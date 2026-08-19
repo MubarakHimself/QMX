@@ -1,0 +1,120 @@
+  fastest and free, thank you now. The trading VPS is out of question. That VPS 
+  exists. By default, it should. Which means we have to have by somewhere to    
+  deploy it. Okay, that's not your work. Okay, that's not your work. For you,   
+  you are building the core. Let's see. Back up. Okay, backup. We need to have  
+  that inbuilt. I think it's actually part of the back-end node last time I     
+  checked. And it's cheap. It's actually cheap. That's cheap. Okay, it's        
+  doable. But that falls back to architecture, overall architecture. So you can 
+  note it down. Then, synthetic data, you are saying generating it is standard  
+  and algorithmic. Resample blocks man. I don't know. For me, okay, I don't     
+  know. I actually forgot the idea, but last time I remember we could have like 
+  used synthetic data somewhere. My bad. First time on yo, what is going on?    
+  It seems like some agent posed itself. What is going on? Oh, they are all     
+  opus agents. I think there is a maximum, a cap limit on how many OPAS agents  
+  you could use. That's why I said mix them because some agent just posed       
+  itself. I don't know why. Study portfolio libs and bot frameworks. That right 
+  there posed itself. Anyway, let me first stop dictating so that you see what  
+  is actually going on with workflow. Yeah. What else? Oh, yeah, I was still    
+  talking about the synthetic data thing. I was actually still yapping about    
+  it. Now, synthetic data, man, I think we can use it. It's just that I think   
+  it can give us something that the Ducascopy data can't do. And I think if we  
+  want to test, especially if a bot, I don't know if that feeds into            
+  overfitting, you know, I really don't. Okay, but we have to be careful there, 
+  but it's a good idea. It's a good idea. Anyway, I think it's part of QMF.     
+  But seems like the data library is heavy, bro. Anyway, anyway, we haven't     
+  capitalized on anything, like I said last time, so yeah, let's first finish   
+  and check out what's going on. There are two agents that have failed. I       
+  actually just saw it, I don't know why. Let me stop here. Let me just leave   
+  you because this is going to take a minute. Because wave one, then wave two,  
+  then wave three, then it's gonna take a minute, an actual minute.             
+
+● Let me look at what's actually happening in the workflow before responding to
+  the rest.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(tracker\map.md)
+  ⎿  Added 2 lines, removed 1 line
+      41  - Alpha-decay detection (old QML feature to rebuild): live perf
+          ormance degrading below backtest; complicated because "edge" wa
+          s defined relative to a Book's configurable values, and Books a
+          re now plural
+      42  - **Simulator (ratified vocabulary)**: backtest engine + a Book
+           + chosen conditions, via a UI — stress a bot against any real 
+          or theoretical Book; fill engine = core QMF now, Simulator UI =
+           later product
+      43  - Synthetic tick data module: algorithmic generation (block res
+          ampling, calibrated volatility models — never LLMs) for stress/
+          kill-switch/scenario testing ONLY; hard rule: synthetic data ca
+          n stress a strategy, never validate an edge
+      44 -- Storage architecture (proposed, pending ratification): workin
+         -g Parquet archive on the workstation; trading VPS runs the alwa
+         -ys-on tick recorder and syncs down; nightly backup to an object
+         --storage bucket (B2/R2 class, ~$1–5/mo); no database server    
+      44 +- Storage architecture (proposed, pending ratification): workin
+         +g Parquet archive on the workstation; trading VPS runs the alwa
+         +ys-on tick recorder and syncs down; nightly backup to an object
+         +-storage bucket (B2/R2 class, ~$1–5/mo); no database server. Ba
+         +ckup is an INBUILT platform feature (historically the backend-n
+         +ode's job) — overall-architecture item, not an operator errand.
+         + Trading VPS exists by default; procuring it is Mubarak's side,
+         + core is Claude's.                                             
+      45 +- Simulator definition is ratified but ABSTRACT per Mubarak — e
+         +nhance it once the backtesting verdict enumerates everything th
+         +at feeds it (data, Books, conditions, kill-switch scenarios, sy
+         +nthetic stress lanes)                                          
+      46  - MIS model stack from the old system: Kronos (time-series mode
+          l) + BOCPD — candidates to re-ratify during the MIS session
+      47  - Mubarak plans a Windows → Linux (Omakub) switch soon; cTrader
+           need not be installed locally — softens the TA-Lib-on-Windows 
+          concern
+      48  - Prime Market Terminal (https://prime-terminal.com/) — macro-t
+          rader terminal, reference for the agentic/macro lane; Mubarak d
+          oubts he needs it
+
+● Everything's recorded. Wave 1 is grinding through the deep studies — I'll
+  digest verdicts and ledger into one artifact and auto-launch wave 2 the moment
+  it completes.
+
+✻ Churned for 49s
+
+● Dynamic workflow "Clone 25+ reference repos locally, deep-study them for
+mental models, produce the idea ledger plus kernel and backtesting verdict
+briefs" completed · 26m 48s
+
+● Mubarak called it — every Opus agent died on the same server-side 529 
+  Overloaded error (Anthropic's Opus capacity, not our cap). The Sonnet agents
+  all survived: 24 repos cloned, catalog study done. Recovery: I'll rebalance
+  the fleet — the two verdict-critical studies stay Opus, the other five deep
+  studies move to Sonnet, then resume the run so the finished work replays from
+  cache and only the failures re-run.
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(~\.claude\projects\C--Users-Mubarak-Desktop-QMX\3f60e17b-e1cb-4eaa-999f
+        -412427d7eea6\workflows\scripts\qmf-repo-study-wf_a53bf7ca-d42.js)
+  ⎿  Added 1 line, removed 1 line
+      101  
+      102  const groups = [
+      103    { slug: 'nautilus', file: 'nautilus-trader.md', model: 'opus
+           ', effort: 'high', prompt: `Deep-study ${REPOS}/nautilus_trade
+           r — the single most important study. Focus: how the kernel wor
+           ks (message bus, cache, data engine, execution engine, clock);
+            how backtest and live share the SAME core (this impressed Mub
+           arak); how strategies are authored; how indicators update incr
+           ementally; how venue adapters are structured; how the Rust cor
+           e relates to the Python surface; what a from-scratch Python-on
+           ly reimplementation of the essential kernel would actually inv
+           olve (est. scope honestly). It is LGPL — design study only, no
+            code reuse.` },
+      104 -  { slug: 'jesse', file: 'jesse.md', model: 'opus', effort: 'h
+          -igh', prompt: `Deep-study ${REPOS}/jesse (Mubarak likes it and
+          - knows the creator). Focus: strategy authoring API (what a use
+          -r writes, lifecycle hooks), backtest engine internals, data pi
+          -peline/candle storage, indicator system, risk/position handlin
+          -g, optimization mode, project structure conventions, and what 
+          -makes it pleasant. Verdict: what QMF should copy from Jesse sp
+          -ecifically vs where Jesse's simplicity would box us in.` },   
+      104 +  { slug: 'jesse', file: 'jesse.md', model: 'sonnet', effort: 
+          +'high', prompt: `Deep-study ${REPOS}/jesse (Mubarak likes it a
+          +nd knows the creator). Focus: strategy authoring API (what a u

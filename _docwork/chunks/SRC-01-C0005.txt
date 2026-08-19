@@ -1,0 +1,120 @@
+         +comes from shared contracts and conventions, never from walls. 
+         +Strictness concentrates in exactly two places: the agentic harn
+         +ess (agents are non-deterministic; DeepSeek-grade discipline ea
+         +rns its place there) and the promotion gate into the live money
+         + path (order, not lock-in). Research/experimentation lanes stay
+         + free.                                                         
+      24  
+      25  ## Decisions so far
+      26  
+
+● Update(tracker\map.md)
+  ⎿  Added 1 line, removed 1 line
+      24  
+      25  ## Decisions so far
+      26  
+      27 -- [QMF research sweep](tickets/001-qmf-research-sweep.md) — 11 
+         -study files + synthesis delivered to `research/` (facts gathere
+         -d, NOT yet adopted; ratification pass = ticket 002). Entry poin
+         -t: `research/00-qmf-synthesis-module-map.md`; digest: `artifact
+         -s/2026-08-17-qmf-minimal-core.html`.                           
+      27 +- [QMF research sweep](tickets/001-qmf-research-sweep.md) — 11 
+         +study files + synthesis delivered to `research/` (facts gathere
+         +d, NOT yet adopted; ratification now runs documentation-first t
+         +hrough the locks discussion — ticket 002, re-scoped 2026-08-18)
+         +. Entry point: `research/00-qmf-synthesis-module-map.md`; diges
+         +t: `artifacts/2026-08-17-qmf-minimal-core.html`.               
+      28  - [Reference repo deep study](tickets/007-repo-deep-study.md) —
+           37 repos studied in two waves; idea ledger (113+43 rows) at `r
+          eference/00-idea-ledger.md` + `03-wave2-supplement.md`; kernel 
+          verdict (BUILD, staged, 3-day spike tiebreaker, D1 LGPL amendme
+          nt) at `reference/01-kernel-verdict.md`; backtesting verdict (O
+          ption 2: contracts first, vocabulary fix, Program/Campaign for 
+          prop-firm, 14 rulings pending) at `reference/02-backtesting-ver
+          dict.md`. Facts gathered — adoption pending ratification.
+      29  - **Kernel RATIFIED (2026-08-17 evening, operator ruling): BUIL
+          D our own — no third-party engine, runtime, or contract, ever.*
+          * Grounds: bots must bind to QMF's contracts not an engine's; l
+          oad-bearing arithmetic (fills/metrics/overfitting) must be read
+          able and patchable by the factory; agents backtest in disposabl
+          e sandboxes where a small pure-Python QMF fits and content-addr
+          essed Runs merge from many sandboxes into one ledger; no inheri
+          ted rebuilds. Nautilus et al. = mental models in the ledger onl
+          y. The 3-day adoption spike is cancelled. D1 licence amendment 
+          (LGPL ok for unmodified deps) still stands for ordinary librari
+          es.
+      30  - **Backtesting: PAUSED as a decision area (operator ruling) — 
+          own session, ticket [008](tickets/008-backtesting-framework.md)
+          .** The verdict briefs are research inputs only; nothing in the
+          m is ratified. Approach changes to his staged funnel (screen → 
+          research → robustness → replay → full Book/BMS sim), on-demand 
+          in sandboxes. His GPT brainstorm markdown is the missing input 
+          — request it.
+● Update(tracker\map.md)
+  ⎿  Added 1 line, removed 1 line
+      25  ## Decisions so far
+      26  
+      27  - [QMF research sweep](tickets/001-qmf-research-sweep.md) — 11 
+          study files + synthesis delivered to `research/` (facts gathere
+          d, NOT yet adopted; ratification now runs documentation-first t
+          hrough the locks discussion — ticket 002, re-scoped 2026-08-18)
+          . Entry point: `research/00-qmf-synthesis-module-map.md`; diges
+          t: `artifacts/2026-08-17-qmf-minimal-core.html`.
+      28 -- [Reference repo deep study](tickets/007-repo-deep-study.md) —
+         - 37 repos studied in two waves; idea ledger (113+43 rows) at `r
+         -eference/00-idea-ledger.md` + `03-wave2-supplement.md`; kernel 
+         -verdict (BUILD, staged, 3-day spike tiebreaker, D1 LGPL amendme
+         -nt) at `reference/01-kernel-verdict.md`; backtesting verdict (O
+         -ption 2: contracts first, vocabulary fix, Program/Campaign for 
+         -prop-firm, 14 rulings pending) at `reference/02-backtesting-ver
+         -dict.md`. Facts gathered — adoption pending ratification.      
+      28 +- [Reference repo deep study](tickets/007-repo-deep-study.md) —
+         + 37 repos studied in two waves; idea ledger (113+43 rows) at `r
+         +eference/00-idea-ledger.md` + `03-wave2-supplement.md`; kernel 
+         +verdict (BUILD, staged, spike tiebreaker since CANCELLED — see 
+         +next entry, D1 LGPL amendment) at `reference/01-kernel-verdict.
+         +md`; backtesting verdict (Option 2: contracts first, vocabulary
+         + fix, Program/Campaign for prop-firm, 14 rulings pending) at `r
+         +eference/02-backtesting-verdict.md`. Facts gathered — adoption 
+         +pending ratification.                                          
+      29  - **Kernel RATIFIED (2026-08-17 evening, operator ruling): BUIL
+          D our own — no third-party engine, runtime, or contract, ever.*
+          * Grounds: bots must bind to QMF's contracts not an engine's; l
+          oad-bearing arithmetic (fills/metrics/overfitting) must be read
+          able and patchable by the factory; agents backtest in disposabl
+          e sandboxes where a small pure-Python QMF fits and content-addr
+          essed Runs merge from many sandboxes into one ledger; no inheri
+          ted rebuilds. Nautilus et al. = mental models in the ledger onl
+          y. The 3-day adoption spike is cancelled. D1 licence amendment 
+          (LGPL ok for unmodified deps) still stands for ordinary librari
+          es.
+      30  - **Backtesting: PAUSED as a decision area (operator ruling) — 
+          own session, ticket [008](tickets/008-backtesting-framework.md)
+          .** The verdict briefs are research inputs only; nothing in the
+          m is ratified. Approach changes to his staged funnel (screen → 
+          research → robustness → replay → full Book/BMS sim), on-demand 
+          in sandboxes. His GPT brainstorm markdown is the missing input 
+          — request it.
+      31  - **Agentic system: HANDS OFF for Claude sessions** — ~5 resear
+          ch papers to analyze first; "don't build organs; the veins only
+          ." Allowed foundational organs: bot schema, data management.
+
+● Update(tracker\map.md)
+  ⎿  Added 1 line, removed 1 line
+      26  
+      27  - [QMF research sweep](tickets/001-qmf-research-sweep.md) — 11 
+          study files + synthesis delivered to `research/` (facts gathere
+          d, NOT yet adopted; ratification now runs documentation-first t
+          hrough the locks discussion — ticket 002, re-scoped 2026-08-18)
+          . Entry point: `research/00-qmf-synthesis-module-map.md`; diges
+          t: `artifacts/2026-08-17-qmf-minimal-core.html`.
+      28  - [Reference repo deep study](tickets/007-repo-deep-study.md) —
+           37 repos studied in two waves; idea ledger (113+43 rows) at `r
+          eference/00-idea-ledger.md` + `03-wave2-supplement.md`; kernel 
+          verdict (BUILD, staged, spike tiebreaker since CANCELLED — see 
+          next entry, D1 LGPL amendment) at `reference/01-kernel-verdict.
+          md`; backtesting verdict (Option 2: contracts first, vocabulary
+           fix, Program/Campaign for prop-firm, 14 rulings pending) at `r
+          eference/02-backtesting-verdict.md`. Facts gathered — adoption 
+          pending ratification.
+      29 -- **Kernel RATIFIED (2026-08-17 evening, operator ruling): BUIL

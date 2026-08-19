@@ -1,0 +1,33 @@
+id: CT-13
+name: Durable journal-evidence contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-DATA
+producer: COMP-QMF-DATA
+consumers: [COMP-QMF-DATA-STORE]
+intended_producers: [COMP-QMF-REGISTRY, COMP-QMF-VENUE, COMP-QMF-RISK]
+wiring_status: data-to-store-only; cross-domain producers reserved-unwired
+layer_from: backend
+layer_to: data
+decisions: [DEC-0042, DEC-0048]
+gaps: [GAP-0005, GAP-0022, GAP-0025, GAP-0026]
+purpose: "Persist durable operational and research journal evidence without introducing a runtime event bus."
+invariants:
+  - "Journal evidence is durable and separate from arbitrary application logging."
+  - "COMP-QMF-DATA owns the schema and is the only currently wired producer into COMP-QMF-DATA-STORE."
+  - "Registry, Venue, and Risk are intended cross-domain producers only; their CT-13 handoffs are not wired until GAP-0025 defines producer, consumer, and failure semantics."
+  - "The journal does not own notification, workflow, recovery, or trading-node orchestration."
+  - "Mutation, amendment, immutability, and ordering semantics are not adopted and remain unresolved under GAP-0025 and GAP-0026."
+  - "Event kinds, fields, correlation identities, cadence, retention, redaction, and query guarantees remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0025
+  fields: null
+  fields_gap: GAP-0025
+  enums: null
+  enums_gap: GAP-0025
+  units: null
+  units_gap: GAP-0025
+  nullability: null
+  nullability_gap: GAP-0025

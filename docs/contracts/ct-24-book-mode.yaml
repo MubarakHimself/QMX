@@ -1,0 +1,34 @@
+id: CT-24
+name: Book mode and account-transition contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-RISK
+consumers: []
+active_consumers: []
+intended_consumers: [COMP-QMF-REGISTRY, COMP-QMF-DATA]
+wiring_status: reserved-evidence-only
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0041, DEC-0070]
+prohibitions: [DEC-0069]
+gaps: [GAP-0005, GAP-0018, GAP-0019, GAP-0041]
+purpose: "Reserve an unwired Book-mode evidence placeholder pending operator confirmation and GAP-0041."
+authority_note: "A study-delivered recap records a Book-level, one-Bot-to-one-Book direction, but the direct operator wording is missing from the export; this is evidence only until operator confirmation."
+invariants:
+  - "Only a human may promote an artifact into the live zone."
+  - "The recorded paper-mode recap is not an executable state or transition contract."
+  - "CT-24 is evidence-only until the operator confirms the recap and GAP-0041 defines the full transition."
+  - "No active Registry, Data, application, account, or execution consumer is wired."
+  - "State values, transition triggers, account roles, rollback, duplicate prevention, continuity, and audit fields remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0041
+  fields: null
+  fields_gap: GAP-0041
+  enums: null
+  enums_gap: GAP-0041
+  units: null
+  units_gap: GAP-0041
+  nullability: null
+  nullability_gap: GAP-0041

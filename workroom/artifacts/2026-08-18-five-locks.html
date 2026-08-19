@@ -1,0 +1,323 @@
+<title>The Five Locks</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+  :root {
+    --bg: #FAFAF7;
+    --surface: #FFFFFF;
+    --ink: #1C2430;
+    --muted: #5B6472;
+    --line: #E3E2DC;
+    --accent: #0E6E5C;
+    --accent-soft: #EEF3F1;
+    --amber: #9A6A16;
+    --amber-bg: #F6EDDC;
+    --live-bg: #1C2430;
+    --live-ink: #F2F3EE;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12161C;
+      --surface: #1A2029;
+      --ink: #E9EAE5;
+      --muted: #9AA3AE;
+      --line: #2A313C;
+      --accent: #37A98B;
+      --accent-soft: #1D2A28;
+      --amber: #D9A441;
+      --amber-bg: #2A2416;
+      --live-bg: #060809;
+      --live-ink: #E9EAE5;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12161C;
+    --surface: #1A2029;
+    --ink: #E9EAE5;
+    --muted: #9AA3AE;
+    --line: #2A313C;
+    --accent: #37A98B;
+    --accent-soft: #1D2A28;
+    --amber: #D9A441;
+    --amber-bg: #2A2416;
+    --live-bg: #060809;
+    --live-ink: #E9EAE5;
+  }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Public Sans", "Segoe UI", system-ui, sans-serif;
+    line-height: 1.55;
+    margin: 0;
+    padding: 3rem 1.25rem 5rem;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 2.75rem; }
+  h1, h2, h3 { font-family: "Bricolage Grotesque", "Public Sans", sans-serif; text-wrap: balance; margin: 0; }
+  h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.08; }
+  h2 { font-size: 1.45rem; font-weight: 700; }
+  h3 { font-size: 1.05rem; font-weight: 600; }
+  p { margin: 0; max-width: 62ch; }
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace; font-size: .72rem; font-weight: 500;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--accent);
+  }
+  .lede { font-size: 1.08rem; color: var(--muted); max-width: 58ch; }
+  .hero { display: flex; flex-direction: column; gap: .8rem; }
+
+  /* chips + tags */
+  .chip {
+    font-family: "IBM Plex Mono", monospace; font-size: .7rem; font-weight: 500;
+    letter-spacing: .05em; padding: .22rem .55rem; border-radius: 3px;
+    background: var(--accent-soft); color: var(--accent); white-space: nowrap;
+  }
+  .chip.pending { background: var(--amber-bg); color: var(--amber); }
+
+  /* THE SLIDE diagram */
+  .slide { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1.6rem 1.4rem; display: flex; flex-direction: column; gap: 1.1rem; overflow-x: auto; }
+  .slide-caption { font-size: .85rem; color: var(--muted); max-width: 60ch; }
+  .lockrow { display: flex; align-items: center; gap: .4rem; min-width: 560px; }
+  .lockchip {
+    flex: 1; text-align: center; background: var(--accent); color: #fff;
+    border-radius: 6px; padding: .55rem .4rem; font-weight: 600; font-size: .82rem; line-height: 1.25;
+  }
+  :root[data-theme="dark"] .lockchip, .lockchip { color: #FFFFFF; }
+  .lockchip small { display: block; font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: .62rem; opacity: .75; letter-spacing: .1em; }
+  .arrow { color: var(--muted); font-size: .95rem; flex: none; }
+  .fan { text-align: center; color: var(--muted); font-size: .8rem; font-family: "IBM Plex Mono", monospace; letter-spacing: .08em; }
+  .lanes { display: grid; grid-template-columns: repeat(5, 1fr); gap: .4rem; min-width: 560px; }
+  .lane {
+    border: 1px dashed var(--line); border-radius: 6px; padding: .5rem .4rem;
+    text-align: center; font-size: .78rem; color: var(--muted); background: var(--bg);
+  }
+
+  /* lock cards */
+  .locks { display: flex; flex-direction: column; gap: 1.1rem; }
+  .lock {
+    display: grid; grid-template-columns: 64px 1fr; gap: 1.1rem;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1.35rem 1.4rem;
+  }
+  .keynum {
+    font-family: "IBM Plex Mono", monospace; font-size: 1.9rem; font-weight: 500;
+    color: var(--accent); line-height: 1; padding-top: .15rem;
+  }
+  .keynum small { display: block; font-size: .6rem; letter-spacing: .12em; color: var(--muted); margin-top: .4rem; }
+  .lockbody { display: flex; flex-direction: column; gap: .65rem; }
+  .lockhead { display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap; }
+  .plain { color: var(--ink); }
+  .unlocks { font-size: .88rem; color: var(--muted); }
+  .unlocks b { color: var(--accent); font-weight: 600; }
+  ul.tight { margin: .2rem 0 0; padding-left: 1.15rem; display: flex; flex-direction: column; gap: .3rem; font-size: .92rem; }
+  ul.tight li::marker { color: var(--accent); }
+
+  /* exam mini diagram */
+  .examdiag { display: flex; flex-direction: column; align-items: center; gap: .35rem; margin-top: .4rem; }
+  .exambox {
+    border: 2px solid var(--accent); color: var(--accent); border-radius: 6px;
+    padding: .4rem 1rem; font-weight: 600; font-size: .85rem; background: var(--accent-soft);
+  }
+  .examarms { display: flex; gap: 2.5rem; color: var(--muted); font-size: .9rem; }
+  .students { display: flex; gap: .6rem; flex-wrap: wrap; justify-content: center; }
+  .student { border: 1px solid var(--line); border-radius: 6px; padding: .4rem .8rem; font-size: .82rem; background: var(--bg); }
+  .student.ghost { border-style: dashed; color: var(--muted); }
+
+  /* open lab / gate / live diagram */
+  .zones { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: .5rem; align-items: stretch; min-width: 620px; }
+  .zone { border-radius: 8px; padding: .9rem .8rem; display: flex; flex-direction: column; gap: .55rem; }
+  .zone h3 { font-size: .95rem; }
+  .zone .zl { font-family: "IBM Plex Mono", monospace; font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; }
+  .zone-lab { border: 1.5px dashed var(--accent); background: var(--bg); }
+  .zone-lab .zl { color: var(--accent); }
+  .zone-gate { border: 2px solid var(--accent); background: var(--accent-soft); }
+  .zone-gate .zl { color: var(--accent); }
+  .zone-live { background: var(--live-bg); color: var(--live-ink); border: 1px solid var(--live-bg); }
+  .zone-live .zl { color: var(--amber); }
+  .zone-live p { color: var(--live-ink); opacity: .85; }
+  .zone p { font-size: .82rem; }
+  .zonechips { display: flex; flex-wrap: wrap; gap: .3rem; }
+  .zonechips span {
+    font-size: .7rem; border: 1px solid var(--line); border-radius: 999px;
+    padding: .1rem .5rem; color: var(--muted); background: var(--surface);
+  }
+  .zarrow { align-self: center; color: var(--muted); font-size: 1.2rem; }
+  .quote { font-size: .9rem; color: var(--muted); font-style: italic; }
+  .zones-scroll { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1.4rem; display: flex; flex-direction: column; gap: 1rem; }
+
+  /* explainers */
+  .twocol { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; }
+  @media (max-width: 680px) { .twocol { grid-template-columns: 1fr; } .lock { grid-template-columns: 48px 1fr; } }
+  .explain { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1.25rem 1.3rem; display: flex; flex-direction: column; gap: .6rem; }
+  .verdict { font-size: .85rem; }
+  .verdict b { color: var(--amber); }
+
+  /* decision strip */
+  .decisions { background: var(--surface); border: 1.5px solid var(--accent); border-radius: 10px; padding: 1.4rem 1.5rem; display: flex; flex-direction: column; gap: .9rem; }
+  .drow { display: grid; grid-template-columns: 44px 1fr auto; gap: .8rem; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: .8rem; }
+  .drow:last-child { border-bottom: none; padding-bottom: 0; }
+  .dnum { font-family: "IBM Plex Mono", monospace; color: var(--accent); font-weight: 500; }
+  .drow p { font-size: .95rem; }
+  section { display: flex; flex-direction: column; gap: 1rem; }
+  .sechead { display: flex; flex-direction: column; gap: .35rem; }
+</style>
+
+<div class="wrap">
+
+  <div class="hero">
+    <span class="eyebrow">QMF · Decision Session · 2026-08-18</span>
+    <h1>The Five Locks</h1>
+    <p class="lede">You asked for a slide — the thing that, once in place, lets everything else pass through quickly. This is it. Five locks. None of them is a build. Each is a decision written down small. Once they're down, every remaining piece of QMF becomes an independent ticket the factory can run in parallel, without waiting on you or on each other.</p>
+  </div>
+
+  <div class="slide">
+    <div class="lockrow">
+      <div class="lockchip"><small>LOCK 1</small>The Dictionary</div>
+      <span class="arrow">→</span>
+      <div class="lockchip"><small>LOCK 2</small>The Venue Checklist</div>
+      <span class="arrow">→</span>
+      <div class="lockchip"><small>LOCK 3</small>One ID Card</div>
+      <span class="arrow">→</span>
+      <div class="lockchip"><small>LOCK 4</small>The Agent Page</div>
+      <span class="arrow">→</span>
+      <div class="lockchip"><small>LOCK 5</small>The Answer Keys</div>
+    </div>
+    <div class="fan">▼ &nbsp; everything below runs in parallel, no coordination needed &nbsp; ▼</div>
+    <div class="lanes">
+      <div class="lane">data lake</div>
+      <div class="lane">indicators &amp; levels</div>
+      <div class="lane">broker adapter</div>
+      <div class="lane">Books &amp; BMS</div>
+      <div class="lane">metrics &amp; reports</div>
+    </div>
+    <p class="slide-caption">Locks are specified in order (each one uses the words the previous one defined), but they are all small. The lanes below them are the actual code — and they only become parallel <em>because</em> the locks exist.</p>
+  </div>
+
+  <section>
+    <div class="sechead">
+      <span class="eyebrow">The locks, in plain words</span>
+    </div>
+
+    <div class="locks">
+
+      <div class="lock">
+        <div class="keynum">1<small>≈2 sessions</small></div>
+        <div class="lockbody">
+          <div class="lockhead"><h2>The Dictionary</h2><span class="chip pending">= qmf-core, needs your yes</span></div>
+          <p class="plain">What an Order, a Fill, a Position, a Tick <em>is</em> — exact money (no rounding errors), exact time (one world clock), and the label every stored result carries so it can never lie about what produced it. This is the language everything else speaks.</p>
+          <p>Six choices get frozen inside this lock. Each is cheap to decide now and ruinously expensive to change later, because changing any one invalidates every test result ever stored:</p>
+          <ul class="tight">
+            <li>One world clock, measured to the nanosecond.</li>
+            <li>What counts as "the same instrument" — the venue plus its symbol.</li>
+            <li>Whose indicator math is the reference answer (proposal: TA-Lib, the industry standard).</li>
+            <li>Three honesty levels stamped on every backtest — did it look at bar closes, inside bars, or every tick.</li>
+            <li>The bar a strategy must clear to count as good — this number also sets how many attempts your data can honestly support.</li>
+            <li>The full label on every result: which bot + which data + which Book + which version of everything.</li>
+          </ul>
+          <p class="unlocks"><b>What slides after it:</b> every module becomes a function over these words. Modules stop needing to agree with each other — they already agree by speaking the same language.</p>
+        </div>
+      </div>
+
+      <div class="lock">
+        <div class="keynum">2<small>≈4–5 days</small></div>
+        <div class="lockbody">
+          <div class="lockhead"><h2>The Venue Checklist</h2><span class="chip pending">renamed — "exam" is banned vocabulary</span></div>
+          <p class="plain">One checklist, written <em>before</em> any venue is built. Every venue — the practice venue that backtests use and the real cTrader connection — must satisfy the same list. If both do, "backtest behaves like live" is no longer a hope; it's a check that fails loudly when broken.</p>
+          <div class="examdiag">
+            <div class="exambox">THE CHECKLIST — written first</div>
+            <div class="examarms">↙ &nbsp;&nbsp;&nbsp;&nbsp; ↘</div>
+            <div class="students">
+              <div class="student">Practice venue (backtesting)</div>
+              <div class="student">Real venue (cTrader)</div>
+              <div class="student ghost">Crypto venue — later, same exam</div>
+            </div>
+          </div>
+          <p class="unlocks"><b>What slides after it:</b> the two hardest builds in the project get a definition of "done" that an agent cannot fake. Crypto later becomes "student #3 takes the same exam" instead of a rewrite.</p>
+        </div>
+      </div>
+
+      <div class="lock">
+        <div class="keynum">3<small>≈300 lines</small></div>
+        <div class="lockbody">
+          <div class="lockhead"><h2>One ID Card</h2></div>
+          <p class="plain">Every thing in the system — a level, a trigger, a bot, a Book, a model, an experiment — carries the same small ID card: what it is, its version, its fingerprint, its lineage. Promotion toward live is an update on the card, never a file moved. Nothing is ever deleted; retired things keep their history.</p>
+          <p class="unlocks"><b>What slides after it:</b> build the card format once, and seven different needs are served for free — versioning, dedup (two agents "discovering" the same bot get the same fingerprint), honest attempt-counting, audit, rollback. This also already covers most of what the DeepSeek harness does — which is why the fancy extension plumbing can wait for the agentic era.</p>
+        </div>
+      </div>
+
+      <div class="lock">
+        <div class="keynum">4<small>≈1 session</small></div>
+        <div class="lockbody">
+          <div class="lockhead"><h2>The Agent Page</h2></div>
+          <p class="plain">The one printed page a future agent reads to build things with QMF: the forms for a Level, a Trigger, a Confirmation, a Confluence, a Book config. Guidelines, not walls — agents still have all of Python beside it. But what gets <em>registered</em> comes through these forms, so it's uniform.</p>
+          <p class="unlocks"><b>What slides after it:</b> the agentic system becomes a <b>consumer</b> of QMF instead of a redesign of it. The five research papers become downstream reading, not an upstream blocker.</p>
+        </div>
+      </div>
+
+      <div class="lock">
+        <div class="keynum">5<small>≈1 session</small></div>
+        <div class="lockbody">
+          <div class="lockhead"><h2>The Answer Keys</h2></div>
+          <p class="plain">For each module, name the <em>external</em> thing that proves it right: a reference library for indicator math, a live demo account for fills, deliberately-overfit fake strategies that the lie detector must catch, a look-ahead test no component can register without passing.</p>
+          <p class="unlocks"><b>What slides after it:</b> this is the only lock that raises your speed limit. Right now the factory's ceiling is <b>your review evenings</b>. Named answer keys turn "Mubarak checks it" into "a machine gate checks it" — and that is what actually makes a one-person operation scale.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sechead">
+      <span class="eyebrow">Your ruling, drawn</span>
+      <h2>Open lab, guarded gate</h2>
+    </div>
+    <div class="zones-scroll">
+      <div class="zones">
+        <div class="zone zone-lab">
+          <span class="zl">The Lab — free</span>
+          <h3>Research &amp; experimentation</h3>
+          <p>Anything goes, alongside plain Python. Methods change — the lab never hard-codes one.</p>
+          <div class="zonechips"><span>NumPy · any library</span><span>genetic algorithms</span><span>neural nets · RL · LLMs</span><span>synthetic data</span><span>currency knowledge bases</span></div>
+        </div>
+        <div class="zarrow">→</div>
+        <div class="zone zone-gate">
+          <span class="zl">The Gate — uniform</span>
+          <h3>Promotion</h3>
+          <p>To move toward real money, a thing shows its ID card, its label, its attempt count, and passes its exam. Same doors for everyone. Order, not walls.</p>
+        </div>
+        <div class="zarrow">→</div>
+        <div class="zone zone-live">
+          <span class="zl">Live — sealed</span>
+          <h3>The money path</h3>
+          <p>Composed at startup, journaled, fail-closed. Changes ship as a new version + restart, never a hot edit.</p>
+        </div>
+      </div>
+      <p class="quote">"Order is necessary, but don't box yourself in." — the ruling this diagram implements. Strictness lives at the gate and inside the agentic harness; nowhere else.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sechead">
+      <span class="eyebrow">The two things I used jargon for — in plain words</span>
+    </div>
+    <div class="twocol">
+      <div class="explain">
+        <h3>"Full statistics battery" = the lie detector</h3>
+        <p class="plain">Math that catches a strategy that only <em>looks</em> profitable because thousands of variants were tried until one got lucky. Try a million worthless bots and the best will look brilliant — the lie detector knows how lucky "lucky" is.</p>
+        <p class="verdict"><b>My call:</b> keep the cheap part now — a counter that records every attempt ever made (agents can burn years of statistical budget in an afternoon). Defer the full lab-grade machinery until one strategy actually gets far enough to need interrogating.</p>
+      </div>
+      <div class="explain">
+        <h3>"Program / Campaign" = the challenge rehearsal machine</h3>
+        <p class="plain">A machine that plays a prop-firm challenge start-to-finish — evaluation, funded, payout — then replays it a thousand times and tells you your pass rate and <em>which rule kills you</em>.</p>
+        <p class="verdict"><b>My call:</b> genuinely valuable — but it's prop-firm machinery, and you ruled prop-firm Books into the agentic era. Keep only the generic slot for firm rules (cheap, shapes the money gate); build the rehearsal machine when its era comes.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="decisions">
+      <span class="eyebrow">Verdicts — ruled 2026-08-18</span>
+      <div class="drow"><span class="dnum">D1</span><p><b>Lock 1 — the Dictionary (qmf-core): ACCEPTED as the first brick</b>, with Mubarak's dictated inputs folded in (heavy indicators live in the MIS; pair-scoped kill switch; paper trading as a standing state for alpha-decay sensing; and more — full capture in the tracker). The six frozen choices remain proposals to confirm during the documentation pass.</p><span class="chip">ratified in principle</span></div>
+      <div class="drow"><span class="dnum">D2</span><p><b>Lock 2: DENIED as bundled.</b> The word "exam" is banned (legacy collision). Venue connection proceeds as simple work; the backtest-parity half moves into the dedicated backtesting session.</p><span class="chip pending">split</span></div>
+      <div class="drow"><span class="dnum">D3</span><p><b>Locks 3–5: identity and graph-shaped lineage accepted in principle</b>; one-card-for-everything, the agent page, and the answer keys all wait — a deep study against the real QMX docs runs first, and the agent page needs the library documented before it can exist.</p><span class="chip pending">deep study first</span></div>
+      <div class="drow"><span class="dnum">D4</span><p><b>All backtesting discussion moves to its own session</b> (lie detector included). The challenge rehearsal machine is off — a prop firm is just a new Book, and Books are born in the agentic era.</p><span class="chip pending">deferred</span></div>
+    </div>
+  </section>
+
+</div>

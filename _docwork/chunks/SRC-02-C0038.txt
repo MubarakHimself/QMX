@@ -1,0 +1,117 @@
+● The harness study is done — reference\06-deepseek-harness-study.md — and it
+  came back with something better than expected: your extensibility instinct and
+  QMF's existing design already fit together, and the gap is only three small
+  primitives. In plain words:
+
+  - The whole DeepSeek/Cordis model reduces to one load-bearing rule: every
+  registration is a reversible effect — anything an extension adds can be
+  cleanly torn out. Hot reload and safe swapping are just consequences of that
+  rule.
+  - Two of their mechanics are gold for money software: the monotonic guard — a
+  deny-only registry where a later extension can never undo an earlier refusal,
+  so no load order can make the system less safe — and fail-closed approval,
+  which refuses before anything gets a chance to answer.
+  - What QMF already planned covers most of it: your versioned registry,
+  manifests, and fingerprints sit in exactly the slots their system uses — and
+  are stronger, being content-addressed. The genuinely new build is seven items,
+  of which three belong in qmf-core: the Context (the container extensions plug
+  into), the disposer discipline (everything undoable), and a typed event bus.
+  - Where extensibility lives — the recommended shape: one mechanism in the QMF
+  libraries, three tiers of composition. Agent workspaces are fully open —
+  agents extend freely, and they're safe not by restriction but by absence: no
+  live-trading provider even exists in that environment. The app tier is
+  reviewed. The live node is composed once at boot, fingerprinted, then sealed —
+  and promotion from tier to tier is only ever a human edit. That gives you
+  "agents experiment like quants experiment with Python" without ever bending
+  the live-money rule.
+  - Explicitly refused imports: hot-module-reload, auto-reload when a service
+  vanishes, and install-time code execution — all fine for a chat harness, all
+  wrong for money.
+
+  One decision this creates for you, when you're ready: bless the three 
+  additions to qmf-core (Context, disposers, typed events)? The study's five
+  open questions are at the end of the file for your read. I've marked the
+  additions as proposed, pending your yes in the handoff spec so the factory
+  can't treat them as settled.
+
+● Update(artifacts\2026-08-17-qmf-v1-spec-DRAFT.md)
+  ⎿  Added 2 lines
+      22  5. **The stamp machine** — canonical serialization + fingerprin
+          ting of any definition (used later by confluences/recipes and r
+          esults).
+      23  6. **Versioning discipline** — definitions carry versions from 
+          birth; changing one mints a new version, never rewrites.
+      24  
+      25 +**PROPOSED additions (2026-08-18, pending operator ratification
+         + — from `reference/06-deepseek-harness-study.md`, the extensibi
+         +lity study):** 7. the **Context** — the container agent-authore
+         +d extensions plug into; 8. **disposer discipline** — every regi
+         +stration is reversible/undoable (the one load-bearing rule of t
+         +he DeepSeek/Cordis model); 9. a **runtime-checked typed event b
+         +us**. Extensibility architecture (also pending): one mechanism 
+         +in the QMF libraries, three composition tiers — agent workspace
+         +s fully open (safe by ABSENCE of live providers), app tier revi
+         +ewed, live node composed at boot + fingerprinted + sealed; prom
+         +otion between tiers is only ever a human edit. Deny-only guards
+         + (a later extension can never undo a refusal) and fail-closed a
+         +pproval carry into the money path. Refused imports: hot reload,
+         + auto-reload on vanished services, install-time code execution.
+      26 +                                                               
+      27  ## 3. Corrected vocabulary (operator-ratified tonight)
+      28  
+      29  - **Confluence** = the starting recipe from a hypothesis: Level
+          (s) + Trigger(s) + Confirmation(s). Every slot allows **multipl
+          e variants** (six triggers may fire together; a whole bot can s
+          erve as a confirmation — composition nests). **No exit in the c
+          onfluence.**
+
+  Wrote 1 memory (ctrl+o to expand)
+
+● Everything's recorded and consistent: the study on disk, the three qmf-core
+  additions marked proposed-pending in the handoff spec, and memory updated so
+  any future session knows the extensibility ruling and its state.
+
+  Waiting on two things from you, no rush: your yes/no on the three qmf-core
+  additions (Context, disposers, typed events), and — whenever you surface it —
+  word on whether the factory ran overnight, plus that GPT backtesting
+  brainstorm markdown for the backtesting session when its day comes.
+
+✻ Brewed for 11m 37s
+
+❯ /context 
+  ⎿  Context Usage
+     ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁   Fable 5
+     ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁   claude-fable-5
+     ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁   537.5k/1m tokens (54%)
+     ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ 
+     ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁   Estimated usage by category
+     ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶   ⛁ System prompt: 6.4k tokens (0.6%)
+     ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶   ⛁ System tools: 21.3k tokens (2.1%)
+     ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶   ⛁ Skills: 5.1k tokens (0.5%)
+     ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶   ⛁ Messages: 504.6k tokens (50.5%)
+     ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶ ⛶   ⛶ Free space: 462.6k (46.3%)
+
+     MCP tools · /mcp (loaded on-demand)
+     └ 69 tools · 0 tokens
+
+     Skills · /skills
+     └ 42 skills · 5.1k tokens
+
+     /context all to expand
+
+      Suggestions
+      ℹ File reads using 85.6k tokens (9%) → save ~25.7k
+        If you are re-reading files, consider referencing earlier reads. Use offset/limit for large files.
+
+❯ Alright, I'm going to restart sorry, I'm going to start a session rather. So  
+  you update the necessary session. I think you've already updated the          
+  necessary docs. And the reason for starting the session is because I believe  
+  it might be better if I start afresh with a few because at least for you've   
+  done the research, you've done the actual, you've tried to document, but I    
+  believe for actual ideation, you're not going to be suitable because you are  
+  at around 54% context window used. That won't be very good in my opinion. So  
+  the idea right now is: let me try to start a fresh session in order to get a  
+  better opinion. But it has been nice talking to you. I don't want to argue    
+  again, you know, because your context, if it's dumbed down, you know, we'll   
+  be arguing every now and then. Okay, so that's it. Ciao                       
+

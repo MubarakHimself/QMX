@@ -1,0 +1,115 @@
+  Ingestion = the pipes that pull data in and archive it — the Dukascopy
+  downloader, the economic-calendar poller, the tick recorder. Provenance =
+  every stored fact carries two timestamps: when it happened and when you could 
+  have known it. They pair because the pipes stamp the facts as they arrive. Why
+  "tonight" mattered: the calendar sites only show the current week, and your
+  own live tick stream can't be re-downloaded later — data not archived is gone
+  forever.
+
+  Licence answer: QMF itself stays yours — private, no licence needed. The
+  allowlist question was only about other people's libraries we depend on: stick
+  to Apache-2.0 / MIT / BSD ones, so if you ever sell QMX nothing explodes. The
+  GPL-family projects (Nautilus included) we study for ideas only — which is
+  exactly the "mental models, not code" rule you stated, and it's baked into
+  every study agent's instructions.
+
+  The "interpreter" you remembered = a validator/linter, and it already has a
+  home: qmf.spec — the typed schema agents must fill, which refuses anything
+  malformed before it ever runs. Cheaper than an interpreter, same safety.
+
+  Your pushbacks are honored formally: the kernel decision (D2) and the
+  simulator framing (D3) are reopened on the tracker. The workflow ends with two
+  verdict briefs written specifically for you — 01-kernel-verdict.md (build vs
+  adopt vs hybrid, costed in factory-days, with the honest counter-case) and
+  02-backtesting-verdict.md (your two options weighed, agent-proof result
+  integrity, Book-pluggable runs including prop-firm eval→funded, alpha-decay
+  monitoring, and your bot × Book matrix idea). Plus the organized ledger you
+  asked for: idea | source | what we borrow | why | how QMF implements it.
+
+  Housekeeping: those untracked files were research-agent leftovers (two Polars
+  installers and a BIS data-catalog probe) — deleted, and a .gitignore now keeps
+  clones and downloads out of your way. The toolbox principle (no third-party
+  SMC/ICT libraries — QMF builds our own) and the no-futures/options constraint
+  are recorded permanently.
+
+  When the study lands I'll rebuild the digest artifact around it, and the
+  ratification pass — with the fixed vocabulary — decides what the factory
+  builds tonight.
+
+✻ Churned for 7m 28s
+
+❯ Okay, in fact, before I read through your last response, I wanted to note     
+  something down, yeah? You see, there is a problem, yeah. The problem is that  
+  I think 15 agents are not going to be enough. My idea or my whole point is:   
+  yeah, you see some ripples that I've given you, so some GitHub repos that     
+  I've given you, are actually what I meant by a map in that they are a         
+  collection of algorithmic and quantitative trading projects, which means I    
+  don't know if you're seeing the compounding happen. So, in the links I've     
+  given you, some of the things in the map are not there. You get me? That's    
+  why I chose, like, for example, awesome trading, or awesome systematic        
+  trading, or awesome quant. All those projects are maps, I believe. So, which  
+  means they can compound very, very quickly. Some are up to 140-something      
+  projects. So, it's not as simple as you think, okay. Then, now let me read    
+  through this. So, you are saying the simulator, so that 15 agents is not      
+  really a big number. In my opinion, I think you undermine the task. Okay,     
+  it's not due, it's just that you didn't know what I meant properly. My bad.   
+  Okay, for the simulator, the simulator, I think, is just okay. Actually, if I 
+  even confused myself, the simulator was more of a Baptist engine, plus, also  
+  against a book or against QMX. But the problem, okay, a back test engine      
+  plus a book. So, in other words, you just wanted to see how the exact thing   
+  I've actually just explained previously: how a bot performs on a specific     
+  book, simple as that, but via a UI. I think that's literally it. That's what  
+  a simulator is. So, data is there. There are certain things that are          
+  defaults, obviously, but we can just see how it performs specifically. Or we  
+  can create a specific condition or specific variables in our engine, and we   
+  just stressed. I don't know if you're getting me. So, I can create a          
+  theoretical book and then we test it out. So, ingestion the pipeline, the     
+  pipes that pull data and archive it. Oh, yeah, yeah, yeah, yeah, my bad on    
+  that. Yeah, we need to have our good ingested database, a solid one, with     
+  even backups. Actually, now I think is the right time to ask the question: Do 
+  we need to use a VPS to host this? Or can we have, I think, specific storage  
+  stuff? Like, I'm hearing people talk about buckets. Now, ingestion, I         
+  understand, but I'm still the provenance you are saying every stored fact     
+  carries to term stamps when it happened and when I could have known it. Well, 
+  that's oh, okay. I mean, that's nice. That's nice. I mean, if we can          
+  actually see if a bot, but I don't think we have anything for economic data,  
+  but it's okay. I think for hypothesis, it's okay. Let's just have as much     
+  data as possible. It's better we have more than we can chew and figure out    
+  how to chew it later. Yeah, so provenance, I get it, ingestion, I get it. I   
+  mean, provenance, you can look at something like the kill switch, even in the 
+  simulator, actually. I think that adds up because we can see when the kill    
+  switch fires, we can ingest in a lot of economic data scenarios, we can even  
+  for synthetic data generation, which by the way is something I thought I      
+  would talk about with you. This thing I wanted to be able to generate         
+  synthetic tick data. I don't know if that's possible. Randomize it with LLMs  
+  because I know LLMs can provide it, or we can write an algorithm to do that.  
+  License, yeah, you do what you want on the license, I really don't care. Just 
+  don't put that thing of authored by Claude. I don't like it. I really don't,  
+  you know so the interpreter or the validator all inter, like that is          
+  something we really need, okay? But it's heavy because QMF is really we are   
+  compiling a lot of libraries together, which by the way, I think you can      
+  handle the splitting of the work or of the libraries themselves because we    
+  have a lot to think through. Like, okay, you have a lot to think through,     
+  like, what is when and what is why. By the way, I'm continuing to yap         
+  forgetting that I had something to push back on. Okay, so let me first stop   
+  here. I think for the kernel and whatever things, we shall talk about those   
+  later. Okay                                                                   
+
+● Good pushback — and the maps-compound point is real. Answers first, then
+  everything gets recorded:
+
+  On 15 agents "undermining the task": the study is staged, not capped. Wave 1
+  (running now) reads your 25 direct links deeply — and its catalog agent's
+  explicit job is to open awesome-quant and the other maps and extract a
+  shortlist of everything they contain that matters for QMF. When it returns,
+  wave 2 fires automatically over that shortlist — and a wave 3 if wave 2
+  surfaces more. That's the compounding you're describing, but with a filter
+  between waves so we don't burn agents reading 140 dead tutorial repos to find
+  the 20 real ones. Same coverage, staged instead of blind.
+
+  Simulator — locked, your definition: backtest engine + a Book + chosen
+  conditions, experienced through a UI. So it's three layers: the fill engine
+  (core QMF, part of backtesting), the Book plug (any book — real, theoretical,
+  prop-firm eval or funded), and the Simulator UI (later, when the app exists).
+  You stress-test a bot against any Book you can describe. Recorded exactly so.
+

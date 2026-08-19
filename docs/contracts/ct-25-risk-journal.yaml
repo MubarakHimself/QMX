@@ -1,0 +1,31 @@
+id: CT-25
+name: Risk and Book journal-evidence contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-RISK
+consumers: []
+active_consumers: []
+intended_consumers: [COMP-QMF-DATA]
+wiring_status: reserved-unwired
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0048, DEC-0065, DEC-0072, DEC-0074, DEC-0094]
+gaps: [GAP-0005, GAP-0025, GAP-0042, GAP-0043, GAP-0045, GAP-0046]
+purpose: "Reserve an unwired placeholder for future Book, BMS, SQS, news-control, kill-switch, and risk-transition evidence."
+invariants:
+  - "News blocking is pair-scoped and distinct from SQS."
+  - "No active Data consumer or persistence handoff is wired."
+  - "The placeholder does not authorize direct store writes or imply that qmf-data already consumes the evidence."
+  - "Event fields, cadence, correlation, retention, news windows, SQS measures, stop-out events, priority outcomes, and redaction remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0025
+  fields: null
+  fields_gap: GAP-0025
+  enums: null
+  enums_gap: GAP-0045
+  units: null
+  units_gap: GAP-0043
+  nullability: null
+  nullability_gap: GAP-0025

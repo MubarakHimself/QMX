@@ -1,0 +1,120 @@
+● Update(tracker\tickets\005-data-architecture.md)
+  ⎿  Added 4 lines
+      10  ## Question
+      11  
+      12  Choose QMX's data stack from the research findings (`research/0
+          2-data-foundation.md`): storage engines and layout for multi-pa
+          ir forex tick/bar history plus continuously collected live data
+          , the relational store, cross-pair analysis access, and the Duk
+          ascopy ingestion path ("engulf" candidate). Sized for one opera
+          tor, deployable on workstation + Linux VPS.
+      13 +                                                               
+      14 +## Progress (2026-08-18)                                       
+      15 +                                                               
+      16 +Deep-dive blueprint delivered to `reference/09-data-layer-bluep
+         +rint.md` (workflow over research/02+10, node primer, operator d
+         +ictation): six layers L0–L5 (ingest / raw evidence / processed 
+         +/ journal / research door with splits-by-default / backup), sto
+         +res-per-purpose matrix (Parquet+DuckDB+SQLite-inbox; PostgreSQL
+         + rejected), **ArcticDB verdict: NO for v1 — technical, not lice
+         +nce** (transaction-time only, no valid-time axis); **lineage: g
+         +raph model in append-only JSONL files, graph database deferred 
+         +until proven needed**; full journal stream table (12 streams, c
+         +adence + retention); paper-twin permanently on for alpha-decay 
+         +continuity; auto-detection = operator-owned rules.yaml over a f
+         +ixed metric catalog, flags notify but NEVER act. Eight yes/no q
+         +uestions queued for the operator (holdout months, backup cadenc
+         +e, Dukascopy risk posture, etc.). Nothing adopted yet — this ti
+         +cket's session ratifies.                                       
+
+● Update(tracker\map.md)  ⎿  Added 1 line
+      38  - **Data acquisition timing DECIDED (2026-08-17): build the plu
+          mbing now; downloading happens at first install.** Forward capt
+          ure is the one exception (operator-approved 2026-08-18): calend
+          ar recording starts now (`recorder/`, standalone script + statu
+          s screen, NOT a QMF module); live tick recording stays blocked 
+          on broker API access (ticket 006) and Dukascopy backfills tick 
+          history meanwhile, so nothing unrecoverable is lost. **SHIPPED 
+          2026-08-18:** task `QMX-Calendar-Recorder` runs 06:00 + 18:00 l
+          ocal, first week banked (96 events); feed cap ~2 downloads/5 mi
+          n — never add triggers casually; the feed has NO `actual` value
+          s (supports news-blackout gating, not surprise strategies); leg
+          al posture of automated archiving = open operator item.
+      39  - **DeepSeek/Cordis harness model scoped to the agentic era (op
+          erator ruling 2026-08-18):** the Context/disposer/event-bus add
+          itions leave qmf-core V1; the agentic system may later adopt th
+          e DeepSeek harness design near-verbatim (UI layout aside). Stan
+          ding scope for current sessions: build everything EXCEPT the ag
+          entic system — i.e. the blocks it will one day use.
+      40  - [Locks session verdicts, 2026-08-18](tickets/002-qmf-minimal-
+          core.md) — Lock 1 "the Dictionary" (qmf-core) ACCEPTED as first
+           brick with heavy dictated inputs (heavy indicators live in the
+           MIS; pair-scoped kill switch; paper trading = standing state f
+          eeding alpha-decay sensing; promotion is HUMAN-ONLY, Mubarak's 
+          daily job; possibly multiple BMSs long-term; Book schema lives 
+          on GitBook, never assume it; data-layer emphasis). Lock 2 denie
+          d as bundled ("exam" banned; connection = simple and proceeds; 
+          sim≡live checklist → ticket 008). Lock 3: identity + graph line
+          age yes in principle, one-card-for-everything DENIED — deep stu
+          dy first (ticket 009). Lock 4 (agent page) deferred until QMF i
+          s documented. Lock 5 not ratified. ALL backtesting discussion →
+           ticket 008; Program/Campaign OFF (a prop firm is just a new Bo
+          ok; Book creation = agentic era). Full capture in the ticket. A
+          rtifact: [The Five Locks](../artifacts/2026-08-18-five-locks.ht
+          ml).
+      41 +- [Deep-dive pass, 2026-08-18 afternoon] — three studies delive
+         +red while operator was out (facts gathered, NONE adopted): [ide
+         +ntity & lineage study](tickets/009-identity-lineage-study.md) c
+         +losed → `reference/07` (three identity disciplines — fingerprin
+         +t/charter/occurrence — replace "one card"; "model" split into t
+         +hree kinds); data-layer blueprint → `reference/09` (six layers,
+         + ArcticDB NO for v1 on technical grounds, lineage graph-in-file
+         +s, 12-stream journal, paper-twin always on, 8 operator question
+         +s) — logged on [ticket 005](tickets/005-data-architecture.md); 
+         +answer-keys catalog → `reference/08` (external truth per module
+         + family; 3 highest-payback checks; honest gaps: fill model → 00
+         +8, zone semantics, Book schema needs machine-readable extractio
+         +n). Verdict artifact: [Three Deep Dives](../artifacts/2026-08-1
+         +8-three-deep-dives.html).                                      
+      42  - [Session accord — QMX Foundations v2](../artifacts/2026-08-17
+          -qmx-foundations.html) — QMF (Quant Mind Framework) is the umbr
+          ella, QML = bot library inside it; two deployables (installable
+           QMX app + one Trading VPS); everything builds on QMF; middle n
+          ode absorbed into the app (ML training ~quarterly in cloud sand
+          boxes, shadow rollout); Python core, Rust UI later, no Electron
+          , no MQL; forex on cTrader first, crypto later via agent-built 
+          adapters; no central backtest engine — backtesting decentralize
+          s into callable QMF components; build method = factory pipeline
+          , validation inside factory runs (modules ship with reference u
+          sage + tests); defaults ≠ mock data, mock data never ships, pro
+          duct ships with no bots; total clean slate (old repos deleted).
+      43  
+      44  ## Not yet specified
+
+● Now the verdict artifact — diagram-first, one page.
+
+● Write(artifacts\2026-08-18-three-deep-dives.html)
+  ⎿  Wrote 273 lines to artifacts\2026-08-18-three-deep-dives.html
+       1 <title>Three Deep Dives</title>
+       2 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?f
+         =Public+Sans:wght@400;600&family=IBM+Plex+Mono:wght@500&display=
+         swap">
+       3 <style>
+       5     --bg: #FAFAF7;
+       6     --surface: #FFFFFF;
+       7     --ink: #1C2430;
+       9     --line: #E3E2DC;
+      10     --accent: #0E6E5C;
+     … +476 lines (ctrl+o to expand)
+
+● Artifact(C:\Users\Mubarak\Desktop\QMX\artifacts\2026-08-18-three-deep-dives.ht
+          ml)
+  ⎿  Published ⧉ 
+     https://claude.ai/code/artifact/344d012c-69b1-4671-8374-7e7b4698ac64
+
+● Welcome back whenever you are — here's the verdict: ⧉ Three Deep Dives 
+  (https://claude.ai/code/artifact/344d012c-69b1-4671-8374-7e7b4698ac64). New
+  page, diagram-first, almost no text blocks.
+
+  The short version:
+

@@ -1,0 +1,31 @@
+id: CT-12
+name: Dataset release, split, and holdout contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-DATA
+consumers: []
+active_consumers: []
+intended_consumers: [COMP-QMF-REGISTRY, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE]
+wiring_status: reserved-consumers-unwired
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0044, DEC-0046]
+gaps: [GAP-0005, GAP-0024]
+purpose: "Identify reproducible research datasets and keep the final recent holdout outside the default research path."
+invariants:
+  - "Research data is split by default."
+  - "All history remains stored while the newest approximately twelve months form a sealed final holdout."
+  - "Registry, Indicators, and Structure are intended consumers only; no active dependency or read handoff is assigned before GAP-0024 resolves release and access semantics."
+  - "Release fields, split names, exact boundary arithmetic, reopening, one-look authorization, audit, and leakage rules remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0024
+  fields: null
+  fields_gap: GAP-0024
+  enums: null
+  enums_gap: GAP-0024
+  units: null
+  units_gap: GAP-0024
+  nullability: null
+  nullability_gap: GAP-0024

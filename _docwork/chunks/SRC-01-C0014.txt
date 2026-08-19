@@ -1,0 +1,120 @@
+  Two direct answers you asked for. Heavy indicators — yes, I understand, and 
+  your old architecture matches the fresh research exactly: heavy = things that
+  can't compute in milliseconds — regime detection over years of data,
+  volatility forecasting (GARCH-family), cross-pair correlation matrices,
+  clustering, any ML model inference — and they live in the MIS, publishing a
+  frozen view the bots read. Light = per-bar arithmetic like EMA, RSI, ATR —
+  bot-level. Custom indicators via genetic algorithms sit in the lab, free. Kill
+  switch: understood — news is pair-scoped, so it blocks only affected pairs
+  while everything else keeps trading; that's now recorded, along with
+  paper-trading as a standing state that keeps recording results for alpha-decay
+  sensing even when live trading is blocked. On Neo4j: lineage really is a
+  graph — whether it needs a graph database or graph-shaped records in plain
+  files is a data-layer decision, and per your own rule we won't box into either
+  yet. ArcticDB has a known technical weakness for our two-timestamp needs (it
+  tracks only one of the two times natively) — the data-layer session settles
+  the store choice.
+
+  Capturing all of it now, then firing the deep-study agent you asked for on the
+  identity question.
+
+● Update(tracker\tickets\002-qmf-minimal-core.md)
+  ⎿  Added 24 lines
+      16  Draft ready for the ~17:00 ratification pass: spec `artifacts/2
+          026-08-17-qmf-v1-spec-DRAFT.md` (module rings, 12 decisions D1–
+          D12 with recommendations, conventions, tonight's fence = Ring 0
+           + Ring 1 + conformance harness) and presentation artifact `art
+          ifacts/2026-08-17-qmf-minimal-core.html`. Resolve when Mubarak 
+          ratifies/amends D1–D9 and blesses the fence; then flip spec DRA
+          FT → RATIFIED and he exports the pack to the documentation fact
+          ory.
+      17  
+      18  **Update (afternoon review):** D2 (own kernel) and D3 (simulato
+          r-as-adapter) are REOPENED pending ticket 007's verdict briefs 
+          — Mubarak wants the mature-platform evidence first, and "simula
+          tor" caused a vocabulary collision (he read it as an FX-Replay-
+          style human chart-replay tool; the spec meant the backtest fill
+           engine — rename at ratification). New operator ruling folded i
+          n: QMF never adopts third-party strategy-family libraries (SMC/
+          ICT/etc.) — it is the toolbox for building our OWN versions of 
+          those ideologies. Ratification pass now happens after the repo-
+          study returns.
+      19 +                                                               
+      20 +## Session 2026-08-18 — locks discussion capture (operator verd
+         +icts + dictation)                                              
+      21 +                                                               
+      22 +**Lock verdicts:**                                             
+      23 +- **Lock 1 "the Dictionary" (qmf-core): ACCEPTED as first brick
+         +**, with every dictated input below folded in. The six freeze-c
+         +hoices (UTC-ns clock, (venue,symbol) identity, TA-Lib reference
+         + math, three backtest honesty levels, SR* bar, result-label tup
+         +le) remain PROPOSALS to be explicitly confirmed during the docu
+         +mentation pass — not yet frozen.                               
+      24 +- **Lock 2: DENIED as bundled; the word "exam" is BANNED** (col
+         +lides with the legacy Examination Engine and the Book-exam conc
+         +ept — bits still being recovered). Split: (a) broker CONNECTION
+         + contract = simple, proceeds (cTrader Open API, Python, no MQL 
+         +ever); (b) the sim≡live parity checklist → input to ticket 008'
+         +s backtesting session. Crypto venue plurality ("crypto is a mes
+         +s, many ways to trade") = extensibility requirement on the venu
+         +e seam.                                                        
+      25 +- **Lock 3: identity + lineage ratified IN PRINCIPLE** (lineage
+         + is explicitly graph-shaped — Neo4j analogy, grows and compound
+         +s); **one-card-for-EVERYTHING DENIED as premature abstraction**
+         +: "model" is ambiguous (ML / trading / analysis model); a Book 
+         +is very specific — own schema on GitBook, operator-in-the-loop 
+         +deployment — and does NOT go under a generic card; a bot may co
+         +ntain MULTIPLE confluences ("heavy bots"; sky is the limit); cr
+         +ypto/prop-firm may need different shapes. Deep study against re
+         +al QMX docs required before re-proposal → ticket 009.          
+      26 +- **Lock 4 (agent page): DEFERRED** — "we can't front-load an a
+         +gent page without proper documentation; QMF is very incomplete.
+         +" Revisit after the library and its docs exist.                
+      27 +- **Lock 5 (answer keys): NOT ratified** — rework grounded in a
+         +ctual QMX components first.                                    
+      28 +- **Backtesting: ALL of it** (incl. the overfitting-statistics 
+         +discussion — old engine had Monte Carlo / walk-forward / PBO, "
+         +heavy and solid" but with wrong claims / over-engineered) **mov
+         +es wholesale to ticket 008** — "too early for me to discuss bac
+         +ktesting"; agents run the backtests, so the design session must
+         + account for that. **Program/Campaign: OFF** — a prop firm is j
+         +ust a new Book; Book creation (incl. prop-firm Books) is an age
+         +ntic-era activity under QMX itself.                            
+      29 +                                                               
+      30 +**Operator dictation — architecture facts for the documentation
+         + factory:**                                                    
+      31 +- Data lake: "handle it like a good data scientist" — agents ge
+         +t properly-split data BY DEFAULT (splits/discipline built into 
+         +the access path so agents can't skip data-science technique).  
+      32 +- Indicators, three tiers: (1) HEAVY indicators (not millisecon
+         +d-computable — regime models, volatility forecasts, correlation
+         + matrices, ML inference) live in the MIS — old-architecture rul
+         +ing reaffirmed; (2) light bot/strategy-level indicators; (3) cu
+         +stom indicators built by experimentation (genetic algorithms pr
+         +oven viable).                                                  
+      33 +- Data types must cover DOM / level-2/3 / order flow / tape. Ol
+         +d QML derived options-style gamma/theta LEVELS recomputed for f
+         +orex (and later crypto) — a levels family to revisit. Crypto ha
+         +s many inefficiencies; deliberately deferred until QMX is a pla
+         +tform, then EXTEND QMX's crypto capabilities (never a separate 
+         +version).                                                      
+      34 +- Broker adapter: READ PROPER DOCUMENTATION (emphatic, repeated
+         +) — mostly the trading-node docs.                              
+      35 +- Books & BMS: Book variants carry lineage/types (scalping-book
+         + variants; prop firms same logic); possibly MULTIPLE BMSs long-
+         +term (crypto may need standalone versions); current Book/BMS = 
+         +"the stable version I could think of — if you want to enhance i
+         +t, you propose"; the Book schema is already documented on GitBo
+         +ok — NEVER assume it.                                          
+      36 +- Trading-node depth warning: exit mechanisms are "a whole worl
+         +d" — fast invalidation, dynamic SL/TP system, correlation ledge
+         +r; Book/BMS calculations have very many variables (some defined
+         +, some defaults, some editable, some locked) — "very surgical, 
+         +don't take them for granted."                                  
+      37 +- Kill switch: news is PAIR-SCOPED — block only affected pairs 
+         +while the system keeps trading everywhere else; globally we zoo
+         +m out (multi-pair by design).                                  
+      38 +- Paper trading is a STANDING STATE, not a waiting room: bots p
+         +aper-trade under documented conditions (kill switch fired, dail
+         +y limit hit, prop-firm rules) and results are recorded continuo
+         +usly regardless — feeding ALPHA-DECAY sensing, which needs unin

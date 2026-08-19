@@ -1,0 +1,113 @@
+         +terrupted data points. Alpha decay is a huge concept; consider 
+         +it throughout the system.                                      
+      39 +- Promotion: HUMAN-ONLY — Mubarak personally, as a daily activi
+         +ty; no agent promotes, ever; he may promote a Python-only bot (
+         +confirms guidelines-not-walls); promotion machinery needs littl
+         +e design — the lab and live are the two zones that matter.     
+      40 +- Metrics & reports: agent-facing; must show WHY a strategy fai
+         +ls — ideally which component; unbiased; triage = improve or cut
+         + loose; "see the inside of the strategy, not just pass/fail."  
+      41 +- Data layer (his repeated emphasis): ingestion ≠ processed col
+         +lection ≠ processing method; trading journal; per-component col
+         +lection (what do bots / Books / BMS / MIS / SQS / kill-switch e
+         +ach record — cadence, quantity, duration); automatic detection 
+         +with operator-set ranges (non-technical operator wants if-this-
+         +then-that flags); right store per purpose (ArcticDB open questi
+         +on; lineage is graph-shaped).                                  
+      42 +- Process meta-ruling (repeated): Claude underestimates depth —
+         + triggers alone (e.g. multi-timeframe-analysis triggers) can be
+         + a two-day session inside QMX; bite off only what one session c
+         +an truly handle; parallel sessions are his coverage mechanism. 
+
+● Update(tracker\map.md)
+  ⎿  Added 1 line
+      18  - **No Claude attribution in commits** — never add "Co-Authored
+          -By: Claude" or similar lines; operator's explicit standing rul
+          e.
+      19  - Repo studies run in WAVES: wave 1 = direct links; the catalog
+           shortlist auto-triggers wave 2 (and 3 if needed) — the awesome
+          -* maps compound and Mubarak expects that expansion.
+      20  - HITL tickets: invoke /grilling + /domain-modeling.
+      21 +- Banned vocabulary: "plugins" (extensions are not plugins); "e
+         +xam" (collides with the legacy Examination Engine / Book-exam c
+         +oncept, 2026-08-18); "engine" for backtesting (it is a library)
+         +; no "fake counterparty" framing. Give reading time — never del
+         +iver an artifact and fire questions in the same beat.          
+      22  - Research protocol: findings are NEVER auto-adopted. Claude pr
+          esents what was found, what it proposes, where it agrees/disagr
+          ees — then Mubarak and Claude discuss and ratify ("agree to dis
+          agree" pass). Applies to every research return.
+      23  - Authority (precedence order, per the lineage addendum): **cur
+          rent operator rulings override every historical layer**; GitBoo
+          k (https://elios-1.gitbook.io/qmx) = the Book/BMS governance ba
+          seline, NOT a complete source — mechanics it names but never de
+          fines are recovered from the legacy `QMX-discussion` corpus; wi
+          ki/BMAD counts claim-by-claim only; `C:\Users\Mubarak\Documents
+          \QMX` old corpus and local `.recovery/` = evidence only, fresh 
+          ratification required; cordiverse composability paper = agentic
+           harness only, never cite it for QMF or the node.
+      24  - **Don't-box-in principle (operator ruling 2026-08-18, platfor
+          m-wide):** QMF is an open toolbox — always usable alongside pla
+          in Python/NumPy/Pandas and any external library or method (GAs,
+           trees, RL, LLMs, synthetic data — methods change). Uniformity 
+          comes from shared contracts and conventions, never from walls. 
+          Strictness concentrates in exactly two places: the agentic harn
+          ess (agents are non-deterministic; DeepSeek-grade discipline ea
+          rns its place there) and the promotion gate into the live money
+           path (order, not lock-in). Research/experimentation lanes stay
+           free.
+
+● Update(tracker\map.md)
+  ⎿  Added 1 line
+      37  - **Process rulings (2026-08-17 night):** Claude never scaffold
+          s/initializes projects — Mubarak's own skills do that; document
+          ation restart is framework-first, trading node later; code is w
+          ritten for humans AND agents ("I might also need to understand 
+          this code"); the platform is fully extensible but the word "plu
+          gins" is banned; build incrementally, one topic per session (su
+          persedes the 2–3-day full-draft plan); rebuild ceiling ~twice/y
+          ear, "Bloomberg Terminal from scratch" durability ambition.
+      38  - **Data acquisition timing DECIDED (2026-08-17): build the plu
+          mbing now; downloading happens at first install.** Forward capt
+          ure is the one exception (operator-approved 2026-08-18): calend
+          ar recording starts now (`recorder/`, standalone script + statu
+          s screen, NOT a QMF module); live tick recording stays blocked 
+          on broker API access (ticket 006) and Dukascopy backfills tick 
+          history meanwhile, so nothing unrecoverable is lost.
+      39  - **DeepSeek/Cordis harness model scoped to the agentic era (op
+          erator ruling 2026-08-18):** the Context/disposer/event-bus add
+          itions leave qmf-core V1; the agentic system may later adopt th
+          e DeepSeek harness design near-verbatim (UI layout aside). Stan
+          ding scope for current sessions: build everything EXCEPT the ag
+          entic system — i.e. the blocks it will one day use.
+      40 +- [Locks session verdicts, 2026-08-18](tickets/002-qmf-minimal-
+         +core.md) — Lock 1 "the Dictionary" (qmf-core) ACCEPTED as first
+         + brick with heavy dictated inputs (heavy indicators live in the
+         + MIS; pair-scoped kill switch; paper trading = standing state f
+         +eeding alpha-decay sensing; promotion is HUMAN-ONLY, Mubarak's 
+         +daily job; possibly multiple BMSs long-term; Book schema lives 
+         +on GitBook, never assume it; data-layer emphasis). Lock 2 denie
+         +d as bundled ("exam" banned; connection = simple and proceeds; 
+         +sim≡live checklist → ticket 008). Lock 3: identity + graph line
+         +age yes in principle, one-card-for-everything DENIED — deep stu
+         +dy first (ticket 009). Lock 4 (agent page) deferred until QMF i
+         +s documented. Lock 5 not ratified. ALL backtesting discussion →
+         + ticket 008; Program/Campaign OFF (a prop firm is just a new Bo
+         +ok; Book creation = agentic era). Full capture in the ticket. A
+         +rtifact: [The Five Locks](../artifacts/2026-08-18-five-locks.ht
+         +ml).                                                           
+      41  - [Session accord — QMX Foundations v2](../artifacts/2026-08-17
+          -qmx-foundations.html) — QMF (Quant Mind Framework) is the umbr
+          ella, QML = bot library inside it; two deployables (installable
+           QMX app + one Trading VPS); everything builds on QMF; middle n
+          ode absorbed into the app (ML training ~quarterly in cloud sand
+          boxes, shadow rollout); Python core, Rust UI later, no Electron
+          , no MQL; forex on cTrader first, crypto later via agent-built 
+          adapters; no central backtest engine — backtesting decentralize
+          s into callable QMF components; build method = factory pipeline
+          , validation inside factory runs (modules ship with reference u
+          sage + tests); defaults ≠ mock data, mock data never ships, pro
+          duct ships with no bots; total clean slate (old repos deleted).
+      42  
+      43  ## Not yet specified
+

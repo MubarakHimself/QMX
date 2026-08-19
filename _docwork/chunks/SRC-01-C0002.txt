@@ -1,0 +1,117 @@
+● The digest workflow is still running (4 readers + inventory, then cross-check
+  and synthesis on Opus). I have the draft spec and research synthesis loaded;
+  once the transcript digest lands I'll give you my opinion on direction, gaps,
+  and leverage, then run the first grilling round with concrete questions.
+  Holding until the workflow reports.
+
+✻ Sautéed for 2m 37s
+
+❯ let me wait                                                                   
+
+● Good — it'll report here the moment it finishes, and I'll come back with the
+  divergence report, my honest verdict on the QMF direction, and the first round
+  of questions.
+
+✻ Brewed for 4s
+❯ Oh yeah, you've just said something above that. I think I'll need to clarify  
+  it now. So you see I don't like having reports or documents. Trust me, I'm    
+  not going to read those documents. Okay, it's better we discuss either in     
+  chat or you produce an artifact that has diagrams or whatever because I don't 
+  like reading blocks of text, I'm not going to lie to you. Okay, so try to     
+  keep it in chat or artifacts or both.                                         
+
+● Understood — the workflow's reports are raw material for me, not deliverables
+  for you. What you'll get is a chat discussion in plain words plus, if it earns
+  its place, one artifact with diagrams. I'll update my memory so this sticks
+  across sessions.
+
+  Recalled 1 memory, wrote 1 memory (ctrl+o to expand)
+
+● Saved. While we wait: nothing I've run writes any new report files into your
+  repo — the workflow's outputs come back to me in memory, I digest them, and
+  you get the conclusions here in chat. If the direction discussion turns out to
+  need a visual (the QMF ring map, what's decided vs open, where the leverage
+  is), I'll build that as one diagram artifact rather than prose.
+
+✻ Churned for 20s
+
+❯ I'm so sorry about this back and forth. Okay, so the other thing is if you    
+  want to ask a question, it's better you ask me with that tool of yours, the   
+  Ask User tool, but with recommendations, because like I said, I'm not         
+  technical. Please, actually, in fact, I don't know what I'm doing. I'm not    
+  going to lie to you. I'm just ideating                                        
+
+● No apology needed — that's a useful ruling. Questions will come through the
+  Ask User tool, each with a recommended option first, phrased in plain words.
+  And "I'm just ideating" changes how I treat your authority: you rule on intent
+  and goals ("what should this thing do for me"), I carry the technical
+  judgment and only bring you decisions where your intent genuinely decides it.
+  Adding that to memory now.
+
+  Wrote 1 memory (ctrl+o to expand)
+
+● Saved. Still waiting on the digest workflow — once it lands you'll get my
+  verdict in chat, then a first round of questions through the Ask User tool
+  with recommendations attached.
+
+✻ Cooked for 13s
+
+❯ Okay, this is I think the other thing I've noted. So I wanted to tell you. I  
+  don't know if you actually already knew this that for any dynamic workflows,  
+  okay, you should know or you should split when to use a dynamic workflow and  
+  when to use a sub-agent because at times dynamic workflows are too long and   
+  okay, they are thorough, don't get me wrong, but at times are simple or two   
+  sub-agents could really do that trick. Okay, then the models, yeah, use       
+  Sonnet. I'm seeing you already know that Sonet and Opus. Don't use Fable for  
+  now. Use Fable only and only when you need should I say high-end thinking or  
+  reasoning. If you need like a devil's advocate or something, okay? So I       
+  wanted to note that out. I don't know if you could use OPUS 4.8. I really     
+  wanted to use that model more. Yeah,let me wait now as they are working       
+
+● Good rulings — I already lean that way, but I'll pin them so every session
+  inherits them. One honest caveat: when I set a subagent's model I choose the
+  family (Sonnet, Opus, Haiku, Fable), and "Opus" resolves to whatever Opus
+  version the harness currently serves — I can't pin 4.8 specifically from here.
+  In practice picking Opus gets you the strongest available Opus, which is what
+  you want. Updating memory and the map notes now.
+
+  Wrote 1 memory (ctrl+o to expand)
+
+● Update(tracker\map.md)
+  ⎿  Added 1 line, removed 1 line
+      14  - Operator: Mubarak — non-technical, dictates (expect transcrip
+          tion noise), reads diagrams not text walls: deliver artifacts w
+          ith diagrams + short numbered yes/no lists. Never ask questions
+           Claude can answer itself ("bogus questions"). Plain words firs
+          t, his authority on all rulings.
+      15  - Sessions stay under ~40% of context; one ticket per session (
+          research tickets excepted).
+      16  - Pipeline: session agrees concepts → artifacts (copy into `art
+          ifacts/`) → documentation-factory skill → Kanban skill → Mubara
+          k's software factory ships autonomously → review.
+      17 -- Subagent/workflow models: **never Fable**; mix Opus (deep/har
+         -d stages) and Sonnet (lighter stages).                         
+      17 +- Subagent/workflow models: Sonnet (light stages) + Opus (deep 
+         +stages, use liberally); **Fable only for high-end reasoning** —
+         + devil's advocate, adversarial verdicts, hardest synthesis (ope
+         +rator ruling 2026-08-18, supersedes the earlier "never Fable").
+         + Prefer 1–2 subagents over a dynamic workflow when the task is 
+         +simple.                                                        
+      18  - **No Claude attribution in commits** — never add "Co-Authored
+          -By: Claude" or similar lines; operator's explicit standing rul
+          e.
+      19  - Repo studies run in WAVES: wave 1 = direct links; the catalog
+           shortlist auto-triggers wave 2 (and 3 if needed) — the awesome
+          -* maps compound and Mubarak expects that expansion.
+      20  - HITL tickets: invoke /grilling + /domain-modeling.
+
+● Both saved — memory for future sessions, map notes for this project. The
+  running workflow already fits your ruling (Sonnet readers, Opus for
+  cross-check and synthesis, no Fable workers). Waiting on it now.
+
+✻ Churned for 21s
+
+● Dynamic workflow "Digest qmf-1.txt session transcript, cross-check against the
+wayfinder map, synthesize QMF state + gaps + leverage points" completed · 10m 
+18s
+

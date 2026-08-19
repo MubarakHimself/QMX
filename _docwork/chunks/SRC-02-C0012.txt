@@ -1,0 +1,110 @@
+  hub.com/PyPortfolio/PyPortfolioOpt]],[[https://github.com/hugo2046/QuantsPlay 
+  book]],[[https://github.com/JerBouma/FinanceToolkit]],[[https://github.com/hu 
+  dson-and-thames/mlfinlab]],[[https://github.com/dcajasn/Riskfolio-Lib]],[[htt 
+  ps://github.com/zvtvz/zvt]],[[https://github.com/EliteQuant/EliteQuant]],[[ht 
+  tps://github.com/LLMQuant/quant-wiki]],[[https://github.com/cybergeekgyan/Qua 
+  nt-Developers-Resources]],[[https://github.com/letianzj/QuantResearch]],[[htt 
+  ps://www.quantframe.io/article]],[[https://github.com/Lumiwealth/lumibot]],[[ 
+  https://github.com/ranaroussi/qtpylib]]      Alright now so I hope that has   
+  been clear. So we are not borrowing any, but we should have a library that    
+  can enable us you've already got my concept there, so that's the first part   
+  of the dictation. Yeah, no frame I can't see trader adapter none models       
+  proper firm rules. Yeah, most of these are going to be in-house. Trust me     
+  most of these are in-house. No maintained library detect zones, honestly,     
+  obviously. In fact, most of these are in-house. We are doing these            
+  ──── (0 lines hidden) ─────────────────────────────────────────────────────── 
+   is a GitHub that allowed us to get exactly what we need from a GitHub repo.  
+  I don't know about it, I've forgotten the name, but all I know is that it     
+  exists. Okay, well, I don't know if I've overcomplicated things, I really     
+  don't, but we might need to dig deep here. I just want to, you know, try so   
+  much to build something that I want, especially the framework. I don't want   
+  to update this every two weeks, okay? I mean, true, it's viable, but I really 
+  want to try and focus so much on, should I say, actual research development   
+  process done of using the platform, yeah, and actual trading than this,       
+  whatever than actually like developing the platform itself. I don't know if   
+  you get me, because building the platform is one, then using it to develop    
+  bots is another, and strategies and maintaining them. Okay, then we also have 
+  a problem of alpha decay. Now, in the very first versions of QMX, we had      
+  this thing, it was meant to help detect alpha decay. Now, it was part of QML. 
+  In other words, when a stretcher defaults below it's backtested results,      
+  yeah, so in other words, the edge is decaying. You know what I'm talking      
+  about. But also now defining what an edge is. Now, based off what I recall,   
+  an edge was actually defined by the book, the matrix of the book it is going  
+  to be in, or as right now we have discovered the books, not a singular book.  
+  Okay, since our system has grown. Now, if you consider that, you also now     
+  consider the fact or the variable that you know, okay, the default book       
+  settings at that time, or because the book had you know configurable values,  
+  or actually, that can become a problem. We also have a lot of architecture    
+  issues my days to think through, I think this is my brain dump. I actually    
+  haven't finished reading through your artifact, and I don't think I am. I     
+  think let's try to dig deep now. The maps, there are so many platforms there  
+  that are like maps, they provide a lot of information. Okay, but try to be    
+  efficient in this work because seriously, it's a lot. Okay, I think this      
+  can't go. Okay, it can go through one dynamic workflow, but that workflow is  
+  gonna be big. Trust me, it's a big one. And try to be efficient and           
+  organized. Please, so let me leave you handle this for now. I'm not           
+  dismissing your previous artifact. No, I feel like it is okay, but I feel     
+  like your blast radius was low. Now, I'm trying to give you a little bit more 
+  of a blast radius. You get me, and a few ideas here and there. Forgive any    
+  gibberish I've been dictating                                                 
+
+● That's a proper blast radius — 22+ repos, a study mandate, and three
+  vocabulary knots to untie. First, quick housekeeping: checking what those
+  untracked files in your folder actually are, then saving your links, then
+  firing the big workflow.
+  Ran 1 shell command (ctrl+o to expand)
+
+● Found them — a research agent downloaded two Polars wheel files and a df.xml
+  into your root while testing. Checking the xml before deleting, since I didn't
+  create it knowingly.
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Write(.gitignore)
+  ⎿  Wrote 16 lines to .gitignore
+       1 # cloned reference repositories (large, recreatable from referen
+         ce/links.md)
+       2 reference/repos/
+       3 
+       4 # python
+       6 *.pyc
+       7 .venv/
+       8 *.whl
+       9 
+      10 # data downloads never belong in git
+     … +7 lines (ctrl+o to expand)
+
+● Write(reference\links.md)
+  ⎿  Wrote 42 lines to reference\links.md
+       1 # Reference links — supplied by Mubarak, 2026-08-17
+       3 Study protocol: clone locally (shallow, `.git` removed) into `re
+         ode transplantation, licences respected and recorded per repo. F
+         idea-ledger.md` (idea | source | what we borrow | why | how QMF 
+       4 
+       5 ## Frameworks & platforms (deep code study)
+       7 | Repo | His note |
+       9 | https://github.com/nautechsystems/nautilus_trader (docs: https
+         same core as live; "we don't have to reinvent the wheel" — kerne
+      10 | https://github.com/je
+     … +58 lines (ctrl+o to expand)
+
+● Now firing the big workflow — Sonnet for the mechanical cloning and
+  cataloging, Opus for the deep code studies and the two verdict briefs.
+
+● Workflow(Clone 25+ reference repos locally, deep-study them for mental models,
+          produce the idea ledger plus kernel and backtesting verdict briefs)
+  ⎿  /workflows to view dynamic workflow runs
+
+❯ Okay, this is a simple nudge. I don't mean to pose you or anything, yeah? I   
+  hope it arrives me like when you are done thinking. But what I wanted to say  
+  is that for the book and the back testing, you remember the idea I had about  
+  the agents being like specific about a specific currency, that thing of the   
+  library talked about a few hours ago. My whole point is: yeah, I think each   
+  book might have different mechanisms of testing. I don't know if you get me,  
+  which means we are trying to be as modular as possible. I don't know if       
+  that's the right word to even use. So, which means if I'm testing a boat, I   
+  can test it against a scalp, I can test it against, you know, different types 
+  of scalpers, rather, scalping books. I can just sit against their trading.    
+  You get me. I know these are different mechanisms, but I'm just trying to get 
+  the point at home, okay? This is a simple nadia again, please                 
+

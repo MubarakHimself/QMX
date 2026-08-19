@@ -1,0 +1,119 @@
+● Write(tracker\tickets\007-repo-deep-study.md)
+  ⎿  Wrote 16 lines to tracker\tickets\007-repo-deep-study.md
+       1 ---
+       2 id: 007
+       3 title: Reference repo deep study
+       4 label: wayfinder:research
+       5 status: claimed
+       6 assignee: claude-session-2026-08-17
+       7 blocked-by: []
+       8 ---
+       9 
+      10 ## Question
+     … +21 lines (ctrl+o to expand)
+
+● Update(tracker\tickets\002-qmf-minimal-core.md)
+  ⎿  Added 2 lines
+      14  ## Progress
+      15  
+      16  Draft ready for the ~17:00 ratification pass: spec `artifacts/2
+          026-08-17-qmf-v1-spec-DRAFT.md` (module rings, 12 decisions D1–
+          D12 with recommendations, conventions, tonight's fence = Ring 0
+           + Ring 1 + conformance harness) and presentation artifact `art
+          ifacts/2026-08-17-qmf-minimal-core.html`. Resolve when Mubarak 
+          ratifies/amends D1–D9 and blesses the fence; then flip spec DRA
+          FT → RATIFIED and he exports the pack to the documentation fact
+          ory.
+      17 +                                                               
+      18 +**Update (afternoon review):** D2 (own kernel) and D3 (simulato
+         +r-as-adapter) are REOPENED pending ticket 007's verdict briefs 
+         +— Mubarak wants the mature-platform evidence first, and "simula
+         +tor" caused a vocabulary collision (he read it as an FX-Replay-
+         +style human chart-replay tool; the spec meant the backtest fill
+         + engine — rename at ratification). New operator ruling folded i
+         +n: QMF never adopts third-party strategy-family libraries (SMC/
+         +ICT/etc.) — it is the toolbox for building our OWN versions of 
+         +those ideologies. Ratification pass now happens after the repo-
+         +study returns.                                                 
+
+● Update(tracker\map.md)
+  ⎿  Added 1 line
+      22  ## Decisions so far
+      23  
+      24  - [QMF research sweep](tickets/001-qmf-research-sweep.md) — 11 
+          study files + synthesis delivered to `research/` (facts gathere
+          d, NOT yet adopted; ratification pass = ticket 002). Entry poin
+          t: `research/00-qmf-synthesis-module-map.md`; digest: `artifact
+          s/2026-08-17-qmf-minimal-core.html`.
+      25 +- Operator rulings (2026-08-17 afternoon) — **Toolbox principle
+         +**: QMF never adopts third-party strategy-family libraries (SMC
+         +, ICT, scalper packs…); it exists so Mubarak/agents can build t
+         +heir OWN custom versions of those ideologies. Repo studies extr
+         +act mental models only — no code transplantation, licences resp
+         +ected. **Permanent product constraint**: no futures or options,
+         + ever; stocks (day-trading) possibly later. **Bot × Book testin
+         +g**: each Book may carry its own testing mechanism — one bot te
+         +stable against many Books (scalping variants, prop-firm eval vs
+         + funded) as a matrix.                                          
+      26  
+      27  - [Session accord — QMX Foundations v2](../artifacts/2026-08-17
+          -qmx-foundations.html) — QMF (Quant Mind Framework) is the umbr
+          ella, QML = bot library inside it; two deployables (installable
+           QMX app + one Trading VPS); everything builds on QMF; middle n
+          ode absorbed into the app (ML training ~quarterly in cloud sand
+          boxes, shadow rollout); Python core, Rust UI later, no Electron
+          , no MQL; forex on cTrader first, crypto later via agent-built 
+          adapters; no central backtest engine — backtesting decentralize
+          s into callable QMF components; build method = factory pipeline
+          , validation inside factory runs (modules ship with reference u
+          sage + tests); defaults ≠ mock data, mock data never ships, pro
+          duct ships with no bots; total clean slate (old repos deleted).
+      28  
+
+● Update(tracker\map.md)
+  ⎿  Added 3 lines
+      36  - Research lane: hypothesis discovery (papers/videos/chat), gen
+          etic algorithms over indicators, experimentation environments
+      37  - Crypto expansion (~3–4 months out)
+      38  - Live-money safety ruling — re-raise during trading-node spec 
+          sessions
+      39 +- Alpha-decay detection (old QML feature to rebuild): live perf
+         +ormance degrading below backtest; complicated because "edge" wa
+         +s defined relative to a Book's configurable values, and Books a
+         +re now plural                                                  
+      40 +- MIS model stack from the old system: Kronos (time-series mode
+         +l) + BOCPD — candidates to re-ratify during the MIS session    
+      41 +- Mubarak plans a Windows → Linux (Omakub) switch soon; cTrader
+         + need not be installed locally — softens the TA-Lib-on-Windows 
+         +concern                                                        
+      42  - Prime Market Terminal (https://prime-terminal.com/) — macro-t
+          rader terminal, reference for the agentic/macro lane; Mubarak d
+          oubts he needs it
+      43  - Currency knowledge libraries — agent fleets building per-curr
+          ency research libraries (JPY, AUD…) from papers/books/repos/web
+          ; NOT control limits directly: they fuel hypothesis proposals a
+          nd give agents real context ("not working with thin air"); some
+           strategies use them, some don't; key use: narrowing pair choic
+          e for prop firms (stable currencies, "cleaner setups" — which p
+          air for passing a challenge vs which for funded phase); agentic
+           lane (RLM + shepherd-agent sketch)
+      44  - Backtesting mechanism as part of QMF — decentralized callable
+           components stand (no monolith), but the mechanism itself must 
+          be designed and built inside QMF; scope it in the minimal core 
+          (ticket 002)
+
+  Wrote 1 memory (ctrl+o to expand)
+
+● The big study is running — 15 agents, Sonnet cloning and cataloging, Opus
+  reading code. Everything you dumped is captured. Now the answers you asked
+  for, in plain words:
+
+  The "simulator" mix-up — we were talking about two different things. You
+  pictured FX Replay / Sierra Charts: a human watches a chart replay and
+  practices. That tool is not in the plan (it could be a later UI toy). What the
+  spec called "SimBroker" is the fill engine inside backtesting — the piece of
+  code that answers "at this candle, with this spread, would your order have
+  filled, and at what price?" Removing it removes backtesting itself. So nothing
+  to remove — just a bad name. I'll rename it at ratification, likely just "the
+  backtest fill engine."
+

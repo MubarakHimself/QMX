@@ -1,0 +1,27 @@
+id: CT-11
+name: Evidence-persistence contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-DATA
+consumers: [COMP-QMF-DATA-STORE]
+layer_from: backend
+layer_to: data
+decisions: [DEC-0038, DEC-0042, DEC-0044, DEC-0045, DEC-0047]
+gaps: [GAP-0005, GAP-0020, GAP-0021, GAP-0022, GAP-0023, GAP-0026]
+purpose: "Persist immutable raw evidence, processed records, and their identities through a replaceable data-layer seam."
+invariants:
+  - "Retention follows registry:raw_history_retention_policy; this contract does not duplicate the configured value."
+  - "Corrections append evidence instead of silently overwriting prior observations."
+  - "Physical engines, schemas, partitions, indexes, compression, migrations, compaction, and retention mechanics remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0021
+  fields: null
+  fields_gap: GAP-0023
+  enums: null
+  enums_gap: GAP-0020
+  units: null
+  units_gap: GAP-0023
+  nullability: null
+  nullability_gap: GAP-0022

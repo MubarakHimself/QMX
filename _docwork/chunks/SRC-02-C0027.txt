@@ -1,0 +1,120 @@
+  So the kernel, it's not about the size of the engine because that guy built   
+  his 1.1 million, but you are forgetting that this guy is building for futures 
+  trading a lot of CFDs, in fact. I don't know if you're understanding me, so   
+  he's building for crypto CFDs. He's building combining a lot of an engine     
+  that combines all of those. While for us, we need specificity, and also if    
+  you consider the bloody thing I told you about the library of, for example, a 
+  currency. I don't know if you are seeing why I'm refusing this thing          
+  outright. I feel like it really doesn't satisfy my needs. I really feel like  
+  I have less control. And let me say this again: the problem is not about how  
+  much work to do, the problem is about can I my problem is how long will this  
+  take without me rebuilding? In fact, I don't want to rebuild. I'm not trying  
+  to get a simple fix, nor am I trying to get something. I'm going to be using, 
+  then later I'll have to patch issues, and in fact, it can produce wrong       
+  results. That those very wrong results are not going to be used properly. You 
+  know, I don't want to be two months in and not understanding why my           
+  strategies are failing. I want absolute complete control over QMX. That's why 
+  I said we are borrowing mental models. I refused code specifically for such   
+  reasons. Not just about licenses, no. That's my rant. I don't know if you get 
+  me. In fact, I'm not going to read through the rest of the whole thing.       
+  Okay, let me read through it. But let me first pause. But I've been           
+  seriously, I don't want to use this guy's thing, and my argument, I don't     
+  know if it stands or not.Alright, so you first take that in while I finish    
+  reading the remaining of the artifact                                         
+
+● Taken in fully — and this time it closes the question rather than reopening
+  it. Your argument stands on technical merit, not just preference:
+
+  1. "My bots would have to fit their engine" — correct, and it's the verdict's
+  own finding: adopting Nautilus means your agents' surface wraps their Strategy
+  API, and their semantics leak into every bot ever written. The whole point of
+  QMF's typed schema is that agents bind to your contracts.
+  2. "Less control over metrics and overfitting logic" — correct. QMX's entire
+  integrity story is that the framework computes verdicts from arithmetic you 
+  ratified (registered metric sets, your budget rules). Inside someone else's
+  engine, the load-bearing numbers come from code you can't read — and theirs is
+  Rust your factory can't patch. Your PBO/overfitting machinery isn't even in
+  their roadmap; they list it as permanently out of scope.
+  3. "Agents in sandboxes, compounding" — this is the decisive one, and it
+  strengthens the build case: a small, pure-Python QMF installs into any
+  throwaway sandbox in seconds. And because every Run is content-addressed, a
+  hundred sandboxes can backtest independently and their results merge into one
+  ledger with automatic dedup — distributed by design, no central bottleneck. A
+  heavyweight Rust-wheel engine is exactly the wrong passenger for that
+  architecture.
+  4. "I don't want to rebuild in a few months" — Nautilus is mid-rebuild right 
+  now (their v1→v2 migration). Adopting it means inheriting someone else's
+  rebuild on someone else's schedule.
+
+  So: D2 is closed — build, ratified on your ruling. The 3-day spike is 
+  cancelled — it existed only to keep my recommendation honest, and your
+  argument reaches the same destination with reasons the spike can't improve on.
+  Nautilus stays what everything else is: mental models in the ledger, code
+  never.
+
+  And the prop-firm correction is absorbed for good this time: the prop-firm
+  book is not decided now — it's a Book (or books) you'll create later with the
+  agentic system, its own long discussion. What we build now is only the generic
+  machinery (a rule schema and phase-machine capability that can hold any
+  firm's rules when that day comes). FTMO is off the ratification list entirely.
+  Updating the artifact and records now.
+
+  Made 4 scratchpad edits +21 -22 (ctrl+o to expand)
+
+● Artifact(C:\Users\Mubarak\AppData\Local\Temp\claude\C--Users-Mubarak-Desktop-Q
+          MX\3f60e17b-e1cb-4eaa-999f-412427d7eea6\scratchpad\qmf-minimal-core.ht
+          ml)
+  ⎿  Updated ⧉ 
+     https://claude.ai/code/artifact/a934f7ba-32a1-475f-bbb8-888bea969f23
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(tracker\map.md)
+  ⎿  Added 2 lines
+      25  
+      26  - [QMF research sweep](tickets/001-qmf-research-sweep.md) — 11 
+          study files + synthesis delivered to `research/` (facts gathere
+          d, NOT yet adopted; ratification pass = ticket 002). Entry poin
+          t: `research/00-qmf-synthesis-module-map.md`; digest: `artifact
+          s/2026-08-17-qmf-minimal-core.html`.
+      27  - [Reference repo deep study](tickets/007-repo-deep-study.md) —
+           37 repos studied in two waves; idea ledger (113+43 rows) at `r
+          eference/00-idea-ledger.md` + `03-wave2-supplement.md`; kernel 
+          verdict (BUILD, staged, 3-day spike tiebreaker, D1 LGPL amendme
+          nt) at `reference/01-kernel-verdict.md`; backtesting verdict (O
+          ption 2: contracts first, vocabulary fix, Program/Campaign for 
+          prop-firm, 14 rulings pending) at `reference/02-backtesting-ver
+          dict.md`. Facts gathered — adoption pending ratification.
+      28 +- **Kernel RATIFIED (2026-08-17 evening, operator ruling): BUIL
+         +D our own — no third-party engine, runtime, or contract, ever.*
+         +* Grounds: bots must bind to QMF's contracts not an engine's; l
+         +oad-bearing arithmetic (fills/metrics/overfitting) must be read
+         +able and patchable by the factory; agents backtest in disposabl
+         +e sandboxes where a small pure-Python QMF fits and content-addr
+         +essed Runs merge from many sandboxes into one ledger; no inheri
+         +ted rebuilds. Nautilus et al. = mental models in the ledger onl
+         +y. The 3-day adoption spike is cancelled. D1 licence amendment 
+         +(LGPL ok for unmodified deps) still stands for ordinary librari
+         +es.                                                            
+      29 +- **Prop-firm Book: DEFERRED to the agentic era (operator rulin
+         +g, re-echoed — do not re-surface).** It is a Book (or books) wi
+         +th its own rules, to be created WITH the agentic system in its 
+         +own long discussion. QMF V1 ships only generic machinery (rule 
+         +schema + Program/Campaign phase capability) able to hold any fi
+         +rm's rules later. No firm is modeled now; prop SR* decided then
+         + too.                                                          
+      30  - Operator rulings (2026-08-17 afternoon) — **Toolbox principle
+          **: QMF never adopts third-party strategy-family libraries (SMC
+          , ICT, scalper packs…); it exists so Mubarak/agents can build t
+          heir OWN custom versions of those ideologies. Repo studies extr
+          act mental models only — no code transplantation, licences resp
+          ected. **Permanent product constraint**: no futures or options,
+           ever; stocks (day-trading) possibly later. **Bot × Book testin
+          g**: each Book may carry its own testing mechanism — one bot te
+          stable against many Books (scalping variants, prop-firm eval vs
+           funded) as a matrix.
+      31  
+      32  - [Session accord — QMX Foundations v2](../artifacts/2026-08-17
+          -qmx-foundations.html) — QMF (Quant Mind Framework) is the umbr
+          ella, QML = bot library inside it; two deployables (installable
+           QMX app + one Trading VPS); everything builds on QMF; middle n

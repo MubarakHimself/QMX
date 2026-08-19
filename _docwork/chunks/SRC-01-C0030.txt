@@ -1,0 +1,109 @@
+           brick with heavy dictated inputs (heavy indicators live in the
+           MIS; pair-scoped kill switch; paper trading = standing state f
+          eeding alpha-decay sensing; promotion is HUMAN-ONLY, Mubarak's 
+          daily job; possibly multiple BMSs long-term; Book schema lives 
+          on GitBook, never assume it; data-layer emphasis). Lock 2 denie
+          d as bundled ("exam" banned; connection = simple and proceeds; 
+          sim≡live checklist → ticket 008). Lock 3: identity + graph line
+          age yes in principle, one-card-for-everything DENIED — deep stu
+          dy first (ticket 009). Lock 4 (agent page) deferred until QMF i
+          s documented. Lock 5 not ratified. ALL backtesting discussion →
+           ticket 008; Program/Campaign OFF (a prop firm is just a new Bo
+          ok; Book creation = agentic era). Full capture in the ticket. A
+          rtifact: [The Five Locks](../artifacts/2026-08-18-five-locks.ht
+          ml).
+      41 +- **Roster simplified (2026-08-18 late): QMF V1 = FIVE librarie
+         +s + TWO modules** — core, registry (incl. registration gates/lo
+         +ok-ahead test), data, indicators, structure; plus the venue mod
+         +ule (cTrader connection, not a library) and the risk module (Bo
+         +oks/BMS v1, explicitly versioned/updatable). MIS is a trading-N
+         +ODE component ("an ML ensembler"), never a QMF library; researc
+         +her tooling + `qml` bot library + agent surface out of V1 scope
+         +. Spec §2b is authoritative.                                   
+      42  - [Evening verdicts, 2026-08-18](tickets/002-qmf-minimal-core.m
+          d) — **ticket 002 CLOSED**: qmf-core accepted; **QMF library ro
+          ster split by the five hats recorded in spec §2b** (nothing agr
+          eed is outside QMF, only outside the first brick — heavy indica
+          tors = `qmf-mis` library, risk/portfolio = `qmf-risk` library, 
+          bots = `qml`); design for 95th-percentile load (~40 bots real);
+           **paper mode is BOOK-level** (Book switches to a paper account
+           when it can't trade live; bots never run parallel twins; one b
+          ot = one Book); news blackout systematic ±15 min, pair-scoped, 
+          SQS is a separate gate; 12-month research seal RATIFIED with ke
+          ep-ALL-history; full raw retention + nightly cloud-bucket backu
+          p; multiple demo accounts expected; "benched"/DPR/PRS = corpus 
+          dig running → trading-node session. **Next step: export session
+           → documentation skill on QMF → factory codes; trading node nex
+          t.**
+      43  - [Deep-dive pass, 2026-08-18 afternoon] — three studies delive
+          red while operator was out (facts gathered, NONE adopted): [ide
+          ntity & lineage study](tickets/009-identity-lineage-study.md) c
+          losed → `reference/07` (three identity disciplines — fingerprin
+          t/charter/occurrence — replace "one card"; "model" split into t
+          hree kinds); data-layer blueprint → `reference/09` (six layers,
+           ArcticDB NO for v1 on technical grounds, lineage graph-in-file
+          s, 12-stream journal, paper-twin always on, 8 operator question
+          s) — logged on [ticket 005](tickets/005-data-architecture.md); 
+          answer-keys catalog → `reference/08` (external truth per module
+           family; 3 highest-payback checks; honest gaps: fill model → 00
+          8, zone semantics, Book schema needs machine-readable extractio
+          n). Verdict artifact: [Three Deep Dives](../artifacts/2026-08-1
+          8-three-deep-dives.html).
+      44  - [Session accord — QMX Foundations v2](../artifacts/2026-08-17
+          -qmx-foundations.html) — QMF (Quant Mind Framework) is the umbr
+          ella, QML = bot library inside it; two deployables (installable
+           QMX app + one Trading VPS); everything builds on QMF; middle n
+          ode absorbed into the app (ML training ~quarterly in cloud sand
+          boxes, shadow rollout); Python core, Rust UI later, no Electron
+          , no MQL; forex on cTrader first, crypto later via agent-built 
+          adapters; no central backtest engine — backtesting decentralize
+          s into callable QMF components; build method = factory pipeline
+          , validation inside factory runs (modules ship with reference u
+          sage + tests); defaults ≠ mock data, mock data never ships, pro
+          duct ships with no bots; total clean slate (old repos deleted).
+
+● Done — spec §2b and the map now say it plainly: QMF V1 = five libraries + two 
+  modules, MIS belongs to the trading node, researcher tooling and the bot
+  library wait their turn. That's the version the documentation agent will read.
+
+  We're effectively wrapped: the only thing still running is the
+  DPR/PRS/benching dig, which files itself into reference/ for the trading-node
+  session — no need to wait on it. Export whenever you're ready.
+
+✻ Crunched for 1m 14s
+
+● Agent "Dig DPR/PRS/bench mechanics" finished · 11m 3s
+
+● The dig is back, and it corrects something I told you earlier — so let me own
+  that first: "benched" IS in your GitBook — I said it came only from the
+  recovery corpus, and that was wrong. It appears in three places (one of the
+  seven doors, a leash rung, and the bot state list
+  LIVE/PAPER/BENCHED/STOOD_DOWN). What's not in the GitBook is DPR and PRS —
+  those are legacy-only, surviving in exactly one old file, and both sit on
+  do-not-revive lists.
+
+  The plain-words picture, now filed in reference/10 for the trading-node
+  session:
+
+  - PRS was a Performance Rating Service (your recall was right): six weighted
+  measures → a 0–100 score → three tiers. DPR was the rolling 10-day tier it
+  emitted — and what the letters D-P-R stand for is written down nowhere, so no
+  agent will be allowed to guess it.
+  - The current baseline is much simpler than the legacy system: no rating at
+  all — two stop-outs in a row benches a bot for the rest of the day, and it
+  auto-resets at the next open. The legacy version had a redemption loop
+  (demoted bots kept scoring on paper to win their live seat back) — that idea
+  is worth remembering for the node session, but nothing revives without your
+  word.
+  - Three real catches for the node session: nobody ever defined what counts as
+  a "stop-out" (does a breakeven close count? — the bench counter can't be built
+  until you rule); the symbol B does double duty in the old math (bench
+  threshold and a divisor in seat sizing — retuning one silently resizes the
+  other); and "BENCHED" currently lives in two places at once (a Book mode and a
+  bot's seat state), which must be untangled before schemas are written —
+  that's your Q9, now with real substance behind it.
+  - Alpha-decay math is confirmed unrecoverable — two independent sources agree
+  it was never written down. It gets designed fresh, not recovered.
+
+  Filing the pointers into the map so the node session inherits all of it:
+

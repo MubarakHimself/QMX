@@ -1,0 +1,120 @@
+         +ONE Book; bots never run parallel paper twins. **News blackout 
+         +is systematic:** halt 15 minutes before scheduled news, resume 
+         +15 minutes after, pair-scoped; the SQS is a separate gate and m
+         +ust never be conflated with the news block. **Multiple demo acc
+         +ounts** are expected (one for paper-mode Books, one for post-ba
+         +cktest validation — a pipeline detail for the agentic era).    
+      56 +                                                               
+      57  ## 3. Corrected vocabulary (operator-ratified tonight)
+      58  
+      59  - **Confluence** = the starting recipe from a hypothesis: Level
+          (s) + Trigger(s) + Confirmation(s). Every slot allows **multipl
+          e variants** (six triggers may fire together; a whole bot can s
+          erve as a confirmation — composition nests). **No exit in the c
+          onfluence.**
+
+● Update(tracker\tickets\002-qmf-minimal-core.md)
+  ⎿  Added 2 lines, removed 1 line
+       2  id: 002
+       3  title: QMF minimal core
+       4  label: wayfinder:grilling
+       5 -status: open                                                   
+       5 +status: closed                                                 
+       6  assignee: claude-session-2026-08-18
+       7 +closed: 2026-08-18                                             
+       8  blocked-by: [001]
+       9  ---
+      10  
+
+● Update(tracker\tickets\002-qmf-minimal-core.md)
+  ⎿  Added 4 lines
+      12  
+      13  What is QMF's minimal core — the named modules of V1, which exi
+          sting libraries each wraps versus what gets built, and the boun
+          daries between the five hat lanes — such that the factory can s
+          hip V1 in ~2–3 days? Claude drafts from the research synthesis 
+          (`research/00-qmf-synthesis-module-map.md`); Mubarak yes/no's t
+          he draft. Ask Mubarak to attach the original QML design doc if 
+          he has found it.
+      14  
+      15 +## Resolution (2026-08-18 evening)                             
+      16 +                                                               
+      17 +QMF's minimal core is answered: **`qmf-core` accepted as the fi
+         +rst brick** (exact money, exact time with three trading calenda
+         +rs, the nouns seeded for order-flow and equities, typed refusal
+         +s, stamp machine, versioning — no loop, no broker, no backtest,
+         + no downloads), and the full **QMF library roster split by the 
+         +five hats** is recorded in the spec (`artifacts/2026-08-17-qmf-
+         +v1-spec-DRAFT.md` §2b) with a status tag per library. Nothing a
+         +greed is outside QMF — only outside the first brick. The six fr
+         +ozen technical choices are confirmed at the documentation pass,
+         + not here. Next step per operator: export this session, run the
+         + documentation skill on QMF, factory codes from the docs. The t
+         +rading node re-spec (ticket 004) follows, built on this session
+         +'s output.                                                     
+      18 +                                                               
+      19  ## Progress
+      20  
+      21  Draft ready for the ~17:00 ratification pass: spec `artifacts/2
+          026-08-17-qmf-v1-spec-DRAFT.md` (module rings, 12 decisions D1–
+          D12 with recommendations, conventions, tonight's fence = Ring 0
+           + Ring 1 + conformance harness) and presentation artifact `art
+          ifacts/2026-08-17-qmf-minimal-core.html`. Resolve when Mubarak 
+          ratifies/amends D1–D9 and blesses the fence; then flip spec DRA
+          FT → RATIFIED and he exports the pack to the documentation fact
+          ory.
+
+● Update(tracker\tickets\005-data-architecture.md)
+  ⎿  Added 2 lines
+      14  ## Progress (2026-08-18)
+      15  
+      16  Deep-dive blueprint delivered to `reference/09-data-layer-bluep
+          rint.md` (workflow over research/02+10, node primer, operator d
+          ictation): six layers L0–L5 (ingest / raw evidence / processed 
+          / journal / research door with splits-by-default / backup), sto
+          res-per-purpose matrix (Parquet+DuckDB+SQLite-inbox; PostgreSQL
+           rejected), **ArcticDB verdict: NO for v1 — technical, not lice
+          nce** (transaction-time only, no valid-time axis); **lineage: g
+          raph model in append-only JSONL files, graph database deferred 
+          until proven needed**; full journal stream table (12 streams, c
+          adence + retention); paper-twin permanently on for alpha-decay 
+          continuity; auto-detection = operator-owned rules.yaml over a f
+          ixed metric catalog, flags notify but NEVER act. Eight yes/no q
+          uestions queued for the operator (holdout months, backup cadenc
+          e, Dukascopy risk posture, etc.). Nothing adopted yet — this ti
+          cket's session ratifies.
+      17 +                                                               
+      18 +**Operator rulings landed early (2026-08-18 evening):** keep AL
+         +L history as far back as each source goes (12-month seal ≠ 12-m
+         +onth dataset — the seal only excludes the newest year from rese
+         +arch until a strategy's one logged final look; RATIFIED); split
+         +/chunking discipline is QMF's job by default (he wants help the
+         +re — splits registry covers it); MIS snapshots and everything e
+         +lse kept RAW in full (storage is his to buy; "better to have ev
+         +ery copy"); backup to a cloud bucket, nightly; news blackout is
+         + systematic ±15 minutes around scheduled news and is NOT the SQ
+         +S (separate gates, never conflate); the record-through-blackout
+         + paper-simulation idea was dropped — ordinary market recording 
+         +continues anyway because recorders never stop.                 
+
+● Update(tracker\map.md)
+  ⎿  Added 1 line
+      38  - **Data acquisition timing DECIDED (2026-08-17): build the plu
+          mbing now; downloading happens at first install.** Forward capt
+          ure is the one exception (operator-approved 2026-08-18): calend
+          ar recording starts now (`recorder/`, standalone script + statu
+          s screen, NOT a QMF module); live tick recording stays blocked 
+          on broker API access (ticket 006) and Dukascopy backfills tick 
+          history meanwhile, so nothing unrecoverable is lost. **SHIPPED 
+          2026-08-18:** task `QMX-Calendar-Recorder` runs 06:00 + 18:00 l
+          ocal, first week banked (96 events); feed cap ~2 downloads/5 mi
+          n — never add triggers casually; the feed has NO `actual` value
+          s (supports news-blackout gating, not surprise strategies); leg
+          al posture of automated archiving = open operator item.
+      39  - **DeepSeek/Cordis harness model scoped to the agentic era (op
+          erator ruling 2026-08-18):** the Context/disposer/event-bus add
+          itions leave qmf-core V1; the agentic system may later adopt th
+          e DeepSeek harness design near-verbatim (UI layout aside). Stan
+          ding scope for current sessions: build everything EXCEPT the ag
+          entic system — i.e. the blocks it will one day use.
+      40  - [Locks session verdicts, 2026-08-18](tickets/002-qmf-minimal-

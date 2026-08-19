@@ -1,0 +1,27 @@
+id: CT-17
+name: Causal market-structure component contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-STRUCTURE
+consumers: []
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0033, DEC-0058]
+gaps: [GAP-0005, GAP-0034]
+purpose: "Let QMX-owned structure families consume ordered facts and emit causally justified level, zone, or market-structure evidence."
+invariants:
+  - "Structure families are QMX-owned and do not transplant third-party strategy-family contracts."
+  - "Outputs must remain compatible with registration causality checks."
+  - "Family taxonomy, fields, composition, parameters, confirmation, invalidation, output shape, and first supported family remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0034
+  fields: null
+  fields_gap: GAP-0034
+  enums: null
+  enums_gap: GAP-0034
+  units: null
+  units_gap: GAP-0034
+  nullability: null
+  nullability_gap: GAP-0034

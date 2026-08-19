@@ -1,0 +1,20 @@
+version: 2
+status: active
+updated_at: '2026-08-18T17:57:49+03:00'
+workspace: 'C:\Users\Mubarak\Desktop\QMX'
+governing_skill: 'C:\Users\Mubarak\.agents\skills\documentation-factory\SKILL.md'
+current_stage: 8
+completed_stages: [1, 2, 3, 4, 5, 6, 7]
+provisional: true
+counts:
+  source_chunks: 70
+  coverage_percent: 100
+  decisions: 98
+  gaps: 49
+  features: 27
+  docs_files: 82
+validation:
+  non_strict: pass
+  independent_reviews: pass
+  strict: operator-ratification-required
+next: Review and sign _docwork/ratification-packet.md before Kanban publication or implementation.

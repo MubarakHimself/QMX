@@ -1,0 +1,115 @@
+          core.md) — Lock 1 "the Dictionary" (qmf-core) ACCEPTED as first
+           brick with heavy dictated inputs (heavy indicators live in the
+           MIS; pair-scoped kill switch; paper trading = standing state f
+          eeding alpha-decay sensing; promotion is HUMAN-ONLY, Mubarak's 
+          daily job; possibly multiple BMSs long-term; Book schema lives 
+          on GitBook, never assume it; data-layer emphasis). Lock 2 denie
+          d as bundled ("exam" banned; connection = simple and proceeds; 
+          sim≡live checklist → ticket 008). Lock 3: identity + graph line
+          age yes in principle, one-card-for-everything DENIED — deep stu
+          dy first (ticket 009). Lock 4 (agent page) deferred until QMF i
+          s documented. Lock 5 not ratified. ALL backtesting discussion →
+           ticket 008; Program/Campaign OFF (a prop firm is just a new Bo
+          ok; Book creation = agentic era). Full capture in the ticket. A
+          rtifact: [The Five Locks](../artifacts/2026-08-18-five-locks.ht
+          ml).
+      41 +- [Evening verdicts, 2026-08-18](tickets/002-qmf-minimal-core.m
+         +d) — **ticket 002 CLOSED**: qmf-core accepted; **QMF library ro
+         +ster split by the five hats recorded in spec §2b** (nothing agr
+         +eed is outside QMF, only outside the first brick — heavy indica
+         +tors = `qmf-mis` library, risk/portfolio = `qmf-risk` library, 
+         +bots = `qml`); design for 95th-percentile load (~40 bots real);
+         + **paper mode is BOOK-level** (Book switches to a paper account
+         + when it can't trade live; bots never run parallel twins; one b
+         +ot = one Book); news blackout systematic ±15 min, pair-scoped, 
+         +SQS is a separate gate; 12-month research seal RATIFIED with ke
+         +ep-ALL-history; full raw retention + nightly cloud-bucket backu
+         +p; multiple demo accounts expected; "benched"/DPR/PRS = corpus 
+         +dig running → trading-node session. **Next step: export session
+         + → documentation skill on QMF → factory codes; trading node nex
+         +t.**                                                           
+      42  - [Deep-dive pass, 2026-08-18 afternoon] — three studies delive
+          red while operator was out (facts gathered, NONE adopted): [ide
+          ntity & lineage study](tickets/009-identity-lineage-study.md) c
+          losed → `reference/07` (three identity disciplines — fingerprin
+          t/charter/occurrence — replace "one card"; "model" split into t
+          hree kinds); data-layer blueprint → `reference/09` (six layers,
+           ArcticDB NO for v1 on technical grounds, lineage graph-in-file
+          s, 12-stream journal, paper-twin always on, 8 operator question
+          s) — logged on [ticket 005](tickets/005-data-architecture.md); 
+          answer-keys catalog → `reference/08` (external truth per module
+           family; 3 highest-payback checks; honest gaps: fill model → 00
+          8, zone semantics, Book schema needs machine-readable extractio
+          n). Verdict artifact: [Three Deep Dives](../artifacts/2026-08-1
+          8-three-deep-dives.html).
+      43  - [Session accord — QMX Foundations v2](../artifacts/2026-08-17
+          -qmx-foundations.html) — QMF (Quant Mind Framework) is the umbr
+          ella, QML = bot library inside it; two deployables (installable
+           QMX app + one Trading VPS); everything builds on QMF; middle n
+          ode absorbed into the app (ML training ~quarterly in cloud sand
+          boxes, shadow rollout); Python core, Rust UI later, no Electron
+          , no MQL; forex on cTrader first, crypto later via agent-built 
+          adapters; no central backtest engine — backtesting decentralize
+          s into callable QMF components; build method = factory pipeline
+          , validation inside factory runs (modules ship with reference u
+          sage + tests); defaults ≠ mock data, mock data never ships, pro
+          duct ships with no bots; total clean slate (old repos deleted).
+      44  
+
+● Here's your answer to "how far are we with QMF" — the library roster, split by
+  your five hats, now written into the spec (§2b) exactly as the factory will
+  read it:
+
+  Cross-cutting: qmf-core (the language — accepted, first brick) · qmf-registry
+  (identity & lineage, three disciplines — study delivered)
+  Analyst: qmf-data (the six-layer data system — blueprint delivered) ·
+  qmf-indicators (light, wraps TA-Lib — direction agreed) · qmf-structure (our
+  own levels/zones — direction agreed, depth sessions later) · qmf-mis (heavy
+  indicators — direction agreed)
+  Trader: qmf-broker (venue port + cTrader — direction agreed, connection is
+  simple)
+  Portfolio manager: qmf-risk (your own risk & portfolio library: Books, BMS,
+  exits — own session, with the Book-schema extraction as its prerequisite)
+  Researcher: qmf-experiment (attempt counter + look-ahead test — ratified) ·
+  backtesting library (own session, ticket 008)
+  Developer/agents: qml (the bot library — vocabulary ratified, binding contract
+  still undesigned) · agent surface (agentic era)
+
+  So the honest progress scoreboard, since that's what you asked for: two 
+  tickets closed today (002 — QMF minimal core, and 009 — the identity study),
+  the map fully reconciled, three research deliverables filed
+  (reference/07/08/09), the calendar recorder shipped and running on schedule,
+  and the spec now carries the roster, your 95th-percentile principle,
+  Book-level paper mode, and the systematic ±15-minute news blackout. One dig
+  still running in the background (DPR/PRS/benching from the old corpus — it
+  files itself into reference/ and waits for the trading-node session; nothing
+  for you to do with it now).
+
+  You are not falling behind — you're at the handoff point. What you do next
+  needs no session with me: export this session, invoke your documentation skill
+  on QMF (the spec draft + the roster + the three reference studies are its
+  inputs), and let the factory document qmf-core first. The six frozen choices
+  get their final yes from you during that documentation pass, in context, where
+  they'll actually make sense. When the docs exist, the software factory codes
+  the first brick — and the trading-node session starts on top of what this
+  session settled, exactly as you said.
+
+✻ Baked for 4m 19s
+
+❯ Okay, now I've actually just been looking at the diffs you were making and I  
+  noticed that we are still at Minimokoa. Is this really a minimal core         
+  anymore? Because if I'm to give the documentation agent to the agent that's   
+  going to document everything, these two transcripts. The one I gave you are   
+  also this one we have just had. Do you really think it's going to be saying   
+  this is minimal? Because this seems like we've agreed on a lot of things      
+
+● You're right, and it matters for exactly the reason you give: a documentation
+  agent reading "minimal core" will scope things down and treat everything
+  beyond a tiny library as out of bounds. What we actually have is the QMF V1 
+  blueprint — a full framework agreement across five hats — inside which
+  qmf-core is deliberately the small first brick. "Small first brick" is a
+  build-order fact; "minimal" as the name of the whole is now false. Retiring
+  the phrase now, and adding a read-order note so the documentation agent knows
+  the spec and tracker are the authority and the two transcripts are raw
+  evidence behind them:
+

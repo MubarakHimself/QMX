@@ -1,0 +1,120 @@
+❯ I've actually been trying to browse around and seems like GitHub is kinda     
+  down. So note that if you have issues accessing GitHub, you're not the only   
+  one                                                                           
+
+● Good to know — and lucky timing: all 24 repos were already cloned to
+  reference\repos\ before the outage, so the running studies read from your disk
+  and never touch GitHub. The only step that needs GitHub back is wave 2's
+  cloning; I'll verify it's healthy before firing that, and if it's still down,
+  wave 2's study prompts queue against the catalog shortlist until it recovers.
+  The 529 failures earlier were Anthropic's side, not GitHub's — unrelated
+  outages, same afternoon.
+✻ Crunched for 9s
+
+❯ Ayo, hang on, there are only 24 total reports. Well, that's new. Sorry, 24    
+  total GitHub repos indexed or whatever cloned. That's quite new. I actually   
+  didn't know. even the maps are giving you a total of 24. Seriously            
+
+● Not quite — the 24 are only wave 1: your direct links plus the three backtest
+  engines I added. The maps themselves are cloned as files, but the hundreds of
+  projects listed inside them aren't cloned yet — that's exactly what wave 2 is
+  for. The catalog agent has already finished digesting all six maps; let me
+  show you what its shortlist actually says.
+
+  Searched for 1 pattern, read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Ten pirated PDFs deleted from the clone. Wave 1's remaining studies are still
+  running on the rebalanced fleet; when they land, wave 2 clones the shortlist
+  above (GitHub health permitting — it only needs to fetch a dozen small repos),
+  and the verdicts plus idea ledger close out with everything folded in.
+
+✻ Cogitated for 1m 32s
+
+● Dynamic workflow "Clone 25+ reference repos locally, deep-study them for
+mental models, produce the idea ledger plus kernel and backtesting verdict
+briefs" completed · 37m 19s
+
+● Wave 1 is nearly home — 13 of 15 done, and crucially the two verdicts and the
+  72-idea ledger DID complete, but they ran without the two most important
+  studies (Nautilus and the backtest-engines comparison), which 529'd again at
+  the start of the resume before Opus recovered. Those verdicts are built on
+  incomplete evidence, so I'm forcing them to regenerate after the missing
+  studies land. Also checking whether GitHub is back so wave 2 can clone the
+  shortlist.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● GitHub is reachable again. Forcing the verdicts and ledger to regenerate with
+  full evidence, then resuming wave 1 and firing wave 2 side by side.
+
+● Update(~\.claude\projects\C--Users-Mubarak-Desktop-QMX\3f60e17b-e1cb-4eaa-999f
+        -412427d7eea6\workflows\scripts\qmf-repo-study-wf_a53bf7ca-d42.js)
+  ⎿  Added 1 line, removed 1 line
+      122  const VERDICT_PREAMBLE = `You are writing a decision brief for
+            Mubarak, the non-technical solo operator of QMX. He pushed ba
+           ck hard on an earlier recommendation and asked for evidence fr
+           om mature platforms before deciding. Style: plain words first,
+            evidence cited (file paths into ${STUDIES}/ and ${REPOS}/, pl
+           us C:/Users/Mubarak/Desktop/QMX/research/), a clear recommenda
+           tion he can disagree with, and the honest counter-case stated 
+           fairly. Read every relevant study file before writing.`
+      123  
+      124  const verdicts = (await parallel([
+      125 -  () => agent(VERDICT_PREAMBLE + `\n\nBRIEF 1 — THE KERNEL QUE
+          -STION. Earlier recommendation was "write our own kernel, copy 
+          -proven shapes" (research/00, decision D2). Mubarak laughed and
+          - said mature platforms exist and we should not reinvent the wh
+          -eel; the repo studies now exist as evidence. Read ${STUDIES}/n
+          -autilus-trader.md, ${STUDIES}/jesse.md, ${STUDIES}/backtest-en
+          -gines.md, ${STUDIES}/bot-frameworks.md and research/01. Write 
+          -${REF}/01-kernel-verdict.md answering: (a) what does "the kern
+          -el" actually consist of, in plain words; (b) the real options:
+          - build minimal Python kernel / adopt+wrap an existing engine (
+          -which, at what licence cost) / hybrid (adopt for research-back
+          -testing, build thin for live); (c) what each costs in factory-
+          -days and in long-term maintenance; (d) your recommendation and
+          - the strongest honest argument against it. Remember the constr
+          -aints: licence allowlist if QMX might ever be sold (D1, pendin
+          -g), agents author via typed schemas, prop-firm rules are first
+          --class, live trading deploys to a Linux VPS.` ,               
+      125 +  () => agent(VERDICT_PREAMBLE + `\n\n(rev2: ${STUDIES}/nautil
+          +us-trader.md and ${STUDIES}/backtest-engines.md now exist — th
+          +ey are your MOST important inputs; read them first and rebuild
+          + your analysis on them.)\n\nBRIEF 1 — THE KERNEL QUESTION. Ear
+          +lier recommendation was "write our own kernel, copy proven sha
+          +pes" (research/00, decision D2). Mubarak laughed and said matu
+          +re platforms exist and we should not reinvent the wheel; the r
+          +epo studies now exist as evidence. Read ${STUDIES}/nautilus-tr
+          +ader.md, ${STUDIES}/jesse.md, ${STUDIES}/backtest-engines.md, 
+          +${STUDIES}/bot-frameworks.md and research/01. Write ${REF}/01-
+          +kernel-verdict.md answering: (a) what does "the kernel" actual
+          +ly consist of, in plain words; (b) the real options: build min
+          +imal Python kernel / adopt+wrap an existing engine (which, at 
+          +what licence cost) / hybrid (adopt for research-backtesting, b
+          +uild thin for live); (c) what each costs in factory-days and i
+          +n long-term maintenance; (d) your recommendation and the stron
+          +gest honest argument against it. Remember the constraints: lic
+          +ence allowlist if QMX might ever be sold (D1, pending), agents
+          + author via typed schemas, prop-firm rules are first-class, li
+          +ve trading deploys to a Linux VPS.` ,                         
+      126      { label: 'verdict:kernel', phase: 'Verdicts', schema: STUD
+           Y_RESULT, model: 'opus', effort: 'high' }),
+      127    () => agent(VERDICT_PREAMBLE + `\n\nBRIEF 2 — THE BACKTESTIN
+           G QUESTION. Mubarak's own words: backtesting is make-or-break;
+            it must be part of QMF; two options he sees — (1) build our o
+           wn backtest engine, or (2) build a library, then use it to bui
+           ld our own, usable by agents under all assumptions so "no matt
+           er how much an agent tries, it can't fabricate the results", a
+           nd he (or he + another agent) can read results simply and know
+            if a strategy is good or bad; it must be standard and industr
+           y-grade; it must adapt to any Book — e.g. answer "what happens
+            if strategy X runs the evaluation stage and then the funded s
+           tage on prop-firm Y, and how much does the account make over t
+           ime under that firm's rules". He also flagged ALPHA DECAY dete
+           ction (live performance degrading below backtest) as an old QM
+           L feature to rebuild, noting the edge was defined relative to 
+           a Book's configurable values. Also address in plain words the 
+           vocabulary confusion from today: the earlier spec's "SimBroker
+           /simulator" is the backtest's fill engine, NOT an FX-Replay-st
+           yle human chart-replay tool — propose clearer names. Read ${ST
+           UDIES}/backtest-engines.md, ${STUDIES}/nautilus-trader.md, ${S

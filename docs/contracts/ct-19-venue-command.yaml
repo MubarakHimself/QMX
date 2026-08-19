@@ -1,0 +1,32 @@
+id: CT-19
+name: Venue command contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-VENUE
+consumers: []
+active_consumers: []
+intended_consumers: [out-of-scope QMX application]
+wiring_status: reserved-unwired
+caller_status: unassigned
+layer_from: backend
+layer_to: middleware
+decisions: [DEC-0029, DEC-0059, DEC-0061]
+gaps: [GAP-0005, GAP-0036, GAP-0038, GAP-0039]
+purpose: "Reserve a platform-neutral command transport shape for an eventual out-of-scope QMX application caller."
+invariants:
+  - "No QMF V1 component is assigned as caller, authorization producer, or authorization-evidence owner."
+  - "No live command transport is buildable while GAP-0036, GAP-0038, and GAP-0039 remain open."
+  - "The reserved shape does not adopt a trading loop, position-sizing policy, authorization boundary, or simulator-parity requirement."
+  - "Command kinds, fields, idempotency, quantity and price semantics, deadlines, and refusal mapping remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0038
+  fields: null
+  fields_gap: GAP-0036
+  enums: null
+  enums_gap: GAP-0038
+  units: null
+  units_gap: GAP-0036
+  nullability: null
+  nullability_gap: GAP-0036

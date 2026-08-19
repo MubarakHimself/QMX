@@ -1,0 +1,120 @@
+         +ence dependencies only (LGPL acceptable for unmodified, separat
+         +ely-installed deps); versioned releases, never break consumers;
+         + no mock data ships; no bots ship.                             
+      11  
+      16 -## 2. Decisions (RATIFY-PENDING — recommendation in bold)      
+      12 +## 2. Library #1 — `qmf-core`, "the language" (the first and on
+         +ly near-term build)                                            
+      13  
+      18 -| # | Question | Recommendation |                              
+      19 -|---|---|---|                                                  
+      20 -| D1 | Sellable/served someday? | **Assume yes → dependency lic
+         -ence allowlist: Apache-2.0/MIT/BSD/NCSA + original code.** GPL/
+         -LGPL/Commons-Clause projects are design-study only (NautilusTra
+         -der, vectorbt, backtesting.py, Freqtrade, pysystemtrade). |    
+      21 -| D2 | Own engine or Nautilus base? | **Write our own kernel, c
+         -opy proven shapes.** Revisit after Nautilus 2.0 stable. |      
+      22 -| D3 | Simulator = ordinary `BrokerAdapter`? | **Yes.** `SimBro
+         -ker`+`SimClock` injected into the one kernel; both pass the sam
+         -e adapter conformance suite. |                                 
+      23 -| D4 | Canonical numerics | **TA-Lib canonical for indicator se
+         -eding; UTC nanoseconds everywhere; identity = opaque `(venue, s
+         -ymbol)`.** |                                                   
+      24 -| D5 | Agents: Python or schema? | **Typed schema (`qmf.spec`) 
+         -is the only agent surface.** Free-form Python = separate human-
+         -gated path; agents never deploy live unattended. |             
+      25 -| D6 | Confluence identity | **Content hash: `sha256(canonical_
+         -json(spec))` incl. each component's semver.** Promotion: propos
+         -ed → measured → validated → confirmed → live → retired; append-
+         -only. |                                                        
+      26 -| D7 | SR\* (pre-registered Sharpe bar) | **2.0 prop-firm books
+         - / 1.5 personal.** Sets the honest search budget. |            
+      27 -| D8 | First prop-firm Book | **FTMO 2-Step schema instance**; 
+         -one rule-evaluation core used as simulator AND live guard; safe
+         -ty buffer trips at ~80% of firm cap. |                         
+      28 -| D9 | Ingestion first? | **Yes — tonight.** Calendar feed and 
+         -tick stream are unrecoverable if not archived; every day of del
+         -ay is permanent loss. |                                        
+      29 -| D10 | Zone kinds + confirmation lag | **Operator picks 3 of 7
+         - ZoneKinds; accept causal confirmation lag** (demo before compl
+         -aint). Session with Mubarak. |                                 
+      30 -| D11 | Broker + Spotware registration | **Submit Open API app 
+         -registration immediately; two candidate brokers; verify demo+li
+         -ve.** Longest external pole. |                                 
+      31 -| D12 | Dukascopy ToS posture | **Accept for personal non-redis
+         -tributed use, recorded as dated decision; measure broker tick r
+         -etention as fallback.** Operator risk call. |                  
+      14 +Pure definitions. No loop, no broker, no backtest, no downloads
+         +.                                                              
+      15  
+      33 -## 3. Module map (rings; dependencies point only toward Ring 0)
+      16 +1. **Exact money** — price/quantity/balance as exact decimals; 
+         +floats banned in money paths at the type level.                
+      17 +2. **Exact time** — UTC-nanosecond instants; a "which trading d
+         +ay" concept (sessions/rollover); the two-dates stamp on every f
+         +act: when it happened, when it became knowable.                
+      18 +3. **The nouns** — Instrument, Bar, Tick, Order, Fill, Position
+         +, Account — style-agnostic (scalp → long hold) and **data-richn
+         +ess-agnostic: seed order-flow concepts now** — DOM/depth-of-mar
+         +ket, tape (time & sales), level 2/3 data, order-flow and market
+         +-structure primitives — because crypto venues expose rich DOM a
+         +nd the nouns must not need a rebuild when crypto arrives. Forex
+         + vs crypto line drawn explicitly: forex has sessions (per-pair 
+         +relevance, a bot may trade several); crypto is 24/7.           
+      19 +4. **Typed refusals** — every "no" carries a machine-readable n
+         +ame; human-readable explanation alongside.                     
+      20 +5. **The stamp machine** — canonical serialization + fingerprin
+         +ting of any definition (used later by confluences/recipes and r
+         +esults).                                                       
+      21 +6. **Versioning discipline** — definitions carry versions from 
+         +birth; changing one mints a new version, never rewrites.       
+      22  
+      35 -Full rationale per module: `research/00`, §"Proposed QMF module
+         - map".                                                         
+      23 +## 3. Corrected vocabulary (operator-ratified tonight)         
+      24  
+      37 -- **Ring 0 — Core**: `qmf.core` (Decimal money, UTC-ns Clock, P
+         -rovenance, ordering, seeding — build ~400 lines), `qmf.model` (
+         -Symbol, InstrumentSpec, Bar, ticks, Order, Fill, Position, Acco
+         -untState — build), `qmf.errors` (VenueRejection vs OperationFai
+         -led + BMS denial codes — build).                               
+      38 -- **Ring 1 — Data**: `qmf.data.lake` (hive-partitioned zstd Par
+         -quet + SQLite-WAL live inbox + manifests; thin over DuckDB/Pola
+         -rs/pyarrow), `qmf.data.splits` (named is/oos/embargo/holdout; `
+         -load(split_id=...)` is the only door), `qmf.data.facts` (bitemp
+         -oral append-only, `as_of(t)` only accessor), `qmf.data.ingest` 
+         -(per-source ~40-line adapters: Dukascopy `.bi5`, cTrader histor
+         -y, FRED+ALFRED, BIS, ECB, CFTC TFF, FairEconomy calendar; schem
+         -a-checked), `qmf.data.micro` (spread/session/tradeability profi
+         -les — build, no library exists).                               
+      39 -- **Ring 2 — Features**: `qmf.indicators` (Indicator protocol +
+         - replay(); wrap TA-Lib batch, build ~15 incremental, `talipp` a
+         -s test oracle), `qmf.structure` (causal zigzag, fractals, BOS/C
+         -HoCH with origin/confirmed_at — build, code from nobody), `qmf.
+         -components` (the four typed concepts below).                   
+      40 -- **Ring 3 — Intelligence**: `qmf.mis` (frozen MarketView: regi
+         -me, vol forecast, confidence/novelty/staleness; causality ∈ {fi
+         -ltered, predicted} only), `qmf.models` (manifest registry, text
+         - formats only, no pickle).                                     
+      41 -- **Ring 4 — Money authority**: `qmf.book` (Signal → sized targ
+         -et; named binding constraint), `qmf.bms` (mandatory pre-trade g
+         -ate; TradingState ACTIVE/REDUCING/HALTED; six-axis prop-firm ru
+         -le schema; greenfield).                                        
+      42 -- **Ring 5 — Venue**: `qmf.broker` (platform-blind port: capabi
+         -lities()/EMULATED, limits, 4-outcome commands, ordered event st
+         -ream, reconciliation triple, rate buckets with order-priority l
+         -ane), `qmf.broker.ctrader` (~400 lines asyncio over vendored .p
+         -roto; NOT built on stale `ctrader-open-api`), `qmf.venue_model`
+         - (what a venue allows; used identically live and sim).         
+      43 -- **Ring 6 — Runtime & sim**: `qmf.runtime` (single-threaded de
+         -terministic kernel; loader with crash containment), `qmf.sim` (
+         -SimClock, SimBroker, Fill/Slippage models calibrated from measu
+         -red live slippage, Ledger with `financing` line), `qmf.metrics`
+         - (~34 stats, 4 input shapes, versioned JSON output).           
+      44 -- **Ring 7 — Epistemics**: `qmf.experiment` (hypothesis + pre-r
+         -egistered thresholds + budget; Optuna ask-and-tell; refusals), 
+         -`qmf.overfit` (DSR/PSR/PBO-CSCV/MinBTL/effective-N/haircuts), `
+         -qmf.ledger` (append-only split budget; exhaustion is an error).
+      45 -- **Ring 8 — Registry & surface**: `qmf.registry` (one manifest
+         - format/promotion machine for everything; content-addressed, ap
+         -pend-only), `qmf.spec` (THE agent surface, target one printed p

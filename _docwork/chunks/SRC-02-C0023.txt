@@ -1,0 +1,120 @@
+  - Old: "replay/live parity allows only two substitutions — historical data for
+  the feed, a fill simulator for the Adapter." New: "the simulator is just
+  another broker adapter injected into the same kernel" (D3). Same idea, two
+  generations apart.
+  - Old: reproducibility identity = bot_spec_version + data_snapshot_id + 
+  config_hash + seed. New: content-hashed confluence + split + data fingerprint.
+  Same discipline.
+  - Old: walk-forward / Monte Carlo / PBO battery, plus my favorite find in the
+  package — prove the battery honest by feeding it known-overfit strategies and 
+  a known-good control and checking it catches them. That's a test of the 
+  tester, and it's coming into QMF regardless of what else survives.
+  - Old: the engine measures and certifies but can never admit, promote, or
+  trade. New: same non-authority rule via the promotion ladder and human gate.
+
+  Where they part: the old design wants a central backend examination service
+  with certificates and dossiers; your clean-state ruling is decentralized
+  callable components with certification absorbed into the promotion ladder's
+  final holdout stage. That's the real decision the comparison must sharpen —
+  not whether the physics is right (both agree) but where certification lives.
+
+  Plan: the fresh backtesting verdict is regenerating right now, deliberately
+  uncontaminated by this package. The moment wave 1 lands, a dedicated
+  comparison agent reads both — old recovery vs fresh verdict — and writes the
+  agrees / conflicts / re-ratify register for your ratification pass.
+
+● Update(tracker\map.md)
+  ⎿  Added 1 line, removed 1 line
+      50  - Backtesting mechanism as part of QMF — decentralized callable
+           components stand (no monolith), but the mechanism itself must 
+          be designed and built inside QMF; scope it in the minimal core 
+          (ticket 002)
+      51  - Prop firms are a major operator goal — prop-firm constraint m
+          odeling (daily loss caps, drawdown rules) and pair-selection su
+          pport deserve first-class weight in risk/sizing design
+      52  - Original QML design doc — Mubarak couldn't locate it; adopt i
+          f it resurfaces
+      53 -- **Incoming: old backtest-engine recovery** — GPT is extractin
+         -g the old project's backtest engine design; when it arrives, co
+         -mpare against `reference/02-backtesting-verdict.md` (agrees / c
+         -onflicts / re-ratify) — evidence, never authority, per the clea
+         -n-state rule                                                   
+      53 +- **Old backtest-engine recovery ARRIVED** (`.recovery/backtest
+         +ing-engine-retrieval/`) — verdict: old repo had NO completed en
+         +gine, only an unratified "Examination Engine" design + data-plu
+         +mbing proofs. Converges independently with fresh research on: t
+         +wo-substitution replay parity (≡ D3), reproducibility identity 
+         +(≡ content-hash runs), WF/MC/PBO battery, battery-honesty proof
+         +s via known-overfit archetypes (carry this!), engine non-author
+         +ity. Diverges on topology: central backend certification servic
+         +e vs decentralized QMF components + promotion-ladder holdout. C
+         +omparison agent fires when wave 1 lands → agrees/conflicts/re-r
+         +atify register                                                 
+      54  
+      55  ## Out of scope
+      56  
+
+● Tracked. Three things now in motion: wave 1's final leg (the two big studies +
+  regenerated verdicts + ledger), wave 2 over the shortlist, and the queued
+  comparison agent for the recovery package. Everything converges into the
+  digest artifact for your ratification pass once they land.
+
+✻ Sautéed for 55s
+
+❯ Okay, now you see the thing with the backtest engine is that for us we've     
+  changed our entire approach. I think for us we are trying to should I say put 
+  it under a library so it's no longer like a core component of the entire      
+  system. I don't know if you get me because at first it was like a singular    
+  component. Right now it's no longer. I don't know if you noticed that. Yeah   
+  and there are lots of things that we are going to change. In fact I just      
+  wanted you to know that, okay, the whole point of actually trying to retrieve 
+  it was so that I want you to know anyway that what I had was not weak, yeah,  
+  but we can enhance it and make it better, trust me,If there is anything to    
+  make better                                                                   
+
+● Noticed — and it's already logged as the one real divergence: the engine moved
+  from core component (a central service on the backend node) to capability 
+  inside QMF (callable components any agent composes, certification absorbed
+  into the promotion ladder's holdout stage). The important thing is what
+  survives that move: all of the physics does. Two-substitution parity, the
+  reproducibility identity, the walk-forward/Monte-Carlo/PBO battery, the
+  engine-can't-promote rule — none of that cares whether it lives in a service
+  or a library. Only the deployment shape dies.
+
+  And your instinct to recover it was right — the old design wasn't weak, and
+  there's now objective proof: this week's research fleet, working blind from
+  NautilusTrader, LEAN, and the overfitting literature, independently arrived at
+  the same core rules your old design had. When strangers and your past self
+  converge on the same physics, that's usually what correct looks like. The
+  enhancements will be real but surgical: content-hashed identities instead of
+  ad-hoc version strings, the battery-honesty proofs formalized, spread-cost
+  refusal at registration, and the budget ledger the old design didn't have.
+
+  Wrote 1 memory (ctrl+o to expand)
+
+● Recorded — the comparison agent's brief will carry your framing exactly: the
+  old design is strong evidence to enhance, the library placement is the
+  ratified direction, and the register it produces will show what transfers,
+  what the move changes, and where the genuine enhancements are. Waiting on the
+  workflows now.
+
+✻ Cogitated for 30s
+
+● Dynamic workflow "Clone and study the catalog shortlist: epistemic tool
+sketches, fill simulation, calendars, CV-native portfolio, point-in-time macro
+backtester" completed · 23m 47s
+
+● Wave 2 is fully home — 7/7 agents, zero errors this time: 13 shortlist repos
+  cloned, five studies written, and the supplement distilled 43 new ledger rows
+  into reference\03-wave2-supplement.md. Highlights pending the full digest:
+  hftbacktest yielded 15 borrowable ideas for the fill engine, and the six
+  "epistemic sketch" repos confirmed themselves as independent reinventions of
+  QMF's planned safety rails.
+
+  Still waiting on wave 1's final leg (the Nautilus and backtest-engines studies
+  plus the regenerated verdicts and ledger). When it lands: comparison agent
+  for the old-engine recovery, then the unified digest artifact for your
+  ratification pass.
+
+✻ Baked for 43s
+

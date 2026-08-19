@@ -1,0 +1,18 @@
+- chunk: SRC-02-C0010
+  reason: Agent drafting and tool-operation output; no new operator decision beyond adjacent extracted chunks.
+- chunk: SRC-02-C0017
+  reason: Workflow-script diff and study prompt text; no adopted project decision.
+- chunk: SRC-02-C0018
+  reason: Workflow-script diff and model rebalance output; no adopted project decision.
+- chunk: SRC-02-C0019
+  reason: Workflow-script diff and execution status; no adopted project decision.
+- chunk: SRC-02-C0020
+  reason: Service-outage chatter and workflow edits; no durable project decision.
+- chunk: SRC-02-C0021
+  reason: Workflow prompt diff only; research instructions are not project rulings.
+- chunk: SRC-02-C0033
+  reason: Artifact and spec diff output restating rulings extracted from direct operator chunks.
+- chunk: SRC-02-C0034
+  reason: Artifact and spec diff output restating rulings extracted from direct operator chunks.
+- chunk: SRC-02-C0039
+  reason: Session-memory consolidation and goodbye; no new project decision.

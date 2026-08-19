@@ -1,0 +1,120 @@
+      72 -                                                               
+      73 -## 7. Acceptance criteria (every fenced module)                
+      74 -                                                               
+      75 -Reference usage example that runs; tests including at least one
+         - property/invariant test; no mock market data (tests use real d
+         -ownloaded fixtures or synthetic-clearly-labeled unit fixtures t
+         -hat never ship); typing clean under pyright strict; public surf
+         -ace documented in the module docstring; nothing imports from a 
+         -higher ring.                                                   
+      76 -                                                               
+      77 -## 8. Open external facts (tickets, not blockers for the fence)
+      78 -                                                               
+      79 -Spotware app approval timeline · chosen broker's real tick rete
+         -ntion · cTrader trendbars BID vs mid (UNVERIFIED) · MIS process
+         - placement (in-process vs separate) · shadow→live promotion tes
+         -t · multi-Book shared-account drawdown coordination.           
+      39 +Book/BMS machinery design (after primer discussion) · bot bindi
+         +ng contract · backtesting framework (staged funnel; operator's 
+         +GPT brainstorm markdown pending) · data acquisition timing · se
+         +ssions model detail · agentic system (5 papers first) · UI · pr
+         +op-firm books · old-vocabulary reconciliation (operator has GPT
+         + working on seat/R/seed inconsistencies — new input may arrive)
+         +.                                                              
+
+❯ Yo, don't do the initialization for you. All I need is just provide me a      
+  state to work on as long as you give me deliverables. Seriously, don't        
+  initialize anything, please. I'm seeing you creating a new project. Don't. I  
+  have skills, specific skills that are meant to do what you are trying to do.  
+  Don't initialize anything, please.                                            
+
+  Made 3 scratchpad edits +15 -15 (ctrl+o to expand)
+
+● Artifact(C:\Users\Mubarak\AppData\Local\Temp\claude\C--Users-Mubarak-Desktop-Q
+          MX\3f60e17b-e1cb-4eaa-999f-412427d7eea6\scratchpad\qmf-minimal-core.ht
+          ml)
+  ⎿  Updated ⧉ 
+     https://claude.ai/code/artifact/a934f7ba-32a1-475f-bbb8-888bea969f23
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Session state is final and nothing was initialized — that stays with your 
+  skills. Here's your deliverable inventory for tonight's export:
+
+  ⧉ The artifact, v7 
+  (https://claude.ai/code/artifact/a934f7ba-32a1-475f-bbb8-888bea969f23) —
+  refreshed with your last corrections: nouns seeded for order flow (DOM, tape,
+  level 2/3 — crypto never forces a rebuild), forex sessions vs crypto 24/7
+  drawn explicitly, code written for humans and agents, and the bot as a lineage
+  — variants first-class, parent/child tracked through fingerprints.
+
+  On disk, ready for your manual export:
+
+  - artifacts\ — the v7 page, the foundations page, and the rewritten handoff 
+  spec (toolbox-not-node, qmf-core contents, tonight's vocabulary rulings
+  including SQS = spread quality sensor and sweep→cap→re-seed as the scalping 
+  book's pattern, the evidence index, and an "explicitly open" list so
+  documentation can't harden anything undecided).
+  - reference\ — 156-row idea ledger, kernel verdict (build, ratified by you),
+  backtesting materials (marked unratified, for their own session), the
+  trading-node primer from your GitBook, and your links.
+  - research\ — the 11 original studies.
+  - tracker\map.md — the running decision record, if your pipeline wants it;
+  ignore otherwise.
+
+  When your GPT returns the seat/R/seed reconciliation, it joins the evidence
+  pile like everything else. Transcript + those folders → your documentation
+  factory → framework docs first → then qmf-core. The state is yours now — good
+  session, long one. Go eat.
+
+✻ Brewed for 2m 40s
+
+※ recap: We're chartering QMX's clean restart, and this session's QMF groundwork is done: research, verdicts, corrected handoff spec, and the v7 artifact are all saved. Next: you export the transcript plus artifacts, research, and reference folders to your documentation factory.
+
+❯ it said [[Before continuing qmf-core, read                                    
+  .recovery/trading-node-delta/recovery-lineage-addendum.md immediately after   
+  reference/05-trading-node-primer.md. The primer is a faithful GitBook         
+  baseline, but GitBook is primarily the Book/BMS authority rewrite—not the     
+  complete source for every surviving mechanic. Use the legacy QMX-discussion   
+  corpus for unchanged mechanics, BMAD claim by claim, and current operator     
+  rulings as highest authority. SQS means Spread Quality Sensor; the later      
+  snapshot-quality aggregate is semantic drift. QMF is genuinely new, so        
+  recover semantics and contracts—not the old module graph. qmf-core may        
+  proceed only with framework-neutral primitives; do not freeze Trading Node    
+  application decisions yet.]]                                                  
+
+● Reading the addendum now — this changes the source-authority picture, so it
+  goes into the record before anything else.
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(artifacts\2026-08-17-qmf-v1-spec-DRAFT.md)
+  ⎿  Added 3 lines, removed 1 line
+       5  
+       6  ## 1. What QMF is — the one ruling everything else hangs on
+       7  
+       8 -QMF (Quant Mind Framework) is the **toolbox used to BUILD the a
+         -pplications**, never an application itself. The trading node (d
+         -esign = the public GitBook, untouched, see `reference/05-tradin
+         -g-node-primer.md`), backtest workspaces (agents in sandboxes, o
+         -n demand), and the QMX app + UI are all **built with** QMF late
+         -r. Do not put application runtime (event loops, bot→Book→BMS pi
+         -pelines, broker sessions) inside the framework's foundation. Re
+         -act analogy: the framework provides parts; the app owns the flo
+         -w.                                                             
+       8 +QMF (Quant Mind Framework) is the **toolbox used to BUILD the a
+         +pplications**, never an application itself. The trading node, b
+         +acktest workspaces (agents in sandboxes, on demand), and the QM
+         +X app + UI are all **built with** QMF later.                   
+       9  
+      10 +**Trading-node authority model (corrected per `.recovery/tradin
+         +g-node-delta/recovery-lineage-addendum.md`):** GitBook supplies
+         + the **Book/BMS baseline** — the governance rewrite (bots propo
+         +se; Books own money and permission; BMS accounts and constrains
+         +; seven doors; Treasury cycles; constitution). It is NOT the co
+         +mplete source for every surviving mechanic: mechanics GitBook n
+         +ames but never defines are recovered from the legacy `QMX-discu
+         +ssion` corpus; wiki/BMAD material counts claim-by-claim only; *
+         +*current operator rulings override every historical layer**. Th
+         +e node will be re-specified by reconciling these — that reconci
+         +liation is future work, not tonight's. Do not put application r

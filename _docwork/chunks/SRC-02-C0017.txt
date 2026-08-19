@@ -1,0 +1,120 @@
+          +ser writes, lifecycle hooks), backtest engine internals, data 
+          +pipeline/candle storage, indicator system, risk/position handl
+          +ing, optimization mode, project structure conventions, and wha
+          +t makes it pleasant. Verdict: what QMF should copy from Jesse 
+          +specifically vs where Jesse's simplicity would box us in.` }, 
+      105    { slug: 'backtest-engines', file: 'backtest-engines.md', mod
+           el: 'opus', effort: 'high', prompt: `Comparative deep-study of
+            ${REPOS}/backtrader, ${REPOS}/zipline-reloaded, ${REPOS}/rqal
+           pha (three generations of Python event-driven backtest engines
+           ). Focus per engine: event loop design, order/fill simulation 
+           and fill models, slippage/commission models, portfolio account
+           ing, result/report objects, multi-asset & multi-timeframe hand
+           ling, extension points, why each aged the way it did. Cross-re
+           ference C:/Users/Mubarak/Desktop/QMX/research/01-architecture-
+           references.md (vectorbt/LEAN already covered). End with: the s
+           hortest honest path to an industry-grade backtest capability f
+           or QMF.` },
+      106    { slug: 'platforms', file: 'platform-patterns.md', model: 'o
+           pus', effort: 'high', prompt: `Study ${REPOS}/OpenBB, ${REPOS}
+           /FinceptTerminal, ${REPOS}/zvt. Focus: OpenBB's provider/adapt
+           er architecture (how hundreds of data sources sit behind one A
+           PI — directly relevant to QMF's ingest layer), its CLI/app spl
+           it; FinceptTerminal's data-presentation and news-display patte
+           rns (Mubarak likes its aesthetics — capture WHAT makes them wo
+           rk, layout-wise, for the future Rust UI); zvt's data-schema/re
+           corder pattern and how it presents data. Extract platform-orga
+           nization mental models, not feature lists.` },
+      107    { slug: 'ml-research', file: 'ml-research-patterns.md', mode
+           l: 'opus', effort: 'high', prompt: `Study ${REPOS}/qlib, ${REP
+           OS}/mlfinlab, ${REPOS}/QuantResearch, ${REPOS}/QuantsPlaybook 
+           (some content Chinese — read it, translate key ideas). Focus: 
+           qlib's ML pipeline (dataset → model → workflow → record/experi
+           ment tracking — compare with our planned qmf.experiment/qmf.mo
+           dels), mlfinlab's techniques catalog (which are relevant to re
+           tail FX and which are equities-only), the notebooks' research-
+           workflow patterns. Verdict: what serves QMX's MIS and research
+            lane, what is noise. Cross-reference research/08 and research
+           /09.` },
+
+● Update(~\.claude\projects\C--Users-Mubarak-Desktop-QMX\3f60e17b-e1cb-4eaa-999f
+        -412427d7eea6\workflows\scripts\qmf-repo-study-wf_a53bf7ca-d42.js)
+  ⎿  Added 1 line, removed 1 line
+      103    { slug: 'nautilus', file: 'nautilus-trader.md', model: 'opus
+           ', effort: 'high', prompt: `Deep-study ${REPOS}/nautilus_trade
+           r — the single most important study. Focus: how the kernel wor
+           ks (message bus, cache, data engine, execution engine, clock);
+            how backtest and live share the SAME core (this impressed Mub
+           arak); how strategies are authored; how indicators update incr
+           ementally; how venue adapters are structured; how the Rust cor
+           e relates to the Python surface; what a from-scratch Python-on
+           ly reimplementation of the essential kernel would actually inv
+           olve (est. scope honestly). It is LGPL — design study only, no
+            code reuse.` },
+      104    { slug: 'jesse', file: 'jesse.md', model: 'sonnet', effort: 
+           'high', prompt: `Deep-study ${REPOS}/jesse (Mubarak likes it a
+           nd knows the creator). Focus: strategy authoring API (what a u
+           ser writes, lifecycle hooks), backtest engine internals, data 
+           pipeline/candle storage, indicator system, risk/position handl
+           ing, optimization mode, project structure conventions, and wha
+           t makes it pleasant. Verdict: what QMF should copy from Jesse 
+           specifically vs where Jesse's simplicity would box us in.` },
+      105    { slug: 'backtest-engines', file: 'backtest-engines.md', mod
+           el: 'opus', effort: 'high', prompt: `Comparative deep-study of
+            ${REPOS}/backtrader, ${REPOS}/zipline-reloaded, ${REPOS}/rqal
+           pha (three generations of Python event-driven backtest engines
+           ). Focus per engine: event loop design, order/fill simulation 
+           and fill models, slippage/commission models, portfolio account
+           ing, result/report objects, multi-asset & multi-timeframe hand
+           ling, extension points, why each aged the way it did. Cross-re
+           ference C:/Users/Mubarak/Desktop/QMX/research/01-architecture-
+           references.md (vectorbt/LEAN already covered). End with: the s
+           hortest honest path to an industry-grade backtest capability f
+           or QMF.` },
+      106 -  { slug: 'platforms', file: 'platform-patterns.md', model: 'o
+          -pus', effort: 'high', prompt: `Study ${REPOS}/OpenBB, ${REPOS}
+          -/FinceptTerminal, ${REPOS}/zvt. Focus: OpenBB's provider/adapt
+          -er architecture (how hundreds of data sources sit behind one A
+          -PI — directly relevant to QMF's ingest layer), its CLI/app spl
+          -it; FinceptTerminal's data-presentation and news-display patte
+          -rns (Mubarak likes its aesthetics — capture WHAT makes them wo
+          -rk, layout-wise, for the future Rust UI); zvt's data-schema/re
+          -corder pattern and how it presents data. Extract platform-orga
+          -nization mental models, not feature lists.` },                
+      106 +  { slug: 'platforms', file: 'platform-patterns.md', model: 's
+          +onnet', effort: 'high', prompt: `Study ${REPOS}/OpenBB, ${REPO
+          +S}/FinceptTerminal, ${REPOS}/zvt. Focus: OpenBB's provider/ada
+          +pter architecture (how hundreds of data sources sit behind one
+          + API — directly relevant to QMF's ingest layer), its CLI/app s
+          +plit; FinceptTerminal's data-presentation and news-display pat
+          +terns (Mubarak likes its aesthetics — capture WHAT makes them 
+          +work, layout-wise, for the future Rust UI); zvt's data-schema/
+          +recorder pattern and how it presents data. Extract platform-or
+          +ganization mental models, not feature lists.` },              
+      107    { slug: 'ml-research', file: 'ml-research-patterns.md', mode
+           l: 'opus', effort: 'high', prompt: `Study ${REPOS}/qlib, ${REP
+           OS}/mlfinlab, ${REPOS}/QuantResearch, ${REPOS}/QuantsPlaybook 
+           (some content Chinese — read it, translate key ideas). Focus: 
+           qlib's ML pipeline (dataset → model → workflow → record/experi
+           ment tracking — compare with our planned qmf.experiment/qmf.mo
+           dels), mlfinlab's techniques catalog (which are relevant to re
+           tail FX and which are equities-only), the notebooks' research-
+           workflow patterns. Verdict: what serves QMX's MIS and research
+            lane, what is noise. Cross-reference research/08 and research
+           /09.` },
+      108    { slug: 'portfolio-libs', file: 'portfolio-libs.md', model: 
+           'opus', effort: 'medium', prompt: `Study ${REPOS}/PyPortfolioO
+           pt, ${REPOS}/Riskfolio-Lib, ${REPOS}/FinanceToolkit. Focus: AP
+           I shapes for optimization/risk (what a clean risk API looks li
+           ke), which methods matter for a forex/prop-firm context vs equ
+           ities-portfolio context (be honest — much of this is equities-
+           shaped), FinanceToolkit's relevance for the later stocks lane 
+           (day trading only, never futures/options — a permanent product
+            constraint). Cross-reference research/04.` },
+      109    { slug: 'bot-frameworks', file: 'bot-frameworks.md', model: 
+           'opus', effort: 'medium', prompt: `Study ${REPOS}/lumibot, ${R
+           EPOS}/qtpylib, and skim ${REPOS}/QuantLib (C++, huge — structu
+           re and concepts only: calendars, day-count conventions, quote 
+           handles; what if anything QMF needs from that world). Focus fo
+           r the two bot frameworks: strategy lifecycle, broker abstracti
+           on, live/backtest switching, scheduling — and their failure mo

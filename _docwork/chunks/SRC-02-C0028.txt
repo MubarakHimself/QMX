@@ -1,0 +1,113 @@
+          ode absorbed into the app (ML training ~quarterly in cloud sand
+          boxes, shadow rollout); Python core, Rust UI later, no Electron
+          , no MQL; forex on cTrader first, crypto later via agent-built 
+          adapters; no central backtest engine — backtesting decentralize
+          s into callable QMF components; build method = factory pipeline
+          , validation inside factory runs (modules ship with reference u
+          sage + tests); defaults ≠ mock data, mock data never ships, pro
+          duct ships with no bots; total clean slate (old repos deleted).
+
+  Wrote 1 memory (ctrl+o to expand)
+
+❯ i am still reading the artifact hang on                                       
+
+● Take your time — one heads-up: refresh the page before you continue. It just
+  updated to v4 with your rulings baked in — Block B now reads "Kernel: BUILD,
+  ratified, spike cancelled," the prop-firm decision is removed from Block E
+  entirely (deferred to the agentic era, machinery-only in QMF), and the kernel
+  card carries your four arguments instead of the spike. Everything else you
+  were reading is unchanged.
+
+✻ Baked for 1m 54s
+
+※ recap: We're finalizing QMX's day-one ratification pack: research done, kernel build ratified, prop-firm deferred. You were reading the QMF Minimal Core artifact (v4). Next action: give your yes/no on blocks A, C, D and E.
+❯ Now, something else I think you kind of forgot, and I'm just curious how you  
+  forgot about it. You do recall that QMF is a framework. You remember the five 
+  hats we talked about? Yeah, if you suggested this guy Nautilus, if you        
+  suggested his thing or whatever, their thing, you are not considering all the 
+  five hearts because I remember telling you, we are to consider all of them,   
+  which means we have to create adapters again to connect to their thing. Yet   
+  instead, we would have built everything in-house with proper uniformity. That 
+  again is removing the bloody uniformity. Okay, also, you know, if this guy    
+  decides tomorrow that, okay, I don't want to share this, or okay, I want to   
+  put a pay wall behind this. You see, we are stuck. Or if we commits and       
+  removes certain things because the community claims they don't want it, but   
+  for us, we do. Alright, so now the backtest engine, this is something I think 
+  we need to really think through seriously. Is it an engine? Okay, actually,   
+  it's no longer even a backtesting, a backtest engine, it's just backtesting   
+  as a library. Okay, because it's like I've explained above, you know, we try  
+  to reduce the amount of compute needed. Okay? To remove it to be from you     
+  know centralized to now on demand because most agents are going to be running 
+  in sandboxes or VPSs. I don't know if you get me. Because there are so many   
+  ways you can do this, but that will depend on the identic architecture. When  
+  I purchase one VPS, which is very, you know, they call them bare metal or     
+  whatever, very high performance. Like I told you, a Ryzen 9 CPU. Okay, so     
+  which means it's very high performance. Okay, this means I can load as many   
+  agents as possible because we can calculate how fast the backtesting can      
+  happen. Okay, so now, anyway, let me first stop ranting and read through your 
+  stuff. So you are saying the library is equals QMX own five contracts.        
+  Really, really? Well, that's ironic. And how is it a thousand five hundred    
+  lines of assembly fabricating proof fabrication proofing of six mechanism     
+  team first now? Oh my god, whoa. Okay, first put the bug testing on hold      
+  because I had actually forgotten something. I meant back testing on hold. I   
+  had forgotten something because I just recalled the conversation I had, and   
+  it was going to change how we handle backtesting overall. The conversation    
+  was as follows. Let me see if I recall it. Okay, the whole idea was we try.   
+  Okay, the idea was we tried to do the back testing in levels instead of front 
+  instea                                                                        
+  ──── (0 lines hidden) ─────────────────────────────────────────────────────── 
+  ing strategies? Because remember, I told you the whole point is that this     
+  system has to be agent-ready, so it means, I mean, think about, look at       
+  React.js, okay, or TypeScript. These things are built, any agent can          
+  understand them, because sure you can be like they have been trained on the   
+  data, but there is documentation for even new libraries. So, we need to look  
+  at maybe core concepts in software engineering, like clean code, modulation,  
+  stuff like that. I'm not even a software engineer, but you get the idea. So,  
+  for me, I feel like you really, really underscored, really underscored. I     
+  don't know why, maybe you because the things you are producing are not making 
+  sense in my opinion. Because you are saying the report scaffolding, I         
+  haven't seen it. I actually don't know what it is. QMF Core, I haven't seen   
+  it, I don't know what it is. QMF model and QMF Errors, I don't know what it   
+  is. Okay, I know what those are. I know ideas of all these, but I don't know  
+  what they're doing. Okay, German data, leg splits, that's okay, but again,    
+  what are they? So, first, explain that's what I wanted you to break this down 
+  because I've been away for a minute, that's my fault. I admit the mistake,    
+  but you are assuming a lot of things, I would say. Okay, and in my opinion, I 
+  feel like it's a little bit ambiguous, and you're moving too fast. So, slow   
+  down. And let's buy I told you it's better if for this session alone we buy   
+  it off a little piece, tomorrow we bite off another piece, like that, we go   
+  on till a week is done. Trust me, this library, this framework rather cannot  
+  take a week, it really can't because most of the things are already being     
+  filled in because you've done most of the heavy lifting with which is the     
+  deep research. If you to be honest, if you've done the deep research very,    
+  very well and you have, should I say, consistent and reusable maps and        
+  artifacts and whatnot, like I requested for any agent I'm going to work with  
+  tomorrow, other than you, will know what to when I say let's talk about the   
+  back testing framework or at the library, it will know what to do. When I ask 
+  about a bot, it will know what to do. Even when we reach documentation,       
+  because all this is going to be redocumented, and I don't know if you know    
+  that, okay? So it means when we reach documentation, the agent documenting is 
+  not going to think a lot, okay? Because the whole point right now is we need  
+  to be slow but sure and efficient in all that we do. Let me end here          
+  dictating. Thank you                                                          
+
+● All of it lands. Recording your rulings first, then rebuilding the artifact
+  the way you actually asked — simple words, diagrams, foundation only, nothing
+  that belongs to another session.
+
+  Wrote 1 memory (ctrl+o to expand)
+
+● Write(tracker\tickets\008-backtesting-framework.md)
+  ⎿  Wrote 19 lines to tracker\tickets\008-backtesting-framework.md
+       1 ---
+       2 id: 008
+       3 title: Backtesting framework (staged funnel)
+       4 label: wayfinder:grilling
+       5 status: open
+       6 assignee:
+       7 blocked-by: []
+       8 ---
+       9 
+      10 ## Question
+     … +23 lines (ctrl+o to expand)
+

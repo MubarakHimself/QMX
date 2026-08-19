@@ -1,0 +1,115 @@
+● Update(artifacts\2026-08-17-qmf-v1-spec-DRAFT.md)
+  ⎿  Added 4 lines, removed 2 lines
+      1 -# QMF — Handoff Specification for the Documentation Factory     
+      1 +# QMF V1 Blueprint — Handoff for the Documentation Factory      
+      2  
+      3 -**Status:** supersedes the earlier draft in this file entirely (
+        -2026-08-17, end of session). The earlier draft conflated QMF wit
+        -h the trading node; this version carries the operator's correcti
+        -ons.                                                            
+      3 +**Status:** supersedes the earlier draft in this file entirely (
+        +2026-08-17, end of session; extended 2026-08-18). The earlier dr
+        +aft conflated QMF with the trading node; this version carries th
+        +e operator's corrections.                                       
+      4 +**Naming note (operator, 2026-08-18): the phrase "minimal core" 
+        +is RETIRED as a name for this agreement.** It survives only as h
+        +istory in ticket 002's title. What this document describes is th
+        +e full QMF V1 blueprint — the library roster across the five hat
+        +s (§2b) plus all ratified rulings; `qmf-core` (§2) is deliberate
+        +ly the SMALL first brick inside it, but nothing here is "minimal
+        +". A documentation agent must scope to the whole blueprint, not 
+        +to the first brick alone.                                       
+      5 +**Read order for the documentation agent:** this spec + `tracker
+        +/map.md` + tracker tickets are the AUTHORITY (they carry the ope
+        +rator's ratifications and denials); `reference/07/08/09` are del
+        +ivered studies pending ratification; the two session transcripts
+        + are raw evidence BEHIND these documents, never overriding them 
+        +— where a transcript and this spec disagree, the spec is the lat
+        +er, corrected word.                                             
+      6  **Job:** documentation-only handoff — **restart QMX documentatio
+         n, framework (QMF) first, trading node later.** Claude initializ
+         es/scaffolds nothing (operator ruling: Mubarak's own skills do t
+         hat). Code (qmf-core) ships only after documentation.
+      7  
+      8  ## 1. What QMF is — the one ruling everything else hangs on
+● Update(tracker\map.md)
+  ⎿  Added 1 line, removed 1 line
+      18  - **No Claude attribution in commits** — never add "Co-Authored
+          -By: Claude" or similar lines; operator's explicit standing rul
+          e.
+      19  - Repo studies run in WAVES: wave 1 = direct links; the catalog
+           shortlist auto-triggers wave 2 (and 3 if needed) — the awesome
+          -* maps compound and Mubarak expects that expansion.
+      20  - HITL tickets: invoke /grilling + /domain-modeling.
+      21 -- Banned vocabulary: "plugins" (extensions are not plugins); "e
+         -xam" (collides with the legacy Examination Engine / Book-exam c
+         -oncept, 2026-08-18); "engine" for backtesting (it is a library)
+         -; no "fake counterparty" framing. Give reading time — never del
+         -iver an artifact and fire questions in the same beat.          
+      21 +- Banned vocabulary: "plugins" (extensions are not plugins); "e
+         +xam" (collides with the legacy Examination Engine / Book-exam c
+         +oncept, 2026-08-18); "engine" for backtesting (it is a library)
+         +; no "fake counterparty" framing. Retired framings: "kernel" (→
+         + qmf-core + separately-specified trading node); "minimal core" 
+         +as the name of the whole agreement (→ **QMF V1 blueprint**; qmf
+         +-core is the small first brick inside it, 2026-08-18); bare wor
+         +d "model" proposed for retirement (→ ML artifact / trading thes
+         +is / analysis artifact). Give reading time — never deliver an a
+         +rtifact and fire questions in the same beat.                   
+      22  - Research protocol: findings are NEVER auto-adopted. Claude pr
+          esents what was found, what it proposes, where it agrees/disagr
+          ees — then Mubarak and Claude discuss and ratify ("agree to dis
+          agree" pass). Applies to every research return.
+      23  - Authority (precedence order, per the lineage addendum): **cur
+          rent operator rulings override every historical layer**; GitBoo
+          k (https://elios-1.gitbook.io/qmx) = the Book/BMS governance ba
+          seline, NOT a complete source — mechanics it names but never de
+          fines are recovered from the legacy `QMX-discussion` corpus; wi
+          ki/BMAD counts claim-by-claim only; `C:\Users\Mubarak\Documents
+          \QMX` old corpus and local `.recovery/` = evidence only, fresh 
+          ratification required; cordiverse composability paper = agentic
+           harness only, never cite it for QMF or the node.
+      24  - **Don't-box-in principle (operator ruling 2026-08-18, platfor
+          m-wide):** QMF is an open toolbox — always usable alongside pla
+          in Python/NumPy/Pandas and any external library or method (GAs,
+           trees, RL, LLMs, synthetic data — methods change). Uniformity 
+          comes from shared contracts and conventions, never from walls. 
+          Strictness concentrates in exactly two places: the agentic harn
+          ess (agents are non-deterministic; DeepSeek-grade discipline ea
+          rns its place there) and the promotion gate into the live money
+           path (order, not lock-in). Research/experimentation lanes stay
+           free.
+
+● Update(tracker\tickets\002-qmf-minimal-core.md)
+  ⎿  Added 2 lines
+      14  
+      15  ## Resolution (2026-08-18 evening)
+      16  
+      17 +**Naming note:** this ticket's title ("QMF minimal core") is hi
+         +storical. What it resolved into is the **QMF V1 blueprint** — t
+         +he phrase "minimal core" is retired (operator, 2026-08-18) beca
+         +use the agreement now spans the full five-hat library roster; o
+         +nly `qmf-core` itself stays deliberately small.                
+      18 +                                                               
+      19  QMF's minimal core is answered: **`qmf-core` accepted as the fi
+          rst brick** (exact money, exact time with three trading calenda
+          rs, the nouns seeded for order-flow and equities, typed refusal
+          s, stamp machine, versioning — no loop, no broker, no backtest,
+           no downloads), and the full **QMF library roster split by the 
+          five hats** is recorded in the spec (`artifacts/2026-08-17-qmf-
+          v1-spec-DRAFT.md` §2b) with a status tag per library. Nothing a
+          greed is outside QMF — only outside the first brick. The six fr
+          ozen technical choices are confirmed at the documentation pass,
+           not here. Next step per operator: export this session, run the
+           documentation skill on QMF, factory codes from the docs. The t
+          rading node re-spec (ticket 004) follows, built on this session
+          's output.
+      20  
+      21  ## Progress
+
+● Done — three changes: the spec is now titled "QMF V1 Blueprint" with an
+  explicit note that "minimal core" is retired and a documentation agent must
+  scope to the whole blueprint, not the first brick; the map's vocabulary list
+  records the retirement (alongside "kernel"); and ticket 002 carries a naming
+  note so its historical title can't mislead anyone.
+

@@ -1,0 +1,120 @@
+  1. Research is a discussion — when the fleet reports, I present findings +
+  what I propose + where I agree and disagree, and you ratify. Nothing
+  auto-adopts. The 5pm draft will be structured exactly that way: findings → my
+  positions → your call.
+  2. Currency libraries corrected — hypothesis fuel and agent context, not
+  control limits; optional per strategy; sharpest use is prop-firm pair
+  selection (stable, cleaner setups; pass-phase vs funded-phase).
+  3. Backtesting goes inside QMF — still callable components, no monolith, but
+  it's now explicitly in the minimal-core scope for today's spec.
+  4. Prop firms elevated — challenge/drawdown constraint modeling gets
+  first-class weight in the risk/sizing design, not a footnote.
+
+  See you at 5 — the findings presentation and the fenced overnight spec will be
+  waiting.
+
+✻ Cooked for 50s
+
+● Dynamic workflow "Deep research across QMF areas: architecture, data,
+indicators, risk, brokers, forex domain, crypto — then gap check and synthesis"
+completed · 1h 8m 53s
+
+● Research fleet is done — 12 agents, 11 study files, zero errors. Now reading
+  the synthesis so I can draft the minimal-core spec pack before Mubarak
+  returns.
+
+  Read 1 file (ctrl+o to expand)
+
+● Write(artifacts\2026-08-17-qmf-v1-spec-DRAFT.md)
+  ⎿  Wrote 79 lines to artifacts\2026-08-17-qmf-v1-spec-DRAFT.md
+      1 # QMF V1 — Minimal Core Specification (DRAFT)
+      3 **Status:** DRAFT — pending operator ratification of the 12 decis
+        ions below (session of 2026-08-17, ~17:00).
+        `). This spec cites those files; it does not repeat them. `resear
+      5 **Prime rules already ratified:** QMF is the umbrella framework e
+        verything in QMX builds on; Python core; no central backtest engi
+        e product ships with no bots; versioned releases, never break con
+        sumers; agents author strategies through a constrained surface.
+      7 ---
+      9 ## 1. The fo
+     … +200 lines (ctrl+o to expand)
+
+  Made 1 scratchpad edit +231 (ctrl+o to expand)
+
+● Artifact(C:\Users\Mubarak\AppData\Local\Temp\claude\C--Users-Mubarak-Desktop-Q
+          MX\3f60e17b-e1cb-4eaa-999f-412427d7eea6\scratchpad\qmf-minimal-core.ht
+          ml)
+  ⎿  Published ⧉ 
+     https://claude.ai/code/artifact/a934f7ba-32a1-475f-bbb8-888bea969f23
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(tracker\tickets\001-qmf-research-sweep.md)
+  ⎿  Added 4 lines, removed 3 lines
+       2  id: 001
+       3  title: QMF research sweep
+       4  label: wayfinder:research
+       5 -status: claimed                                                
+       5 +status: closed                                                 
+       6  assignee: claude-session-2026-08-17
+       7  blocked-by: []
+       8 +closed: 2026-08-17                                             
+       9  ---
+      10  
+      11  ## Question
+      12  
+      13  What does the open ecosystem already offer for each QMF area — 
+          architecture references, data foundation, indicators/analysis, 
+          portfolio risk & sizing, broker connectivity, forex domain comp
+          onents (Level/Trigger/Confirmation/Exit), crypto inefficiencies
+           — and how do the five quant hats link across them?
+      14  
+      14 -## Progress                                                    
+      15 +## Resolution                                                  
+      16  
+      16 -Dynamic workflow `wf_b48ad2b8-965` (qmf-research-sweep) fired 2
+         -026-08-17: 7 area researchers → completeness critic → up to 3 g
+         -ap digs → synthesis. Output: `research/01..07-*.md`, gap files 
+         -`08+`, entry point `research/00-qmf-synthesis-module-map.md`. R
+         -esolve this ticket when the synthesis lands and is digested int
+         -o an index artifact.                                           
+      17 +Workflow `wf_b48ad2b8-965`: 12 agents, 0 errors, 11 study files
+         + in `research/` (7 areas + 3 critic-ordered gap digs: MIS/ML re
+         +gime models, experimentation/overfitting control, macro-micro d
+         +ata) + synthesis `research/00-qmf-synthesis-module-map.md`. Hea
+         +dlines: four convergent ideas (two-timestamp provenance; define
+         +-once/replay; strategy never sizes; nothing counts unless regis
+         +tered); three genuinely greenfield pieces (cTrader adapter, pro
+         +p-firm rule engine, honest zone detection — popular `smartmoney
+         +concepts` has a 2-year-old lookahead bug); overfitting budget a
+         +rithmetic makes search-counting a core framework duty; ingestio
+         +n must ship first (calendar + own tick stream unrecoverable). D
+         +igested into the [QMF Minimal Core artifact](../../artifacts/20
+         +26-08-17-qmf-minimal-core.html) and draft spec `artifacts/2026-
+         +08-17-qmf-v1-spec-DRAFT.md`. Findings are NOT adopted until the
+         + ratification pass (ticket 002) — per the research protocol in 
+         +the map notes.                                                 
+
+● Update(tracker\tickets\002-qmf-minimal-core.md)
+  ⎿  Added 4 lines
+      10  ## Question
+      11  
+      12  What is QMF's minimal core — the named modules of V1, which exi
+          sting libraries each wraps versus what gets built, and the boun
+          daries between the five hat lanes — such that the factory can s
+          hip V1 in ~2–3 days? Claude drafts from the research synthesis 
+          (`research/00-qmf-synthesis-module-map.md`); Mubarak yes/no's t
+          he draft. Ask Mubarak to attach the original QML design doc if 
+          he has found it.
+      13 +                                                               
+      14 +## Progress                                                    
+      15 +                                                               
+      16 +Draft ready for the ~17:00 ratification pass: spec `artifacts/2
+         +026-08-17-qmf-v1-spec-DRAFT.md` (module rings, 12 decisions D1–
+         +D12 with recommendations, conventions, tonight's fence = Ring 0
+         + + Ring 1 + conformance harness) and presentation artifact `art
+         +ifacts/2026-08-17-qmf-minimal-core.html`. Resolve when Mubarak 
+         +ratifies/amends D1–D9 and blesses the fence; then flip spec DRA
+         +FT → RATIFIED and he exports the pack to the documentation fact
+         +ory.                                                           
+

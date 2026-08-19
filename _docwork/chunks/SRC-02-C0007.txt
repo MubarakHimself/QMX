@@ -1,0 +1,106 @@
+  feel like it is going to be wasting my usage try using opus as much as you    
+  want try using sonnet if you want yeah I don't know can I trust you to do     
+  this because dude I'm dead I'm actually tired my brain can't think properly   
+  anymore                                                                       
+● Rest easy — I've got it from here. Firing the deep-research fleet now (Opus
+  subagents only, no Fable, as ordered), then setting up the map and home while
+  it runs.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Workflow(Deep research across QMF areas: architecture, data, indicators, risk,
+          brokers, forex domain, crypto — then gap check and synthesis)
+  ⎿  /workflows to view dynamic workflow runs
+
+❯ Alright, this is just a simple nudge, yeah. Continue working. I was just      
+  waiting for you to respond, then I leave. Try mixing Sonnet and Opus models,  
+  please                                                                        
+
+● Write(tracker\map.md)
+  ⎿  Wrote 40 lines to tracker\map.md
+       1 ---
+       3 created: 2026-08-17
+       4 ---
+       5 
+       7 
+       8 ## Destination
+      10 QMF V1 is specified and factory-ready, the trading node is re-sp
+         ecified on QMF, and every agreed concept is captured as factory-
+         ready artifacts — so the software factory can ship QMX piece by 
+         t locked final wording.)*
+     … +67 lines (ctrl+o to expand)
+
+● Write(tracker\tickets\001-qmf-research-sweep.md)
+  ⎿  Wrote 16 lines to tracker\tickets\001-qmf-research-sweep.md
+       1 ---
+       2 id: 001
+       3 title: QMF research sweep
+       4 label: wayfinder:research
+       5 status: claimed
+       6 assignee: claude-session-2026-08-17
+       7 blocked-by: []
+       8 ---
+       9 
+      10 ## Question
+     … +14 lines (ctrl+o to expand)
+
+● Write(tracker\tickets\002-qmf-minimal-core.md)
+  ⎿  Wrote 12 lines to tracker\tickets\002-qmf-minimal-core.md
+       1 ---
+       2 id: 002
+       3 title: QMF minimal core
+       4 label: wayfinder:grilling
+       5 status: open
+       6 assignee:
+       7 blocked-by: [001]
+       8 ---
+       9 
+      10 ## Question
+     … +7 lines (ctrl+o to expand)
+
+● Write(tracker\tickets\003-bot-schema.md)
+  ⎿  Wrote 12 lines to tracker\tickets\003-bot-schema.md
+       1 ---
+       2 id: 003
+       3 title: Bot schema
+       4 label: wayfinder:grilling
+       5 status: open
+       6 assignee:
+       7 blocked-by: [002]
+       8 ---
+       9 
+      10 ## Question
+     … +7 lines (ctrl+o to expand)
+
+● Write(tracker\tickets\004-trading-node-spec.md)
+  ⎿  Wrote 12 lines to tracker\tickets\004-trading-node-spec.md
+       1 ---
+       2 id: 004
+       3 title: Trading node on QMF
+       4 label: wayfinder:grilling
+       5 status: open
+       6 assignee:
+       7 blocked-by: [002]
+       8 ---
+       9 
+      10 ## Question
+     … +7 lines (ctrl+o to expand)
+
+● Write(tracker\tickets\005-data-architecture.md)
+  ⎿  Wrote 12 lines to tracker\tickets\005-data-architecture.md
+       1 ---
+       2 id: 005
+       3 title: Data architecture
+       4 label: wayfinder:grilling
+       5 status: open
+       6 assignee:
+       7 blocked-by: [001]
+       8 ---
+       9 
+      10 ## Question
+     … +7 lines (ctrl+o to expand)
+
+  Ran 1 shell command, wrote 1 memory (ctrl+o to expand)
+
+● Go rest — everything is running. Status:
+

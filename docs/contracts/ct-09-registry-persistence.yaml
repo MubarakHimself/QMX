@@ -1,0 +1,27 @@
+id: CT-09
+name: Registry persistence contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-REGISTRY
+consumers: [COMP-QMF-DATA-STORE]
+layer_from: backend
+layer_to: data
+decisions: [DEC-0035, DEC-0038, DEC-0047]
+gaps: [GAP-0005, GAP-0015, GAP-0021, GAP-0022]
+purpose: "Persist registry identities, lineage, versions, and occurrences behind a storage-neutral seam."
+invariants:
+  - "Persistence does not select a graph database or adopt the study stack automatically."
+  - "The data layer does not own registry business rules."
+  - "Records, transactions, engines, indexes, migrations, compaction, and recovery remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0021
+  fields: null
+  fields_gap: GAP-0015
+  enums: null
+  enums_gap: GAP-0015
+  units: null
+  units_gap: GAP-0021
+  nullability: null
+  nullability_gap: GAP-0022

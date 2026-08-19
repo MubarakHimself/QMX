@@ -1,0 +1,120 @@
+● Update(tracker\map.md)
+  ⎿  Added 1 line, removed 1 line
+      43  - Agentic system: paper-based harness, browser-equipped agents,
+           sandbox hosting (Modal-like), compute split, agents authoring 
+          Books/bots and proposing QMF changes
+      44  - QMX app itself + Rust UI (UI exists mainly to serve agents)
+      45  - Prop-firm book — own long session; scalping book is the curre
+          nt structural pattern
+      46 -- Bot schema: Level + Trigger + Confirmation (= confluence) + E
+         -xit/risk-sizing; multi-pair vs mono-pair; an agent drafts, Muba
+         -rak ratifies                                                   
+      46 +- Bot↔Book binding contract — not yet designed (the vocabulary 
+         +itself is now ratified: confluence carries NO exit; Exit/sizing
+         +/risk are Book territory); multi-pair vs mono-pair bots; an age
+         +nt drafts the taxonomy, Mubarak ratifies                       
+      47  - MIS models: regime/ML references; possibly book-specific mode
+          ls → registration implications for BMS and Book
+      48  - Research lane: hypothesis discovery (papers/videos/chat), gen
+          etic algorithms over indicators, experimentation environments
+      49  - Crypto expansion (~3–4 months out)
+
+● Update(tracker\map.md)
+  ⎿  Added 1 line, removed 1 line
+      49  - Crypto expansion (~3–4 months out)
+      50  - Live-money safety ruling — re-raise during trading-node spec 
+          sessions
+      51  - Alpha-decay detection (old QML feature to rebuild): live perf
+          ormance degrading below backtest; complicated because "edge" wa
+          s defined relative to a Book's configurable values, and Books a
+          re now plural
+      52 -- **Simulator (ratified vocabulary)**: backtest engine + a Book
+         - + chosen conditions, via a UI — stress a bot against any real 
+         -or theoretical Book; fill engine = core QMF now, Simulator UI =
+         - later product                                                 
+      52 +- **Simulator (ratified vocabulary)**: backtest engine + a Book
+         + + chosen conditions, via a UI — stress a bot against any real 
+         +or theoretical Book; fill engine design belongs wholly to the p
+         +aused backtesting area (ticket 008), Simulator UI = later produ
+         +ct                                                             
+      53  - Synthetic tick data module: algorithmic generation (block res
+          ampling, calibrated volatility models — never LLMs) for stress/
+          kill-switch/scenario testing ONLY; hard rule: synthetic data ca
+          n stress a strategy, never validate an edge
+      54  - Storage architecture (proposed, pending ratification): workin
+          g Parquet archive on the workstation; trading VPS runs the alwa
+          ys-on tick recorder and syncs down; nightly backup to an object
+          -storage bucket (B2/R2 class, ~$1–5/mo); no database server. Ba
+          ckup is an INBUILT platform feature (historically the backend-n
+          ode's job) — overall-architecture item, not an operator errand.
+           Trading VPS exists by default; procuring it is Mubarak's side,
+           core is Claude's.
+      55  - Simulator definition is ratified but ABSTRACT per Mubarak — e
+          nhance it once the backtesting verdict enumerates everything th
+          at feeds it (data, Books, conditions, kill-switch scenarios, sy
+          nthetic stress lanes)
+
+● Update(tracker\map.md)
+  ⎿  Added 1 line, removed 1 line
+      57  - Mubarak plans a Windows → Linux (Omakub) switch soon; cTrader
+           need not be installed locally — softens the TA-Lib-on-Windows 
+          concern
+      58  - Prime Market Terminal (https://prime-terminal.com/) — macro-t
+          rader terminal, reference for the agentic/macro lane; Mubarak d
+          oubts he needs it
+      59  - Currency knowledge libraries — agent fleets building per-curr
+          ency research libraries (JPY, AUD…) from papers/books/repos/web
+          ; NOT control limits directly: they fuel hypothesis proposals a
+          nd give agents real context ("not working with thin air"); some
+           strategies use them, some don't; key use: narrowing pair choic
+          e for prop firms (stable currencies, "cleaner setups" — which p
+          air for passing a challenge vs which for funded phase); agentic
+           lane (RLM + shepherd-agent sketch)
+      60 -- Backtesting mechanism as part of QMF — decentralized callable
+         - components stand (no monolith), but the mechanism itself must 
+         -be designed and built inside QMF; scope it in the minimal core 
+         -(ticket 002)                                                   
+      60 +- Backtesting mechanism — decentralized callable components sta
+         +nd (no monolith); design lives wholly in ticket 008 (paused are
+         +a); explicitly OUT of qmf-core ("no loop, no broker, no backtes
+         +t, no downloads")                                              
+      61  - Prop firms are a major operator goal — prop-firm constraint m
+          odeling (daily loss caps, drawdown rules) and pair-selection su
+          pport deserve first-class weight in risk/sizing design
+      62  - Original QML design doc — Mubarak couldn't locate it; adopt i
+          f it resurfaces
+      63  - **Old backtest-engine recovery ARRIVED** (`.recovery/backtest
+          ing-engine-retrieval/`) — verdict: old repo had NO completed en
+          gine, only an unratified "Examination Engine" design + data-plu
+          mbing proofs. Converges independently with fresh research on: t
+          wo-substitution replay parity (≡ D3), reproducibility identity 
+          (≡ content-hash runs), WF/MC/PBO battery, battery-honesty proof
+          s via known-overfit archetypes (carry this!), engine non-author
+          ity. Diverges on topology: central backend certification servic
+          e vs decentralized QMF components + promotion-ladder holdout. C
+          omparison agent fires when wave 1 lands → agrees/conflicts/re-r
+          atify register
+
+● Update(tracker\map.md)
+  ⎿  Added 7 lines
+      62  - Original QML design doc — Mubarak couldn't locate it; adopt i
+          f it resurfaces
+      63  - **Old backtest-engine recovery ARRIVED** (`.recovery/backtest
+          ing-engine-retrieval/`) — verdict: old repo had NO completed en
+          gine, only an unratified "Examination Engine" design + data-plu
+          mbing proofs. Converges independently with fresh research on: t
+          wo-substitution replay parity (≡ D3), reproducibility identity 
+          (≡ content-hash runs), WF/MC/PBO battery, battery-honesty proof
+          s via known-overfit archetypes (carry this!), engine non-author
+          ity. Diverges on topology: central backend certification servic
+          e vs decentralized QMF components + promotion-ladder holdout. C
+          omparison agent fires when wave 1 lands → agrees/conflicts/re-r
+          atify register
+      64  
+      65 +- Six irreversible technical decisions pending ratification (ea
+         +ch invalidates every prior stored result if changed later): fid
+         +elity taxonomy (bar_close / intrabar / tick), TA-Lib as canonic
+         +al indicator arithmetic, UTC-nanosecond timestamps, (venue,symb
+         +ol) identity with opaque symbol string, SR* (the pre-registered
+         + Sharpe bar that sets the whole search budget), the result key 
+         +tuple — queued for the locks discussion (2026-08-18)           

@@ -1,0 +1,117 @@
+● Dynamic workflow "Clone 25+ reference repos locally, deep-study them for
+mental models, produce the idea ledger plus kernel and backtesting verdict
+briefs" completed · 48m 49s
+
+● Wave 1 complete — 15/15, zero errors, verdicts rebuilt on full evidence,
+  ledger at 113 ideas. Firing the recovery-comparison agent now, then reading
+  the verdicts myself to assemble your ratification digest.
+
+● Agent(Compare old backtest recovery vs fresh verdict) Opus 5 (1M context)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+  Read 2 files (ctrl+o to expand)
+
+● Update(tracker\tickets\007-repo-deep-study.md)
+  ⎿  Added 2 lines, removed 1 line
+       2  id: 007
+       3  title: Reference repo deep study
+       4  label: wayfinder:research
+       5 -status: claimed                                                
+       5 +status: closed                                                 
+       6  assignee: claude-session-2026-08-17
+       7  blocked-by: []
+       8 +closed: 2026-08-17                                             
+       9  ---
+      10  
+      11  ## Question
+
+● Update(tracker\tickets\007-repo-deep-study.md)
+  ⎿  Added 4 lines
+      12  
+      13  What mental models should QMF borrow from the 25+ reference rep
+          os Mubarak supplied (see `reference/links.md`) — and, with that
+           evidence, how do the kernel question (build vs adopt vs hybrid
+          ) and the backtesting architecture (agent-proof, Book-pluggable
+          , industry-grade) actually resolve?
+      14  
+      15 +## Resolution                                                  
+      16 +                                                               
+      17 +Waves 1+2 complete (22 agents total, 37 repos cloned, 13 study 
+         +files, 113-idea ledger + 43-idea wave-2 supplement). Verdicts d
+         +elivered: `reference/01-kernel-verdict.md` — BUILD the kernel (
+         +staged: skeleton+conformance suite first; honest cost 7–11k lin
+         +es / 45–67 factory-days ±40%; Nautilus on a dated review trigge
+         +r; **D1 amendment: LGPL permitted for unmodified separately-ins
+         +talled deps**; tiebreaker = a 3-factory-day adoption spike with
+         + a pre-agreed decision rule). `reference/02-backtesting-verdict
+         +.md` — Option 2: five QMF contracts first (Run/Result, metrics,
+         + FillAssumptions+fidelity, registration gate, Book seam), engin
+         +e as thin assembly (~1,500 lines given the kernel); full vocabu
+         +lary fix (SimVenue / Fill Engine / Run / Replay / Paper mode / 
+         +Simulator=UI / Book Matrix / Program / Campaign); 14 rulings qu
+         +eued for Mubarak. Honest risk both briefs agree on: the retail-
+         +forex fill model has NO reference implementation anywhere — ins
+         +trument it, expect v1 to be wrong visibly. Recovery comparison 
+         +(old Examination Engine) in progress → `reference/04-recovery-c
+         +omparison.md`.                                                 
+      18 +                                                               
+      19  ## Progress
+      20  
+      21  Workflow `wf_a53bf7ca-d42` running: 4 Sonnet cloners (shallow c
+          lones → `reference/repos/`, .git stripped, licences recorded) →
+           8 study agents (Nautilus deep, Jesse deep, backtest engines co
+          mparative, platform patterns, ML/research patterns, portfolio l
+          ibs, bot frameworks, catalog maps) → 2 verdict briefs (`referen
+          ce/01-kernel-verdict.md`, `reference/02-backtesting-verdict.md`
+          ) → merged idea ledger (`reference/00-idea-ledger.md`: idea | s
+          ource | borrow | why | how QMF implements | licence). Ethics ru
+          le baked into every prompt: mental models only, no code transpl
+          antation, copyleft = design-study only. Mubarak's nudge to fold
+           into the digest: each Book may carry its own testing mechanism
+           — the same bot testable against different Books (scalping vari
+          ants, prop-firm eval/funded) as a matrix.
+
+● Update(tracker\map.md)
+  ⎿  Added 1 line
+      24  ## Decisions so far
+      25  
+      26  - [QMF research sweep](tickets/001-qmf-research-sweep.md) — 11 
+          study files + synthesis delivered to `research/` (facts gathere
+          d, NOT yet adopted; ratification pass = ticket 002). Entry poin
+          t: `research/00-qmf-synthesis-module-map.md`; digest: `artifact
+          s/2026-08-17-qmf-minimal-core.html`.
+      27 +- [Reference repo deep study](tickets/007-repo-deep-study.md) —
+         + 37 repos studied in two waves; idea ledger (113+43 rows) at `r
+         +eference/00-idea-ledger.md` + `03-wave2-supplement.md`; kernel 
+         +verdict (BUILD, staged, 3-day spike tiebreaker, D1 LGPL amendme
+         +nt) at `reference/01-kernel-verdict.md`; backtesting verdict (O
+         +ption 2: contracts first, vocabulary fix, Program/Campaign for 
+         +prop-firm, 14 rulings pending) at `reference/02-backtesting-ver
+         +dict.md`. Facts gathered — adoption pending ratification.      
+      28  - Operator rulings (2026-08-17 afternoon) — **Toolbox principle
+          **: QMF never adopts third-party strategy-family libraries (SMC
+          , ICT, scalper packs…); it exists so Mubarak/agents can build t
+          heir OWN custom versions of those ideologies. Repo studies extr
+          act mental models only — no code transplantation, licences resp
+          ected. **Permanent product constraint**: no futures or options,
+           ever; stocks (day-trading) possibly later. **Bot × Book testin
+          g**: each Book may carry its own testing mechanism — one bot te
+          stable against many Books (scalping variants, prop-firm eval vs
+           funded) as a matrix.
+      29  
+      30  - [Session accord — QMX Foundations v2](../artifacts/2026-08-17
+          -qmx-foundations.html) — QMF (Quant Mind Framework) is the umbr
+          ella, QML = bot library inside it; two deployables (installable
+           QMX app + one Trading VPS); everything builds on QMF; middle n
+          ode absorbed into the app (ML training ~quarterly in cloud sand
+          boxes, shadow rollout); Python core, Rust UI later, no Electron
+          , no MQL; forex on cTrader first, crypto later via agent-built 
+          adapters; no central backtest engine — backtesting decentralize
+          s into callable QMF components; build method = factory pipeline
+          , validation inside factory runs (modules ship with reference u
+          sage + tests); defaults ≠ mock data, mock data never ships, pro
+          duct ships with no bots; total clean slate (old repos deleted).
+
+  Wrote 1 memory (ctrl+o to expand)
+● Verdicts recorded. The headlines while the comparison agent finishes:
+

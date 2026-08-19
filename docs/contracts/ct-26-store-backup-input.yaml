@@ -1,0 +1,33 @@
+id: CT-26
+name: Store-to-backup input boundary
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-DATA-STORE
+consumers: [COMP-QMF-DATA-BACKUP]
+layer_from: data
+layer_to: data
+decisions: [DEC-0042, DEC-0045]
+gaps: [GAP-0005, GAP-0020, GAP-0022, GAP-0026, GAP-0027]
+purpose: "Reserve the Store-to-Backup input seam without defining snapshot shape, completeness, consistency, recovery, or cutover."
+invariants:
+  - "This provisional boundary does not claim a complete or consistent snapshot."
+  - "Record set, snapshot boundary, concurrency, schema compatibility, abort and cleanup, manifest binding, and recovery behavior remain unresolved."
+  - "No operational recovery or cutover may be implemented until GAP-0027 is resolved."
+schema:
+  type: null
+  type_gap: GAP-0020
+  fields: null
+  fields_gap: GAP-0027
+  enums: null
+  enums_gap: GAP-0022
+  units: null
+  units_gap: GAP-0026
+  nullability: null
+  nullability_gap: GAP-0027
+shape: null
+shape_gap: GAP-0020
+completeness: null
+completeness_gap: GAP-0027
+consistency: null
+consistency_gap: GAP-0022

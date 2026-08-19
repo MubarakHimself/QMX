@@ -1,0 +1,120 @@
+  Kernel (D2) — recommendation: build it, staged, and the brief is honest that
+  its own first draft underestimated the job three-fold (honest range: 7–11k
+  lines, 45–67 factory-days ±40%). Two things you'll like: your licence pushback
+  was partially vindicated — D1 gets amended because LGPL doesn't actually
+  block using Nautilus as an unmodified dependency — and instead of asking you
+  to take anyone's word, it ends with a 3-factory-day measurement spike with a
+  decision rule agreed before running it: stub a cTrader adapter against
+  Nautilus's contract, and try to place one forex swap charge as a P&L line. If
+  that lands cleanly in a wrapper, we adopt; if it has to live inside a Rust
+  crate, we build — settled by measurement, not by argument.
+
+  Backtesting — your Option 2 wins, with one correction: the "library" is QMF's 
+  own five contracts (what a Run is, what a Result is, what a Fill Assumption
+  Set is, what a Book is, what fidelity a number was produced at), then the
+  engine is a thin ~1,500-line assembly on top. The full vocabulary fix is in
+  there — including a discovery you'll want: Paper mode (live prices + simulated
+  fills) falls out of the architecture for free, and it is exactly a zero-risk
+  prop-firm challenge dry-run. Your prop question gets its real answer shape
+  too: a Program (evaluation → funded → payout as a phase machine) run hundreds
+  of times as a Campaign, reporting pass rate, expected payout, ruin
+  probability, and which rule kills you — not a Sharpe.
+
+  The one honest risk both briefs converge on: nobody anywhere has built a
+  retail-forex fill model — variable spread, weekend gaps, swap. Ours will be
+  wrong at first, and the design's job is making that wrongness visible and 
+  improving (measured live slippage feeds back into the model) instead of
+  silent.
+
+  Once the recovery comparison lands I assemble the full digest artifact — then
+  it's your ratification pass: the original decisions (amended), the 14 backtest
+  rulings, and the spike authorization.
+
+✻ Worked for 1m 52s
+
+❯ Yo, to be honest, I actually have not been around, yeah. So, any updates?     
+  Because I remember the last time I talked to you was when I was talking about 
+  the backtest engine. I really haven't been around, so what's up               
+
+● Welcome back. Everything you set in motion finished — one agent is still
+  writing, the rest is done and on disk:
+
+  1. The full repo study is complete — both waves, 37 repositories including
+  everything from your link dump plus the shortlist the maps surfaced. Zero
+  permanent failures (the Opus overload from earlier was retried and recovered).
+  Results: 13 study files, a 113-row idea ledger (reference\00-idea-ledger.md —
+  idea | source | what we borrow | why | how QMF implements it, exactly the
+  table you asked for).
+  2. The kernel question got its answer brief — recommendation: build our own,
+  but it doesn't ask you to trust an argument. It ends with a 3-day practical 
+  test with the pass/fail rule agreed up front: we try wiring cTrader and one
+  forex-specific need (swap charges) into NautilusTrader; if it fits cleanly we
+  adopt, if it needs patching their Rust internals we build. Measurement
+  decides, not opinion. Bonus: your licence pushback was partly right — LGPL
+  doesn't forbid using Nautilus unmodified, so the earlier blanket ban gets
+  amended.
+  3. The backtesting question got its brief too — your Option 2 wins: contracts
+  first (what a Run is, what a Result is, what fill assumptions are, what a Book
+  is), then the engine is a small ~1,500-line assembly. Your Simulator word is
+  now properly split into named things, and two gifts fell out: Paper mode (live
+  prices, simulated fills — a free, zero-risk prop-firm challenge dry-run) and
+  Program/Campaign (your "eval stage then funded stage on firm Y" question
+  answered as pass rate, expected payout, and ruin probability — a distribution,
+  not one number).
+  4. Your GPT recovery is being reconciled right now — the last running agent is
+  writing the old-Examination-Engine vs new-design comparison
+  (reference\04-recovery-comparison.md): where they agree (a lot — your old
+  design independently matches what NautilusTrader and the research literature
+  do), where they conflict, and what needs your re-ratification.
+
+  When that lands I build the one-page digest artifact, and then it's your
+  yes/no pass — that's the only thing left standing between today's work and
+  your factory export.
+
+✻ Worked for 20s
+
+● Agent "Compare old backtest recovery vs fresh verdict" finished · 9m 55s
+
+● The comparison landed — and it found something neither side had: a real defect
+  in the old spec (its Monte Carlo reported order-invariant metrics as
+  overfitting evidence), plus the single best thing to carry forward (the old
+  battery-honesty acceptance test, which nothing on the fresh side covers).
+  Assembling the final ratification artifact now.
+
+  Made 1 scratchpad edit +203 (ctrl+o to expand)
+
+❯ Okay, for the broker, I'm most likely going to use IC markets, and I believe  
+  they have a swap-free account, as they said. Yeah, so now that oh my god.     
+  Okay, now to now to Lia Strada starts with N, I can't pronounce it. Now, the  
+  reason we wanted rust, I believe, was mostly the UI, but I think for          
+  modularity and back testing speed, Rust would be good, but we have a problem. 
+  I don't think I would trust it. Okay, it's not, I think it's not as simple    
+  and easy to build with as Python, especially with agents. I don't know. What  
+  do you think? You have three back test questions, got it brief too Dude,      
+  seriously, first dumb this down. I need an artifact. Everything you've so far 
+  done, because I can't read these blocks of text                               
+
+● Artifact(C:\Users\Mubarak\AppData\Local\Temp\claude\C--Users-Mubarak-Desktop-Q
+          MX\3f60e17b-e1cb-4eaa-999f-412427d7eea6\scratchpad\qmf-minimal-core.ht
+          ml)
+  ⎿  Updated ⧉ 
+     https://claude.ai/code/artifact/a934f7ba-32a1-475f-bbb8-888bea969f23
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(tracker\tickets\006-spotware-broker-setup.md)
+  ⎿  Added 4 lines
+       7  blocked-by: []
+       8  ---
+       9  
+      10 +## Operator input (2026-08-17 evening)                         
+      11 +                                                               
+      12 +Broker choice: **IC Markets**, most likely on their **swap-free
+         + (Islamic) account**. Implications to verify during setup: swap
+         +-free accounts usually replace overnight swap with an administr
+         +ation fee after N days — get the exact fee schedule in writing,
+         + because the ledger's `financing` column must model IT rather t
+         +han swap; confirm IC Markets cTrader demo + live both expose Op
+         +en API; measure their real tick-history retention.             
+      13 +                                                               
+      14  ## Question

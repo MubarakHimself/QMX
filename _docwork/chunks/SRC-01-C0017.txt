@@ -1,0 +1,107 @@
+● Update(tracker\tickets\008-backtesting-framework.md)
+  ⎿  Added 8 lines, removed 1 line
+      16  - Mubarak's GPT brainstorm conversation (he will attach the mar
+          kdown — REQUEST IT at session start)
+      17  - `reference/02-backtesting-verdict.md` (rev2) and `reference/0
+          4-recovery-comparison.md` — treat as research inputs; blocks C/
+          D of the 2026-08-17 artifact were explicitly NOT ratified
+      18  - His constraints: intraday scalping profile (swap largely irre
+          levant; IC Markets swap-free account), synthetic data = experim
+          entation/stress only (99% historical), spread modeled within me
+          asured ranges, SQS reverse-engineered into backtest conditions
+      19 -- Vocabulary sensitivities: no "fake counterparty" framing; pla
+         -in words + diagrams                                            
+      19 +- Vocabulary sensitivities: no "fake counterparty" framing; pla
+         +in words + diagrams; **"exam" is banned** (collides with the le
+         +gacy Examination Engine / Book-exam concept)                   
+      20 +                                                               
+      21 +## Additional inputs (2026-08-18 locks session)                
+      22 +                                                               
+      23 +- The sim≡live parity idea (one shared checklist both the pract
+         +ice venue and the real cTrader connection must pass, written be
+         +fore either implementation) was pitched as "Lock 2" and DENIED 
+         +as bundled — the connection half proceeds separately as simple 
+         +work; the parity half belongs HERE and must be re-presented wit
+         +h more depth ("dig deep or present a better version — I'm not b
+         +uying it now").                                                
+      24 +- The full overfitting-statistics discussion also lands here wh
+         +olesale ("too early for me to discuss backtesting"). Operator's
+         + read of the old engine: Monte Carlo + walk-forward + PBO made 
+         +it "heavy and solid" but with wrong claims / over-engineered; t
+         +he true goal is overfitting prevention AND letting agents run t
+         +ests correctly on their own — agents, not Mubarak, execute back
+         +tests, so the design must make the right thing the easy thing f
+         +or an agent.                                                   
+      25 +- Legacy "exam" concept for context (recovered meaning, do not 
+         +reuse the word): a bot was tested against the things that make 
+         +its Book that Book — the Book supplies the conditions. Partial 
+         +overlap with the parity checklist, not the same thing.         
+      26 +- Books connection: each Book may carry its own testing mechani
+         +sm (bot × Book matrix, standing map ruling) — the funnel design
+         + must accommodate per-Book test conditions.                    
+
+● Write(tracker\tickets\009-identity-lineage-study.md)
+  ⎿  Wrote 16 lines to tracker\tickets\009-identity-lineage-study.md
+       1 ---
+       2 id: 009
+       3 title: Identity & lineage deep study
+       4 label: wayfinder:research
+       5 status: open
+       6 assignee: claude-session-2026-08-18
+       7 blocked-by: []
+       8 ---
+       9 
+      10 ## Question
+     … +22 lines (ctrl+o to expand)
+
+  Wrote 1 memory (ctrl+o to expand)
+
+● Now updating the artifact to carry your verdicts and retire the banned word,
+  then firing the deep-study agent.
+
+● Update(artifacts\2026-08-18-five-locks.html)
+  ⎿  Added 1 line, removed 1 line
+      170      <div class="lockrow">
+      171        <div class="lockchip"><small>LOCK 1</small>The Dictionar
+           y</div>
+      172        <span class="arrow">→</span>
+      173 -      <div class="lockchip"><small>LOCK 2</small>The Broker Ex
+          -am</div>                                                      
+      173 +      <div class="lockchip"><small>LOCK 2</small>The Venue Che
+          +cklist</div>                                                  
+      174        <span class="arrow">→</span>
+      175        <div class="lockchip"><small>LOCK 3</small>One ID Card</
+           div>
+      176        <span class="arrow">→</span>
+
+● Update(artifacts\2026-08-18-five-locks.html)
+  ⎿  Added 3 lines, removed 3 lines
+      217        <div class="lock">
+      218          <div class="keynum">2<small>≈4–5 days</small></div>
+      219          <div class="lockbody">
+      220 -          <div class="lockhead"><h2>The Broker Exam</h2></div>
+      221 -          <p class="plain">One exam, written <em>before</em> a
+          -ny student exists. Every venue — the practice venue that backt
+          -ests use and the real cTrader connection — must pass the same 
+          -test paper. If they both pass, "backtest behaves like live" is
+          - no longer a hope; it's a test that fails loudly when broken.<
+          -/p>                                                           
+      220 +          <div class="lockhead"><h2>The Venue Checklist</h2><s
+          +pan class="chip pending">renamed — "exam" is banned vocabulary
+          +</span></div>                                                 
+      221 +          <p class="plain">One checklist, written <em>before</
+          +em> any venue is built. Every venue — the practice venue that 
+          +backtests use and the real cTrader connection — must satisfy t
+          +he same list. If both do, "backtest behaves like live" is no l
+          +onger a hope; it's a check that fails loudly when broken.</p> 
+      222            <div class="examdiag">
+      223 -            <div class="exambox">THE EXAM — written first</div
+          ->                                                             
+      223 +            <div class="exambox">THE CHECKLIST — written first
+          +</div>                                                        
+      224              <div class="examarms">↙ &nbsp;&nbsp;&nbsp;&nbsp; ↘
+           </div>
+      225              <div class="students">
+      226                <div class="student">Practice venue (backtesting
+           )</div>
+

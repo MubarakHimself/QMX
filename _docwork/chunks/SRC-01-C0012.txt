@@ -1,0 +1,120 @@
+     that being there is we have something we wanted to do which is called alpha
+     decay and alpha decay sensing. Now, you see, alpha decay is a huge 
+     concept. Yeah, so we should also consider it so much because most 
+     strategies we might use might work, but they might decay very quickly. Some
+     might be very specific, and we might over time we might experiment with 
+     better versions of them, and you know, we come up with new versions. But 
+     that doesn't mean that we pause them there and then. We still need a lot of
+     data collections or data points. In fact, throughout the entire system, 
+     that's something we need to consider so much. That's why yesterday I was 
+     saying it a lot and a lot and a lot that we really need to consider the 
+     data layer. I don't know why I call it that, but you get what I'm talking 
+     about. Because data ingestion or data intake is one thing, data collection 
+     after being processed is another. How data is processed is something to 
+     also consider. So, there are so many things that go from literally before 
+     even a bot starts trading to you know actually search, because the egetetic
+     system is also a huge data thing, as you as I've already seen, or as I've 
+     already explained. So, when you look at what the agentic system does, when 
+     you look at how it processes or how it handles research, you know, 
+     automated research, development, backtesting, optimizations if necessary, 
+     experiments, all that stuff. Then you go from okay, we've got strategies 
+     that we believe can trade live or can trade under specific conditions, then
+     the whole point of actually creating QMX as it is is giving a strategy the
+     best suitable conditions for it to trade. So, we remove the burden of 
+     modeling risk management, we do it at a higher level, and we just give the 
+     bot things that it needs to trade. That's why it brought up these things of
+     the definition of a strategy under QMX. We have actually, I defined it 
+     yesterday in the session. That's where you are seeing things like a level, 
+     a trigger, then you let us see something claude confluence, all that 
+     nonsense. Yeah, so yeah, I think I'm giving you a bit more information than
+     you need, but the data, all that is again data. So, what happens in 
+     backtest should be kind of similar to what happens in this. I don't know if
+     that's even correct, but it might not be correct. Okay, so you take that 
+     up, then okay, if the bots are trading, what do we need to be collecting? 
+     If you look at it in terms of an actual portfolio manager, what data do you
+     need to be collecting? Because we have a trading journal, we should have a
+     trading journal. You know, if a bot is trading, if a book is trading, what
+     is the BMS saying? The MIS, the SQS, the kill switch. There are so many 
+     things we need to collect. But those are all components, but we still also 
+     need to see what is it collecting, how is it collecting it, in what 
+     quantity, how long, how often? You get me. So, data alone is a huge, huge 
+     concept. And in fact, if you take up because the egentic systems is simple,
+     by the way, for data, the part that you know is that is going to mess up 
+     the data collection and processing across everything. Not mess up, I feel 
+     like it's too big because it needs to be very, very specific. We need to 
+     choose the right stat for the right purpose. Yesterday we were proposing 
+     ArcticDB. I don't know if it will work, but what I'm trying to say is that 
+     there are so many things to collect, so many things to look at, how are 
+     they presented? Can we have automatic detection? Because personally, I'm 
+     not so technical. So, if this is that, if that is this, but all that is 
+     going to need to setting of ranges. So, yeah, there is a lot to consider. 
+     So, this point of one card, I think it's a bit abstract. I really do. 
+     Because there is so much to consider before you even propose one singular 
+     card, in my opinion, and it's not as simple as saying one card because 
+     tomorrow, if I decide to, because you see, the problem right now is that we
+     are having a level, a trigger abort, but that's for Forex. Yeah, crypto 
+     might be different. Pro funds might require something very different. Okay,
+     if we go ahead and combine multiple triggers, what happens then? Okay, so 
+     this is this can bring about locking ourselves in. So, card number three: I
+     feel like you are on the right track, but you've rushed in. So, you might 
+     need some agent to actually go deep into card number three. But the ID 
+     itself is okay. I don't deny the thing of an ID. I do, but in fact, 
+     actually, this is where relational databases come in. I don't know if I'm 
+     actually saying the right thing, but if you look at something like Neo4je, 
+     for example, Neo4j is a good example. Yeah, now Neo4j, if you look at the 
+     graph relationship, we can have it that okay, this strategy is from this 
+     lineage, but if you look at that graph, that you know it grows and 
+     compounds. I don't know if you picture it properly. The Nia 4G example 
+     that's variable also, but anyway, let me first finish reading through the 
+     card number three. So, you are saying a book, yeah, okay, I agree. Okay, I 
+     already said forgot number three, I agree and disagree because I feel like 
+     some things you are combining them when they shouldn't. Because a model, I 
+     wonder what you mean by a model. Are you seeing how it can become very 
+     ambiguous? Because on card number three, if you're talking about a model, a
+     model alone, what is a model? Are you talking about a machine learning 
+     model, a trading model? Are you talking about, you know, should I say, a 
+     data analysis model? Like, there are so many, you get? Okay, they're not so
+     many, but you get what I'm talking about. A book, a book is specific, a 
+     book is just under risk management and position sizing. Okay, it's very 
+     specific. A book is, in fact, for an agent to deploy a book, I have to be 
+     in the loop. Okay, and a book has specific metrics and variables. They are 
+     very, very specific. Okay, these are things that we measure. That's why we 
+     are introducing multiple variants of a specific trading strategy. That's 
+     why a book, I don't think it should be under a card. About now, about is a 
+     combination of many things. So, when you say a level or trigger, a level 
+     and a trigger are under a bot, together with the other thing I was talking 
+     about in the last session called Confluence, but that alone doesn't make up
+     a bot because it can contain multiple confluences. We can create a very 
+     heavy bot. We can create a bot that does only mini version, we can create a
+     bot that does combines both mini version and choppy markets. Like, the sky
+     is the limit. So, for card number three, I feel like, yes, again, I'll say
+     this again and again. You are on the right track, but it is too abstract, 
+     and I think you need to dig deep before you propose this. This takes me 
+     back to what I was saying yesterday in the other session: that we need to 
+     try and bite off as little, okay, not as little, but the part that we can 
+     actually handle in one go. Because I can decide to start another session 
+     and we handle some other part as long as the core components are being 
+     coded at the moment. You get me Then you look at the agent page. now this 
+     right here is good, but I feel like no, let's first build the library. If 
+     you, for example, you're an agent right now, right? If you were told to use
+     React and you've never actually seen React, you'll need proper 
+     documentation, right? But the thing is, we can't front-load an agent page 
+     without having proper documentation because this right here is incomplete. 
+     QMF is very incomplete, in my opinion. Because if we are still just 
+     ideating, where are we proposing an actual agent page? Maybe I've 
+     misunderstood it. You are saying one printed page a feature agent reads 
+     that builds things in QMF. You are saying the forms for a level, a trigger,
+     and I think three and four are very correlated, and it still goes back to 
+     my thing. I feel like you are undermining the level of depth that these 
+     things have because we can just have a session where we are creating our 
+     own triggers. Do you know what a trigger is in QML? If I look at my notes 
+     here, for example, we can do multi-time frame analysis. Triggers for only 
+     multi-time frame analysis. That can be a session that goes on for two days 
+     under QMX itself. I don't know if you are seeing the depth of this. It's 
+     actually not as simple as you think. Because a trigger is the exact event 
+     that puts you into a trade. Okay, let's say we just decide to build our own
+     versions of triggers. Then what? How is QMF meant to help me? Let's say, 
+     because there are many things we can use as triggers, there are many things
+     we can use as levels. I don't know if you get me. It's not one thing. 
+     Okay, we can decide to make many variants and then we can also decide to 
+     make many combinations of those variants. Then we can decide, because even 

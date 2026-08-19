@@ -1,0 +1,116 @@
+  And our prices, check the door. Okay, the pipes, rather. So we are shelving   
+  them. I mean, it's okay, but I don't know why. Okay, for development, okay,   
+  we have a lot to consider. This is why I was saying we should buy it off a    
+  little bit every now and then. Because now, even in developing this south, we 
+  have to consider: is this really a viable method to download the data now or  
+  download it when we are installing QMX officially? That's something to        
+  really consider because me I feel like downloading it now won't make sense,   
+  and also which range we have to also consider that because on the ducascopy,  
+  whatever node, ducascopy node, it says that it goes back all the way to 1990. 
+  Okay, from 1990 to 2000 to the present day in that range. Okay, so yeah, it   
+  has a lot. I don't know. It actually has a CLI. I think the CLI is far better 
+  because the Ducascopy node might be far, far, far, far better. So, in my      
+  opinion, I think we shall just have this in QMX. man, there are so many       
+  things to consider. Maybe I really think maybe I take a break because I don't 
+  think I'm thinking clean. I really don't because that diagram alone for the   
+  factory doesn't add up at all. Seems like maybe me had something very         
+  different in mind. I don't know if you recall the actual discussion we had    
+  about QML itself, like the actual QML before you turned it into QMF. All my   
+  ranting before that, even during that seriously, if it amounted to this, I'm  
+  now confused. Cause I gave you thirty-something links. Seriously, thirty      
+  seven total links. You can't tell me you confused yourself, and you weren't   
+  even the one doing the work. It was dynamic workflows and sub-agents doing    
+  the work. So, I'm so confused how you have ended up here. I'm really confused 
+  because if I look at the foundations that you proposed, yeah, we have QMX as  
+  an app. In fact, this is the old artifact. Then you say we have QuantMind     
+  framework, everything above is yourself, you said everything above is built   
+  with QMF. Okay, same bricks, same everything. So, we looked at the five hats. 
+  This frame, this artifacture that is very, very, very still available. Okay,  
+  this artifact is very available because I told you to look at all these five  
+  hearts that you proposed in the artifact, okay? Because we had analyst,       
+  portfolio manager, trader, developer, researcher. In fact, I'm the one who    
+  suggested all this. Then I told you, researcher at that moment was deferred,  
+  but in the repos I recall saying something in the manner, Oh, we might have a 
+  look at what these guys do for research. Okay, developer is mostly about the  
+  agents themselves, then, trader, trader is a whole other case, but trader,    
+  in fact, analyst, portfolio manager, trader, and developer are the ones we    
+  were really focusing on. So, you yourself, I even gave you how the workflow   
+  is going to be. We sorted that out. Then you saw the architectural            
+  references, and funny enough, eventually just suggested them as the actual    
+  things. Okay, oh my god. So, you are saying what data ships first. The        
+  calendar only shows this week I'm not trying to have a calendar now. I don't  
+  know if I'm too tired or something, but why would I want a calendar at the    
+  moment? We don't even have a UI for God's sake. What are we downloading the   
+  calendar for? my days. So, anyway, you are saying the workshop, you are       
+  saying the repo itself, strict quality rules word. That's okay, I think.      
+  Anyway, you're saying QMF Core Okay, the core, at least now the core, I see   
+  it, it makes sense. the model now model has to consider all types of trading  
+  from scalping to literally holding and going long, you know what I'm talking  
+  about. Qermef errors, yeah, KMF is part of the actual whatever the linting    
+  and whatnot, the data ring. Now, data ring, we've it was a right track, by    
+  the way. I think I ranted for kinda nothing. It's just that the way you       
+  propose it is very sloppy. Seriously, it's very, very sloppy. I don't think   
+  it makes sense, okay? But it should be there because most of everything, in   
+  fact, everything is using it. So the same exam harness, no, no, no, no, no,   
+  no. My days, you guy, why don't you understand by let's leave the back        
+  testing out? Seriously leave it out. The exam, you're not going to fool me    
+  with changing the wording. The exam is the backtesting engineer. I'm the one  
+  who suggested that, okay? You can't fool me. Leave it out completely, and     
+  also it's not yours. Today, even if you handle something very small, I'm okay 
+  as long as tomorrow I have somewhere to start from. So, confluence identity.  
+  oh, confluence. Confluence kind of makes up a strategy. You do know that,     
+  right? But the problem is, each of these things can have multiple             
+  combinations. So, Engle, so for example, trigger, rather. Trigger can have    
+  like six different triggers. It's very possible. All fire at a given time.    
+  For example, in a conversation I was having with GPT, you can look at what we 
+  suggested something like a five-minute scalping mechanism where we turned a   
+  bot for five-minute scalping as a confirmation. There are so many things.     
+  Seriously, there are so, so many things we can have. So, all these things in  
+  a confluence can have multiple variants. Now, what doesn't have a variant is  
+  that exit. Exit is part of the book. Let me make myself clear there. Exit is  
+  part of the book. You really need to understand what a book and a BMS do      
+  before you really build any of this. Okay? So that you don't contradict       
+  yourself. In fact, the entire system, what we have so far, what we agreed     
+  upon, the things I haven't touched are literally that trading note, but       
+  everything else is off. So I was saying same recipe found by two different    
+  agents. Yeah, okay. At least now this is okay. The confluence, I get it. Now, 
+  what is parked now? The bot itself, you don't realize that it's a it's        
+  literally the confluence. I don't know if you get that. Do you understand? I  
+  don't know if you're understanding this. It's just that the boat, actually,   
+  it's not direct literal confluence, but the confluence is part of the boat.   
+  It makes up a huge chunk of the bot. The only difference is the boat now      
+  contains another, should I say, contract? Is it even a contract? I don't even 
+  know what to call it, but it contains the thing that links the recipe card    
+  together with the book. So, yeah. And those two things make up a boat, I      
+  believe. Unless I'm wrong, you can review there now. Prop funds are I said    
+  they're under risk management, and I was only ranting. Prop funds are books,  
+  you know. So, books contain a lot, and you should really understand them      
+  before doing any. In fact, you should really understand what is a trading     
+  node before you try to build anything. I hope you did. It wasn't just for     
+  shock, you really need to understand it because I have a very, very good idea 
+  that you might build something we don't need. The agentic system agentic      
+  system is leave it. That's one of the highest value things that it's gonna be 
+  hard to build. I already know it. So, should I say go? Well, you are not the  
+  factory, you don't even know what the factory is, neither do you understand   
+  anything. So, you first clarify everything, then we are going to produce      
+  reusable artifacts and then update everything so that I can start other       
+  sessions based off. Do we even need to update anything? Nah, don't do it.     
+  Just, I think we need a core. So, is this sufficient enough to build a core?  
+  And if so, which library are we building? What I mean by the core is not just 
+  what you suggested as a core. No, for me, I'm thinking of the first           
+  foundational thing that is going to be used to build QMF. And let me re-echo  
+  this again. I'm not intending to use anyone's code. I can use mental models,  
+  I can use architecture, I'm okay with that. I'm not intending to also use     
+  rebuild this multiple times. This is something I intend to build at least     
+  twice a year, from now on. Think of it as if we are building Bloomberg        
+  Terminal from scratch                                                         
+
+● You caught a real error, and naming it precisely matters more than apologizing
+  for it: I drew the trading node's spine — bot → Book → BMS → broker — and 
+  labeled it "QMF's kernel." That pipeline is the application. QMF is the 
+  toolbox the application gets built from. React doesn't contain your app's page
+  flow; it gives you the parts to build any app. Same here: QMF must give the
+  parts to build the trading node (whose design, from the GitBook, stands
+  untouched — the one thing you never reopened), not be the trading node.
+  Everything below reflects that correction, and your others:
+

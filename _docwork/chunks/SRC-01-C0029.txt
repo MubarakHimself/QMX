@@ -1,0 +1,120 @@
+      36 +1. `qmf-core` — the language: exact money, exact time (three tr
+         +ading calendars: forex sessions / crypto 24-7 / equity exchange
+         + hours), the nouns (order-flow and equities seeded), typed refu
+         +sals, stamp machine, versioning. **ACCEPTED — first brick.** Si
+         +x frozen choices pending explicit confirmation in the documenta
+         +tion pass.                                                     
+      37 +2. `qmf-registry` — identity & lineage (three disciplines: fing
+         +erprinted recipes / operator-chartered Books & BMS / occurrence
+         +s; graph-shaped lineage in append-only files, no database) **pl
+         +us the registration gates**: the ratified look-ahead/causality 
+         +test (K1, with the context-library logic) and the attempt count
+         +er run here as registration preconditions. **STUDY DELIVERED** 
+         +(`reference/07`, `reference/08`).                              
+      38 +3. `qmf-data` — the six-layer data system: ingest plumbing, raw
+         + evidence archive, processed layer, journal, research door with
+         + splits-by-default, backup. **STUDY DELIVERED** (`reference/09`
+         +); ratification = ticket 005 session. Rulings folded: keep ALL 
+         +history as far back as sources go; 12-month research seal (one 
+         +logged final look per strategy); full raw retention; nightly cl
+         +oud-bucket backup.                                             
+      39 +4. `qmf-indicators` — light indicators, wrapping TA-Lib-class l
+         +ibraries (wrap, never reinvent; dual-reference checks per K2). 
+         +**DIRECTION AGREED.**                                          
+      40 +5. `qmf-structure` — our OWN causal levels/zones/market-structu
+         +re components (toolbox principle; context-library method — stud
+         +y SMC-and-friends deeply, build our own). **DIRECTION AGREED**;
+         + per-component depth sessions later.                           
+      41  
+      43 -**Trader hat:**                                                
+      44 -- `qmf-broker` — the venue port + cTrader Open API adapter (con
+         -nection is simple; Python only, no MQL; crypto/stock venues lat
+         -er through the same seam). **DIRECTION AGREED.** Venue checklis
+         -t idea re-presents in the backtesting session.                 
+      42 +**The two modules (deliberately not libraries):**              
+      43 +- **Venue module** — the cTrader Open API connection (simple; P
+         +ython only, no MQL; crypto/stock venues later through the same 
+         +seam). Grouped with the portfolio/risk side per operator. Venue
+         + checklist idea re-presents in the backtesting session.        
+      44 +- **Risk module** — Books + BMS machinery as currently designed
+         +, **v1 and explicitly versioned/updatable** ("later down the ro
+         +ad we might develop a new version"): exits (fast invalidation, 
+         +dynamic SL/TP), correlation ledger, money rules. Detail = the t
+         +rading-node/Book session; GitBook Book schema extraction (ratif
+         +ied) is its prerequisite.                                      
+      45  
+      46 -**Portfolio-manager hat:**                                     
+      47 -- `qmf-risk` — our OWN risk-management & portfolio-optimization
+         - library: Books, BMS machinery (possibly plural BMSs long-term)
+         -, exits (fast invalidation, dynamic SL/TP), correlation ledger,
+         - money rules. **OWN SESSION** (trading-node/Book session; GitBo
+         -ok Book schema extraction ratified as prerequisite — machine-ch
+         -eckable form, operator-verified).                              
+      46 +**Explicitly NOT QMF libraries:**                              
+      47 +- **MIS** — a trading-NODE component ("a machine-learning ensem
+         +bler"), built WITH qmf-indicators + qmf-data, not a library of 
+         +its own. Heavy indicators run there; shadow deployment for mode
+         +l rollout.                                                     
+      48 +- **Researcher-hat tooling** (full experiment machinery, overfi
+         +tting statistics, backtesting library) — **OUT OF SCOPE for V1*
+         +*; own session (ticket 008). The ratified pieces (look-ahead te
+         +st, attempt counter) already live in `qmf-registry`.           
+      49 +- **`qml` bot library** — vocabulary ratified (confluences, bot
+         + careers/variants/lineage) but the bot↔Book binding contract is
+         + undesigned; own pass after the node session.                  
+      50 +- **Agent surface + extension plumbing** — **AGENTIC ERA.**    
+      51  
+      49 -**Researcher hat:**                                            
+      50 -- `qmf-experiment` — attempt counting, splits usage, the look-a
+         -head registration test (K1, ratified, with the context-library 
+         -logic), dual-reference indicator checks (K2, delegated). **DIRE
+         -CTION AGREED.** Full overfitting statistics: **OWN SESSION** (t
+         -icket 008).                                                    
+      51 -- backtesting library — **OWN SESSION** (ticket 008), never "en
+         -gine".                                                         
+      52 -                                                               
+      53 -**Developer hat (and agents-as-developers):**                  
+      54 -- `qml` — the bot library: confluence schemas, bot careers/vari
+         -ants/lineage, the bot↔Book binding contract (contract not yet d
+         -esigned). **DIRECTION AGREED.**                                
+      55 -- Agent authoring surface + extension plumbing — **AGENTIC ERA*
+         -* (deferred; DeepSeek/Cordis model may be adopted near-verbatim
+         - there).                                                       
+      56 -                                                               
+      52  **Design load principle (operator ruling):** design for the 95t
+          h-percentile load — ~40 concurrent bots is a real scenario, nev
+          er a toy that breaks at scale. **Paper mode is BOOK-level:** wh
+          en a Book cannot trade live, the Book switches to a paper/demo 
+          account and its bots keep trading there so performance data kee
+          ps flowing into alpha-decay sensing; a bot connects to exactly 
+          ONE Book; bots never run parallel paper twins. **News blackout 
+          is systematic:** halt 15 minutes before scheduled news, resume 
+          15 minutes after, pair-scoped; the SQS is a separate gate and m
+          ust never be conflated with the news block. **Multiple demo acc
+          ounts** are expected (one for paper-mode Books, one for post-ba
+          cktest validation — a pipeline detail for the agentic era).
+      53  
+      54  ## 3. Corrected vocabulary (operator-ratified tonight)
+
+● Update(tracker\map.md)
+  ⎿  Added 1 line
+      38  - **Data acquisition timing DECIDED (2026-08-17): build the plu
+          mbing now; downloading happens at first install.** Forward capt
+          ure is the one exception (operator-approved 2026-08-18): calend
+          ar recording starts now (`recorder/`, standalone script + statu
+          s screen, NOT a QMF module); live tick recording stays blocked 
+          on broker API access (ticket 006) and Dukascopy backfills tick 
+          history meanwhile, so nothing unrecoverable is lost. **SHIPPED 
+          2026-08-18:** task `QMX-Calendar-Recorder` runs 06:00 + 18:00 l
+          ocal, first week banked (96 events); feed cap ~2 downloads/5 mi
+          n — never add triggers casually; the feed has NO `actual` value
+          s (supports news-blackout gating, not surprise strategies); leg
+          al posture of automated archiving = open operator item.
+      39  - **DeepSeek/Cordis harness model scoped to the agentic era (op
+          erator ruling 2026-08-18):** the Context/disposer/event-bus add
+          itions leave qmf-core V1; the agentic system may later adopt th
+          e DeepSeek harness design near-verbatim (UI layout aside). Stan
+          ding scope for current sessions: build everything EXCEPT the ag
+          entic system — i.e. the blocks it will one day use.
+      40  - [Locks session verdicts, 2026-08-18](tickets/002-qmf-minimal-
+          core.md) — Lock 1 "the Dictionary" (qmf-core) ACCEPTED as first

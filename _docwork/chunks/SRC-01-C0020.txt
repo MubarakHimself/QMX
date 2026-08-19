@@ -1,0 +1,108 @@
+● Recorded. The three deep dives are still running — verdict artifact when
+  you're back.
+
+✻ Crunched for 23s
+
+● Agent "Rework answer keys per module" finished · 3m 34s
+
+● The answer-keys rework has landed — properly grounded this time: each real QMX
+  module family gets an external truth (TA-Lib and talipp as dual reference for
+  indicators, the broken smartmoneyconcepts library kept as a specimen the
+  look-ahead test must always catch, the GitBook Book schema as the only spec
+  for money math, published prop-firm rulebooks as free fixtures, your archived
+  calendar snapshots as the kill-switch test corpus). Persisting it to
+  reference/ so the factory can consume it, then waiting on the other two dives.
+
+  Read 1 file (ctrl+o to expand)
+
+● Heredoc quoting failed — using the Write tool instead.
+
+● Write(reference\08-answer-keys-catalog.md)
+  ⎿  Wrote 79 lines to reference\08-answer-keys-catalog.md
+       1 # 08 — Answer-Keys Catalog: External Truth per QMX Module Family
+       3 **Written:** 2026-08-18. **Status:** research finding, NOT adopt
+         work grounded in actual QMX components first"; this is that rewo
+         rk).
+          that proves agent-built code right — so operator review stops b
+         itly excluded (ticket 008); rows only note where a check belongs
+       5 
+       6 ---
+       8 ## Catalog — external truth per QMX module family
+      10 **1. Light indicators (bot/strategy tier)**
+     … +208 lines (ctrl+o to expand)
+
+● Agent "Identity & lineage deep study" finished · 9m 17s
+
+● Dynamic workflow "Synthesize the QMX data-layer blueprint from existing
+research + trading-node docs + operator dictation" completed · 4m 54s
+
+● Both deep dives are in. The blueprint got truncated in the notification —
+  pulling the full text before assembling the verdict.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Full blueprint saved to reference/09. Now closing ticket 009, updating the
+  map, then building the verdict artifact.
+
+● Update(tracker\tickets\009-identity-lineage-study.md)
+  ⎿  Added 2 lines, removed 1 line
+       2  id: 009
+       3  title: Identity & lineage deep study
+       4  label: wayfinder:research
+       5 -status: open                                                   
+       5 +status: closed                                                 
+       6  assignee: claude-session-2026-08-18
+       7  blocked-by: []
+       8 +closed: 2026-08-18                                             
+       9  ---
+      10  
+      11  ## Question
+
+● Update(tracker\tickets\009-identity-lineage-study.md)
+  ⎿  Added 2 lines, removed 2 lines
+      12  
+      13  What is the right identity/registration/lineage model for QMX's
+           things — WITHOUT collapsing unlike things into one generic car
+          d? Operator verdict (2026-08-18): identity and graph-shaped lin
+          eage are right in principle; "one ID card for everything" is pr
+          emature abstraction. Specifically: disambiguate "model" (ML / t
+          rading / analysis); respect that a Book is its own very specifi
+          c schema (documented on GitBook, operator-in-the-loop deploymen
+          t) and does NOT belong under a generic card; a bot may contain 
+          MULTIPLE confluences ("heavy bots"); crypto and prop-firm shape
+          s may differ from forex; paper/live/benched states and continuo
+          us paper-recording for alpha-decay sensing must be representabl
+          e; promotion is human-only. Ground the study in the real QMX co
+          rpus (GitBook Book schema, trading-node primer, lineage addendu
+          m, spec-draft vocabulary) and the 37-repo idea ledger — then pr
+          opose a typed identity model (which kinds exist, what each carr
+          ies, how lineage edges work) for operator review. Do not box in
+          : the lineage graph shape must not presume a specific database.
+      14  
+      15 -## Progress                                                    
+      15 +## Resolution                                                  
+      16  
+      17 -Research agent fired 2026-08-18 (background); findings land in 
+         -`reference/07-identity-lineage-study.md`.                      
+      17 +Study delivered: `reference/07-identity-lineage-study.md` (416 
+         +lines; findings NOT adopted — operator ratification pending). K
+         +ind catalog: 7 families, ~23 kinds. The three-discipline correc
+         +tion to "one card": **fingerprint** (reproducible recipes — lev
+         +els/triggers/confluences, content-addressed), **charter** (name
+         +d things the operator stands behind — Books, BMS instances, ope
+         +rator-countersigned, amended by named decisions), **occurrence*
+         +* (unrepeatable events — runs, live sessions; a live Tuesday ca
+         +nnot be re-derived, so it carries no content hash). Only the ad
+         +dress format `kind + id` is universal. "Model" disambiguated in
+         +to three kinds (ML artifact / trading thesis / analysis artifac
+         +t) — bare word "model" proposed for the banned list. Bot = perm
+         +anent career identity + per-revision fingerprints; variants are
+         + new bots linked `variant-of`; plain-Python bots carried via `d
+         +efinition: opaque`. Books: scalping-book-v2 is a NEW Book (neve
+         +r inherits v1's ledger). 16 typed edge kinds, 5 store-agnostic 
+         +graph rules, smallest honest starting set of 6 kinds. Top open 
+         +questions (operator): BENCHED moves from Book mode to the bot's
+         + roster seat (recommend yes); one bot in paper while its Book s
+         +tays live (recommend yes); idea-origin required only at promoti
+         +on gate, not registration (recommend yes — don't-box-in).      
+

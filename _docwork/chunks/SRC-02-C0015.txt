@@ -1,0 +1,120 @@
+  VPS or buckets, plain words: three jobs, three answers. Working data (what
+  research reads daily) — plain Parquet files on your own disk; fastest and
+  free; no database server needed. Live tick recording (needs something
+  always-on, your laptop isn't) — the trading VPS you already planned runs the
+  recorder; archives sync down to your machine. Backup — that's what buckets
+  are: cheap offsite object storage (Backblaze B2 / Cloudflare R2, roughly
+  $1–5/month at your scale); the archive copies there nightly. So: no new server
+  — the VPS you already need plus one cheap bucket.
+
+  Synthetic tick data — yes, but with one hard rule. Generating it is standard
+  and algorithmic: resample blocks of your real ticks, or simulate from
+  volatility models calibrated to real data — good for exactly what you said:
+  firing the kill switch, spread blowouts, flash-crash scenarios, gap opens. Not
+  LLMs — they're the wrong tool for numbers at tick scale (slow, expensive,
+  statistically wrong). And the hard rule: synthetic data may stress a strategy,
+  never validate one — a bot that profits on synthetic data has proven nothing,
+  because the data inherits the generator's assumptions. Stress-lab yes,
+  evidence no.
+
+  Commit attribution: understood — no "authored by Claude" lines in your
+  commits, ever. Recorded as a standing rule for me and for anything the factory
+  inherits.
+
+  Library splitting: mine to carry. The revised spec after the verdicts will lay
+  out which libraries QMF compiles together, what wraps what, and why each
+  split exists — you judge the result, not the plumbing.
+
+● Update(tracker\map.md)
+  ⎿  Error editing file
+
+● Update(tracker\map.md)
+  ⎿  Added 3 lines
+      37  - Crypto expansion (~3–4 months out)
+      38  - Live-money safety ruling — re-raise during trading-node spec 
+          sessions
+      39  - Alpha-decay detection (old QML feature to rebuild): live perf
+          ormance degrading below backtest; complicated because "edge" wa
+          s defined relative to a Book's configurable values, and Books a
+          re now plural
+      40 +- **Simulator (ratified vocabulary)**: backtest engine + a Book
+         + + chosen conditions, via a UI — stress a bot against any real 
+         +or theoretical Book; fill engine = core QMF now, Simulator UI =
+         + later product                                                 
+      41 +- Synthetic tick data module: algorithmic generation (block res
+         +ampling, calibrated volatility models — never LLMs) for stress/
+         +kill-switch/scenario testing ONLY; hard rule: synthetic data ca
+         +n stress a strategy, never validate an edge                    
+      42 +- Storage architecture (proposed, pending ratification): workin
+         +g Parquet archive on the workstation; trading VPS runs the alwa
+         +ys-on tick recorder and syncs down; nightly backup to an object
+         +-storage bucket (B2/R2 class, ~$1–5/mo); no database server    
+      43  - MIS model stack from the old system: Kronos (time-series mode
+          l) + BOCPD — candidates to re-ratify during the MIS session
+      44  - Mubarak plans a Windows → Linux (Omakub) switch soon; cTrader
+           need not be installed locally — softens the TA-Lib-on-Windows 
+          concern
+      45  - Prime Market Terminal (https://prime-terminal.com/) — macro-t
+          rader terminal, reference for the agentic/macro lane; Mubarak d
+          oubts he needs it
+
+  Wrote 1 memory (ctrl+o to expand)
+
+● Update(tracker\map.md)  ⎿  Added 2 lines
+      15  - Sessions stay under ~40% of context; one ticket per session (
+          research tickets excepted).
+      16  - Pipeline: session agrees concepts → artifacts (copy into `art
+          ifacts/`) → documentation-factory skill → Kanban skill → Mubara
+          k's software factory ships autonomously → review.
+      17  - Subagent/workflow models: **never Fable**; mix Opus (deep/har
+          d stages) and Sonnet (lighter stages).
+      18 +- **No Claude attribution in commits** — never add "Co-Authored
+         +-By: Claude" or similar lines; operator's explicit standing rul
+         +e.                                                             
+      19 +- Repo studies run in WAVES: wave 1 = direct links; the catalog
+         + shortlist auto-triggers wave 2 (and 3 if needed) — the awesome
+         +-* maps compound and Mubarak expects that expansion.           
+      20  - HITL tickets: invoke /grilling + /domain-modeling.
+      21  - Research protocol: findings are NEVER auto-adopted. Claude pr
+          esents what was found, what it proposes, where it agrees/disagr
+          ees — then Mubarak and Claude discuss and ratify ("agree to dis
+          agree" pass). Applies to every research return.
+      22  - Authority: GitBook (https://elios-1.gitbook.io/qmx) = stable 
+          trading-node baseline; `C:\Users\Mubarak\Documents\QMX` old cor
+          pus and local `.recovery/` = evidence only, everything needs fr
+          esh ratification; cordiverse composability paper = agentic harn
+          ess only, never cite it for QMF or the node.
+
+● All recorded — the map and memory now carry: the wave architecture (wave 2
+  auto-fires from the catalog shortlist), your Simulator definition, the
+  synthetic-data rule (stress yes, validate no), the storage proposal (local
+  Parquet + VPS recorder + cheap bucket backup), the no-Claude-attribution rule
+  for commits, and the library-splitting delegation to me.
+
+  Wave 1 is still reading code — Nautilus, Jesse, the three backtest engines,
+  OpenBB's provider pattern, and the rest. When it lands you get the two verdict
+  briefs (kernel, backtesting) and the idea ledger, wave 2 launches over
+  whatever the maps surfaced, and we talk kernel then — as you said, later, with
+  evidence on the table.
+
+✻ Baked for 1m 20s
+
+❯ Oh, okay. This is wave one of I don't know how many. But okay, that's okay.   
+  Thank you for not thank you for taking that. Let me first now continue my     
+  yapping as we were last time. So I had talked about pushback. Okay, I had     
+  finished interpreter. Now you are saying that pushbacks are ordered.          
+  Formally, the kernel decision did to understand framing. Yeah, yeah, yeah. We 
+  shall see how things go after the research. I think we haven't capitalized    
+  on anything yet. Okay, then housekeeping those untracked files were. Oh,      
+  yeah, that's okay. Now, yeah, the SMC and whatever libraries, I think, okay,  
+  it's better to have an agent in QMX build our own custom libraries with the   
+  right tools, like I talked about, instead of us like having third-party ones. 
+  Because those remember, everything we are dealing here is a metric, so yeah,  
+  you get what I'm saying. So, it's a simple data scientist or analyst,         
+  whichever you want to call yourself, you can look through that lens. So the   
+  simulator looked in. Yeah, okay, the simulator is. I think that definition is 
+  okay, but you can enhance it. I feel like it's incomplete. I don't know why,  
+  but I think it's abstract, not incomplete, it's abstract. Now, because there  
+  are so many things that feed into it, okay? But I don't know anyway. Now,     
+  the VPS of bucket: three jobs, three answers, working data. Okay, now here's  
+  the thing, okay, playing on my disk. Yes, we need some stuff on my disk       

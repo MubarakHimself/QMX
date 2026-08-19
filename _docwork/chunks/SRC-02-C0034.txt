@@ -1,0 +1,120 @@
+         -age: Level/Trigger/Confirmation/Exit/Confluence/BookConfig/Expe
+         -rimentRequest schemas — no order methods, no raw dates, no floa
+         -ts, no venue enums), `qmf.app`/`qmf.cli` (thin shells; two CI-e
+         -nforced lockfiles: trading vs analysis).                       
+      25 +- **Confluence** = the starting recipe from a hypothesis: Level
+         +(s) + Trigger(s) + Confirmation(s). Every slot allows **multipl
+         +e variants** (six triggers may fire together; a whole bot can s
+         +erve as a confirmation — composition nests). **No exit in the c
+         +onfluence.**                                                   
+      26 +- **Exits, sizing, risk** = Book territory. (Baseline nuance fo
+         +r the future Book session: the GitBook has bots owning exit org
+         +ans with Books owning forced exits; dynamic SL/TP-as-Book-gramm
+         +ar was a later delta — reconcile there, not here.)             
+      27 +- **Bot** = confluence + the **binding contract** linking it to
+         + a Book (binding not yet designed) — and a bot **accumulates**:
+         + as it moves through the system, lineage/genealogy is appended.
+         + **Bot variants are first-class**: a bot failing on one pair ma
+         +y work on another, or pass after one trigger variable changes; 
+         +parent/variant links are tracked (fingerprints connected by lin
+         +eage).                                                         
+      28 +- **Prop firms are Books** — deferred entirely to the agentic e
+         +ra (baseline agrees: GAP-0004).                                
+      29 +- **SQS = spread quality sensor** (operator's expansion tonight
+         +; the baseline never expands the acronym — flag for the documen
+         +tation pass).                                                  
+      30 +- **Sweep → cap → re-seed cycle = the SCALPING book's pattern**
+         +, not a universal law; it's the repeatable template other books
+         + will vary from, formed later with the agentic system.         
+      31 +- **Simulator** = a product UI (bot × Book × conditions), later
+         +. Backtesting = a **library** (never "engine"), staged funnel, 
+         +own session — see `tracker/tickets/008` inputs; nothing ratifie
+         +d.                                                             
+      32  
+      47 -### The four first-class typed concepts                        
+      33 +## 4. Reference library (evidence for the documentation pass — 
+         +none of it is authority)                                       
+      34  
+      49 -`Level → Zone{provenance, bounds, side, kind, strength, state}`
+         -; `Trigger → Signal{provenance, direction, conviction, invalida
+         -tion_price?}` (never a size); `Confirmation → Score{provenance,
+         - value∈[0,1], weight, evidence_state}` (never an entry); `Exit`
+         - = choice from closed policy set (fixed-R | ATR-multiple | stru
+         -cture-invalidation | trailing-to-structure | partial-at-R). `Co
+         -nfluence` composes them + gates + sizing policy. Component mani
+         -fests carry: id+semver, input_contract (binding refused on mism
+         -atch), output_schema, warmup+stability, causality (smoothed not
+         - constructible live), canonical_resolution, evidence_state (hyp
+         -othesis/measured/validated/retired — SMC and candlesticks ship 
+         -as `hypothesis`, visibly), definition_source.                  
+      35 +`research/00–10` (web research + synthesis) · `reference/00-ide
+         +a-ledger.md` + `03-wave2-supplement.md` (156 borrowable mental 
+         +models, licence-annotated) · `reference/01-kernel-verdict.md` (
+         +build-our-own, ratified) · `reference/02-backtesting-verdict.md
+         +` + `04-recovery-comparison.md` (inputs to the backtesting sess
+         +ion ONLY) · `reference/05-trading-node-primer.md` (Books/BMS in
+         + plain words from the GitBook) · `reference/links.md` (all oper
+         +ator-supplied sources) · `.recovery/` (old-state evidence, fres
+         +h ratification required) · dukascopy-node CLI (https://www.duka
+         +scopy-node.app/config/cli) as the reference shape for the futur
+         +e in-app data-acquisition feature (download-now vs at-install: 
+         +OPEN).                                                         
+      36  
+      51 -## 4. Adopted novel proposals (pending ratification with D-bloc
+         -k)                                                             
+      37 +## 5. Explicitly open (do not let documentation harden these)  
+      38  
+      53 -N1 one `Provenance` type + one CI lookahead property test as re
+         -gistration precondition · N2 conformance suite first, SimBroker
+         - = implementation #1, cTrader = #2 · N3 spread-cost-vs-edge ref
+         -usal at registration (protects search budget for free) · N4 mea
+         -sure live slippage → feed the sim's FillModel (backtest fidelit
+         -y becomes a measured quantity) · N5 `tradeability` wired into B
+         -MS (never attempt a challenge in a hostile hour) · N6 ingestion
+         - ships first · N7 two lockfiles CI-enforced · N8 `financing` P&
+         -L line from day one (forex swap ≡ crypto funding) · N9 `evidenc
+         -e_state` visible in UI and readable by agents · N10 three data-
+         -layer accessors (Explore/Validate/Confirm; holdout unloadable u
+         -ntil a Validate pass exists) · N11 ledger corrections (ArcticDB
+         - objection is technical not licence; FairEconomy is forward-dat
+         -ed and is the v1 scheduled-events source).                     
+      54 -                                                               
+      55 -## 5. Conventions                                              
+      56 -                                                               
+      57 -Python ≥3.12; strict typing (pyright strict) + ruff + pytest; `
+         -Decimal` for all money/price/quantity (no floats in money paths
+         -); UTC-ns integer timestamps; no `pickle` anywhere; licence all
+         -owlist per D1; semver + deprecation policy, never break consume
+         -rs; every module ships with reference usage + tests; mock data 
+         -never ships; src layout, package `qmf`, `strategies/` directory
+         - outside the package importable by nothing.                    
+      58 -                                                               
+      59 -## 6. BUILD TONIGHT (the fence — factory scope for the overnigh
+         -t run)                                                         
+      60 -                                                               
+      61 -Everything inside the fence is decision-independent of D7/D8/D1
+         -0–D12 and blocked by nothing external:                         
+      62 -                                                               
+      63 -1. Repo scaffold: pyproject (uv), pyright-strict, ruff, pytest,
+         - CI skeleton, the two-lockfile structure, licence-allowlist che
+         -ck.                                                            
+      64 -2. `qmf.core` — including `Provenance` and the lookahead proper
+         -ty test harness.                                               
+      65 -3. `qmf.model` + `qmf.errors`.                                 
+      66 -4. `qmf.data.lake` + `qmf.data.splits` (ledger interface stubbe
+         -d, enforcement lands with Ring 7).                             
+      67 -5. `qmf.data.facts` (bitemporal, `as_of()` accessor, tested wit
+         -h real ingested rows — never fabricated rows).                 
+      68 -6. `qmf.data.ingest`: Dukascopy `.bi5` (decision D12 pending — 
+         -build the adapter, gate the bulk run on ratification), FairEcon
+         -omy calendar poller, FRED+ALFRED adapter. Tick-recorder interfa
+         -ce stubbed (blocked on broker credentials, D11).               
+      69 -7. Adapter conformance-suite harness (empty of venue implementa
+         -tions; SimBroker arrives Day 2).                               
+      70 -                                                               
+      71 -**NOT tonight** (Day 2–3, in order): `qmf.indicators` + `qmf.st
+         -ructure` + `qmf.components` + `qmf.spec`; `qmf.registry`; `qmf.
+         -book` + `qmf.bms`; `qmf.venue_model` + `qmf.sim` + `qmf.runtime
+         -` + `qmf.metrics`; Ring 7 epistemics; `qmf.broker` + `.ctrader`
+         - (gated on Spotware app approval, D11); `qmf.mis` + `qmf.models
+         -`.                                                             

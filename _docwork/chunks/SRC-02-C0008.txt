@@ -1,0 +1,113 @@
+  - Research fleet is live: 7 deep-research agents (architecture references,
+  data foundation, indicators, portfolio/risk & sizing, broker connectivity,
+  forex domain built around your Level + Trigger + Confirmation + Exit formula,
+  crypto scan) → then a completeness critic orders up to 3 gap digs (MIS/ML
+  models and the analyst-hat landscape are top candidates) → then a synthesis
+  agent writes the cross-hat correlation and a draft QMF module map. Every study
+  lands as a file in Desktop\QMX\research\, plain-words summary first. It will
+  run for a while; I'll compile the digest artifact when it finishes.
+  - On models: this run launched all-Opus moments before your nudge, and it
+  can't be re-mixed mid-flight — but the Sonnet+Opus mix is now a standing rule
+  in the map's notes and my memory for every future workflow. No Fable
+  subagents, ever.
+  - Map created: tracker\map.md with tickets 001–005 (research → minimal core →
+  bot schema / trading node / data architecture). Git initialized in
+  Desktop\QMX. Artifact copy saved in artifacts\.
+  - Tomorrow's session: open with "minimal core" — I draft QMF V1's module list
+  from the synthesis, you yes/no it, artifacts go to your factory.
+
+  Eat, sleep — the machines are digging.
+
+✻ Churned for 6m 1s
+
+❯ [[]]https://prime-terminal.com/]]  Yo, I'm just hungry because of coffee,     
+  okay? That's why I'm tired. But I will come back at around five or so and     
+  resume. But okay, wow. So you've done deep research, architecture references, 
+  data foundation indicators, portfolio, risk, broker connectivity, forex       
+  domain built around, okay, crypto scan. Now, I think crypto we can build a    
+  core, but crypto has a lot of inefficiencies. I'm seeing a lot of research    
+  pop up, and most research is actually about crypto. For Forex, Forex has a    
+  problem of it's more towards banks. Oh, which by the way does remind me, I    
+  forgot to give you the prime trading terminal. Hang on. Alright, I think we   
+  are going to have this coded out overnight. It's not Prime, it's Prime Market 
+  Terminal. It's for serious macros trader. I just wanted this, but I don't     
+  think I'll need it to be honest. Okay, because one of the actually let me     
+  give you a bit of a little bit of more con context here. One of the things    
+  I'm planning for in the agentic system is that for the first few weeks, in    
+  fact, due to the speed of deep-seek, I don't think we are going to have a few 
+  weeks. It might be days, yeah. Now, me, I'm saying for the first few days or  
+  weeks, I would like to spawn up or create certain inst I want, I don't even   
+  know what to call them instances or anything, but these agents, what they are 
+  going to be doing is, should I say pair-specific, or actually, not pair, but  
+  currency-specific. So, they are going to do a lot of research. For example,   
+  okay, okay, this is a brain dump. It's just I want an opinion. Okay, don't    
+  take it seriously. So, for me, what I was thinking is: yeah, if I could have, 
+  because our system, the agentic system might be built with RLM, yeah? So it   
+  may be built of pre-called desk of RLM. So, RLM and Shepherd Agent. So, it's  
+  a whole thing, it's a whole mess. I can't really explain it right now. But    
+  what I'm thinking is, if I can build, let's say, one agent or a fleet, yeah,  
+  and what happens is that it can go and research not even just research, it    
+  does research, it does, you know, recap, it also generates as much as         
+  possible from books, repos, I don't know, research, of course, academic       
+  papers, and just information of the internet as much as possible as it can    
+  find. Let's say if we wanted a pair like the JPY or AUD, you get you get so   
+  which means it we shall have let's say a library of as much information as    
+  possible about one given pair or one given currency. I don't know if you are  
+  seeing where I'm going with this. So, over time, if we want to build maybe or 
+  if a strategy is being built in that pair, we can have like control limits.   
+  We know that this pair actually, not even this pair, this whatever. This, for 
+  example, this thing is more stable. Even that can help me okay with prop      
+  forms because I can know which ones are most stable, which ones are very good 
+  with scalping. I don't know if you're getting what I'm pointing at. Anyway,   
+  I just wanted to dump that here in the time being. But this thing has the     
+  potential to really be very, very helpful, especially with control. It's      
+  already huge in its own regard. All right, man, let me leave you work. Yeah,  
+  let me leave you work. But okay, for today, what is like what's the thing you 
+  expect us to end on for today? Because I'm not going to work overnight. So,   
+  for today, what's the thing you expect us to end on? A quasa deliverable, you 
+  can give me by today. Okay, by around 6 p.m. I'm yeah, what's deliverable,    
+  maybe? But I'm looking at the dictation. So, I was asking what deliverable    
+  can we expect to end by today with no ambiguity? So, that we leave it being   
+  coded out overnight, okay? Because just now I'm going to export this inter    
+  session transcript, so and also the artifacts you provide or whatever.        
+  Artifacts or anything. I don't know, you'll give me a map. Okay, I don't know 
+  really a map or whatever because I'm going to use that documentation factory  
+  skill. Yeah, so it can ingest a lot of stuff. And we are going to rebuild     
+  some documentation, you get me. So, for this time, we aren't starting with    
+  the trading node, we are starting with the core, the actual core. Anyway,     
+  man, answer this, and I go pray because it's like two in the afternoon, then  
+  have some lunch                                                               
+
+● Noted the Prime Market Terminal link and your currency-library idea — parking
+  both on the map before I answer.
+
+● Update(tracker\map.md)
+  ⎿  Added 2 lines, removed 1 line
+      32  - Research lane: hypothesis discovery (papers/videos/chat), gen
+          etic algorithms over indicators, experimentation environments
+      33  - Crypto expansion (~3–4 months out)
+      34  - Live-money safety ruling — re-raise during trading-node spec 
+          sessions
+      35 -- "Prime trading terminal" reference — Mubarak to supply the li
+         -nk                                                             
+      35 +- Prime Market Terminal (https://prime-terminal.com/) — macro-t
+         +rader terminal, reference for the agentic/macro lane; Mubarak d
+         +oubts he needs it                                              
+      36 +- Currency knowledge libraries — agent fleets building per-curr
+         +ency research libraries (JPY, AUD…) from papers/books/repos/web
+         +; feeds control limits (stability, scalping suitability, prop-f
+         +irm pair choice); belongs to the agentic lane (RLM + shepherd-a
+         +gent architecture, his sketch)                                 
+      37  - Original QML design doc — Mubarak couldn't locate it; adopt i
+          f it resurfaces
+      38  
+      39  ## Out of scope
+
+  Wrote 1 memory (ctrl+o to expand)
+
+● Today ends on one deliverable: the QMF V1 Minimal Core spec pack — unambiguous
+  enough that your factory codes it overnight without inventing a single 
+  decision.
+
+  Concretely, by ~6pm you'll have:
+

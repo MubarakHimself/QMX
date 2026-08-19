@@ -1,0 +1,120 @@
+● Write(tracker\tickets\006-spotware-broker-setup.md)
+  ⎿  Wrote 12 lines to tracker\tickets\006-spotware-broker-setup.md
+       1 ---
+       2 id: 006
+       3 title: Spotware app + broker selection
+       4 label: wayfinder:task
+       5 status: open
+       6 assignee:
+       7 blocked-by: []
+       8 ---
+       9 
+      10 ## Question
+     … +11 lines (ctrl+o to expand)
+
+● Update(tracker\map.md)
+  ⎿  Added 2 lines
+      21  
+      22  ## Decisions so far
+      23  
+      24 +- [QMF research sweep](tickets/001-qmf-research-sweep.md) — 11 
+         +study files + synthesis delivered to `research/` (facts gathere
+         +d, NOT yet adopted; ratification pass = ticket 002). Entry poin
+         +t: `research/00-qmf-synthesis-module-map.md`; digest: `artifact
+         +s/2026-08-17-qmf-minimal-core.html`.                           
+      25 +                                                               
+      26  - [Session accord — QMX Foundations v2](../artifacts/2026-08-17
+          -qmx-foundations.html) — QMF (Quant Mind Framework) is the umbr
+          ella, QML = bot library inside it; two deployables (installable
+           QMX app + one Trading VPS); everything builds on QMF; middle n
+          ode absorbed into the app (ML training ~quarterly in cloud sand
+          boxes, shadow rollout); Python core, Rust UI later, no Electron
+          , no MQL; forex on cTrader first, crypto later via agent-built 
+          adapters; no central backtest engine — backtesting decentralize
+          s into callable QMF components; build method = factory pipeline
+          , validation inside factory runs (modules ship with reference u
+          sage + tests); defaults ≠ mock data, mock data never ships, pro
+          duct ships with no bots; total clean slate (old repos deleted).
+      27  
+      28  ## Not yet specified
+
+  Wrote 1 memory (ctrl+o to expand)
+
+● Everything is ready for your 5pm pass. The research came back clean — 12 
+  agents, 11 study files, and they converged hard — and your deliverable pack is
+  drafted.
+
+  Read this one page: ⧉ QMF Minimal Core 
+  (https://claude.ai/code/artifact/a934f7ba-32a1-475f-bbb8-888bea969f23) —
+  findings, my agree/disagree positions (per your protocol), the 12 decisions,
+  the module map, and tonight's fence. The factory-facing spec sits at
+  artifacts\2026-08-17-qmf-v1-spec-DRAFT.md.
+
+  The headlines, in plain words:
+
+  - Ten independent briefs kept landing on the same four ideas — every fact
+  carries two timestamps (what happened vs when you could know it); write every
+  calculation once in live form and get backtests by replay; a strategy never
+  names a size; nothing counts unless registered. Your framework is those four
+  disciplines applied everywhere.
+  - The three things nobody has built — and are therefore QMX's real work: a
+  cTrader adapter, a prop-firm rule engine, and honest chart-zone detection. The
+  popular SMC library literally reads future candles (profit factor 7.32 → 1.82
+  when the leak was removed; unfixed for two years).
+  - The scariest number: five years of data honestly supports ~45 strategy
+  attempts at a Sharpe bar of 1.0. Agents can burn that in an afternoon — so QMF
+  counts every search and refuses when the evidence is spent. That's the
+  "safety on the gun", made mathematical.
+  - Urgent and unrecoverable: the economic calendar and your own tick stream
+  can't be bought back later. That's why tonight's fence is data first — core
+  types + the whole data ring — with the kernel, sim, and broker deliberately
+  staged to Day 2–3.
+
+  At 5, three moves: (1) ratify or amend D1–D9 ("ratify all as recommended" is a
+  valid answer), (2) bless the fence — I flip the spec to RATIFIED and you
+  export transcript + artifacts\ + research\ + tracker\ to the documentation
+  factory, (3) submit the Spotware Open API application tonight (ticket 006) —
+  it's the longest external wait and costs ten minutes.
+
+✻ Cogitated for 1h 18m 45s
+
+❯ Oh suggest arrived back. It's like took you less than an hour to actually     
+  deliver. let me have a look at this here. Damn, that was quick. So it's like  
+  3:33 p.m. So we're still early                                                
+
+● Welcome back — the fleet ran about 69 minutes end to end, and the drafting
+  took the rest. You're ahead of schedule.
+
+  Take your time with the artifact. Suggested reading order: section 1 (what the
+  fleet found), section 2 (where I stand — that's your agree-to-disagree
+  table), then section 3 (the twelve decisions). The module map and fence at the
+  bottom are what tonight hangs on.
+
+  Whenever something reads too technical, say the word and I'll put it in plain
+  words — and when you're ready, D1–D9 can be ratified one by one or with a
+  single "ratify all as recommended."
+
+✻ Worked for 11s
+
+※ recap: We're building QMF, the framework everything in QMX stands on; research is done and the draft spec plus decision pack are waiting in the QMF Minimal Core artifact. Next action: ratify decisions D1-D9 and bless tonight's factory fence. (disable recaps in /config)
+
+❯ Okay, wow, wow, wow, wow, wow. Alright, so let's begin with review. Now, the  
+  first finding that caught my eye, seriously, you said that there are          
+  apparently two findings that should change behavior. Now, here is the core    
+  idea I wanted to go with overall. For starters, I would really not like using 
+  libraries for specific strategy families, I would say. For example, ICT,      
+  SMC, macros, micro, scalpers, or whatnot. Yeah, I'm sorry, but I wouldn't     
+  really like using them. What I would like though is having, should I say, a   
+  proper toolbox in order to replicate ideologies from those specific families  
+  or those specific hypotheses. I don't know if you get me there. Because my    
+  idea would not be me using a third-party SMC library, my idea would be having 
+  a framework that allows me to build my own custom SMC library. Do you get me  
+  there? Yeah, I hope you understand me there. So, that's the first take I'm    
+  going to give you before I even read through anything else. Because I've just 
+  opened the document [[https://nautilustrader.io/docs/ ]]                      
+  [[https://github.com/wilsonfreitas/awesome-quant]] ,                          
+  [[https://github.com/OpenBB-finance/OpenBB]]]                                 
+  ,[[https://github.com/microsoft/qlib]],[[https://github.com/Fincept-Corporati 
+  on/FinceptTerminal]],[[https://github.com/paperswithbacktest/awesome-systemat 
+  ic-trading]],[[https://github.com/je-suis-tm/quant-trading]],[[https://github 
+  .com/jesse-ai/jesse]],[[https://github.com/lballabio/QuantLib]],[[https://git 

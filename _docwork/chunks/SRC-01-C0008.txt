@@ -1,0 +1,120 @@
+      66 +- Oracle list — for each module, the external thing that proves
+         + it right (talipp for indicators, purgedcv for overfitting math
+         +s, a live demo account for fills/reconciliation, known-overfit 
+         +archetypes for the battery-honesty test, the two-timestamp prop
+         +erty test as a registration precondition); the lever that conve
+         +rts operator review into automated gates                       
+      67 +- Kill switch specification — nowhere designed, incl. behaviour
+         + when it fires while the broker connection is down; the one com
+         +ponent with unbounded failure cost                             
+      68 +- FX time model: 5pm-NY rollover, week boundary, weekend gaps, 
+         +triple-swap Wednesday, broker-server vs prop-firm DST desync; n
+         +ote the swap-free account means the `financing` P&L column mode
+         +ls an admin fee, not swap                                      
+      69 +- Broker credential lifecycle + operational runbook: OAuth refr
+         +esh rotation, secrets on the VPS, token expiry mid-challenge, w
+         +ho flattens positions if the VPS dies                          
+      70 +- cTrader trendbars BID- vs mid-derived — UNVERIFIED across res
+         +earch files 02/05; affects every backtest-to-live comparison (f
+         +old into ticket 006)                                           
+      71 +                                                               
+      72  ## Out of scope
+      73  
+      74  - Reviving the old `Documents\QMX` module graph or code by defa
+          ult — evidence only, per operator ruling.
+
+● Map reconciled. Now the same corrections in the handoff spec — it's what the
+  documentation factory will actually read.
+
+● Update(artifacts\2026-08-17-qmf-v1-spec-DRAFT.md)
+  ⎿  Added 1 line, removed 1 line
+      1  # QMF — Handoff Specification for the Documentation Factory
+      2  
+      3  **Status:** supersedes the earlier draft in this file entirely (
+         2026-08-17, end of session). The earlier draft conflated QMF wit
+         h the trading node; this version carries the operator's correcti
+         ons.
+      4 -**Tonight's job:** initialize the project for the factory and **
+        -restart QMX documentation — framework (QMF) first, trading node 
+        -later.** Code (qmf-core) ships only after documentation.        
+      4 +**Job:** documentation-only handoff — **restart QMX documentatio
+        +n, framework (QMF) first, trading node later.** Claude initializ
+        +es/scaffolds nothing (operator ruling: Mubarak's own skills do t
+        +hat). Code (qmf-core) ships only after documentation.           
+      5  
+      6  ## 1. What QMF is — the one ruling everything else hangs on
+      7  
+
+● Update(artifacts\2026-08-17-qmf-v1-spec-DRAFT.md)
+  ⎿  Added 1 line, removed 1 line
+       9  
+      10  **Trading-node authority model (corrected per `.recovery/tradin
+          g-node-delta/recovery-lineage-addendum.md`):** GitBook supplies
+           the **Book/BMS baseline** — the governance rewrite (bots propo
+          se; Books own money and permission; BMS accounts and constrains
+          ; seven doors; Treasury cycles; constitution). It is NOT the co
+          mplete source for every surviving mechanic: mechanics GitBook n
+          ames but never defines are recovered from the legacy `QMX-discu
+          ssion` corpus; wiki/BMAD material counts claim-by-claim only; *
+          *current operator rulings override every historical layer**. Th
+          e node will be re-specified by reconciling these — that reconci
+          liation is future work, not tonight's. Do not put application r
+          untime (event loops, bot→Book→BMS pipelines, broker sessions) i
+          nside the framework's foundation. React analogy: the framework 
+          provides parts; the app owns the flow.
+      11  
+      12 -Design values (operator-ratified): 100% our own code — mental m
+         -odels only from the 37-repo study (`reference/00-idea-ledger.md
+         -`), never code; built to last (rebuild at most ~twice/year; "Bl
+         -oomberg Terminal from scratch" ambition); Python core (Rust res
+         -erved for UI later; speed via Polars/DuckDB); **written for hum
+         -ans AND agents** — the operator reads this code; permissive-lic
+         -ence dependencies only (LGPL acceptable for unmodified, separat
+         -ely-installed deps); versioned releases, never break consumers;
+         - no mock data ships; no bots ship.                             
+      12 +Design values (operator-ratified): 100% our own code — mental m
+         +odels only from the 37-repo study (`reference/00-idea-ledger.md
+         +`), never code — **clarified 2026-08-18: this bans transplantat
+         +ion, not dependencies; wrapping permissive-licence libraries (T
+         +A-Lib, Polars, DuckDB, Optuna, statsmodels, arch…) is expected 
+         +and encouraged.** **Don't-box-in principle (operator ruling 202
+         +6-08-18, platform-wide):** QMF is an open toolbox, always usabl
+         +e alongside plain Python and any external library or method (GA
+         +s, trees, RL, LLMs, synthetic data — methods change); uniformit
+         +y comes from shared contracts, never walls; strictness concentr
+         +ates in the agentic harness and the promotion gate into the liv
+         +e money path (order, not lock-in); research lanes stay free; bu
+         +ilt to last (rebuild at most ~twice/year; "Bloomberg Terminal f
+         +rom scratch" ambition); Python core (Rust reserved for UI later
+         +; speed via Polars/DuckDB); **written for humans AND agents** —
+         + the operator reads this code; permissive-licence dependencies 
+         +only (LGPL acceptable for unmodified, separately-installed deps
+         +); versioned releases, never break consumers; no mock data ship
+         +s; no bots ship.                                               
+      13  
+      14  ## 2. Library #1 — `qmf-core`, "the language" (the first and on
+          ly near-term build)
+      15  
+
+● Update(artifacts\2026-08-17-qmf-v1-spec-DRAFT.md)
+  ⎿  Added 1 line, removed 1 line
+      11  
+      12  Design values (operator-ratified): 100% our own code — mental m
+          odels only from the 37-repo study (`reference/00-idea-ledger.md
+          `), never code — **clarified 2026-08-18: this bans transplantat
+          ion, not dependencies; wrapping permissive-licence libraries (T
+          A-Lib, Polars, DuckDB, Optuna, statsmodels, arch…) is expected 
+          and encouraged.** **Don't-box-in principle (operator ruling 202
+          6-08-18, platform-wide):** QMF is an open toolbox, always usabl
+          e alongside plain Python and any external library or method (GA
+          s, trees, RL, LLMs, synthetic data — methods change); uniformit
+          y comes from shared contracts, never walls; strictness concentr
+          ates in the agentic harness and the promotion gate into the liv
+          e money path (order, not lock-in); research lanes stay free; bu
+          ilt to last (rebuild at most ~twice/year; "Bloomberg Terminal f
+          rom scratch" ambition); Python core (Rust reserved for UI later
+          ; speed via Polars/DuckDB); **written for humans AND agents** —
+           the operator reads this code; permissive-licence dependencies 
+          only (LGPL acceptable for unmodified, separately-installed deps
+          ); versioned releases, never break consumers; no mock data ship
+          s; no bots ship.

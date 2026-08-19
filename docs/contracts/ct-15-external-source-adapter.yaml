@@ -1,0 +1,38 @@
+id: CT-15
+name: External data-source adapter contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-DATA-INGEST
+active_providers: [COMP-DUKASCOPY, COMP-CALENDAR-FEED]
+intended_providers: [COMP-CTRADER]
+caller: COMP-QMF-DATA-INGEST
+consumers: [COMP-QMF-DATA-INGEST]
+request_from: COMP-QMF-DATA-INGEST
+request_to: [COMP-DUKASCOPY, COMP-CALENDAR-FEED]
+response_from: [COMP-DUKASCOPY, COMP-CALENDAR-FEED]
+response_to: COMP-QMF-DATA-INGEST
+layer_from: external
+layer_to: middleware
+decisions: [DEC-0051, DEC-0052, DEC-0053]
+gaps: [GAP-0005, GAP-0028, GAP-0029, GAP-0030]
+purpose: "Define the external-provider request and response port owned and called by COMP-QMF-DATA-INGEST without owning provider behavior."
+invariants:
+  - "COMP-QMF-DATA-INGEST is the QMF owner and caller; COMP-DUKASCOPY and COMP-CALENDAR-FEED are external providers."
+  - "COMP-CTRADER is an intended future provider under GAP-0030, not an active CT-15 provider."
+  - "Requests flow from Data-Ingest to a provider and responses flow from that provider to Data-Ingest."
+  - "COMP-QMF-DATA does not accept CT-15; it accepts Data-Ingest producer observations through the Data-owned CT-10 boundary."
+  - "Scheduled process lifecycle stays outside the qmf-data library."
+  - "Dukascopy-class history and broker ticks remain separately identified sources."
+  - "External schemas, legal terms, source identities, rate limits, retries, capabilities, and correction behavior remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0030
+  fields: null
+  fields_gap: GAP-0030
+  enums: null
+  enums_gap: GAP-0029
+  units: null
+  units_gap: GAP-0030
+  nullability: null
+  nullability_gap: GAP-0029

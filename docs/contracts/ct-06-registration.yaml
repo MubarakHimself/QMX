@@ -1,0 +1,28 @@
+id: CT-06
+name: Registry registration contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-REGISTRY
+consumers: [COMP-QMF-DATA, COMP-QMF-STRUCTURE, COMP-QMF-RISK]
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0033, DEC-0035, DEC-0038, DEC-0041]
+gaps: [GAP-0005, GAP-0014, GAP-0016, GAP-0017, GAP-0019]
+purpose: "Register type-specific identities only after the applicable lineage and gate preconditions are represented."
+invariants:
+  - "Registration does not require one universal all-fields card."
+  - "Only a human may promote a registered artifact into the live zone."
+  - "Object kinds, fields, atomicity, signatures, evidence, and result shape remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0014
+  fields: null
+  fields_gap: GAP-0014
+  enums: null
+  enums_gap: GAP-0014
+  units: null
+  units_gap: GAP-0014
+  nullability: null
+  nullability_gap: GAP-0014
+

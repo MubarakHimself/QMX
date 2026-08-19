@@ -1,0 +1,49 @@
+project: QMX
+mode: transcripts
+created: '2026-08-18'
+lenses:
+- core
+- data
+- ops
+- security
+- observability
+- performance
+- testing
+- bugs
+lens_capture:
+  data:
+    answer: yes
+    reason: QMF V1 includes schema-bearing market, lineage, journal, holdout, and backup concerns.
+  mlops:
+    answer: no
+    reason: Model training and MIS lifecycle belong to the later trading-node scope, not QMF V1.
+  ui:
+    answer: no
+    reason: The QMX UI and Simulator are explicitly deferred product scope.
+  ops:
+    answer: yes
+    reason: Venue connectivity, acquisition plumbing, and backup behavior cross operational boundaries.
+  security:
+    answer: yes
+    reason: The venue and risk boundaries handle broker access, live-money permission, and secrets.
+scope:
+  in:
+  - QMX system context and the QMF V1 framework blueprint stated in QMX2 and QMF1.
+  - QMF V1's five libraries: qmf-core, qmf-registry, qmf-data, qmf-indicators, and qmf-structure.
+  - QMF V1's venue and risk modules, limited to the boundaries and behavior actually settled in the transcripts.
+  - Agent-consumable documentation and an ordered feature inventory for the downstream software-factory workflow.
+  out:
+  - Implementing the software described by the transcripts.
+  - Detailed trading-node, Book/BMS, backtesting, QML bot-library, agentic-harness, and QMX UI specifications that the transcripts explicitly defer to later sessions.
+  - Treating pre-existing repository artifacts as authoritative unless a transcript explicitly identifies them as source material.
+sources:
+- id: SRC-01
+  path: qmx-2.txt
+  kind: transcript
+  role: primary
+  status: harvested
+- id: SRC-02
+  path: qmf-1.txt
+  kind: transcript
+  role: primary
+  status: harvested

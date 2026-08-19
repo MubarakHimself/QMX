@@ -1,0 +1,163 @@
+<title>QMF Minimal Core</title>
+<style>
+  :root {
+    --bg: #FAFBFC; --ink: #191C22; --muted: #5A6472; --line: #D8DEE6;
+    --card: #FFFFFF; --accent: #0E7568; --accent-soft: #E3F1EE;
+    --amber: #9A6210; --amber-soft: #F6EDDC; --defer: #8A93A0; --bad: #A33A2E;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #131519; --ink: #E6E9ED; --muted: #9AA4B2; --line: #2A2F37;
+      --card: #1A1D23; --accent: #3FC2AE; --accent-soft: #12332E;
+      --amber: #D9A45B; --amber-soft: #33291A; --defer: #7A828E; --bad: #E07B6E;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #131519; --ink: #E6E9ED; --muted: #9AA4B2; --line: #2A2F37;
+    --card: #1A1D23; --accent: #3FC2AE; --accent-soft: #12332E;
+    --amber: #D9A45B; --amber-soft: #33291A; --defer: #7A828E; --bad: #E07B6E;
+  }
+  body { background: var(--bg); color: var(--ink); font-family: system-ui, "Segoe UI", sans-serif; line-height: 1.55; margin: 0; padding: 2.5rem 1.25rem 5rem; }
+  main { max-width: 900px; margin: 0 auto; }
+  .mono { font-family: "Cascadia Code", Consolas, ui-monospace, monospace; }
+  .eyebrow { font-family: "Cascadia Code", Consolas, ui-monospace, monospace; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin: 3rem 0 .4rem; }
+  h1 { font-size: 2rem; font-weight: 750; letter-spacing: -.02em; margin: .2rem 0 .3rem; text-wrap: balance; }
+  h2 { font-size: 1.25rem; font-weight: 700; letter-spacing: -.01em; margin: 0 0 .75rem; text-wrap: balance; }
+  .sub { color: var(--muted); max-width: 62ch; margin: 0; }
+  .correction { border-left: 4px solid var(--bad); background: var(--card); border-radius: 0 6px 6px 0; padding: .8rem 1.1rem; margin-top: 1rem; font-size: .95rem; max-width: 76ch; }
+  .correction strong { color: var(--bad); }
+  .diagram-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--card); padding: 1rem; margin-top: 1rem; }
+  .diagram-wrap svg { max-width: 100%; height: auto; display: block; min-width: 660px; margin: 0 auto; }
+  figure { margin: 0; }
+  figcaption { font-size: .8rem; color: var(--muted); margin-top: .5rem; }
+  .pieces { margin: 1rem 0 0; padding: 0; list-style: none; }
+  .pieces li { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: .6rem .9rem; margin-top: .5rem; font-size: .92rem; }
+  .pieces li b { font-family: "Cascadia Code", Consolas, ui-monospace, monospace; font-size: .82rem; color: var(--accent); }
+  .pieces li span { color: var(--muted); }
+  .recipe { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-top: 1rem; }
+  .recipe-card { border: 1px solid var(--accent); border-radius: 8px; background: var(--card); padding: .8rem 1rem; font-size: .85rem; min-width: 250px; }
+  .recipe-card h4 { margin: 0 0 .4rem; font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+  .recipe-card div { padding: .15rem 0; border-top: 1px solid var(--line); }
+  .recipe-card div:first-of-type { border-top: 0; }
+  .recipe-card small { color: var(--muted); }
+  .plus { font-size: 1.4rem; color: var(--muted); font-weight: 700; }
+  .bind-card { border: 1px dashed var(--amber); border-radius: 8px; background: var(--amber-soft); padding: .8rem 1rem; font-size: .85rem; min-width: 200px; }
+  .bind-card h4 { margin: 0 0 .3rem; font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--amber); }
+  .parked { margin: 1rem 0 0; padding: 0; list-style: none; }
+  .parked li { border: 1px dashed var(--line); border-radius: 6px; padding: .55rem .9rem .55rem 2.2rem; position: relative; font-size: .92rem; margin-top: .5rem; color: var(--muted); }
+  .parked li::before { content: "⏸"; position: absolute; left: .8rem; color: var(--defer); }
+  .parked li strong { color: var(--ink); }
+  .ask { border: 1px solid var(--accent); border-left: 4px solid var(--accent); border-radius: 6px; background: var(--card); padding: 1rem 1.2rem; margin-top: 1rem; font-size: .95rem; }
+  a { color: var(--accent); }
+</style>
+
+<main>
+  <p class="eyebrow" style="margin-top:0">Foundation pack · 17 Aug 2026 · v6 — corrected: framework, not node</p>
+  <h1>QMF Minimal Core</h1>
+
+  <div class="correction"><strong>The correction, owned:</strong> v5's "kernel" diagram was the trading node's own pipeline wearing a framework costume. Wrong layer. QMF is the <em>toolbox</em>; the trading node — whose GitBook design stands untouched — is an <em>application built from it</em>, later. This page now shows only the toolbox, and only its first brick.</div>
+
+  <p class="eyebrow">1 · The two layers</p>
+  <h2>The toolbox, and the things built with it</h2>
+  <figure>
+    <div class="diagram-wrap">
+    <svg viewBox="0 0 920 360" role="img" aria-label="Left: QMF, a stack of libraries starting with qmf-core tonight, then data access, components and confluences, Book and BMS machinery, backtesting library, broker adapters. Right: applications built with QMF — the trading node per the GitBook, backtest workspaces in sandboxes, the QMX app with UI.">
+      <defs>
+        <marker id="c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <text x="30" y="36" font-size="13" font-weight="700" fill="currentColor" class="mono">QMF — THE TOOLBOX (libraries)</text>
+      <rect x="30" y="52" width="380" height="42" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.8"/>
+      <text x="46" y="78" font-size="12.5" font-weight="700" fill="currentColor">qmf-core — the language · TONIGHT</text>
+
+      <rect x="30" y="102" width="380" height="38" rx="6" fill="none" stroke="currentColor" opacity=".55"/>
+      <text x="46" y="126" font-size="12" fill="currentColor" opacity=".8">data access — later; acquisition timing = open decision</text>
+
+      <rect x="30" y="148" width="380" height="38" rx="6" fill="none" stroke="currentColor" opacity=".55"/>
+      <text x="46" y="172" font-size="12" fill="currentColor" opacity=".8">components &amp; confluences — after the bot session</text>
+
+      <rect x="30" y="194" width="380" height="38" rx="6" fill="none" stroke="currentColor" opacity=".55"/>
+      <text x="46" y="218" font-size="12" fill="currentColor" opacity=".8">Book &amp; BMS machinery — after the primer + its session</text>
+
+      <rect x="30" y="240" width="380" height="38" rx="6" fill="none" stroke="currentColor" opacity=".55"/>
+      <text x="46" y="264" font-size="12" fill="currentColor" opacity=".8">backtesting library — your staged funnel, ticket 008</text>
+
+      <rect x="30" y="286" width="380" height="38" rx="6" fill="none" stroke="currentColor" opacity=".55"/>
+      <text x="46" y="310" font-size="12" fill="currentColor" opacity=".8">broker adapters — after Spotware access</text>
+
+      <text x="30" y="350" font-size="10.5" fill="currentColor" opacity=".6">each library: mental models from the 37-repo study · code 100% ours · built to last</text>
+
+      <!-- arrow -->
+      <line x1="420" y1="190" x2="500" y2="190" stroke="var(--accent)" stroke-width="2" marker-end="url(#c)" color="var(--accent)"/>
+      <text x="460" y="178" font-size="11" fill="var(--accent)" font-weight="700" text-anchor="middle">builds</text>
+
+      <text x="510" y="36" font-size="13" font-weight="700" fill="currentColor" class="mono">APPLICATIONS — built with QMF</text>
+      <rect x="510" y="52" width="380" height="74" rx="6" fill="none" stroke="var(--amber)" stroke-width="1.6"/>
+      <text x="526" y="78" font-size="12.5" font-weight="700" fill="currentColor">The Trading Node</text>
+      <text x="526" y="97" font-size="11" fill="currentColor" opacity=".7">baseline: GitBook's Book/BMS rewrite + surviving legacy</text>
+      <text x="526" y="112" font-size="11" fill="currentColor" opacity=".7">mechanics — re-specified later, assembled from QMF</text>
+
+      <rect x="510" y="140" width="380" height="56" rx="6" fill="none" stroke="currentColor" opacity=".55"/>
+      <text x="526" y="164" font-size="12.5" font-weight="600" fill="currentColor" opacity=".85">Backtest workspaces</text>
+      <text x="526" y="182" font-size="11" fill="currentColor" opacity=".6">agents in sandboxes, on demand — never centralized</text>
+
+      <rect x="510" y="210" width="380" height="56" rx="6" fill="none" stroke="currentColor" opacity=".55"/>
+      <text x="526" y="234" font-size="12.5" font-weight="600" fill="currentColor" opacity=".85">The QMX app + UI</text>
+      <text x="526" y="252" font-size="11" fill="currentColor" opacity=".6">installable; data acquisition lives here as a feature</text>
+
+      <rect x="510" y="280" width="380" height="44" rx="6" fill="none" stroke="currentColor" stroke-dasharray="5 4" opacity=".45"/>
+      <text x="526" y="307" font-size="12" fill="currentColor" opacity=".6">Agentic system — its own world, five papers first</text>
+    </svg>
+    </div>
+    <figcaption>Same bricks everywhere — but the bricks are the toolbox, and none of the buildings gets designed tonight.</figcaption>
+  </figure>
+
+  <p class="eyebrow">2 · The first brick</p>
+  <h2>Library #1: <span class="mono">qmf-core</span> — the language</h2>
+  <p class="sub">Everything every hat will ever import. No loop, no broker, no backtest, no downloads — pure definitions.</p>
+  <ul class="pieces">
+    <li><b>exact money</b> — <span>prices, quantities, balances as exact decimals. A float rounding error in money is a bug that compounds silently; banned at the type level.</span></li>
+    <li><b>exact time</b> — <span>one instant type (UTC, nanosecond), plus "which trading day is this" for sessions and rollover, plus the two-dates stamp: when a fact happened and when it became knowable.</span></li>
+    <li><b>the nouns</b> — <span>Instrument, Bar, Tick, Order, Fill, Position, Account — style-agnostic (5-minute scalp to month-long hold) AND seeded for order flow now: DOM / depth-of-market, tape (time &amp; sales), level 2/3 data, market-structure primitives — so crypto's rich order books never force a rebuild. Forex gets sessions (per-pair, a bot may trade several); crypto is 24/7 — the line drawn explicitly.</span></li>
+    <li><b>typed refusals</b> — <span>every "no" carries a machine-readable name PLUS a human-readable explanation — this codebase is written for agents and for you.</span></li>
+    <li><b>the stamp machine</b> — <span>canonical writing-down + fingerprinting of any definition, so recipes, versions, and results can be identified exactly. (Used later by confluences; built now because everything needs it.)</span></li>
+    <li><b>versioning discipline</b> — <span>definitions carry versions from birth; changing a definition mints a new version instead of silently rewriting the old one.</span></li>
+  </ul>
+
+  <p class="eyebrow">3 · Corrected vocabulary</p>
+  <h2>The confluence and the bot, as you actually defined them</h2>
+  <div class="recipe">
+    <div class="recipe-card">
+      <h4>Confluence — the recipe</h4>
+      <div>Levels <small>— one or many, variants allowed</small></div>
+      <div>Triggers <small>— can be six firing together</small></div>
+      <div>Confirmations <small>— even a whole bot can serve as one</small></div>
+      <div><small>NO exit here — exits belong to the Book</small></div>
+    </div>
+    <div class="plus">+</div>
+    <div class="bind-card">
+      <h4>Book binding</h4>
+      the contract that links this recipe to a Book — not yet designed
+    </div>
+    <div class="plus">=</div>
+    <div class="recipe-card" style="border-color: var(--amber)">
+      <h4 style="color: var(--amber)">A bot</h4>
+      <div>recipe + binding, running under a Book's money rules</div>
+    </div>
+  </div>
+  <p class="sub" style="margin-top:.8rem">Exits, sizing, risk — Book territory. Prop firms are Books. And a bot is never frozen: as it moves through the system it <strong>accumulates a lineage</strong> — variants are first-class (fails on one pair, works on another; one trigger variable changed → passes), with parent/variant links tracked through the fingerprints. The Book/BMS primer is written (<span class="mono">reference\05-trading-node-primer.md</span>) so the Book session starts from your own baseline.</p>
+
+  <p class="eyebrow">4 · Tonight — your pipeline, your skills</p>
+  <h2>The state is ready; nothing was initialized by me</h2>
+  <div class="ask">
+    <p style="margin:.2rem 0 .6rem"><strong>Your plan, as you set it:</strong> restart QMX documentation — framework first, trading node later — then the factory ships <span class="mono">qmf-core</span>. Your export, your documentation-factory skill, your initialization skills. I only prepared the state:</p>
+    <ol style="margin:.2rem 0 0; padding-left:1.4rem">
+      <li><span class="mono">artifacts\2026-08-17-qmf-v1-spec-DRAFT.md</span> — rewritten as the corrected QMF handoff spec: toolbox-not-node, qmf-core contents, tonight's vocabulary rulings, the evidence index, and the explicitly-open list so documentation can't harden undecided things.</li>
+      <li><span class="mono">reference\</span> — idea ledger (156 rows), kernel verdict (build, ratified), backtesting inputs (unratified, for their session), trading-node primer from your GitBook.</li>
+      <li><span class="mono">research\</span> — the 11 web-research studies.</li>
+      <li>This page — the readable summary, also copied to <span class="mono">artifacts\</span>.</li>
+    </ol>
+    <p style="margin:.6rem 0 0">Export those + the transcript whenever you're ready. Old vocabulary reconciliation (seat, R, seed) is with your GPT — when it returns, it joins the evidence pile like the others.</p>
+  </div>
+</main>

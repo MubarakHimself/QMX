@@ -1,0 +1,120 @@
+● Update(artifacts\2026-08-18-five-locks.html)
+  ⎿  Added 5 lines, removed 5 lines
+      312  
+      313    <section>
+      314      <div class="decisions">
+      315 -      <span class="eyebrow">Decisions on the table</span>     
+      316 -      <div class="drow"><span class="dnum">D1</span><p>Ratify 
+          -<b>Lock 1 — the Dictionary</b> as the first brick (this is qmf
+          --core, plus its six frozen choices).</p><span class="chip">rec
+          -ommended: yes</span></div>                                    
+      317 -      <div class="drow"><span class="dnum">D2</span><p>Ratify 
+          -<b>Lock 2 — the Broker Exam</b>: the exam is written before ei
+          -ther venue is built.</p><span class="chip">recommended: yes</s
+          -pan></div>                                                    
+      318 -      <div class="drow"><span class="dnum">D3</span><p>Ratify 
+          -<b>Locks 3–5</b> — one ID card, the agent page, the answer key
+          -s — as the rest of the spine.</p><span class="chip">recommende
+          -d: yes</span></div>                                           
+      319 -      <div class="drow"><span class="dnum">D4</span><p>Confirm
+          - the two deferrals: full lie detector waits (counter stays now
+          -); challenge rehearsal machine waits for the agentic era (gene
+          -ric rule slot stays).</p><span class="chip">recommended: yes</
+          -span></div>                                                   
+      315 +      <span class="eyebrow">Verdicts — ruled 2026-08-18</span>
+      316 +      <div class="drow"><span class="dnum">D1</span><p><b>Lock
+          + 1 — the Dictionary (qmf-core): ACCEPTED as the first brick</b
+          +>, with Mubarak's dictated inputs folded in (heavy indicators 
+          +live in the MIS; pair-scoped kill switch; paper trading as a s
+          +tanding state for alpha-decay sensing; and more — full capture
+          + in the tracker). The six frozen choices remain proposals to c
+          +onfirm during the documentation pass.</p><span class="chip">ra
+          +tified in principle</span></div>                              
+      317 +      <div class="drow"><span class="dnum">D2</span><p><b>Lock
+          + 2: DENIED as bundled.</b> The word "exam" is banned (legacy c
+          +ollision). Venue connection proceeds as simple work; the backt
+          +est-parity half moves into the dedicated backtesting session.<
+          +/p><span class="chip pending">split</span></div>              
+      318 +      <div class="drow"><span class="dnum">D3</span><p><b>Lock
+          +s 3–5: identity and graph-shaped lineage accepted in principle
+          +</b>; one-card-for-everything, the agent page, and the answer 
+          +keys all wait — a deep study against the real QMX docs runs fi
+          +rst, and the agent page needs the library documented before it
+          + can exist.</p><span class="chip pending">deep study first</sp
+          +an></div>                                                     
+      319 +      <div class="drow"><span class="dnum">D4</span><p><b>All 
+          +backtesting discussion moves to its own session</b> (lie detec
+          +tor included). The challenge rehearsal machine is off — a prop
+          + firm is just a new Book, and Books are born in the agentic er
+          +a.</p><span class="chip pending">deferred</span></div>        
+      320      </div>
+      321    </section>
+      322  
+
+● Artifact(C:\Users\Mubarak\Desktop\QMX\artifacts\2026-08-18-five-locks.html)
+  ⎿  Updated ⧉ 
+     https://claude.ai/code/artifact/b708c68b-1e2f-4448-82d2-afad08a0ade9
+
+● Agent(Identity & lineage deep study) Opus 5 (1M context)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+● Everything from your verdicts is now captured, and here's where the session
+  stands.
+
+  Recorded in the tracker (full detail in ticket 002's capture section; the map
+  indexes it): Lock 1 accepted with all your dictation folded in — the MIS
+  heavy-indicator split, pair-scoped kill switch, paper-trading as a standing
+  state for alpha-decay sensing, human-only promotion, the possible multiple-BMS
+  future, the Book-schema-lives-on-GitBook warning, the exit-mechanisms depth
+  warning, and the data-layer emphasis. "Exam" joined the banned-vocabulary list
+  next to "plugins" and "engine". Ticket 008 (backtesting) now holds the
+  parity-checklist idea, the lie-detector discussion, and your read of the old
+  engine — all waiting for that dedicated session with your GPT brainstorm. The
+  ⧉ Five Locks artifact
+  (https://claude.ai/code/artifact/b708c68b-1e2f-4448-82d2-afad08a0ade9) now
+  shows your actual verdicts instead of my recommendations, and Lock 2 is
+  renamed the Venue Checklist.
+
+  Running in the background: the identity-and-lineage deep study you asked for
+  (ticket 009) — an agent reading the GitBook Book schema, the trading-node
+  primer, the recovery lineage material, and your dictated objections, then
+  proposing a typed model (separate kinds for Book, bot, confluence, the three
+  meanings of "model", experiments) with graph-shaped lineage that presumes no
+  database. Findings land in reference/07 for a future session — nothing gets
+  adopted without you.
+
+  Already shipped today: the calendar recorder — first snapshots banked,
+  scheduled twice daily, python recorder\status.py whenever you want to see it.
+
+  For whenever you start the next sessions, the slate that follows from today's
+  rulings, smallest bites first: the qmf-core documentation pass through your
+  documentation factory (Lock 1 is ratified — this is ready now, and the six
+  frozen choices get their explicit yes there); the data-layer session (ticket
+  005, now much richer with today's dictation — journal, per-component
+  collection, stores); the trading-node/Book-BMS session (ticket 004,
+  GitBook-grounded, where exits and the correlation ledger get their due depth);
+  and backtesting (ticket 008) when you're ready to sit down with it. This
+  session's export plus the tracker now carry everything the factory needs — the
+  context goal you set is met.
+
+✻ Cooked for 14m 0s
+
+❯ Alright, let me go for something else. Okay, I'm going out, yeah, in a        
+  minute. But you first do some deep study because everything I gave you in my  
+  last responses, I believe, can literally help us cover a lot of ground. Okay, 
+  so please first do some deep dives because we did a lot of research           
+  yesterday, and today I feel like I don't want to repeat the same things,      
+  okay? And then you give me a good verdict with proper diagrams, perhaps this  
+  time because I'm going for a haircut, I'll be back in like an hour. So you do 
+  as much as you want, really. Especially for decision three to five, then      
+  two, I told you, I really don't want to look at the back testing framework. I 
+  hope I explained it very well. And at the end, I said I'm not the one doing   
+  the Baptists, it's the agents. Okay, so yeah, all right, let me first go away 
+  because I don't have anything to add. The artifact kind of looks the same.    
+  And I decided I don't really like reading blocks. Anyway, to you, you go.     
+  Never mind about what I've just said, but read the stuff I've said. Yeah.     
+  Okay, I'm confusing you. I've given you opinions, that's it because the data  
+  layer. Now, data layer, I think oh the data layer, I think, is something that 
+  we need to look into so much. Now, I'm curious what the doc what the QMF      
+  core now becomes                                                              
+● Go get the haircut — here's the plan for the hour: the identity/lineage study

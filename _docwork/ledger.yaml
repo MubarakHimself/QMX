@@ -1,0 +1,920 @@
+ledger:
+  - id: DEC-0001
+    title: "Current operator rulings are authoritative"
+    statement: "Current direct operator corrections and rulings govern QMF V1 when sources disagree."
+    status: provisional
+    rationale: "The transcripts explicitly place current operator rulings above inherited plans, summaries, and historical material."
+    sources: [EXT-0041, EXT-1143]
+    component: COMP-QMF-CORE
+    tags: [law, authority]
+
+  - id: DEC-0002
+    title: "Historical source hierarchy"
+    statement: "The GitBook supplies Book and BMS governance baselines, while recovery and older QMX material supplies evidence only for semantics that have not been changed by later rulings."
+    status: provisional
+    rationale: "The baseline is useful but incomplete; it does not override later corrections or recreate the old module graph."
+    sources: [EXT-0042, EXT-0043, EXT-1144, EXT-1145, EXT-1147]
+    component: COMP-QMF-CORE
+    tags: [law, authority]
+
+  - id: DEC-0003
+    title: "Research never auto-adopts"
+    statement: "Research and study deliverables are evidence for a later ruling; they do not become QMF contracts merely because a study was completed."
+    status: provisional
+    rationale: "Both sessions distinguish study delivery from operator adoption."
+    sources: [EXT-0040, EXT-0203, EXT-1046]
+    component: COMP-QMF-CORE
+    tags: [law, governance]
+
+  - id: DEC-0004
+    title: "Documentation precedes implementation"
+    statement: "QMF is documented and reviewed before trading-node implementation or code generation, and deep design proceeds one focused topic at a time."
+    status: provisional
+    rationale: "The operator requested a documentation handoff first and repeatedly rejected premature implementation."
+    sources: [EXT-0078, EXT-0107, EXT-1112]
+    component: COMP-QMF-CORE
+    tags: [law, delivery]
+
+  - id: DEC-0005
+    title: "Project initialization stays with operator tooling"
+    statement: "Documentation agents must not initialize or scaffold QMX; the operator's project skills own that step."
+    status: provisional
+    rationale: "The source explicitly reserves initialization and scaffolding for the user's tooling."
+    sources: [EXT-0075, EXT-1142]
+    component: COMP-QMF-CORE
+    tags: [delivery]
+
+  - id: DEC-0006
+    title: "Human and agent readability"
+    statement: "QMF code and documentation must be legible to both human developers and coding agents."
+    status: provisional
+    rationale: "The factory is intended to support both forms of maintainer."
+    sources: [EXT-0076, EXT-1133]
+    component: COMP-QMF-CORE
+    tags: [law, maintainability]
+
+  - id: DEC-0007
+    title: "No shipped mock trading estate"
+    statement: "QMF libraries ship without mock market data, fake bots, or default strategies; tests may use controlled fixtures but the product does not pretend those are live artifacts."
+    status: provisional
+    rationale: "The operator repeatedly rejected shipping fake data and bots as platform content."
+    sources: [EXT-0090, EXT-0111, EXT-1104]
+    component: COMP-QMF-CORE
+    tags: [law, quality]
+
+  - id: DEC-0008
+    title: "QMF is a toolbox"
+    statement: "QMF is a set of reusable libraries and small modules from which QMX applications are built; QMF is not itself an application."
+    status: provisional
+    rationale: "The operator corrected application-like framing and positioned QMF as foundation tooling."
+    sources: [EXT-0013, EXT-0108]
+    component: COMP-QMF-CORE
+    tags: [law, scope, accepted-source]
+
+  - id: DEC-0009
+    title: "Application runtime stays outside the foundation"
+    statement: "Application loops, orchestration flows, scheduled lifecycles, and product UI do not belong in the QMF foundation unless a later component contract explicitly admits them."
+    status: provisional
+    rationale: "The source separates reusable contracts from the applications that consume them."
+    sources: [EXT-0108, EXT-0080]
+    component: COMP-QMF-CORE
+    tags: [law, boundary]
+
+  - id: DEC-0010
+    title: "Constrained-only authoring surface"
+    statement: "All QMF strategy authoring must occur through a narrowly constrained agent surface."
+    status: superseded
+    rationale: "This was an earlier safety framing before the operator corrected QMF toward an open Python toolbox."
+    sources: [EXT-1010]
+    component: COMP-QMF-CORE
+    tags: [historical]
+    superseded_by: DEC-0011
+
+  - id: DEC-0011
+    title: "Open Python toolbox"
+    statement: "QMF must not box in developers or agents: ordinary Python and suitable external libraries remain usable, while uniformity is enforced at live-money and agent-harness boundaries."
+    status: provisional
+    rationale: "The later correction preserves experimentation and extensibility while concentrating strictness where capital is exposed."
+    sources: [EXT-0025, EXT-0026, EXT-0030, EXT-0045, EXT-0166]
+    component: COMP-QMF-CORE
+    tags: [law, extensibility, accepted-source]
+    supersedes: [DEC-0010]
+
+  - id: DEC-0012
+    title: "Blanket ban on third-party code"
+    statement: "QMF must implement every dependency internally and may not use external libraries."
+    status: superseded
+    rationale: "The later ruling narrowed the prohibition to contract transplantation and unsuitable strategy-family dependencies."
+    sources: [EXT-1129]
+    component: COMP-QMF-CORE
+    tags: [historical]
+    superseded_by: DEC-0013
+
+  - id: DEC-0013
+    title: "Build-own boundary"
+    statement: "QMX-owned domain contracts and strategy semantics are implemented locally; suitable dependencies may be wrapped or used without transplanting a foreign platform contract, and separately installed compatible libraries remain permissible."
+    status: provisional
+    rationale: "The operator distinguished dependency reuse from copying another framework's architecture or strategy model."
+    sources: [EXT-0052, EXT-0062, EXT-0109, EXT-1059]
+    component: COMP-QMF-CORE
+    tags: [law, dependency-policy]
+    supersedes: [DEC-0012]
+
+  - id: DEC-0014
+    title: "Third-party strategy-family libraries"
+    statement: "QMF may use third-party libraries that define or transplant strategy families."
+    status: dead
+    rationale: "Strategy semantics are an owned QMX domain boundary."
+    sources: [EXT-0061, EXT-1050]
+    component: COMP-QMF-CORE
+    tags: [death, dependency-policy]
+    reason: "The operator said no third-party strategy-family libraries; QMX will build its own."
+
+  - id: DEC-0015
+    title: "Futures and options support"
+    statement: "QMF V1 or a later QMX edition will support futures and options."
+    status: dead
+    rationale: "The operator permanently excluded those asset classes rather than merely deferring them."
+    sources: [EXT-0063, EXT-1058]
+    component: COMP-QMF-CORE
+    tags: [death, scope]
+    reason: "The ruling was permanent: no futures and no options; stocks may come later."
+
+  - id: DEC-0016
+    title: "QML as the framework name"
+    statement: "The overall reusable trading framework is named QML."
+    status: superseded
+    rationale: "The operator corrected QML into the Bot-specific future library and renamed the umbrella QMF."
+    sources: [EXT-1025]
+    component: COMP-QMF-CORE
+    tags: [historical, naming]
+    superseded_by: DEC-0017
+
+  - id: DEC-0017
+    title: "QMF umbrella and QML Bot domain"
+    statement: "QMF is the framework umbrella; QML names the future Bot-oriented library rather than the whole foundation."
+    status: provisional
+    rationale: "This naming correction separates reusable framework primitives from Bot-specific machinery."
+    sources: [EXT-0083, EXT-1026]
+    component: COMP-QMF-CORE
+    tags: [law, naming]
+    supersedes: [DEC-0016]
+
+  - id: DEC-0018
+    title: "Minimal-core project scope"
+    statement: "The complete project deliverable is a minimal core rather than a QMF V1 blueprint."
+    status: superseded
+    rationale: "Later QMX2 corrections enlarged and renamed the agreed deliverable while retaining a deliberately small qmf-core."
+    sources: [EXT-1030, EXT-1031]
+    component: COMP-QMF-CORE
+    tags: [historical, scope]
+    superseded_by: DEC-0019
+
+  - id: DEC-0019
+    title: "QMF V1 Blueprint"
+    statement: "The current documentation target is the QMF V1 Blueprint; qmf-core is only its first small foundational component."
+    status: provisional
+    rationale: "The operator explicitly corrected the whole-agreement label and scope."
+    sources: [EXT-0235, EXT-0237]
+    component: COMP-QMF-CORE
+    tags: [law, scope, accepted-source]
+    supersedes: [DEC-0018]
+
+  - id: DEC-0020
+    title: "Minimal core as the whole-project label"
+    statement: "The whole QMF V1 agreement is called the minimal core."
+    status: dead
+    rationale: "The operator retained small-core design but retired this phrase for the overall blueprint."
+    sources: [EXT-0236]
+    component: COMP-QMF-CORE
+    tags: [death, naming]
+    reason: "The phrase \"minimal core\" was explicitly retired for the whole agreement."
+
+  - id: DEC-0021
+    title: "Broad runtime kernel"
+    statement: "QMF begins as a runtime kernel containing trading execution and orchestration machinery."
+    status: superseded
+    rationale: "The later boundary makes qmf-core a definitions-only library and moves runtime machinery to consumers or future modules."
+    sources: [EXT-0047, EXT-1097]
+    component: COMP-QMF-CORE
+    tags: [historical, architecture]
+    superseded_by: DEC-0022
+
+  - id: DEC-0022
+    title: "Definitions-only qmf-core"
+    statement: "qmf-core is a framework-neutral definitions library with exact primitives, domain nouns, typed refusals, and fingerprints; it contains no broker, event loop, backtest, download, or node runtime."
+    status: provisional
+    rationale: "The accepted first brick is intentionally small and exposes stable language to every later consumer."
+    sources: [EXT-0095, EXT-0112, EXT-0118, EXT-1131]
+    component: COMP-QMF-CORE
+    tags: [law, boundary, accepted-source]
+    supersedes: [DEC-0021]
+
+  - id: DEC-0023
+    title: "Kernel terminology"
+    statement: "The qmf-core foundation is described as the QMX kernel."
+    status: dead
+    rationale: "The term implied an application/runtime center that the operator did not want."
+    sources: [EXT-0053]
+    component: COMP-QMF-CORE
+    tags: [death, vocabulary]
+    reason: "The operator said the word \"kernel\" is retired."
+
+  - id: DEC-0024
+    title: "Final QMF V1 component roster"
+    statement: "QMF V1 consists of five libraries—qmf-core, qmf-registry, qmf-data, qmf-indicators, and qmf-structure—and two small modules—venue and risk."
+    status: provisional
+    rationale: "This is the final simplified roster stated after the detailed studies and corrections."
+    sources: [EXT-0244, EXT-0245, EXT-0246]
+    component: COMP-QMF-CORE
+    tags: [law, scope, accepted-source]
+
+  - id: DEC-0025
+    title: "qmf-core is the first brick"
+    statement: "qmf-core is the first component to specify and build, but its six detailed freeze choices remain pending."
+    status: provisional
+    rationale: "Lock 1 was accepted as the first brick without silently ratifying the proposed choices inside it."
+    sources: [EXT-0177]
+    component: COMP-QMF-CORE
+    tags: [source-accepted, sequencing]
+
+  - id: DEC-0026
+    title: "Exact money primitives"
+    statement: "qmf-core represents money and quantity exactly and does not use binary floating-point values for monetary contracts."
+    status: provisional
+    rationale: "Exact money is part of the accepted definitions boundary; the precision and rounding policy remains a gap."
+    sources: [EXT-0065, EXT-1131]
+    component: COMP-QMF-CORE
+    tags: [direction-agreed, contract]
+
+  - id: DEC-0027
+    title: "Exact time and trading dates"
+    statement: "qmf-core distinguishes exact instants, trading days, and the two date concepts required by trading semantics."
+    status: provisional
+    rationale: "The sources require exact time vocabulary while leaving encoding and calendar details to ratification."
+    sources: [EXT-0065, EXT-1131]
+    component: COMP-QMF-CORE
+    tags: [direction-agreed, contract]
+
+  - id: DEC-0028
+    title: "Core market nouns"
+    statement: "qmf-core defines Instrument, Bar, Tick, Order, Fill, Position, and Account as asset-neutral domain nouns that can later support order flow, DOM, tape, and market structure."
+    status: provisional
+    rationale: "The vocabulary must support later Forex, equities, and crypto consumers without forcing a core rebuild."
+    sources: [EXT-0126, EXT-1131, EXT-1132]
+    component: COMP-QMF-CORE
+    tags: [direction-agreed, contract]
+
+  - id: DEC-0029
+    title: "Typed refusals and deterministic fingerprints"
+    statement: "qmf-core exposes typed refusal outcomes and canonical deterministic fingerprint primitives rather than ad-hoc exceptions or unstable identifiers."
+    status: provisional
+    rationale: "Downstream registration, evidence, and live gates require failures and identities that agents can reason about reproducibly."
+    sources: [EXT-0065, EXT-0113, EXT-1131]
+    component: COMP-QMF-CORE
+    tags: [direction-agreed, contract]
+
+  - id: DEC-0030
+    title: "Versioning from birth"
+    statement: "Public QMF contracts are versioned from their first release, and incompatible semantic changes mint new versions instead of mutating old meaning."
+    status: provisional
+    rationale: "The foundation is intended to remain stable while later Books, brokers, and asset classes evolve."
+    sources: [EXT-0114, EXT-1134]
+    component: COMP-QMF-CORE
+    tags: [law, compatibility]
+
+  - id: DEC-0031
+    title: "Asset-neutral core"
+    statement: "qmf-core must not assume Forex, cTrader, scalping, or a specific deployment environment; Forex is only the first seeded consumer."
+    status: provisional
+    rationale: "The operator wants equities and crypto to fit later without rebuilding the foundational language."
+    sources: [EXT-0118, EXT-0192, EXT-0204]
+    component: COMP-QMF-CORE
+    tags: [law, extensibility]
+
+  - id: DEC-0032
+    title: "Six qmf-core freeze choices"
+    statement: "The UTC clock encoding, instrument identity, canonical indicator arithmetic, backtest fidelity taxonomy, SR* threshold, and result-label tuple are not frozen contracts."
+    status: open
+    rationale: "The source explicitly calls all six proposals pending confirmation during documentation."
+    sources: [EXT-0097, EXT-0098, EXT-0099, EXT-0100, EXT-0101, EXT-0177]
+    component: COMP-QMF-CORE
+    tags: [open-design, source-unratified]
+
+  - id: DEC-0033
+    title: "qmf-registry V1 boundary"
+    statement: "qmf-registry owns identity, lineage, and registration preconditions, including look-ahead causality checks and attempt-count gates."
+    status: provisional
+    rationale: "The final roster folds these disciplines into registry, while their exact schemas remain for a dedicated contract pass."
+    sources: [EXT-0247, EXT-0248]
+    component: COMP-QMF-REGISTRY
+    tags: [accepted-scope, direction-agreed]
+
+  - id: DEC-0034
+    title: "Universal registry recipe card"
+    statement: "Every registered QMF object must implement one universal all-fields recipe-card schema."
+    status: dead
+    rationale: "The operator rejected a universal card as too abstract and too constraining for unlike domain objects."
+    sources: [EXT-0157, EXT-0178]
+    component: COMP-QMF-REGISTRY
+    tags: [death, schema]
+    reason: "The one-card-for-everything proposal was rejected as too abstract; only identity and lineage were accepted in principle."
+
+  - id: DEC-0035
+    title: "Graph-shaped lineage without a graph database"
+    statement: "Registry lineage is graph-shaped and append-only, but its V1 persistence does not require a graph database."
+    status: provisional
+    rationale: "Identity and lineage were accepted in principle while database choice was deliberately kept simple."
+    sources: [EXT-0158, EXT-0178, EXT-0200]
+    component: COMP-QMF-REGISTRY
+    tags: [accepted-in-principle, direction-agreed]
+
+  - id: DEC-0036
+    title: "Registry identity study model"
+    statement: "The study-proposed fingerprint, charter, occurrence, kind-plus-id, and Bot revision model remains a candidate design rather than a frozen registry schema."
+    status: open
+    rationale: "The study was delivered but the transcript warns that study output does not auto-adopt."
+    sources: [EXT-0194, EXT-0195, EXT-0196, EXT-0203]
+    component: COMP-QMF-REGISTRY
+    tags: [study-delivered, source-unratified]
+
+  - id: DEC-0037
+    title: "Graph database in QMF V1"
+    statement: "qmf-registry V1 requires Neo4j or another graph database for lineage."
+    status: dead
+    rationale: "The operator expressly declined a graph database for V1."
+    sources: [EXT-0228]
+    component: COMP-QMF-REGISTRY
+    tags: [death, persistence]
+    reason: "When asked whether graphs were needed for V1, the operator answered: \"No, we don't.\""
+
+  - id: DEC-0038
+    title: "Content-addressed evidence with two timestamps"
+    statement: "Stored result artifacts are content-addressed and preserve both event time and knowledge or ingestion time."
+    status: provisional
+    rationale: "Reproducible lineage and look-ahead checks need immutable identity plus the time evidence became knowable."
+    sources: [EXT-0016, EXT-0017]
+    component: COMP-QMF-REGISTRY
+    tags: [direction-agreed, contract]
+
+  - id: DEC-0039
+    title: "Bot and Book lineage"
+    statement: "Bots and Books accumulate lineage across first-class variants and revisions instead of being overwritten in place."
+    status: provisional
+    rationale: "Career identity and variant lineage are necessary for promotion, audit, and later comparisons."
+    sources: [EXT-0131, EXT-1135]
+    component: COMP-QMF-REGISTRY
+    tags: [direction-agreed, lineage]
+
+  - id: DEC-0040
+    title: "Bot-to-confluence cardinality"
+    statement: "The number of confluences contained by one Bot is unresolved."
+    status: conflict
+    rationale: "An earlier definition describes the Bot around a single confluence and Book binding, while the later direct correction permits multiple confluences."
+    sources: [EXT-0161, EXT-1126]
+    component: COMP-QMF-REGISTRY
+    tags: [conflict, contract]
+    conflict:
+      - "A Bot is built around one confluence plus a not-yet-designed Book binding."
+      - "A Bot may contain multiple confluences."
+    recommendation: "Adopt one-or-more confluences per Bot because the multiple-confluence statement is the later direct correction, but ratify it explicitly before defining the Bot schema."
+
+  - id: DEC-0041
+    title: "Human-controlled promotion"
+    statement: "Only a human may promote a Bot or other registered artifact into the live zone; opaque ordinary-Python implementations may still be promoted after review."
+    status: provisional
+    rationale: "This preserves an open research surface without allowing automated live-money promotion."
+    sources: [EXT-0166, EXT-0167]
+    component: COMP-QMF-REGISTRY
+    tags: [law, live-money-gate]
+
+  - id: DEC-0042
+    title: "qmf-data V1 boundary"
+    statement: "qmf-data separates ingestion evidence, processed data, processing mechanisms, research access, journaling, and backup as distinct concerns."
+    status: provisional
+    rationale: "The component is in the final roster and the separation is directionally agreed, but the detailed six-layer schema is still study-derived."
+    sources: [EXT-0152, EXT-0249]
+    component: COMP-QMF-DATA
+    tags: [accepted-scope, direction-agreed]
+
+  - id: DEC-0043
+    title: "Six-layer qmf-data study"
+    statement: "The proposed six qmf-data layers are not yet a ratified storage or API contract."
+    status: open
+    rationale: "The study is plausible and delivered, but the source explicitly requires a dedicated ratification session."
+    sources: [EXT-0198, EXT-0203, EXT-0205, EXT-0249]
+    component: COMP-QMF-DATA
+    tags: [study-delivered, source-unratified]
+
+  - id: DEC-0044
+    title: "Historical data retention and sealed holdout"
+    statement: "QMX retains the full obtainable history for each currency and source and seals the newest approximately twelve months as a final one-time evaluation holdout."
+    status: provisional
+    rationale: "The later data ruling keeps historical evidence while protecting one untouched recent period from repeated research use."
+    sources: [EXT-0219, EXT-0220, EXT-0233]
+    component: COMP-QMF-DATA
+    tags: [direction-agreed, evidence]
+
+  - id: DEC-0045
+    title: "Full raw evidence and off-machine backup"
+    statement: "qmf-data retains complete raw evidence locally and maintains a bucket or equivalent off-machine backup with platform-level backup support."
+    status: provisional
+    rationale: "The operator rejected relying only on reduced buckets and required durable recovery beyond one machine."
+    sources: [EXT-0215, EXT-0233, EXT-1074]
+    component: COMP-QMF-DATA
+    tags: [law, durability]
+
+  - id: DEC-0046
+    title: "Research splits by default"
+    statement: "qmf-data presents research datasets through explicit train, validation, and untouched-test splits by default."
+    status: provisional
+    rationale: "The source treats split discipline as a guard against agent-driven overfitting."
+    sources: [EXT-0122]
+    component: COMP-QMF-DATA
+    tags: [law, research-integrity]
+
+  - id: DEC-0047
+    title: "Proposed local data stack"
+    statement: "Parquet, DuckDB, SQLite, and append-only JSONL are candidate V1 persistence choices, not adopted engine contracts."
+    status: open
+    rationale: "These engines came from the data study, and study completion is explicitly weaker than ratification."
+    sources: [EXT-0199, EXT-0200, EXT-0203, EXT-0217]
+    component: COMP-QMF-DATA
+    tags: [study-delivered, source-unratified, persistence]
+
+  - id: DEC-0048
+    title: "Cross-domain journal and observability"
+    statement: "The data foundation must support durable journal and observability records for Bot, Book, BMS, MIS, SQS, and kill-switch behavior."
+    status: provisional
+    rationale: "The listed trading domains need audit evidence, although event shapes, cadence, and retention are still open."
+    sources: [EXT-0154, EXT-0155]
+    component: COMP-QMF-DATA
+    tags: [direction-agreed, observability]
+
+  - id: DEC-0049
+    title: "Automatic detector action"
+    statement: "Automated data or quality detectors may notify, but whether they can mutate trading state is not adopted from the data study."
+    status: open
+    rationale: "The study proposed notification without action, but it was never independently ratified as a live-control law."
+    sources: [EXT-0202, EXT-0203]
+    component: COMP-QMF-DATA
+    tags: [study-delivered, safety]
+
+  - id: DEC-0050
+    title: "Calendar and live-feed capture excluded from foundation work"
+    statement: "The current foundation must not implement calendar capture or live-price recording."
+    status: superseded
+    rationale: "This earlier boundary was later replaced by an urgent forward-recording decision and a standalone calendar recorder seam."
+    sources: [EXT-1119]
+    component: COMP-QMF-DATA
+    tags: [historical, acquisition]
+    superseded_by: DEC-0051
+
+  - id: DEC-0051
+    title: "Acquisition plumbing and first-install bulk history"
+    statement: "QMF V1 provides ingest plumbing and supports a bulk historical load during first installation, while scheduled acquisition lifecycle remains outside the reusable library."
+    status: provisional
+    rationale: "The later source requires evidence capture now but preserves the toolbox-versus-application boundary."
+    sources: [EXT-0079, EXT-0080, EXT-1155]
+    component: COMP-QMF-DATA
+    tags: [direction-agreed, acquisition]
+    supersedes: [DEC-0050]
+
+  - id: DEC-0052
+    title: "Standalone economic-calendar recorder"
+    statement: "Forward economic-calendar recording is performed by a standalone application that consumes QMF data contracts rather than by a QMF runtime module."
+    status: provisional
+    rationale: "Calendar history is otherwise lost, but scheduling and operation are application responsibilities."
+    sources: [EXT-0018, EXT-0031, EXT-0080]
+    component: COMP-QMF-DATA
+    tags: [boundary, acquisition]
+
+  - id: DEC-0053
+    title: "Tick acquisition sequence"
+    statement: "Historical tick backfill uses Dukascopy-class evidence first, and forward broker tick capture waits for the broker API application and connection."
+    status: provisional
+    rationale: "This sequence captures available history without pretending the unapproved broker feed already exists."
+    sources: [EXT-0019, EXT-0081, EXT-0216]
+    component: COMP-QMF-DATA
+    tags: [direction-agreed, acquisition]
+
+  - id: DEC-0054
+    title: "Synthetic data role"
+    statement: "Synthetic market data may stress infrastructure and failure handling, but it may not validate trading edge or replace real evidence."
+    status: provisional
+    rationale: "The operator allows synthetic conditions only as a robustness tool."
+    sources: [EXT-0093, EXT-1075]
+    component: COMP-QMF-DATA
+    tags: [law, research-integrity]
+
+  - id: DEC-0055
+    title: "qmf-indicators wrapper boundary"
+    statement: "qmf-indicators wraps TA-Lib-class arithmetic through QMF-owned interfaces instead of reimplementing established indicator formulas."
+    status: provisional
+    rationale: "The final roster explicitly chooses wrapping for light indicator arithmetic."
+    sources: [EXT-0250]
+    component: COMP-QMF-INDICATORS
+    tags: [direction-agreed, accepted-scope]
+
+  - id: DEC-0056
+    title: "Light and heavy indicator split"
+    statement: "Light deterministic indicators may run with Bots, while heavy analytical indicators belong to MIS or research consumers outside qmf-indicators runtime responsibility."
+    status: provisional
+    rationale: "The sessions consistently separate trading-path arithmetic from heavier analytical work."
+    sources: [EXT-0123, EXT-0124, EXT-0180, EXT-0181]
+    component: COMP-QMF-INDICATORS
+    tags: [direction-agreed, boundary]
+
+  - id: DEC-0057
+    title: "Custom indicator discovery"
+    statement: "Genetic or other custom-indicator discovery belongs to a future research lab and is not a QMF V1 indicator-library responsibility."
+    status: out-of-scope
+    rationale: "The source assigns custom discovery to research rather than the stable library."
+    sources: [EXT-0125]
+    component: COMP-QMF-INDICATORS
+    tags: [future, research]
+
+  - id: DEC-0058
+    title: "qmf-structure boundary"
+    statement: "qmf-structure owns QMX-defined causal levels, zones, and market-structure components rather than generic indicator arithmetic."
+    status: provisional
+    rationale: "The final roster assigns proprietary causal structure to its own library."
+    sources: [EXT-0251]
+    component: COMP-QMF-STRUCTURE
+    tags: [direction-agreed, accepted-scope]
+
+  - id: DEC-0059
+    title: "Venue module boundary"
+    statement: "COMP-QMF-VENUE is a small broker and venue integration module whose first implementation targets the cTrader Open API in Python."
+    status: provisional
+    rationale: "The final roster treats broker connection as a small module, not as a broad trader library."
+    sources: [EXT-0141, EXT-0241, EXT-0252]
+    component: COMP-QMF-VENUE
+    tags: [accepted-scope, direction-agreed]
+
+  - id: DEC-0060
+    title: "No MQL implementation"
+    statement: "The first venue integration uses the cTrader Open API from Python and does not use MQL."
+    status: provisional
+    rationale: "The operator chose the Python cTrader path explicitly."
+    sources: [EXT-0141]
+    component: COMP-QMF-VENUE
+    tags: [law, integration]
+
+  - id: DEC-0061
+    title: "Multi-venue seam"
+    statement: "COMP-QMF-VENUE exposes a venue-neutral seam so later crypto and stock adapters can be added without changing foundational contracts."
+    status: provisional
+    rationale: "cTrader is the first adapter, not a permanent assumption baked into qmf-core."
+    sources: [EXT-0142, EXT-0252]
+    component: COMP-QMF-VENUE
+    tags: [law, extensibility]
+
+  - id: DEC-0062
+    title: "Broker Exam terminology"
+    statement: "The venue conformance work is named the Broker Exam."
+    status: dead
+    rationale: "The label collided with a different operator concept and created scope confusion."
+    sources: [EXT-0140]
+    component: COMP-QMF-VENUE
+    tags: [death, vocabulary]
+    reason: "The operator said the term \"exam\" collides with another concept and must not be used for broker conformance."
+
+  - id: DEC-0063
+    title: "Broker connection and parity as one Lock 2 bundle"
+    statement: "Broker connection, parity testing, and broader broker-exam work ship as one immediate Lock 2 bundle."
+    status: dead
+    rationale: "The operator denied the combined bundle and separated simple connectivity from future backtesting parity."
+    sources: [EXT-0143, EXT-0265]
+    component: COMP-QMF-VENUE
+    tags: [death, sequencing]
+    reason: "The operator denied the broker-exam bundle; connection is separate and parity belongs to future backtesting."
+
+  - id: DEC-0064
+    title: "Broker parity checklist"
+    statement: "Broker-versus-simulation parity work is deferred to the future backtesting library and is not part of COMP-QMF-VENUE V1 connectivity."
+    status: out-of-scope
+    rationale: "The final correction separates broker plumbing from backtest fidelity."
+    sources: [EXT-0265]
+    component: COMP-QMF-VENUE
+    tags: [future, backtesting]
+
+  - id: DEC-0065
+    title: "Risk module boundary"
+    statement: "COMP-QMF-RISK owns the current versioned Book and BMS machinery, exits, correlation ledger, and money rules, with its internals deferred to a dedicated risk and trading-node session."
+    status: provisional
+    rationale: "The final V1 roster includes risk as a small module but explicitly avoids pretending the detailed Book grammar is finished."
+    sources: [EXT-0242, EXT-0253]
+    component: COMP-QMF-RISK
+    tags: [accepted-scope, direction-agreed]
+
+  - id: DEC-0066
+    title: "Book and BMS are risk semantics"
+    statement: "Books and BMS express risk, money management, and position-sizing policy rather than trading-entry logic."
+    status: provisional
+    rationale: "The operator consistently separates the Bot's confluence from the Book's capital and risk behavior."
+    sources: [EXT-0130, EXT-0242]
+    component: COMP-QMF-RISK
+    tags: [direction-agreed, contract]
+
+  - id: DEC-0067
+    title: "Exit ownership"
+    statement: "The final ownership split between Bot exits and Book exits is unresolved and must be settled inside the risk and trading-node design session, not qmf-core."
+    status: conflict
+    rationale: "Direct operator corrections repeatedly place Exit in Book territory, while the inherited baseline described Bot exit organs and Book-forced exits."
+    sources: [EXT-0020, EXT-0067, EXT-1125, EXT-0136, EXT-0253]
+    component: COMP-QMF-RISK
+    tags: [conflict, contract]
+    conflict:
+      - "All Exit semantics, including dynamic SL/TP and fast invalidation, belong to the Book and risk module."
+      - "Bots own ordinary exit organs, while Books own forced exits and risk overrides."
+    recommendation: "Make the Book/risk contract authoritative for exit policy and let Bots emit exit signals only through that contract, because the repeated direct corrections place exits in Book territory."
+
+  - id: DEC-0068
+    title: "Surgical risk controls and correlation"
+    statement: "COMP-QMF-RISK must support independently specified risk variables, fast invalidation, dynamic stop-loss and take-profit behavior, and a correlation ledger."
+    status: provisional
+    rationale: "The risk design is intentionally fine-grained rather than one global position-size rule."
+    sources: [EXT-0135, EXT-0136, EXT-0137]
+    component: COMP-QMF-RISK
+    tags: [direction-agreed, risk]
+
+  - id: DEC-0069
+    title: "Parallel Bot paper twins"
+    statement: "A live Bot also runs a parallel paper twin, or one Bot attaches to several Books simultaneously to compare them."
+    status: dead
+    rationale: "The ruling rejects both parallel Bot twins and one-Bot-to-many-Books; the direct operator wording is missing from the export, so this survives through the assistant's immediate recap."
+    sources: [EXT-0201, EXT-0214]
+    component: COMP-QMF-RISK
+    tags: [death, paper-trading]
+    reason: "The operator ruled that no Bot runs a parallel paper twin and that a Bot connects to exactly one Book."
+
+  - id: DEC-0070
+    title: "Book-level paper mode"
+    statement: "Paper mode is a Book-level state: when a Book cannot trade live, its attached Bots continue against the Book's paper account so performance evidence continues."
+    status: provisional
+    rationale: "The ruling moves paper behavior from Bot twins to the risk container and anticipates separate demo accounts; the direct operator wording is missing from the export, so the Book-level ruling survives through the assistant's immediate recap."
+    sources: [EXT-0149, EXT-0150, EXT-0213, EXT-0232]
+    component: COMP-QMF-RISK
+    tags: [source-accepted, paper-trading]
+
+  - id: DEC-0071
+    title: "Special blackout paper simulator"
+    statement: "A special paper simulator must run through news blackouts solely to preserve market observations."
+    status: dead
+    rationale: "Ordinary market recorders continue through blackouts, so a special simulation path adds no required evidence."
+    sources: [EXT-0186, EXT-0234]
+    component: COMP-QMF-RISK
+    tags: [death, paper-trading]
+    reason: "The record-through-blackout paper-simulation idea was dropped because ordinary recorders never stop."
+
+  - id: DEC-0072
+    title: "Pair-scoped news controls"
+    statement: "News blocking is scoped to the affected pair and does not automatically stop unrelated trading; SQS remains a separate control."
+    status: provisional
+    rationale: "The operator separated event relevance from spread quality and preserved unaffected trading."
+    sources: [EXT-0138, EXT-0223]
+    component: COMP-QMF-RISK
+    tags: [direction-agreed, risk]
+
+  - id: DEC-0073
+    title: "Snapshot Quality Sensor interpretation"
+    statement: "SQS expands to Snapshot Quality Sensor and replaces the spread-quality meaning."
+    status: dead
+    rationale: "The later source explicitly calls the snapshot-quality interpretation semantic drift."
+    sources: [EXT-1146]
+    component: COMP-QMF-RISK
+    tags: [death, vocabulary]
+    reason: "The correction says SQS means Spread Quality Sensor; the later snapshot-quality aggregate is semantic drift."
+
+  - id: DEC-0074
+    title: "Spread Quality Sensor"
+    statement: "SQS means Spread Quality Sensor and is a risk-quality input distinct from news controls."
+    status: provisional
+    rationale: "Both the later correction and QMX2 consolidation use the spread-quality expansion."
+    sources: [EXT-0069, EXT-1138, EXT-1146]
+    component: COMP-QMF-RISK
+    tags: [law, vocabulary]
+
+  - id: DEC-0075
+    title: "SQS calculation"
+    statement: "The Spread Quality Sensor formula, inputs, thresholds, conditioning, and sampling cadence remain unratified."
+    status: open
+    rationale: "The source names the sensor but expressly leaves its candidate formula open."
+    sources: [EXT-0069, EXT-1152]
+    component: COMP-QMF-RISK
+    tags: [open-design, formula]
+
+  - id: DEC-0076
+    title: "R is pre-trade risk"
+    statement: "R denotes one unit of pre-trade risk and is not realized profit, account equity, or post-trade return."
+    status: provisional
+    rationale: "This vocabulary correction is required before formulas can be dimensionally checked."
+    sources: [EXT-0070]
+    component: COMP-QMF-RISK
+    tags: [law, vocabulary]
+
+  - id: DEC-0077
+    title: "FORM-0006 implementation"
+    statement: "The recovered FORM-0006 expression may be implemented unchanged."
+    status: dead
+    rationale: "The expression is dimensionally invalid under the corrected meaning of R."
+    sources: [EXT-0071]
+    component: COMP-QMF-RISK
+    tags: [death, formula]
+    reason: "FORM-0006 is dimensionally broken and must never be implemented as-is."
+
+  - id: DEC-0078
+    title: "Three distinct capital concepts"
+    statement: "Current roster state, risk allocation, and any surviving legacy slot concept remain distinct and must not collapse into one field."
+    status: provisional
+    rationale: "The source warns that merging the three produces semantic and accounting errors."
+    sources: [EXT-0072, EXT-1150]
+    component: COMP-QMF-RISK
+    tags: [direction-agreed, contract]
+
+  - id: DEC-0079
+    title: "Legacy capital-slot machinery"
+    statement: "Legacy auctions, DPR-driven slot tables, and capital-slot machinery are carried into COMP-QMF-RISK V1."
+    status: dead
+    rationale: "The recovery ruling marks this machinery donor-only rather than live design."
+    sources: [EXT-1151]
+    component: COMP-QMF-RISK
+    tags: [death, legacy]
+    reason: "The legacy slot machinery was marked donor-only."
+
+  - id: DEC-0080
+    title: "Scalping Book is not universal"
+    statement: "The recovered scalping cycle is one reusable Book pattern, not a global Book law for all strategies and holding periods."
+    status: provisional
+    rationale: "The operator explicitly identified the recovered design as a Scalping Book and expects other Book forms."
+    sources: [EXT-0073, EXT-1139, EXT-1140]
+    component: COMP-QMF-RISK
+    tags: [law, extensibility]
+
+  - id: DEC-0081
+    title: "Prop-firm Books"
+    statement: "Prop-firm evaluation and funded-account Books are deferred to the agentic era and are not QMF V1 deliverables."
+    status: out-of-scope
+    rationale: "The source postpones those specialized Books while retaining the general Book concept."
+    sources: [EXT-0059, EXT-1087]
+    component: COMP-QMF-RISK
+    tags: [future, agentic]
+
+  - id: DEC-0082
+    title: "Program and Campaign machinery"
+    statement: "QMF models prop-firm workflows with generic Program and Campaign state machines."
+    status: dead
+    rationale: "The operator rejected this abstraction and said each prop-firm case should be modeled as a new Book."
+    sources: [EXT-0060, EXT-0169]
+    component: COMP-QMF-RISK
+    tags: [death, prop-firm]
+    reason: "The Program/Campaign machine was rejected as far off; the prop firm should be treated as a new Book."
+
+  - id: DEC-0083
+    title: "Backtesting in QMF V1"
+    statement: "Backtesting, fill simulation, validation statistics, and their detailed contracts are deferred to a separate future design session and are not part of QMF V1."
+    status: out-of-scope
+    rationale: "The operator paused the area to avoid freezing incomplete mechanics inside the foundation."
+    sources: [EXT-0021, EXT-0054, EXT-0144, EXT-0168]
+    component: null
+    tags: [future, backtesting]
+
+  - id: DEC-0084
+    title: "Central backtesting service"
+    statement: "All agents and Books share one centralized always-on backtesting service."
+    status: dead
+    rationale: "The recovered design could not supply adequate compute isolation or per-Book testing variation."
+    sources: [EXT-1089]
+    component: null
+    tags: [death, backtesting]
+    reason: "The operator rejected centralization because it could not provide sufficient compute for concurrent work."
+
+  - id: DEC-0085
+    title: "Nautilus contract adoption"
+    statement: "QMF adopts Nautilus Trader's contracts as its foundation."
+    status: dead
+    rationale: "The operator explicitly rejected adopting Nautilus as the contract and retained QMX-owned semantics."
+    sources: [EXT-1093]
+    component: null
+    tags: [death, dependency-policy]
+    reason: "The operator said he does not want the Nautilus contract."
+
+  - id: DEC-0086
+    title: "Three-day dependency adoption spike"
+    statement: "QMF performs a three-day spike to decide whether to adopt an external trading framework."
+    status: dead
+    rationale: "The later ruling canceled the spike and committed to locally owned contracts."
+    sources: [EXT-0051, EXT-1098]
+    component: null
+    tags: [death, dependency-policy]
+    reason: "The three-day adoption spike was explicitly cancelled."
+
+  - id: DEC-0087
+    title: "Future modular backtesting library"
+    statement: "Any future backtesting capability is a modular on-demand library or sandbox that can vary by Book, not a permanent central engine."
+    status: out-of-scope
+    rationale: "The future direction preserves Bot-by-Book testing variation without adding V1 runtime machinery."
+    sources: [EXT-0064, EXT-0074, EXT-1105, EXT-1106]
+    component: null
+    tags: [future, backtesting]
+
+  - id: DEC-0088
+    title: "Trading simulator product"
+    statement: "A visual simulator for Bot-by-Book and theoretical-condition exploration is a later product UI, not a QMF V1 engine."
+    status: out-of-scope
+    rationale: "The source separates the future human-facing product from the reusable backtesting library."
+    sources: [EXT-0074, EXT-1061, EXT-1062]
+    component: null
+    tags: [future, ui]
+
+  - id: DEC-0089
+    title: "MIS as a QMF library"
+    statement: "MIS is a later trading-node component built with qmf-data and qmf-indicators; it is not a QMF V1 library."
+    status: out-of-scope
+    rationale: "The final correction places MIS in the trading node as a consumer of QMF libraries."
+    sources: [EXT-0240]
+    component: null
+    tags: [scope, trading-node]
+
+  - id: DEC-0090
+    title: "QML Bot library in V1"
+    statement: "The QML Bot library is deferred outside the immediate QMF V1 roster until its Bot-to-Book binding contract is designed."
+    status: out-of-scope
+    rationale: "Bot-to-Book binding is not designed, so the Bot library is intentionally excluded from this roster."
+    sources: [EXT-0254]
+    component: null
+    tags: [future, qml]
+
+  - id: DEC-0091
+    title: "Agentic runtime organs"
+    statement: "DeepSeek Context, disposers, event buses, autonomous organs, and the full agentic harness are deferred outside QMF V1."
+    status: out-of-scope
+    rationale: "The current blueprint builds reusable veins and stable contracts before agentic organs."
+    sources: [EXT-0036, EXT-0057, EXT-0082, EXT-0115]
+    component: null
+    tags: [future, agentic]
+
+  - id: DEC-0092
+    title: "Fresh alpha-decay mathematics"
+    statement: "Any future alpha-decay and benchmark mathematics is designed afresh from current definitions rather than reconstructed from unrecoverable legacy formulas."
+    status: provisional
+    rationale: "The operator stopped further excavation after the legacy math proved incomplete and ambiguous."
+    sources: [EXT-0264, EXT-0270]
+    component: COMP-QMF-RISK
+    tags: [law, clean-start]
+
+  - id: DEC-0093
+    title: "DPR and PRS revival"
+    statement: "The legacy DPR and PRS mechanisms return as current risk controls."
+    status: dead
+    rationale: "The operator marked both concepts legacy-only and warned against reviving them."
+    sources: [EXT-0256]
+    component: COMP-QMF-RISK
+    tags: [death, legacy]
+    reason: "DPR and PRS are legacy-only and must not be revived."
+
+  - id: DEC-0094
+    title: "Recovered benchmark baseline"
+    statement: "The recovered two-stopouts-per-day baseline, stop-out definition, overloaded B symbol, and BENCHED namespace are not yet valid V1 contracts."
+    status: open
+    rationale: "The study exposed missing definitions and namespace collisions that require a fresh risk session."
+    sources: [EXT-0259, EXT-0261, EXT-0262, EXT-0263]
+    component: COMP-QMF-RISK
+    tags: [study-delivered, source-unratified, formula]
+
+  - id: DEC-0095
+    title: "Multiple BMS per Book"
+    statement: "Whether one Book may own multiple BMS instances or policies remains undecided."
+    status: open
+    rationale: "The transcript raises the possibility without supplying a final cardinality contract."
+    sources: [EXT-0132]
+    component: COMP-QMF-RISK
+    tags: [open-design, contract]
+
+  - id: DEC-0096
+    title: "Factory module evidence"
+    statement: "Every factory-built QMF component ships with executable tests and reference usage that demonstrates its public contract."
+    status: provisional
+    rationale: "The factory must hand consumers verifiable contracts rather than prose-only claims."
+    sources: [EXT-0089]
+    component: COMP-QMF-CORE
+    tags: [law, quality]
+
+  - id: DEC-0097
+    title: "Long-lived foundation"
+    statement: "QMF is designed for durable evolution with infrequent foundational rebuilds and versioned extension rather than repeated replacement."
+    status: provisional
+    rationale: "The operator's ambition is a Bloomberg-class personal platform rebuilt at most roughly twice per year."
+    sources: [EXT-0110, EXT-1094, EXT-1130]
+    component: COMP-QMF-CORE
+    tags: [law, durability]
+
+  - id: DEC-0098
+    title: "Real workload design target"
+    statement: "QMF contracts and implementations are designed for a real scenario of roughly forty concurrent Bots rather than toy-scale assumptions."
+    status: provisional
+    rationale: "The operator gave roughly forty Bots as a real workload; this is a design case, not a measured percentile SLO."
+    sources: [EXT-0212]
+    component: COMP-QMF-CORE
+    tags: [direction-agreed, performance]

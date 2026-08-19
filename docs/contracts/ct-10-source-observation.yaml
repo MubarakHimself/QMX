@@ -1,0 +1,33 @@
+id: CT-10
+name: Source-observation and bitemporal fact contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-DATA
+producers: [COMP-QMF-DATA-INGEST, COMP-QMF-VENUE]
+consumers: [COMP-QMF-DATA]
+governed_readers: [COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK]
+layer_from: middleware
+layer_to: backend
+decisions: [DEC-0038, DEC-0042, DEC-0051, DEC-0053]
+gaps: [GAP-0005, GAP-0020, GAP-0023, GAP-0028, GAP-0030]
+purpose: "Define the QMF-owned public observation boundary without erasing when an observation occurred or when it became knowable."
+invariants:
+  - "COMP-QMF-DATA owns the CT-10 schema and public boundary."
+  - "COMP-QMF-DATA-INGEST and COMP-QMF-VENUE are CT-10 producers; producer submissions enter through COMP-QMF-DATA."
+  - "COMP-QMF-DATA is the direct consumer; COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, and COMP-QMF-RISK are governed readers of the Data-owned public boundary."
+  - "Only COMP-QMF-DATA consumes CT-10 directly from COMP-QMF-DATA-INGEST; no downstream reader consumes CT-10 directly from Data-Ingest."
+  - "Event time and knowledge or ingestion time are distinct."
+  - "Raw evidence and processed data remain distinct concerns."
+  - "Fields, timestamps, source keys, duplicate rules, ordering, quality flags, units, and raw-payload handling remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0023
+  fields: null
+  fields_gap: GAP-0023
+  enums: null
+  enums_gap: GAP-0030
+  units: null
+  units_gap: GAP-0030
+  nullability: null
+  nullability_gap: GAP-0023

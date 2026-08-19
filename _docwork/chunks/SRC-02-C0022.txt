@@ -1,0 +1,107 @@
+          -g any place these code studies disagree with research/00-10 (n
+          -ame the file and the claim). This ledger is Mubarak's requeste
+          -d artifact: "we organize where an idea is from, why, and how w
+          -e implement it."`,                                            
+      134 +  `(rev2: nautilus-trader.md and backtest-engines.md now exist
+          + in the studies folder and the verdicts were rebuilt on them —
+          + regenerate the ledger over the complete set.) You are the led
+          +ger agent. Read EVERY file in ${STUDIES}/ plus ${REF}/01-kerne
+          +l-verdict.md and ${REF}/02-backtesting-verdict.md. Merge every
+          + "mental models worth borrowing" entry into ONE organized tabl
+          +e at ${REF}/00-idea-ledger.md with columns: Idea | Source (rep
+          +o + path) | What we borrow (the mental model) | Why it matters
+          + | How QMF implements it | Licence note. Deduplicate ideas tha
+          +t multiple studies found — cite all sources on one row. Group 
+          +rows by QMF ring (core / data / features / intelligence / mone
+          +y authority / venue / runtime+backtest / epistemics / registry
+          ++surface / UI-later). Open with a 10-line plain-words summary 
+          +of what the whole study concluded, and close with "## Contradi
+          +ctions with the earlier web research" listing any place these 
+          +code studies disagree with research/00-10 (name the file and t
+          +he claim). This ledger is Mubarak's requested artifact: "we or
+          +ganize where an idea is from, why, and how we implement it."`,
+      135    { label: 'idea-ledger', phase: 'Ledger', schema: STUDY_RESUL
+           T, model: 'opus', effort: 'high' })
+      136  
+      137  return {
+  ⎿  /workflows to view dynamic workflow runs
+
+● Wave 1's final leg is running. Now wave 2 over the shortlist — clones resolved
+  from the local awesome-quant README, with a strict read-only rule since
+  several are unvetted single-author repos.
+
+● Workflow(Clone and study the catalog shortlist: epistemic tool sketches, fill
+          simulation, calendars, CV-native portfolio, point-in-time macro
+          backtester)
+  ⎿  /workflows to view dynamic workflow runs
+
+❯ Heads up, GPT is doing some recovery from an old project of mine, yeah. It's  
+  getting specifically the old version of the backtest engine we had. You'll    
+  get receive it when it finishes                                               
+
+● Update(tracker\map.md)
+  ⎿  Added 1 line
+      50  - Backtesting mechanism as part of QMF — decentralized callable
+           components stand (no monolith), but the mechanism itself must 
+          be designed and built inside QMF; scope it in the minimal core 
+          (ticket 002)
+      51  - Prop firms are a major operator goal — prop-firm constraint m
+          odeling (daily loss caps, drawdown rules) and pair-selection su
+          pport deserve first-class weight in risk/sizing design
+      52  - Original QML design doc — Mubarak couldn't locate it; adopt i
+          f it resurfaces
+      53 +- **Incoming: old backtest-engine recovery** — GPT is extractin
+         +g the old project's backtest engine design; when it arrives, co
+         +mpare against `reference/02-backtesting-verdict.md` (agrees / c
+         +onflicts / re-ratify) — evidence, never authority, per the clea
+         +n-state rule                                                   
+      54  
+      55  ## Out of scope
+      56  
+
+● Status of everything in flight:
+
+  - Wave 1 final leg — Nautilus and backtest-engines studies retrying on Opus;
+  both verdict briefs and the idea ledger will regenerate on top of them (I
+  stamped the prompts so the stale versions can't survive from cache).
+  - Wave 2 — running: one cloner resolving the shortlist URLs from your local
+  awesome-quant copy, then five studies (fill simulation from hftbacktest,
+  session calendars + FX value dates, skfolio's cross-validation design,
+  riskkit's risk-layer factoring, Sextant's point-in-time macro wiring, and the
+  six epistemic sketches) under a hard read-only rule — nothing from those
+  unvetted repos ever executes on your machine.
+  - Incoming — your GPT backtest-engine recovery, flagged on the map for
+  comparison against the fresh verdict the moment you hand it over.
+
+  When both waves land I fold everything — verdicts, ledger, wave-2 supplement,
+  and your recovery if it's arrived — into one readable digest artifact for the
+  ratification pass.
+
+✻ Brewed for 2m 45s
+
+❯ codex/gpt is done [[Start here:                                               
+  [Recovery overview (line 1)](C:/Users/Mubarak/Desktop/QMX/.recovery/backtesti 
+  ng-engine-retrieval/README.md:1)                                              
+  [Consolidated recovered specification (line 1)](C:/Users/Mubarak/Desktop/QMX/ 
+  .recovery/backtesting-engine-retrieval/recovered-backtesting-engine.md:1)     
+  [Fresh-session handoff (line 1)](C:/Users/Mubarak/Desktop/QMX/.recovery/backt 
+  esting-engine-retrieval/restart-handoff.md:1)                                 
+  [Source and evidence ledger (line 1)](C:/Users/Mubarak/Desktop/QMX/.recovery/ 
+  backtesting-engine-retrieval/source-ledger.md:1)                              
+  Everything is isolated under .recovery/backtesting-engine-retrieval. Claude’s 
+  existing files were not modified, no implementation code was transplanted,    
+  and no Git operations were performed.]]]                                      
+● Reading the recovery package now — starting with the overview to gauge its
+  size and claims.
+
+  Read 2 files (ctrl+o to expand)
+
+● Received and skimmed — and this recovery is genuinely useful, with one big
+  clarification worth stating now: the old repo never had a backtest engine.
+  What it had was a design for an "Examination Engine" — a
+  certification-oriented replayer — plus data plumbing proofs. The GPT package
+  is honest about that, which makes it good evidence.
+
+  The striking part: the old design and this week's fresh research converged 
+  independently on the same physics:
+

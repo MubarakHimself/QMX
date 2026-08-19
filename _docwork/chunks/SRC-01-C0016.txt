@@ -1,0 +1,120 @@
+● Update(tracker\map.md)
+  ⎿  Added 1 line, removed 1 line
+      35  
+      36  - [QMF handoff spec (draft)](../artifacts/2026-08-17-qmf-v1-spe
+          c-DRAFT.md) — **QMF is a toolbox that BUILDS applications, neve
+          r an application itself** (trading node, backtest workspaces, Q
+          MX app are all built WITH it — the most load-bearing correction
+           of the 2026-08-17 night session); library #1 = `qmf-core` "the
+           language" (exact money, exact time, the nouns seeded with orde
+          r-flow/DOM concepts so crypto never forces a rebuild, typed ref
+          usals, stamp machine, versioning) — **proposed, pending explici
+          t ratification (locks discussion 2026-08-18)**; ratified vocabu
+          lary: Confluence = Level(s)+Trigger(s)+Confirmation(s), multi-v
+          ariant and nesting, **no Exit — Exit/sizing/risk are Book terri
+          tory**; Bot = confluence + binding contract (not yet designed) 
+          + accumulating lineage, variants first-class; SQS = Spread Qual
+          ity Sensor (candidate formula NOT ratified); R = one unit of or
+          iginal pre-trade risk (FORM-0006 dimensionally broken — never i
+          mplement as-is); three seat concepts never collapsed; sweep→cap
+          →re-seed = the SCALPING Book's pattern, not a universal law; Si
+          mulator = product UI later; backtesting = library, never "engin
+          e".
+      37  - **Process rulings (2026-08-17 night):** Claude never scaffold
+          s/initializes projects — Mubarak's own skills do that; document
+          ation restart is framework-first, trading node later; code is w
+          ritten for humans AND agents ("I might also need to understand 
+          this code"); the platform is fully extensible but the word "plu
+          gins" is banned; build incrementally, one topic per session (su
+          persedes the 2–3-day full-draft plan); rebuild ceiling ~twice/y
+          ear, "Bloomberg Terminal from scratch" durability ambition.
+      38 -- **Data acquisition timing DECIDED (2026-08-17): build the plu
+         -mbing now; downloading happens at first install.** Forward capt
+         -ure is the one exception (operator-approved 2026-08-18): calend
+         -ar recording starts now (`recorder/`, standalone script + statu
+         -s screen, NOT a QMF module); live tick recording stays blocked 
+         -on broker API access (ticket 006) and Dukascopy backfills tick 
+         -history meanwhile, so nothing unrecoverable is lost.           
+      38 +- **Data acquisition timing DECIDED (2026-08-17): build the plu
+         +mbing now; downloading happens at first install.** Forward capt
+         +ure is the one exception (operator-approved 2026-08-18): calend
+         +ar recording starts now (`recorder/`, standalone script + statu
+         +s screen, NOT a QMF module); live tick recording stays blocked 
+         +on broker API access (ticket 006) and Dukascopy backfills tick 
+         +history meanwhile, so nothing unrecoverable is lost. **SHIPPED 
+         +2026-08-18:** task `QMX-Calendar-Recorder` runs 06:00 + 18:00 l
+         +ocal, first week banked (96 events); feed cap ~2 downloads/5 mi
+         +n — never add triggers casually; the feed has NO `actual` value
+         +s (supports news-blackout gating, not surprise strategies); leg
+         +al posture of automated archiving = open operator item.        
+      39  - **DeepSeek/Cordis harness model scoped to the agentic era (op
+          erator ruling 2026-08-18):** the Context/disposer/event-bus add
+          itions leave qmf-core V1; the agentic system may later adopt th
+          e DeepSeek harness design near-verbatim (UI layout aside). Stan
+          ding scope for current sessions: build everything EXCEPT the ag
+          entic system — i.e. the blocks it will one day use.
+      40  - [Locks session verdicts, 2026-08-18](tickets/002-qmf-minimal-
+          core.md) — Lock 1 "the Dictionary" (qmf-core) ACCEPTED as first
+           brick with heavy dictated inputs (heavy indicators live in the
+           MIS; pair-scoped kill switch; paper trading = standing state f
+          eeding alpha-decay sensing; promotion is HUMAN-ONLY, Mubarak's 
+          daily job; possibly multiple BMSs long-term; Book schema lives 
+          on GitBook, never assume it; data-layer emphasis). Lock 2 denie
+          d as bundled ("exam" banned; connection = simple and proceeds; 
+          sim≡live checklist → ticket 008). Lock 3: identity + graph line
+          age yes in principle, one-card-for-everything DENIED — deep stu
+          dy first (ticket 009). Lock 4 (agent page) deferred until QMF i
+          s documented. Lock 5 not ratified. ALL backtesting discussion →
+           ticket 008; Program/Campaign OFF (a prop firm is just a new Bo
+          ok; Book creation = agentic era). Full capture in the ticket. A
+          rtifact: [The Five Locks](../artifacts/2026-08-18-five-locks.ht
+          ml).
+      41  - [Session accord — QMX Foundations v2](../artifacts/2026-08-17
+          -qmx-foundations.html) — QMF (Quant Mind Framework) is the umbr
+          ella, QML = bot library inside it; two deployables (installable
+           QMX app + one Trading VPS); everything builds on QMF; middle n
+          ode absorbed into the app (ML training ~quarterly in cloud sand
+          boxes, shadow rollout); Python core, Rust UI later, no Electron
+          , no MQL; forex on cTrader first, crypto later via agent-built 
+          adapters; no central backtest engine — backtesting decentralize
+          s into callable QMF components; build method = factory pipeline
+          , validation inside factory runs (modules ship with reference u
+          sage + tests); defaults ≠ mock data, mock data never ships, pro
+          duct ships with no bots; total clean slate (old repos deleted).
+
+● Update(tracker\map.md)
+  ⎿  Added 1 line, removed 1 line
+      66  
+      67  - Six irreversible technical decisions pending ratification (ea
+          ch invalidates every prior stored result if changed later): fid
+          elity taxonomy (bar_close / intrabar / tick), TA-Lib as canonic
+          al indicator arithmetic, UTC-nanosecond timestamps, (venue,symb
+          ol) identity with opaque symbol string, SR* (the pre-registered
+           Sharpe bar that sets the whole search budget), the result key 
+          tuple — queued for the locks discussion (2026-08-18)
+      68  - Oracle list — for each module, the external thing that proves
+           it right (talipp for indicators, purgedcv for overfitting math
+          s, a live demo account for fills/reconciliation, known-overfit 
+          archetypes for the battery-honesty test, the two-timestamp prop
+          erty test as a registration precondition); the lever that conve
+          rts operator review into automated gates
+      69 -- Kill switch specification — nowhere designed, incl. behaviour
+         - when it fires while the broker connection is down; the one com
+         -ponent with unbounded failure cost                             
+      69 +- Kill switch specification — nowhere designed, incl. behaviour
+         + when it fires while the broker connection is down; the one com
+         +ponent with unbounded failure cost. Operator ruling 2026-08-18:
+         + news is PAIR-SCOPED — block only affected pairs, keep trading 
+         +everywhere else; while blocked, bots may continue in paper mode
+         + so alpha-decay data keeps flowing                             
+      70  - FX time model: 5pm-NY rollover, week boundary, weekend gaps, 
+          triple-swap Wednesday, broker-server vs prop-firm DST desync; n
+          ote the swap-free account means the `financing` P&L column mode
+          ls an admin fee, not swap
+      71  - Broker credential lifecycle + operational runbook: OAuth refr
+          esh rotation, secrets on the VPS, token expiry mid-challenge, w
+          ho flattens positions if the VPS dies
+      72  - cTrader trendbars BID- vs mid-derived — UNVERIFIED across res
+          earch files 02/05; affects every backtest-to-live comparison (f
+          old into ticket 006)
+

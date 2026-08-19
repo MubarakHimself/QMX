@@ -1,0 +1,26 @@
+id: CT-04
+name: Typed refusal and invariant-violation contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-CORE
+consumers: [COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST]
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0022, DEC-0029, DEC-0030]
+gaps: [GAP-0005, GAP-0011]
+purpose: "Carry machine-readable refusal outcomes across public QMF boundaries without embedding recovery policy."
+invariants:
+  - "Refusals are typed and versioned."
+  - "Codes, detail fields, retryability, redaction, and exception mapping remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0011
+  fields: null
+  fields_gap: GAP-0011
+  enums: null
+  enums_gap: GAP-0011
+  units: null
+  units_gap: GAP-0011
+  nullability: null
+  nullability_gap: GAP-0011

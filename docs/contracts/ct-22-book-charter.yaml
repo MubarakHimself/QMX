@@ -1,0 +1,33 @@
+id: CT-22
+name: Book and BMS charter contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-RISK
+consumers: []
+active_consumers: []
+intended_consumers: [COMP-QMF-REGISTRY]
+wiring_status: reserved-unwired
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0039, DEC-0065, DEC-0066, DEC-0080, DEC-0095]
+conflicts: [DEC-0040, DEC-0067]
+gaps: [GAP-0005, GAP-0018, GAP-0039, GAP-0040]
+purpose: "Reserve an unwired Book and BMS charter placeholder pending the dedicated risk-boundary reconciliation."
+invariants:
+  - "Book and BMS express risk and money-management semantics, not trading-entry logic."
+  - "The recovered Scalping Book is not a universal Book schema."
+  - "No active Registry consumer or persistence handoff is assigned."
+  - "The placeholder is not buildable until its caller, consumer, fields, and wiring are ratified."
+  - "Bot cardinality, Book binding, BMS multiplicity, exit ownership, fields, mutability, inheritance, and signatures remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0039
+  fields: null
+  fields_gap: GAP-0039
+  enums: null
+  enums_gap: GAP-0039
+  units: null
+  units_gap: GAP-0039
+  nullability: null
+  nullability_gap: GAP-0039

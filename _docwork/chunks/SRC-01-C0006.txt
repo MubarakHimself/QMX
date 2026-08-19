@@ -1,0 +1,117 @@
+         -D our own — no third-party engine, runtime, or contract, ever.*
+         -* Grounds: bots must bind to QMF's contracts not an engine's; l
+         -oad-bearing arithmetic (fills/metrics/overfitting) must be read
+         -able and patchable by the factory; agents backtest in disposabl
+         -e sandboxes where a small pure-Python QMF fits and content-addr
+         -essed Runs merge from many sandboxes into one ledger; no inheri
+         -ted rebuilds. Nautilus et al. = mental models in the ledger onl
+         -y. The 3-day adoption spike is cancelled. D1 licence amendment 
+         -(LGPL ok for unmodified deps) still stands for ordinary librari
+         -es.                                                            
+      29 +- **Kernel RATIFIED (2026-08-17 evening, operator ruling): BUIL
+         +D our own — no third-party engine, runtime, or contract, ever.*
+         +* Grounds: bots must bind to QMF's contracts not an engine's; l
+         +oad-bearing arithmetic (fills/metrics/overfitting) must be read
+         +able and patchable by the factory; agents backtest in disposabl
+         +e sandboxes where a small pure-Python QMF fits and content-addr
+         +essed Runs merge from many sandboxes into one ledger; no inheri
+         +ted rebuilds. Nautilus et al. = mental models in the ledger onl
+         +y. The 3-day adoption spike is cancelled. D1 licence amendment 
+         +(LGPL ok for unmodified deps) still stands for ordinary librari
+         +es. **Vocabulary note (2026-08-18): the word "kernel" is retire
+         +d** — the referent is now `qmf-core` (the language) plus the se
+         +parately-specified trading node; the build-our-own ruling survi
+         +ves, the old framing does not.                                 
+      30  - **Backtesting: PAUSED as a decision area (operator ruling) — 
+          own session, ticket [008](tickets/008-backtesting-framework.md)
+          .** The verdict briefs are research inputs only; nothing in the
+          m is ratified. Approach changes to his staged funnel (screen → 
+          research → robustness → replay → full Book/BMS sim), on-demand 
+          in sandboxes. His GPT brainstorm markdown is the missing input 
+          — request it.
+      31  - **Agentic system: HANDS OFF for Claude sessions** — ~5 resear
+          ch papers to analyze first; "don't build organs; the veins only
+          ." Allowed foundational organs: bot schema, data management.
+      32  - **Prop-firm Book: DEFERRED to the agentic era (operator rulin
+          g, re-echoed — do not re-surface).** It is a Book (or books) wi
+          th its own rules, to be created WITH the agentic system in its 
+          own long discussion. QMF V1 ships only generic machinery (rule 
+          schema + Program/Campaign phase capability) able to hold any fi
+          rm's rules later. No firm is modeled now; prop SR* decided then
+           too.
+
+● Update(tracker\map.md)
+  ⎿  Added 4 lines
+      32  - **Prop-firm Book: DEFERRED to the agentic era (operator rulin
+          g, re-echoed — do not re-surface).** It is a Book (or books) wi
+          th its own rules, to be created WITH the agentic system in its 
+          own long discussion. QMF V1 ships only generic machinery (rule 
+          schema + Program/Campaign phase capability) able to hold any fi
+          rm's rules later. No firm is modeled now; prop SR* decided then
+           too.
+      33  - Operator rulings (2026-08-17 afternoon) — **Toolbox principle
+          **: QMF never adopts third-party strategy-family libraries (SMC
+          , ICT, scalper packs…); it exists so Mubarak/agents can build t
+          heir OWN custom versions of those ideologies. Repo studies extr
+          act mental models only — no code transplantation, licences resp
+          ected. **Permanent product constraint**: no futures or options,
+           ever; stocks (day-trading) possibly later. **Bot × Book testin
+          g**: each Book may carry its own testing mechanism — one bot te
+          stable against many Books (scalping variants, prop-firm eval vs
+           funded) as a matrix.
+      34  
+      35 +- [QMF handoff spec (draft)](../artifacts/2026-08-17-qmf-v1-spe
+         +c-DRAFT.md) — **QMF is a toolbox that BUILDS applications, neve
+         +r an application itself** (trading node, backtest workspaces, Q
+         +MX app are all built WITH it — the most load-bearing correction
+         + of the 2026-08-17 night session); library #1 = `qmf-core` "the
+         + language" (exact money, exact time, the nouns seeded with orde
+         +r-flow/DOM concepts so crypto never forces a rebuild, typed ref
+         +usals, stamp machine, versioning) — **proposed, pending explici
+         +t ratification (locks discussion 2026-08-18)**; ratified vocabu
+         +lary: Confluence = Level(s)+Trigger(s)+Confirmation(s), multi-v
+         +ariant and nesting, **no Exit — Exit/sizing/risk are Book terri
+         +tory**; Bot = confluence + binding contract (not yet designed) 
+         ++ accumulating lineage, variants first-class; SQS = Spread Qual
+         +ity Sensor (candidate formula NOT ratified); R = one unit of or
+         +iginal pre-trade risk (FORM-0006 dimensionally broken — never i
+         +mplement as-is); three seat concepts never collapsed; sweep→cap
+         +→re-seed = the SCALPING Book's pattern, not a universal law; Si
+         +mulator = product UI later; backtesting = library, never "engin
+         +e".                                                            
+      36 +- **Process rulings (2026-08-17 night):** Claude never scaffold
+         +s/initializes projects — Mubarak's own skills do that; document
+         +ation restart is framework-first, trading node later; code is w
+         +ritten for humans AND agents ("I might also need to understand 
+         +this code"); the platform is fully extensible but the word "plu
+         +gins" is banned; build incrementally, one topic per session (su
+         +persedes the 2–3-day full-draft plan); rebuild ceiling ~twice/y
+         +ear, "Bloomberg Terminal from scratch" durability ambition.    
+      37 +- **Data acquisition timing DECIDED (2026-08-17): build the plu
+         +mbing now; downloading happens at first install.** Forward capt
+         +ure is the one exception (operator-approved 2026-08-18): calend
+         +ar recording starts now (`recorder/`, standalone script + statu
+         +s screen, NOT a QMF module); live tick recording stays blocked 
+         +on broker API access (ticket 006) and Dukascopy backfills tick 
+         +history meanwhile, so nothing unrecoverable is lost.           
+      38 +- **DeepSeek/Cordis harness model scoped to the agentic era (op
+         +erator ruling 2026-08-18):** the Context/disposer/event-bus add
+         +itions leave qmf-core V1; the agentic system may later adopt th
+         +e DeepSeek harness design near-verbatim (UI layout aside). Stan
+         +ding scope for current sessions: build everything EXCEPT the ag
+         +entic system — i.e. the blocks it will one day use.            
+      39  - [Session accord — QMX Foundations v2](../artifacts/2026-08-17
+          -qmx-foundations.html) — QMF (Quant Mind Framework) is the umbr
+          ella, QML = bot library inside it; two deployables (installable
+           QMX app + one Trading VPS); everything builds on QMF; middle n
+          ode absorbed into the app (ML training ~quarterly in cloud sand
+          boxes, shadow rollout); Python core, Rust UI later, no Electron
+          , no MQL; forex on cTrader first, crypto later via agent-built 
+          adapters; no central backtest engine — backtesting decentralize
+          s into callable QMF components; build method = factory pipeline
+          , validation inside factory runs (modules ship with reference u
+          sage + tests); defaults ≠ mock data, mock data never ships, pro
+          duct ships with no bots; total clean slate (old repos deleted).
+      40  
+      41  ## Not yet specified
+

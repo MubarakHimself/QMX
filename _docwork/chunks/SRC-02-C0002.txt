@@ -1,0 +1,120 @@
+● Node first, library second — and your own past self agrees with me. In the old
+  plan, QML was Epic 8, deliberately scheduled after the trading node shipped
+  at Epic 7. That ordering was right, and here's the hard truth behind it: a
+  library is extracted from working code, not invented in a vacuum. If we design
+  QML before a single bot runs against a real Book, we'll ratify APIs nobody
+  has ever used, and you'll be rebuilding it the way you've rebuilt the
+  platform. What does belong up front is QML's boundary — the contract where a
+  bot plugs into a Book (CT-QML-01, currently zero ratified interfaces). That
+  contract is part of making the node build-ready. QML's internals become their
+  own map later. QMA (agent library) is even further out — your own ratified
+  topology puts the agentic system entirely outside V1.
+
+  Second hard truth: your last run died partly from mixing planning with 
+  building — stories marked "done" that were proof-shaped, "CI green" claims
+  before CI was green. So this map will produce decisions and a spec, not code.
+  Coding starts as its own effort once the way is clear. That's also exactly
+  what your recovery package prescribes.
+
+  Good news: you're not starting from zero. The recovery register already sorted
+  the entire old corpus into keep / re-confirm / reopen / drop. Roughly 25
+  genuine decisions remain open — those become the map's tickets.
+
+  Now Round 1 of the interview. Each question has my recommendation; answer in
+  any order, plain words are fine.
+
+  ---
+  ❓ Q1 - Destination: What does "done" look like for this map? My proposal:
+  "The Trading Node V1 specification is build-ready" — every reopened decision
+  closed, every unratified detail either re-confirmed or replaced, and fresh
+  documentation written in Desktop\QMX that passes the acceptance test in your
+  recovery handoff (a coder can build the node without ever opening the old
+  repository). Coding itself is not in this map.
+
+  ➡️ Yes — spec-complete is the destination; coding is the next effort.
+
+  ❓ Q2 - Build order: Confirm the ordering above — node spec first (including
+  the QML↔Book boundary contract as one ticket), full QML design as a later
+  separate map, QMA/agentic system and Backend internals out of scope for this
+  map entirely?
+
+  ➡️ Yes — node → QML → (much later) agents.
+
+  ❓ Q3 - Starting authority: The recovery register's "KEEP" layer is ~50
+  rulings you already ratified in the old wiki (three-node topology, one SQLite
+  database, five journal streams, paper-as-fail-mechanism-only, etc.). Do we
+  adopt that whole layer as our starting spine in one walkthrough session —
+  where I present it in plain words and you confirm or flag exceptions — instead
+  of re-debating each item one by one?
+
+  ➡️ One walkthrough ticket. Re-debating settled ground is how restarts stall;
+  your decision tickets should go to the genuinely open questions.
+
+  ❓ Q4 - Fresh home: Desktop\QMX becomes the new project home — I initialize
+  git there, the map and all new documentation live there, and Documents\QMX +
+  the GitBook + the old QMX-discussion folder stay strictly read-only evidence.
+  Old code gets reused only if a specific decision ticket explicitly says so,
+  never by default. Agreed?
+
+  ➡️ Yes.
+
+  ❓ Q5 - Platform and broker: Everything in the corpus assumes cTrader 
+  (Spotware Open API), one live account with a paired demo. Is that still the
+  plan, and which broker is the account with? (I need this to fire research
+  tickets verifying current cTrader rate limits, heartbeat, and label
+  constraints — the old numbers were flagged "recheck before trusting.") Also:
+  do the demo API credentials from the last run still exist and work, as far as
+  you know?
+
+  ➡️ Keep cTrader; name the broker; I'll verify the platform numbers via
+  research.
+
+  ❓ Q6 - V1 scope re-confirmation: V1 stays deterministic, algorithmic,
+  forex-only, single live account — no crypto, stocks, prop-firm, multi-venue,
+  machine-learning-driven execution, or agentic anything.
+  Backtesting/certification internals and historical-data acquisition (the
+  Dukascopy licensing question included) also stay out of this map. Still true?
+
+  ➡️ Yes — this fixes the map's out-of-scope fence.
+
+  ---
+  Answer these and I'll run Round 2 — the breadth-first pass over the ~25 open
+  decisions (position fate, kill-switch matrix, adapter commands, Kelly sizing,
+  state machines, and friends) to shape them into tickets before creating the
+  map.
+
+✻ Baked for 5m 48s
+
+❯ [[https://github.com/cordiverse/paper]]]okay, here is the thing. Yeah you are 
+  saying that we ship the node first and library second. Why I'm kinda          
+  agreeing and disagreeing at the same time. Okay, to think through it, and I   
+  think for this session I'm going to just try to bring down as much as         
+  possible. What you are seeing in the old version of QMX, please don't take it 
+  as core. Okay, what we did with GPT was try to recover and whatnot, but       
+  don't take it as something core for you to build this new system on top of.   
+  Otherwise, you'll poison the entire state, please. Okay, you'll poison this   
+  entire new project. It's like you are really repeating what I'm trying to run 
+  away from. That's not good, and that's not my idea. The whole reason of me    
+  restarting this is because I want to run away from the other poisonous thing, 
+  okay? So it's as if you are not valuing my whole reason to run away. Now you  
+  are proposing the node first and QML second. Now let's first think through    
+  this. What really goes into the node? Yeah, because the node we have the MIS, 
+  we have SQS, we have the news, the kill switch and whatnot, we have the       
+  book, the BMS. Well, the books rather, the BMS and the bots. Now, QML         
+  originally was built for book for bots, rather. I've actually remembered.     
+  Now, the problem with that idea was that bots we wanted to provide one        
+  uniform way for agents because agents were mostly the ones going to be coding 
+  this thing out. So, in other words, instead of using Python and making        
+  everything too generic, which later down the road can cause issues, yeah, we  
+  wanted to have reusable components inbuilt in-house. We wanted to have, for   
+  example, what I'm trying to say by usable components. For example, if we      
+  manage to build like certain market engines or certain data, stuff like that, 
+  okay, or certain indicators. We would like them to be reusable across.        
+  That's the whole point of building the library. Now, if you look at that very 
+  ideology, you now start to wonder why are we building the node before we      
+  build the library? That's what is bothering me. Because I do make sure this   
+  idea does make sense to build the node before you build the library. But at   
+  the end of the day, I feel like certain things will have to be rebuilt with   
+  the library because the library at first that we had, the reason it's white   
+  was in Epic 8, and the very reason I'm telling you not to use the old ideas   
+  to be part of this conversation is because you are going to confuse two       

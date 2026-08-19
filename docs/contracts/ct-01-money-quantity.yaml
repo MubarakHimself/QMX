@@ -1,0 +1,27 @@
+id: CT-01
+name: Money, price, and quantity value contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-CORE
+consumers: [COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-VENUE, COMP-QMF-RISK]
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0022, DEC-0026, DEC-0030]
+gaps: [GAP-0005, GAP-0007]
+purpose: "Provide one exact value vocabulary for amounts, prices, and quantities."
+invariants:
+  - "Monetary contracts do not use binary floating-point representation."
+  - "Precision, quantization, rounding, units, and overflow behavior remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0007
+  fields: null
+  fields_gap: GAP-0007
+  enums: null
+  enums_gap: GAP-0007
+  units: null
+  units_gap: GAP-0007
+  nullability: null
+  nullability_gap: GAP-0007
+

@@ -1,0 +1,120 @@
+  and whatnot, and I believe all this exists in either Git book. I don't know   
+  if it does anyway. But things like because I some bots might, okay, there is  
+  this idea we had whereby some bots can have variants of themselves. In other  
+  words, the logic behind that is that a bot can fail, for example, on a        
+  specific pair but work on another, or you know, if we change one variable,    
+  for example, a trigger it can pass, you get me. So that's why we had like     
+  it's claude lineage, I believe, in proper genealogy. So now part I don't need 
+  this part of parked. I know what seriously, I really don't. Maybe things      
+  that we can try, especially I think the confluence. I don't know if the book  
+  handles this already, but things like which session. I think that's going to  
+  be very necessary, especially for Forex. You also need to draw a clear line   
+  between Forex and crypto. For Forex, we may need sessions because some bots   
+  can trade multiple sessions, but I believe a session is corresponding to a    
+  pair. Yeah, those are, I think, my opinions. So you produce viable artifacts, 
+  and I don't know if it's possible, you could really export. I don't know if   
+  you can export this session transcript without my ranting. Yeah, but never    
+  mind, I'll export it manually because I think we have something for the       
+  factory to work on tonight. So don't produce stuff like tickets and whatnot.  
+  No, no, no, no. Okay, you can, I really don't care, but I don't think they're 
+  viable. So we need to see what the factory needs to take in consideration     
+  because we have two things to do first. First of all, we need to initialize   
+  this as a project viable for the factory, and in order to do that, we need to 
+  first document before we feed it to the factory. So, we are going to restart  
+  documentation of QMX. Okay, so we are starting with the framework before I    
+  even document the trading node. For the very first time, I've actually never  
+  done that, so that's that. And it seems like the agents are still, you know,  
+  working. Now, you found the trading node primer. Yeah, yeah, I don't think    
+  you really need anything from me. Oh, yeah, the dynamic SL and TP. I actually 
+  forgot about that. I really actually forgot about that. Then the kill         
+  switch. Yeah, now there are lots of things I think you have undermined, like  
+  the SQS, which is the spread quality sensor. Then acid is actually removed, R 
+  is removed. I don't know. A seat. I don't think we had a seat. Oh, yeah, we   
+  had a seat for this version. I recall. A seat on the book. Is it the book had 
+  a template? That's all I recall. Because this is from April. So I don't       
+  know. I don't recall fully. Yeah, sweep cup, sweep receipt. Now, that is      
+  specifically for a scalper. Specifically, the book you are looking at is a    
+  scalping book. Please note that, okay, and it has a repeatable pattern which  
+  we are going to be using for book, which we are going to be using for books   
+  across QRMX. Because once you set things like a sweep, then a cup, then a     
+  sweep, then a receipt, that right there is a scalper, I recall. That's a      
+  scalping book, okay? But there are other books we're going to form, and the   
+  identic system of QMX will be helping me do that. Okay, anything else?        
+  Because I don't know. So, prop phone book, we've already talked about that,   
+  it's not going to be shipped yet. Prop firm nowadays, this dictation. Then,   
+  holes the baseline itself has you are saying foolish rungs are named. Oh,     
+  yeah, I already told you. Now, a seed, I don't know if I recall Polly, but    
+  acid is part of the book. Do I recall Polly? Then R, I don't know what R is.  
+  I think R is part of risk. Okay, we have a problem. What you're looking at    
+  can vary, very much consistently. Let me try to see if GPT can try to solve   
+  this, okay? You first have this dictation                                     
+
+● All absorbed — and the plan for tonight just got its real shape: initialize 
+  the project for the factory, and restart QMX documentation — framework first, 
+  trading node later — before any code ships. Updating the record, then revising
+  the artifact and the handoff spec so your manual export carries everything
+  the documentation factory needs.
+  Wrote 1 memory (ctrl+o to expand)
+
+● Write(artifacts\2026-08-17-qmf-v1-spec-DRAFT.md)
+  ⎿  Added 26 lines, removed 66 lines
+       1 -# QMF V1 — Minimal Core Specification (DRAFT)                  
+       1 +# QMF — Handoff Specification for the Documentation Factory    
+       2  
+       3 -**Status:** DRAFT — pending operator ratification of the 12 dec
+         -isions below (session of 2026-08-17, ~17:00).                  
+       4 -**Consumes:** the research library at `research/` (files `00`–`
+         -10`). This spec cites those files; it does not repeat them. `re
+         -search/00-qmf-synthesis-module-map.md` is the design entry poin
+         -t.                                                             
+       5 -**Prime rules already ratified:** QMF is the umbrella framework
+         - everything in QMX builds on; Python core; no central backtest 
+         -engine (backtesting = callable components); mock data never shi
+         -ps; the product ships with no bots; versioned releases, never b
+         -reak consumers; agents author strategies through a constrained 
+         -surface.                                                       
+       3 +**Status:** supersedes the earlier draft in this file entirely 
+         +(2026-08-17, end of session). The earlier draft conflated QMF w
+         +ith the trading node; this version carries the operator's corre
+         +ctions.                                                        
+       4 +**Tonight's job:** initialize the project for the factory and *
+         +*restart QMX documentation — framework (QMF) first, trading nod
+         +e later.** Code (qmf-core) ships only after documentation.     
+       5  
+       7 ----                                                            
+       6 +## 1. What QMF is — the one ruling everything else hangs on    
+       7  
+       9 -## 1. The four load-bearing ideas (from the research, to be enc
+         -oded everywhere)                                               
+       8 +QMF (Quant Mind Framework) is the **toolbox used to BUILD the a
+         +pplications**, never an application itself. The trading node (d
+         +esign = the public GitBook, untouched, see `reference/05-tradin
+         +g-node-primer.md`), backtest workspaces (agents in sandboxes, o
+         +n demand), and the QMX app + UI are all **built with** QMF late
+         +r. Do not put application runtime (event loops, bot→Book→BMS pi
+         +pelines, broker sessions) inside the framework's foundation. Re
+         +act analogy: the framework provides parts; the app owns the flo
+         +w.                                                             
+       9  
+      11 -1. **Two timestamps on every fact** — when it happened vs when 
+         -it became knowable (`Provenance`: `ts_event`/`ts_init`, `known_
+         -at`/`known_until`, `origin`/`confirmed_at`). One type, one CI p
+         -roperty test: `label(bars[0:t])[-1] == label(bars[0:t+n])[t]` —
+         - registration precondition for every component.                
+      12 -2. **Define once, incremental-first, research by replay** — eve
+         -ry calculation is written in live one-bar-at-a-time form; vecto
+         -rized research results come from `replay()` of the same definit
+         -ion.                                                           
+      13 -3. **A strategy never names a size** — `Signal` carries directi
+         -on/conviction only; `qmf.book` sizes; `qmf.bms` may veto. Exits
+         - come from a closed policy set.                                
+      14 -4. **Nothing counts unless registered** — components, confluenc
+         -es, models, books, splits, experiments all get versioned manife
+         -sts; results cite versions; the search budget is enforced (`Spl
+         -itBudgetExhausted` has no `force=True`).                       
+      10 +Design values (operator-ratified): 100% our own code — mental m
+         +odels only from the 37-repo study (`reference/00-idea-ledger.md
+         +`), never code; built to last (rebuild at most ~twice/year; "Bl
+         +oomberg Terminal from scratch" ambition); Python core (Rust res
+         +erved for UI later; speed via Polars/DuckDB); **written for hum
+         +ans AND agents** — the operator reads this code; permissive-lic

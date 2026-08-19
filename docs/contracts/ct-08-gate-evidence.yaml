@@ -1,0 +1,27 @@
+id: CT-08
+name: Causality and attempt-gate evidence contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-REGISTRY
+consumers: [COMP-QMF-DATA, COMP-QMF-STRUCTURE]
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0033, DEC-0038]
+gaps: [GAP-0005, GAP-0016, GAP-0017]
+purpose: "Carry the evidence for look-ahead causality checks and immutable registration-attempt accounting."
+invariants:
+  - "Causality checking and attempt accounting are registration preconditions."
+  - "Claim fields, cutoff comparison, attempt scope, budget, reset, outcome, and override semantics remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0016
+  fields: null
+  fields_gap: GAP-0016
+  enums: null
+  enums_gap: GAP-0017
+  units: null
+  units_gap: GAP-0017
+  nullability: null
+  nullability_gap: GAP-0016
+

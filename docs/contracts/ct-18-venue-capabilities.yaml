@@ -1,0 +1,32 @@
+id: CT-18
+name: Venue capability-discovery contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-VENUE
+consumers: []
+active_consumers: []
+intended_consumers: [COMP-QMF-DATA, COMP-QMF-RISK]
+wiring_status: reserved-unwired
+layer_from: middleware
+layer_to: backend
+decisions: [DEC-0059, DEC-0060, DEC-0061]
+gaps: [GAP-0005, GAP-0036, GAP-0037, GAP-0038]
+purpose: "Reserve a venue-neutral capability shape for later Data and Risk consumers without creating an active QMF V1 handoff."
+invariants:
+  - "cTrader Open API from Python is the first adapter, not a qmf-core assumption."
+  - "Later crypto and stock adapters use the same venue-neutral seam."
+  - "No active QMF V1 downstream consumer is wired; the intended consumers are documentary targets only."
+  - "No capability contract is buildable until GAP-0036 and GAP-0038 define the caller, state, fields, and wiring."
+  - "Capability values, symbol catalog, price basis, order types, account modes, limits, and negotiation remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0038
+  fields: null
+  fields_gap: GAP-0038
+  enums: null
+  enums_gap: GAP-0038
+  units: null
+  units_gap: GAP-0037
+  nullability: null
+  nullability_gap: GAP-0038

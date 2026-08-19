@@ -1,0 +1,9 @@
+{
+  "files.exclude": {
+    "**/__pycache__": true,
+    ".agent": true,
+    ".agents": true,
+    ".claude": true,
+    "_bmad": true
+  }
+}

@@ -1,0 +1,110 @@
+  1. The spec (artifact + markdown in the repo): QMF V1's named modules with
+  one-line responsibilities, the public surface of each (what a strategy author
+  calls), which existing library each wraps vs what gets built, repo/package
+  layout, conventions (typing, versioning, never-break-consumers), acceptance
+  criteria per module (ships with reference usage + tests), and a hard "build 
+  tonight" subset clearly fenced from "build tomorrow" — because unambiguity
+  beats ambition; the fence is what keeps the overnight run clean.
+  2. The supporting pack you export with the transcript: research\ (all study
+  files + synthesis), artifacts\ (the accord + today's spec), tracker\ (the
+  map).
+
+  Timeline: the research fleet is still digging. When its synthesis lands I
+  pre-draft the whole spec myself — so when you're back at 5, your job is only
+  the yes/no pass, not a discussion. One pass, we fence the overnight subset,
+  done by 6.
+
+  On the currency-library idea, quick opinion as requested: genuinely good —
+  it's a knowledge-base-per-instrument pattern and it fits the agentic lane
+  perfectly. One steer: prose libraries don't give you control limits; make the
+  fleets distill into structured, measurable facts (volatility profiles, session
+  behavior, spread statistics, news sensitivity per currency) so Books and bots
+  can consume them as numbers, not essays. Parked on the map. Prime Market
+  Terminal noted as a macro-lane reference.
+
+  Go pray and eat. I'll have the draft waiting.
+
+✻ Crunched for 57s
+
+❯ Yo, okay, before I go, I just wanted to clarify something. For the research   
+  we shall have to discuss, this discussion is still going on, it's still very, 
+  very long, I believe. Because research is going to come back. You have to     
+  present me with what you found in the research, what you propose, what you    
+  agree with. Then I will see we agree to disagree, in other words. It's a      
+  whole discussion. Okay, or it's a knowledge-based per instrument pattern. Wow 
+  Yeah, okay, the libraries are not giving us control images, just that they    
+  can help us propose new hypotheses and whatnot. Okay, and also in the agents  
+  are working, they're not working with thin air. I don't know if you get me    
+  like we built enough context around a specific currency, yeah, that when we   
+  are developing, for example, a strategy, at least we have something to bear   
+  so far. Because it's not that every strategy is going to be based off that    
+  library. Some may, some may not, but it can help us narrow down, especially   
+  prop funds. I believe for prop firms, we can when you are building a          
+  backtesting mechanism, we can know by the way, which by the way we still need 
+  to build as part of QMF. I almost forgot. I want it to be as part, so we      
+  shall see how we do that. But I was saying we can know, okay, that this       
+  currency, for example, is more stable, it has cleaner setups, as these        
+  traders like to call it. So, which means this strategy, maybe the AMD model   
+  or what, okay, that's a multi, a multi-set, a multi-session setup, but you    
+  get the idea, yeah. So, we can know that this one we can use okay, this       
+  currency or this pair for passing a proper firm, this one for funding. You    
+  get the idea because I'm trying so much to do prop firms                      
+
+● All four points captured — updating the map and memory, then you're free.
+
+● Update(tracker\map.md)
+  ⎿  Added 3 lines, removed 1 line
+      33  - Crypto expansion (~3–4 months out)
+      34  - Live-money safety ruling — re-raise during trading-node spec 
+          sessions
+      35  - Prime Market Terminal (https://prime-terminal.com/) — macro-t
+          rader terminal, reference for the agentic/macro lane; Mubarak d
+          oubts he needs it
+      36 -- Currency knowledge libraries — agent fleets building per-curr
+         -ency research libraries (JPY, AUD…) from papers/books/repos/web
+         -; feeds control limits (stability, scalping suitability, prop-f
+         -irm pair choice); belongs to the agentic lane (RLM + shepherd-a
+         -gent architecture, his sketch)                                 
+      36 +- Currency knowledge libraries — agent fleets building per-curr
+         +ency research libraries (JPY, AUD…) from papers/books/repos/web
+         +; NOT control limits directly: they fuel hypothesis proposals a
+         +nd give agents real context ("not working with thin air"); some
+         + strategies use them, some don't; key use: narrowing pair choic
+         +e for prop firms (stable currencies, "cleaner setups" — which p
+         +air for passing a challenge vs which for funded phase); agentic
+         + lane (RLM + shepherd-agent sketch)                            
+      37 +- Backtesting mechanism as part of QMF — decentralized callable
+         + components stand (no monolith), but the mechanism itself must 
+         +be designed and built inside QMF; scope it in the minimal core 
+         +(ticket 002)                                                   
+      38 +- Prop firms are a major operator goal — prop-firm constraint m
+         +odeling (daily loss caps, drawdown rules) and pair-selection su
+         +pport deserve first-class weight in risk/sizing design         
+      39  - Original QML design doc — Mubarak couldn't locate it; adopt i
+          f it resurfaces
+      40  
+      41  ## Out of scope
+
+● Update(tracker\map.md)
+  ⎿  Added 1 line
+      16  - Pipeline: session agrees concepts → artifacts (copy into `art
+          ifacts/`) → documentation-factory skill → Kanban skill → Mubara
+          k's software factory ships autonomously → review.
+      17  - Subagent/workflow models: **never Fable**; mix Opus (deep/har
+          d stages) and Sonnet (lighter stages).
+      18  - HITL tickets: invoke /grilling + /domain-modeling.
+      19 +- Research protocol: findings are NEVER auto-adopted. Claude pr
+         +esents what was found, what it proposes, where it agrees/disagr
+         +ees — then Mubarak and Claude discuss and ratify ("agree to dis
+         +agree" pass). Applies to every research return.                
+      20  - Authority: GitBook (https://elios-1.gitbook.io/qmx) = stable 
+          trading-node baseline; `C:\Users\Mubarak\Documents\QMX` old cor
+          pus and local `.recovery/` = evidence only, everything needs fr
+          esh ratification; cordiverse composability paper = agentic harn
+          ess only, never cite it for QMF or the node.
+      21  
+      22  ## Decisions so far
+  Wrote 1 memory (ctrl+o to expand)
+
+● Absorbed, all four:
+

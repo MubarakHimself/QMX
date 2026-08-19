@@ -1,0 +1,120 @@
+  One practical point for your handoff: give the documentation agent the spec,
+  the tracker (map + tickets), and the three reference studies as the authority
+  — the two transcripts go along as raw evidence only. The spec now says this in
+  its own read-order note, so even if the agent reads the transcripts first, it
+  knows the corrected word wins. That ordering matters because both transcripts
+  contain things you later corrected or denied — an agent treating them as
+  equal authority would resurrect dead ideas like the one-card or bot-level
+  paper mode.
+
+✻ Churned for 42s
+
+❯ And I believe now this framework has what five libraries five to nine let me  
+  see we have core registry data indicator structure down oh structure and      
+  indicator okay then we have MIS which should be the same as indicator because 
+  they are all under I don't know why you split them but anyway it's okay       
+  because anyway never mind but then no in fact no never mind MRS doesn't make  
+  sense because the MRS is a very core component of the trading node the MIS    
+  that's what I mean okay so I don't think it's it deserves a library I really  
+  don't because it's it's if you read about it it's it's just a machine         
+  learning ensembler in a way okay then trader broker broker yeah no okay       
+  trader trader does it really need an actual library some of these things seem 
+  too hard like too simple i know i'm done who said with this still but bruh    
+  seems like it is still too much broker and risk seems like we could have just 
+  put them at the portfolio because trader still falls under structure and      
+  data trader cuts across by the way cuts across around three other huts then   
+  risk risk handles a lot a lot a lot okay and also you know broker yeah it     
+  handles broker and risk but the risk thing man for now we are using the book  
+  management system and the books themselves but i think i think later down the 
+  road we sh we might develop a new version so it should be updatable anyway    
+  researcher okay that one is out of scope for now then agents also out of      
+  scope all right that's what i wanted to say i don't know if you understood me 
+  so what are we actually building because i just asked you a question and for  
+  you agreed so i'm curious what you're actually updating is it's no longer     
+  minimal well that's ironic and if it's no longer minimal then what's going on 
+  all right so my bad so yeah that's that also what else oh yeah i wanted to    
+  ask about what was the decision we took for data are we going to download it  
+  or we're going to pause oh my godAnd I respond in brief because I think now   
+  we are doneOkay, well yeah, I know it's really done, we are still waiting for 
+  an agent                                                                      
+
+● Understood — simplifying now, and your cuts are recorded exactly: MIS is not a
+  QMF library (it's a trading-node component — a machine-learning ensembler
+  that consumes QMF's indicator and data libraries); no standalone trader 
+  library (the cTrader connection is a small module, grouped with the
+  portfolio/risk side as you said); risk stays Book/BMS v1, explicitly versioned
+  so you can replace it down the road; researcher and agents out of scope for
+  now — with one save: the look-ahead test you ratified doesn't vanish, it folds
+  into the registry as a registration gate.
+
+  So the plain answer to "what are we actually building" — QMF V1 is five 
+  libraries and two small modules:
+
+  1. qmf-core — the language (first brick)
+  2. qmf-registry — identity, lineage, and the registration gates (look-ahead
+  test lives here)
+  3. qmf-data — the six-layer data system
+  4. qmf-indicators — light indicators, wrapping TA-Lib
+  5. qmf-structure — our own levels, zones, market structure
+
+  Plus: the venue module (cTrader connection — simple, not a library) and the
+  risk module (Books + BMS as designed, v1, updatable). Everything else is
+  either the trading node's job (MIS), a later session (backtesting, researcher
+  tools), or the agentic era (agent surface).
+
+  Your data question: the decision stands as you made it yesterday — we build
+  the plumbing into the platform now, and the big historical download
+  (Dukascopy) happens at first install, so it's paused; it isn't going anywhere.
+  The one exception already running is the calendar recorder, because those
+  weeks genuinely can't be bought back later.
+
+  Updating the spec and map to this simplified roster:
+
+● Update(artifacts\2026-08-17-qmf-v1-spec-DRAFT.md)
+  ⎿  Added 15 lines, removed 20 lines
+      30  
+      31  QMF is an umbrella of libraries. **Nothing agreed is outside QM
+          F — only outside `qmf-core`, the first brick.** Cross-cutting l
+          ibraries serve every hat; hat libraries serve one primarily. St
+          atus tags: ACCEPTED (build-ready once documented) · DIRECTION A
+          GREED (shape ratified, detail pending) · STUDY DELIVERED (resea
+          rch done, ratification pending) · OWN SESSION (deliberately par
+          ked).
+      32  
+      33 -**Cross-cutting:**                                             
+      34 -- `qmf-core` — the language: exact money, exact time (three tra
+         -ding calendars: forex sessions / crypto 24-7 / equity exchange 
+         -hours), the nouns (order-flow and equities seeded), typed refus
+         -als, stamp machine, versioning. **ACCEPTED — first brick.** Six
+         - frozen choices pending explicit confirmation in the documentat
+         -ion pass.                                                      
+      35 -- `qmf-registry` — identity & lineage: three disciplines (finge
+         -rprinted recipes / operator-chartered Books & BMS / occurrences
+         -), graph-shaped lineage in append-only files, no database. **ST
+         -UDY DELIVERED** (`reference/07`).                              
+      33 +**SIMPLIFIED ROSTER (operator ruling, 2026-08-18 late evening):
+         + QMF V1 = FIVE libraries + TWO small modules.** The five-hat sp
+         +lit remains the mental frame, but library count follows substan
+         +ce, not hats.                                                  
+      34  
+      37 -**Analyst hat:**                                               
+      38 -- `qmf-data` — the six-layer data system: ingest plumbing, raw 
+         -evidence archive, processed layer, journal, research door with 
+         -splits-by-default, backup. **STUDY DELIVERED** (`reference/09`)
+         -; ratification = ticket 005 session. Operator rulings already f
+         -olded: keep ALL history as far back as sources go; seal newest 
+         -12 months from research (one logged final look per strategy); f
+         -ull raw retention (storage is not a constraint; nightly cloud-b
+         -ucket backup).                                                 
+      39 -- `qmf-indicators` — light indicators, wrapping TA-Lib-class li
+         -braries (wrap, never reinvent). **DIRECTION AGREED.**          
+      40 -- `qmf-structure` — our OWN causal levels/zones/market-structur
+         -e components (toolbox principle: no third-party strategy-family
+         - libraries; context-library method — study SMC-and-friends deep
+         -ly, build our own). **DIRECTION AGREED**; per-component depth s
+         -essions later (triggers alone can be a two-day session).       
+      41 -- `qmf-mis` — heavy indicators: regime models, volatility forec
+         -asts, correlation matrices, ML inference. A QMF library serving
+         - the trading node's MIS; shadow deployment for model rollout. *
+         -*DIRECTION AGREED**, own design pass later.                    
+      35 +**The five libraries:**                                        

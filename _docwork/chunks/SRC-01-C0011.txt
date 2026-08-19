@@ -1,0 +1,120 @@
+     don't get me wrong, but some might pass. Now, those that fail, we need to 
+     understand why they failed. Can we improve them or do we cut them loose? 
+     So, there is a lot there in terms of development and research as we need to
+     consider. So, unbiased and biased, I believe, is the right word. Now, you 
+     started describing everything. You've talked about the dictionary. Now, 
+     dictionary, in fact, it's loc one. Now, let me first okay. All these I've 
+     just been dictating, so let me first look read through this. According to 
+     two economions, so what happens when an order is filled, a position is 
+     taken. Now, please mind the trading not so much because we have a lot of 
+     things. Actually, I'd forgotten to talk about exit conditions and 
+     mechanisms, as well as money rules. There are so many calculations in the 
+     book and the BMS, so many that you need to consider. Very many variables. 
+     Don't just take them for granted. Some are already defined, some are 
+     defaults, some are editable, others are not. So be careful, it's very 
+     surgical. Also, for exit mechanisms, you have things like fast 
+     invalidation, you have the dynamic SL and TP system. It's a whole world 
+     down there. Seriously, it took me a minute to design positions. Now, we had
+     something like a correlation ledger. Man, seriously, I don't want to 
+     redefine the entire trading note to you, but there's so much there. But let
+     me first see what you're actually calling the dictionary. Oh, the actual 
+     thing. Okay. Oh, yeah, no, I think the exact time is very useful because we
+     have, in fact, this is a problem I've had to think about. We have this 
+     thing called the kill switch. Now, the problem is that the kill switch we 
+     wanted it to be able to stop trading. It has a mechanism, I can't explain 
+     it to you. You can look into the documentation either on Gitbook or the 
+     ones that are local. But what it was doing, it stops trading, of course, 
+     because of news. Okay, but remember that news can affect, you know, 
+     specific pairs, and then the other way around is not affecting any pair. 
+     So, what I wanted is that if there is news here, the system can still trade
+     anywhere else because I'm not trying to trade only one specific pair. Of 
+     course, we are going to design strategies for specific pairs or specific 
+     sessions, but that's not the core idea. Globally, we are going to zoom out.
+     Okay, I hope you understood my logic there. Then, the label every stored 
+     result carries. Yeah, okay, that one is yours. Yeah, six choices get frozen
+     inside this look. Wow, okay, for dictionary, I believe first take 
+     everything I've just dictated because I think I don't want to dictate more 
+     than I should. So, take everything I've just dictated. yeah, we did a lot 
+     of research yesterday. We did a lot of research and also, you know, 
+     consider everything I've just dictated. I don't think I have anything to 
+     add on dictionary
+     · D2 — Ratify Lock 2, the Broker Exam? One test paper written BEFORE either
+     venue exists; the practice venue (backtesting) and the real cTrader 
+     connection must both pass it. Makes "backtest behaves like live" a loud 
+     test failure instead of a hope, and crypto later just takes the same exam. 
+     → Now, for that broker exam, I think I've already said I don't like the 
+     term. Maybe broker adapter or something. An exam might confuse some people,
+     even me, or even the thing, the agents coding. Because an exam, if you 
+     look at the old systems of QMX, means something very different, so don't do
+     that. It might claude with the actual documentation, old versions, because
+     we are still retrieving some bits and pieces. Okay, don't do that, please.
+     Change the name. That's the first request. Now, this thing of CTrade and 
+     whatnot, CTrader has OpenAPI, I believe it uses OpenAPI, then the thing 
+     that I think we needed to, that's why I said that's where again 
+     extensibility comes in, is crypto, because crypto is a mess. Yeah, crypto 
+     is a mess, then platform bias. I don't know. We can add multiple platforms.
+     I don't know how these other guys do it. I wanted to use maybe at times, 
+     but I don't think I'll use MQL. I really don't. C trade, I think let me 
+     stick to Python. Yeah, but crypto is a whole thing because there are so 
+     many ways to trade in crypto. You also know that. So, focus that one, I'll 
+     think. Okay, I won't tell you to focus, but try it for the exam and the 
+     broker thing. So, lock number two, I have nothing to really say. Maybe let 
+     me first read through. I've seen the word Baptist somewhere. You're saying 
+     on exam. Okay, now I think I'm going to deny the broker exam. You see, to 
+     be honest with you, let's think the backtesting system or framework rather,
+     this one might not. I feel like, I don't know why, but I feel like even it
+     deserves a longer session than a simple write-off like this. Seriously. 
+     Okay, okay, I'm a bit, you know, torn on the decision. I feel like, yes, he
+     deserves a longer session. I feel like no, you could really just pull it 
+     off. Because the whole point if you look at our old backtesting engine, it 
+     had a lot, but there were so many wrong claims and it seemed 
+     over-engineered, in my opinion. But what we were trying to do is just 
+     preventing overfitting. So, in other words, we want to not just give the 
+     agents but also me the ability. So, the agents are not the ones that 
+     decide, but the agents should be able to do the right things in terms of 
+     testing a strategy and also them knowing if there is something wrong or if 
+     the strategy can actually make money, depending on the situation we gave 
+     it. Now, the whole point of the exam: the exam was written, or rather, the 
+     version of the exam, or okay, the introduction of the exam in QMX, I think 
+     that's the right way to say it, was when we were building the book and the 
+     bot. Now, this was the analogy was based off the book being the college or 
+     something, and the exam was meant to be passed by the board. Now, the book 
+     ideally gave us the conditions. Okay, so if we want to test, for example, a
+     strategy that is going in scalper book one or the scalping book, depending
+     on the situation we are in. The strategy or the bot has to be tested 
+     against the things that make the scalping book the scalping book. Okay, 
+     okay, it's partial. It's actually partial. It's not only that, it's 
+     partial. That's why I'm saying it. I'm a bit torn because I really don't 
+     think I haven't thought through the backtesting things, and I don't think I
+     have the right knowledge. Okay, so yes and no, but mostly no. I'm leaning 
+     a lot towards no. I feel like for connection, it's simple, for actually, 
+     connections, it's quite simple. However, when we bring in actual 
+     backtesting, I think no because connection is simple again. I'll say this a
+     lot: connection is simple. You can build simple. In fact, C trader has 
+     open API. I think that's the simplest value. Okay, I don't think there is 
+     more than that, okay? So, to say that if they both pass back test behaves 
+     like alive, I think true, but I think also no, I think you need to dig 
+     deep. Seriously, for broker exam, I'm torn, and I think you need to do to 
+     dig deep or present a better explanation of version because I'm not buying 
+     it now. On to card number three
+     · D3 — Ratify Locks 3–5 as the rest of the spine? One ID card format for 
+     everything (versioning, fingerprints, promotion-by-card-update); the 
+     one-page Agent Page (uniform forms for registering things — guidelines, not
+     walls, per your ruling); and the Answer Keys (external proof per module, 
+     so a machine gate replaces your review evenings). → Okay, so on to card 
+     number three. Seems like you combined all of them. So three, four, five. So
+     I've started with three, and something has caught my eye. You say it, so 
+     everything in the system, a level, a trigger, a bought a book, a model. An 
+     experiment carries the same ID card. Seriously, okay promotion towards life
+     is a little bit ambiguous. It's either live or not live, simple as that. 
+     Okay, that's as simple as that. And if it's not live, what is it doing? 
+     Because we had a mechanism of having both be paper trading, I believe. So 
+     the bots were pepper trading. That's what I was saying. So if they're not 
+     live, but under what conditions should they also paper trade? That was 
+     actually kind of documented already, I believe. So, for example, if the 
+     kill switch fires, if for example, the scalping book example we have, if 
+     the daily drawdown, I don't know if it's called drawdown, but it's 
+     something like a daily limit, I believe. If it's heat, stuff like that, and
+     even for prop firm books, that might be the way. Okay, so the whole point 
+     is to still continue recording results on an actual paper account, 
+     regardless whether we're trading money or not. Okay, the whole point for 

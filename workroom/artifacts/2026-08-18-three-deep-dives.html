@@ -1,0 +1,273 @@
+<title>Three Deep Dives</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+  :root {
+    --bg: #FAFAF7;
+    --surface: #FFFFFF;
+    --ink: #1C2430;
+    --muted: #5B6472;
+    --line: #E3E2DC;
+    --accent: #0E6E5C;
+    --accent-soft: #EEF3F1;
+    --amber: #9A6A16;
+    --amber-bg: #F6EDDC;
+    --blue: #2A5B9E;
+    --blue-bg: #EBF0F8;
+    --dark-bg: #1C2430;
+    --dark-ink: #F2F3EE;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12161C; --surface: #1A2029; --ink: #E9EAE5; --muted: #9AA3AE; --line: #2A313C;
+      --accent: #37A98B; --accent-soft: #1D2A28; --amber: #D9A441; --amber-bg: #2A2416;
+      --blue: #6E9BD8; --blue-bg: #1B2433; --dark-bg: #060809; --dark-ink: #E9EAE5;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12161C; --surface: #1A2029; --ink: #E9EAE5; --muted: #9AA3AE; --line: #2A313C;
+    --accent: #37A98B; --accent-soft: #1D2A28; --amber: #D9A441; --amber-bg: #2A2416;
+    --blue: #6E9BD8; --blue-bg: #1B2433; --dark-bg: #060809; --dark-ink: #E9EAE5;
+  }
+  body { background: var(--bg); color: var(--ink); font-family: "Public Sans", "Segoe UI", system-ui, sans-serif; line-height: 1.5; margin: 0; padding: 3rem 1.25rem 5rem; }
+  .wrap { max-width: 920px; margin: 0 auto; display: flex; flex-direction: column; gap: 3.2rem; }
+  h1, h2, h3 { font-family: "Bricolage Grotesque", "Public Sans", sans-serif; text-wrap: balance; margin: 0; }
+  h1 { font-size: 2.5rem; font-weight: 700; line-height: 1.08; }
+  h2 { font-size: 1.5rem; font-weight: 700; }
+  h3 { font-size: 1rem; font-weight: 600; }
+  p { margin: 0; max-width: 66ch; }
+  .eyebrow { font-family: "IBM Plex Mono", monospace; font-size: .72rem; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  .lede { font-size: 1.05rem; color: var(--muted); }
+  .cap { font-size: .82rem; color: var(--muted); }
+  .chip { font-family: "IBM Plex Mono", monospace; font-size: .68rem; font-weight: 500; letter-spacing: .05em; padding: .2rem .55rem; border-radius: 3px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+  .chip.no { background: var(--amber-bg); color: var(--amber); }
+  section { display: flex; flex-direction: column; gap: 1.1rem; }
+  .secnum { font-family: "IBM Plex Mono", monospace; color: var(--muted); font-size: .72rem; letter-spacing: .14em; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; overflow-x: auto; }
+
+  /* seams diagram */
+  .seams { display: grid; grid-template-columns: auto 1fr; gap: 1.4rem; align-items: center; min-width: 560px; }
+  .core { background: var(--accent); color: #fff; border-radius: 50%; width: 130px; height: 130px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-weight: 600; font-size: .85rem; flex: none; }
+  .core small { font-family: "IBM Plex Mono", monospace; font-size: .6rem; opacity: .8; letter-spacing: .1em; }
+  .seamlist { display: flex; flex-direction: column; gap: .5rem; }
+  .seam { display: grid; grid-template-columns: 16px 150px 1fr; gap: .7rem; align-items: center; }
+  .seam .tick { color: var(--accent); font-weight: 700; }
+  .seam b { font-size: .88rem; }
+  .seam span { font-size: .82rem; color: var(--muted); }
+
+  /* in-out */
+  .inout { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; }
+  @media (max-width: 700px) { .inout { grid-template-columns: 1fr; } }
+  .iobox { border-radius: 10px; padding: 1.2rem 1.3rem; display: flex; flex-direction: column; gap: .6rem; }
+  .iobox.in { border: 2px solid var(--accent); background: var(--surface); }
+  .iobox.out { border: 1.5px dashed var(--line); background: var(--bg); }
+  .iobox ul { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: .35rem; font-size: .9rem; }
+  .iobox.in li::marker { color: var(--accent); }
+  .iobox.out li { color: var(--muted); }
+  .iobox .whereto { color: var(--accent); font-size: .78rem; font-family: "IBM Plex Mono", monospace; }
+
+  /* water system */
+  .layers { display: flex; flex-direction: column; gap: .45rem; min-width: 600px; }
+  .layer { display: grid; grid-template-columns: 56px 200px 1fr; gap: 1rem; align-items: center; border-radius: 8px; padding: .75rem 1rem; background: var(--blue-bg); border: 1px solid var(--line); }
+  .layer .lnum { font-family: "IBM Plex Mono", monospace; font-weight: 500; color: var(--blue); font-size: .95rem; }
+  .layer b { font-size: .92rem; }
+  .layer span { font-size: .82rem; color: var(--muted); }
+  .layer.evidence { border-left: 4px solid var(--blue); }
+  .layer.door { background: var(--accent-soft); border-left: 4px solid var(--accent); }
+  .flowarrow { text-align: center; color: var(--muted); font-size: .8rem; line-height: 1; }
+
+  .verdicts { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; }
+  @media (max-width: 700px) { .verdicts { grid-template-columns: 1fr; } }
+  .vbox { border-radius: 10px; border: 1px solid var(--line); background: var(--surface); padding: 1.1rem 1.2rem; display: flex; flex-direction: column; gap: .5rem; }
+  .vbox .vhead { display: flex; justify-content: space-between; align-items: baseline; gap: .8rem; }
+  .vbox p { font-size: .87rem; }
+
+  .streams { display: flex; flex-wrap: wrap; gap: .35rem; }
+  .streams span { font-family: "IBM Plex Mono", monospace; font-size: .68rem; border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: .18rem .6rem; color: var(--muted); }
+  .streams span.hot { color: var(--blue); border-color: var(--blue); }
+
+  /* identity disciplines */
+  .disc { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; min-width: 620px; }
+  .dcard { border-radius: 10px; padding: 1.1rem 1.15rem; display: flex; flex-direction: column; gap: .55rem; border: 1px solid var(--line); background: var(--surface); }
+  .dcard.d1 { border-top: 4px solid var(--accent); }
+  .dcard.d2 { border-top: 4px solid var(--amber); }
+  .dcard.d3 { border-top: 4px solid var(--blue); }
+  .dcard .kinds { display: flex; flex-wrap: wrap; gap: .3rem; }
+  .dcard .kinds span { font-size: .7rem; border: 1px solid var(--line); border-radius: 999px; padding: .12rem .5rem; color: var(--muted); background: var(--bg); }
+  .dcard p { font-size: .84rem; }
+  .dcard .who { font-family: "IBM Plex Mono", monospace; font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; }
+  .d1 .who { color: var(--accent); } .d2 .who { color: var(--amber); } .d3 .who { color: var(--blue); }
+
+  /* checks */
+  .checks { display: flex; flex-direction: column; gap: .6rem; }
+  .check { display: grid; grid-template-columns: 40px 1fr; gap: .9rem; align-items: baseline; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: .8rem 1rem; }
+  .check .cnum { font-family: "IBM Plex Mono", monospace; color: var(--accent); font-weight: 500; }
+  .check p { font-size: .9rem; }
+
+  /* questions */
+  .qs { background: var(--surface); border: 1.5px solid var(--accent); border-radius: 12px; padding: 1.4rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+  .qgroup { display: flex; flex-direction: column; gap: .55rem; }
+  .qgroup h3 { color: var(--accent); }
+  .q { display: grid; grid-template-columns: 46px 1fr auto; gap: .8rem; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: .55rem; }
+  .q:last-child { border-bottom: none; }
+  .q .qn { font-family: "IBM Plex Mono", monospace; color: var(--accent); font-size: .85rem; }
+  .q p { font-size: .9rem; }
+  .rec { font-family: "IBM Plex Mono", monospace; font-size: .66rem; color: var(--amber); white-space: nowrap; }
+</style>
+
+<div class="wrap">
+
+  <div style="display:flex; flex-direction:column; gap:.8rem;">
+    <span class="eyebrow">QMX · While you were at the barber · 2026-08-18</span>
+    <h1>Three Deep Dives</h1>
+    <p class="lede">Data layer, identity &amp; lineage, and answer keys — dug from yesterday's research, nothing repeated, backtesting untouched. Plus the answer to your parting question. Everything here is a proposal: your yes/no list is at the bottom.</p>
+  </div>
+
+  <section>
+    <span class="secnum">01 · YOUR PARTING QUESTION</span>
+    <h2>"Are we building a lot at the start?" — No. Small core, wide seams.</h2>
+    <div class="panel">
+      <div class="seams">
+        <div class="core"><small>QMF-CORE</small>the words<br>&amp; the labels</div>
+        <div class="seamlist">
+          <div class="seam"><span class="tick">→</span><b>Venue seam</b><span>cTrader now · crypto venues later · a stock broker later — each is "one more venue", never a rebuild</span></div>
+          <div class="seam"><span class="tick">→</span><b>Instrument seam</b><span>forex pair · crypto perp · stock share — one noun with optional parts, all three seeded now</span></div>
+          <div class="seam"><span class="tick">→</span><b>Time seam</b><span>forex sessions · crypto 24/7 · stock exchange hours + holidays — three calendars, one clock</span></div>
+          <div class="seam"><span class="tick">→</span><b>Book seam</b><span>scalping Book now · prop-firm Books · crypto Books, possibly their own BMS — same slot</span></div>
+          <div class="seam"><span class="tick">→</span><b>Method seam</b><span>GAs today, neural nets tomorrow, RL after — the lab never hard-codes a method</span></div>
+        </div>
+      </div>
+      <p class="cap">You keep adding ideas — stocks came back today. That is not scope creep to fight; it is the design requirement. The core stays small (words and labels only); each seam is a decision about what the words must NOT assume. Seams cost decisions, not months. Front-loading a big build stays off the table.</p>
+    </div>
+  </section>
+
+  <section>
+    <span class="secnum">02 · AFTER TODAY'S RULINGS</span>
+    <h2>What qmf-core now becomes</h2>
+    <div class="inout">
+      <div class="iobox in">
+        <div style="display:flex; justify-content:space-between; align-items:baseline;"><h3>Stays in — "the language"</h3><span class="chip">first brick · accepted</span></div>
+        <ul>
+          <li><b>Exact money</b> — no float ever touches a price or a balance</li>
+          <li><b>Exact time</b> — one world clock; the three trading calendars (forex / crypto / stocks); the two-dates stamp on every fact</li>
+          <li><b>The nouns</b> — Instrument, Bar, Tick, Order, Fill, Position, Account — seeded for DOM / order flow / level 2-3, and now for equities too</li>
+          <li><b>Typed refusals</b> — every "no" has a machine-readable name</li>
+          <li><b>The stamp machine</b> — fingerprinting any definition</li>
+          <li><b>Versioning discipline</b> — change mints a new version, never rewrites</li>
+        </ul>
+        <p class="cap">Still no loop, no broker, no backtest, no downloads. The six frozen choices remain proposals awaiting your explicit yes during the documentation pass.</p>
+      </div>
+      <div class="iobox out">
+        <h3>Moved out — and where it went</h3>
+        <ul>
+          <li>DeepSeek harness plumbing <span class="whereto">→ agentic era</span></li>
+          <li>Anything backtesting <span class="whereto">→ ticket 008, its own session</span></li>
+          <li>Heavy indicators <span class="whereto">→ the MIS (your old ruling, reaffirmed)</span></li>
+          <li>Exit / sizing / risk vocabulary <span class="whereto">→ Book territory</span></li>
+          <li>The agent page <span class="whereto">→ after the library is documented</span></li>
+          <li>Program / Campaign machinery <span class="whereto">→ off (a prop firm is just a new Book)</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <span class="secnum">03 · YOUR TOP PRIORITY</span>
+    <h2>The data system — six layers, one direction of flow</h2>
+    <div class="panel">
+      <div class="layers">
+        <div class="layer"><span class="lnum">L0</span><b>Ingest — recorders</b><span>small dumb programs that fetch, stamp, and store bytes exactly as received. Calendar one already running. A failed fetch is recorded as failed, never as "nothing happened".</span></div>
+        <div class="flowarrow">▼</div>
+        <div class="layer evidence"><span class="lnum">L1</span><b>Raw evidence — never edited</b><span>prices · facts (every number with "when we first knew it") · our own execution record, which no one can re-download for us. Corrections are new rows.</span></div>
+        <div class="flowarrow">▼</div>
+        <div class="layer"><span class="lnum">L2</span><b>Processed — disposable by design</b><span>spread profiles, regime labels, feature tables. Every file names its recipe + raw inputs, so a wrong recipe means delete and rebuild — never argue about copies.</span></div>
+        <div class="flowarrow">▼</div>
+        <div class="layer evidence"><span class="lnum">L3</span><b>The journal — what OUR system did</b><span>what a real portfolio manager keeps: every intent, fill, veto, mode change, MIS snapshot, SQS score, kill-switch event, treasury sweep. Append-only.</span></div>
+        <div class="flowarrow">▼</div>
+        <div class="layer door"><span class="lnum">L4</span><b>The research door — splits by default</b><span>agents ask for a NAMED split, never dates. The lazy call returns properly-split data — the easy path IS the correct path. Plain Python can still open any file: the door controls what gets BELIEVED, not what gets read.</span></div>
+        <div class="flowarrow">▼</div>
+        <div class="layer"><span class="lnum">L5</span><b>Backup — a platform feature</b><span>nightly VPS → workstation, weekly → external drive, monthly encrypted offsite for the irreplaceable megabytes. A restore test on a schedule — an untested backup is a rumour.</span></div>
+      </div>
+      <div>
+        <h3 style="margin-bottom:.4rem;">The journal's twelve streams</h3>
+        <div class="streams">
+          <span class="hot">intents</span><span class="hot">trades</span><span class="hot">vetoes</span><span>book events</span><span>MIS snapshots</span><span class="hot">kill-switch audit</span><span>adapter log</span><span>treasury</span><span>correlation ledger</span><span>certificates</span><span>flags</span><span>heartbeat</span>
+        </div>
+        <p class="cap" style="margin-top:.5rem;">Everything except MIS snapshots is under a gigabyte a year. The heartbeat stream is what makes "no trades" and "no data" different things — the paper twin keeps beating through every kill-switch fire, so alpha-decay sensing never goes blind.</p>
+      </div>
+      <div class="verdicts">
+        <div class="vbox"><div class="vhead"><h3>ArcticDB</h3><span class="chip no">NO for v1</span></div><p>Not the licence — that argument was overstated. The real reason: it can only remember when we <em>wrote</em> a number, not when the world <em>revised</em> it. Our two-timestamp rule needs both, and plain Parquet + DuckDB already does it free.</p></div>
+        <div class="vbox"><div class="vhead"><h3>Lineage graph</h3><span class="chip">files now · database maybe never</span></div><p>Your Neo4j instinct is right about the <em>shape</em> — lineage is a growing graph. But we store it as an append-only edge file that plain Python reads; if we ever want Neo4j, that same file loads in unchanged. No lock-in either way.</p></div>
+        <div class="vbox"><div class="vhead"><h3>Auto-detection with your ranges</h3><span class="chip">simple by design</span></div><p>One plain-text rules file you own: pick a measurement from a menu, set your range, say how long it must hold. Flags open and close with memory of why. Hard boundary: <b>flags notify, flags never act</b> — only the kill switch and the Book touch trading.</p></div>
+        <div class="vbox"><div class="vhead"><h3>The sealed shelf</h3><span class="chip">protects you from you</span></div><p>The most recent months of history are never handed to research — by anyone, including you. Unsealing is a separate logged act, once per candidate. It is the strongest defence a one-person operation has against its own iteration bias.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <span class="secnum">04 · THE ONE-CARD CORRECTION</span>
+    <h2>Who's who — three identity disciplines, not one card</h2>
+    <div class="panel">
+      <div class="disc">
+        <div class="dcard d1">
+          <span class="who">Fingerprinted · recipes</span>
+          <h3>Things you can re-make</h3>
+          <div class="kinds"><span>Level</span><span>Trigger</span><span>Confirmation</span><span>Confluence</span><span>indicator definitions</span><span>rulesets</span><span>splits</span></div>
+          <p>Same recipe → same fingerprint, always. Two agents "discovering" the same confluence get the same identity — deduplication for free.</p>
+        </div>
+        <div class="dcard d2">
+          <span class="who">Chartered · signed by you</span>
+          <h3>Things you stand behind</h3>
+          <div class="kinds"><span>Book</span><span>BMS instance</span><span>roster seat</span><span>venue binding</span></div>
+          <p>Named, operator-countersigned, amended only by named decisions. The GitBook Book schema stays untouched as the spec. Scalping-book-v2 is a NEW Book — it never inherits v1's ledger.</p>
+        </div>
+        <div class="dcard d3">
+          <span class="who">Occurrences · happened once</span>
+          <h3>Things that cannot re-happen</h3>
+          <div class="kinds"><span>Run</span><span>live session</span><span>Result</span><span>promotion event</span><span>refusal record</span></div>
+          <p>A live Tuesday cannot be re-derived, so it carries no recipe fingerprint — it is evidence, filed forever, linked into the lineage graph.</p>
+        </div>
+      </div>
+      <p class="cap">Also settled by the study: <b>a bot is a career</b> — one permanent name plus a fingerprint per revision; variants are new bots linked "variant-of"; a plain-Python bot you promote rides along as an opaque definition. And the bare word <b>"model" is proposed for the banned list</b> — it splits into ML artifact / trading thesis / analysis artifact, which were three different things wearing one word.</p>
+    </div>
+  </section>
+
+  <section>
+    <span class="secnum">05 · REVIEW WITHOUT THE BOTTLENECK</span>
+    <h2>Answer keys — now grounded in real QMX parts</h2>
+    <div class="checks">
+      <div class="check"><span class="cnum">K1</span><p><b>The look-ahead test at registration.</b> One afternoon of work, covers every component any agent ever writes — and it ships with two known-cheaters it must always catch (the broken public SMC library; a "smoothed" regime model), which proves the test itself is awake.</p></div>
+      <div class="check"><span class="cnum">K2</span><p><b>Two reference calculators for every indicator.</b> TA-Lib and talipp answer independently; QMF must match both, and warm-up is computed, not guessed. Kills the "backtest says buy, live says hold" bug class — the most expensive one there is.</p></div>
+      <div class="check"><span class="cnum">K3</span><p><b>One venue checklist run against both the practice venue and a real demo account.</b> Doubles as the only way to learn the broker facts written in no document. <span class="cap">(Full catalog: nine module families, each with its external truth — including your pair-scoped kill switch tested against our own recorded calendar weeks.)</span></p></div>
+    </div>
+    <p class="cap">Honest gaps where no external truth exists yet: the fill model (only measured live slippage can calibrate it — waits for the tick recorder, flagged to the backtesting session); what a "correct" zone even is (no canonical definition anywhere — your GitBook definition becomes the only spec); and the Book schema must first be extracted from GitBook into machine-checkable form — operator-verified work, not an agent guess.</p>
+  </section>
+
+  <section>
+    <span class="secnum">06 · YOUR LIST</span>
+    <div class="qs">
+      <span class="eyebrow">Yes/no, when you're ready — recommendation first on every one</span>
+      <div class="qgroup">
+        <h3>Data</h3>
+        <div class="q"><span class="qn">Q1</span><p>Drop ArcticDB for v1? (Technical reason, not licence.)</p><span class="rec">rec: yes</span></div>
+        <div class="q"><span class="qn">Q2</span><p>Lineage as graph-shaped files now; buy a graph database only if ever proven needed?</p><span class="rec">rec: yes</span></div>
+        <div class="q"><span class="qn">Q3</span><p>Dukascopy downloads for private research only, never redistributed — your risk call?</p><span class="rec">rec: yes</span></div>
+        <div class="q"><span class="qn">Q4</span><p>Seal the most recent 12 months from all research; unseal once per candidate, logged?</p><span class="rec">rec: yes</span></div>
+        <div class="q"><span class="qn">Q5</span><p>Every bot runs its paper twin permanently — even while trading live?</p><span class="rec">rec: yes</span></div>
+        <div class="q"><span class="qn">Q6</span><p>Pair-scoped blocks stop execution but never stop recording?</p><span class="rec">rec: yes</span></div>
+        <div class="q"><span class="qn">Q7</span><p>MIS snapshots: 90 days full detail, then summaries + every state change forever?</p><span class="rec">rec: yes</span></div>
+        <div class="q"><span class="qn">Q8</span><p>Backup rhythm: nightly VPS→workstation, weekly→drive, monthly encrypted offsite, restore test on a schedule?</p><span class="rec">rec: yes</span></div>
+      </div>
+      <div class="qgroup">
+        <h3>Identity</h3>
+        <div class="q"><span class="qn">Q9</span><p>BENCHED moves off the Book's mode list onto the bot's seat in that Book? (Edits a GitBook detail — needs your word.)</p><span class="rec">rec: yes</span></div>
+        <div class="q"><span class="qn">Q10</span><p>One bot can sit in paper while its Book stays live?</p><span class="rec">rec: yes</span></div>
+        <div class="q"><span class="qn">Q11</span><p>"Where the idea came from" required only at promotion, never at registration?</p><span class="rec">rec: yes</span></div>
+      </div>
+      <div class="qgroup">
+        <h3>Verification</h3>
+        <div class="q"><span class="qn">Q12</span><p>Extract the GitBook Book schema into machine-checkable form, with you verifying the extraction?</p><span class="rec">rec: yes</span></div>
+      </div>
+    </div>
+  </section>
+
+</div>

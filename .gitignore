@@ -1,0 +1,28 @@
+# cloned reference repositories (large, recreatable from workroom/reference/links.md)
+workroom/reference/repos/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+*.whl
+
+# data downloads never belong in git
+data/
+*.bi5
+
+# recorded raw evidence (append-only local archive, never committed)
+recorder/data/
+
+# agent tooling installs — reinstallable, not project content
+.agent/
+.agents/
+.claude/
+_bmad/*
+!_bmad/config.toml
+!_bmad/config.user.toml
+!_bmad/custom/
+
+# OS noise
+Thumbs.db
+.DS_Store

@@ -1,0 +1,31 @@
+id: CT-20
+name: Venue event and reconciliation contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-VENUE
+consumers: []
+active_consumers: []
+intended_consumers: [COMP-QMF-DATA, COMP-QMF-RISK]
+wiring_status: reserved-unwired
+layer_from: middleware
+layer_to: backend
+decisions: [DEC-0048, DEC-0059, DEC-0061]
+gaps: [GAP-0005, GAP-0030, GAP-0036, GAP-0037, GAP-0038]
+purpose: "Reserve a normalized venue-event and reconciliation shape for later Data and Risk consumers without creating an active QMF V1 handoff."
+invariants:
+  - "Connection and real-venue outcomes remain separate from future simulator parity."
+  - "No active QMF V1 downstream consumer is wired; the intended consumers are documentary targets only."
+  - "Uncertain submission is implementation-blocking until GAP-0036 defines the complete state and transition table."
+  - "Event kinds, order and fill shapes, sequence guarantees, deduplication, cursors, outage recovery, and price basis remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0038
+  fields: null
+  fields_gap: GAP-0036
+  enums: null
+  enums_gap: GAP-0038
+  units: null
+  units_gap: GAP-0037
+  nullability: null
+  nullability_gap: GAP-0036

@@ -1,0 +1,3179 @@
+extractions:
+  - id: EXT-0001
+    type: context
+    summary: "QMX, or Quantmind, is conceived as the operator's custom trading terminal."
+    quote: "it's more like a my own custom trading terminal"
+    cite: SRC-01-C0001
+    topics: [qmx, product, vision]
+    authority: source
+  - id: EXT-0002
+    type: constraint
+    summary: "QMX must be extensible because it is built to leverage AI agents."
+    quote: "the idea is simple the idea is to try as much as possible to make it extensible since it's leveraging AI agents"
+    cite: SRC-01-C0001
+    topics: [qmx, extensibility, agents]
+    authority: source
+  - id: EXT-0003
+    type: constraint
+    summary: "The platform is intended to provide uniformity, control, order, and easy extension through building blocks."
+    quote: "we wanted uniformity we wanted control and order we wanted something that if we want to extend it it's simple so it's like we are we wanted to create building blocks"
+    cite: SRC-01-C0001
+    topics: [architecture, extensibility, design-values]
+    authority: source
+  - id: EXT-0004
+    type: value
+    summary: "QMF expands to Quantmind Framework and contains Quantmind Libraries called QMLs."
+    quote: "QMF is Quantmind Framework which contains a lot of quantmind libraries which are QMLs"
+    cite: SRC-01-C0001
+    topics: [qmf, qml, vocabulary]
+    authority: source
+  - id: EXT-0005
+    type: context
+    summary: "The trading node is a core component, but it is not the whole QMX system."
+    quote: "the quant mind trading node and this is a thing that deals with after life trading so it is one of the core components of the entire system but it's not the only component of the entire system"
+    cite: SRC-01-C0001
+    topics: [trading-node, qmx, scope]
+    authority: source
+  - id: EXT-0006
+    type: constraint
+    summary: "The work should seek the most efficient leverage points rather than merely the fastest route."
+    quote: "I won't say the fastest way, but the most efficient way"
+    cite: SRC-01-C0001
+    topics: [process, leverage, delivery]
+    authority: source
+  - id: EXT-0007
+    type: correction
+    summary: "The existing tracker and map are unverified and must not be treated as authoritative."
+    quote: "everything you are going to read in terms of tracker and map, some stuff is not really verified yet. Okay, so for me, I think don't take it as core as you think."
+    cite: SRC-01-C0001
+    topics: [authority, tracker, evidence]
+    authority: source
+  - id: EXT-0008
+    type: constraint
+    summary: "User-facing output should stay in chat or diagrammatic artifacts, not prose-heavy reports."
+    quote: "it's better we discuss either in chat or you produce an artifact that has diagrams or whatever because I don't like reading blocks of text"
+    cite: SRC-01-C0002
+    topics: [communication, diagrams, operator-experience]
+    authority: source
+  - id: EXT-0009
+    type: constraint
+    summary: "Questions should use the Ask User tool and include recommendations."
+    quote: "if you want to ask a question, it's better you ask me with that tool of yours, the Ask User tool, but with recommendations"
+    cite: SRC-01-C0002
+    topics: [process, questions, operator-experience]
+    authority: source
+  - id: EXT-0010
+    type: context
+    summary: "The operator identifies as nontechnical and is ideating, so technical judgment should be carried by the agents."
+    quote: "I'm not technical. Please, actually, in fact, I don't know what I'm doing. I'm not going to lie to you. I'm just ideating"
+    cite: SRC-01-C0002
+    topics: [operator, process, decision-making]
+    authority: source
+  - id: EXT-0011
+    type: constraint
+    summary: "Use one or two subagents for simple work instead of a long dynamic workflow."
+    quote: "at times dynamic workflows are too long and okay, they are thorough, don't get me wrong, but at times are simple or two sub-agents could really do that trick"
+    cite: SRC-01-C0002
+    topics: [agents, workflow, process]
+    authority: source
+  - id: EXT-0012
+    type: decision
+    summary: "Use Sonnet and Opus routinely; reserve Fable for high-end reasoning or devil's-advocate work."
+    quote: "Use Fable only and only when you need should I say high-end thinking or reasoning. If you need like a devil's advocate or something"
+    cite: SRC-01-C0002
+    topics: [agents, models, process]
+    authority: source
+  - id: EXT-0013
+    type: correction
+    summary: "QMF is a toolbox of libraries that builds applications; it is not itself an application."
+    quote: "QMF-as-toolbox (libraries that build applications, never an application itself)"
+    cite: SRC-01-C0003
+    topics: [qmf, architecture, scope]
+    authority: source
+  - id: EXT-0014
+    type: context
+    summary: "An earlier design proposed one kernel with two plugs to make backtest/live parity testable."
+    quote: "one kernel with two plugs (so backtest ≡ live is enforced by tests, not hoped for)"
+    cite: SRC-01-C0003
+    topics: [kernel, backtesting, live-parity]
+    authority: source
+  - id: EXT-0015
+    type: constraint
+    summary: "Signals must not carry money quantity, preventing bots from controlling sizing."
+    quote: "signals that carry no money quantity (so a bot cannot blow the account through sizing)"
+    cite: SRC-01-C0003
+    topics: [signals, risk, bot]
+    authority: source
+  - id: EXT-0016
+    type: decision
+    summary: "Stored results should be content-addressed so changed definitions cannot silently reuse stale results."
+    quote: "content-addressed results (so old test results can never silently lie about new definitions)"
+    cite: SRC-01-C0003
+    topics: [identity, results, reproducibility]
+    authority: source
+  - id: EXT-0017
+    type: constraint
+    summary: "A two-timestamp rule is required to prevent look-ahead bias."
+    quote: "the two-timestamp rule (the one defence against an agent building in look-ahead bias at 3am)"
+    cite: SRC-01-C0003
+    topics: [data, timestamps, look-ahead]
+    authority: source
+  - id: EXT-0018
+    type: constraint
+    summary: "Forward-only calendar and tick evidence must be recorded or it is permanently lost."
+    quote: "The economic calendar feed only shows the current week — past weeks are unbuyable at any price. Your own tick stream exists only if something records it."
+    cite: SRC-01-C0003
+    topics: [data-acquisition, calendar, ticks]
+    authority: source
+  - id: EXT-0019
+    type: open
+    summary: "The Spotware API application had not been submitted and its review lead time was unknown."
+    quote: "The Spotware application isn't submitted. They review applications before you're allowed to build against their API, the queue length is unknown"
+    cite: SRC-01-C0003
+    topics: [ctrader, spotware, dependency]
+    authority: source
+  - id: EXT-0020
+    type: correction
+    summary: "Exit belongs to Book territory, not inside a confluence."
+    quote: "It still says Exit lives inside the confluence (you ruled it's Book territory)"
+    cite: SRC-01-C0003
+    topics: [book, confluence, exits]
+    authority: source
+  - id: EXT-0021
+    type: decision
+    summary: "Backtesting and its fill engine were paused as a decision area."
+    quote: "still puts the fill engine in core QMF (you paused backtesting entirely)"
+    cite: SRC-01-C0003
+    topics: [backtesting, fill-model, scope]
+    authority: source
+  - id: EXT-0022
+    type: open
+    summary: "The proposed five-lock sequencing spine was not adopted immediately and required discussion."
+    quote: "Adopt the five locks (nouns+keys, broker contract+test suite, one manifest format, one-page agent surface, oracle list) as the official sequencing spine"
+    cite: SRC-01-C0004
+    topics: [five-locks, sequencing, open]
+    authority: source
+  - id: EXT-0023
+    type: value
+    summary: "An assistant estimate placed QMF alone at roughly 100–150 factory-days."
+    quote: "The honest estimate for QMF alone is on the order of 100–150 factory-days"
+    cite: SRC-01-C0003
+    topics: [estimate, delivery, qmf]
+    authority: source
+  - id: EXT-0024
+    type: context
+    summary: "The cTrader adapter, prop-firm rule schema, and fill model were identified as pieces without obvious reusable implementations."
+    quote: "Three pieces can't be sped up by copying because nothing to copy exists anywhere: the cTrader adapter, the prop-firm rule schema, and the fill model"
+    cite: SRC-01-C0003
+    topics: [ctrader, prop-firm, fill-model]
+    authority: source
+  - id: EXT-0025
+    type: correction
+    summary: "The framework must not box developers or agents into its own libraries."
+    quote: "while we are building the framework, we should still make sure that we are not boxing ourselves in"
+    cite: SRC-01-C0003
+    topics: [extensibility, interoperability, architecture]
+    authority: source
+  - id: EXT-0026
+    type: constraint
+    summary: "QMF must remain usable together with ordinary Python and external libraries."
+    quote: "We can still use the framework in correlation with normal Python."
+    cite: SRC-01-C0003
+    topics: [python, interoperability, qmf]
+    authority: source
+  - id: EXT-0027
+    type: decision
+    summary: "The agentic harness is the area that merits stricter discipline because agents are nondeterministic."
+    quote: "the part where we are going to be a bit strict is the agentic harness. And the reason for that is because, well, agents are very non-deterministic"
+    cite: SRC-01-C0003
+    topics: [agentic-harness, strictness, safety]
+    authority: source
+  - id: EXT-0028
+    type: context
+    summary: "The DeepSeek approach was selected as a reference for the agentic harness, not as a constraint on all of QMF."
+    quote: "So we are going to use what DeepSeek was using, but everywhere else, I believe we are just giving them a little bit of guidelines, but not boxing them"
+    cite: SRC-01-C0003
+    topics: [deepseek, agentic-harness, extensibility]
+    authority: source
+  - id: EXT-0029
+    type: constraint
+    summary: "Research and hypothesis experimentation must remain open to synthetic data, RLMs, and other methods."
+    quote: "If we want to experiment with synthetic data, we can generate it. If we want to experiment with, you know, oh my god, if you want to experiment with RLMs, we can do it."
+    cite: SRC-01-C0003
+    topics: [research, experimentation, extensibility]
+    authority: source
+  - id: EXT-0030
+    type: correction
+    summary: "The live path needs uniformity and order, not rigid lock-in."
+    quote: "order is necessary, but don't build yourself in"
+    cite: SRC-01-C0003
+    topics: [live-trading, uniformity, extensibility]
+    authority: source
+  - id: EXT-0031
+    type: decision
+    summary: "Begin recording and storing forward data in a retrievable form for the later full QMX build."
+    quote: "we can start recording and storing the data somewhere, but we need to be logical and we need to be able to make sure we can retrieve it"
+    cite: SRC-01-C0004
+    topics: [data-acquisition, retention, recorder]
+    authority: source
+  - id: EXT-0032
+    type: correction
+    summary: "The trading node is specifically the live-trading portion of the larger QMX system."
+    quote: "the trading node is actually still part of it, it's just the actual live trading part"
+    cite: SRC-01-C0004
+    topics: [trading-node, live-trading, scope]
+    authority: source
+  - id: EXT-0033
+    type: constraint
+    summary: "The recorder must expose visible status through a UI or TUI."
+    quote: "Do we have a do you can you give me a UI or a TUI? I don't know if you want anyway, but as long as I know what's going on"
+    cite: SRC-01-C0004
+    topics: [recorder, observability, ui]
+    authority: source
+  - id: EXT-0034
+    type: open
+    summary: "The need to record the live tick stream remained delegated to technical judgment."
+    quote: "I don't think we can we really need to bother so much for thick stream, but at the same time, I'm then wondering why bother a thick stream. This this one I think you do what you think is right"
+    cite: SRC-01-C0004
+    topics: [ticks, data-acquisition, open]
+    authority: source
+  - id: EXT-0035
+    type: correction
+    summary: "Examples in ideation must not be promoted automatically into crucial requirements."
+    quote: "it takes that message as very crucial. Yet in the message, I said I was actually giving an example"
+    cite: SRC-01-C0004
+    topics: [process, examples, authority]
+    authority: source
+  - id: EXT-0036
+    type: decision
+    summary: "Current work excludes the agentic system and focuses on the ordinary building blocks that system will later use."
+    quote: "For today, let's focus on everything apart from the agentic system. Okay? We build what the agentic system will be using in a normal day today."
+    cite: SRC-01-C0004
+    topics: [agentic-system, scope, qmf]
+    authority: source
+  - id: EXT-0037
+    type: constraint
+    summary: "The present documentation should not turn the illustrative agentic-system vision into requirements."
+    quote: "You don't need to record anything about the authentic system. Again, I'm just giving you, painting a picture here"
+    cite: SRC-01-C0004
+    topics: [agentic-system, examples, scope]
+    authority: source
+  - id: EXT-0038
+    type: constraint
+    summary: "Extensibility must accommodate changing methods such as genetic algorithms, trees, RL, LLMs, and neural networks."
+    quote: "today. I'm using genetic algorithms, tomorrow I'm using you know, decision trees, the other day I'm using RLA, and the other time I'm using an actual LLN, another time I'm using a neural network. So things change."
+    cite: SRC-01-C0004
+    topics: [extensibility, methods, research]
+    authority: source
+  - id: EXT-0039
+    type: open
+    summary: "The five-lock proposal was explicitly held for discussion rather than ratified."
+    quote: "Discuss first"
+    cite: SRC-01-C0004
+    topics: [five-locks, ratification, open]
+    authority: source
+  - id: EXT-0040
+    type: constraint
+    summary: "Research findings are never adopted automatically; they must be discussed and ratified."
+    quote: "Research protocol: findings are NEVER auto-adopted. Claude presents what was found, what it proposes, where it agrees/disagrees — then Mubarak and Claude discuss and ratify"
+    cite: SRC-01-C0004
+    topics: [research, ratification, process]
+    authority: source
+  - id: EXT-0041
+    type: constraint
+    summary: "Current operator rulings outrank every historical source layer."
+    quote: "current operator rulings override every historical layer"
+    cite: SRC-01-C0004
+    topics: [authority, precedence, evidence]
+    authority: source
+  - id: EXT-0042
+    type: constraint
+    summary: "GitBook is the Book/BMS governance baseline but is not a complete mechanics source."
+    quote: "GitBook (https://elios-1.gitbook.io/qmx) = the Book/BMS governance baseline, NOT a complete source"
+    cite: SRC-01-C0004
+    topics: [gitbook, authority, book]
+    authority: source
+  - id: EXT-0043
+    type: constraint
+    summary: "Old corpora and recovery material are evidence only and require fresh ratification."
+    quote: "old corpus and local `.recovery/` = evidence only, fresh ratification required"
+    cite: SRC-01-C0004
+    topics: [legacy, recovery, authority]
+    authority: source
+  - id: EXT-0044
+    type: constraint
+    summary: "The Cordiverse composability paper is scoped to the agentic harness and must not be cited for QMF or the trading node."
+    quote: "cordiverse composability paper = agentic harness only, never cite it for QMF or the node"
+    cite: SRC-01-C0004
+    topics: [cordiverse, agentic-harness, authority]
+    authority: source
+  - id: EXT-0045
+    type: constraint
+    summary: "Strictness is concentrated in the nondeterministic agentic harness and the gate into live money; research remains free."
+    quote: "Strictness concentrates in exactly two places: the agentic harness (agents are non-deterministic; DeepSeek-grade discipline earns its place there) and the promotion gate into the live money path (order, not lock-in). Research/experimentation lanes stay free."
+    cite: SRC-01-C0005
+    topics: [strictness, agentic-harness, live-trading]
+    authority: source
+  - id: EXT-0046
+    type: constraint
+    summary: "The QMF research sweep and repo studies are research inputs, not adopted requirements."
+    quote: "Facts gathered — adoption pending ratification."
+    cite: SRC-01-C0005
+    topics: [research, ratification, authority]
+    authority: source
+  - id: EXT-0047
+    type: decision
+    summary: "The earlier kernel ruling selected an in-house implementation rather than a third-party engine, runtime, or contract."
+    quote: "BUILD our own — no third-party engine, runtime, or contract, ever."
+    cite: SRC-01-C0005
+    topics: [build-own, kernel, architecture]
+    authority: source
+  - id: EXT-0048
+    type: constraint
+    summary: "Load-bearing fills, metrics, and overfitting arithmetic must be readable and patchable by the factory."
+    quote: "load-bearing arithmetic (fills/metrics/overfitting) must be readable and patchable by the factory"
+    cite: SRC-01-C0005
+    topics: [code-quality, fills, metrics]
+    authority: source
+  - id: EXT-0049
+    type: decision
+    summary: "Agent backtests run in disposable sandboxes and content-addressed Runs merge into a common ledger."
+    quote: "agents backtest in disposable sandboxes where a small pure-Python QMF fits and content-addressed Runs merge from many sandboxes into one ledger"
+    cite: SRC-01-C0005
+    topics: [backtesting, sandboxes, results]
+    authority: source
+  - id: EXT-0050
+    type: constraint
+    summary: "Reference platforms contribute mental models only, not inherited implementations."
+    quote: "Nautilus et al. = mental models in the ledger only."
+    cite: SRC-01-C0005
+    topics: [references, build-own, licensing]
+    authority: source
+  - id: EXT-0051
+    type: death
+    summary: "The proposed three-day third-party adoption spike was cancelled."
+    quote: "The 3-day adoption spike is cancelled."
+    cite: SRC-01-C0005
+    topics: [kernel, evaluation, dead]
+    authority: source
+  - id: EXT-0052
+    type: decision
+    summary: "Unmodified, separately installed LGPL dependencies are acceptable."
+    quote: "D1 licence amendment (LGPL ok for unmodified deps) still stands for ordinary libraries."
+    cite: SRC-01-C0005
+    topics: [licensing, dependencies, constraint]
+    authority: source
+  - id: EXT-0053
+    type: death
+    summary: "The word and framing 'kernel' were retired; qmf-core plus the separately specified trading node replace it."
+    quote: "the word \"kernel\" is retired — the referent is now `qmf-core` (the language) plus the separately-specified trading node; the build-our-own ruling survives, the old framing does not."
+    cite: SRC-01-C0006
+    topics: [vocabulary, kernel, qmf-core]
+    authority: source
+  - id: EXT-0054
+    type: decision
+    summary: "Backtesting is paused for its own session, with a staged funnel and a missing GPT brainstorm as input."
+    quote: "Backtesting: PAUSED as a decision area (operator ruling) — own session"
+    cite: SRC-01-C0005
+    topics: [backtesting, scope, deferred]
+    authority: source
+  - id: EXT-0055
+    type: context
+    summary: "The intended backtesting funnel progresses from screening through research, robustness, replay, and full Book/BMS simulation."
+    quote: "Approach changes to his staged funnel (screen → research → robustness → replay → full Book/BMS sim), on-demand in sandboxes."
+    cite: SRC-01-C0005
+    topics: [backtesting, funnel, book]
+    authority: source
+  - id: EXT-0056
+    type: open
+    summary: "The operator's GPT backtesting brainstorm remained a missing input."
+    quote: "His GPT brainstorm markdown is the missing input — request it."
+    cite: SRC-01-C0005
+    topics: [backtesting, input, open]
+    authority: source
+  - id: EXT-0057
+    type: constraint
+    summary: "Current Claude sessions must keep hands off the agentic system until its research papers are analyzed."
+    quote: "Agentic system: HANDS OFF for Claude sessions — ~5 research papers to analyze first; \"don't build organs; the veins only.\""
+    cite: SRC-01-C0006
+    topics: [agentic-system, scope, deferred]
+    authority: source
+  - id: EXT-0058
+    type: decision
+    summary: "Bot schema and data management were the only explicitly allowed agentic foundations."
+    quote: "Allowed foundational organs: bot schema, data management."
+    cite: SRC-01-C0006
+    topics: [agentic-system, bot-schema, data]
+    authority: source
+  - id: EXT-0059
+    type: decision
+    summary: "Prop-firm Books and firm-specific modeling were deferred to the agentic era."
+    quote: "Prop-firm Book: DEFERRED to the agentic era (operator ruling, re-echoed — do not re-surface)."
+    cite: SRC-01-C0006
+    topics: [prop-firm, book, deferred]
+    authority: source
+  - id: EXT-0060
+    type: context
+    summary: "An earlier plan retained generic rule-schema and Program/Campaign capability in QMF V1, but this is later reversed."
+    quote: "QMF V1 ships only generic machinery (rule schema + Program/Campaign phase capability) able to hold any firm's rules later."
+    cite: SRC-01-C0006
+    topics: [prop-firm, program-campaign, superseded]
+    authority: source
+  - id: EXT-0061
+    type: constraint
+    summary: "QMF does not adopt third-party strategy-family libraries; it enables custom implementations of those ideologies."
+    quote: "QMF never adopts third-party strategy-family libraries (SMC, ICT, scalper packs…); it exists so Mubarak/agents can build their OWN custom versions of those ideologies."
+    cite: SRC-01-C0006
+    topics: [strategy-libraries, build-own, qmf]
+    authority: source
+  - id: EXT-0062
+    type: constraint
+    summary: "Repo studies may supply mental models but not transplanted code, and licenses must be respected."
+    quote: "Repo studies extract mental models only — no code transplantation, licences respected."
+    cite: SRC-01-C0006
+    topics: [research, licensing, code-transplant]
+    authority: source
+  - id: EXT-0063
+    type: constraint
+    summary: "Futures and options trading are permanently excluded; day-traded stocks may be added later."
+    quote: "Permanent product constraint: no futures or options, ever; stocks (day-trading) possibly later."
+    cite: SRC-01-C0006
+    topics: [asset-classes, scope, stocks]
+    authority: source
+  - id: EXT-0064
+    type: decision
+    summary: "Testing is a Bot-by-Book matrix because each Book may define its own test mechanism."
+    quote: "each Book may carry its own testing mechanism — one bot testable against many Books (scalping variants, prop-firm eval vs funded) as a matrix."
+    cite: SRC-01-C0006
+    topics: [bot, book, testing]
+    authority: source
+  - id: EXT-0065
+    type: context
+    summary: "The proposed qmf-core language includes exact money, exact time, broad nouns, typed refusals, stamping, and versioning."
+    quote: "library #1 = `qmf-core` \"the language\" (exact money, exact time, the nouns seeded with order-flow/DOM concepts so crypto never forces a rebuild, typed refusals, stamp machine, versioning) — proposed, pending explicit ratification"
+    cite: SRC-01-C0006
+    topics: [qmf-core, primitives, proposal]
+    authority: source
+  - id: EXT-0066
+    type: value
+    summary: "Confluence is defined as levels, triggers, and confirmations, with multiple variants and nesting."
+    quote: "Confluence = Level(s)+Trigger(s)+Confirmation(s), multi-variant and nesting"
+    cite: SRC-01-C0006
+    topics: [confluence, bot, schema]
+    authority: source
+  - id: EXT-0067
+    type: constraint
+    summary: "Confluence contains no Exit; Exit, sizing, and risk are Book responsibilities."
+    quote: "no Exit — Exit/sizing/risk are Book territory"
+    cite: SRC-01-C0006
+    topics: [confluence, book, risk]
+    authority: source
+  - id: EXT-0068
+    type: open
+    summary: "The Bot-to-Book binding contract remained undesigned."
+    quote: "Bot = confluence + binding contract (not yet designed) + accumulating lineage, variants first-class"
+    cite: SRC-01-C0006
+    topics: [bot, book, contract]
+    authority: source
+  - id: EXT-0069
+    type: value
+    summary: "SQS expands to Spread Quality Sensor, but its candidate formula was not ratified."
+    quote: "SQS = Spread Quality Sensor (candidate formula NOT ratified)"
+    cite: SRC-01-C0006
+    topics: [sqs, spread, formula]
+    authority: source
+  - id: EXT-0070
+    type: value
+    summary: "R means one unit of original pre-trade risk."
+    quote: "R = one unit of original pre-trade risk"
+    cite: SRC-01-C0006
+    topics: [risk, variables, r]
+    authority: source
+  - id: EXT-0071
+    type: death
+    summary: "FORM-0006 must not be implemented because it is dimensionally broken."
+    quote: "FORM-0006 dimensionally broken — never implement as-is"
+    cite: SRC-01-C0006
+    topics: [formula, risk, dead]
+    authority: source
+  - id: EXT-0072
+    type: constraint
+    summary: "The three seat concepts must never be collapsed into one."
+    quote: "three seat concepts never collapsed"
+    cite: SRC-01-C0006
+    topics: [seat, book, schema]
+    authority: source
+  - id: EXT-0073
+    type: correction
+    summary: "Sweep-to-cap-to-reseed is a scalping Book pattern, not a global QMX law."
+    quote: "sweep→cap→re-seed = the SCALPING Book's pattern, not a universal law"
+    cite: SRC-01-C0006
+    topics: [scalping, book, treasury]
+    authority: source
+  - id: EXT-0074
+    type: decision
+    summary: "Simulator is reserved as a later product UI and backtesting is called a library, not an engine."
+    quote: "Simulator = product UI later; backtesting = library, never \"engine\"."
+    cite: SRC-01-C0006
+    topics: [simulator, backtesting, vocabulary]
+    authority: source
+  - id: EXT-0075
+    type: constraint
+    summary: "Claude must not scaffold projects; documentation restarts framework-first and trading-node work follows."
+    quote: "Claude never scaffolds/initializes projects — Mubarak's own skills do that; documentation restart is framework-first, trading node later"
+    cite: SRC-01-C0006
+    topics: [process, documentation, trading-node]
+    authority: source
+  - id: EXT-0076
+    type: constraint
+    summary: "Code must be understandable by humans as well as agents."
+    quote: "code is written for humans AND agents (\"I might also need to understand this code\")"
+    cite: SRC-01-C0006
+    topics: [code-quality, operator, agents]
+    authority: source
+  - id: EXT-0077
+    type: death
+    summary: "The term 'plugins' is banned even though the platform is extensible."
+    quote: "the platform is fully extensible but the word \"plugins\" is banned"
+    cite: SRC-01-C0006
+    topics: [vocabulary, extensibility, dead]
+    authority: source
+  - id: EXT-0078
+    type: decision
+    summary: "Build incrementally one topic per session rather than attempting a multi-day full draft."
+    quote: "build incrementally, one topic per session (supersedes the 2–3-day full-draft plan)"
+    cite: SRC-01-C0006
+    topics: [process, incremental, sessions]
+    authority: source
+  - id: EXT-0079
+    type: decision
+    summary: "Build data-acquisition plumbing now, but perform bulk downloading at first install."
+    quote: "Data acquisition timing DECIDED (2026-08-17): build the plumbing now; downloading happens at first install."
+    cite: SRC-01-C0006
+    topics: [data-acquisition, installation, timing]
+    authority: source
+  - id: EXT-0080
+    type: decision
+    summary: "Calendar forward capture is a standalone recorder rather than a QMF module."
+    quote: "calendar recording starts now (`recorder/`, standalone script + status screen, NOT a QMF module)"
+    cite: SRC-01-C0006
+    topics: [calendar, recorder, qmf]
+    authority: source
+  - id: EXT-0081
+    type: decision
+    summary: "Live tick capture waits for broker API access while Dukascopy provides historical backfill."
+    quote: "live tick recording stays blocked on broker API access (ticket 006) and Dukascopy backfills tick history meanwhile"
+    cite: SRC-01-C0006
+    topics: [ticks, dukascopy, broker]
+    authority: source
+  - id: EXT-0082
+    type: decision
+    summary: "DeepSeek Context, disposer, and event-bus extensions leave qmf-core V1 and are deferred to the agentic era."
+    quote: "the Context/disposer/event-bus additions leave qmf-core V1; the agentic system may later adopt the DeepSeek harness design near-verbatim (UI layout aside)."
+    cite: SRC-01-C0006
+    topics: [deepseek, qmf-core, deferred]
+    authority: source
+  - id: EXT-0083
+    type: value
+    summary: "QMF is the umbrella and QML is the bot library within it."
+    quote: "QMF (Quant Mind Framework) is the umbrella, QML = bot library inside it"
+    cite: SRC-01-C0006
+    topics: [qmf, qml, vocabulary]
+    authority: source
+  - id: EXT-0084
+    type: decision
+    summary: "The system has two deployables: the installable QMX application and one trading VPS."
+    quote: "two deployables (installable QMX app + one Trading VPS)"
+    cite: SRC-01-C0006
+    topics: [deployment, qmx-app, vps]
+    authority: source
+  - id: EXT-0085
+    type: decision
+    summary: "The former middle node is absorbed into the app; ML training happens periodically in cloud sandboxes with shadow rollout."
+    quote: "middle node absorbed into the app (ML training ~quarterly in cloud sandboxes, shadow rollout)"
+    cite: SRC-01-C0006
+    topics: [deployment, ml, shadow]
+    authority: source
+  - id: EXT-0086
+    type: decision
+    summary: "The core is Python, a later UI may use Rust, and Electron and MQL are excluded."
+    quote: "Python core, Rust UI later, no Electron, no MQL"
+    cite: SRC-01-C0006
+    topics: [technology, python, rust]
+    authority: source
+  - id: EXT-0087
+    type: decision
+    summary: "Forex on cTrader comes first; crypto arrives later through agent-built adapters."
+    quote: "forex on cTrader first, crypto later via agent-built adapters"
+    cite: SRC-01-C0006
+    topics: [forex, ctrader, crypto]
+    authority: source
+  - id: EXT-0088
+    type: constraint
+    summary: "Backtesting must be decentralized into callable QMF components rather than a central engine."
+    quote: "no central backtest engine — backtesting decentralizes into callable QMF components"
+    cite: SRC-01-C0006
+    topics: [backtesting, architecture, qmf]
+    authority: source
+  - id: EXT-0089
+    type: constraint
+    summary: "Factory-built modules ship with tests and reference usage."
+    quote: "validation inside factory runs (modules ship with reference usage + tests)"
+    cite: SRC-01-C0006
+    topics: [factory, validation, modules]
+    authority: source
+  - id: EXT-0090
+    type: constraint
+    summary: "Mock data and bots do not ship with the product."
+    quote: "defaults ≠ mock data, mock data never ships, product ships with no bots"
+    cite: SRC-01-C0006
+    topics: [mock-data, bots, shipping]
+    authority: source
+  - id: EXT-0091
+    type: open
+    summary: "The Bot-to-Book binding contract and multi-pair versus mono-pair bot taxonomy remain undesigned."
+    quote: "Bot↔Book binding contract — not yet designed; multi-pair vs mono-pair bots; an agent drafts the taxonomy, Mubarak ratifies"
+    cite: SRC-01-C0007
+    topics: [bot, book, taxonomy]
+    authority: source
+  - id: EXT-0092
+    type: context
+    summary: "Alpha-decay detection compares deteriorating live performance with backtest expectations and is complicated by plural Books."
+    quote: "Alpha-decay detection (old QML feature to rebuild): live performance degrading below backtest; complicated because \"edge\" was defined relative to a Book's configurable values, and Books are now plural"
+    cite: SRC-01-C0007
+    topics: [alpha-decay, qml, book]
+    authority: source
+  - id: EXT-0093
+    type: constraint
+    summary: "Synthetic tick data is algorithmically generated for stress/scenario work only and can never validate an edge."
+    quote: "Synthetic tick data module: algorithmic generation (block resampling, calibrated volatility models — never LLMs) for stress/kill-switch/scenario testing ONLY; hard rule: synthetic data can stress a strategy, never validate an edge"
+    cite: SRC-01-C0007
+    topics: [synthetic-data, validation, stress-testing]
+    authority: source
+  - id: EXT-0094
+    type: open
+    summary: "A Parquet/VPS/object-storage/no-database storage architecture was proposed but remained pending ratification."
+    quote: "Storage architecture (proposed, pending ratification): working Parquet archive on the workstation; trading VPS runs the always-on tick recorder and syncs down; nightly backup to an object-storage bucket (B2/R2 class, ~$1–5/mo); no database server."
+    cite: SRC-01-C0007
+    topics: [storage, parquet, backup]
+    authority: source
+  - id: EXT-0095
+    type: constraint
+    summary: "qmf-core itself has no loop, broker, backtest, or downloads."
+    quote: "explicitly OUT of qmf-core (\"no loop, no broker, no backtest, no downloads\")"
+    cite: SRC-01-C0007
+    topics: [qmf-core, boundary, architecture]
+    authority: source
+  - id: EXT-0096
+    type: context
+    summary: "Prop-firm constraints and pair selection are major operator goals that should influence risk and sizing design."
+    quote: "Prop firms are a major operator goal — prop-firm constraint modeling (daily loss caps, drawdown rules) and pair-selection support deserve first-class weight in risk/sizing design"
+    cite: SRC-01-C0007
+    topics: [prop-firm, risk, pair-selection]
+    authority: source
+  - id: EXT-0097
+    type: open
+    summary: "Six result-invalidating technical choices were queued for later ratification."
+    quote: "Six irreversible technical decisions pending ratification (each invalidates every prior stored result if changed later)"
+    cite: SRC-01-C0007
+    topics: [ratification, reproducibility, technical-decisions]
+    authority: source
+  - id: EXT-0098
+    type: value
+    summary: "The pending fidelity taxonomy is bar_close, intrabar, and tick."
+    quote: "fidelity taxonomy (bar_close / intrabar / tick)"
+    cite: SRC-01-C0007
+    topics: [backtesting, fidelity, enum]
+    authority: source
+  - id: EXT-0099
+    type: value
+    summary: "Pending choices included TA-Lib reference arithmetic and UTC-nanosecond timestamps."
+    quote: "TA-Lib as canonical indicator arithmetic, UTC-nanosecond timestamps"
+    cite: SRC-01-C0007
+    topics: [ta-lib, timestamps, indicators]
+    authority: source
+  - id: EXT-0100
+    type: value
+    summary: "Pending identity uses venue plus opaque symbol string."
+    quote: "(venue,symbol) identity with opaque symbol string"
+    cite: SRC-01-C0007
+    topics: [identity, venue, symbol]
+    authority: source
+  - id: EXT-0101
+    type: open
+    summary: "SR*, the preregistered Sharpe threshold governing search budget, remained unratified."
+    quote: "SR* (the pre-registered Sharpe bar that sets the whole search budget)"
+    cite: SRC-01-C0007
+    topics: [sharpe, search-budget, open]
+    authority: source
+  - id: EXT-0102
+    type: open
+    summary: "Kill-switch behavior while the broker connection is down was not designed."
+    quote: "Kill switch specification — nowhere designed, incl. behaviour when it fires while the broker connection is down"
+    cite: SRC-01-C0008
+    topics: [kill-switch, broker, failure-mode]
+    authority: source
+  - id: EXT-0103
+    type: value
+    summary: "The FX time model includes New York rollover, week/weekend boundaries, triple-swap Wednesday, and DST desynchronization."
+    quote: "FX time model: 5pm-NY rollover, week boundary, weekend gaps, triple-swap Wednesday, broker-server vs prop-firm DST desync"
+    cite: SRC-01-C0008
+    topics: [fx-time, rollover, dst]
+    authority: source
+  - id: EXT-0104
+    type: correction
+    summary: "For swap-free accounts, the financing P&L column represents an administrative fee rather than swap."
+    quote: "the swap-free account means the `financing` P&L column models an admin fee, not swap"
+    cite: SRC-01-C0008
+    topics: [pnl, financing, swap-free]
+    authority: source
+  - id: EXT-0105
+    type: open
+    summary: "Credential rotation, VPS secrets, token expiry, and VPS-failure flattening need an operational runbook."
+    quote: "Broker credential lifecycle + operational runbook: OAuth refresh rotation, secrets on the VPS, token expiry mid-challenge, who flattens positions if the VPS dies"
+    cite: SRC-01-C0008
+    topics: [credentials, operations, broker]
+    authority: source
+  - id: EXT-0106
+    type: open
+    summary: "Whether cTrader trendbars are bid-derived or mid-derived remained unverified."
+    quote: "cTrader trendbars BID- vs mid-derived — UNVERIFIED across research files 02/05"
+    cite: SRC-01-C0008
+    topics: [ctrader, trendbars, data-quality]
+    authority: source
+  - id: EXT-0107
+    type: decision
+    summary: "The immediate handoff is documentation-only: QMF first, trading node later, and code only after documentation."
+    quote: "documentation-only handoff — restart QMX documentation, framework (QMF) first, trading node later. Claude initializes/scaffolds nothing"
+    cite: SRC-01-C0008
+    topics: [documentation, qmf, sequencing]
+    authority: source
+  - id: EXT-0108
+    type: constraint
+    summary: "Application runtime flows such as event loops, pipelines, and broker sessions do not belong in the framework foundation."
+    quote: "Do not put application runtime (event loops, bot→Book→BMS pipelines, broker sessions) inside the framework's foundation."
+    cite: SRC-01-C0008
+    topics: [framework-boundary, runtime, architecture]
+    authority: source
+  - id: EXT-0109
+    type: correction
+    summary: "Build-own bans code transplantation, not dependencies; wrapping suitable libraries is encouraged."
+    quote: "this bans transplantation, not dependencies; wrapping permissive-licence libraries (TA-Lib, Polars, DuckDB, Optuna, statsmodels, arch…) is expected and encouraged."
+    cite: SRC-01-C0008
+    topics: [dependencies, build-own, licensing]
+    authority: source
+  - id: EXT-0110
+    type: constraint
+    summary: "The system targets at most roughly two rebuilds per year and Bloomberg-from-scratch durability."
+    quote: "built to last (rebuild at most ~twice/year; \"Bloomberg Terminal from scratch\" ambition)"
+    cite: SRC-01-C0008
+    topics: [durability, rebuild, design-values]
+    authority: source
+  - id: EXT-0111
+    type: constraint
+    summary: "Releases are versioned, consumers are not broken, and neither mock data nor bots ship."
+    quote: "versioned releases, never break consumers; no mock data ships; no bots ship."
+    cite: SRC-01-C0008
+    topics: [versioning, compatibility, shipping]
+    authority: source
+  - id: EXT-0112
+    type: constraint
+    summary: "qmf-core is pure definitions with no loop, broker, backtest, or downloads."
+    quote: "Pure definitions. No loop, no broker, no backtest, no downloads."
+    cite: SRC-01-C0009
+    topics: [qmf-core, boundary, primitives]
+    authority: source
+  - id: EXT-0113
+    type: decision
+    summary: "qmf-core includes canonical serialization and fingerprinting of definitions."
+    quote: "The stamp machine — canonical serialization + fingerprinting of any definition"
+    cite: SRC-01-C0009
+    topics: [qmf-core, fingerprint, serialization]
+    authority: source
+  - id: EXT-0114
+    type: constraint
+    summary: "Definitions are versioned from birth and changes mint new versions rather than rewrite old ones."
+    quote: "definitions carry versions from birth; changing one mints a new version, never rewrites."
+    cite: SRC-01-C0009
+    topics: [versioning, immutability, definitions]
+    authority: source
+  - id: EXT-0115
+    type: decision
+    summary: "The DeepSeek Context, disposer, event bus, and extension composition design are future agentic-session inputs, not qmf-core V1."
+    quote: "DEFERRED to the agentic era (operator ruling 2026-08-18): everything in this paragraph leaves qmf-core V1."
+    cite: SRC-01-C0009
+    topics: [deepseek, agentic-system, deferred]
+    authority: source
+  - id: EXT-0116
+    type: open
+    summary: "Book/BMS mechanics, binding, backtesting, sessions, agentic, UI, and prop-firm Books remain explicitly open."
+    quote: "Book/BMS machinery design (after primer discussion) · bot binding contract · backtesting framework (staged funnel; operator's GPT brainstorm markdown pending) · sessions model detail · agentic system (5 papers first) · UI · prop-firm books."
+    cite: SRC-01-C0009
+    topics: [open, book, backtesting]
+    authority: source
+  - id: EXT-0117
+    type: open
+    summary: "Several trading-node mechanics remain unresolved and must not be hardened by qmf-core."
+    quote: "SQS formula ratification · FORM-0006 dimensional repair · risk-seat persistence vs derivation · which legacy KSA effects survive the escalate-only model · same-tick priority among KSA close / force-flat / protective stop / discretionary exit · hold-time force-flat vs no-overnight relationship."
+    cite: SRC-01-C0010
+    topics: [trading-node, risk, open]
+    authority: source
+  - id: EXT-0118
+    type: constraint
+    summary: "qmf-core proceeds with framework-neutral primitives and freezes none of the open trading-node details."
+    quote: "qmf-core proceeds only with framework-neutral primitives and freezes none of these."
+    cite: SRC-01-C0010
+    topics: [qmf-core, primitives, open]
+    authority: source
+  - id: EXT-0119
+    type: context
+    summary: "The operator frames QMX around five hats/hearts, but only research, development, trading, and portfolio management are clearly named here."
+    quote: "we have five hearts. This thing is meant to help me do research, development hurts the wearable thing. So, research, development, my edition software, bear with me. I was saying, so research, development, trading, portfolio management."
+    cite: SRC-01-C0010
+    topics: [five-hats, product, vocabulary]
+    authority: source
+  - id: EXT-0120
+    type: open
+    summary: "The fifth hat is unclear in the raw dictation and needs confirmation from later reconciled material."
+    quote: "we have five hearts"
+    cite: SRC-01-C0010
+    topics: [five-hats, open, transcription]
+    authority: source
+  - id: EXT-0121
+    type: decision
+    summary: "The data lake should be built and handled according to sound data-science practice."
+    quote: "the data lake, we are building that. Thank you. Please, for the data lake, handle it like a good data scientist."
+    cite: SRC-01-C0010
+    topics: [data-lake, data-science, decision]
+    authority: source
+  - id: EXT-0122
+    type: constraint
+    summary: "Agents must receive properly split data by default rather than having to remember data-science discipline themselves."
+    quote: "agents are going to be using the same data, so it means they should be able to copy, or by default, it should allow them to copy, and they don't have to think through proper data science techniques, like you know, you know what I'm talking about, these things of splitting data"
+    cite: SRC-01-C0010
+    topics: [data, splits, agents]
+    authority: source
+  - id: EXT-0123
+    type: decision
+    summary: "Compute-heavy indicators belong in the trading node's MIS."
+    quote: "there are indicators that are heavy to calculate, you know, they can't be calculated in milliseconds. Remember, we have something called the MIS. So, what we did in the architecture last time is that we put heavy indicators in the MIS."
+    cite: SRC-01-C0010
+    topics: [indicators, mis, trading-node]
+    authority: source
+  - id: EXT-0124
+    type: decision
+    summary: "Light indicators also exist at bot or strategy level."
+    quote: "indicators at a bot level or in under a strategy"
+    cite: SRC-01-C0010
+    topics: [indicators, bot, strategy]
+    authority: source
+  - id: EXT-0125
+    type: decision
+    summary: "The research lab may create custom indicators, including through genetic algorithms."
+    quote: "we can experiment and build our own custom indicators. We've already seen that that's possible using genetic algorithms."
+    cite: SRC-01-C0010
+    topics: [indicators, genetic-algorithms, experimentation]
+    authority: source
+  - id: EXT-0126
+    type: constraint
+    summary: "The data vocabulary must be broad enough for DOM, level-three, and order-flow data."
+    quote: "the types of data we should be able to get. Now, this goes to DOM data or level 3 data. So, things like order flow"
+    cite: SRC-01-C0010
+    topics: [data, dom, order-flow]
+    authority: source
+  - id: EXT-0127
+    type: context
+    summary: "Older QML derived options-style gamma and theta levels for Forex and crypto rather than trading options directly."
+    quote: "the last version of QML had stuff relating to options and whatnot."
+    cite: SRC-01-C0010
+    topics: [qml, levels, gamma]
+    authority: source
+  - id: EXT-0128
+    type: decision
+    summary: "Crypto capability is deferred until QMX is a platform and will extend QMX rather than create a separate crypto edition."
+    quote: "when QMX is a platform. So, we can extend QMX itself to build a crypto version of it. Okay, not a crypto version, but to extend its crypto capabilities."
+    cite: SRC-01-C0010
+    topics: [crypto, qmx, scope]
+    authority: source
+  - id: EXT-0129
+    type: constraint
+    summary: "Broker-adapter work must be grounded in proper documentation, especially the trading-node documentation."
+    quote: "broker adapter, this one is you read proper documentation, please. Please, please, please, please. It's not even funny. Read proper documentation, and this goes to mostly that reading node."
+    cite: SRC-01-C0010
+    topics: [broker, documentation, trading-node]
+    authority: source
+  - id: EXT-0130
+    type: value
+    summary: "Books and BMS are the operator's risk-management and position-sizing system."
+    quote: "books and the BMS is our okay, it's my own version of what I would consider as risk management and position sizing"
+    cite: SRC-01-C0010
+    topics: [book, bms, risk]
+    authority: source
+  - id: EXT-0131
+    type: decision
+    summary: "Book types and variants need lineage and categorization, including multiple scalping Books and later prop-firm Books."
+    quote: "we can have another version of a scalping book, yeah, which means we can, which means there is that lineage, there is that types. I don't know if you get what I mean, categorization and whatnot. Then, the same logic with prop firms."
+    cite: SRC-01-C0010
+    topics: [book, lineage, variants]
+    authority: source
+  - id: EXT-0132
+    type: open
+    summary: "There may eventually be multiple BMS implementations, particularly for crypto."
+    quote: "there is a scenario where we shall have more than one BMS. I don't know, because the crypto system is, I don't think, will use exactly this, it might have standalone versions or something like that."
+    cite: SRC-01-C0010
+    topics: [bms, crypto, open]
+    authority: source
+  - id: EXT-0133
+    type: constraint
+    summary: "Metrics and reports should reveal whether a strategy works without bias and expose internal failure causes."
+    quote: "what shows if our strategy is right, what shows if a strategy is wrong, but at the same time, being unbiased overall"
+    cite: SRC-01-C0010
+    topics: [metrics, reports, strategy]
+    authority: source
+  - id: EXT-0134
+    type: decision
+    summary: "Failed strategies should be diagnosable so they can be improved or deliberately cut loose."
+    quote: "those that fail, we need to understand why they failed. Can we improve them or do we cut them loose?"
+    cite: SRC-01-C0011
+    topics: [strategy, diagnostics, research]
+    authority: source
+  - id: EXT-0135
+    type: constraint
+    summary: "Book/BMS calculations have many variables with differing editability and defaults and must be modeled surgically."
+    quote: "There are so many calculations in the book and the BMS, so many that you need to consider. Very many variables. Don't just take them for granted. Some are already defined, some are defaults, some are editable, others are not. So be careful, it's very surgical."
+    cite: SRC-01-C0011
+    topics: [book, bms, variables]
+    authority: source
+  - id: EXT-0136
+    type: context
+    summary: "Trading-node exit mechanics include fast invalidation and dynamic stop-loss/take-profit behavior."
+    quote: "for exit mechanisms, you have things like fast invalidation, you have the dynamic SL and TP system. It's a whole world down there."
+    cite: SRC-01-C0011
+    topics: [exits, stop-loss, trading-node]
+    authority: source
+  - id: EXT-0137
+    type: context
+    summary: "The previous trading-node design included a correlation ledger."
+    quote: "we had something like a correlation ledger"
+    cite: SRC-01-C0011
+    topics: [correlation, ledger, trading-node]
+    authority: source
+  - id: EXT-0138
+    type: decision
+    summary: "News kill-switch scope is pair-specific; unaffected pairs keep trading."
+    quote: "if there is news here, the system can still trade anywhere else because I'm not trying to trade only one specific pair"
+    cite: SRC-01-C0011
+    topics: [kill-switch, news, pairs]
+    authority: source
+  - id: EXT-0139
+    type: constraint
+    summary: "Strategies may be pair- or session-specific, while the platform as a whole remains multi-pair."
+    quote: "we are going to design strategies for specific pairs or specific sessions, but that's not the core idea. Globally, we are going to zoom out."
+    cite: SRC-01-C0011
+    topics: [strategy, pairs, sessions]
+    authority: source
+  - id: EXT-0140
+    type: death
+    summary: "The name 'Broker Exam' is rejected because exam already has incompatible meanings in QMX."
+    quote: "I think I've already said I don't like the term. Maybe broker adapter or something. An exam might confuse some people, even me, or even the thing, the agents coding. Because an exam, if you look at the old systems of QMX, means something very different"
+    cite: SRC-01-C0011
+    topics: [vocabulary, broker, exam]
+    authority: source
+  - id: EXT-0141
+    type: decision
+    summary: "cTrader integration should use its Open API from Python, not MQL."
+    quote: "CTrader has OpenAPI, I believe it uses OpenAPI"
+    cite: SRC-01-C0011
+    topics: [ctrader, open-api, python]
+    authority: source
+  - id: EXT-0142
+    type: constraint
+    summary: "The venue seam must support multiple platforms because crypto has many trading venues and modes."
+    quote: "crypto is a whole thing because there are so many ways to trade in crypto"
+    cite: SRC-01-C0011
+    topics: [crypto, venues, extensibility]
+    authority: source
+  - id: EXT-0143
+    type: death
+    summary: "Lock 2 was rejected as a bundled broker-connection/backtesting-parity decision."
+    quote: "now I think I'm going to deny the broker exam"
+    cite: SRC-01-C0011
+    topics: [five-locks, broker, dead]
+    authority: source
+  - id: EXT-0144
+    type: decision
+    summary: "Backtesting deserves a dedicated, deeper session rather than being resolved inside a broker checklist."
+    quote: "the backtesting system or framework rather, this one might not. I feel like, I don't know why, but I feel like even it deserves a longer session than a simple write-off like this."
+    cite: SRC-01-C0011
+    topics: [backtesting, scope, session]
+    authority: source
+  - id: EXT-0145
+    type: correction
+    summary: "The old backtesting system was overengineered and carried wrong claims, while its true purpose was preventing overfitting."
+    quote: "our old backtesting engine, it had a lot, but there were so many wrong claims and it seemed over-engineered, in my opinion. But what we were trying to do is just preventing overfitting."
+    cite: SRC-01-C0011
+    topics: [backtesting, overfitting, legacy]
+    authority: source
+  - id: EXT-0146
+    type: constraint
+    summary: "Agents execute tests correctly, but agents do not decide whether a strategy is accepted."
+    quote: "the agents are not the ones that decide, but the agents should be able to do the right things in terms of testing a strategy"
+    cite: SRC-01-C0011
+    topics: [agents, backtesting, authority]
+    authority: source
+  - id: EXT-0147
+    type: value
+    summary: "The legacy Book exam meant testing a Bot against the conditions that define its target Book."
+    quote: "The strategy or the bot has to be tested against the things that make the scalping book the scalping book."
+    cite: SRC-01-C0011
+    topics: [book, bot, testing]
+    authority: source
+  - id: EXT-0148
+    type: correction
+    summary: "Broker connection is considered simple, whereas backtesting is not."
+    quote: "connection is simple again. I'll say this a lot: connection is simple."
+    cite: SRC-01-C0011
+    topics: [broker, connection, backtesting]
+    authority: source
+  - id: EXT-0149
+    type: correction
+    summary: "Live promotion is binary, and non-live Bots may be in paper trading rather than an abstract promotion tier."
+    quote: "promotion towards life is a little bit ambiguous. It's either live or not live, simple as that. Okay, that's as simple as that. And if it's not live, what is it doing? Because we had a mechanism of having both be paper trading"
+    cite: SRC-01-C0011
+    topics: [promotion, live, paper]
+    authority: source
+  - id: EXT-0150
+    type: decision
+    summary: "Paper trading can be activated by kill-switch, daily-limit, or prop-firm conditions while results continue to be recorded."
+    quote: "if the kill switch fires, if for example, the scalping book example we have, if the daily drawdown, I don't know if it's called drawdown, but it's something like a daily limit, I believe. If it's heat, stuff like that, and even for prop firm books, that might be the way."
+    cite: SRC-01-C0011
+    topics: [paper-trading, kill-switch, book]
+    authority: source
+  - id: EXT-0151
+    type: constraint
+    summary: "Alpha-decay sensing requires continued collection even after a strategy is paused or evolves into new versions."
+    quote: "that doesn't mean that we pause them there and then. We still need a lot of data collections or data points. In fact, throughout the entire system, that's something we need to consider so much."
+    cite: SRC-01-C0012
+    topics: [alpha-decay, data, strategy]
+    authority: source
+  - id: EXT-0152
+    type: correction
+    summary: "Data ingestion, processed-data collection, and processing methodology are distinct concerns."
+    quote: "data ingestion or data intake is one thing, data collection after being processed is another. How data is processed is something to also consider."
+    cite: SRC-01-C0012
+    topics: [data-layer, ingestion, processing]
+    authority: source
+  - id: EXT-0153
+    type: decision
+    summary: "QMX provides strategies with appropriate trading conditions while centralizing risk management above individual Bots."
+    quote: "the whole point of actually creating QMX as it is is giving a strategy the best suitable conditions for it to trade. So, we remove the burden of modeling risk management, we do it at a higher level, and we just give the bot things that it needs to trade."
+    cite: SRC-01-C0012
+    topics: [qmx, risk, bot]
+    authority: source
+  - id: EXT-0154
+    type: decision
+    summary: "The data layer includes a trading journal and observability for Bot, Book, BMS, MIS, SQS, and kill switch."
+    quote: "we should have a trading journal. You know, if a bot is trading, if a book is trading, what is the BMS saying? The MIS, the SQS, the kill switch. There are so many things we need to collect."
+    cite: SRC-01-C0012
+    topics: [journal, observability, data]
+    authority: source
+  - id: EXT-0155
+    type: open
+    summary: "Collection content, mechanism, quantity, retention, and cadence remain to be specified per component."
+    quote: "we still also need to see what is it collecting, how is it collecting it, in what quantity, how long, how often?"
+    cite: SRC-01-C0012
+    topics: [data, cadence, retention]
+    authority: source
+  - id: EXT-0156
+    type: open
+    summary: "ArcticDB was only a proposal and its suitability remained uncertain."
+    quote: "Yesterday we were proposing ArcticDB. I don't know if it will work"
+    cite: SRC-01-C0012
+    topics: [arcticdb, storage, open]
+    authority: source
+  - id: EXT-0157
+    type: death
+    summary: "A single universal identity card was rejected as premature abstraction that could lock in Forex-specific assumptions."
+    quote: "this point of one card, I think it's a bit abstract. I really do. Because there is so much to consider before you even propose one singular card"
+    cite: SRC-01-C0012
+    topics: [identity, abstraction, dead]
+    authority: source
+  - id: EXT-0158
+    type: decision
+    summary: "Identity is acceptable in principle and lineage is graph-shaped, but no graph database is yet chosen."
+    quote: "the ID itself is okay. I don't deny the thing of an ID. I do, but in fact, actually, this is where relational databases come in. I don't know if I'm actually saying the right thing, but if you look at something like Neo4je, for example"
+    cite: SRC-01-C0012
+    topics: [identity, lineage, graph]
+    authority: source
+  - id: EXT-0159
+    type: correction
+    summary: "The bare term 'model' is ambiguous across ML, trading, and analysis meanings."
+    quote: "what is a model? Are you talking about a machine learning model, a trading model? Are you talking about, you know, should I say, a data analysis model?"
+    cite: SRC-01-C0012
+    topics: [vocabulary, model, ambiguity]
+    authority: source
+  - id: EXT-0160
+    type: constraint
+    summary: "Books have their own specific metrics, variables, and schemas, and deploying a Book requires the operator in the loop."
+    quote: "a book is specific, a book is just under risk management and position sizing. Okay, it's very specific. A book is, in fact, for an agent to deploy a book, I have to be in the loop. Okay, and a book has specific metrics and variables."
+    cite: SRC-01-C0012
+    topics: [book, deployment, operator]
+    authority: source
+  - id: EXT-0161
+    type: correction
+    summary: "A Bot can contain multiple confluences and can combine behavior for multiple market regimes."
+    quote: "About now, about is a combination of many things. So, when you say a level or trigger, a level and a trigger are under a bot, together with the other thing I was talking about in the last session called Confluence, but that alone doesn't make up a bot because it can contain multiple confluences."
+    cite: SRC-01-C0012
+    topics: [bot, confluence, composition]
+    authority: source
+  - id: EXT-0162
+    type: constraint
+    summary: "Design work should be sliced to what one session can genuinely handle."
+    quote: "we need to try and bite off as little, okay, not as little, but the part that we can actually handle in one go"
+    cite: SRC-01-C0012
+    topics: [process, sessions, scope]
+    authority: source
+  - id: EXT-0163
+    type: decision
+    summary: "The one-page agent authoring surface is deferred until the QMF library and documentation exist."
+    quote: "let's first build the library. If you, for example, you're an agent right now, right? If you were told to use React and you've never actually seen React, you'll need proper documentation, right? But the thing is, we can't front-load an agent page without having proper documentation"
+    cite: SRC-01-C0012
+    topics: [agent-surface, documentation, deferred]
+    authority: source
+  - id: EXT-0164
+    type: value
+    summary: "A Trigger is the exact event that enters a trade."
+    quote: "a trigger is the exact event that puts you into a trade"
+    cite: SRC-01-C0012
+    topics: [trigger, bot, vocabulary]
+    authority: source
+  - id: EXT-0165
+    type: constraint
+    summary: "The existing Book schema in GitBook must be read rather than guessed."
+    quote: "a book is already documented very, very well on Gitbook. Very well. It has a schema, all right."
+    cite: SRC-01-C0013
+    topics: [book, gitbook, schema]
+    authority: source
+  - id: EXT-0166
+    type: constraint
+    summary: "Promotion into live trading is human-only; an agent cannot promote, and even an opaque Python-only Bot may be promoted."
+    quote: "promotion is just actually prom no agent can promote, it's me who does the actual promotion. So, I can even just decide to promote a Python-only bot."
+    cite: SRC-01-C0013
+    topics: [promotion, operator, bot]
+    authority: source
+  - id: EXT-0167
+    type: decision
+    summary: "The essential lifecycle zones are the free lab and live money, with promotion as a human review activity rather than a major subsystem."
+    quote: "the only two things that are very important are love-free and live"
+    cite: SRC-01-C0013
+    topics: [lab, live, promotion]
+    authority: source
+  - id: EXT-0168
+    type: decision
+    summary: "All overfitting-statistics and backtesting design is deferred because upstream concepts are not yet settled and agents will run the tests."
+    quote: "I'm not the one doing the back tests. I really am not. It's the agents. So we need to really sit down and think through this. And I'm not willing to do it now because there are so many things we haven't thought through upstream."
+    cite: SRC-01-C0013
+    topics: [backtesting, agents, deferred]
+    authority: source
+  - id: EXT-0169
+    type: death
+    summary: "Program/Campaign challenge machinery is rejected; a prop firm is modeled as a new Book."
+    quote: "the program campaign: a machine that plays a program challenge. No, this is off very much off. Reason being, what are you going to use as a prop form to model the prop farm? That is some the prop form, think of it as a new book."
+    cite: SRC-01-C0013
+    topics: [program-campaign, prop-firm, book]
+    authority: source
+  - id: EXT-0170
+    type: decision
+    summary: "Book creation, including prop-firm Books, belongs to the agentic era."
+    quote: "tomorrow, if I decide to make a prop form book, I should be able to do it under QMX. That's one of the things I want to be doing with QMX. Also, creation of books, but all that goes to agentic system."
+    cite: SRC-01-C0013
+    topics: [book, prop-firm, agentic-system]
+    authority: source
+  - id: EXT-0171
+    type: constraint
+    summary: "Backend and UI extensibility require structure and order."
+    quote: "it does reinforce my point of this being extensible as much as possible, as much as possible in the back end in the UI. It really needs to be. That's why we need structure and order."
+    cite: SRC-01-C0013
+    topics: [extensibility, backend, ui]
+    authority: source
+  - id: EXT-0172
+    type: value
+    summary: "The calendar recorder captured 96 events, including 8 high-impact events, on its first run."
+    quote: "recorder/ now holds today's first snapshots (96 events, 8 high-impact)"
+    cite: SRC-01-C0013
+    topics: [calendar, recorder, values]
+    authority: source
+  - id: EXT-0173
+    type: value
+    summary: "The calendar recorder was scheduled for 06:00 and 18:00 daily."
+    quote: "a scheduled task runs it at 06:00 and 18:00 daily"
+    cite: SRC-01-C0013
+    topics: [calendar, schedule, operations]
+    authority: source
+  - id: EXT-0174
+    type: constraint
+    summary: "The calendar feed allows roughly two downloads per five minutes and should not be polled more aggressively."
+    quote: "the feed allows roughly 2 downloads per 5 minutes, so we deliberately don't poll more"
+    cite: SRC-01-C0013
+    topics: [calendar, rate-limit, recorder]
+    authority: source
+  - id: EXT-0175
+    type: constraint
+    summary: "The calendar feed lacks actual release values, so it supports blackout gating but not surprise-based strategies."
+    quote: "the feed carries forecast/consensus but no actual released values — it supports the news-blackout gate, not surprise-based strategies"
+    cite: SRC-01-C0013
+    topics: [calendar, news, data-quality]
+    authority: source
+  - id: EXT-0176
+    type: open
+    summary: "The legal posture of automated calendar archiving remained unresolved."
+    quote: "the legal posture of automated archiving stays an open item on your side"
+    cite: SRC-01-C0013
+    topics: [calendar, legal, open]
+    authority: source
+  - id: EXT-0177
+    type: decision
+    summary: "Lock 1, the qmf-core Dictionary, was accepted as the first brick, while its six irreversible choices stayed proposals."
+    quote: "Lock 1 \"the Dictionary\" (qmf-core): ACCEPTED as first brick, with every dictated input below folded in. The six freeze-choices (UTC-ns clock, (venue,symbol) identity, TA-Lib reference math, three backtest honesty levels, SR* bar, result-label tuple) remain PROPOSALS to be explicitly confirmed during the documentation pass — not yet frozen."
+    cite: SRC-01-C0014
+    topics: [qmf-core, five-locks, ratification]
+    authority: source
+  - id: EXT-0178
+    type: decision
+    summary: "Identity and graph-shaped lineage were accepted in principle while a universal card was denied."
+    quote: "Lock 3: identity + lineage ratified IN PRINCIPLE (lineage is explicitly graph-shaped — Neo4j analogy, grows and compounds); one-card-for-EVERYTHING DENIED as premature abstraction"
+    cite: SRC-01-C0014
+    topics: [identity, lineage, five-locks]
+    authority: source
+  - id: EXT-0179
+    type: decision
+    summary: "Lock 5's answer-key catalog was not ratified and had to be grounded in actual QMX components."
+    quote: "Lock 5 (answer keys): NOT ratified — rework grounded in actual QMX components first."
+    cite: SRC-01-C0014
+    topics: [answer-keys, validation, five-locks]
+    authority: source
+  - id: EXT-0180
+    type: context
+    summary: "Heavy examples include regime detection, GARCH-family volatility, correlations, clustering, and ML inference; MIS publishes a frozen view consumed by Bots."
+    quote: "heavy = things that can't compute in milliseconds — regime detection over years of data, volatility forecasting (GARCH-family), cross-pair correlation matrices, clustering, any ML model inference — and they live in the MIS, publishing a frozen view the bots read."
+    cite: SRC-01-C0014
+    topics: [indicators, mis, heavy-compute]
+    authority: source
+  - id: EXT-0181
+    type: context
+    summary: "Light indicators are per-bar calculations such as EMA, RSI, and ATR."
+    quote: "Light = per-bar arithmetic like EMA, RSI, ATR — bot-level."
+    cite: SRC-01-C0014
+    topics: [indicators, bot, light-compute]
+    authority: source
+  - id: EXT-0182
+    type: open
+    summary: "Graph-shaped lineage does not yet imply Neo4j or any other graph database."
+    quote: "whether it needs a graph database or graph-shaped records in plain files is a data-layer decision, and per your own rule we won't box into either yet."
+    cite: SRC-01-C0014
+    topics: [lineage, graph, storage]
+    authority: source
+  - id: EXT-0183
+    type: context
+    summary: "ArcticDB was reported to have only one native time axis, a weakness for the two-timestamp requirement."
+    quote: "ArcticDB has a known technical weakness for our two-timestamp needs (it tracks only one of the two times natively)"
+    cite: SRC-01-C0014
+    topics: [arcticdb, timestamps, storage]
+    authority: source
+  - id: EXT-0184
+    type: constraint
+    summary: "Banned vocabulary includes plugins, exam, engine for backtesting, and fake-counterparty framing."
+    quote: "Banned vocabulary: \"plugins\" (extensions are not plugins); \"exam\" (collides with the legacy Examination Engine / Book-exam concept, 2026-08-18); \"engine\" for backtesting (it is a library); no \"fake counterparty\" framing."
+    cite: SRC-01-C0015
+    topics: [vocabulary, process, constraint]
+    authority: source
+  - id: EXT-0185
+    type: constraint
+    summary: "Give the operator time to read an artifact before asking questions about it."
+    quote: "Give reading time — never deliver an artifact and fire questions in the same beat."
+    cite: SRC-01-C0015
+    topics: [communication, artifacts, process]
+    authority: source
+  - id: EXT-0186
+    type: decision
+    summary: "While a pair is blocked by news, its Bots may remain in paper mode to preserve alpha-decay evidence."
+    quote: "while blocked, bots may continue in paper mode so alpha-decay data keeps flowing"
+    cite: SRC-01-C0016
+    topics: [kill-switch, paper-trading, alpha-decay]
+    authority: source
+  - id: EXT-0187
+    type: constraint
+    summary: "Deep-study work on identity, data, and answer keys explicitly excluded backtesting."
+    quote: "Backtesting is explicitly excluded from all of them."
+    cite: SRC-01-C0019
+    topics: [backtesting, deep-study, scope]
+    authority: source
+  - id: EXT-0188
+    type: context
+    summary: "The operator worried that front-loading a large build would create avoidable cost."
+    quote: "I think I'm proposing rather that we build a lot at the start, and I think that is going to cost me in a way."
+    cite: SRC-01-C0019
+    topics: [scope, delivery, cost]
+    authority: source
+  - id: EXT-0189
+    type: constraint
+    summary: "Extensibility is the paramount design idea because new asset classes and methods will keep being added."
+    quote: "extensibility again should be the core idea behind all of this because I had actually forgotten I also want to trade stocks"
+    cite: SRC-01-C0019
+    topics: [extensibility, stocks, design-values]
+    authority: source
+  - id: EXT-0190
+    type: decision
+    summary: "Stocks are a required future asset class alongside Forex and crypto."
+    quote: "I had actually forgotten I also want to trade stocks"
+    cite: SRC-01-C0019
+    topics: [stocks, asset-classes, scope]
+    authority: source
+  - id: EXT-0191
+    type: decision
+    summary: "The foundational pattern is a small core with wide seams rather than a large initial build."
+    quote: "The honest pattern is: build a small core with wide seams."
+    cite: SRC-01-C0019
+    topics: [architecture, qmf-core, extensibility]
+    authority: source
+  - id: EXT-0192
+    type: constraint
+    summary: "Core concepts must not assume Forex, cTrader, or scalping so later assets extend rather than rebuild the foundation."
+    quote: "making sure the core words never assume forex, cTrader, or scalping. Then stocks later is \"one more venue and one more instrument type,\" not a rebuild."
+    cite: SRC-01-C0019
+    topics: [qmf-core, asset-neutral, extensibility]
+    authority: source
+  - id: EXT-0193
+    type: context
+    summary: "The first answer-key rework proposed dual indicator references, a look-ahead specimen, Book schema validation, prop-firm fixtures, and calendar blackout fixtures."
+    quote: "each real QMX module family gets an external truth (TA-Lib and talipp as dual reference for indicators, the broken smartmoneyconcepts library kept as a specimen the look-ahead test must always catch, the GitBook Book schema as the only spec for money math, published prop-firm rulebooks as free fixtures, your archived calendar snapshots as the kill-switch test corpus)"
+    cite: SRC-01-C0020
+    topics: [answer-keys, validation, research]
+    authority: source
+  - id: EXT-0194
+    type: context
+    summary: "The identity study proposed fingerprint, charter, and occurrence as three distinct identity disciplines."
+    quote: "The three-discipline correction to \"one card\": fingerprint (reproducible recipes — levels/triggers/confluences, content-addressed), charter (named things the operator stands behind — Books, BMS instances, operator-countersigned, amended by named decisions), occurrence (unrepeatable events — runs, live sessions; a live Tuesday cannot be re-derived, so it carries no content hash)."
+    cite: SRC-01-C0020
+    topics: [identity, fingerprint, charter]
+    authority: source
+  - id: EXT-0195
+    type: constraint
+    summary: "Only the address shape kind plus id was proposed as universal across identity families."
+    quote: "Only the address format `kind + id` is universal."
+    cite: SRC-01-C0020
+    topics: [identity, address, proposal]
+    authority: source
+  - id: EXT-0196
+    type: context
+    summary: "The identity study distinguishes permanent Bot career identity from per-revision fingerprints and represents plain-Python Bots opaquely."
+    quote: "Bot = permanent career identity + per-revision fingerprints; variants are new bots linked `variant-of`; plain-Python bots carried via `definition: opaque`."
+    cite: SRC-01-C0020
+    topics: [bot, identity, lineage]
+    authority: source
+  - id: EXT-0197
+    type: open
+    summary: "Whether BENCHED belongs to a roster seat, whether individual Bots can paper trade under live Books, and when idea-origin becomes mandatory were open."
+    quote: "Top open questions (operator): BENCHED moves from Book mode to the bot's roster seat (recommend yes); one bot in paper while its Book stays live (recommend yes); idea-origin required only at promotion gate, not registration (recommend yes — don't-box-in)."
+    cite: SRC-01-C0020
+    topics: [benched, paper-trading, identity]
+    authority: source
+  - id: EXT-0198
+    type: context
+    summary: "A six-layer data blueprint proposed ingest, raw evidence, processed data, journal, research-door, and backup layers."
+    quote: "six layers L0–L5 (ingest / raw evidence / processed / journal / research door with splits-by-default / backup)"
+    cite: SRC-01-C0021
+    topics: [data-layer, layers, proposal]
+    authority: source
+  - id: EXT-0199
+    type: context
+    summary: "The data study proposed Parquet, DuckDB, and a SQLite inbox while rejecting PostgreSQL and ArcticDB for V1."
+    quote: "stores-per-purpose matrix (Parquet+DuckDB+SQLite-inbox; PostgreSQL rejected), ArcticDB verdict: NO for v1 — technical, not licence"
+    cite: SRC-01-C0021
+    topics: [storage, parquet, arcticdb]
+    authority: source
+  - id: EXT-0200
+    type: context
+    summary: "The data study proposed append-only JSONL lineage and deferred a graph database until needed."
+    quote: "lineage: graph model in append-only JSONL files, graph database deferred until proven needed"
+    cite: SRC-01-C0021
+    topics: [lineage, jsonl, graph]
+    authority: source
+  - id: EXT-0201
+    type: context
+    summary: "The data blueprint proposed a permanently active paper twin, later rejected at Bot level."
+    quote: "paper-twin permanently on for alpha-decay continuity"
+    cite: SRC-01-C0021
+    topics: [paper-twin, alpha-decay, superseded]
+    authority: source
+  - id: EXT-0202
+    type: constraint
+    summary: "Proposed automatic detection rules may notify but must never act autonomously."
+    quote: "auto-detection = operator-owned rules.yaml over a fixed metric catalog, flags notify but NEVER act."
+    cite: SRC-01-C0021
+    topics: [automation, detection, operator]
+    authority: source
+  - id: EXT-0203
+    type: constraint
+    summary: "None of the three deep-dive studies were adopted merely by being delivered."
+    quote: "three studies delivered while operator was out (facts gathered, NONE adopted)"
+    cite: SRC-01-C0021
+    topics: [research, ratification, authority]
+    authority: source
+  - id: EXT-0204
+    type: decision
+    summary: "Forex is seeded first; equities and crypto arrive later."
+    quote: "we are seeding Forex, but the other two will come in later: equities and crypto."
+    cite: SRC-01-C0022
+    topics: [forex, equities, crypto]
+    authority: source
+  - id: EXT-0205
+    type: open
+    summary: "The six-layer data system was accepted as a plausible shape but still needed definition."
+    quote: "The data layer, in my opinion, it's a six-layer system, good okay, seems like it by the way. Kind of seems like six, but we need to define it."
+    cite: SRC-01-C0022
+    topics: [data-layer, six-layers, open]
+    authority: source
+  - id: EXT-0206
+    type: constraint
+    summary: "Documentation must give coding agents enough context to avoid implementation mistakes."
+    quote: "our whole point is to provide enough context so that the agent doesn't actually make mistakes while coding this out."
+    cite: SRC-01-C0022
+    topics: [documentation, coding-agents, quality]
+    authority: source
+  - id: EXT-0207
+    type: open
+    summary: "Using cTrader for stocks was explicitly speculative and not a ruling."
+    quote: "I might still use C trader for stocks unless I see otherwise. Anyway, hey, don't take that literally."
+    cite: SRC-01-C0022
+    topics: [ctrader, stocks, open]
+    authority: source
+  - id: EXT-0208
+    type: open
+    summary: "Crypto spot and crypto-versus-currency instrument treatment remain undecided."
+    quote: "A crypto might go with spot. Yeah, but we shall see really. Crypto is large."
+    cite: SRC-01-C0022
+    topics: [crypto, spot, instruments]
+    authority: source
+  - id: EXT-0209
+    type: context
+    summary: "There is one current BMS version, expected to evolve or diversify later."
+    quote: "I have one version of a BMS, but I believe as we go further down the road, we might enhance it and make it different"
+    cite: SRC-01-C0022
+    topics: [bms, versioning, future]
+    authority: source
+  - id: EXT-0210
+    type: correction
+    summary: "Specific method examples such as genetic algorithms are illustrative and not framework limits."
+    quote: "the method scheme, the genetic algorithms, method sim, don't worry about it, really. Like, the sky is the limit."
+    cite: SRC-01-C0022
+    topics: [methods, examples, extensibility]
+    authority: source
+  - id: EXT-0211
+    type: correction
+    summary: "Nothing agreed left QMF merely because it was outside qmf-core; QMF is an umbrella of libraries."
+    quote: "Nothing agreed leaves QMF. Those things are only outside qmf-core, the first brick. QMF is an umbrella of libraries split along your five hats"
+    cite: SRC-01-C0022
+    topics: [qmf, qmf-core, correction]
+    authority: source
+  - id: EXT-0212
+    type: constraint
+    summary: "Architecture must be designed for a real workload of roughly forty Bots rather than toy assumptions."
+    quote: "this system has a possibility of having around 40-something bots"
+    cite: SRC-01-C0022
+    topics: [scale, bots, architecture]
+    authority: source
+  - id: EXT-0213
+    type: decision
+    summary: "Book paper mode is Book-level: the Book switches to paper and all attached Bots continue there."
+    quote: "paper mode is Book-level, not bot-level — when a Book can't trade live, the Book switches to a paper account and its bots keep trading there so performance data keeps flowing"
+    cite: SRC-01-C0023
+    topics: [paper-trading, book, bots]
+    authority: source
+  - id: EXT-0214
+    type: death
+    summary: "Parallel Bot paper twins and one-Bot-to-many-Books were rejected."
+    quote: "no bot ever runs a parallel paper twin, and a bot connects to exactly one Book (Q5 and Q10 both die, correctly)."
+    cite: SRC-01-C0023
+    topics: [paper-twin, bot, book]
+    authority: source
+  - id: EXT-0215
+    type: decision
+    summary: "Raw data is retained fully and backed up to an object-storage bucket."
+    quote: "Q7: keep everything raw — storage is yours to buy, bucket backs it up."
+    cite: SRC-01-C0023
+    topics: [raw-data, retention, backup]
+    authority: source
+  - id: EXT-0216
+    type: decision
+    summary: "Historical Dukascopy plumbing is built now, while bulk data download stays at installation time."
+    quote: "Historical Dukascopy download stays where you already ruled it: plumbing now, downloading at install"
+    cite: SRC-01-C0023
+    topics: [dukascopy, data-acquisition, installation]
+    authority: source
+  - id: EXT-0217
+    type: context
+    summary: "The proposed no-server local stack is compressed Parquet, DuckDB, and SQLite for the live inbox."
+    quote: "Plain compressed files (Parquet) + DuckDB (free, no server) + SQLite for the live inbox"
+    cite: SRC-01-C0023
+    topics: [storage, parquet, sqlite]
+    authority: source
+  - id: EXT-0218
+    type: decision
+    summary: "Trading-node design may start soon, but trading-node code waits for its QMF library dependencies."
+    quote: "the node's design sessions can start soon (it's documentation work), but its code waits for the QMF libraries it stands on."
+    cite: SRC-01-C0023
+    topics: [trading-node, sequencing, documentation]
+    authority: source
+  - id: EXT-0219
+    type: decision
+    summary: "Historical datasets should retain as much history as each currency and Dukascopy provide."
+    quote: "It should have as far back as that currency goes. Okay, as far back as that currency goes, and also as far back as locascopy provides."
+    cite: SRC-01-C0023
+    topics: [history, dukascopy, retention]
+    authority: source
+  - id: EXT-0220
+    type: decision
+    summary: "The newest twelve months of historical data are sealed from experiments for a final out-of-sample look."
+    quote: "for the data of most recent, yes, skip the most recent 12 months"
+    cite: SRC-01-C0023
+    topics: [holdout, out-of-sample, backtesting]
+    authority: source
+  - id: EXT-0221
+    type: decision
+    summary: "Live performance data remains stored and may support MIS training and shadow deployment."
+    quote: "we are still storing the performance data because we can still distill it and like use it for training, not training, yeah. Actually, my ML, the MIS training, there are so many models in there that I think I believe was already thought through for Shadow Dish. It's called Shadow Deployment."
+    cite: SRC-01-C0023
+    topics: [performance-data, mis, shadow-deployment]
+    authority: source
+  - id: EXT-0222
+    type: open
+    summary: "The exact training/out-of-sample splitting method and whether sheer data volume is the right design variable remain open."
+    quote: "is it called chunking where we split like that data that this is for training, this is for out of sample? We have a long enough time frame to test with. I don't know if the amount is a good variable to use anyway"
+    cite: SRC-01-C0023
+    topics: [splits, training, open]
+    authority: source
+  - id: EXT-0223
+    type: correction
+    summary: "SQS is a distinct trading gate and must not be confused with the news blackout."
+    quote: "The SQS is one of the gates that allow a system to trade or not, simple as that."
+    cite: SRC-01-C0023
+    topics: [sqs, news, gates]
+    authority: source
+  - id: EXT-0224
+    type: decision
+    summary: "Scheduled-news blackout is pair-scoped and tentatively runs from 15 minutes before through 15 minutes after the event."
+    quote: "I think it stops 15 minutes before, then resumes 15 minutes after. It's very systematic."
+    cite: SRC-01-C0023
+    topics: [news, kill-switch, timing]
+    authority: source
+  - id: EXT-0225
+    type: open
+    summary: "The meaning and mechanics of BENCHED required a dedicated corpus dig."
+    quote: "benching, I don't think I'm sure. So, you might need to dig deep here"
+    cite: SRC-01-C0023
+    topics: [benched, alpha-decay, open]
+    authority: source
+  - id: EXT-0226
+    type: context
+    summary: "DPR and PRS were remembered as alpha-decay-related legacy mechanisms, with PRS possibly meaning Performance Rating System."
+    quote: "those things were part of Alpha Decay. So the DPR is, I think, I don't even recall what the full thing is, but PR is like performance rating system."
+    cite: SRC-01-C0023
+    topics: [dpr, prs, alpha-decay]
+    authority: source
+  - id: EXT-0227
+    type: decision
+    summary: "The next step is to document QMF for coding, then build the trading node on the resulting framework."
+    quote: "the next session should be actually coding this QMF, the version we have. I think it will be getting it ready to be coded. So we have to first start documenting and whatnot. Then another part I believe we shall use trading, we shall start on the trading node, but it will be using what we have built in this session"
+    cite: SRC-01-C0023
+    topics: [sequencing, qmf, trading-node]
+    authority: source
+  - id: EXT-0228
+    type: death
+    summary: "A graph database is not needed for QMF V1."
+    quote: "do we need graphs? No, we don't."
+    cite: SRC-01-C0024
+    topics: [graph-database, lineage, dead]
+    authority: source
+  - id: EXT-0229
+    type: constraint
+    summary: "The project must show concrete progress toward documentation and factory implementation."
+    quote: "my problem right now is progress, because I feel like I'm falling behind. Seriously, that's why I preferred you taking over most things."
+    cite: SRC-01-C0024
+    topics: [progress, process, factory]
+    authority: source
+  - id: EXT-0230
+    type: constraint
+    summary: "QMF must be distilled into concrete libraries mapped to the five hats."
+    quote: "QMF, remember, has to have libraries, unless I'm wrong. A framework always has libraries. So, which libraries do we have? We need to narrow everything down to the literally the nanometer. And I remember asking or telling you, I don't know if it came out properly, that thing of I thought we, I think we should try so much to distill and separate the framework into what each heart that we suggested earlier is going to use. Okay, I'm meaning the 5 hats"
+    cite: SRC-01-C0024
+    topics: [qmf, libraries, five-hats]
+    authority: source
+  - id: EXT-0231
+    type: constraint
+    summary: "Design for the ninety-fifth-percentile workload, with about forty concurrent Bots as a real case."
+    quote: "Design load principle (operator ruling): design for the 95th-percentile load — ~40 concurrent bots is a real scenario, never a toy that breaks at scale."
+    cite: SRC-01-C0024
+    topics: [scale, bots, performance]
+    authority: source
+  - id: EXT-0232
+    type: decision
+    summary: "Multiple demo accounts are expected for different pipeline roles."
+    quote: "Multiple demo accounts are expected (one for paper-mode Books, one for post-backtest validation — a pipeline detail for the agentic era)."
+    cite: SRC-01-C0025
+    topics: [demo-accounts, paper-trading, validation]
+    authority: source
+  - id: EXT-0233
+    type: decision
+    summary: "Retain all source history, seal the newest year from research, keep full raw data, and back up nightly to a cloud bucket."
+    quote: "keep ALL history as far back as each source goes (12-month seal ≠ 12-month dataset — the seal only excludes the newest year from research until a strategy's one logged final look; RATIFIED); split/chunking discipline is QMF's job by default (he wants help there — splits registry covers it); MIS snapshots and everything else kept RAW in full (storage is his to buy; \"better to have every copy\"); backup to a cloud bucket, nightly"
+    cite: SRC-01-C0025
+    topics: [data, holdout, backup]
+    authority: source
+  - id: EXT-0234
+    type: death
+    summary: "The special paper-simulation-through-news-blackout idea was dropped because ordinary market recorders already continue."
+    quote: "the record-through-blackout paper-simulation idea was dropped — ordinary market recording continues anyway because recorders never stop."
+    cite: SRC-01-C0025
+    topics: [news, paper-simulation, dead]
+    authority: source
+  - id: EXT-0235
+    type: correction
+    summary: "The whole agreement is not a minimal core; it is a broad QMF V1 blueprint whose qmf-core is only the small first brick."
+    quote: "Is this really a minimal core anymore? Because if I'm to give the documentation agent to the agent that's going to document everything, these two transcripts. The one I gave you are also this one we have just had. Do you really think it's going to be saying this is minimal? Because this seems like we've agreed on a lot of things"
+    cite: SRC-01-C0026
+    topics: [qmf, minimal-core, correction]
+    authority: source
+  - id: EXT-0236
+    type: death
+    summary: "The phrase 'minimal core' was retired as the name of the overall agreement."
+    quote: "the phrase \"minimal core\" is RETIRED as a name for this agreement."
+    cite: SRC-01-C0027
+    topics: [vocabulary, qmf, dead]
+    authority: source
+  - id: EXT-0237
+    type: value
+    summary: "The corrected name for the agreement is QMF V1 Blueprint."
+    quote: "QMF V1 Blueprint — Handoff for the Documentation Factory"
+    cite: SRC-01-C0027
+    topics: [qmf, blueprint, vocabulary]
+    authority: source
+  - id: EXT-0238
+    type: constraint
+    summary: "A documentation agent should cover the whole blueprint, not restrict itself to qmf-core."
+    quote: "A documentation agent must scope to the whole blueprint, not to the first brick alone."
+    cite: SRC-01-C0027
+    topics: [documentation, qmf, scope]
+    authority: source
+  - id: EXT-0239
+    type: constraint
+    summary: "The reconciled spec/tracker were designated later authority, with transcripts treated as raw evidence containing superseded ideas."
+    quote: "the two session transcripts are raw evidence BEHIND these documents, never overriding them — where a transcript and this spec disagree, the spec is the later, corrected word."
+    cite: SRC-01-C0027
+    topics: [authority, transcripts, spec]
+    authority: source
+  - id: EXT-0240
+    type: correction
+    summary: "MIS is not a QMF library; it is a core trading-node ML-ensemble component."
+    quote: "the MIS that's what I mean okay so I don't think it's it deserves a library I really don't because it's it's if you read about it it's it's just a machine learning ensembler in a way"
+    cite: SRC-01-C0028
+    topics: [mis, trading-node, qmf]
+    authority: source
+  - id: EXT-0241
+    type: correction
+    summary: "Broker connection does not warrant a standalone trader library; it is a small module."
+    quote: "trader does it really need an actual library some of these things seem too hard like too simple"
+    cite: SRC-01-C0028
+    topics: [broker, library, module]
+    authority: source
+  - id: EXT-0242
+    type: decision
+    summary: "Risk remains the current Book/BMS design in V1 and must be versioned so later designs can replace it."
+    quote: "for now we are using the book management system and the books themselves but i think i think later down the road we sh we might develop a new version so it should be updatable"
+    cite: SRC-01-C0028
+    topics: [risk, book, bms]
+    authority: source
+  - id: EXT-0243
+    type: decision
+    summary: "Researcher tooling and agent tooling are outside the immediate QMF V1 scope."
+    quote: "researcher okay that one is out of scope for now then agents also out of scope"
+    cite: SRC-01-C0028
+    topics: [researcher, agents, scope]
+    authority: source
+  - id: EXT-0244
+    type: decision
+    summary: "The final simplified QMF V1 roster is five libraries plus two small modules."
+    quote: "QMF V1 is five libraries and two small modules"
+    cite: SRC-01-C0028
+    topics: [qmf, roster, architecture]
+    authority: source
+  - id: EXT-0245
+    type: value
+    summary: "The five QMF V1 libraries are qmf-core, qmf-registry, qmf-data, qmf-indicators, and qmf-structure."
+    quote: "The five libraries:"
+    cite: SRC-01-C0028
+    topics: [qmf, libraries, roster]
+    authority: source
+  - id: EXT-0246
+    type: value
+    summary: "The two deliberately non-library modules are the venue module and risk module."
+    quote: "Plus: the venue module (cTrader connection — simple, not a library) and the risk module (Books + BMS as designed, v1, updatable)."
+    cite: SRC-01-C0028
+    topics: [venue, risk, modules]
+    authority: source
+  - id: EXT-0247
+    type: decision
+    summary: "The look-ahead test remains in V1 by folding into qmf-registry as a registration gate."
+    quote: "the look-ahead test you ratified doesn't vanish, it folds into the registry as a registration gate."
+    cite: SRC-01-C0028
+    topics: [look-ahead, qmf-registry, gate]
+    authority: source
+  - id: EXT-0248
+    type: decision
+    summary: "qmf-registry owns identity, lineage, and registration gates including look-ahead and attempt-count preconditions."
+    quote: "`qmf-registry` — identity & lineage: three disciplines (fingerprinted recipes / operator-chartered Books & BMS / occurrences; graph-shaped lineage in append-only files, no database) plus the registration gates: the ratified look-ahead/causality test (K1, with the context-library logic) and the attempt counter run here as registration preconditions."
+    cite: SRC-01-C0029
+    topics: [qmf-registry, identity, registration]
+    authority: source
+  - id: EXT-0249
+    type: context
+    summary: "qmf-data is the six-layer data-system study and still requires a dedicated ratification session."
+    quote: "`qmf-data` — the six-layer data system: ingest plumbing, raw evidence archive, processed layer, journal, research door with splits-by-default, backup. STUDY DELIVERED (`reference/09`); ratification = ticket 005 session."
+    cite: SRC-01-C0029
+    topics: [qmf-data, data-layer, ratification]
+    authority: source
+  - id: EXT-0250
+    type: decision
+    summary: "qmf-indicators wraps TA-Lib-class libraries rather than reinventing their arithmetic."
+    quote: "`qmf-indicators` — light indicators, wrapping TA-Lib-class libraries (wrap, never reinvent; dual-reference checks per K2)."
+    cite: SRC-01-C0029
+    topics: [qmf-indicators, ta-lib, dependencies]
+    authority: source
+  - id: EXT-0251
+    type: decision
+    summary: "qmf-structure contains QMX-owned causal levels, zones, and market-structure components."
+    quote: "`qmf-structure` — our OWN causal levels/zones/market-structure components"
+    cite: SRC-01-C0029
+    topics: [qmf-structure, levels, market-structure]
+    authority: source
+  - id: EXT-0252
+    type: decision
+    summary: "The venue module is a Python cTrader Open API connection with later crypto and stock venues behind the same seam."
+    quote: "Venue module — the cTrader Open API connection (simple; Python only, no MQL; crypto/stock venues later through the same seam)."
+    cite: SRC-01-C0029
+    topics: [venue, ctrader, python]
+    authority: source
+  - id: EXT-0253
+    type: decision
+    summary: "The risk module holds versioned Books/BMS, exits, correlation ledger, and money rules and requires a separate deep session."
+    quote: "Risk module — Books + BMS machinery as currently designed, v1 and explicitly versioned/updatable (\"later down the road we might develop a new version\"): exits (fast invalidation, dynamic SL/TP), correlation ledger, money rules. Detail = the trading-node/Book session"
+    cite: SRC-01-C0029
+    topics: [risk, book, trading-node]
+    authority: source
+  - id: EXT-0254
+    type: decision
+    summary: "The QML Bot library is excluded from V1 until its Bot-to-Book binding contract is designed."
+    quote: "`qml` bot library — vocabulary ratified (confluences, bot careers/variants/lineage) but the bot↔Book binding contract is undesigned; own pass after the node session."
+    cite: SRC-01-C0029
+    topics: [qml, bot, scope]
+    authority: source
+  - id: EXT-0255
+    type: correction
+    summary: "BENCHED is present in GitBook and appears as a door, leash rung, and Bot-state enum."
+    quote: "\"benched\" IS in your GitBook — I said it came only from the recovery corpus, and that was wrong. It appears in three places (one of the seven doors, a leash rung, and the bot state list LIVE/PAPER/BENCHED/STOOD_DOWN)."
+    cite: SRC-01-C0030
+    topics: [benched, gitbook, bot-state]
+    authority: source
+  - id: EXT-0256
+    type: death
+    summary: "DPR and PRS are legacy-only mechanisms on do-not-revive lists."
+    quote: "DPR and PRS — those are legacy-only, surviving in exactly one old file, and both sit on do-not-revive lists."
+    cite: SRC-01-C0030
+    topics: [dpr, prs, legacy]
+    authority: source
+  - id: EXT-0257
+    type: value
+    summary: "Legacy PRS was a Performance Rating Service producing a zero-to-one-hundred score from six weighted measures and mapping it to three tiers."
+    quote: "PRS was a Performance Rating Service (your recall was right): six weighted measures → a 0–100 score → three tiers."
+    cite: SRC-01-C0030
+    topics: [prs, performance, legacy]
+    authority: source
+  - id: EXT-0258
+    type: value
+    summary: "Legacy DPR was a rolling ten-day tier, but the expansion of the initials is unknown and must not be guessed."
+    quote: "DPR was the rolling 10-day tier it emitted — and what the letters D-P-R stand for is written down nowhere, so no agent will be allowed to guess it."
+    cite: SRC-01-C0030
+    topics: [dpr, legacy, vocabulary]
+    authority: source
+  - id: EXT-0259
+    type: value
+    summary: "The current baseline benches a Bot after two consecutive stop-outs for the rest of the day and resets it at the next open."
+    quote: "two stop-outs in a row benches a bot for the rest of the day, and it auto-resets at the next open."
+    cite: SRC-01-C0030
+    topics: [benched, stop-out, bot]
+    authority: source
+  - id: EXT-0260
+    type: context
+    summary: "A legacy redemption loop let demoted Bots paper trade to regain live status, but it is not revived without a new ruling."
+    quote: "The legacy version had a redemption loop (demoted bots kept scoring on paper to win their live seat back) — that idea is worth remembering for the node session, but nothing revives without your word."
+    cite: SRC-01-C0030
+    topics: [redemption, paper-trading, legacy]
+    authority: source
+  - id: EXT-0261
+    type: open
+    summary: "The definition of stop-out, including whether breakeven counts, is missing."
+    quote: "nobody ever defined what counts as a \"stop-out\" (does a breakeven close count? — the bench counter can't be built until you rule)"
+    cite: SRC-01-C0030
+    topics: [stop-out, benched, open]
+    authority: source
+  - id: EXT-0262
+    type: open
+    summary: "Symbol B is overloaded between the bench threshold and a seat-sizing divisor."
+    quote: "the symbol B does double duty in the old math (bench threshold and a divisor in seat sizing — retuning one silently resizes the other)"
+    cite: SRC-01-C0030
+    topics: [variables, benched, seat-sizing]
+    authority: source
+  - id: EXT-0263
+    type: open
+    summary: "BENCHED currently exists both as a Book mode and a Bot seat state and must be untangled before schema design."
+    quote: "\"BENCHED\" currently lives in two places at once (a Book mode and a bot's seat state), which must be untangled before schemas are written"
+    cite: SRC-01-C0030
+    topics: [benched, book, schema]
+    authority: source
+  - id: EXT-0264
+    type: decision
+    summary: "Alpha-decay mathematics is unrecoverable and must be designed fresh."
+    quote: "Alpha-decay math is confirmed unrecoverable — two independent sources agree it was never written down. It gets designed fresh, not recovered."
+    cite: SRC-01-C0030
+    topics: [alpha-decay, recovery, design]
+    authority: source
+  - id: EXT-0265
+    type: decision
+    summary: "The sim-live parity checklist was denied as part of Lock 2 and moved into the dedicated backtesting session, while broker connection proceeds separately."
+    quote: "The sim≡live parity idea (one shared checklist both the practice venue and the real cTrader connection must pass, written before either implementation) was pitched as \"Lock 2\" and DENIED as bundled — the connection half proceeds separately as simple work; the parity half belongs HERE"
+    cite: SRC-01-C0017
+    topics: [live-parity, backtesting, broker]
+    authority: source
+  - id: EXT-0266
+    type: constraint
+    summary: "Backtesting design must make correct testing the easy path for autonomous agents."
+    quote: "agents, not Mubarak, execute backtests, so the design must make the right thing the easy thing for an agent."
+    cite: SRC-01-C0017
+    topics: [backtesting, agents, usability]
+    authority: source
+  - id: EXT-0267
+    type: decision
+    summary: "The operator requested deep dives on Locks 3–5 while keeping the backtesting framework untouched."
+    quote: "Especially for decision three to five, then two, I told you, I really don't want to look at the back testing framework."
+    cite: SRC-01-C0018
+    topics: [five-locks, deep-study, backtesting]
+    authority: source
+  - id: EXT-0268
+    type: constraint
+    summary: "The verdict should use proper diagrams because the operator does not want prose blocks."
+    quote: "you give me a good verdict with proper diagrams"
+    cite: SRC-01-C0018
+    topics: [communication, diagrams, operator]
+    authority: source
+  - id: EXT-0269
+    type: constraint
+    summary: "The data layer is a major priority deserving extensive investigation."
+    quote: "the data layer, I think, is something that we need to look into so much."
+    cite: SRC-01-C0018
+    topics: [data-layer, priority, research]
+    authority: source
+  - id: EXT-0270
+    type: death
+    summary: "Alpha-decay recovery work should stop because its mathematics was never written down."
+    quote: "Math confirmed unrecoverable (2026-08-18 dig, two independent sources — never written down): design fresh, don't excavate"
+    cite: SRC-01-C0031
+    topics: [alpha-decay, recovery, dead]
+    authority: source
+  - id: EXT-0271
+    type: constraint
+    summary: "The documentation handoff has no pending QMF-side work and should pass the spec, tracker, studies, and transcripts as evidence."
+    quote: "Nothing is pending on my side — export when ready, hand the spec + tracker + reference studies to your documentation skill, and the transcripts ride along as evidence only."
+    cite: SRC-01-C0031
+    topics: [handoff, documentation, evidence]
+    authority: source
+  - id: EXT-1001
+    type: context
+    summary: "QMX is the operator's custom algorithmic-trading platform, with a later ambition to become fully quantitative."
+    quote: >-
+      what I'm building is a project called QMX. Now, that project is meant to be my own custom quantitative trading platform, I would call it. Okay, it's actually not quantitative, but algorithmic. Later, we shall switch fully to quantitative
+    cite: SRC-02-C0001
+    topics: [qmx, product-vision, trading]
+    authority: source
+  - id: EXT-1002
+    type: context
+    summary: "The initial deployment picture contained a trading node, a debatable backend/middle node, and an agentic node."
+    quote: >-
+      the second thing was going to be a back-end server. Now, this is very debatable because depending on how we see things, we might not need it or we might. It depends on things, yeah. Then, the third thing would have been the agentic node
+    cite: SRC-02-C0001
+    topics: [topology, trading-node, backend, agentic-system]
+    authority: source
+  - id: EXT-1003
+    type: decision
+    summary: "The trading node owns most live-trading work and must be precise, surgical, and efficient."
+    quote: >-
+      the trading node handles most of the things that deal with live trading. Alright, so that right there is very crucial. You know, the core concepts need to be precise, surgical, and efficient.
+    cite: SRC-02-C0001
+    topics: [trading-node, live-trading, quality]
+    authority: source
+  - id: EXT-1004
+    type: context
+    summary: "The original middle layer was imagined for persistence and longer-running computation such as synchronization and model training."
+    quote: >-
+      that middle pass is meant to be like, think of it like a database, I would call it. It handles longer-running tasks, syncing, machine learning, model training, and whatnot.
+    cite: SRC-02-C0001
+    topics: [backend, data, machine-learning, topology]
+    authority: source
+  - id: EXT-1005
+    type: context
+    summary: "QML began as an internal bot library and QMA was floated as a future agent-oriented counterpart."
+    quote: >-
+      QML, which is the quant mind library. Okay, now I don't know if we can have, I don't know if they are called modules, yeah, so small sort of features that form up the library. So, for at first, QML was made for only you know bots like the trading bots. However, it has occurred to me that we might also need something called I'm calling it QMA
+    cite: SRC-02-C0001
+    topics: [qml, qma, bots, agentic-system]
+    authority: source
+  - id: EXT-1006
+    type: open
+    summary: "At the start of the session, whether the node or QML should be designed first was unresolved."
+    quote: >-
+      Are we first building the agents? Sorry, are we first building the library? Not the agents, but the library, are we first building the node? What do you propose?
+    cite: SRC-02-C0001
+    topics: [build-order, qml, trading-node]
+    authority: source
+  - id: EXT-1007
+    type: correction
+    summary: "The old QMX version and recovery material are evidence only and must not become the foundation of the restart."
+    quote: >-
+      What you are seeing in the old version of QMX, please don't take it as core. Okay, what we did with GPT was try to recover and whatnot, but don't take it as something core for you to build this new system on top of. Otherwise, you'll poison the entire state
+    cite: SRC-02-C0002
+    topics: [source-authority, clean-start, legacy]
+    authority: source
+  - id: EXT-1008
+    type: decision
+    summary: "The new project is a deliberate clean restart away from the previous design state."
+    quote: >-
+      The whole reason of me restarting this is because I want to run away from the other poisonous thing
+    cite: SRC-02-C0002
+    topics: [clean-start, legacy, project-reset]
+    authority: source
+  - id: EXT-1009
+    type: context
+    summary: "The trading-node domain includes MIS, SQS, news, kill switch, Books, BMS, and bots."
+    quote: >-
+      the node we have the MIS, we have SQS, we have the news, the kill switch and whatnot, we have the book, the BMS. Well, the books rather, the BMS and the bots.
+    cite: SRC-02-C0002
+    topics: [trading-node, mis, sqs, books, bms, bots]
+    authority: source
+  - id: EXT-1010
+    type: decision
+    summary: "QML's purpose is to give coding agents a uniform, constrained way to author bots instead of unconstrained generic Python."
+    quote: >-
+      bots we wanted to provide one uniform way for agents because agents were mostly the ones going to be coding this thing out. So, in other words, instead of using Python and making everything too generic, which later down the road can cause issues
+    cite: SRC-02-C0002
+    topics: [qml, agents, authoring-surface, uniformity]
+    authority: source
+  - id: EXT-1011
+    type: decision
+    summary: "Reusable internal components such as market engines, data tools, and indicators are a primary reason for the framework."
+    quote: >-
+      wanted to have reusable components inbuilt in-house. We wanted to have, for example, what I'm trying to say by usable components. For example, if we manage to build like certain market engines or certain data, stuff like that, okay, or certain indicators. We would like them to be reusable across.
+    cite: SRC-02-C0002
+    topics: [qml, reuse, market-data, indicators]
+    authority: source
+  - id: EXT-1012
+    type: constraint
+    summary: "The design order must avoid building the node in a way that will later require a framework-driven rewrite."
+    quote: >-
+      I feel like certain things will have to be rebuilt with the library
+    cite: SRC-02-C0002
+    topics: [build-order, rebuild-risk, qml]
+    authority: source
+  - id: EXT-1013
+    type: decision
+    summary: "cTrader is the initial broker platform."
+    quote: >-
+      for the broker, yes, for now, we shall use C trader.
+    cite: SRC-02-C0003
+    topics: [broker, ctrader, venue]
+    authority: source
+  - id: EXT-1014
+    type: constraint
+    summary: "The operator prefers pure Python where cTrader permits it."
+    quote: >-
+      I would prefer at times using pure Python, which by the way, C Trader does allow
+    cite: SRC-02-C0003
+    topics: [python, ctrader, implementation]
+    authority: source
+  - id: EXT-1015
+    type: decision
+    summary: "The recurring delivery workflow is transcript and accepted artifacts to documentation factory, then Kanban, software factory, and later review."
+    quote: >-
+      I will export the transcript together with the artifacts for that session. Then we parse them to the documentation factory skill. Then, after documentation factory works its magic, we pass it to the Kanban skill, which just updates the Kanban for the factory. And the factory, the software factory, does the shipping. And we shall do review down the road
+    cite: SRC-02-C0003
+    topics: [workflow, documentation-factory, kanban, software-factory]
+    authority: source
+  - id: EXT-1016
+    type: constraint
+    summary: "Sessions should understand, agree, and decompose concepts into verifiable or accepted artifacts before implementation."
+    quote: >-
+      we are going to try as much as possible to break down and not even just break down, but understand, agree, and break down a lot of concepts. Once we produce, you know, the verifiable or accepted artifacts
+    cite: SRC-02-C0003
+    topics: [workflow, ratification, artifacts]
+    authority: source
+  - id: EXT-1017
+    type: decision
+    summary: "The framework should come before the node because a solo operator needs organization and cannot safely retrofit an exponentially growing bot estate."
+    quote: >-
+      I'm a one-man army, okay? So, which means if I try to be very disorganized, I'm going to be burnt out very quickly. Alright, that's why I'm pushing more for the library first so that things are more organized and simpler to run.
+    cite: SRC-02-C0004
+    topics: [build-order, solo-operator, qml, maintainability]
+    authority: source
+  - id: EXT-1018
+    type: constraint
+    summary: "The framework must do upstream containment so agents can work with less babysitting."
+    quote: >-
+      we are trying to build something that makes work for agents very, very simple. Okay, in other words, you don't have to contain them so much. We already did the containment upstream.
+    cite: SRC-02-C0004
+    topics: [agents, safety, authoring-surface, framework]
+    authority: source
+  - id: EXT-1019
+    type: constraint
+    summary: "Agents should receive the right tool for each job, with the framework functioning as a safety layer."
+    quote: >-
+      We are not going to have to babysit them so much because we know, like, the library will do the talking. I don't know if you understand me. So, we are trying so much to give them that right tool for the right jobs that we are giving them.
+    cite: SRC-02-C0004
+    topics: [agents, tooling, safety, framework]
+    authority: source
+  - id: EXT-1020
+    type: open
+    summary: "Genetic algorithms were only a hypothesis and were not adopted."
+    quote: >-
+      these are hypotheses. For example, genetic algorithm, we might or might not use it.
+    cite: SRC-02-C0004
+    topics: [genetic-algorithms, experimentation, open]
+    authority: source
+  - id: EXT-1021
+    type: decision
+    summary: "Forex is the first supported market; crypto remains a considered later version."
+    quote: >-
+      at the core yes crypto should be considered yes other things will come in yes but now okay the problem I think we might miss some stuff for crypto so maybe no let's do forex first maybe that will come in another version of QML
+    cite: SRC-02-C0004
+    topics: [forex, crypto, scope, roadmap]
+    authority: source
+  - id: EXT-1022
+    type: decision
+    summary: "Prop-firm Book design needs its own long session and must not be casually specified."
+    quote: >-
+      the prop firm book that is a whole long session because it needs me to think through a lot of things
+    cite: SRC-02-C0004
+    topics: [prop-firm, books, deferred]
+    authority: source
+  - id: EXT-1023
+    type: context
+    summary: "The envisioned agentic system may create and manage Books and update BMS values."
+    quote: >-
+      i might actually create the book in the agentic section or the agentic system of this QMX platform okay so yeah that's why we have agents creating books managing them updating BMS values and whatnot
+    cite: SRC-02-C0004
+    topics: [agentic-system, books, bms]
+    authority: source
+  - id: EXT-1024
+    type: correction
+    summary: "The Cordiverse paper is for the agentic harness, not QMF or the trading node."
+    quote: >-
+      I don't think the paper is producing something genuinely new. It is producing something genuinely new in the identic harness, but in normal coding standards, oh my god, you the agentic harness is what I'm talking about.
+    cite: SRC-02-C0005
+    topics: [cordiverse, agentic-system, source-boundary]
+    authority: source
+  - id: EXT-1025
+    type: correction
+    summary: "QML was reclassified from a library to a framework and renamed QMF, with QMF engulfing QML."
+    quote: >-
+      QML so QML is a framework, perfect. The QML framework. That's nice. Alright, now that we have the core idea, since it's a framework, it's no longer a library. So, does it become QMF instead? That seems like it's where we are going to.
+    cite: SRC-02-C0005
+    topics: [qmf, qml, naming, framework]
+    authority: source
+  - id: EXT-1026
+    type: value
+    summary: "The adopted name is QMF, and QMF contains or supersedes the former QML concept."
+    quote: >-
+      It has now become QMF, not QML anymore. Okay, QMF engulfs QML.
+    cite: SRC-02-C0005
+    topics: [qmf, qml, vocabulary]
+    authority: source
+  - id: EXT-1027
+    type: constraint
+    summary: "QMF must handle very large quantities of data."
+    quote: >-
+      one of the things we might need to build so much in QMF or whatever you want to call it is this thing better handling. We are going to be dealing with a lot of data. It's not even funny.
+    cite: SRC-02-C0005
+    topics: [qmf, data, scalability]
+    authority: source
+  - id: EXT-1028
+    type: open
+    summary: "Dukascopy and other mature quant projects should be studied before choosing what QMF uses or implements."
+    quote: >-
+      I know it, and we can study it. Yes, I agree. We can study it.
+    cite: SRC-02-C0005
+    topics: [research, reference-platforms, dukascopy]
+    authority: source
+  - id: EXT-1029
+    type: death
+    summary: "The one-slice-at-a-time framework build loop was rejected as unnecessarily slow and overly dependent on operator answers."
+    quote: >-
+      what the proven one slice at a time, I think no, it might not work. Seriously, I'm I'm very serious here. This might not work. Because the problem is you're going to be asking me questions which you already know the answer to.
+    cite: SRC-02-C0005
+    topics: [delivery, build-method, autonomy]
+    authority: source
+  - id: EXT-1030
+    type: value
+    summary: "The operator targeted a two-to-three-day factory build for QMF V1 once the minimal core was understood."
+    quote: >-
+      That slow version is going to take days, yet we could do this within two to three days, and we have QML version one because we have the power of AI agents and my software factory.
+    cite: SRC-02-C0005
+    topics: [qmf-v1, delivery, estimate]
+    authority: source
+  - id: EXT-1031
+    type: decision
+    summary: "The minimal core must cover the path from strategy research to live trading, including portfolio management and analysis."
+    quote: >-
+      the normal day-to-day would be, you know, going from research of strategy to getting it to actual trading, so everything that is used in between. But then, if you look at actual trading, you have to now also consider the portfolio management stuff, the analysis stuff
+    cite: SRC-02-C0005
+    topics: [qmf-core, research, portfolio, analysis, live-trading]
+    authority: source
+  - id: EXT-1032
+    type: constraint
+    summary: "QMF should be designed primarily for agent use, while the agent answers routine technical questions without repeatedly consulting the nontechnical operator."
+    quote: >-
+      Most of these things are going to be used by agents under QMX.
+    cite: SRC-02-C0005
+    topics: [agents, qmf-core, operator-experience]
+    authority: source
+  - id: EXT-1033
+    type: constraint
+    summary: "Deep research should begin only after collecting enough context and a candidate list."
+    quote: >-
+      for these other open source things, I think we can research them, but let's hang on. I told you we shall first have a list because the deep research is going to take a minute, an actual actual minute. Okay, so which means we need to collect enough context
+    cite: SRC-02-C0005
+    topics: [research-protocol, context, reference-platforms]
+    authority: source
+  - id: EXT-1034
+    type: decision
+    summary: "The operator accepted a two-deployable foundation consisting of the QMX app and a Trading VPS, with QMF underneath."
+    quote: >-
+      QMX Foundations. Okay, I think yeah, the up is okay Yeah, trading VPS, that's okay QMF, yes, that's okay
+    cite: SRC-02-C0006
+    topics: [topology, qmx-app, trading-vps, qmf]
+    authority: source
+  - id: EXT-1035
+    type: decision
+    summary: "The Trader hat is bot-oriented rather than cTrader-specific."
+    quote: >-
+      the threader threader is threader is actually more bot related not just not not just you know C trader but it's more of bot related
+    cite: SRC-02-C0006
+    topics: [five-hats, trader, bots]
+    authority: source
+  - id: EXT-1036
+    type: context
+    summary: "Trainer, developer, researcher, and analyst responsibilities overlap and should not be treated as rigid silos."
+    quote: >-
+      trainer developer and researcher co kinda share a lot more because analysts can fall under researcher can fall under developer depending on any day
+    cite: SRC-02-C0006
+    topics: [five-hats, roles, qmf]
+    authority: source
+  - id: EXT-1037
+    type: decision
+    summary: "QMF's data capabilities should include macro, micro, pairs trading, cross-pair analysis, and pair correlation."
+    quote: >-
+      for data we have stuff like macro and micro we have pair trading or pairs trading we have cross okay we have cross-pair analysis especially for for forex all analysis across multiple pairs
+    cite: SRC-02-C0006
+    topics: [data, forex, macro, micro, pairs-trading]
+    authority: source
+  - id: EXT-1038
+    type: decision
+    summary: "Experimentation is a key feature of QMX."
+    quote: >-
+      experimentation is one of the key features for QMX as a whole
+    cite: SRC-02-C0006
+    topics: [experimentation, qmx, research]
+    authority: source
+  - id: EXT-1039
+    type: open
+    summary: "Whether MIS has global or Book-specific models, and how Books and BMS register them, remained unresolved."
+    quote: >-
+      even the MIS the MIS might need some better models or we might have you know book specific models and man that that is gonna make stuff a bit weird if you have book-specific models it means the BMS needs to register that also the book itself needs to be able to register that
+    cite: SRC-02-C0006
+    topics: [mis, models, books, bms, open]
+    authority: source
+  - id: EXT-1040
+    type: constraint
+    summary: "Research should dig deeply into forex and crypto and examine correlations across every QMF hat."
+    quote: >-
+      for the framework dig deep seriously dig deep i really i don't know if it's even domain modeling or even deep research but i'm going to need you to dig deep especially forex forex is something i really look under underlook at times forex then crypto
+    cite: SRC-02-C0006
+    topics: [research, forex, crypto, five-hats]
+    authority: source
+  - id: EXT-1041
+    type: constraint
+    summary: "Each research effort should produce an artifact and may surface novel ideas."
+    quote: >-
+      for today let's let's start with research and for each research you produce an artifact if you have novel ideas i'm okay with them
+    cite: SRC-02-C0006
+    topics: [research, artifacts, ideation]
+    authority: source
+  - id: EXT-1042
+    type: constraint
+    summary: "Dynamic workflows must not use Fable models and should mix Sonnet and Opus."
+    quote: >-
+      Try mixing Sonnet and Opus models, please
+    cite: SRC-02-C0007
+    topics: [workflow, models, operations]
+    authority: source
+  - id: EXT-1043
+    type: context
+    summary: "A per-currency knowledge-library agent fleet was floated as an agentic-system hypothesis, not a ratified design."
+    quote: >-
+      this is a brain dump. It's just I want an opinion. Okay, don't take it seriously.
+    cite: SRC-02-C0008
+    topics: [agentic-system, currency-knowledge, hypothesis]
+    authority: source
+  - id: EXT-1044
+    type: context
+    summary: "The proposed currency research fleets would collect books, repositories, papers, and web material into instrument-specific knowledge."
+    quote: >-
+      it does research, it does, you know, recap, it also generates as much as possible from books, repos, I don't know, research, of course, academic papers, and just information of the internet as much as possible as it can find.
+    cite: SRC-02-C0008
+    topics: [agentic-system, currency-knowledge, research]
+    authority: source
+  - id: EXT-1045
+    type: decision
+    summary: "The restart begins with the framework core rather than the trading node."
+    quote: >-
+      for this time, we aren't starting with the trading node, we are starting with the core, the actual core.
+    cite: SRC-02-C0008
+    topics: [build-order, qmf-core, trading-node]
+    authority: source
+  - id: EXT-1046
+    type: constraint
+    summary: "Research findings are never adopted automatically; the agent must present findings and positions for discussion and operator ratification."
+    quote: >-
+      For the research we shall have to discuss, this discussion is still going on, it's still very, very long, I believe. Because research is going to come back. You have to present me with what you found in the research, what you propose, what you agree with. Then I will see we agree to disagree
+    cite: SRC-02-C0009
+    topics: [research-protocol, ratification, authority]
+    authority: source
+  - id: EXT-1047
+    type: correction
+    summary: "Currency knowledge libraries provide hypothesis fuel and context, not control limits, and their use is optional per strategy."
+    quote: >-
+      the libraries are not giving us control images, just that they can help us propose new hypotheses and whatnot. Okay, and also in the agents are working, they're not working with thin air.
+    cite: SRC-02-C0009
+    topics: [currency-knowledge, hypotheses, agent-context]
+    authority: source
+  - id: EXT-1048
+    type: decision
+    summary: "A backtesting mechanism belongs inside QMF."
+    quote: >-
+      when you are building a backtesting mechanism, we can know by the way, which by the way we still need to build as part of QMF. I almost forgot. I want it to be as part
+    cite: SRC-02-C0009
+    topics: [backtesting, qmf, scope]
+    authority: source
+  - id: EXT-1049
+    type: context
+    summary: "Currency knowledge may help choose different pairs for prop-firm evaluation and funded phases."
+    quote: >-
+      it can help us narrow down, especially prop funds. I believe for prop firms, we can when you are building a backtesting mechanism, we can know by the way, which by the way we still need to build as part of QMF.
+    cite: SRC-02-C0009
+    topics: [currency-knowledge, prop-firm, pair-selection]
+    authority: source
+  - id: EXT-1050
+    type: death
+    summary: "Third-party libraries tied to strategy families such as ICT or SMC must not be adopted."
+    quote: >-
+      I would really not like using libraries for specific strategy families, I would say. For example, ICT, SMC, macros, micro, scalpers, or whatnot.
+    cite: SRC-02-C0011
+    topics: [dependencies, strategy-families, toolbox-principle]
+    authority: source
+  - id: EXT-1051
+    type: decision
+    summary: "QMF must provide a general toolbox from which the operator and agents can build their own strategy-family libraries."
+    quote: >-
+      What I would like though is having, should I say, a proper toolbox in order to replicate ideologies from those specific families or those specific hypotheses. I don't know if you get me there. Because my idea would not be me using a third-party SMC library, my idea would be having a framework that allows me to build my own custom SMC library.
+    cite: SRC-02-C0011
+    topics: [qmf, toolbox-principle, agents, strategy-families]
+    authority: source
+  - id: EXT-1052
+    type: constraint
+    summary: "Most strategy-specific detection and rule mechanisms are expected to be built in-house."
+    quote: >-
+      No maintained library detect zones, honestly, obviously. In fact, most of these are in-house.
+    cite: SRC-02-C0012
+    topics: [in-house, strategy-components, dependencies]
+    authority: source
+  - id: EXT-1053
+    type: constraint
+    summary: "The framework should be stable enough that attention shifts to research, bot development, and trading rather than biweekly platform rewrites."
+    quote: >-
+      I don't want to update this every two weeks, okay? I mean, true, it's viable, but I really want to try and focus so much on, should I say, actual research development process done of using the platform, yeah, and actual trading than this, whatever than actually like developing the platform itself.
+    cite: SRC-02-C0012
+    topics: [stability, maintainability, research, trading]
+    authority: source
+  - id: EXT-1054
+    type: decision
+    summary: "QMF should include alpha-decay detection that notices live performance falling below backtested expectations."
+    quote: >-
+      in the very first versions of QMX, we had this thing, it was meant to help detect alpha decay. Now, it was part of QML. In other words, when a stretcher defaults below it's backtested results, yeah, so in other words, the edge is decaying.
+    cite: SRC-02-C0012
+    topics: [alpha-decay, monitoring, qmf, backtesting]
+    authority: source
+  - id: EXT-1055
+    type: open
+    summary: "How to define edge and its baseline across multiple configurable Books remained unresolved."
+    quote: >-
+      defining what an edge is. Now, based off what I recall, an edge was actually defined by the book, the matrix of the book it is going to be in, or as right now we have discovered the books, not a singular book. Okay, since our system has grown.
+    cite: SRC-02-C0012
+    topics: [edge, books, alpha-decay, open]
+    authority: source
+  - id: EXT-1056
+    type: constraint
+    summary: "Reference repositories and catalog projects are to expand the mental-model search space, not become an adopted implementation by default."
+    quote: >-
+      I'm not dismissing your previous artifact. No, I feel like it is okay, but I feel like your blast radius was low. Now, I'm trying to give you a little bit more of a blast radius.
+    cite: SRC-02-C0012
+    topics: [research, reference-repositories, scope]
+    authority: source
+  - id: EXT-1057
+    type: decision
+    summary: "Backtesting must be modular enough for each Book to supply different testing mechanisms and for one bot to be tested against multiple Books."
+    quote: >-
+      I think each book might have different mechanisms of testing. I don't know if you get me, which means we are trying to be as modular as possible. I don't know if that's the right word to even use. So, which means if I'm testing a boat, I can test it against a scalp, I can test it against, you know, different types of scalpers, rather, scalping books.
+    cite: SRC-02-C0012
+    topics: [backtesting, books, bots, modularity]
+    authority: source
+  - id: EXT-1058
+    type: death
+    summary: "Futures and options are permanently out of scope."
+    quote: >-
+      **Permanent product constraint**: no futures or options,
+    cite: SRC-02-C0013
+    topics: [markets, futures, options, stocks, scope]
+    authority: source
+  - id: EXT-1059
+    type: constraint
+    summary: "Reference studies borrow mental models only, transplant no code, and respect licenses."
+    quote: >-
+      That's why I said we are borrowing mental models. I refused code specifically for such reasons. Not just about licenses, no.
+    cite: SRC-02-C0027
+    topics: [research, dependencies, licensing, code-reuse]
+    authority: source
+  - id: EXT-1060
+    type: context
+    summary: "BOCPD was recovered as an old MIS model candidate that still requires re-ratification."
+    quote: >-
+      BOCPD — candidates to re-ratify during the MIS session
+    cite: SRC-02-C0013
+    topics: [mis, kronos, bocpd, legacy]
+    authority: source
+  - id: EXT-1061
+    type: correction
+    summary: "The term simulator means a UI-driven backtest of a bot against a Book and selected conditions, not merely a fill-engine adapter."
+    quote: >-
+      the simulator was more of a Baptist engine, plus, also against a book or against QMX. But the problem, okay, a back test engine plus a book. So, in other words, you just wanted to see how the exact thing I've actually just explained previously: how a bot performs on a specific book, simple as that, but via a UI.
+    cite: SRC-02-C0014
+    topics: [simulator, backtesting, ui, books]
+    authority: source
+  - id: EXT-1062
+    type: decision
+    summary: "The simulator must support custom conditions and theoretical Books for stress testing."
+    quote: >-
+      we can create a specific condition or specific variables in our engine, and we just stressed. I don't know if you're getting me. So, I can create a theoretical book and then we test it out.
+    cite: SRC-02-C0014
+    topics: [simulator, stress-testing, books]
+    authority: source
+  - id: EXT-1063
+    type: decision
+    summary: "QMX needs a solid ingested data store with backups."
+    quote: >-
+      Yeah, we need to have our good ingested database, a solid one, with even backups.
+    cite: SRC-02-C0014
+    topics: [data, storage, backup]
+    authority: source
+  - id: EXT-1064
+    type: open
+    summary: "Whether durable data storage belongs on a VPS or object-storage buckets was left open."
+    quote: >-
+      Do we need to use a VPS to host this? Or can we have, I think, specific storage stuff? Like, I'm hearing people talk about buckets.
+    cite: SRC-02-C0014
+    topics: [storage, vps, object-storage, open]
+    authority: source
+  - id: EXT-1065
+    type: decision
+    summary: "The platform should collect abundant historical and economic data even before every future use is known."
+    quote: >-
+      Let's just have as much data as possible. It's better we have more than we can chew and figure out how to chew it later.
+    cite: SRC-02-C0014
+    topics: [data, collection, research]
+    authority: source
+  - id: EXT-1066
+    type: decision
+    summary: "The simulator should be able to exercise kill-switch behavior under economic-data scenarios."
+    quote: >-
+      provenance, you can look at something like the kill switch, even in the simulator, actually. I think that adds up because we can see when the kill switch fires, we can ingest in a lot of economic data scenarios
+    cite: SRC-02-C0014
+    topics: [simulator, kill-switch, economic-data, stress-testing]
+    authority: source
+  - id: EXT-1067
+    type: open
+    summary: "Synthetic tick-data generation was desired, but whether to use an LLM or an algorithm was initially unresolved."
+    quote: >-
+      This thing I wanted to be able to generate synthetic tick data. I don't know if that's possible. Randomize it with LLMs because I know LLMs can provide it, or we can write an algorithm to do that.
+    cite: SRC-02-C0014
+    topics: [synthetic-data, ticks, open]
+    authority: source
+  - id: EXT-1068
+    type: constraint
+    summary: "Generated project history must never include Claude authorship attribution."
+    quote: >-
+      Just don't put that thing of authored by Claude. I don't like it.
+    cite: SRC-02-C0014
+    topics: [git, attribution, operations]
+    authority: source
+  - id: EXT-1069
+    type: decision
+    summary: "QMF needs a validator or linter that rejects malformed definitions before execution."
+    quote: >-
+      the interpreter or the validator all inter, like that is something we really need, okay?
+    cite: SRC-02-C0014
+    topics: [validation, linting, agent-safety]
+    authority: source
+  - id: EXT-1070
+    type: constraint
+    summary: "The agent is delegated the technical splitting and organization of QMF's component libraries."
+    quote: >-
+      I think you can handle the splitting of the work or of the libraries themselves because we have a lot to think through.
+    cite: SRC-02-C0014
+    topics: [delegation, library-design, operator-experience]
+    authority: source
+  - id: EXT-1071
+    type: constraint
+    summary: "The simulator definition was accepted only as an abstract starting point and must be elaborated later."
+    quote: >-
+      I think that definition is okay, but you can enhance it. I feel like it's incomplete. I don't know why, but I think it's abstract, not incomplete, it's abstract.
+    cite: SRC-02-C0015
+    topics: [simulator, open, specification]
+    authority: source
+  - id: EXT-1072
+    type: decision
+    summary: "Agents should build QMX's own metric-aware strategy libraries rather than adopt third-party family libraries."
+    quote: >-
+      it's better to have an agent in QMX build our own custom libraries with the right tools, like I talked about, instead of us like having third-party ones. Because those remember, everything we are dealing here is a metric
+    cite: SRC-02-C0015
+    topics: [agents, in-house, metrics, strategy-libraries]
+    authority: source
+  - id: EXT-1073
+    type: decision
+    summary: "A Trading VPS is assumed to exist in the deployment picture, while its procurement is outside the core-design task."
+    quote: >-
+      The trading VPS is out of question. That VPS exists. By default, it should. Which means we have to have by somewhere to deploy it. Okay, that's not your work. Okay, that's not your work. For you, you are building the core.
+    cite: SRC-02-C0016
+    topics: [trading-vps, deployment, scope]
+    authority: source
+  - id: EXT-1074
+    type: decision
+    summary: "Backup is a built-in platform capability and belongs to overall architecture rather than an operator chore."
+    quote: >-
+      backup. We need to have that inbuilt. I think it's actually part of the back-end node last time I checked. And it's cheap. It's actually cheap. That's cheap. Okay, it's doable. But that falls back to architecture, overall architecture.
+    cite: SRC-02-C0016
+    topics: [backup, architecture, backend]
+    authority: source
+  - id: EXT-1075
+    type: decision
+    summary: "Synthetic data belongs in QMF because it can cover scenarios not available in Dukascopy history."
+    quote: >-
+      synthetic data, man, I think we can use it. It's just that I think it can give us something that the Ducascopy data can't do. And I think if we want to test, especially if a bot, I don't know if that feeds into overfitting, you know, I really don't. Okay, but we have to be careful there, but it's a good idea. It's a good idea. Anyway, I think it's part of QMF.
+    cite: SRC-02-C0016
+    topics: [synthetic-data, qmf, dukascopy, overfitting]
+    authority: source
+  - id: EXT-1076
+    type: open
+    summary: "Synthetic-data use needs safeguards against overfitting and had not yet been ratified in detail."
+    quote: >-
+      I don't know if that feeds into overfitting, you know, I really don't. Okay, but we have to be careful there
+    cite: SRC-02-C0016
+    topics: [synthetic-data, overfitting, open]
+    authority: source
+  - id: EXT-1077
+    type: constraint
+    summary: "Large repository studies must expand recursively through awesome-list maps rather than stop at direct links."
+    quote: >-
+      some GitHub repos that I've given you, are actually what I meant by a map in that they are a collection of algorithmic and quantitative trading projects, which means I don't know if you're seeing the compounding happen.
+    cite: SRC-02-C0014
+    topics: [research, awesome-lists, recursive-study]
+    authority: source
+  - id: EXT-1078
+    type: value
+    summary: "Some supplied project maps contain roughly 140 projects, making the research corpus much larger than the initial agent count implied."
+    quote: >-
+      Some are up to 140-something projects. So, it's not as simple as you think
+    cite: SRC-02-C0014
+    topics: [research, scale, reference-repositories]
+    authority: source
+  - id: EXT-1079
+    type: context
+    summary: "The old recovered repository contained an Examination Engine design and data-plumbing proofs, not a completed backtest engine."
+    quote: >-
+      the old repo never had a backtest engine. What it had was a design for an "Examination Engine" — a certification-oriented replayer — plus data plumbing proofs.
+    cite: SRC-02-C0022
+    topics: [legacy, examination-engine, backtesting, evidence]
+    authority: source
+  - id: EXT-1080
+    type: correction
+    summary: "Backtesting moved from a singular central system component to a capability inside the QMF library."
+    quote: >-
+      we've changed our entire approach. I think for us we are trying to should I say put it under a library so it's no longer like a core component of the entire system. I don't know if you get me because at first it was like a singular component. Right now it's no longer.
+    cite: SRC-02-C0023
+    topics: [backtesting, qmf, topology, correction]
+    authority: source
+  - id: EXT-1081
+    type: constraint
+    summary: "The recovered backtesting design is strong evidence to improve, not an implementation to transplant unchanged."
+    quote: >-
+      the whole point of actually trying to retrieve it was so that I want you to know anyway that what I had was not weak, yeah, but we can enhance it and make it better
+    cite: SRC-02-C0023
+    topics: [legacy, backtesting, enhancement, evidence]
+    authority: source
+  - id: EXT-1082
+    type: open
+    summary: "Research recommended building a QMF kernel, but its reported estimate and adoption-spike proposal were still pending operator ratification at this point."
+    quote: >-
+      Facts gathered — adoption pending ratification.
+    cite: SRC-02-C0024
+    topics: [kernel, research, ratification]
+    authority: source
+  - id: EXT-1083
+    type: open
+    summary: "IC Markets was the likely broker choice, with a swap-free account, but the choice remained tentative."
+    quote: >-
+      for the broker, I'm most likely going to use IC markets, and I believe they have a swap-free account, as they said.
+    cite: SRC-02-C0025
+    topics: [broker, ic-markets, swap-free, open]
+    authority: source
+  - id: EXT-1084
+    type: open
+    summary: "Rust was considered for UI and backtesting speed, but the operator distrusted its build complexity and agent maintainability relative to Python."
+    quote: >-
+      the reason we wanted rust, I believe, was mostly the UI, but I think for modularity and back testing speed, Rust would be good, but we have a problem. I don't think I would trust it. Okay, it's not, I think it's not as simple and easy to build with as Python, especially with agents.
+    cite: SRC-02-C0025
+    topics: [rust, python, ui, backtesting, open]
+    authority: source
+  - id: EXT-1085
+    type: constraint
+    summary: "Complex technical findings must be delivered in a plain-language artifact rather than dense text blocks."
+    quote: >-
+      Dude, seriously, first dumb this down. I need an artifact. Everything you've so far done, because I can't read these blocks of text
+    cite: SRC-02-C0025
+    topics: [communication, artifacts, operator-experience]
+    authority: source
+  - id: EXT-1086
+    type: correction
+    summary: "No prop-firm model or rules were agreed; a prop firm is one or more Books to be designed later."
+    quote: >-
+      the proc firm, we haven't agreed on it yet. It has its own rules to be to be real with you. It's a book, if not books, okay? So, which means we can't really decide on it as yet.
+    cite: SRC-02-C0026
+    topics: [prop-firm, books, deferred, correction]
+    authority: source
+  - id: EXT-1087
+    type: decision
+    summary: "Prop-firm Books are deferred to a later agentic-system design session."
+    quote: >-
+      it is going to be a book we shall have to create with the agentic system because it's going to be a long discussion
+    cite: SRC-02-C0026
+    topics: [prop-firm, agentic-system, books, deferred]
+    authority: source
+  - id: EXT-1088
+    type: context
+    summary: "QMX is conceived as a distributed strategy or hypothesis factory that scales idea-to-test-to-validation throughput."
+    quote: >-
+      what we are trying to do right now is more of a factory, a strategy factory, or a hypothesis factory. It's not actually a hypothesis factory, but it's a factory that is meant to help me scale my ability to go from you know idea hypothesis to testing it out and then validating at the same time.
+    cite: SRC-02-C0026
+    topics: [strategy-factory, hypotheses, validation, agentic-system]
+    authority: source
+  - id: EXT-1089
+    type: death
+    summary: "A centralized backtesting and validation service was rejected because one machine cannot scale the intended agent workload."
+    quote: >-
+      if we actually centralize the backtesting and validation mechanism, we had one big problem. Okay, sorry, sorry. The problem we had is that you know we didn't have enough compute, yeah, that we didn't have enough compute to really go through that large-scale testing because this would take days for just a couple of hundred backtests.
+    cite: SRC-02-C0026
+    topics: [backtesting, decentralization, compute, death]
+    authority: source
+  - id: EXT-1090
+    type: decision
+    summary: "Agents should run QMF backtesting inside remote sandboxes or servers such as Modal to distribute compute and reduce babysitting."
+    quote: >-
+      instead we get we make it in that the agents could be in sandboxes on a given server because there are so many providers that provide us with agentic sandboxes like Modal and so on and so on.
+    cite: SRC-02-C0026
+    topics: [agents, sandboxes, modal, backtesting, compute]
+    authority: source
+  - id: EXT-1091
+    type: constraint
+    summary: "QMX must retain control over the logic, metrics, and variables that determine backtest validity."
+    quote: >-
+      we have to really know which logic they are using because we have less control over the metrics and variables. That's why I wanted to build my own in-house engine
+    cite: SRC-02-C0026
+    topics: [backtesting, control, metrics, in-house]
+    authority: source
+  - id: EXT-1092
+    type: constraint
+    summary: "Backtesting capabilities must be swappable and usable by agents inside workspaces or sandboxes."
+    quote: >-
+      it's better if we build our own backtesting mechanism which we can swap stuff around, in my opinion.
+    cite: SRC-02-C0026
+    topics: [backtesting, modularity, agents, sandboxes]
+    authority: source
+  - id: EXT-1093
+    type: death
+    summary: "NautilusTrader was rejected as QMF's engine or contract because it would constrain bots, obscure arithmetic, and create an unpatchable Rust dependency."
+    quote: >-
+      I really don't think I would need to use this guy's contract. I really don't. I would like to use it if word for word, you know, bmad for bmad, his thing actually satisfies my system and my needs, and it won't produce errors that I'll still struggle to fix.
+    cite: SRC-02-C0026
+    topics: [nautilus-trader, dependencies, backtesting, death]
+    authority: source
+  - id: EXT-1094
+    type: constraint
+    summary: "The foundation must be durable enough to avoid rebuilding it within a few months."
+    quote: >-
+      I don't want to use something I'm going to be rebuilding in a few months. Trust me, I really don't because I want to build a foundation so strong that anytime I really don't want to rebuild it.
+    cite: SRC-02-C0026
+    topics: [stability, foundation, maintainability]
+    authority: source
+  - id: EXT-1095
+    type: constraint
+    summary: "QMX requires complete control and transparent correctness rather than quick fixes that may silently produce wrong results."
+    quote: >-
+      I don't want to be two months in and not understanding why my strategies are failing. I want absolute complete control over QMX.
+    cite: SRC-02-C0027
+    topics: [control, correctness, observability, qmx]
+    authority: source
+  - id: EXT-1096
+    type: constraint
+    summary: "Reference platforms contribute mental models only; their code is refused for control and correctness reasons, not merely license concerns."
+    quote: >-
+      That's why I said we are borrowing mental models. I refused code specifically for such reasons. Not just about licenses, no.
+    cite: SRC-02-C0027
+    topics: [code-reuse, mental-models, licensing, control]
+    authority: source
+  - id: EXT-1097
+    type: decision
+    summary: "QMF will build its own kernel and use no third-party engine, runtime, or contract."
+    quote: >-
+      I've been seriously, I don't want to use this guy's thing
+    cite: SRC-02-C0027
+    topics: [kernel, in-house, dependencies, ratified]
+    authority: source
+  - id: EXT-1098
+    type: death
+    summary: "The proposed three-day Nautilus adoption spike was cancelled after the operator rejected adoption on architectural grounds."
+    quote: >-
+      The 3-day adoption spike is cancelled.
+    cite: SRC-02-C0027
+    topics: [nautilus-trader, spike, death]
+    authority: source
+  - id: EXT-1099
+    type: constraint
+    summary: "Five-hat uniformity requires in-house contracts; a third-party engine would force adapters and erase the intended consistency."
+    quote: >-
+      if you suggested this guy Nautilus, if you suggested his thing or whatever, their thing, you are not considering all the five hearts because I remember telling you, we are to consider all of them, which means we have to create adapters again to connect to their thing. Yet instead, we would have built everything in-house with proper uniformity.
+    cite: SRC-02-C0028
+    topics: [five-hats, uniformity, nautilus-trader, in-house]
+    authority: source
+  - id: EXT-1100
+    type: constraint
+    summary: "QMF must not depend on an external engine whose owner can paywall, remove, or redirect needed capabilities."
+    quote: >-
+      if this guy decides tomorrow that, okay, I don't want to share this, or okay, I want to put a pay wall behind this. You see, we are stuck. Or if we commits and removes certain things because the community claims they don't want it, but for us, we do.
+    cite: SRC-02-C0028
+    topics: [dependencies, supply-chain, control, nautilus-trader]
+    authority: source
+  - id: EXT-1101
+    type: constraint
+    summary: "Planning sessions should stay below roughly 40 percent of the active context window."
+    quote: >-
+      I want to be below 40% of your context pooling or to serve your intelligence, in my opinion. Okay, I meant context window
+    cite: SRC-02-C0001
+    topics: [sessions, context-window, operations]
+    authority: source
+  - id: EXT-1102
+    type: context
+    summary: "The accepted foundation artifact described the middle node as absorbed into the QMX app, with two deployables and cloud-based ML training."
+    quote: >-
+      two deployables — the installable QMX app (which absorbed the middle node; ML training goes to cloud sandboxes with shadow rollout) and one Trading VPS
+    cite: SRC-02-C0006
+    topics: [topology, qmx-app, trading-vps, machine-learning]
+    authority: source
+  - id: EXT-1103
+    type: decision
+    summary: "The recorded foundation used a Python core, reserved Rust for the later UI, and excluded Electron."
+    quote: >-
+      Python core, Rust UI later, no Electron
+    cite: SRC-02-C0013
+    topics: [python, rust, ui, electron, mql]
+    authority: source
+  - id: EXT-1104
+    type: constraint
+    summary: "The recorded foundation says mock data and bots do not ship with the product."
+    quote: >-
+      no mock data ships; no bots ship.
+    cite: SRC-02-C0036
+    topics: [mock-data, bots, distribution]
+    authority: source
+  - id: EXT-1105
+    type: correction
+    summary: "Backtesting is a QMF library capability, not a centralized engine."
+    quote: >-
+      it's no longer even a backtesting, a backtest engine, it's just backtesting as a library.
+    cite: SRC-02-C0028
+    topics: [backtesting, qmf, vocabulary, decentralization]
+    authority: source
+  - id: EXT-1106
+    type: decision
+    summary: "Backtesting should run on demand across agent sandboxes or VPSs rather than as a continuously centralized service."
+    quote: >-
+      we try to reduce the amount of compute needed. Okay? To remove it to be from you know centralized to now on demand because most agents are going to be running in sandboxes or VPSs.
+    cite: SRC-02-C0028
+    topics: [backtesting, on-demand, sandboxes, vps]
+    authority: source
+  - id: EXT-1107
+    type: context
+    summary: "A high-performance bare-metal Ryzen 9 host was one candidate for dense agent and backtest execution."
+    quote: >-
+      When I purchase one VPS, which is very, you know, they call them bare metal or whatever, very high performance. Like I told you, a Ryzen 9 CPU.
+    cite: SRC-02-C0028
+    topics: [compute, vps, ryzen, backtesting]
+    authority: source
+  - id: EXT-1108
+    type: decision
+    summary: "Backtesting decisions were paused for a dedicated future session; the current research briefs were not ratified."
+    quote: >-
+      first put the bug testing on hold because I had actually forgotten something. I meant back testing on hold.
+    cite: SRC-02-C0028
+    topics: [backtesting, deferred, ratification]
+    authority: source
+  - id: EXT-1109
+    type: open
+    summary: "The future backtesting session starts from a staged funnel of screen, research, robustness, replay, and full Book/BMS simulation."
+    quote: >-
+      it carries your staged funnel (screen → research → robustness → replay → full Book/BMS sim, on-demand in sandboxes), notes that today's briefs are research inputs not ratified
+    cite: SRC-02-C0029
+    topics: [backtesting, funnel, books, bms, sandboxes]
+    authority: source
+  - id: EXT-1110
+    type: constraint
+    summary: "The agentic system was hands-off for the current framework session."
+    quote: >-
+      The agentic system agentic system is leave it. That's one of the highest value things that it's gonna be hard to build.
+    cite: SRC-02-C0030
+    topics: [agentic-system, scope, research, bot-schema, data]
+    authority: source
+  - id: EXT-1111
+    type: constraint
+    summary: "QMF must be documented and modular enough for unfamiliar agents to continue any area without relying on the original session."
+    quote: >-
+      React.js, okay, or TypeScript. These things are built, any agent can understand them, because sure you can be like they have been trained on the data, but there is documentation for even new libraries. So, we need to look at maybe core concepts in software engineering, like clean code, modulation, stuff like that.
+    cite: SRC-02-C0028
+    topics: [agent-readiness, documentation, modularity, clean-code]
+    authority: source
+  - id: EXT-1112
+    type: constraint
+    summary: "Work should proceed one well-understood piece per session, using consistent reusable artifacts that make later handoffs reliable."
+    quote: >-
+      it's better if for this session alone we buy it off a little piece, tomorrow we bite off another piece, like that, we go on till a week is done.
+    cite: SRC-02-C0028
+    topics: [delivery, sessions, artifacts, handoff]
+    authority: source
+  - id: EXT-1113
+    type: constraint
+    summary: "The desired pace is slow, certain, and efficient rather than fast and ambiguous."
+    quote: >-
+      the whole point right now is we need to be slow but sure and efficient in all that we do.
+    cite: SRC-02-C0028
+    topics: [delivery, quality, process]
+    authority: source
+  - id: EXT-1114
+    type: correction
+    summary: "The proposed kernel incorrectly reproduced the trading-node application; QMF is the toolbox used to build that application."
+    quote: >-
+      what we are creating is not the trading node, we are creating what is used to build the actual trading node. Do you understand my difference?
+    cite: SRC-02-C0029
+    topics: [qmf, trading-node, framework-boundary, correction]
+    authority: source
+  - id: EXT-1115
+    type: open
+    summary: "Historical-data download timing was unresolved at first, with install-time or in-app acquisition preferred over downloading during design."
+    quote: >-
+      is this really a viable method to download the data now or download it when we are installing QMX officially? That's something to really consider because me I feel like downloading it now won't make sense
+    cite: SRC-02-C0030
+    topics: [data-acquisition, installation, dukascopy, open]
+    authority: source
+  - id: EXT-1116
+    type: value
+    summary: "Dukascopy-node's CLI was the preferred reference shape and was said to expose history back to roughly 1990."
+    quote: >-
+      on the ducascopy, whatever node, ducascopy node, it says that it goes back all the way to 1990. Okay, from 1990 to 2000 to the present day in that range. Okay, so yeah, it has a lot. I don't know. It actually has a CLI. I think the CLI is far better
+    cite: SRC-02-C0030
+    topics: [dukascopy, cli, historical-data, value]
+    authority: source
+  - id: EXT-1117
+    type: value
+    summary: "The five QMF hats are Analyst, Portfolio Manager, Trader, Developer, and Researcher."
+    quote: >-
+      we had analyst, portfolio manager, trader, developer, researcher.
+    cite: SRC-02-C0030
+    topics: [five-hats, vocabulary, qmf]
+    authority: source
+  - id: EXT-1118
+    type: decision
+    summary: "Researcher was deferred while Analyst, Portfolio Manager, Trader, and Developer were the immediate four-hat focus."
+    quote: >-
+      researcher at that moment was deferred, but in the repos I recall saying something in the manner, Oh, we might have a look at what these guys do for research. Okay, developer is mostly about the agents themselves, then, trader, trader is a whole other case, but trader, in fact, analyst, portfolio manager, trader, and developer are the ones we were really focusing on.
+    cite: SRC-02-C0030
+    topics: [five-hats, scope, agents]
+    authority: source
+  - id: EXT-1119
+    type: death
+    summary: "Live-price ingestion and economic-calendar acquisition were explicitly excluded from the current foundation work."
+    quote: >-
+      I'm not trying to have a calendar now. I don't know if I'm too tired or something, but why would I want a calendar at the moment? We don't even have a UI for God's sake.
+    cite: SRC-02-C0030
+    topics: [calendar, live-prices, data-acquisition, death]
+    authority: source
+  - id: EXT-1120
+    type: constraint
+    summary: "Framework-neutral trading models must support styles from scalping through long-term holding."
+    quote: >-
+      the model now model has to consider all types of trading from scalping to literally holding and going long
+    cite: SRC-02-C0030
+    topics: [qmf-core, models, scalping, long-term]
+    authority: source
+  - id: EXT-1121
+    type: decision
+    summary: "The error model belongs to QMF's linting and validation capability."
+    quote: >-
+      Qermef errors, yeah, KMF is part of the actual whatever the linting and whatnot
+    cite: SRC-02-C0030
+    topics: [qmf-errors, validation, linting]
+    authority: source
+  - id: EXT-1122
+    type: decision
+    summary: "A common data ring is foundational because every QMF hat consumes it."
+    quote: >-
+      the data ring. Now, data ring, we've it was a right track, by the way. I think I ranted for kinda nothing. It's just that the way you propose it is very sloppy. Seriously, it's very, very sloppy. I don't think it makes sense, okay? But it should be there because most of everything, in fact, everything is using it.
+    cite: SRC-02-C0030
+    topics: [data, qmf, five-hats, foundation]
+    authority: source
+  - id: EXT-1123
+    type: death
+    summary: "The same-exam or conformance harness was rejected from the current foundation because it was backtesting under a new label."
+    quote: >-
+      So the same exam harness, no, no, no, no, no, no. My days, you guy, why don't you understand by let's leave the back testing out? Seriously leave it out. The exam, you're not going to fool me with changing the wording. The exam is the backtesting engineer.
+    cite: SRC-02-C0030
+    topics: [backtesting, conformance-harness, death, scope]
+    authority: source
+  - id: EXT-1124
+    type: decision
+    summary: "A confluence contains one or more Levels, Triggers, and Confirmations, and each category can have multiple simultaneous variants."
+    quote: >-
+      confluence. Confluence kind of makes up a strategy. You do know that, right? But the problem is, each of these things can have multiple combinations. So, Engle, so for example, trigger, rather. Trigger can have like six different triggers. It's very possible. All fire at a given time.
+    cite: SRC-02-C0030
+    topics: [confluence, levels, triggers, confirmations, strategy]
+    authority: source
+  - id: EXT-1125
+    type: correction
+    summary: "Exit is owned by the Book rather than being a confluence variant."
+    quote: >-
+      Now, what doesn't have a variant is that exit. Exit is part of the book. Let me make myself clear there. Exit is part of the book.
+    cite: SRC-02-C0030
+    topics: [exit, books, confluence, correction]
+    authority: source
+  - id: EXT-1126
+    type: open
+    summary: "The preliminary Bot definition is a confluence plus an as-yet-unnamed binding contract to a Book."
+    quote: >-
+      the boat, actually, it's not direct literal confluence, but the confluence is part of the boat. It makes up a huge chunk of the bot. The only difference is the boat now contains another, should I say, contract? Is it even a contract? I don't even know what to call it, but it contains the thing that links the recipe card together with the book.
+    cite: SRC-02-C0030
+    topics: [bots, confluence, books, binding, open]
+    authority: source
+  - id: EXT-1127
+    type: constraint
+    summary: "Book, BMS, and trading-node semantics must be understood before QMF primitives are frozen."
+    quote: >-
+      you should really understand what is a trading node before you try to build anything. I hope you did. It wasn't just for shock, you really need to understand it because I have a very, very good idea that you might build something we don't need.
+    cite: SRC-02-C0030
+    topics: [books, bms, trading-node, prerequisites]
+    authority: source
+  - id: EXT-1128
+    type: constraint
+    summary: "No factory shipping or project update was authorized until concepts were clarified and reusable artifacts were produced."
+    quote: >-
+      So, should I say go? Well, you are not the factory, you don't even know what the factory is, neither do you understand anything. So, you first clarify everything, then we are going to produce reusable artifacts and then update everything so that I can start other sessions based off.
+    cite: SRC-02-C0030
+    topics: [factory, authorization, artifacts, workflow]
+    authority: source
+  - id: EXT-1129
+    type: constraint
+    summary: "QMF may borrow architectures and mental models but is not intended to use other projects' code."
+    quote: >-
+      I'm not intending to use anyone's code. I can use mental models, I can use architecture, I'm okay with that.
+    cite: SRC-02-C0030
+    topics: [in-house, code-reuse, architecture, mental-models]
+    authority: source
+  - id: EXT-1130
+    type: context
+    summary: "The durability ambition is comparable to building a Bloomberg Terminal from scratch, with infrequent foundational rebuilds."
+    quote: >-
+      I'm not intending to also use rebuild this multiple times. This is something I intend to build at least twice a year, from now on. Think of it as if we are building Bloomberg Terminal from scratch
+    cite: SRC-02-C0030
+    topics: [product-vision, durability, rebuild-cadence]
+    authority: source
+  - id: EXT-1131
+    type: decision
+    summary: "qmf-core is the first foundational library and must contain definitions only, with no loop, broker, backtest, or downloads."
+    quote: >-
+      One: qmf-core, the language. Exact money (no floats ever), exact time (including "which trading day is this" and the two-dates stamp: happened / knowable), the nouns everything shares — Instrument, Bar, Tick, Order, Fill, Position, Account, defined style-agnostic from scalp to long hold — typed refusals, and the fingerprint machinery your recipe cards will use later. No loop, no broker, no backtest, no downloads.
+    cite: SRC-02-C0031
+    topics: [qmf-core, foundation, primitives]
+    authority: source
+  - id: EXT-1132
+    type: constraint
+    summary: "qmf-core nouns must anticipate order flow, DOM, tape, market structure, technical analysis, and level-three data so crypto does not force a rebuild."
+    quote: >-
+      the nouns I've just looked at, I think we might need to consider something like order flow. I think that's DOM DOM, yeah, it's dom,Remember, we are also considering crypto. So, crypto has a lot of DOM and like tepper. You know what I'm talking about. So, order flow and all that. So, most order flow components or concepts. I hope you understand me. So, market structure, technical analysis, you know, level three data.
+    cite: SRC-02-C0031
+    topics: [qmf-core, order-flow, dom, crypto, market-structure]
+    authority: source
+  - id: EXT-1133
+    type: constraint
+    summary: "QMF code and documentation must be comprehensible to both human operators and agents."
+    quote: >-
+      remember, human, I might also need to understand this code. Don't underestimate that. So, write for both humans and agents. Okay, this should be for both humans and agents. This framework.
+    cite: SRC-02-C0031
+    topics: [documentation, human-readable, agent-readable, qmf]
+    authority: source
+  - id: EXT-1134
+    type: decision
+    summary: "Versioning discipline is an accepted foundational QMF concern."
+    quote: >-
+      Oh, yeah, versioning discipline. Thank you for that. Actually, I've forgotten about it. Seems like it's viable.
+    cite: SRC-02-C0031
+    topics: [versioning, qmf-core, compatibility]
+    authority: source
+  - id: EXT-1135
+    type: decision
+    summary: "Bots accumulate lineage and first-class variants as pair choice or component variables change."
+    quote: >-
+      some bots might, okay, there is this idea we had whereby some bots can have variants of themselves. In other words, the logic behind that is that a bot can fail, for example, on a specific pair but work on another, or you know, if we change one variable, for example, a trigger it can pass
+    cite: SRC-02-C0032
+    topics: [bots, lineage, variants, genealogy]
+    authority: source
+  - id: EXT-1136
+    type: open
+    summary: "Forex sessions and their relationship to pairs and multi-session bots require explicit modeling; crypto must remain distinct."
+    quote: >-
+      things like which session. I think that's going to be very necessary, especially for Forex. You also need to draw a clear line between Forex and crypto. For Forex, we may need sessions because some bots can trade multiple sessions, but I believe a session is corresponding to a pair. Yeah, those are, I think, my opinions.
+    cite: SRC-02-C0032
+    topics: [forex, crypto, sessions, pairs, open]
+    authority: source
+  - id: EXT-1137
+    type: decision
+    summary: "The documentation restart precedes implementation and documents QMF before the trading node."
+    quote: >-
+      we need to first document before we feed it to the factory. So, we are going to restart documentation of QMX. Okay, so we are starting with the framework before I even document the trading node.
+    cite: SRC-02-C0032
+    topics: [documentation, qmf, trading-node, build-order]
+    authority: source
+  - id: EXT-1138
+    type: correction
+    summary: "SQS expands to Spread Quality Sensor."
+    quote: >-
+      the SQS, which is the spread quality sensor.
+    cite: SRC-02-C0032
+    topics: [sqs, spread-quality, vocabulary]
+    authority: source
+  - id: EXT-1139
+    type: correction
+    summary: "The recovered Book baseline is specifically a Scalping Book, not a universal Book design."
+    quote: >-
+      Specifically, the book you are looking at is a scalping book. Please note that, okay, and it has a repeatable pattern which we are going to be using for book, which we are going to be using for books across QRMX.
+    cite: SRC-02-C0032
+    topics: [books, scalping, legacy, correction]
+    authority: source
+  - id: EXT-1140
+    type: decision
+    summary: "Other Book types will vary from the Scalping Book template and are expected to be formed with the agentic system."
+    quote: >-
+      But there are other books we're going to form, and the identic system of QMX will be helping me do that.
+    cite: SRC-02-C0032
+    topics: [books, agentic-system, templates]
+    authority: source
+  - id: EXT-1141
+    type: constraint
+    summary: "The existing Book vocabulary contains uncertainties such as seat, R, and ACID that must be reconciled before documentation hardens them."
+    quote: >-
+      Then R, I don't know what R is. I think R is part of risk. Okay, we have a problem. What you're looking at can vary, very much consistently. Let me try to see if GPT can try to solve this
+    cite: SRC-02-C0032
+    topics: [books, vocabulary, legacy, open]
+    authority: source
+  - id: EXT-1142
+    type: constraint
+    summary: "The agent must not initialize a project or codebase; specialized user skills own initialization."
+    quote: >-
+      don't initialize anything, please. I'm seeing you creating a new project. Don't. I have skills, specific skills that are meant to do what you are trying to do. Don't initialize anything, please.
+    cite: SRC-02-C0035
+    topics: [authorization, initialization, skills, workflow]
+    authority: source
+  - id: EXT-1143
+    type: decision
+    summary: "Current operator rulings outrank all historical sources."
+    quote: >-
+      current operator rulings as highest authority.
+    cite: SRC-02-C0035
+    topics: [source-authority, operator, precedence]
+    authority: source
+  - id: EXT-1144
+    type: correction
+    summary: "GitBook is primarily the Book/BMS authority rewrite, not the complete authority for every surviving mechanic."
+    quote: >-
+      The primer is a faithful GitBook baseline, but GitBook is primarily the Book/BMS authority rewrite—not the complete source for every surviving mechanic.
+    cite: SRC-02-C0035
+    topics: [gitbook, source-authority, books, bms]
+    authority: source
+  - id: EXT-1145
+    type: constraint
+    summary: "Unchanged mechanics may be recovered from the legacy QMX-discussion corpus, while BMAD claims are evaluated individually."
+    quote: >-
+      Use the legacy QMX-discussion corpus for unchanged mechanics, BMAD claim by claim
+    cite: SRC-02-C0035
+    topics: [legacy, bmad, source-authority, mechanics]
+    authority: source
+  - id: EXT-1146
+    type: correction
+    summary: "The later Snapshot Quality interpretation of SQS is semantic drift and must not replace Spread Quality Sensor."
+    quote: >-
+      SQS means Spread Quality Sensor; the later snapshot-quality aggregate is semantic drift.
+    cite: SRC-02-C0035
+    topics: [sqs, snapshot-quality, spread-quality, correction]
+    authority: source
+  - id: EXT-1147
+    type: constraint
+    summary: "Because QMF is genuinely new, historical sources may supply semantics and contracts but not an old module graph."
+    quote: >-
+      QMF is genuinely new, so recover semantics and contracts—not the old module graph.
+    cite: SRC-02-C0035
+    topics: [qmf, legacy, module-graph, clean-start]
+    authority: source
+  - id: EXT-1148
+    type: constraint
+    summary: "qmf-core may proceed only with framework-neutral primitives and must not freeze trading-node application decisions."
+    quote: >-
+      qmf-core may proceed only with framework-neutral primitives; do not freeze Trading Node application decisions yet.
+    cite: SRC-02-C0035
+    topics: [qmf-core, trading-node, framework-neutral, constraint]
+    authority: source
+  - id: EXT-1149
+    type: context
+    summary: "Recovered legacy evidence defines R by loss at the original stop, while FORM-0006 must not be implemented as-is."
+    quote: >-
+      R = loss at the original stop (with the FORM-0006 "never implement as-is" warning)
+    cite: SRC-02-C0037
+    topics: [r, risk, formula, legacy]
+    authority: source
+  - id: EXT-1150
+    type: context
+    summary: "Recovered evidence distinguishes roster seat, risk seat, and a legacy capital slot rather than collapsing them into one concept."
+    quote: >-
+      roster seat / risk seat / legacy capital slot kept firmly separate
+    cite: SRC-02-C0037
+    topics: [seat, books, risk, legacy]
+    authority: source
+  - id: EXT-1151
+    type: death
+    summary: "Legacy capital-slot machinery such as auctions, DPR, and slot tables does not survive."
+    quote: >-
+      slot machinery marked donor-only.
+    cite: SRC-02-C0037
+    topics: [capital-slot, auctions, dpr, legacy, death]
+    authority: source
+  - id: EXT-1152
+    type: open
+    summary: "The proposed Spread Quality Sensor formula remained unratified."
+    quote: >-
+      the candidate formula flagged as unratified.
+    cite: SRC-02-C0037
+    topics: [sqs, formula, thresholds, open]
+    authority: source
+  - id: EXT-1153
+    type: decision
+    summary: "QMX should be fully extensible because the operator cannot yet predict every future use."
+    quote: >-
+      since, okay, not we, but I'm not certain on how I'm going to be using this fully, but I want it to be okay, QMX rather, what I want QMX to be able to do is be fully extensible.
+    cite: SRC-02-C0037
+    topics: [qmx, extensibility, product-vision]
+    authority: source
+  - id: EXT-1154
+    type: decision
+    summary: "Agents should be able to extend the harness themselves for experiments such as machine learning and other future work."
+    quote: >-
+      I want this thing to be very extensible in that the agents can build, I won't call them plugins, but they can extend the harness on themselves. So, which means if we want to, you know, experiment with ML, we go ahead and do it. If we want to experiment with anything else, we go ahead and do it.
+    cite: SRC-02-C0037
+    topics: [agents, extensibility, experiments, machine-learning]
+    authority: source
+  - id: EXT-1155
+    type: decision
+    summary: "The data layer should build plumbing now and perform actual downloads during first installation."
+    quote: >-
+      for the data, the data layer, rather, I don't think it's even the data layer. The other thing we were talking about, the onloading and storage of data. I believe let's just do the plumbing. The downloading will come in during the, like, for example, the first install or something.
+    cite: SRC-02-C0037
+    topics: [data, plumbing, installation, acquisition]
+    authority: source
+  - id: EXT-1156
+    type: open
+    summary: "Context, reversible disposers, and a typed event bus were proposed from the DeepSeek/Cordis study but never ratified in this session."
+    quote: >-
+      The genuinely new build is seven items, of which three belong in qmf-core: the Context (the container extensions plug into), the disposer discipline (everything undoable), and a typed event bus.
+    cite: SRC-02-C0038
+    topics: [extensibility, context, disposers, event-bus, open]
+    authority: source
+  - id: EXT-1157
+    type: open
+    summary: "A three-tier extension model for open agent workspaces, reviewed app composition, and a sealed live node remained an unratified recommendation."
+    quote: >-
+      Agent workspaces are fully open — agents extend freely, and they're safe not by restriction but by absence: no live-trading provider even exists in that environment. The app tier is reviewed. The live node is composed once at boot, fingerprinted, then sealed — and promotion from tier to tier is only ever a human edit.
+    cite: SRC-02-C0038
+    topics: [extensibility, agent-workspaces, app, live-node, open]
+    authority: source
+  - id: EXT-1158
+    type: open
+    summary: "Deny-only guards, fail-closed approval, and rejection of hot reload, auto reload, and install-time execution were research proposals rather than operator-ratified rules."
+    quote: >-
+      Explicitly refused imports: hot-module-reload, auto-reload when a service vanishes, and install-time code execution — all fine for a chat harness, all wrong for money.
+    cite: SRC-02-C0038
+    topics: [extensibility, safety, hot-reload, open]
+    authority: source
+  - id: EXT-1159
+    type: context
+    summary: "The session ended before the operator answered the proposed qmf-core extensibility additions."
+    quote: >-
+      the idea right now is: let me try to start a fresh session in order to get a better opinion.
+    cite: SRC-02-C0038
+    topics: [session-handoff, open, extensibility]
+    authority: source
+  - id: EXT-1160
+    type: open
+    summary: "Book/BMS design, bot binding, backtesting, sessions, agentic architecture, UI, prop-firm Books, and several risk-priority questions remained explicitly open."
+    quote: >-
+      Parked with owners: backtesting session (your staged funnel — still waiting on that GPT brainstorm markdown whenever you find it), Book/BMS session (primer ready), bot session, agentic (five papers), UI.
+    cite: SRC-02-C0037
+    topics: [open, books, bms, backtesting, agentic-system, ui]
+    authority: source
+

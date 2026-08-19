@@ -1,0 +1,119 @@
+  is already running; I'm now launching a data-layer deep dive (your loudest
+  priority) that builds on yesterday's research instead of repeating it, plus
+  one agent reworking the answer keys against real QMX components. Backtesting
+  stays untouched, as you said. When everything lands I'll draw the verdict as a
+  properly diagram-first artifact — including what qmf-core now becomes after
+  today's rulings.
+
+● Workflow(Synthesize the QMX data-layer blueprint from existing research +
+          trading-node docs + operator dictation)
+  ⎿  /workflows to view dynamic workflow runs
+
+● Agent(Rework answer keys per module) Opus 5 (1M context)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+● All three deep dives are now running in parallel: the identity/lineage study
+  (started earlier), the data-layer blueprint workflow, and the answer-keys
+  rework against real QMX modules. Backtesting is explicitly excluded from all
+  of them. When they land I'll assemble the verdict artifact — diagram-first
+  this time, including the "what qmf-core now becomes" picture. Enjoy the
+  haircut.
+
+✻ Sautéed for 1m 44s
+
+❯ And maybe one call out before you go. I think may I don't know. I feel like   
+  we are trying to build. Okay, I think I'm proposing rather that we build a    
+  lot at the start, and I think that is going to cost me in a way. But is it    
+  possible? Because I don't know. Because I yeah, I say the data layer, but     
+  extensibility again should be the core idea behind all of this because I had  
+  actually forgotten I also want to trade stocks, but you see, you see how I'm  
+  going. It's like I'm adding more ideas every now and then. So yeah, that's    
+  why extensibility is very key and paramount. All right, I'm going now. So     
+  ciao                                                                          
+
+● Ciao — and quick answer before you go, because it's the right worry: no, we 
+  should not build a lot at the start, and the good news is you don't need to.
+  The honest pattern is: build a small core with wide seams. You keep adding
+  ideas (stocks today, crypto before, RL tomorrow) — that's not a problem to
+  fix, it's the design requirement itself, and the way a framework absorbs it is
+  by making sure the core words never assume forex, cTrader, or scalping. Then
+  stocks later is "one more venue and one more instrument type," not a rebuild.
+  That's what extensibility actually means at the foundation level, and it costs
+  decisions, not months. I'm folding stocks into the nouns' requirements now,
+  and the verdict will answer "is it possible" with real numbers.
+
+● Update(tracker\map.md)
+  ⎿  Added 1 line, removed 1 line
+      31  - **Backtesting: PAUSED as a decision area (operator ruling) — 
+          own session, ticket [008](tickets/008-backtesting-framework.md)
+          .** The verdict briefs are research inputs only; nothing in the
+          m is ratified. Approach changes to his staged funnel (screen → 
+          research → robustness → replay → full Book/BMS sim), on-demand 
+          in sandboxes. His GPT brainstorm markdown is the missing input 
+          — request it.
+      32  - **Agentic system: HANDS OFF for Claude sessions** — ~5 resear
+          ch papers to analyze first; "don't build organs; the veins only
+          ." Allowed foundational organs: bot schema, data management.
+      33  - **Prop-firm Book: DEFERRED to the agentic era (operator rulin
+          g, re-echoed — do not re-surface).** It is a Book (or books) wi
+          th its own rules, to be created WITH the agentic system in its 
+          own long discussion. QMF V1 ships only generic machinery (rule 
+          schema + Program/Campaign phase capability) able to hold any fi
+          rm's rules later. No firm is modeled now; prop SR* decided then
+           too.
+      34 -- Operator rulings (2026-08-17 afternoon) — **Toolbox principle
+         -**: QMF never adopts third-party strategy-family libraries (SMC
+         -, ICT, scalper packs…); it exists so Mubarak/agents can build t
+         -heir OWN custom versions of those ideologies. Repo studies extr
+         -act mental models only — no code transplantation, licences resp
+         -ected. **Permanent product constraint**: no futures or options,
+         - ever; stocks (day-trading) possibly later. **Bot × Book testin
+         -g**: each Book may carry its own testing mechanism — one bot te
+         -stable against many Books (scalping variants, prop-firm eval vs
+         - funded) as a matrix.                                          
+      34 +- Operator rulings (2026-08-17 afternoon) — **Toolbox principle
+         +**: QMF never adopts third-party strategy-family libraries (SMC
+         +, ICT, scalper packs…); it exists so Mubarak/agents can build t
+         +heir OWN custom versions of those ideologies. Repo studies extr
+         +act mental models only — no code transplantation, licences resp
+         +ected. **Permanent product constraint**: no futures or options,
+         + ever; stocks (day-trading) possibly later — RE-AFFIRMED 2026-0
+         +8-18 ("I had actually forgotten I also want to trade stocks"): 
+         +the core nouns must not preclude equities, alongside forex CFD 
+         +and crypto perp. **Extensibility is the paramount design driver
+         + (operator, 2026-08-18):** he keeps adding ideas by design; the
+         + answer is a SMALL core with WIDE seams — foundations never ass
+         +ume forex/cTrader/scalping — so every later idea lands as an ex
+         +tension, not a rebuild. Front-loading a big build is explicitly
+         + NOT the plan. **Bot × Book testing**: each Book may carry its 
+         +own testing mechanism — one bot testable against many Books (sc
+         +alping variants, prop-firm eval vs funded) as a matrix.        
+      35  
+      36  - [QMF handoff spec (draft)](../artifacts/2026-08-17-qmf-v1-spe
+          c-DRAFT.md) — **QMF is a toolbox that BUILDS applications, neve
+          r an application itself** (trading node, backtest workspaces, Q
+          MX app are all built WITH it — the most load-bearing correction
+           of the 2026-08-17 night session); library #1 = `qmf-core` "the
+           language" (exact money, exact time, the nouns seeded with orde
+          r-flow/DOM concepts so crypto never forces a rebuild, typed ref
+          usals, stamp machine, versioning) — **proposed, pending explici
+          t ratification (locks discussion 2026-08-18)**; ratified vocabu
+          lary: Confluence = Level(s)+Trigger(s)+Confirmation(s), multi-v
+          ariant and nesting, **no Exit — Exit/sizing/risk are Book terri
+          tory**; Bot = confluence + binding contract (not yet designed) 
+          + accumulating lineage, variants first-class; SQS = Spread Qual
+          ity Sensor (candidate formula NOT ratified); R = one unit of or
+          iginal pre-trade risk (FORM-0006 dimensionally broken — never i
+          mplement as-is); three seat concepts never collapsed; sweep→cap
+          →re-seed = the SCALPING Book's pattern, not a universal law; Si
+          mulator = product UI later; backtesting = library, never "engin
+          e".
+      37  - **Process rulings (2026-08-17 night):** Claude never scaffold
+          s/initializes projects — Mubarak's own skills do that; document
+          ation restart is framework-first, trading node later; code is w
+          ritten for humans AND agents ("I might also need to understand 
+          this code"); the platform is fully extensible but the word "plu
+          gins" is banned; build incrementally, one topic per session (su
+          persedes the 2–3-day full-draft plan); rebuild ceiling ~twice/y
+          ear, "Bloomberg Terminal from scratch" durability ambition.
+

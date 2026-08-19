@@ -1,0 +1,120 @@
+  Your other rulings, recorded: paper mode is Book-level, not bot-level — when a
+  Book can't trade live, the Book switches to a paper account and its bots keep
+  trading there so performance data keeps flowing; no bot ever runs a parallel
+  paper twin, and a bot connects to exactly one Book (Q5 and Q10 both die,
+  correctly). Q7: keep everything raw — storage is yours to buy, bucket backs it
+  up. Q3, Q8, Q11, Q12, K1, K2: ratified/delegated as you said, and K1 carries
+  your context-library logic — study SMC-and-friends deeply, build the knowledge
+  base, then build our own versions with QMF. Multiple demo accounts noted into
+  the broker ticket. Historical Dukascopy download stays where you already
+  ruled it: plumbing now, downloading at install — it isn't going anywhere.
+
+  Direct answers you asked for. The stack: nothing is bought, anywhere. Plain
+  compressed files (Parquet) + DuckDB (free, no server) + SQLite for the live
+  inbox — all open source. On the graph: Neo4j is open source, but we don't need
+  it — we make our own, exactly as you suspected: lineage lives in a plain
+  append-only file that ordinary Python reads, and if we ever want a graph
+  database later, that same file loads straight in. Trading node timing: not
+  "immediately after QMF is finished" — the node's design sessions can start
+  soon (it's documentation work), but its code waits for the QMF libraries it
+  stands on. The artifact transferring: yes — it's already a file in artifacts/
+  in the repo, so it hands to the documentation factory with everything else.
+
+  And you asked what a heavy indicator is — one plain example so the term isn't
+  fog: an EMA updates with one addition per bar, any bot does it instantly; a
+  regime model re-reads years of history to say "the market's mood changed" —
+  seconds to minutes of work, so it runs once in the MIS and every bot reads the
+  answer. That's the whole split.
+
+  Now the three you asked me to dumb down — in plain words, then your call:
+
+  Q4, the locked drawer. When you test many versions of strategies on the same
+  history, you slowly memorize that history — even honestly. So we keep the most
+  recent ~12 months in a locked drawer no experiment can touch. A strategy
+  earns one look at it, at the very end, and that look is written down. It's
+  fresh, never-seen data — the strongest protection a one-person operation has
+  against fooling itself.
+
+  Q6, recording through a news block. When news blocks USD pairs, orders on
+  those pairs stop. The question is only: do we keep watching and writing down
+  those pairs during the block — prices, spreads, what the Book's paper side
+  would have done? Those minutes are exactly the ones we most need data about
+  (spread sensor tuning, kill-switch review, alpha decay). Blocking mouths
+  shouldn't blind eyes.
+
+  Q9, the bench. A Book has a roster of bots, like a team. "Benched" means one
+  bot sits out while the team plays on. The old docs hung "benched" on the whole
+  Book's mode; the study says it really belongs to one bot's seat — the Book
+  stays active while a single bot sits. It edits a GitBook detail, so it needs
+  your word.
+
+● User answered Claude's questions:
+  ⎿  · Q4 — the locked drawer: keep the most recent ~12 months of history locked
+     away from ALL experiments (yours and agents'), with one logged look per 
+     strategy at the very end? → Okay. Now, this question is interesting because
+     it is making me think about a good scenario. Okay, for starters for data 
+     in terms of backtesting that is going to be used in backtesting and 
+     experimentation. Our, I don't know if it's claude warehouse or whatever. It
+     should have as far back as that currency goes. Okay, as far back as that 
+     currency goes, and also as far back as locascopy provides. We need to make 
+     sure that that is the same thing. Because here's the thing: we consider two
+     variables, okay, not two variables, two scenarios. I don't want to keep on
+     the 12-month data. That's not sufficient enough to train a bot or even do 
+     back testing. I don't know if it's even if the amount of data is a variable
+     for backtesting. Maybe I'm looking at this the wrong way. Yeah, so but for
+     historical data, keep as much as possible. Okay, now for the data of most 
+     recent, yes, skip the most recent 12 months of the assisting. Yeah, you 
+     remember we are still storing the performance data because we can still 
+     distill it and like use it for training, not training, yeah. Actually, my 
+     ML, the MIS training, there are so many models in there that I think I 
+     believe was already thought through for Shadow Dish. It's called Shadow 
+     Deployment. Yeah, yeah, but if it is for historical data, I think I might 
+     need your help there, but I believe I wanted for me personally, I wanted to
+     have as much data as possible. Okay, so that even when we start like that,
+     is it called chunking where we split like that data that this is for 
+     training, this is for out of sample? We have a long enough time frame to 
+     test with. I don't know if the amount is a good variable to use anyway
+     · Q6 — recording through news blocks: when news blocks a pair, orders stop 
+     — but the system keeps watching and recording that pair (prices, spreads, 
+     what the Book's paper side would have done)? → No, this is something that 
+     you caught, and I believe it's genuinely useful. Now, don't confuse two 
+     things. The first thing you want to confuse is the spread quality sensor or
+     the SQS. The SQS is one of the gates that allow a system to trade or not, 
+     simple as that. Okay, it will actually adjust depending on the books and 
+     the bots, but that's not part of your journey. I actually just saw that, 
+     but the thing that I want to clarify or understand, I want you to 
+     understand, I actually never saw this. Yeah, once news has blocked up pair,
+     we don't trade news, it's as simple as that. For the time being, we don't 
+     trade news, so everything halts. There is no trading, and it and it's not 
+     like it's an immediate stop as long as news is active. No, this thing is 
+     systematic. I think it stops 15 minutes before, then resumes 15 minutes 
+     after. It's very systematic. I believe that's the way the system is
+     · Q9 — the bench: "benched" describes ONE BOT's seat on a Book's roster 
+     (the Book plays on while that bot sits out) — not a mode of the whole Book.
+     Agree? (This edits a GitBook detail, so it needs your word.) → Yo, 
+     seriously, what do you mean by benched? Is this word even in the in the Git
+     book? Seriously, I am so confused what you are talking about. I don't 
+     recall anything like a bench. Okay? I really don't. Maybe benched in terms 
+     of there is something claude DPR and the PRS. Oh my god. Now, those things 
+     were part of Alpha Decay. So the DPR is, I think, I don't even recall what 
+     the full thing is, but PR is like performance rating system. So what they 
+     were meant to do, if you look at the Git book or whatever, whatever you can
+     find, really, what they were meant to do is help in terms of alpha decay, 
+     and there is a simple calculation that we were doing. I think I lost it 
+     whereby if I bought, I think losing trades, it's I think benching, now I 
+     get you. It's, I think, in terms of losing trades, yeah. So, in terms of 
+     losing trades, I believe yes. I think we had a maximum amount of losing 
+     trade. Man, I don't know. I don't know, I don't want to confuse myself. So,
+     benching, I don't think I'm sure. So, you might need to dig deep here
+     · What's the next session after this one? You asked my opinion — I 
+     recommend the trading node / Book & BMS session before backtesting, because
+     today's rulings piled up exactly there (Book-level paper mode, exits, the 
+     schema extraction), and your own description of backtesting needs the Book 
+     schema settled first ("a bot is tested against the things that make the 
+     scalping book the scalping book"). → No, okay. I believe the next session 
+     should be actually coding this QMF, the version we have. I think it will be
+     getting it ready to be coded. So we have to first start documenting and 
+     whatnot. Then another part I believe we shall use trading, we shall start 
+     on the trading node, but it will be using what we have built in this 
+     session, unless I'm wrong. I believe the framework is solid, yeah. Please 
+     reread through,Now, I actually almost forgot to comment on the things you 

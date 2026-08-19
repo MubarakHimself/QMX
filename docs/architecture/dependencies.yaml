@@ -1,0 +1,154 @@
+components:
+  - id: COMP-QMF-CORE
+    name: qmf-core
+    kind: library
+    layer: backend
+    roster_role: public-library
+    distribution: null
+    distribution_gap: GAP-0002
+    depends_on: []
+    interfaces: [CT-01, CT-02, CT-03, CT-04, CT-05]
+    spec: docs/components/qmf-core.md
+
+  - id: COMP-QMF-REGISTRY
+    name: qmf-registry
+    kind: library
+    layer: backend
+    roster_role: public-library
+    distribution: null
+    distribution_gap: GAP-0002
+    depends_on: [COMP-QMF-CORE, COMP-QMF-DATA-STORE]
+    interfaces: [CT-02, CT-03, CT-04, CT-05, CT-06, CT-07, CT-08, CT-09, CT-13]
+    spec: docs/components/qmf-registry.md
+
+  - id: COMP-QMF-DATA
+    name: qmf-data
+    kind: library
+    layer: backend
+    roster_role: public-library
+    distribution: null
+    distribution_gap: GAP-0002
+    depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA-STORE]
+    interfaces: [CT-01, CT-02, CT-03, CT-04, CT-05, CT-06, CT-07, CT-08, CT-10, CT-11, CT-12, CT-13, CT-14]
+    spec: docs/components/qmf-data.md
+
+  - id: COMP-QMF-INDICATORS
+    name: qmf-indicators
+    kind: library
+    layer: backend
+    roster_role: public-library
+    distribution: null
+    distribution_gap: GAP-0002
+    depends_on: [COMP-QMF-CORE, COMP-QMF-DATA]
+    interfaces: [CT-01, CT-02, CT-03, CT-04, CT-05, CT-10, CT-16]
+    spec: docs/components/qmf-indicators.md
+
+  - id: COMP-QMF-STRUCTURE
+    name: qmf-structure
+    kind: library
+    layer: backend
+    roster_role: public-library
+    distribution: null
+    distribution_gap: GAP-0002
+    depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA]
+    interfaces: [CT-02, CT-03, CT-04, CT-05, CT-06, CT-07, CT-08, CT-10, CT-17]
+    spec: docs/components/qmf-structure.md
+
+  - id: COMP-QMF-VENUE
+    name: QMF venue module
+    kind: middleware
+    layer: middleware
+    roster_role: public-module
+    distribution: null
+    distribution_gap: GAP-0002
+    depends_on: [COMP-QMF-CORE, COMP-QMF-DATA]
+    interfaces: [CT-01, CT-02, CT-03, CT-04, CT-05, CT-10, CT-13, CT-18, CT-19, CT-20, CT-21]
+    spec: docs/components/qmf-venue.md
+
+  - id: COMP-QMF-RISK
+    name: QMF risk module
+    kind: library
+    layer: backend
+    roster_role: public-module
+    distribution: null
+    distribution_gap: GAP-0002
+    depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA]
+    interfaces: [CT-01, CT-02, CT-03, CT-04, CT-05, CT-06, CT-07, CT-10, CT-13, CT-22, CT-23, CT-24, CT-25]
+    spec: docs/components/qmf-risk.md
+
+  - id: COMP-QMF-DATA-INGEST
+    name: qmf-data source-ingest seam
+    kind: middleware
+    layer: middleware
+    roster_role: internal-seam
+    distribution: null
+    distribution_gap: GAP-0002
+    depends_on: [COMP-QMF-CORE, COMP-QMF-DATA, COMP-DUKASCOPY, COMP-CALENDAR-FEED]
+    interfaces: [CT-03, CT-04, CT-10, CT-15]
+    spec: docs/components/qmf-data-ingest.md
+
+  - id: COMP-QMF-DATA-STORE
+    name: qmf-data persistence seam
+    kind: store
+    layer: data
+    roster_role: internal-seam
+    distribution: null
+    distribution_gap: GAP-0002
+    depends_on: []
+    interfaces: [CT-09, CT-11, CT-13, CT-26]
+    spec: docs/components/qmf-data-store.md
+
+  - id: COMP-QMF-DATA-BACKUP
+    name: qmf-data backup and restore process
+    kind: process
+    layer: data
+    roster_role: internal-seam
+    distribution: null
+    distribution_gap: GAP-0002
+    depends_on: [COMP-QMF-DATA-STORE, COMP-OBJECT-STORAGE]
+    interfaces: [CT-14, CT-26]
+    spec: docs/components/qmf-data-backup.md
+
+  - id: COMP-CTRADER
+    name: cTrader Open API
+    kind: external
+    layer: external
+    roster_role: external
+    distribution: null
+    distribution_gap: GAP-0002
+    depends_on: []
+    interfaces: [CT-15, CT-18, CT-19, CT-20, CT-21]
+    spec: docs/components/ctrader.md
+
+  - id: COMP-DUKASCOPY
+    name: Dukascopy historical data source
+    kind: external
+    layer: external
+    roster_role: external
+    distribution: null
+    distribution_gap: GAP-0002
+    depends_on: []
+    interfaces: [CT-15]
+    spec: docs/components/dukascopy.md
+
+  - id: COMP-CALENDAR-FEED
+    name: Economic-calendar feed
+    kind: external
+    layer: external
+    roster_role: external
+    distribution: null
+    distribution_gap: GAP-0002
+    depends_on: []
+    interfaces: [CT-15]
+    spec: docs/components/calendar-feed.md
+
+  - id: COMP-OBJECT-STORAGE
+    name: Off-machine object storage
+    kind: external
+    layer: external
+    roster_role: external
+    distribution: null
+    distribution_gap: GAP-0002
+    depends_on: []
+    interfaces: [CT-14]
+    spec: docs/components/object-storage.md

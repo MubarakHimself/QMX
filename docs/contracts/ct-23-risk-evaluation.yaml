@@ -1,0 +1,33 @@
+id: CT-23
+name: Risk evaluation and refusal contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-RISK
+consumers: []
+active_consumers: []
+intended_consumers: []
+wiring_status: reserved-unwired
+caller_status: unassigned
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0065, DEC-0066, DEC-0068, DEC-0074, DEC-0076, DEC-0078, DEC-0092, DEC-0094]
+conflicts: [DEC-0067]
+gaps: [GAP-0005, GAP-0007, GAP-0011, GAP-0039, GAP-0040, GAP-0043, GAP-0044, GAP-0045, GAP-0046]
+purpose: "Reserve an unwired risk-evaluation placeholder without assigning a caller or implementing Book, BMS, exit, sizing, SQS, or priority semantics."
+invariants:
+  - "The meaning of R is referenced only through registry:original_risk_unit; this contract does not restate its value."
+  - "FORM-0006, DPR, PRS, and legacy slot machinery are not admissible inputs or formulas."
+  - "No active caller or consumer is assigned, and no risk decision is buildable from this placeholder."
+  - "Risk formulas, exit ownership, priority, SQS, correlation, stop-out, bench, sizing, and refusal payloads remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0039
+  fields: null
+  fields_gap: GAP-0044
+  enums: null
+  enums_gap: GAP-0046
+  units: null
+  units_gap: GAP-0044
+  nullability: null
+  nullability_gap: GAP-0039

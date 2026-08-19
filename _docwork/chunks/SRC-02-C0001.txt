@@ -1,0 +1,112 @@
+╭─── Claude Code v2.1.233 ─────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting        │
+│                Welcome back Mubarak!               │ started                 │
+│                                                    │ Run /init to create a … │
+│                       ▐▛███▜▌                      │ ─────────────────────── │
+│                      ▝▜█████▛▘                     │ What's new              │
+│                        ▘▘ ▝▝                       │ Added GitLab merge req… │
+│ Fable 5 · Claude Max · himselfmubarak@gmail.com's  │ Added an opt-in `forwa… │
+│ Organization                                       │ Added opt-in memory cg… │
+│                   ~\Desktop\QMX                    │ /release-notes for more │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+
+❯ /effort                                                                       
+  ⎿  Set effort level to ultracode (this session only): xhigh + dynamic workflow
+     orchestration
+
+❯ /wayfinder All right, so first of all, I would like to welcome you to this    
+session. And it's going to be a long one, but it is one of the very many that   
+we are going to start with. Okay, so this is not the only session you're going  
+to have. Well, not with you, but this first session, okay, now I'm going to be  
+building a platform I've attempted to build multiple times, however, to this    
+time we are going to take a very structured approach. And I would like you to   
+correct me, tell me her truths where you know things would be going south, you  
+know, because I'm not so technical. I would need you to be more of my advisor   
+in terms of technicalities. Okay, so what I'm building is a project called QMX. 
+Now, that project is meant to be my own custom quantitative trading platform,   
+I would call it. Okay, it's actually not quantitative, but algorithmic. Later,  
+we shall switch fully to quantitative, but they are kind of the same thing, all 
+right now so I had GPT last time recover some information from the trading      
+node. Okay, it's claude trading node, but the reason it's claude trading node   
+is because the platform I'm trying to build is based on core concepts           
+deployments, which by the way, we shall change over time depending on how I see 
+things. Alright, so number one, we have our trade ignored. Now, the reason we   
+have that thing is because it is trading a node. Now, the reason we have that   
+node or a server is because we wanted a server customized for actual trading,   
+so with low latency and whatnot. So, if you couple low latency plus you know a  
+low spread account and whatnot, you can be very, very good with things like     
+scalping and whatnot, if you get what I'm saying. So, that's the first thing,   
+but it's just part of a core deployment mechanism. Now, the second thing was    
+going to be a back-end server. Now, this is very debatable because depending on 
+how we see things, we might not need it or we might. It depends on things,      
+yeah. Then, the third thing would have been the agentic node, but we shall see  
+how that goes. Alright, so QMX for now we have three core sections. That is the 
+trading node. Now, the trading node handles most of the things that deal with   
+live trading. Alright, so that right there is very crucial. You know, the core  
+concepts need to be precise, surgical, and efficient. Now, the agentic system   
+is what has made me to repeat this project so many times. Well, think of it as  
+we are doing it the first time because this time I have an actual idea behind   
+what I'm trying to do. Okay, now there is that middle part. Now, that middle    
+pass is meant to be like, think of it like a database, I would call it. It      
+handles longer-running tasks, syncing, machine learning, model training, and    
+whatnot. Yeah, so that and that. So, for now, I think the first task I want is  
+making sure that the trading node, all stuff that is meant to be on the trading 
+node is ready for coding because I want to move quickly. Okay, so I think       
+that's one of the first things. Then, the second thing would be in another      
+session, I think I'll begin the okay. Now, in fact, I've just thought through   
+it. I have something else that I have been thinking through, and the thing is   
+that I've seen that I might need to sort of try to create a library, but I      
+don't know anything about creating a coding library. Okay, it's actually        
+already proposed under QMX, it's called QML, which is the quant mind library.   
+Okay, now I don't know if we can have, I don't know if they are called modules, 
+yeah, so small sort of features that form up the library. So, for at first,     
+QML was made for only you know bots like the trading bots. However, it has      
+occurred to me that we might also need something called I'm calling it QMA,     
+okay, and the reason it's called that is because it's quantum agents. Yeah,     
+because the identic system might actually quant mind agents, is what I'm        
+talking about. So, because the agentic system might actually be, you know, kind 
+of functioned. Yeah, these things are going to come later. So, I don't know.    
+Are we first building the agents? Sorry, are we first building the library? Not 
+the agents, but the library, are we first building the node? What do you        
+propose? Okay, the stuff that goes on the node. Because I think we actually     
+have never sat down to talk through QML, to be honest. I really have never. So, 
+yeah, that's that. So, as you can see, we have a lot of work ahead. Okay, now   
+feel free to ask me as many questions as you want to remove ambiguity, to help  
+me and whatnot, call out any BS. Yeah, and all you should know is that this is  
+not the only session we're going to be having. I mean, in fact, this session    
+might be even fractioned. This might be, this might handle some parts. Then I   
+might start another session to continue this session like that because I want   
+to be below 40% of your context pooling or to serve your intelligence, in my    
+opinion. Okay, I meant context window on my days. I'm so sorry, I'm dictating,  
+so forgive me for any gibberish, but that's that. So, yeah, we can begin. I     
+don't know if you want to use dynamic workflows, but I believe you could. I     
+have no problem with that if you want to, anyway, though sub-agents can be      
+faster at times, to be honest. yeah, so take your time. yeah, I actually need   
+to give you the link to the Git book. Okay, that's mostly it. So, take your     
+time. You're going to do a lot of work today, but the first part is getting     
+some things out of the way to be ready for coding. But I think the library      
+might come first. What do you reckon? All right, that's it. So, let's begin.    
+So, yeah, this is more of ideas in trying to scope work down, please            
+
+● I'll start by looking at what's already in the QMX directory and checking for
+  any tracker or memory setup, then load the grilling and domain-modeling skills
+  to chart the map with you.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Found the recovered material from your last attempt. Reading it before we
+  talk.
+
+  Searched for 1 pattern, read 4 files, ran 1 shell command (ctrl+o to expand)
+
+❯ her is the link to gitbook [[https://elios-1.gitbook.io/qmx]]]                
+
+● Skill(grilling)
+  ⎿  Successfully loaded skill
+
+● Skill(domain-modeling)
+  ⎿  Successfully loaded skill
+
+  Read 1 file, wrote 4 memories (ctrl+o to expand)
+

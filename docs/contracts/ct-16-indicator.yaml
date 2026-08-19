@@ -1,0 +1,31 @@
+id: CT-16
+name: Incremental indicator component contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-INDICATORS
+consumers: []
+active_consumers: []
+intended_consumers: [COMP-QMF-STRUCTURE]
+wiring_status: reserved-consumer-unwired
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0055, DEC-0056]
+gaps: [GAP-0005, GAP-0031, GAP-0032, GAP-0033]
+purpose: "Let light indicator implementations consume causal observations through a package-neutral interface."
+invariants:
+  - "Suitable TA-Lib-class arithmetic is wrapped instead of reimplemented."
+  - "Heavy MIS and research analysis are outside this component."
+  - "Structure is an intended consumer only; no active dependency or call path is assigned before the indicator protocol and first consumers are ratified."
+  - "Fields, input and output types, warm-up, readiness, state, replay equivalence, reference implementation, versions, and tolerances remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0031
+  fields: null
+  fields_gap: GAP-0031
+  enums: null
+  enums_gap: GAP-0031
+  units: null
+  units_gap: GAP-0031
+  nullability: null
+  nullability_gap: GAP-0031

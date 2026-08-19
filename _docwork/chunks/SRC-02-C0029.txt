@@ -1,0 +1,120 @@
+● Update(tracker\map.md)
+  ⎿  Added 2 lines
+      26  - [QMF research sweep](tickets/001-qmf-research-sweep.md) — 11 
+          study files + synthesis delivered to `research/` (facts gathere
+          d, NOT yet adopted; ratification pass = ticket 002). Entry poin
+          t: `research/00-qmf-synthesis-module-map.md`; digest: `artifact
+          s/2026-08-17-qmf-minimal-core.html`.
+      27  - [Reference repo deep study](tickets/007-repo-deep-study.md) —
+           37 repos studied in two waves; idea ledger (113+43 rows) at `r
+          eference/00-idea-ledger.md` + `03-wave2-supplement.md`; kernel 
+          verdict (BUILD, staged, 3-day spike tiebreaker, D1 LGPL amendme
+          nt) at `reference/01-kernel-verdict.md`; backtesting verdict (O
+          ption 2: contracts first, vocabulary fix, Program/Campaign for 
+          prop-firm, 14 rulings pending) at `reference/02-backtesting-ver
+          dict.md`. Facts gathered — adoption pending ratification.
+      28  - **Kernel RATIFIED (2026-08-17 evening, operator ruling): BUIL
+          D our own — no third-party engine, runtime, or contract, ever.*
+          * Grounds: bots must bind to QMF's contracts not an engine's; l
+          oad-bearing arithmetic (fills/metrics/overfitting) must be read
+          able and patchable by the factory; agents backtest in disposabl
+          e sandboxes where a small pure-Python QMF fits and content-addr
+          essed Runs merge from many sandboxes into one ledger; no inheri
+          ted rebuilds. Nautilus et al. = mental models in the ledger onl
+          y. The 3-day adoption spike is cancelled. D1 licence amendment 
+          (LGPL ok for unmodified deps) still stands for ordinary librari
+          es.
+      29 +- **Backtesting: PAUSED as a decision area (operator ruling) — 
+         +own session, ticket [008](tickets/008-backtesting-framework.md)
+         +.** The verdict briefs are research inputs only; nothing in the
+         +m is ratified. Approach changes to his staged funnel (screen → 
+         +research → robustness → replay → full Book/BMS sim), on-demand 
+         +in sandboxes. His GPT brainstorm markdown is the missing input 
+         +— request it.                                                  
+      30 +- **Agentic system: HANDS OFF for Claude sessions** — ~5 resear
+         +ch papers to analyze first; "don't build organs; the veins only
+         +." Allowed foundational organs: bot schema, data management.   
+      31  - **Prop-firm Book: DEFERRED to the agentic era (operator rulin
+          g, re-echoed — do not re-surface).** It is a Book (or books) wi
+          th its own rules, to be created WITH the agentic system in its 
+          own long discussion. QMF V1 ships only generic machinery (rule 
+          schema + Program/Campaign phase capability) able to hold any fi
+          rm's rules later. No firm is modeled now; prop SR* decided then
+           too.
+      32  - Operator rulings (2026-08-17 afternoon) — **Toolbox principle
+          **: QMF never adopts third-party strategy-family libraries (SMC
+          , ICT, scalper packs…); it exists so Mubarak/agents can build t
+          heir OWN custom versions of those ideologies. Repo studies extr
+          act mental models only — no code transplantation, licences resp
+          ected. **Permanent product constraint**: no futures or options,
+           ever; stocks (day-trading) possibly later. **Bot × Book testin
+          g**: each Book may carry its own testing mechanism — one bot te
+          stable against many Books (scalping variants, prop-firm eval vs
+           funded) as a matrix.
+      33  
+
+  Made 1 scratchpad edit +217 (ctrl+o to expand)
+
+● Artifact(C:\Users\Mubarak\AppData\Local\Temp\claude\C--Users-Mubarak-Desktop-Q
+          MX\3f60e17b-e1cb-4eaa-999f-412427d7eea6\scratchpad\qmf-minimal-core.ht
+          ml)
+  ⎿  Updated ⧉ 
+     https://claude.ai/code/artifact/a934f7ba-32a1-475f-bbb8-888bea969f23
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Rebuilt from scratch, your way: ⧉ QMF Minimal Core — v5 
+  (https://claude.ai/code/artifact/a934f7ba-32a1-475f-bbb8-888bea969f23)
+  (refresh the page). What changed:
+
+  - Foundation only. Backtesting, bots, prop books, agentic, UI — all moved to a
+  "Parked, each gets its own day" list. No decisions asked in any of them.
+  - The kernel explained as a picture — a traffic controller: one clock, one
+  queue, memory first, your bot answers direction only, Book adds size, BMS door
+  says yes/no. The backtest≡live trick is one caption: swap the clock and the
+  broker plug, same machine replays the past. Your five-hats uniformity argument
+  is in the caption too — it sealed the build decision alongside your other
+  three.
+  - Tonight's six pieces, one sentence each — the workshop, the basic words, the
+  nouns, the ways things say no, the data ring (with its own picture), and the
+  same-exam harness.
+  - "Confluence identity" demystified — it's your own
+  Level+Trigger+Confirmation+Exit recipe card, stamped with a fingerprint so
+  duplicates recognize themselves and results stay glued to exact versions.
+  Drawn, not described.
+  - The ask shrank to three lines: say GO, confirm three quiet defaults, and
+  (any day) the ten-minute Spotware application.
+
+  Also done behind the scenes: ticket 008 created for tomorrow's backtesting
+  session — it carries your staged funnel (screen → research → robustness →
+  replay → full Book/BMS sim, on-demand in sandboxes), notes that today's briefs
+  are research inputs not ratified, and its first move is asking you for the
+  GPT brainstorm markdown — attach it whenever convenient, tonight or tomorrow.
+  Prop books are recorded as examples-only, 2–3 eventually, under risk
+  management, agentic-era. Agentic system marked hands-off pending your five
+  papers.
+
+  Slow and sure from here: tonight the foundation ships, tomorrow one bite —
+  backtesting, with your conversation as the seed.
+
+✻ Cooked for 5m 9s
+
+※ recap: We're setting up QMX's foundation: research done, kernel decided (build our own), artifact simplified to foundation-only. Next: you say GO so the factory ships tonight's foundation pieces, then tomorrow's backtesting session with your GPT brainstorm markdown.
+
+❯ Alright, here is the thing. Why do I feel like the kernel is not what I asked 
+  for? I really don't know why but I feel like the colonel is literally the     
+  rebuild of the treading node. Why is it? I'm so so disappointed, by the way.  
+  It seems like the kernel is like the entire trading node, literally word for  
+  word[[https://www.dukascopy-node.app/config/cli]]]In fact, not even just word 
+  for word is this is what the trading node does, seriously. Okay, maybe I was  
+  ambiguous. Seriously, I feel like maybe I'm the one who didn't understand     
+  what I wanted. Maybe. Because what we are creating is not the trading node,   
+  we are creating what is used to build the actual trading node. Do you         
+  understand my difference? I really don't know. Do you read this session       
+  transcript? Can you reread it? Because this is very, very annoying now. And   
+  you're not the one shipping against a factory. So, Lucas copy history, price  
+  data. Okay, we are going to download data, that's true. But okay, I don't     
+  know how we shall handle this because downloading of data is the factory is   
+  literally. Remember, all this has to be in an up later. So I don't know if    
+  you're downloading it now or later. Life prices, we don't need life prices,   
+  economic calendar. We need them, but like, where are we getting them from?    

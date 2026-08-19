@@ -1,0 +1,118 @@
+           h-workflow patterns. Verdict: what serves QMX's MIS and resear
+           ch lane, what is noise. Cross-reference research/08 and resear
+           ch/09.` },
+      108 -  { slug: 'portfolio-libs', file: 'portfolio-libs.md', model: 
+          -'opus', effort: 'medium', prompt: `Study ${REPOS}/PyPortfolioO
+          -pt, ${REPOS}/Riskfolio-Lib, ${REPOS}/FinanceToolkit. Focus: AP
+          -I shapes for optimization/risk (what a clean risk API looks li
+          -ke), which methods matter for a forex/prop-firm context vs equ
+          -ities-portfolio context (be honest — much of this is equities-
+          -shaped), FinanceToolkit's relevance for the later stocks lane 
+          -(day trading only, never futures/options — a permanent product
+          - constraint). Cross-reference research/04.` },                
+      108 +  { slug: 'portfolio-libs', file: 'portfolio-libs.md', model: 
+          +'sonnet', effort: 'high', prompt: `Study ${REPOS}/PyPortfolioO
+          +pt, ${REPOS}/Riskfolio-Lib, ${REPOS}/FinanceToolkit. Focus: AP
+          +I shapes for optimization/risk (what a clean risk API looks li
+          +ke), which methods matter for a forex/prop-firm context vs equ
+          +ities-portfolio context (be honest — much of this is equities-
+          +shaped), FinanceToolkit's relevance for the later stocks lane 
+          +(day trading only, never futures/options — a permanent product
+          + constraint). Cross-reference research/04.` },                
+      109    { slug: 'bot-frameworks', file: 'bot-frameworks.md', model: 
+           'opus', effort: 'medium', prompt: `Study ${REPOS}/lumibot, ${R
+           EPOS}/qtpylib, and skim ${REPOS}/QuantLib (C++, huge — structu
+           re and concepts only: calendars, day-count conventions, quote 
+           handles; what if anything QMF needs from that world). Focus fo
+           r the two bot frameworks: strategy lifecycle, broker abstracti
+           on, live/backtest switching, scheduling — and their failure mo
+           des (qtpylib is abandoned: why did it age badly?).` },
+      110    { slug: 'maps', file: 'catalog-maps.md', model: 'sonnet', ef
+           fort: 'high', prompt: `Catalog ${REPOS}/awesome-quant, ${REPOS
+           }/awesome-systematic-trading, ${REPOS}/EliteQuant, ${REPOS}/qu
+           ant-wiki, ${REPOS}/Quant-Developers-Resources, ${REPOS}/quant-
+           trading. Job: (1) classify every listed/contained resource int
+           o learning-material vs production-grade-code vs data-source vs
+            dead; (2) shortlist a MAXIMUM of 15 additional repos/librarie
+           s across all these catalogs that the other studies did NOT cov
+           er and that plausibly matter for QMF (forex, backtesting, data
+           , risk, prop-firm, agent-authoring), each with one line on why
+           ; (3) note anything specifically strong for forex. Mubarak: "a
+           wesome-quant can give us the map we need."` },
+      111  ]
+
+● Update(~\.claude\projects\C--Users-Mubarak-Desktop-QMX\3f60e17b-e1cb-4eaa-999f
+        -412427d7eea6\workflows\scripts\qmf-repo-study-wf_a53bf7ca-d42.js)
+  ⎿  Added 1 line, removed 1 line
+      106    { slug: 'platforms', file: 'platform-patterns.md', model: 's
+           onnet', effort: 'high', prompt: `Study ${REPOS}/OpenBB, ${REPO
+           S}/FinceptTerminal, ${REPOS}/zvt. Focus: OpenBB's provider/ada
+           pter architecture (how hundreds of data sources sit behind one
+            API — directly relevant to QMF's ingest layer), its CLI/app s
+           plit; FinceptTerminal's data-presentation and news-display pat
+           terns (Mubarak likes its aesthetics — capture WHAT makes them 
+           work, layout-wise, for the future Rust UI); zvt's data-schema/
+           recorder pattern and how it presents data. Extract platform-or
+           ganization mental models, not feature lists.` },
+      107    { slug: 'ml-research', file: 'ml-research-patterns.md', mode
+           l: 'sonnet', effort: 'high', prompt: `Study ${REPOS}/qlib, ${R
+           EPOS}/mlfinlab, ${REPOS}/QuantResearch, ${REPOS}/QuantsPlayboo
+           k (some content Chinese — read it, translate key ideas). Focus
+           : qlib's ML pipeline (dataset → model → workflow → record/expe
+           riment tracking — compare with our planned qmf.experiment/qmf.
+           models), mlfinlab's techniques catalog (which are relevant to 
+           retail FX and which are equities-only), the notebooks' researc
+           h-workflow patterns. Verdict: what serves QMX's MIS and resear
+           ch lane, what is noise. Cross-reference research/08 and resear
+           ch/09.` },
+      108    { slug: 'portfolio-libs', file: 'portfolio-libs.md', model: 
+           'sonnet', effort: 'high', prompt: `Study ${REPOS}/PyPortfolioO
+           pt, ${REPOS}/Riskfolio-Lib, ${REPOS}/FinanceToolkit. Focus: AP
+           I shapes for optimization/risk (what a clean risk API looks li
+           ke), which methods matter for a forex/prop-firm context vs equ
+           ities-portfolio context (be honest — much of this is equities-
+           shaped), FinanceToolkit's relevance for the later stocks lane 
+           (day trading only, never futures/options — a permanent product
+            constraint). Cross-reference research/04.` },
+      109 -  { slug: 'bot-frameworks', file: 'bot-frameworks.md', model: 
+          -'opus', effort: 'medium', prompt: `Study ${REPOS}/lumibot, ${R
+          -EPOS}/qtpylib, and skim ${REPOS}/QuantLib (C++, huge — structu
+          -re and concepts only: calendars, day-count conventions, quote 
+          -handles; what if anything QMF needs from that world). Focus fo
+          -r the two bot frameworks: strategy lifecycle, broker abstracti
+          -on, live/backtest switching, scheduling — and their failure mo
+          -des (qtpylib is abandoned: why did it age badly?).` },        
+      109 +  { slug: 'bot-frameworks', file: 'bot-frameworks.md', model: 
+          +'sonnet', effort: 'high', prompt: `Study ${REPOS}/lumibot, ${R
+          +EPOS}/qtpylib, and skim ${REPOS}/QuantLib (C++, huge — structu
+          +re and concepts only: calendars, day-count conventions, quote 
+          +handles; what if anything QMF needs from that world). Focus fo
+          +r the two bot frameworks: strategy lifecycle, broker abstracti
+          +on, live/backtest switching, scheduling — and their failure mo
+          +des (qtpylib is abandoned: why did it age badly?).` },        
+      110    { slug: 'maps', file: 'catalog-maps.md', model: 'sonnet', ef
+           fort: 'high', prompt: `Catalog ${REPOS}/awesome-quant, ${REPOS
+           }/awesome-systematic-trading, ${REPOS}/EliteQuant, ${REPOS}/qu
+           ant-wiki, ${REPOS}/Quant-Developers-Resources, ${REPOS}/quant-
+           trading. Job: (1) classify every listed/contained resource int
+           o learning-material vs production-grade-code vs data-source vs
+            dead; (2) shortlist a MAXIMUM of 15 additional repos/librarie
+           s across all these catalogs that the other studies did NOT cov
+           er and that plausibly matter for QMF (forex, backtesting, data
+           , risk, prop-firm, agent-authoring), each with one line on why
+           ; (3) note anything specifically strong for forex. Mubarak: "a
+           wesome-quant can give us the map we need."` },
+      111  ]
+      112  
+  ⎿  /workflows to view dynamic workflow runs
+
+● Wave 1 resumed with the rebalanced fleet: the 24 clones and the finished
+  catalog study replayed instantly from cache; five studies now run on Sonnet,
+  while Nautilus, the backtest-engines comparison, both verdict briefs, and the
+  ledger stay on Opus (they run later, when the overload has likely passed — and
+  if Opus 529s again, I drop them to Sonnet on the next resume without losing
+  anything). Your "mix the models" call was the right instinct; it's now the
+  recovery policy too.
+
+✻ Cooked for 59s
+

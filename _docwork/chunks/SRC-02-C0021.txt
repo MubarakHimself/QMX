@@ -1,0 +1,120 @@
+           TUDIES}/jesse.md, research/01, research/04, research/09. Write
+            ${REF}/02-backtesting-verdict.md: (a) the design that satisfi
+           es every requirement above, named module by module in QMF term
+           s; (b) how result-integrity is enforced against agent fabricat
+           ion (registered runs, framework-computed metrics, content-addr
+           essed inputs, budget ledger); (c) how a Book (incl. a prop-fir
+           m ruleset) plugs into a run; (d) how alpha-decay monitoring re
+           uses the same metrics contract live; (e) the recommendation be
+           tween his options 1 and 2, with the honest counter-case.`,
+      128      { label: 'verdict:backtesting', phase: 'Verdicts', schema:
+            STUDY_RESULT, model: 'opus', effort: 'high' }),
+
+● Update(~\.claude\projects\C--Users-Mubarak-Desktop-QMX\3f60e17b-e1cb-4eaa-999f
+        -412427d7eea6\workflows\scripts\qmf-repo-study-wf_a53bf7ca-d42.js)
+  ⎿  Added 1 line, removed 1 line
+      124  const verdicts = (await parallel([
+      125    () => agent(VERDICT_PREAMBLE + `\n\n(rev2: ${STUDIES}/nautil
+           us-trader.md and ${STUDIES}/backtest-engines.md now exist — th
+           ey are your MOST important inputs; read them first and rebuild
+            your analysis on them.)\n\nBRIEF 1 — THE KERNEL QUESTION. Ear
+           lier recommendation was "write our own kernel, copy proven sha
+           pes" (research/00, decision D2). Mubarak laughed and said matu
+           re platforms exist and we should not reinvent the wheel; the r
+           epo studies now exist as evidence. Read ${STUDIES}/nautilus-tr
+           ader.md, ${STUDIES}/jesse.md, ${STUDIES}/backtest-engines.md, 
+           ${STUDIES}/bot-frameworks.md and research/01. Write ${REF}/01-
+           kernel-verdict.md answering: (a) what does "the kernel" actual
+           ly consist of, in plain words; (b) the real options: build min
+           imal Python kernel / adopt+wrap an existing engine (which, at 
+           what licence cost) / hybrid (adopt for research-backtesting, b
+           uild thin for live); (c) what each costs in factory-days and i
+           n long-term maintenance; (d) your recommendation and the stron
+           gest honest argument against it. Remember the constraints: lic
+           ence allowlist if QMX might ever be sold (D1, pending), agents
+            author via typed schemas, prop-firm rules are first-class, li
+           ve trading deploys to a Linux VPS.` ,
+      126      { label: 'verdict:kernel', phase: 'Verdicts', schema: STUD
+           Y_RESULT, model: 'opus', effort: 'high' }),
+      127 -  () => agent(VERDICT_PREAMBLE + `\n\nBRIEF 2 — THE BACKTESTIN
+          -G QUESTION. Mubarak's own words: backtesting is make-or-break;
+          - it must be part of QMF; two options he sees — (1) build our o
+          -wn backtest engine, or (2) build a library, then use it to bui
+          -ld our own, usable by agents under all assumptions so "no matt
+          -er how much an agent tries, it can't fabricate the results", a
+          -nd he (or he + another agent) can read results simply and know
+          - if a strategy is good or bad; it must be standard and industr
+          -y-grade; it must adapt to any Book — e.g. answer "what happens
+          - if strategy X runs the evaluation stage and then the funded s
+          -tage on prop-firm Y, and how much does the account make over t
+          -ime under that firm's rules". He also flagged ALPHA DECAY dete
+          -ction (live performance degrading below backtest) as an old QM
+          -L feature to rebuild, noting the edge was defined relative to 
+          -a Book's configurable values. Also address in plain words the 
+          -vocabulary confusion from today: the earlier spec's "SimBroker
+          -/simulator" is the backtest's fill engine, NOT an FX-Replay-st
+          -yle human chart-replay tool — propose clearer names. Read ${ST
+          -UDIES}/backtest-engines.md, ${STUDIES}/nautilus-trader.md, ${S
+          -TUDIES}/jesse.md, research/01, research/04, research/09. Write
+          - ${REF}/02-backtesting-verdict.md: (a) the design that satisfi
+          -es every requirement above, named module by module in QMF term
+          -s; (b) how result-integrity is enforced against agent fabricat
+          -ion (registered runs, framework-computed metrics, content-addr
+          -essed inputs, budget ledger); (c) how a Book (incl. a prop-fir
+          -m ruleset) plugs into a run; (d) how alpha-decay monitoring re
+          -uses the same metrics contract live; (e) the recommendation be
+          -tween his options 1 and 2, with the honest counter-case.`,    
+      127 +  () => agent(VERDICT_PREAMBLE + `\n\n(rev2: ${STUDIES}/nautil
+          +us-trader.md and ${STUDIES}/backtest-engines.md now exist — th
+          +ey are your MOST important inputs; read them first and rebuild
+          + your analysis on them.)\n\nBRIEF 2 — THE BACKTESTING QUESTION
+          +. Mubarak's own words: backtesting is make-or-break; it must b
+          +e part of QMF; two options he sees — (1) build our own backtes
+          +t engine, or (2) build a library, then use it to build our own
+          +, usable by agents under all assumptions so "no matter how muc
+          +h an agent tries, it can't fabricate the results", and he (or 
+          +he + another agent) can read results simply and know if a stra
+          +tegy is good or bad; it must be standard and industry-grade; i
+          +t must adapt to any Book — e.g. answer "what happens if strate
+          +gy X runs the evaluation stage and then the funded stage on pr
+          +op-firm Y, and how much does the account make over time under 
+          +that firm's rules". He also flagged ALPHA DECAY detection (liv
+          +e performance degrading below backtest) as an old QML feature 
+          +to rebuild, noting the edge was defined relative to a Book's c
+          +onfigurable values. Also address in plain words the vocabulary
+          + confusion from today: the earlier spec's "SimBroker/simulator
+          +" is the backtest's fill engine, NOT an FX-Replay-style human 
+          +chart-replay tool — propose clearer names. Read ${STUDIES}/bac
+          +ktest-engines.md, ${STUDIES}/nautilus-trader.md, ${STUDIES}/je
+          +sse.md, research/01, research/04, research/09. Write ${REF}/02
+          +-backtesting-verdict.md: (a) the design that satisfies every r
+          +equirement above, named module by module in QMF terms; (b) how
+          + result-integrity is enforced against agent fabrication (regis
+          +tered runs, framework-computed metrics, content-addressed inpu
+          +ts, budget ledger); (c) how a Book (incl. a prop-firm ruleset)
+          + plugs into a run; (d) how alpha-decay monitoring reuses the s
+          +ame metrics contract live; (e) the recommendation between his 
+          +options 1 and 2, with the honest counter-case.`,              
+      128      { label: 'verdict:backtesting', phase: 'Verdicts', schema:
+            STUDY_RESULT, model: 'opus', effort: 'high' }),
+      129  ])).filter(Boolean)
+      130  
+
+● Update(~\.claude\projects\C--Users-Mubarak-Desktop-QMX\3f60e17b-e1cb-4eaa-999f
+        -412427d7eea6\workflows\scripts\qmf-repo-study-wf_a53bf7ca-d42.js)
+  ⎿  Added 1 line, removed 1 line
+      131  phase('Ledger')
+      132  
+      133  const ledger = await agent(
+      134 -  `You are the ledger agent. Read EVERY file in ${STUDIES}/ pl
+          -us ${REF}/01-kernel-verdict.md and ${REF}/02-backtesting-verdi
+          -ct.md. Merge every "mental models worth borrowing" entry into 
+          -ONE organized table at ${REF}/00-idea-ledger.md with columns: 
+          -Idea | Source (repo + path) | What we borrow (the mental model
+          -) | Why it matters | How QMF implements it | Licence note. Ded
+          -uplicate ideas that multiple studies found — cite all sources 
+          -on one row. Group rows by QMF ring (core / data / features / i
+          -ntelligence / money authority / venue / runtime+backtest / epi
+          -stemics / registry+surface / UI-later). Open with a 10-line pl
+          -ain-words summary of what the whole study concluded, and close
+          - with "## Contradictions with the earlier web research" listin

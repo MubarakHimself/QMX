@@ -1,0 +1,27 @@
+id: CT-07
+name: Registry lineage-edge contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-REGISTRY
+consumers: [COMP-QMF-DATA, COMP-QMF-STRUCTURE, COMP-QMF-RISK]
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0035, DEC-0039]
+gaps: [GAP-0005, GAP-0015]
+purpose: "Represent immutable graph-shaped provenance between versioned identities and occurrences."
+invariants:
+  - "Graph shape does not require a graph database."
+  - "Edge kinds, endpoint cardinality, cycle policy, amendment behavior, and query guarantees remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0015
+  fields: null
+  fields_gap: GAP-0015
+  enums: null
+  enums_gap: GAP-0015
+  units: null
+  units_gap: GAP-0015
+  nullability: null
+  nullability_gap: GAP-0015
+

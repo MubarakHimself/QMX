@@ -1,0 +1,353 @@
+generated: 2026-08-18
+ratified: null
+features:
+  - id: FEAT-0001
+    name: "Money, price, and quantity value contracts"
+    scope: >-
+      In: immutable exact amount, price, and quantity values; validated construction; currency and unit compatibility; arithmetic, comparison, quantization, and deterministic rounding semantics; and executable boundary tests. Out: FX conversion, position sizing, P&L, portfolio aggregation, broker balances, persistence, and display formatting. Done: the ratified precision and rounding laws exist once in qmf-core, invalid operations have specified failure conditions ready for the shared refusal envelope, and consumers need no private money primitive.
+    decisions: [DEC-0022, DEC-0026, DEC-0030, DEC-0096]
+    components: [COMP-QMF-CORE]
+    blocked_by: []
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0001, GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0007, GAP-0013. The feature must not choose precision or rounding from a recommendation."
+
+  - id: FEAT-0002
+    name: "UTC, trading-day, calendar, and session value contracts"
+    scope: >-
+      In: canonical UTC instants, civil-date and trading-date values, interval boundaries, venue/session calendar interfaces, timezone conversion validation, and DST and ambiguity tests. Out: a maintained global holiday database, Forex-specific rollover inside the universal primitive, a scheduler, dataset holdout policy, and structure algorithms. Done: every QMF contract can express time unambiguously, naive or ambiguous times fail explicitly, and the ratified trading-day/session semantics are covered by golden boundary cases.
+    decisions: [DEC-0022, DEC-0027, DEC-0030, DEC-0031, DEC-0032, DEC-0096]
+    components: [COMP-QMF-CORE]
+    blocked_by: []
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0001, GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0008, GAP-0013. DEC-0032 keeps the encoding choice open until the gap is answered."
+
+  - id: FEAT-0003
+    name: "Asset-neutral instrument and order-flow nouns"
+    scope: >-
+      In: the smallest asset-neutral public vocabulary needed by facts and venue ports, including instrument identity references, venue-qualified symbols, side, Bar, Tick, Order, Fill, Position, Account, and ratified order-flow fields with validation. Out: broker commands, strategy signals, portfolio policy, node state, futures/options, and a universal entity card. Done: data, registry, and venue specifications share stable versioned nouns without Forex, cTrader, scalping, or deployment assumptions.
+    decisions: [DEC-0022, DEC-0028, DEC-0030, DEC-0031, DEC-0032, DEC-0096]
+    components: [COMP-QMF-CORE]
+    blocked_by: []
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0001, GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0009, GAP-0013. DEC-0032 leaves exact instrument identity open; no alias or identity rule may be inferred."
+
+  - id: FEAT-0004
+    name: "Typed refusal and invariant-violation envelope"
+    scope: >-
+      In: a small public refusal taxonomy, stable machine codes, safe structured detail, causal chaining, invariant-violation conversion at public boundaries, and tests for redaction and deterministic classification. Out: retry orchestration, incident response, notification routing, exception swallowing, trading-node recovery, and DPR/PRS mechanisms. Done: every QMF boundary can communicate the ratified failure categories through one versioned shape without embedding recovery policy or exposing secrets.
+    decisions: [DEC-0022, DEC-0029, DEC-0030, DEC-0096]
+    components: [COMP-QMF-CORE]
+    blocked_by: []
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0001, GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0011, GAP-0013. Refusal categories and payload fields remain unratified."
+
+  - id: FEAT-0005
+    name: "Canonical serialization, fingerprints, and compatibility rules"
+    scope: >-
+      In: deterministic canonical encoding for the ratified core values and refusals, versioned content fingerprints, schema and contract-version identifiers, compatibility checks, deprecation metadata, and golden byte vectors. Out: a general ORM, database migrations, network negotiation, artifact packaging, registry persistence, and proprietary signing. Done: semantically equal values produce equal canonical bytes and fingerprints, incompatible versions fail explicitly, and registry and data consumers can depend on a stable identity substrate.
+    decisions: [DEC-0022, DEC-0029, DEC-0030, DEC-0032, DEC-0096, DEC-0097]
+    components: [COMP-QMF-CORE]
+    blocked_by:
+      - id: FEAT-0001
+        reason: "canonical serialization must encode the exact money, price, and quantity contract FEAT-0001 lands"
+      - id: FEAT-0002
+        reason: "canonical serialization must encode the UTC and trading-date contract FEAT-0002 lands"
+      - id: FEAT-0003
+        reason: "fingerprints must cover the asset-neutral instrument and market-noun contract FEAT-0003 lands"
+      - id: FEAT-0004
+        reason: "compatibility vectors must include the typed refusal envelope FEAT-0004 lands"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0001, GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0010, GAP-0012, GAP-0013. DEC-0032 keeps the result-label tuple open."
+
+  - id: FEAT-0006
+    name: "Registry identity families and canonical addresses"
+    scope: >-
+      In: the ratified first type-specific identity families, stable typed addresses, immutable identity records, namespaces and versions, address lookup, and collision and malformed-reference tests. Out: one universal recipe card, one-page agent metadata, generic extension plumbing, graph-database adoption, UI browsing, and trading-node entities. Done: each admitted V1 kind has a narrow canonical identity that round-trips through qmf-core encoding and adding a kind does not require a universal mega-record.
+    decisions: [DEC-0030, DEC-0033, DEC-0035, DEC-0036, DEC-0038]
+    components: [COMP-QMF-REGISTRY]
+    blocked_by:
+      - id: FEAT-0005
+        reason: "registry addresses consume the canonical serialization, fingerprint, and compatibility contract FEAT-0005 lands"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0013, GAP-0014. DEC-0036 is an open study model, not permission to select its kinds or fields without ratification."
+
+  - id: FEAT-0007
+    name: "Registry lineage edges and graph invariants"
+    scope: >-
+      In: the ratified first typed lineage edges, append-only relationship records, endpoint and duplicate validation, the ratified cycle policy, minimum ancestry queries, and an in-memory reference implementation. Out: a graph database, arbitrary knowledge-graph traversal, visualization, runtime event buses, organization/mission graphs, and Bot or Book schemas. Done: V1 identities record and query provenance through stable typed endpoints and the contract is proven without committing QMF to a graph storage engine.
+    decisions: [DEC-0030, DEC-0033, DEC-0035, DEC-0038]
+    components: [COMP-QMF-REGISTRY]
+    blocked_by:
+      - id: FEAT-0006
+        reason: "lineage edges require the typed identity families and canonical registry addresses FEAT-0006 lands"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0013, GAP-0015, GAP-0021, GAP-0022. The reference implementation must not silently select the final persistence engine."
+
+  - id: FEAT-0008
+    name: "Causality and look-ahead registration gate"
+    scope: >-
+      In: a provider-neutral registration claim over canonical observation time, knowledge/availability time, cutoff time, and registry addresses; deterministic validation; refusal evidence; lineage attachment; and permitted, unavailable, and leaking golden cases. Out: a backtester, model evaluation, walk-forward optimization, research statistics, live monitoring, and automatic promotion. Done: future or unavailable evidence is rejected with the violated causal rule and qmf-data can implement the claim contract without Registry importing Data.
+    decisions: [DEC-0033, DEC-0038]
+    components: [COMP-QMF-REGISTRY]
+    blocked_by:
+      - id: FEAT-0007
+        reason: "causality pass and refusal evidence must attach to the identity and lineage contracts FEAT-0007 completes"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0013, GAP-0016. The exact claim, cutoff comparison, and pass evidence must come from GAP-0016."
+
+  - id: FEAT-0009
+    name: "Immutable registry attempt accounting"
+    scope: >-
+      In: append-only records for the ratified attempt scope, target address, sequence/count behavior, reset or no-reset rule, budget state, outcome and refusal references, idempotency, and minimum queries. Out: retry scheduling, quotas, billing, command journaling, holdout-access auditing, mutable counters, and workflow orchestration. Done: every in-scope attempt remains immutable whether accepted or refused, the ratified reset/budget semantics are tested, and causality outcomes attach without redefining accounting.
+    decisions: [DEC-0033]
+    components: [COMP-QMF-REGISTRY]
+    blocked_by:
+      - id: FEAT-0008
+        reason: "attempt records must reference the causality-gate outcome and refusal evidence contract FEAT-0008 lands"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0013, GAP-0017. The counter target, scope, reset, and budget rules remain open."
+
+  - id: FEAT-0010
+    name: "Bitemporal market-fact envelope"
+    scope: >-
+      In: the minimum immutable fact envelope, event/observation time, knowledge/availability time, source and instrument identity, payload fingerprint, correction or supersession link, canonical validation, and golden causal examples. Out: the proposed full six-layer data architecture, a selected database, ingest scheduling, feature engineering, resampling catalogs, and deletion or compaction. Done: facts preserve what occurred, when it became knowable, and where it came from; corrections append rather than erase evidence; and the fact implements Registry's causality-claim boundary.
+    decisions: [DEC-0038, DEC-0042, DEC-0043, DEC-0045]
+    components: [COMP-QMF-DATA]
+    blocked_by:
+      - id: FEAT-0008
+        reason: "the fact envelope must implement the observation, knowledge-time, cutoff, identity, and evidence contract FEAT-0008 lands"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0013, GAP-0020, GAP-0023. DEC-0043 keeps the complete layer model open; this slice may land only the ratified minimum fact shape."
+
+  - id: FEAT-0011
+    name: "Dataset partition, sealed-holdout, and release contract"
+    scope: >-
+      In: immutable dataset-release identity, time-ordered train, validation, test, and final-holdout manifests, the newest approximately twelve-month sealed default, explicit override evidence, access-policy hooks, and leakage checks. Out: model training, a backtester, walk-forward optimization, researcher UI, performance metrics, and automated promotion. Done: each release reproduces exact partition membership, the default research path cannot read the final holdout, and any ratified one-time release or override is explicit and auditable.
+    decisions: [DEC-0030, DEC-0042, DEC-0044, DEC-0046]
+    components: [COMP-QMF-DATA]
+    blocked_by:
+      - id: FEAT-0010
+        reason: "dataset partition manifests consume the bitemporal fact identity and knowledge-time contract FEAT-0010 lands"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0013, GAP-0024. The approximately twelve-month law is live; reopening, registration, and audit mechanics remain unresolved."
+
+  - id: FEAT-0012
+    name: "Durable operational and research journal-evidence contract"
+    scope: >-
+      In: a narrow durable journal-evidence schema for QMF library and adapter evidence, occurrence and causal references, dataset-release references, outcome and refusal attachment, canonical encoding, the ratified mutation or append policy, and an in-memory contract harness. Out: a global event bus, Context/disposer lifecycle, trading-node loop, notification system, recovery coordinator, audit UI, and arbitrary application logging. Done: components can emit durable typed evidence without a runtime, causal links validate, the ratified history-preservation rule is explicit, and storage implementations remain replaceable behind the contract.
+    decisions: [DEC-0030, DEC-0042, DEC-0048]
+    components: [COMP-QMF-DATA]
+    blocked_by:
+      - id: FEAT-0011
+        reason: "research journal entries must reference the dataset-release and sealed-holdout evidence contract FEAT-0011 lands"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0013, GAP-0025. Event types, identifiers, mutation or append policy, cadence, retention, and redaction remain open; durable does not mean append-only until ratified."
+
+  - id: FEAT-0013
+    name: "Backup snapshot and recovery-boundary specification"
+    scope: >-
+      In: the Store-to-Backup snapshot boundary, backup manifests, content hashes, consistency and completeness rules, a provider-neutral off-machine target interface, non-destructive restore and recovery boundaries, corruption and partial-backup refusals, and blocked golden recovery scenarios. Out: an unratified cloud vendor, high availability, runtime scheduling, secrets management, retention deletion, operational cutover, and trading-node recovery. Done: CT-26 and CT-14 have ratified schemas and failure semantics, a coherent evidence snapshot can be specified without overstating recoverability, and operational restore, rollback, and cutover remain blocked until GAP-0027 explicitly authorizes them.
+    decisions: [DEC-0042, DEC-0045]
+    components: [COMP-QMF-DATA]
+    blocked_by:
+      - id: FEAT-0012
+        reason: "backup manifests must cover the fact, dataset-release, and durable journal-evidence contracts FEAT-0012 completes"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0013, GAP-0026, GAP-0027. Provider, encryption, schedule, retention, RTO/RPO, and restore cadence remain unresolved."
+
+  - id: FEAT-0014
+    name: "Raw-evidence persistence adapter"
+    scope: >-
+      In: one ratified local persistence adapter for immutable raw facts and backup manifests, content-addressed write and read, duplicate handling, corruption detection, and adapter conformance tests. Out: automatic adoption of the proposed Parquet/DuckDB/SQLite/JSONL stack, a whole six-layer platform, cloud replication, derived indicators, acquisition jobs, and deletion or compaction. Done: the selected adapter passes the provider-neutral fact and integrity suites, repeated writes are deterministic, evidence cannot be silently overwritten, and backend types stay private.
+    decisions: [DEC-0038, DEC-0042, DEC-0045, DEC-0047]
+    components: [COMP-QMF-DATA]
+    blocked_by:
+      - id: FEAT-0013
+        reason: "the persistence adapter must implement the fact, content-integrity, backup-unit, and restore contracts FEAT-0013 completes"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0013, GAP-0021, GAP-0022, GAP-0026. DEC-0047 names candidates only; no engine may be selected from its recommendation."
+
+  - id: FEAT-0015
+    name: "Dataset-release access and sealed-holdout enforcement"
+    scope: >-
+      In: release materialization, partition-filtered reads, default final-holdout denial, the ratified authorized-override boundary, deterministic journal-ready access evidence, and leakage tests over persisted facts. Out: research notebooks, model fitting, backtesting, analytics, a general permissions service, and automatic holdout consumption. Done: declared non-final partitions are readable without sealed facts, denied or overridden final-holdout access produces evidence, and membership is reproducible from the release fingerprint.
+    decisions: [DEC-0044, DEC-0046]
+    components: [COMP-QMF-DATA]
+    blocked_by:
+      - id: FEAT-0014
+        reason: "release access enforcement consumes the persisted immutable fact and backup-safe storage contract FEAT-0014 lands"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0013, GAP-0024. Override authority and audit mechanics must be ratified before implementation."
+
+  - id: FEAT-0016
+    name: "Journal persistence adapter"
+    scope: >-
+      In: durable write under the ratified history-preservation policy, lookup by identity, lookup by causal chain and dataset release, integrity verification, and crash/interrupted-write behavior for journal evidence on the selected local backend. Out: pub/sub, event dispatch, workflow state, notifications, live-node recovery, log-search UI, and storage of arbitrary application logs. Done: writes satisfy the ratified mutation or append semantics, interrupted writes cannot appear valid, causal queries order deterministically, and the implementation passes the journal contract suite without runtime dependencies.
+    decisions: [DEC-0042, DEC-0047, DEC-0048]
+    components: [COMP-QMF-DATA]
+    blocked_by:
+      - id: FEAT-0015
+        reason: "journal persistence must store the sealed-holdout access and override evidence contract FEAT-0015 lands"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0013, GAP-0021, GAP-0022, GAP-0025, GAP-0026. The open storage study is not an adopted backend decision, and no append-only journal rule is adopted before GAP-0025."
+
+  - id: FEAT-0017
+    name: "Off-machine backup and recovery adapter"
+    scope: >-
+      In: one ratified off-machine target adapter, the ratified credential and encryption boundary, CT-26 snapshot intake, CT-14 manifest transfer, required idempotent or resumable behavior, the ratified scheduler-neutral cadence, and a non-destructive recovery drill on disposable data after recovery and cutover authority are defined. Out: enterprise HA, any credential provisioning or storage behavior not ratified by GAP-0027, provider details in core contracts, destructive replacement of the only good evidence, and deletion of local raw evidence. Done: the ratified snapshot restores into an isolated target with matching fingerprints, missing or corrupt objects fail validation, credential handling and evidence follow the ratified GAP-0027 boundary, and the approved external scheduler can invoke the ratified backup procedure; production cutover still requires its explicit human gate.
+    decisions: [DEC-0042, DEC-0045]
+    components: [COMP-QMF-DATA]
+    blocked_by:
+      - id: FEAT-0016
+        reason: "the off-machine backup must protect the settled raw-fact, release, and durable journal stores FEAT-0016 completes"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0013, GAP-0026, GAP-0027. Only the off-machine direction is decided; cadence, provider, encryption, retention, RPO/RTO, recovery, rollback, verification, and cutover remain unresolved."
+
+  - id: FEAT-0018
+    name: "First historical-source acquisition adapter"
+    scope: >-
+      In: the ratified source boundary and one first historical tick adapter, source-to-fact mapping, checksums and progress evidence, bounded resumable batches, idempotent persistence, and fixture-based mapping tests. Out: downloading the historical corpus during the factory pass, scheduled harvesting, every vendor, indicator transformation, live-feed supervision, and embedded credentials. Done: a bounded operator-invoked batch is reproducibly acquired with provenance, retries do not duplicate facts, malformed records are refused and journaled, and the full first-install load remains an installation action.
+    decisions: [DEC-0042, DEC-0045, DEC-0051, DEC-0053]
+    components: [COMP-QMF-DATA]
+    blocked_by:
+      - id: FEAT-0017
+        reason: "new source evidence may be admitted only after the raw store, journal, and ratified off-machine protection boundary FEAT-0017 completes"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0013, GAP-0028, GAP-0030. Source ownership, legal fields, symbols, depth, and reconciliation remain open; no bulk download occurs in this feature pass."
+
+  - id: FEAT-0019
+    name: "Incremental indicator protocol and conformance harness"
+    scope: >-
+      In: a small batch-and-incremental indicator interface, warm-up and readiness semantics, missing and invalid input behavior, output fact and identity linkage, deterministic reset or snapshot rules where ratified, and a package-neutral conformance harness with oracle hooks. Out: a full indicator catalog, batch research framework, GPU engine, signals, strategies, market structure, backtesting, and scheduling. Done: implementations are testable without vendor types, equal input fact streams produce equal outputs, readiness and refusal behavior are explicit, and outputs preserve causal source references.
+    decisions: [DEC-0030, DEC-0032, DEC-0055, DEC-0056]
+    components: [COMP-QMF-INDICATORS]
+    blocked_by:
+      - id: FEAT-0010
+        reason: "the indicator protocol consumes the canonical bitemporal input and derived-fact identity contract FEAT-0010 lands"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0013, GAP-0031. GAP-0033 is open but non-blocking; it may refine the light/heavy classification without enlarging this protocol."
+
+  - id: FEAT-0020
+    name: "First light-indicator wrapper set"
+    scope: >-
+      In: the ratified first small light-indicator wrapper set, parameter validation, batch/incremental equivalence where applicable, reference-oracle comparisons, causal output facts, and isolation of the selected third-party implementation. Out: every technical indicator, vendor objects in public APIs, structure or zone logic, signals, hyperparameter search, visualization, and canonical claims for unselected families. Done: every selected wrapper passes the shared protocol and approved oracle tolerances, warm-up behavior is documented, dependency-specific types stay private, and later wrappers remain separate one-pass slices.
+    decisions: [DEC-0013, DEC-0032, DEC-0055, DEC-0056, DEC-0096]
+    components: [COMP-QMF-INDICATORS]
+    blocked_by:
+      - id: FEAT-0019
+        reason: "concrete wrappers must implement the package-neutral incremental protocol and conformance harness FEAT-0019 lands"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0013, GAP-0032. The first wrapper names and canonical reference/version must be selected in the spec without treating DEC-0032 as resolved."
+
+  - id: FEAT-0021
+    name: "Causal structure-component protocol"
+    scope: >-
+      In: a common boundary for consuming ordered facts and emitting versioned structure facts, including confirmation time, readiness, invalidation or supersession, provenance, parameter identity, replay determinism, and causality conformance scenarios. Out: an all-purpose algorithm framework, signals, strategies, plotting, backtesting, runtime scheduling, and any unratified structure family. Done: a family can state exactly what it knew and when, outputs cannot precede confirmation evidence, invalidation preserves history, and Registry's gate accepts valid examples while rejecting look-ahead.
+    decisions: [DEC-0013, DEC-0030, DEC-0033, DEC-0038, DEC-0058]
+    components: [COMP-QMF-STRUCTURE]
+    blocked_by:
+      - id: FEAT-0010
+        reason: "structure components consume the bitemporal fact envelope and causality-claim integration contract FEAT-0010 lands"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0013, GAP-0034. The protocol may define family-neutral causality only; no assistant-generated closed family taxonomy is adopted."
+
+  - id: FEAT-0022
+    name: "First causal structure family"
+    scope: >-
+      In: one operator-ratified level, zone, or market-structure family; its parameters and identity; confirmation and invalidation laws; incremental computation; causal fixtures; golden outputs; and explicit look-ahead failure cases. Out: additional families, discretionary chart interpretation, plotting, strategies, signal scoring, backtesting, and treating the first family as the whole library. Done: the family passes protocol, causality, replay-determinism, and invalidation tests, every output links to sufficient facts, and parameter changes mint distinct versioned identities.
+    decisions: [DEC-0013, DEC-0030, DEC-0058, DEC-0096]
+    components: [COMP-QMF-STRUCTURE]
+    blocked_by:
+      - id: FEAT-0021
+        reason: "the first causal family must implement the structure protocol, provenance, confirmation, and invalidation contract FEAT-0021 lands"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0013, GAP-0034. The family and its causal confirmation rule must be ratified before this pass starts."
+
+  - id: FEAT-0023
+    name: "Platform-neutral venue port contract"
+    scope: >-
+      In: capability discovery, instrument resolution, connection/session boundaries, historical and live data requests, asset-neutral order commands, acknowledgements and execution observations, idempotency keys, typed refusal mapping, and reconciliation evidence as a small Python port. Out: a standalone broker library, autonomous trading loop, order or risk policy, portfolio state, deployment service, simulator parity, and cTrader types in public contracts. Done: a test double proves the port, unsupported capabilities fail explicitly, duplicate commands follow the ratified rule, events journal canonically, and no runtime or risk decision is embedded.
+    decisions: [DEC-0022, DEC-0029, DEC-0030, DEC-0031, DEC-0059, DEC-0061]
+    components: [COMP-QMF-VENUE]
+    blocked_by:
+      - id: FEAT-0012
+        reason: "venue commands, observations, refusals, and reconciliation must use the canonical durable journal-evidence contract FEAT-0012 lands"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0001, GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0013, GAP-0036, GAP-0038. The port cannot freeze an order-state machine or capability set from recommendations."
+
+  - id: FEAT-0024
+    name: "cTrader authentication and session adapter"
+    scope: >-
+      In: the ratified cTrader credential and token boundary, connection/session lifecycle, account and capability discovery, API-required reconnect and idempotency behavior, refusal translation, and fixture or sandbox conformance tests. Out: any credential creation, storage, injection, or redaction behavior not ratified by GAP-0035, market-data mapping, order placement, live-node liveness, long-running deployment, and other venues. Done: the adapter establishes and closes an approved test session through the venue port, credential and evidence behavior follows the ratified GAP-0035 and CT-21 rules without inferring secret fields or locations, platform failures map to typed results, and tested reconnect behavior is deterministic.
+    decisions: [DEC-0013, DEC-0059, DEC-0060, DEC-0061, DEC-0096]
+    components: [COMP-QMF-VENUE]
+    blocked_by:
+      - id: FEAT-0023
+        reason: "the cTrader session adapter must implement the platform-neutral capability, session, and refusal contract FEAT-0023 lands"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0001, GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0013, GAP-0035, GAP-0037. Credentials, target broker/account, rotation, revocation, and safe test environment remain open."
+
+  - id: FEAT-0025
+    name: "cTrader market-data adapter"
+    scope: >-
+      In: ratified cTrader historical and live market-data requests, subscription lifecycle, instrument and time mapping, pagination, gap and duplicate handling, canonical fact conversion, raw persistence and journal integration, and sandbox or fixture conformance tests. Out: trading decisions, indicator computation, order commands, global resampling, an always-on collector, and non-cTrader venues. Done: representative platform data maps losslessly into source-identified bitemporal facts, reconnect or pagination duplicates are idempotent, gaps are explicit evidence, and vendor types do not escape the adapter.
+    decisions: [DEC-0042, DEC-0053, DEC-0059, DEC-0060, DEC-0061]
+    components: [COMP-QMF-VENUE]
+    blocked_by:
+      - id: FEAT-0024
+        reason: "market-data subscriptions require the authenticated cTrader session and capability mapping FEAT-0024 lands"
+      - id: FEAT-0016
+        reason: "received observations consume the durable raw-fact and journal-evidence persistence contracts FEAT-0016 completes"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0001, GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0013, GAP-0030, GAP-0035, GAP-0037. Bid/ask fields, source identity, account target, and reconciliation rules remain open."
+
+  - id: FEAT-0026
+    name: "cTrader order, execution-event, and reconciliation adapter"
+    scope: >-
+      In: the ratified command subset after an explicit external QMX-application caller and authorization-evidence boundary are assigned, platform-id and idempotency mapping, acknowledgement, fill, cancel, and reject conversion, refusal mapping, read-back reconciliation, durable command evidence, and sandbox tests that cannot place uncontrolled live trades. Out: deciding whether to trade, risk checks, sizing, strategy logic, autonomous retries, portfolio accounting, node lifecycle, simulator parity, and other venues. Done: the assigned caller can exercise the safe test boundary with ratified authorization evidence, every response becomes canonical evidence, duplicate submission follows the port rule, divergence is detectable, and the adapter never manufactures approval.
+    decisions: [DEC-0029, DEC-0048, DEC-0059, DEC-0060, DEC-0061]
+    components: [COMP-QMF-VENUE]
+    blocked_by:
+      - id: FEAT-0025
+        reason: "order and reconciliation mapping consume the established cTrader session, instrument, time, and journal integration contract FEAT-0025 completes"
+    size: one-pass
+    status: planned
+    notes: "Blocking gaps: GAP-0001, GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0006, GAP-0013, GAP-0035, GAP-0036, GAP-0037, GAP-0038, GAP-0039. CT-19 is reserved and unwired; no implementation starts until the out-of-scope caller, authorization producer, authorization evidence, and safe command-state contract are ratified."
+
+  - id: FEAT-0027
+    name: "Book, BMS, and risk-boundary specification and reconciliation"
+    scope: >-
+      In: reconcile Book, account, and venue-account vocabulary; BMS ownership and cardinality; versioned money/risk rules; sizing inputs and outputs; exit ownership; paper mode; pair-scoped news control; SQS; fast invalidation; correlation and exposure; capital concepts; stop-out and alpha-decay terms; execution priority; and the exact reusable-module versus trading-node boundary, then produce operator-ratified decisions and one-pass build slices. Out: implementing risk code, autonomous order authorization, a trading-node runtime, prop-firm Program/Campaign machinery, legacy DPR/PRS or slot revival, MIS, QML, and backtesting. Done: the operator has ratified a vocabulary and ownership matrix, every earlier conflict is explicitly disposed, QMF risk contracts are separated from node policy, and independently specifiable features with named upstream contracts can replace this fenced discovery slice.
+    decisions: [DEC-0030, DEC-0039, DEC-0065, DEC-0066, DEC-0068, DEC-0070, DEC-0072, DEC-0074, DEC-0075, DEC-0076, DEC-0078, DEC-0080, DEC-0092, DEC-0094, DEC-0095]
+    components: [COMP-QMF-RISK]
+    blocked_by:
+      - id: FEAT-0023
+        reason: "the risk boundary must target the stable venue capability, order-command, refusal, execution-observation, and reconciliation contract FEAT-0023 lands"
+    size: multi-pass
+    status: planned
+    notes: "Fenced by blocking gaps: GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0007, GAP-0008, GAP-0011, GAP-0013, GAP-0018, GAP-0019, GAP-0025, GAP-0036, GAP-0039, GAP-0040, GAP-0041, GAP-0042, GAP-0043, GAP-0044, GAP-0045, GAP-0046. Do not schedule implementation or infer answers from recommendations; DEC-0040 and DEC-0067 are conflicts and are intentionally not traced."

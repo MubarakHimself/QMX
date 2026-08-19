@@ -1,0 +1,120 @@
+     just said above. Stacking, now for the stack, the stack is a simple one. 
+     But do we need graphs? No, we don't. You already said that. Treading note 
+     timing. Oh, yeah, I've already answered that. So, for me, I think, okay, my
+     problem right now is progress, because I feel like I'm falling behind. 
+     Seriously, that's why I preferred you taking over most things. Though I 
+     have a strategy for coding, yeah, so for ideation and whatnot, I believe 
+     QMF is how far are we with QMF? Do we need to? Because QMF, remember, has 
+     to have libraries, unless I'm wrong. A framework always has libraries. So, 
+     which libraries do we have? We need to narrow everything down to the 
+     literally the nanometer. And I remember asking or telling you, I don't know
+     if it came out properly, that thing of I thought we, I think we should try
+     so much to distill and separate the framework into what each heart that we
+     suggested earlier is going to use. Okay, I'm meaning the 5 hats
+
+● Agent(Dig DPR/PRS/bench mechanics) Opus 5 (1M context)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+● Update(artifacts\2026-08-17-qmf-v1-spec-DRAFT.md)
+  ⎿  Added 30 lines
+      24  
+      25  **DEFERRED to the agentic era (operator ruling 2026-08-18): eve
+          rything in this paragraph leaves qmf-core V1.** The agentic sys
+          tem may later adopt the DeepSeek/Cordis harness design near-ver
+          batim (UI layout aside); recorded here as input for that future
+           session (from `reference/06-deepseek-harness-study.md`): 7. th
+          e **Context** — the container agent-authored extensions plug in
+          to; 8. **disposer discipline** — every registration is reversib
+          le/undoable (the one load-bearing rule of the DeepSeek/Cordis m
+          odel); 9. a **runtime-checked typed event bus**. Extensibility 
+          architecture (also pending): one mechanism in the QMF libraries
+          , three composition tiers — agent workspaces fully open (safe b
+          y ABSENCE of live providers), app tier reviewed, live node comp
+          osed at boot + fingerprinted + sealed; promotion between tiers 
+          is only ever a human edit. Deny-only guards (a later extension 
+          can never undo a refusal) and fail-closed approval carry into t
+          he money path. Refused imports: hot reload, auto-reload on vani
+          shed services, install-time code execution.
+      26  
+      27 +## 2b. The QMF library roster — split by the five hats (operato
+         +r ruling 2026-08-18: "distill the framework into what each hat 
+         +uses"; state as of 2026-08-18 evening)                         
+      28 +                                                               
+      29 +QMF is an umbrella of libraries. **Nothing agreed is outside QM
+         +F — only outside `qmf-core`, the first brick.** Cross-cutting l
+         +ibraries serve every hat; hat libraries serve one primarily. St
+         +atus tags: ACCEPTED (build-ready once documented) · DIRECTION A
+         +GREED (shape ratified, detail pending) · STUDY DELIVERED (resea
+         +rch done, ratification pending) · OWN SESSION (deliberately par
+         +ked).                                                          
+      30 +                                                               
+      31 +**Cross-cutting:**                                             
+      32 +- `qmf-core` — the language: exact money, exact time (three tra
+         +ding calendars: forex sessions / crypto 24-7 / equity exchange 
+         +hours), the nouns (order-flow and equities seeded), typed refus
+         +als, stamp machine, versioning. **ACCEPTED — first brick.** Six
+         + frozen choices pending explicit confirmation in the documentat
+         +ion pass.                                                      
+      33 +- `qmf-registry` — identity & lineage: three disciplines (finge
+         +rprinted recipes / operator-chartered Books & BMS / occurrences
+         +), graph-shaped lineage in append-only files, no database. **ST
+         +UDY DELIVERED** (`reference/07`).                              
+      34 +                                                               
+      35 +**Analyst hat:**                                               
+      36 +- `qmf-data` — the six-layer data system: ingest plumbing, raw 
+         +evidence archive, processed layer, journal, research door with 
+         +splits-by-default, backup. **STUDY DELIVERED** (`reference/09`)
+         +; ratification = ticket 005 session. Operator rulings already f
+         +olded: keep ALL history as far back as sources go; seal newest 
+         +12 months from research (one logged final look per strategy); f
+         +ull raw retention (storage is not a constraint; nightly cloud-b
+         +ucket backup).                                                 
+      37 +- `qmf-indicators` — light indicators, wrapping TA-Lib-class li
+         +braries (wrap, never reinvent). **DIRECTION AGREED.**          
+      38 +- `qmf-structure` — our OWN causal levels/zones/market-structur
+         +e components (toolbox principle: no third-party strategy-family
+         + libraries; context-library method — study SMC-and-friends deep
+         +ly, build our own). **DIRECTION AGREED**; per-component depth s
+         +essions later (triggers alone can be a two-day session).       
+      39 +- `qmf-mis` — heavy indicators: regime models, volatility forec
+         +asts, correlation matrices, ML inference. A QMF library serving
+         + the trading node's MIS; shadow deployment for model rollout. *
+         +*DIRECTION AGREED**, own design pass later.                    
+      40 +                                                               
+      41 +**Trader hat:**                                                
+      42 +- `qmf-broker` — the venue port + cTrader Open API adapter (con
+         +nection is simple; Python only, no MQL; crypto/stock venues lat
+         +er through the same seam). **DIRECTION AGREED.** Venue checklis
+         +t idea re-presents in the backtesting session.                 
+      43 +                                                               
+      44 +**Portfolio-manager hat:**                                     
+      45 +- `qmf-risk` — our OWN risk-management & portfolio-optimization
+         + library: Books, BMS machinery (possibly plural BMSs long-term)
+         +, exits (fast invalidation, dynamic SL/TP), correlation ledger,
+         + money rules. **OWN SESSION** (trading-node/Book session; GitBo
+         +ok Book schema extraction ratified as prerequisite — machine-ch
+         +eckable form, operator-verified).                              
+      46 +                                                               
+      47 +**Researcher hat:**                                            
+      48 +- `qmf-experiment` — attempt counting, splits usage, the look-a
+         +head registration test (K1, ratified, with the context-library 
+         +logic), dual-reference indicator checks (K2, delegated). **DIRE
+         +CTION AGREED.** Full overfitting statistics: **OWN SESSION** (t
+         +icket 008).                                                    
+      49 +- backtesting library — **OWN SESSION** (ticket 008), never "en
+         +gine".                                                         
+      50 +                                                               
+      51 +**Developer hat (and agents-as-developers):**                  
+      52 +- `qml` — the bot library: confluence schemas, bot careers/vari
+         +ants/lineage, the bot↔Book binding contract (contract not yet d
+         +esigned). **DIRECTION AGREED.**                                
+      53 +- Agent authoring surface + extension plumbing — **AGENTIC ERA*
+         +* (deferred; DeepSeek/Cordis model may be adopted near-verbatim
+         + there).                                                       
+      54 +                                                               
+      55 +**Design load principle (operator ruling):** design for the 95t
+         +h-percentile load — ~40 concurrent bots is a real scenario, nev
+         +er a toy that breaks at scale. **Paper mode is BOOK-level:** wh
+         +en a Book cannot trade live, the Book switches to a paper/demo 
+         +account and its bots keep trading there so performance data kee
+         +ps flowing into alpha-decay sensing; a bot connects to exactly 

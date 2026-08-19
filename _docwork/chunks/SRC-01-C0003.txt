@@ -1,0 +1,120 @@
+● The digest is done — 7 agents, no errors. The headline finding is that
+  yesterday's biggest correction (QMF is a toolbox, not an application) never
+  reached the map. Reading the full output now before giving you my verdict.
+
+  Read 1 file (ctrl+o to expand)
+
+● The digest is in — 7 agents over the transcript, the map, and both verdict
+  briefs. Here's my honest read, then four decisions for you.
+
+  Your three questions, answered
+
+  1. Are you going in the right direction? Yes — the QMF shape is sound.
+  QMF-as-toolbox (libraries that build applications, never an application
+  itself) is the strongest correction of yesterday's session, and four ideas in
+  the design are genuinely excellent: one kernel with two plugs (so backtest ≡
+  live is enforced by tests, not hoped for); signals that carry no money
+  quantity (so a bot cannot blow the account through sizing); content-addressed
+  results (so old test results can never silently lie about new definitions);
+  and the two-timestamp rule (the one defence against an agent building in
+  look-ahead bias at 3am).
+
+  2. Are you missing anything? Yes — three things, and one of them costs you 
+  evidence every single day:
+
+  - Nothing is recording. The economic calendar feed only shows the current week
+  — past weeks are unbuyable at any price. Your own tick stream exists only if
+  something records it. Everything else in the plan can wait; this can't. It's a
+  ~150-line script, not a project.
+  - The Spotware application isn't submitted. They review applications before
+  you're allowed to build against their API, the queue length is unknown, and no
+  agent can shorten it. It gates the entire broker side.
+  - The map contradicts yesterday's rulings in three places. It still says Exit
+  lives inside the confluence (you ruled it's Book territory), still puts the
+  fill engine in core QMF (you paused backtesting entirely), and still scopes
+  backtesting into the minimal core. You told me not to treat the map as core —
+  good, because if the documentation factory read it today, it would document
+  the wrong thing.
+
+  3. Where's the leverage — the "slide"? Five locks, and none of them is a 
+  build. They're decisions and small artifacts: the nouns and keys (what an
+  Order, Fill, Position is, and how results are keyed), the broker contract + 
+  its test suite (written before any implementation — the tests define "done"
+  for the two hardest modules), one manifest format (build once, seven uses),
+  the one-page agent surface (the entire contract between future agents and
+  QMF), and the oracle list (for each module, the external thing that proves it
+  right — this is what converts "Mubarak must review it" into "a machine gate
+  checks it," which is what actually raises your speed).
+
+  The hard truth on "there's really not that much to build"
+
+  You're half right, and the half matters. Right: most code running on your
+  machine will be other people's — DuckDB, Polars, TA-Lib, Optuna handle the
+  math, and there's not much to invent per module. Wrong: the total is nowhere
+  near small. The honest estimate for QMF alone is on the order of 100–150 
+  factory-days — and a factory-day is a day of you reviewing and merging, not an
+  agent-hour. Your review bandwidth is the schedule, not agent throughput.
+  Three pieces can't be sped up by copying because nothing to copy exists
+  anywhere: the cTrader adapter, the prop-firm rule schema, and the fill model
+  (how simulated trades get realistic prices). That's why the oracle list is the
+  lever worth pulling — it's the only lock that raises your ceiling instead of
+  just organizing the work.
+
+  Also, three things in the current plan are over-engineered for where you are
+  and should be deferred: the full statistical anti-overfitting battery
+  (desk-grade machinery before a single strategy exists), Program/Campaign
+  machinery (building the container for prop-firm content you explicitly
+  deferred), and the DeepSeek-style extensibility plumbing (your registry design
+  already covers most of it).
+
+  Four decisions for you — each with my recommendation first:
+
+● User answered Claude's questions:
+  ⎿  · The map and tickets contradict yesterday's rulings in several places 
+     (Exit location, backtesting scope, retired "kernel" vocabulary). Should I 
+     reconcile them now, this session, so the exported context is clean for the 
+     documentation factory? → Okay, so for this question of fixing the map, the 
+     reason we actually didn't want to touch the backtesting framework or 
+     library is because I believe for it we need to consider it as, for example,
+     okay, think of it as follows: yeah, and I'm sorry, I know I'm not 
+     answering your question, but think of it as follows: yeah, if I'm a 
+     quantitative developer and I wanted to test out my strategy or an 
+     algorithmic developer, I wouldn't want to be limited by the library or the 
+     framework I'm using, right? If you think about it, that's why people are 
+     going to combine multiple ML, you know, libraries and frameworks. They are 
+     going to combine it with NumPy and Pandas. Reason being they don't want to 
+     be limited, and in fact, you're already using most of these inside. Yeah, 
+     so I think it should be the same logic. I think that's why I was arguing so
+     much yesterday because it seemed like we were boxing ourselves in, and 
+     globally, that's not even just for the backtesting library or framework 
+     alone. I believe while we are building the framework, we should still make 
+     sure that we are not boxing ourselves in. We can still use the framework in
+     correlation with normal Python. Yeah, the part where we are going to be a 
+     bit strict is the agentic harness. And the reason for that is because, 
+     well, agents are very non-deterministic, as you know. So we are going to 
+     use what DeepSeek was using, but everywhere else, I believe we are just 
+     giving them a little bit of guidelines, but not boxing them, in my opinion.
+     That's what I wanted to add on. But, yes, you do the recommended rulings 
+     and whatever you want to do. Just wanted to add this because it should be 
+     something that we use overall. I don't want to box myself in, trust me. I 
+     really don't. Okay, yeah, sure. I like the framework. Yeah, don't get me 
+     wrong, but there is a high chance I'm seeing if we do build the framework 
+     as strict, we are going to reach a point whereby we can't use any other, 
+     okay, we can't use a certain library, external library, with it, and that's
+     not the case. I don't want to box myself in, okay? Okay, I don't want to 
+     box the agents in. If we want to experiment with synthetic data, we can 
+     generate it. If we want to experiment with, you know, oh my god, if you 
+     want to experiment with RLMs, we can do it. Okay, the whole point right now
+     is just having building blocks, but to be honest, okay. Now that I think 
+     about it, I think for experimentation, it's for research and hypothesis. 
+     But normally, for what goes into the actual live trading, I think actually 
+     we might need to be a bit strict there[[And I'm not meaning actually being 
+     strict. I think what I wanted to mean, because I've just restarted 
+     dictating, what I wanted to mean is that we want to be uniform. The whole 
+     point I remember for designing or making QML, the older version, is because
+     we wanted to have order when building block when building trading blocks. 
+     So, what you are doing is like a bigger version, so it's still order, it's 
+     just that yeah, order is necessary, but don't build yourself in. Okay.]]] 
+     What do you think about that? So, yes, you fix it, but take this as a 
+     guideline, please
+     · The economic calendar only shows the current week, and your tick stream 

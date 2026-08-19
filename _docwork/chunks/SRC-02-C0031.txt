@@ -1,0 +1,120 @@
+  - Exit lives in the Book, not the confluence. Recipe card corrected: Level(s)
+  + Trigger(s) + Confirmation(s) — each slot allowing multiple variants,
+  including your example of a whole 5-minute scalper bot serving as a
+  confirmation. Composition nests.
+  - A bot = a confluence + the contract that binds it to a Book. Two pieces, and
+  the binding piece is the part we haven't designed yet.
+  - Prop firms are Books. Understood as said, no more relocations of it.
+  - The "same-exam harness" was backtesting wearing a costume — your catch was
+  correct, it's out of tonight and parked with ticket 008.
+  - Calendar, live prices, bulk data downloads — all out of tonight. Data
+  acquisition is a capability inside the QMX app (dukascopy-node's CLI is the
+  reference shape, noted), and when to download — during development or at
+  install — is a genuinely open decision I've parked rather than assumed.
+
+  Your direct question — which library are we building first? One: qmf-core, the
+  language. Exact money (no floats ever), exact time (including "which trading
+  day is this" and the two-dates stamp: happened / knowable), the nouns
+  everything shares — Instrument, Bar, Tick, Order, Fill, Position, Account,
+  defined style-agnostic from scalp to long hold — typed refusals, and the
+  fingerprint machinery your recipe cards will use later. No loop, no broker, no
+  backtest, no downloads. It is sufficient for tonight, it preempts no
+  discussion we haven't had, and tomorrow starts on top of it. That's the whole
+  bite.
+
+  And your instruction to actually understand Books, BMS, and the trading node
+  before building — taken as homework, starting now: I'm sending a background
+  agent to study the GitBook baseline (your local capture) and write a
+  plain-words trading-node primer into reference\, so every future session
+  builds from real understanding of Books and the BMS instead of my assumptions.
+
+● Agent(Write trading-node primer from GitBook baseline) Opus 5 (1M context)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+  Made 1 scratchpad edit +164, wrote 1 memory (ctrl+o to expand)
+
+● Artifact(C:\Users\Mubarak\AppData\Local\Temp\claude\C--Users-Mubarak-Desktop-Q
+          MX\3f60e17b-e1cb-4eaa-999f-412427d7eea6\scratchpad\qmf-minimal-core.ht
+          ml)
+  ⎿  Updated ⧉ 
+     https://claude.ai/code/artifact/a934f7ba-32a1-475f-bbb8-888bea969f23
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Refresh the artifact — ⧉ v6 is live 
+  (https://claude.ai/code/artifact/a934f7ba-32a1-475f-bbb8-888bea969f23), and it
+  opens by owning the error in one box: v5's "kernel" was your trading node in
+  a costume. The page now shows two layers — QMF the toolbox (a stack of
+  libraries, only qmf-core lit up for tonight) and the applications built with 
+  it (trading node per your GitBook, untouched; sandbox backtest workspaces; the
+  QMX app where data acquisition lives as a feature). The confluence/bot
+  section is redrawn to your definition: recipe = Levels + Triggers +
+  Confirmations with variants and nesting, no exit — plus the not-yet-designed
+  Book binding = a bot. Exits, sizing, risk: Book territory. Prop firms are
+  Books.
+
+  One question stands at the bottom, and it's the only thing tonight needs: is 
+  qmf-core — the language: exact money, exact time, the nouns, typed refusals, 
+  the stamp machine, versioning — the right first brick? Yes and the factory
+  ships it; no and you tell me what the first brick is instead.
+
+  The trading-node primer agent is reading your GitBook capture as we speak —
+  Books, BMS, doors, the authority chain, in plain words — so tomorrow's
+  sessions start from understanding, not assumption. And you were right to be
+  annoyed: thirty-seven links of mental models were never meant to boomerang
+  back as someone else's architecture. The toolbox is yours; tonight it gets its
+  first brick, nothing more.
+
+✻ Churned for 3m 39s
+
+● Agent "Write trading-node primer from GitBook baseline" finished · 8m 45s
+  ⎿  1 skill available
+
+● The trading-node primer is done — the agent read all 68 pages of your GitBook
+  capture (verified complete against the live site) and wrote
+  reference\05-trading-node-primer.md, with the baseline's own diagrams carried
+  through so future sessions can render them visually.
+
+  What it found, briefly:
+
+  - A Book, in one breath: a pod with charter, capital, roster, profile, rules,
+  and journals — it owns the money and the permission, says yes/no through the
+  seven doors, sizes through the registry's money ladder, kills slowly through
+  the leash chain, and lives in cycles (seed → cap → sweep → re-seed). Bots
+  propose; Books decide. It never trades directly.
+  - Prop-firm books: the baseline itself marks them deferred (GAP-0004) — your
+  ruling and your own old documentation agree exactly.
+  - Holes the baseline itself has: four leash rungs are named once and defined
+  nowhere; "seat" and "R" are load-bearing words with no glossary entry; "SQS"
+  is never expanded in the baseline (the "snapshot quality score" expansion came
+  later).
+  - One tension worth your eyes, parked for the Book session — not tonight: the
+  baseline says the bot owns its entry and exit organs, and the Book's exit
+  power is only forced exits (leash and kill-switch). Tonight you said exits
+  belong to the Book. Both can be reconciled (the later corpus moved dynamic
+  SL/TP toward Book grammar), but it's exactly the kind of thing the Book/BMS
+  session should settle deliberately rather than either of us assuming.
+
+  Nothing else moves until you answer the one question on the artifact: is 
+  qmf-core the right first brick for tonight?
+
+✻ Cogitated for 10m 46s
+
+❯ Alright, now the nouns I've just looked at, I think we might need to consider 
+  something like order flow. I think that's DOM DOM, yeah, it's dom,Remember,   
+  we are also considering crypto. So, crypto has a lot of DOM and like tepper.  
+  You know what I'm talking about. So, order flow and all that. So, most order  
+  flow components or concepts. I hope you understand me. So, market structure,  
+  technical analysis, you know, level three data. There are lots of things I'm  
+  not talking about, but you get what I'm talking about. I believe, okay, you   
+  get the idea. I'm trying to seedOkay, so for typed refusal, let me leave you  
+  at that, but make it I know agents are going to be working in this code base  
+  and whatnot, but remember, human, I might also need to understand this code.  
+  Don't underestimate that. So, write for both humans and agents. Okay, this    
+  should be for both humans and agents. This framework. Oh, yeah, versioning    
+  discipline. Thank you for that. Actually, I've forgotten about it. Seems like 
+  it's viable. Then the corrected vocabulary. yeah. Yes, and no. I think you    
+  will need to revise your confluence and about whole thing because I feel like 
+  you're undermining a lot of things, okay? Because a confluence can come from  
+  hypothesis, but as the bot goes through the system, you know, a lot of        
+  things will be appended. So I believe because there are things like lineages  

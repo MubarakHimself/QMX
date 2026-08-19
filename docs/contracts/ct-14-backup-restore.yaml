@@ -1,0 +1,28 @@
+id: CT-14
+name: Off-machine backup boundary contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-DATA-BACKUP
+consumers: [COMP-OBJECT-STORAGE]
+layer_from: data
+layer_to: external
+decisions: [DEC-0045]
+gaps: [GAP-0005, GAP-0026, GAP-0027]
+purpose: "Carry backup material off-machine while snapshot shape, cadence, verification, recovery, and cutover remain unresolved."
+invariants:
+  - "QMF maintains an off-machine backup direction; this contract does not claim a complete or consistent snapshot."
+  - "Cadence is registry:backup_cadence and is null under GAP-0027."
+  - "Routine restore verification, disaster recovery, operational recovery, and cutover are non-operational until GAP-0027 is resolved."
+  - "Provider, manifest fields, encryption, credentials, RPO, RTO, retention, deletion, restore procedure, and verification cadence remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0027
+  fields: null
+  fields_gap: GAP-0027
+  enums: null
+  enums_gap: GAP-0027
+  units: null
+  units_gap: GAP-0027
+  nullability: null
+  nullability_gap: GAP-0027

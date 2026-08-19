@@ -1,0 +1,370 @@
+variables:
+  - name: monetary_representation
+    symbol: null
+    value: null
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-CORE
+    decision: DEC-0026
+    configurable: false
+    gap: GAP-0007
+    notes: "Exact representation is unresolved; binary floating point is prohibited for monetary contracts."
+
+  - name: money_decimal_scale
+    symbol: null
+    value: null
+    formula: null
+    units: decimal-places
+    type: count
+    component: COMP-QMF-CORE
+    decision: DEC-0026
+    configurable: false
+    gap: GAP-0007
+    notes: "No precision is ratified."
+
+  - name: price_decimal_scale
+    symbol: null
+    value: null
+    formula: null
+    units: decimal-places
+    type: count
+    component: COMP-QMF-CORE
+    decision: DEC-0026
+    configurable: false
+    gap: GAP-0007
+    notes: "Venue-specific precision metadata is not yet specified."
+
+  - name: quantity_decimal_scale
+    symbol: null
+    value: null
+    formula: null
+    units: decimal-places
+    type: count
+    component: COMP-QMF-CORE
+    decision: DEC-0026
+    configurable: false
+    gap: GAP-0007
+    notes: "Quantity precision and quantization boundaries are unresolved."
+
+  - name: money_rounding_mode
+    symbol: null
+    value: null
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-CORE
+    decision: DEC-0026
+    configurable: false
+    gap: GAP-0007
+    notes: "Rounding is a blocking operator choice."
+
+  - name: timestamp_precision
+    symbol: null
+    value: null
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-CORE
+    decision: DEC-0032
+    configurable: false
+    gap: GAP-0008
+    notes: "UTC nanoseconds is a proposal, not a contract."
+
+  - name: instrument_identity_shape
+    symbol: null
+    value: null
+    formula: null
+    units: null
+    type: string
+    component: COMP-QMF-CORE
+    decision: DEC-0032
+    configurable: false
+    gap: GAP-0009
+    notes: "Venue plus opaque symbol is a recommendation only."
+
+  - name: canonical_hash_algorithm
+    symbol: null
+    value: null
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-CORE
+    decision: DEC-0029
+    configurable: false
+    gap: GAP-0010
+    notes: "The fingerprint algorithm and canonical bytes are unresolved."
+
+  - name: contract_version_syntax
+    symbol: null
+    value: null
+    formula: null
+    units: null
+    type: string
+    component: COMP-QMF-CORE
+    decision: DEC-0030
+    configurable: false
+    gap: GAP-0005
+    notes: "Versioning from birth is decided; syntax and compatibility policy are not."
+
+  - name: typed_refusal_codes
+    symbol: null
+    value: null
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-CORE
+    decision: DEC-0029
+    configurable: false
+    gap: GAP-0011
+    notes: "The refusal taxonomy remains unratified."
+
+  - name: result_identity_key
+    symbol: null
+    value: null
+    formula: null
+    units: null
+    type: string
+    component: COMP-QMF-CORE
+    decision: DEC-0032
+    configurable: false
+    gap: GAP-0012
+    notes: "The result-label tuple is one of the six open freeze choices."
+
+  - name: design_bot_concurrency
+    symbol: null
+    value: null
+    formula: null
+    units: bots
+    type: count
+    component: COMP-QMF-CORE
+    decision: DEC-0098
+    configurable: false
+    gap: GAP-0013
+    notes: "The source names about forty Bots as a real design case, not an exact capacity or SLO."
+
+  - name: registry_attempt_scope
+    symbol: null
+    value: null
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-REGISTRY
+    decision: DEC-0033
+    configurable: false
+    gap: GAP-0017
+    notes: "The counter target and scope are unresolved."
+
+  - name: registry_attempt_budget
+    symbol: null
+    value: null
+    formula: null
+    units: attempts
+    type: count
+    component: COMP-QMF-REGISTRY
+    decision: DEC-0033
+    configurable: true
+    gap: GAP-0017
+    notes: "No attempt budget is ratified."
+
+  - name: registry_attempt_reset_policy
+    symbol: null
+    value: null
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-REGISTRY
+    decision: DEC-0033
+    configurable: false
+    gap: GAP-0017
+    notes: "Whether and when attempt accounting resets is unresolved."
+
+  - name: historical_holdout_months
+    symbol: null
+    value: null
+    formula: null
+    units: months
+    type: duration
+    component: COMP-QMF-DATA
+    decision: DEC-0044
+    configurable: true
+    gap: GAP-0024
+    notes: "The source says approximately twelve months; the exact boundary and date arithmetic are unresolved."
+
+  - name: raw_history_retention_policy
+    symbol: null
+    value: all-obtainable-history
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-DATA
+    decision: DEC-0044
+    configurable: false
+    notes: "Retain the full obtainable history for each source."
+
+  - name: backup_cadence
+    symbol: null
+    value: null
+    formula: null
+    units: schedule
+    type: enum
+    component: COMP-QMF-DATA
+    decision: DEC-0045
+    configurable: true
+    gap: GAP-0027
+    notes: "Off-machine backup direction is decided; cadence and scheduling remain unresolved."
+
+  - name: backup_recovery_point_objective
+    symbol: null
+    value: null
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMF-DATA
+    decision: DEC-0045
+    configurable: true
+    gap: GAP-0027
+    notes: "No RPO is ratified."
+
+  - name: backup_recovery_time_objective
+    symbol: null
+    value: null
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMF-DATA
+    decision: DEC-0045
+    configurable: true
+    gap: GAP-0027
+    notes: "No RTO is ratified."
+
+  - name: backup_retention_period
+    symbol: null
+    value: null
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMF-DATA
+    decision: DEC-0045
+    configurable: true
+    gap: GAP-0027
+    notes: "Off-machine retention is unresolved."
+
+  - name: restore_verification_cadence
+    symbol: null
+    value: null
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMF-DATA
+    decision: DEC-0045
+    configurable: true
+    gap: GAP-0027
+    notes: "Restore-verification cadence is unresolved."
+
+  - name: local_store_engine
+    symbol: null
+    value: null
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-DATA
+    decision: DEC-0047
+    configurable: false
+    gap: GAP-0021
+    notes: "Parquet, DuckDB, SQLite, and JSONL are study candidates only."
+
+  - name: canonical_indicator_reference
+    symbol: null
+    value: null
+    formula: null
+    units: null
+    type: string
+    component: COMP-QMF-INDICATORS
+    decision: DEC-0055
+    configurable: false
+    gap: GAP-0032
+    notes: "No implementation, version, or oracle tolerance is ratified."
+
+  - name: venue_trendbar_price_basis
+    symbol: null
+    value: null
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-VENUE
+    decision: DEC-0059
+    configurable: false
+    gap: GAP-0037
+    notes: "Bid, ask, mid, and provider-native handling remain unresolved."
+
+  - name: original_risk_unit
+    symbol: R
+    value: 1
+    formula: null
+    units: pre-trade-risk-unit
+    type: ratio
+    component: COMP-QMF-RISK
+    decision: DEC-0076
+    configurable: false
+    notes: "R is exactly one unit of original pre-trade risk; it is not profit, equity, or post-trade return."
+
+  - name: news_blackout_before
+    symbol: null
+    value: null
+    formula: null
+    units: minutes
+    type: duration
+    component: COMP-QMF-RISK
+    decision: DEC-0072
+    configurable: true
+    gap: GAP-0042
+    notes: "Fifteen minutes was tentative and is not a live value."
+
+  - name: news_blackout_after
+    symbol: null
+    value: null
+    formula: null
+    units: minutes
+    type: duration
+    component: COMP-QMF-RISK
+    decision: DEC-0072
+    configurable: true
+    gap: GAP-0042
+    notes: "Fifteen minutes was tentative and is not a live value."
+
+  - name: spread_quality_sensor_formula
+    symbol: SQS
+    value: null
+    formula: null
+    units: null
+    type: formula
+    component: COMP-QMF-RISK
+    decision: DEC-0075
+    configurable: false
+    gap: GAP-0043
+    notes: "SQS means Spread Quality Sensor; its formula is explicitly unratified."
+
+  - name: bench_stopout_threshold
+    symbol: null
+    value: null
+    formula: null
+    units: consecutive-stop-outs
+    type: count
+    component: COMP-QMF-RISK
+    decision: DEC-0094
+    configurable: true
+    gap: GAP-0045
+    notes: "A reported value of two is unusable until stop-out and BENCHED semantics are reconciled."
+
+  - name: bench_reset_boundary
+    symbol: null
+    value: null
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-RISK
+    decision: DEC-0094
+    configurable: true
+    gap: GAP-0045
+    notes: "The reported next-open reset is not a ratified V1 contract."

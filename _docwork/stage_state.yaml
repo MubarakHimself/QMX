@@ -1,0 +1,47 @@
+current_stage: 8
+provisional: true
+completed:
+- stage: 1
+  date: '2026-08-18'
+  gate: pass
+- stage: 2
+  date: '2026-08-18'
+  gate: pass
+- stage: 3
+  date: '2026-08-18'
+  gate: pass
+- stage: 4
+  date: '2026-08-18'
+  gate: pass
+- stage: 5
+  date: '2026-08-18'
+  gate: pass
+- stage: 6
+  date: '2026-08-18'
+  gate: pass
+- stage: 7
+  date: '2026-08-18'
+  gate: pass
+harvest_progress:
+  SRC-01: SRC-01-C0031
+  SRC-02: SRC-02-C0039
+ratification:
+  status: provisional
+  by: operator-pending
+  date: '2026-08-18'
+  notes: Provisional corpus and feature slicing are complete; the packet awaits operator signature.
+pause:
+  status: resumed
+  at: '2026-08-18T15:05:11+03:00'
+  reason: Operator is switching accounts.
+  resume_from: _docwork/RESUME.md
+  resumed_at: '2026-08-18T15:26:00+03:00'
+final_gate:
+  status: operator-ratification-required
+  checked_at: '2026-08-18T17:57:49+03:00'
+  non_strict_validation: pass
+  independent_reviews: pass
+  strict_lint: expected-blocked
+  strict_reasons:
+  - 54 provisional Markdown documents
+  - 45 unique blocking gaps

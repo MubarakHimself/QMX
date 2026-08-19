@@ -1,0 +1,57 @@
+● Update(tracker\map.md)
+  ⎿  Added 2 lines, removed 1 line
+      53  - Research lane: hypothesis discovery (papers/videos/chat), gen
+          etic algorithms over indicators, experimentation environments
+      54  - Crypto expansion (~3–4 months out)
+      55  - Live-money safety ruling — re-raise during trading-node spec 
+          sessions
+      56 -- Alpha-decay detection (old QML feature to rebuild): live perf
+         -ormance degrading below backtest; complicated because "edge" wa
+         -s defined relative to a Book's configurable values, and Books a
+         -re now plural                                                  
+      56 +- Alpha-decay detection (old QML feature to rebuild): live perf
+         +ormance degrading below backtest; complicated because "edge" wa
+         +s defined relative to a Book's configurable values, and Books a
+         +re now plural. **Math confirmed unrecoverable (2026-08-18 dig, 
+         +two independent sources — never written down): design fresh, do
+         +n't excavate**                                                 
+      57 +- Bench/DPR/PRS dig delivered ([reference/10](../reference/10-d
+         +pr-prs-bench-dig.md), for the trading-node session): "benched" 
+         +IS GitBook baseline (door 5, leash rung 3, bot-state enum); PRS
+         + = legacy Performance Rating Service (six weights → 0–100 → tie
+         +rs), DPR = its rolling 10-day tier (expansion of the letters re
+         +corded NOWHERE — never guess); current baseline = 2 consecutive
+         + stop-outs bench a bot for the day, auto-reset next open (DEC-0
+         +032); legacy redemption loop (demoted bots earn their seat back
+         + on paper) = idea worth re-presenting. NODE-SESSION BLOCKERS: "
+         +stop-out" never defined (breakeven close — counts or not?); sym
+         +bol `B` does double duty (bench threshold AND seat-sizing divis
+         +or); BENCHED lives in two namespaces (Book mode vs seat state) 
+         +— untangle before schemas                                      
+      58  - **Simulator (ratified vocabulary)**: backtest engine + a Book
+           + chosen conditions, via a UI — stress a bot against any real 
+          or theoretical Book; fill engine design belongs wholly to the p
+          aused backtesting area (ticket 008), Simulator UI = later produ
+          ct
+      59  - Synthetic tick data module: algorithmic generation (block res
+          ampling, calibrated volatility models — never LLMs) for stress/
+          kill-switch/scenario testing ONLY; hard rule: synthetic data ca
+          n stress a strategy, never validate an edge
+      60  - Storage architecture (proposed, pending ratification): workin
+          g Parquet archive on the workstation; trading VPS runs the alwa
+          ys-on tick recorder and syncs down; nightly backup to an object
+          -storage bucket (B2/R2 class, ~$1–5/mo); no database server. Ba
+          ckup is an INBUILT platform feature (historically the backend-n
+          ode's job) — overall-architecture item, not an operator errand.
+           Trading VPS exists by default; procuring it is Mubarak's side,
+           core is Claude's.
+
+● That was the last running agent — everything is now landed and filed. Final
+  state of the session: QMF V1 pinned to five libraries + two modules in the
+  spec, two tickets closed, three studies plus the bench dig in reference/, the
+  recorder running on schedule, and the map carrying every ruling and every
+  parked question for the trading-node session. Nothing is pending on my side —
+  export when ready, hand the spec + tracker + reference studies to your
+  documentation skill, and the transcripts ride along as evidence only.
+
+✻ Worked for 6m 39s

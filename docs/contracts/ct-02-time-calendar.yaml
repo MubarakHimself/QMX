@@ -1,0 +1,27 @@
+id: CT-02
+name: Exact time and trading-calendar contract
+status: provisional
+version: null
+version_gap: GAP-0005
+owner: COMP-QMF-CORE
+consumers: [COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK]
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0022, DEC-0027, DEC-0030, DEC-0031]
+gaps: [GAP-0005, GAP-0008]
+purpose: "Distinguish exact instants, civil dates, trading dates, and venue or session calendar semantics."
+invariants:
+  - "The universal contract does not embed a Forex-only calendar or scheduler."
+  - "Timestamp precision, timezone rules, rollover, DST, and session boundaries remain unresolved."
+schema:
+  type: null
+  type_gap: GAP-0008
+  fields: null
+  fields_gap: GAP-0008
+  enums: null
+  enums_gap: GAP-0008
+  units: null
+  units_gap: GAP-0008
+  nullability: null
+  nullability_gap: GAP-0008
+

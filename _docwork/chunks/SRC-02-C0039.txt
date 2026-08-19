@@ -1,0 +1,27 @@
+● Understood — smart call, and no arguments from me. Doing one last thing before
+  you go: consolidating the project memory into a clean, ordered state document
+  so the fresh session starts sharp instead of parsing a day's worth of
+  chronological patches.
+
+  Wrote 1 memory (ctrl+o to expand)
+
+● Memory consolidated — the fresh session will load a clean, ordered state
+  instead of a day of patches: what QMX and QMF are, every ratified ruling and
+  vocabulary term, the source-authority model, the deliverables on disk, your
+  working method, and exactly what's open (the three qmf-core additions, the
+  factory status, the backtest markdown, Spotware).
+
+  For the new session's first minute, the ground truth lives in three places: my
+  memory (loads automatically), artifacts\2026-08-17-qmf-v1-spec-DRAFT.md (the
+  handoff spec — the entry point), and the reference\ folder with the read order
+  baked into the spec.
+
+  It's been a genuinely good session — the platform went from scattered recovery
+  fragments to a named framework with a researched foundation, ratified
+  vocabulary, and a clean first brick. Your pushbacks made every one of those
+  better than my first drafts. Fresh context will serve the ideation better,
+  exactly as you say.
+
+  Ciao, Mubarak — go build.
+
+✻ Sautéed for 1m 0s

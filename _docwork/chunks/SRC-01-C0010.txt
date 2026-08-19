@@ -1,0 +1,120 @@
+         + / force-flat / protective stop / discretionary exit · hold-tim
+         +e force-flat vs no-overnight relationship. **qmf-core proceeds 
+         +only with framework-neutral primitives and freezes none of thes
+         +e.**                                                           
+
+● Spec reconciled too. Now building the discussion artifact for the five locks —
+  loading the design skill first as required.
+
+● Skill(artifact-design)
+  ⎿  Successfully loaded skill
+
+● Write(artifacts\2026-08-18-five-locks.html)
+  ⎿  Wrote 323 lines to artifacts\2026-08-18-five-locks.html
+       1 <title>The Five Locks</title>
+       2 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?f
+         =Public+Sans:wght@400;600&family=IBM+Plex+Mono:wght@500&display=
+         swap">
+       3 <style>
+       5     --bg: #FAFAF7;
+       6     --surface: #FFFFFF;
+       7     --ink: #1C2430;
+       9     --line: #E3E2DC;
+      10     --accent: #0E6E5C;
+     … +464 lines (ctrl+o to expand)
+
+● Artifact(C:\Users\Mubarak\Desktop\QMX\artifacts\2026-08-18-five-locks.html)
+  ⎿  Published ⧉ 
+     https://claude.ai/code/artifact/b708c68b-1e2f-4448-82d2-afad08a0ade9
+● User answered Claude's questions:
+  ⎿  · D1 — Ratify Lock 1, the Dictionary, as the first brick? This is qmf-core:
+     what an Order/Fill/Position/Tick IS, exact money, one world clock — plus 
+     six frozen choices (nanosecond clock, venue+symbol identity, TA-Lib as 
+     reference math, three backtest honesty levels, the quality bar a strategy 
+     must clear, the label on every result). Cheap to decide now, ruinous to 
+     change later. → You know, it's really not a good idea to just give me an 
+     artifact, then ask me questions right there and then, but it's okay, that's
+     just messing around with you. So, I'm looking at artifact right now. In 
+     fact, let me still this monitor so that it looks green. Okay, so you are 
+     saying I asked for a slide. That's true. Yeah, now a slide is like the five
+     building blocks. Not actually, okay, the core, core things, yeah. That 
+     once they are built, they're like the actual foundation of the entire 
+     framework, which, funny enough, becomes the actual foundation of the entire
+     library, sorry, the entire thing. So remember, we have five hearts. This 
+     thing is meant to help me do research, development hurts the wearable 
+     thing. So, research, development, my edition software, bear with me. I was 
+     saying, so research, development, trading, portfolio management. Well, 
+     let's start. So, you already have a lot of stuff covered partially, but 
+     that's what extensibility was also meant to that's another thing to 
+     solidify extensibility logic. So, you're saying none of them is a built. 
+     Each of these decisions writes down small. Once they're done, everything is
+     a piece. Okay, okay, you're saying the look, the dictionary, please. Now, 
+     what I don't get is why you are calling a broker exam. I don't really like 
+     that word exam. I don't know what it is. Then you are saying one ID card. 
+     Well, yeah, that's good. The agent page, no, let's leave the agents a bit. 
+     What do you mean by the agent page? Anyway, let me. You already described 
+     everything. Let me first read through. Okay, so the data lake, we are 
+     building that. Thank you. Please, for the data lake, handle it like a good 
+     data scientist. Okay, remember, agents are going to be using the same data,
+     so it means they should be able to copy, or by default, it should allow 
+     them to copy, and they don't have to think through proper data science 
+     techniques, like you know, you know what I'm talking about, these things of
+     splitting data and whatnot. Yeah, now indicators and levels. So, 
+     indicators, indicators, there are three things I think we need to consider 
+     together with levels, in fact. So, you see, indicators, you are to consider
+     heavy indicators. That's the first part. For example, there are indicators
+     that are heavy to calculate, you know, they can't be calculated in 
+     milliseconds. Remember, we have something called the MIS. So, what we did 
+     in the architecture last time is that we put heavy indicators in the MIS. I
+     don't know if you could give me examples, and I don't know if you 
+     understand what I'm talking about. Now, if you consider that, and then you 
+     know, you put in levels, okay, that's the first thing. So, second thing is 
+     also indicators at a bot level or in under a strategy. Yeah, that's another
+     thing. Then, of course, we can experiment and build our own custom 
+     indicators. We've already seen that that's possible using genetic 
+     algorithms. Then, the other thing would have been the types of data we 
+     should be able to get. Now, this goes to DOM data or level 3 data. So, 
+     things like order flow, things like I don't know, we could do something 
+     like because the last version of QML had stuff relating to options and 
+     whatnot. Okay, what we did is that we did these things of option, gamma, 
+     theta levels, and then we sort of did simple calculations. I don't know if 
+     you understand what I'm talking about, but we did simple calculations or we
+     redid our own versions, but for Forex and crypto. Because crypto is 
+     something I believe has many inefficiencies and we can explore and make a 
+     lot of money in. So it's just that we haven't looked at it in depth, and we
+     shall look at it when QMX is a platform. So, we can extend QMX itself to 
+     build a crypto version of it. Okay, not a crypto version, but to extend its
+     crypto capabilities. So, for now, I know more about Forex than crypto. So,
+     that's indicators. So, there is a lot to look into there. Now, broker 
+     adapter, this one is you read proper documentation, please. Please, please,
+     please, please. It's not even funny. Read proper documentation, and this 
+     goes to mostly that reading node. This is not so big books and BMS. Now, 
+     books and the BMS is our okay, it's my own version of what I would consider
+     as risk management and position sizing, but I'm thinking, okay, we can 
+     have, for example, one type of trading, for example, in the documentation 
+     we have scalping, but we can have another version of a scalping book, yeah,
+     which means we can, which means there is that lineage, there is that 
+     types. I don't know if you get what I mean, categorization and whatnot. 
+     Then, the same logic with prop firms. Okay, so that's that, but over time, 
+     I think the book and the BMS might change. I'm also thinking, you know, 
+     there is a scenario where we shall have more than one BMS. I don't know, 
+     because the crypto system is, I don't think, will use exactly this, it 
+     might have standalone versions or something like that. So, yeah, that's 
+     that. So, books and BMSs under risk management and version sizing, it's the
+     stable version I thought I could think of. If you want to enhance it, you 
+     propose. All right, let's move on to metrics and reports. Now, metrics and 
+     reports is more towards the agentic side of things. So, how we view you 
+     know what happened during this backtest, stuff like that. So, what to 
+     track, what not to track, what shows if our strategy is right, what shows 
+     if a strategy is wrong, but at the same time, being unbiased overall, okay?
+     Because one of the core things I wanted with 3MX is it's not just, should 
+     I say, being so strict in terms of discovering strategies, or rather, not 
+     even discovering testing strategies, and to see if they work or not. I want
+     to see the inside than out of the actual strategy. And I believe what I 
+     mean by that is that if a strategy is to fail, I want to know why it fails,
+     which component fails, or I don't know if that's even possible, but I 
+     don't know if you're understanding me. So, because the idea is, yeah, we 
+     want to try and get as much information as possible and compare, okay, not 
+     even compare, but if we get as much information as possible, if we build a 
+     mechanism that allows us to extract strategies, for example, from as much 
+     information as possible from the internet, most strategies might fail, 
