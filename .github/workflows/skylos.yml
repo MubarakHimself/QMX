@@ -1,0 +1,22 @@
+name: Skylos
+# Quality gate for the factory lanes: dead code + SAST on everything headed
+# for main. Runs on Linux, where Skylos is fully armed (the local Windows
+# install stays "incomplete" by design - MSVC-only build dependency).
+on:
+  push:
+    branches: [integration]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  skylos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: duriantaco/skylos@v4.33.2
