@@ -5,22 +5,22 @@ type: component-spec
 status: provisional
 component: COMP-QMF-DATA-BACKUP
 depends_on: [COMP-QMF-DATA-STORE, COMP-OBJECT-STORAGE]
-decisions: [DEC-0045]
-sources: [_docwork/ledger.yaml, _docwork/gaps.yaml, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/contracts/ct-14-backup-restore.yaml, docs/contracts/ct-26-store-backup-input.yaml]
+decisions: [DEC-0103, DEC-0106, DEC-0109, DEC-0110, DEC-0113, DEC-0117, DEC-0118, DEC-0119, DEC-0045]
+sources: [_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, _docwork/gaps.yaml, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/contracts/ct-14-backup-restore.yaml, docs/contracts/ct-26-store-backup-input.yaml]
 generated: 2026-08-18
-verified: 2026-08-18
+verified: 2026-08-20
 stale_after: 30d
 ---
 
 # qmf-data Off-Machine Backup Boundary
 
-`COMP-QMF-DATA-BACKUP` is the data-layer seam for the decided off-machine backup direction from `COMP-QMF-DATA-STORE` to `COMP-OBJECT-STORAGE` (DEC-0045). CT-26 and CT-14 do not yet define a complete snapshot, routine verification, disaster recovery, or cutover procedure.
+`COMP-QMF-DATA-BACKUP` provides QMF's backup, restore, and verify **primitives**, carrying encrypted, versioned copies off-machine from `COMP-QMF-DATA-STORE` to `COMP-OBJECT-STORAGE`. The backup design is ratified — nightly, encrypted, versioned, off-machine, with automated sample-restore tests and a periodic full-restore rehearsal — while the schedule (`registry:backup_cadence` = nightly) and its execution are application/ops-owned, the same split as all scheduling (DEC-0118, AD-20). QMF ships the primitives; the cadence that runs them nightly is application/ops territory.
 
 ## Authority boundary
 
-May: receive only the provisional CT-26 Store-to-Backup input, and, after the missing schemas and operating policy are ratified, transfer material through CT-14 in the off-machine direction (DEC-0045).
+May: receive the CT-26 Store-to-Backup input per room-role and per world (DEC-0117); produce an encrypted, versioned off-machine copy through CT-14 as a backup, restore, and verify primitive (DEC-0118); back up every room-role including the registry room under one retention, backup, and migration law (DEC-0117); preserve stored int64 UTC nanosecond timestamps verbatim across the round-trip, never re-derived under a later calendar identity or tzdata version (DEC-0106); run automated sample-restore tests and a periodic full-restore rehearsal as first-class verification, never optional add-ons (DEC-0118); and enforce the 12-month seal on any read against restored data exactly as a live read does (DEC-0119).
 
-May never: claim CT-26 input is complete or consistent; select the object-storage provider, snapshot or manifest schema, encryption, credential store, cadence, RPO, RTO, retention, deletion, restore procedure, or verification cadence without ratification; embed credentials in evidence; delete local raw evidence; define data retention policy; operate a QMF application runtime; or perform operational recovery or cutover while `GAP(GAP-0027)` is open (DEC-0045).
+May never: mutate the only copy — every off-machine copy is a new versioned artifact, and every migration backs up first (preflight → backup-first → dry-run → migrate → verify) (DEC-0118); read across worlds (a cross-world restore read is a policy-rejection refusal) or restore `world = simulated` into governed evidence (DEC-0117, DEC-0110); embed credentials in evidence; delete the only local raw evidence copy; select the object-storage provider, object-key layout, encryption key custody, or numeric RPO/RTO/retention targets — those are named at the node/ops sitting (DEC-0118); own the schedule or operate a QMF application runtime; or define data-retention policy (DEC-0118, DEC-0045).
 
 ## Interfaces
 
@@ -29,48 +29,58 @@ May never: claim CT-26 input is complete or consistent; select the object-storag
 | Store-to-Backup input | in | [CT-26](../contracts/ct-26-store-backup-input.yaml) | COMP-QMF-DATA-STORE |
 | Off-machine backup boundary | out | [CT-14](../contracts/ct-14-backup-restore.yaml) | COMP-OBJECT-STORAGE |
 
-CT-26 is provisional: shape, completeness, consistency, concurrency, and manifest binding remain null. CT-14 is likewise provisional and does not certify recovery.
+CT-26 presents one room-role's records per world as a consistent, restorable input, read verbatim under one-writer-per-stream and never mutated (DEC-0113). CT-14 carries the encrypted, versioned copy across to object storage; boundary failures return typed refusals rather than raising (DEC-0109).
 
 ## Behavior
 
-The decided behavior is directional: retained evidence must have an off-machine backup path (DEC-0045). `registry:backup_cadence` is null under `GAP(GAP-0027)`, so no scheduled run is specified. CT-26 reserves the store input seam and CT-14 reserves the external target seam; neither authorizes an operational transfer implementation while their shapes and results remain null.
+### Ratified backup design
 
-Routine verification and disaster recovery are separate operating concerns, not synonyms for off-machine direction. `GAP(GAP-0027): Which provider, manifest fields, encryption, credential boundary, cadence, retention, RPO, RTO, restore procedure, verification cadence, retry behavior, recovery authority, cutover gate, and result shape define CT-14?` `GAP(GAP-0020)`, `GAP(GAP-0022)`, and `GAP(GAP-0026)` also block CT-26 shape, consistency, partitions, and completeness. Non-destructive implementation gate: no operational recovery or cutover may be implemented until GAP-0027 is resolved.
+The backup primitive produces an encrypted, versioned copy and the application/ops cadence runs it nightly off-machine to the object-storage bucket (DEC-0118). The CT-26 input covers every room-role — ingest door, immutable raw archive, processed, journal, split-governed research door, backup, and the registry room — all instantiated per world; a cross-world backup read is a policy-rejection refusal (DEC-0117, DEC-0110). Timestamps pass through verbatim as int64 UTC nanosecond data, never re-derived (DEC-0106). Topology: the trading-node VPS records and syncs down, the workstation holds the working archive, and the bucket catches nightly copies (DEC-0118).
+
+### Verification and restore
+
+Verification is a first-class primitive: automated sample-restore tests plus a periodic full-restore rehearsal are part of the ratified design (DEC-0118). A restore never rewrites the only copy; each off-machine copy is a distinct version. Restored backups still enforce the 12-month seal — a read against restored data refuses sealed rows as a policy rejection exactly as a live read does (DEC-0119). Encryption is required; encryption key custody and the crypto dependency are named at the node/ops sitting — a pointer carried here, not resolved by this boundary (DEC-0118).
+
+### Node/ops-owned numbers
+
+The design is ratified; the numbers are node/ops territory. Object-key layout, retention depth, the numeric recovery-point objective (`registry:backup_recovery_point_objective`), recovery-time objective (`registry:backup_recovery_time_objective`), retention period (`registry:backup_retention_period`), and verification cadence (`registry:restore_verification_cadence`) are named at the node/ops sitting (DEC-0118). No provider selection is baked into QMF: the object-storage target stays external and replaceable (DEC-0045).
 
 ```mermaid
 sequenceDiagram
     participant Store as COMP-QMF-DATA-STORE
     participant Backup as COMP-QMF-DATA-BACKUP
     participant Object as COMP-OBJECT-STORAGE
-    Store-->>Backup: provisional input (CT-26)
-    Backup-->>Object: off-machine boundary (CT-14; non-operational)
-    Note over Store,Object: Shape, completeness, consistency, verification, recovery, and cutover are GAP-bound
+    Store->>Backup: CT-26 room-role records, per world (verbatim, unlimited reader)
+    Backup->>Backup: encrypt + version (primitive)
+    Backup->>Object: CT-14 off-machine copy (nightly cadence = app/ops-owned)
+    Backup->>Backup: automated sample-restore + periodic full-restore rehearsal
+    Note over Store,Object: 12-month seal enforced on restored reads; timestamps verbatim; key custody + numeric RPO/RTO at node/ops sitting
 ```
 
 ## Configuration
 
 | Variable | Registry key | Notes |
 |---|---|---|
-| Backup cadence | `registry:backup_cadence` | `GAP(GAP-0027)`; no cadence, invocation time, or scheduler is ratified. |
-| Recovery-point objective | `registry:backup_recovery_point_objective` | `GAP(GAP-0027)`; no RPO is ratified. |
-| Recovery-time objective | `registry:backup_recovery_time_objective` | `GAP(GAP-0027)`; no RTO is ratified. |
-| Backup retention | `registry:backup_retention_period` | `GAP(GAP-0027)`; no off-machine retention period is ratified. |
-| Restore-verification cadence | `registry:restore_verification_cadence` | `GAP(GAP-0027)`; no verification cadence is ratified. |
+| Backup cadence | `registry:backup_cadence` | Nightly (ratified design); QMF provides the primitives while schedule and execution are application/ops-owned (DEC-0118). |
+| Recovery-point objective | `registry:backup_recovery_point_objective` | Design ratified; the numeric RPO is named at the node/ops sitting (DEC-0118). |
+| Recovery-time objective | `registry:backup_recovery_time_objective` | Design ratified; the numeric RTO is named at the node/ops sitting (DEC-0118). |
+| Backup retention | `registry:backup_retention_period` | Design ratified; the numeric retention depth is named at the node/ops sitting (DEC-0118). |
+| Restore-verification cadence | `registry:restore_verification_cadence` | Automated sample-restore plus periodic full-restore rehearsal are ratified; the numeric cadence is named at the node/ops sitting (DEC-0118). |
 
-The provider, credential location, encryption method, manifest schema, and deletion policy have no ratified registry variables and remain `GAP(GAP-0027)`.
+The object-storage provider, object-key layout, credential location, encryption method and key custody, and manifest schema are named at the node/ops sitting; no credential-bearing operation is baked into this boundary (DEC-0118).
 
 ## Failure modes
 
 | # | Condition | Behavior | Cites |
 |---|---|---|---|
-| FM-1 | A caller asks CT-26 for a complete or consistent snapshot. | The process does not start or make the claim; shape, completeness, and consistency remain `GAP(GAP-0020)`, `GAP(GAP-0022)`, `GAP(GAP-0026)`, and `GAP(GAP-0027)`. | DEC-0045 |
-| FM-2 | Material is transferred off-machine while verification behavior is unresolved. | The transfer may not be represented as verified recovery; routine verification and result semantics remain `GAP(GAP-0027)`. | DEC-0045 |
-| FM-3 | A caller requests restore, disaster recovery, or cutover. | The request is non-operational and cannot proceed until `GAP(GAP-0027)` defines the authority, non-destructive procedure, verification, and cutover gate. | DEC-0045 |
-| FM-4 | `COMP-OBJECT-STORAGE` is unavailable or rejects a transfer. | No CT-14 completion is reported; retry limits, resumability, and error result remain `GAP(GAP-0027)`. | DEC-0045 |
-| FM-5 | Required credentials or encryption behavior are absent or unratified. | The process cannot assert that CT-14 has been satisfied; credential and encryption behavior remain `GAP(GAP-0027)`. | DEC-0045 |
-| FM-6 | A caller asks whether the unresolved `registry:backup_cadence` was met. | The process makes no cadence claim; schedule, detection, notification, and catch-up behavior remain `GAP(GAP-0027)`. | DEC-0045 |
-| FM-7 | A retention action would delete the only raw evidence copy or apply an unratified deletion rule. | The deletion does not proceed under this component's authority. | DEC-0045 |
+| FM-1 | A CT-26 read would cross worlds or read `world = simulated`. | The read is a `policy rejection` refusal; storage separation delivers world isolation. | DEC-0117, DEC-0110 |
+| FM-2 | `COMP-OBJECT-STORAGE` is unreachable, rejects the upload, or the copy is corrupt. | No CT-14 completion is claimed; the boundary returns a `storage failure` typed refusal, never raised across the boundary. | DEC-0109, DEC-0118 |
+| FM-3 | A migration would mutate the only copy. | The migration backs up first (preflight → backup-first → dry-run → migrate → verify) and never mutates the only copy. | DEC-0118 |
+| FM-4 | A read against restored data touches the sealed holdout. | The restored read refuses sealed rows as a `policy rejection`, exactly as a live read does. | DEC-0119 |
+| FM-5 | A retention action would delete the only local raw evidence copy. | The deletion does not proceed under this component's authority; raw originals are kept forever. | DEC-0118 |
+| FM-6 | A caller asks the boundary to own the nightly schedule or a numeric RPO/RTO. | The boundary provides the primitive only; the cadence and numeric targets are application/ops- and node/ops-owned. | DEC-0118 |
+| FM-7 | A copy is transferred while encryption key custody is unresolved. | The boundary carries the encryption-required pointer; key custody is named at the node/ops sitting and no credential is embedded in evidence. | DEC-0118 |
 
 ## Related
 
-Decisions: DEC-0045. Scenarios: [SCN-0004 backup boundary](../scenarios/SCN-0004-off-machine-backup.md). Knowledge: none in the current provisional set.
+Decisions: DEC-0118, DEC-0119, DEC-0117, DEC-0113, DEC-0110, DEC-0109, DEC-0106, DEC-0045. Spine: [ARCHITECTURE-SPINE.md](../../_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md) AD-20, AD-19, AD-21. Scenarios: [SCN-0004 backup boundary](../scenarios/SCN-0004-off-machine-backup.md). Knowledge: none in the current provisional set.

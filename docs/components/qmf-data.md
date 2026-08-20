@@ -4,118 +4,158 @@ title: qmf-data
 type: component-spec
 status: provisional
 component: COMP-QMF-DATA
-depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA-STORE]
-decisions: [DEC-0026, DEC-0029, DEC-0038, DEC-0042, DEC-0044, DEC-0045, DEC-0046, DEC-0048, DEC-0051, DEC-0052, DEC-0053, DEC-0054]
-sources: [_docwork/ledger.yaml, _docwork/gaps.yaml, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/contracts/ct-01-money-quantity.yaml, docs/contracts/ct-02-time-calendar.yaml, docs/contracts/ct-03-instrument-identity.yaml, docs/contracts/ct-04-typed-refusal.yaml, docs/contracts/ct-05-version-fingerprint.yaml, docs/contracts/ct-06-registration.yaml, docs/contracts/ct-07-lineage-edge.yaml, docs/contracts/ct-08-gate-evidence.yaml, docs/contracts/ct-10-source-observation.yaml, docs/contracts/ct-11-evidence-persistence.yaml, docs/contracts/ct-12-dataset-split.yaml, docs/contracts/ct-13-journal.yaml, docs/contracts/ct-14-backup-restore.yaml, docs/contracts/ct-26-store-backup-input.yaml]
+depends_on: [COMP-QMF-CORE, COMP-QMF-DATA-STORE]
+decisions: [DEC-0103, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0113, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0038, DEC-0042, DEC-0044, DEC-0045, DEC-0046, DEC-0048, DEC-0051, DEC-0052, DEC-0053, DEC-0054, DEC-0126, DEC-0130, DEC-0131, DEC-0135, DEC-0138, DEC-0141]
+sources: [_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, _docwork/gaps.yaml, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/contracts/ct-01-money-quantity.yaml, docs/contracts/ct-02-time-calendar.yaml, docs/contracts/ct-03-instrument-identity.yaml, docs/contracts/ct-04-typed-refusal.yaml, docs/contracts/ct-05-version-fingerprint.yaml, docs/contracts/ct-10-source-observation.yaml, docs/contracts/ct-11-evidence-persistence.yaml, docs/contracts/ct-12-dataset-split.yaml, docs/contracts/ct-13-journal.yaml, docs/contracts/ct-14-backup-restore.yaml, docs/contracts/ct-26-store-backup-input.yaml]
 generated: 2026-08-18
-verified: 2026-08-18
+verified: 2026-08-20
 stale_after: 30d
 ---
 
 # qmf-data
 
-`COMP-QMF-DATA` is the public data-policy and API library that preserves source evidence, governs reproducible research access, and emits durable journal evidence. Middleware ingest, physical persistence, and backup execution remain separate components so adapters and stores do not acquire backend business rules (DEC-0042, DEC-0051, DEC-0052).
+`COMP-QMF-DATA` is the public data-policy and API library that preserves source evidence, governs reproducible research access, and emits durable journal evidence. It owns seven room-roles — ingest door, immutable raw archive, processed, journal, split-governed research door, backup, and the registry room — each instantiated per world (DEC-0117, AD-19). Middleware ingest, physical persistence, and backup execution stay in separate components so adapters and stores never acquire data-policy business rules (DEC-0042, DEC-0051, DEC-0052).
+
+`COMP-QMF-DATA` depends only on `COMP-QMF-CORE` and its internal persistence seam `COMP-QMF-DATA-STORE`. Under default-deny (DEC-0120), the only ratified inter-library edge into the data family is `qmf-registry → qmf-data`: `COMP-QMF-REGISTRY` persists its records and lineage through this library's append-store, so `COMP-QMF-DATA` never depends on `COMP-QMF-REGISTRY`.
 
 ## Authority boundary
 
-May: own the CT-10 public schema and accept CT-10 producer submissions from Data-Ingest and Venue; use exact Core values and typed refusals; register evidence identities and lineage through CT-06 and CT-07; enforce bitemporal fact, raw-evidence, processed-data, dataset-release, split, final-holdout, and journal policy; send evidence to CT-11 and CT-13 persistence seams; expose reserved CT-12 releases and governed CT-10 reads; and require the CT-14 off-machine backup direction (DEC-0026, DEC-0029, DEC-0038, DEC-0042, DEC-0044, DEC-0045, DEC-0046, DEC-0048).
+May: own the seven room-roles and their per-world instantiation (DEC-0117); own the CT-10 public boundary and accept CT-10 producer observation values from Data-Ingest and Venue, the venue's market-data kinds (ticks, bars, depth, gap-replay backfill, historical paging) entering through the existing CT-15 intake with raw depth stored as verbatim wire payload (DEC-0138); use exact Core values (CT-01, CT-02, CT-03), fp1 identity (CT-05, DEC-0108), and the seven-category typed refusals (CT-04, DEC-0109); enforce the bitemporal fact law (event-time, known-at, source, revision) with corrections appended never overwritten (DEC-0117); enforce keep-raw-forever retention, source/instrument/time-window partitioning, and the evidence-bearing-vs-rebuildable distinction (DEC-0117, DEC-0118); persist through the CT-11 append-store and CT-13 journal seams; expose CT-12 dataset-split manifests and enforce the 12-month seal as a read-boundary refusal at every read boundary (DEC-0119); provide the CT-14/CT-26 backup/restore/verify primitives requirement while the schedule stays application-owned (DEC-0118); emit registration and lineage-edge values routed by the application (DEC-0120).
 
-May never: schedule or supervise source acquisition; own external-provider behavior; select a physical store, file format, graph database, object-storage provider, encryption scheme, or credential mechanism without ratification; erase raw evidence when processed data or corrections arrive; expose the final holdout through the default research path; use synthetic data to validate trading edge; or become a backtester, runtime event bus, trading node, MIS, or product UI (DEC-0042, DEC-0044, DEC-0045, DEC-0046, DEC-0051, DEC-0052, DEC-0054).
+May never: define registration, causality, promotion, or trading rules; select a physical store engine, file format, object-storage provider, encryption scheme, or credential mechanism without ratification (engines are named — Parquet, DuckDB, SQLite, JSONL — but sit behind CT-11's owned contract, DEC-0117); erase raw evidence when processed data or corrections arrive; delete any artifact a result label cites (DEC-0117); expose the sealed holdout through the default research path or read across worlds (both are policy-rejection refusals, DEC-0119, DEC-0117); write `world = simulated` into governed evidence (policy rejection until the backtesting sitting, DEC-0110); use synthetic data to validate trading edge (DEC-0054); depend on `COMP-QMF-REGISTRY` or any package other than `COMP-QMF-CORE` and its store seam (DEC-0120); schedule or supervise source acquisition or backup runs (DEC-0051, DEC-0118); or become a backtester, runtime event bus, trading node, MIS, or product UI (DEC-0042).
 
 ## Interfaces
 
 | Interface | Direction | Contract | Peer |
 |---|---|---|---|
 | Exact money, price, and quantity values | in | [CT-01](../contracts/ct-01-money-quantity.yaml) | COMP-QMF-CORE |
-| Exact time and calendar values | in | [CT-02](../contracts/ct-02-time-calendar.yaml) | COMP-QMF-CORE |
-| Instrument and venue identity | in | [CT-03](../contracts/ct-03-instrument-identity.yaml) | COMP-QMF-CORE |
-| Typed refusals | out | [CT-04](../contracts/ct-04-typed-refusal.yaml) | COMP-QMF-CORE |
-| Canonical identity and compatibility | in | [CT-05](../contracts/ct-05-version-fingerprint.yaml) | COMP-QMF-CORE |
-| Registry registration | out | [CT-06](../contracts/ct-06-registration.yaml) | COMP-QMF-REGISTRY |
-| Lineage edges | out | [CT-07](../contracts/ct-07-lineage-edge.yaml) | COMP-QMF-REGISTRY |
-| Causality and attempt evidence | in | [CT-08](../contracts/ct-08-gate-evidence.yaml) | COMP-QMF-REGISTRY |
-| Observation producer input | in | [CT-10](../contracts/ct-10-source-observation.yaml) | COMP-QMF-DATA-INGEST, COMP-QMF-VENUE |
-| Governed observation read | out | [CT-10](../contracts/ct-10-source-observation.yaml) | COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK |
-| Evidence persistence | out | [CT-11](../contracts/ct-11-evidence-persistence.yaml) | COMP-QMF-DATA-STORE |
-| Dataset release and split | out (reserved) | [CT-12](../contracts/ct-12-dataset-split.yaml) | Intended: COMP-QMF-REGISTRY, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE; not wired |
+| Exact time, TradingDate, and market-hours-calendar values | in | [CT-02](../contracts/ct-02-time-calendar.yaml) | COMP-QMF-CORE |
+| Instrument, venue, and account identity | in | [CT-03](../contracts/ct-03-instrument-identity.yaml) | COMP-QMF-CORE |
+| Typed refusals (seven categories) | in/out | [CT-04](../contracts/ct-04-typed-refusal.yaml) | COMP-QMF-CORE |
+| Canonical fp1 identity and version | in | [CT-05](../contracts/ct-05-version-fingerprint.yaml) | COMP-QMF-CORE |
+| Registration values (application-routed) | out (value only) | [CT-06](../contracts/ct-06-registration.yaml) | COMP-QMF-REGISTRY |
+| Lineage-edge values (application-routed) | out (value only) | [CT-07](../contracts/ct-07-lineage-edge.yaml) | COMP-QMF-REGISTRY |
+| Causality and attempt evidence | in (deferred) | [CT-08](../contracts/ct-08-gate-evidence.yaml) | COMP-QMF-REGISTRY |
+| Source-observation producer input | in (value) | [CT-10](../contracts/ct-10-source-observation.yaml) | COMP-QMF-DATA-INGEST, COMP-QMF-VENUE |
+| Governed observation read | out | [CT-10](../contracts/ct-10-source-observation.yaml) | Intended: COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK — under default-deny, not a live edge |
+| Evidence persistence (append-store) | out | [CT-11](../contracts/ct-11-evidence-persistence.yaml) | COMP-QMF-DATA-STORE |
+| Registry-room persistence | in (ratified edge) | [CT-11](../contracts/ct-11-evidence-persistence.yaml) | COMP-QMF-REGISTRY |
+| Dataset release, split, and holdout | out | [CT-12](../contracts/ct-12-dataset-split.yaml) | COMP-QMF-DATA |
 | Durable journal persistence | out | [CT-13](../contracts/ct-13-journal.yaml) | COMP-QMF-DATA-STORE |
-| Cross-domain journal evidence | in (reserved) | [CT-13](../contracts/ct-13-journal.yaml) | Intended: COMP-QMF-REGISTRY, COMP-QMF-VENUE, COMP-QMF-RISK; not wired |
+| Journal producer (promotion, via ratified edge) | in | [CT-13](../contracts/ct-13-journal.yaml) | COMP-QMF-REGISTRY |
 | Off-machine backup boundary | delegated | [CT-14](../contracts/ct-14-backup-restore.yaml) | COMP-QMF-DATA-BACKUP |
 
-CT-14 is a manifest-visible delegated boundary. `COMP-QMF-DATA-BACKUP` owns CT-14 and `COMP-OBJECT-STORAGE` consumes it; `COMP-QMF-DATA` owns only the off-machine backup requirement and does not implement the data-layer process (DEC-0045).
+Registration (CT-06) and lineage-edge (CT-07) rows are **value-only**: `COMP-QMF-DATA` produces registration and lineage-edge records as frozen dataclasses that the application routes to `COMP-QMF-REGISTRY`; producing a value creates no package dependency on `COMP-QMF-REGISTRY` (DEC-0120). CT-08 causality/attempt evidence is **deferred**: the look-ahead registration gate and attempt counter are operator-deferred to the backtesting sitting (`GAP-0016`, `GAP-0017`, DEC-0121), so artifacts registered before that sitting carry no causality evidence. The governed-read (CT-10 out) row is design intent, not a live edge: under default-deny the downstream libraries may read this boundary only once a `qmf-data` inter-library edge is ratified as a spine amendment (DEC-0120). CT-14 is a manifest-visible delegated boundary owned by `COMP-QMF-DATA-BACKUP`; `COMP-QMF-DATA` owns only the off-machine backup requirement (DEC-0118, DEC-0045).
 
 ## Behavior
 
-### Facts and retention
+### Seven room-roles, per world
 
-`COMP-QMF-DATA` owns the CT-10 schema and public boundary. Data-Ingest and Venue are producers, and Data is the only direct consumer of CT-10 from Data-Ingest. Data, Indicators, Structure, Venue, and Risk are governed readers of the Data-owned boundary; no downstream reader consumes CT-10 directly from Data-Ingest. An admitted observation preserves distinct event time and knowledge time, source identity, and canonical evidence identity through CT-10, CT-02, CT-03, and CT-05 (DEC-0038, DEC-0042). `GAP(GAP-0023): Which bitemporal fields, revision links, nullability, and late-correction rules define the fact?` `GAP(GAP-0030): Which source fields, bid/ask values, depth, granularity, units, and reconciliation rules define the V1 evidence set?`
+`COMP-QMF-DATA` owns seven room-roles — **ingest door**, **immutable raw archive**, **processed**, **journal**, **split-governed research door**, **backup**, and the **registry room** (records and lineage stored for `COMP-QMF-REGISTRY` under the same retention, backup, and migration law) — each instantiated per world (DEC-0117, AD-19). Worlds are `live` (real venue clocks and quotes, with account role carrying money-reality so paper and demo runs are `world = live`), `replay` (a data-driven injected clock over recorded history), and `simulated` (reserved-unusable in V1; writing it into governed evidence is a policy-rejection refusal until the backtesting sitting defines simulated-time typing) (DEC-0110). A read that crosses worlds is a policy-rejection refusal (DEC-0117, DEC-0109); storage separation, not identity distinctness alone, delivers world isolation (DEC-0110).
 
-Raw evidence remains distinct from processed data. The retention law is `registry:raw_history_retention_policy`, and corrections append evidence rather than silently overwriting an earlier observation (DEC-0044, DEC-0045). CT-11 moves evidence to `COMP-QMF-DATA-STORE`; physical schemas, engines, partitions, migrations, indexes, and compaction remain `GAP(GAP-0020)`, `GAP(GAP-0021)`, `GAP(GAP-0022)`, and `GAP(GAP-0026)`.
+Only the **immutable raw archive** and **journal** formats are evidence-bearing. Processed data and analytics-engine views (DuckDB) are rebuildable views, so an engine's format break costs a rebuild, never evidence, and analytics engine majors are pinned per release (DEC-0117, DEC-0103). "Rebuildable" licenses deletion only of artifacts no result label cites: a processed artifact cited as an input is retained forever, and any rebuild pins the original calendar identity and tzdata version (DEC-0117, DEC-0118).
 
-### Research access
+```mermaid
+flowchart TB
+    subgraph live["world = live"]
+      direction LR
+      il["ingest door"] --> rl["immutable raw archive ★"]
+      rl --> pl["processed (rebuildable view)"]
+      jl["journal ★"]
+      resl["split-governed research door"]
+      regl["registry room"]
+      bl["backup"]
+    end
+    subgraph replay["world = replay"]
+      direction LR
+      note_r["same seven room-roles, instantiated independently"]
+    end
+    sim["world = simulated — reserved-unusable in V1 (write = policy rejection)"]
+    live -. "cross-world read = policy rejection" .- replay
+    live -. "★ = evidence-bearing (raw archive + journal only)" .- sim
+```
 
-CT-12 identifies reproducible dataset releases and exposes explicit train, validation, and untouched-test splits by default (DEC-0046). The final holdout remains stored but outside the default research path; its duration is `registry:historical_holdout_months` (DEC-0044). `GAP(GAP-0024): What release fields, partition names, boundary arithmetic, reopening, one-look authorization, audit, and leakage rules apply?`
+### Facts and retention (bitemporal law)
+
+`COMP-QMF-DATA` owns the CT-10 boundary and is its only ratified reader today (DEC-0117, DEC-0120). Data-Ingest and Venue submit observation **values** routed by the application; no downstream library reads CT-10 directly under default-deny. Every external fact carries **event-time**, **known-at**, **source**, and **revision** (DEC-0117). `source` is a core provenance noun **orthogonal to VenueId** — a provider QMF can trade at is a venue; a provider it only reads from is a source — so a read-only provider is never conflated with a tradeable one (DEC-0117, DEC-0107). Foreign timestamps are stored verbatim with their declared zone, offset, and source resolution alongside a local receive wall time in int64 UTC nanoseconds; foreign money is stored verbatim as scaled integers with the source's declared scales; conversions to framework Time and Money are derived values carrying lineage, never rewrites (DEC-0106, DEC-0105). Corrections are appended as annotation records referencing the corrected observation's fp1 fingerprint; an observation is never overwritten. No package folds corrections inline in V1 — the annotation read-resolution rule is deferred (DEC-0117). A record's identity is its fp1 fingerprint; `(instant, writer, sequence)` is a replay-ordering key with no causal meaning, and timestamps are never primary or dedup keys (DEC-0106, DEC-0108).
+
+Raw evidence remains distinct from processed data; the retention law `registry:raw_history_retention_policy` keeps raw originals and lineage forever (DEC-0118). Time-series is partitioned by source, instrument, and time window (DEC-0118). Bar aggregation is a fingerprinted `qmf-data` derivation: aggregated bars live in the processed room with lineage back to their source series, and a bar series is well-defined only through its `BarSpec` (DEC-0126, DEC-0130). The per-kind aggregation-rule details — renko, tick-count, volume, and the other BarSpec kinds — are deferred to documentation time per the spine's Deferred table, while the `BarSpec` noun itself is ratified in `qmf-core` (DEC-0126, DEC-0130). Venue-native bars — trendbars a venue delivers directly — gain a legal `BarSpec` anchor only once the adapter's measured venue daily boundary is minted as a venue-scoped market-hours calendar identity; until then they are ungoverned observations, recorded but not promotable to governed `BarSpec`-anchored bars (DEC-0138, DEC-0141). The tick-to-bar builder that would produce those governed bars stays a Deferred-table row (DEC-0126, DEC-0130). CT-11 moves evidence to `COMP-QMF-DATA-STORE` behind the QMF-owned append-store contract; store engines stay swappable and there is no database server (DEC-0117). cTrader intake facts are ratified as pointer-level surface — see [ctrader.md](ctrader.md) for the field-by-field sheet: timestamps are Unix ms UTC asserted per field with named epoch exceptions, three independent numeric wire-scale systems, `hasMore`-only paging under a one-week tick-span cap, and trendbars gappy by design (DEC-0135). The venue daily-bar boundary and trendbar price basis are never hardcoded — the adapter measures them per broker at first connection and records them in the per-account venue-observation profile — and depth is a Level-2 resting-liquidity book recorded verbatim; QMF's own forex 17:00-New-York market-hours calendar remains its accounting rule, independent of venue bars (DEC-0135).
+
+### Research access and the seal
+
+CT-12 dataset splits are fingerprinted, time-ordered, non-overlapping manifests, each pinning exactly one calendar identity and version in-band and refusing any row carrying a different calendar identity (DEC-0119, DEC-0106). Research data is split by default into train, validation, and a sealed-test holdout (DEC-0046). Boundaries are explicit stored TradingDates or Instants, never civil dates, and the seal boundary is a **frozen** TradingDate never re-derived under a later tzdata version (DEC-0119).
+
+**Purge and embargo widths are required manifest fields now**, entering the split fingerprint and defaulting to the maximum declared warm-up-plus-confirmation-delay bound across every producer the split cites — a split reused with a longer-horizon artifact refuses rather than leaks (DEC-0131). Records partition into splits by **knowledge time** — confirmed-at for structure objects, the knowable-at of the last contributing input for indicator results — and a manifest refuses any record whose observed-at precedes a boundary while its confirmed-at follows it, unless the declared embargo covers the gap (DEC-0131).
+
+The newest sealed window (`registry:historical_holdout_months`, approximately twelve months) is a **no-peek lock, not retention** — all history is kept regardless (DEC-0044, DEC-0119). The seal is enforced **now** as a policy-rejection refusal at every qmf-data read boundary — raw archive, processed, research door, and restored backups alike — **independent of** the deferred look-ahead and attempt-counter gates (DEC-0119, DEC-0121). The sealed period gets exactly one logged final look, journaled as a named `control action` subtype in CT-13, and is never silently recycled into research (DEC-0119). `GAP(GAP-0016): the exact look-ahead/causality registration test is deferred to the backtesting sitting (DEC-0121).` `GAP(GAP-0017): the attempt counter is deferred to the backtesting sitting (DEC-0121).`
 
 Synthetic data may test infrastructure and failure handling, but it may not validate trading edge or replace real evidence (DEC-0054).
 
-### Journal and backup
+### Journal
 
-CT-13 carries durable operational and research journal evidence without becoming an event bus, arbitrary application log, workflow engine, or recovery coordinator (DEC-0042, DEC-0048). Only the Data-to-Store persistence path is currently wired. Registry, Venue, and Risk remain intended cross-domain producers; no inbound handoff or failure rule exists for them. Journal producer/consumer roles, mutation, amendment, immutability, ordering, and failure semantics remain `GAP(GAP-0025)` and `GAP(GAP-0026)`.
+CT-13 persists durable operational and research journal evidence as **N append-only streams**, one per producing component, each written under a single AD-8 `WriterId` following one-writer-per-stream with unlimited readers (DEC-0119, DEC-0113). Each stream's sequence is strictly increasing and gapless per `(writer, boot-epoch)`; a detected gap signals loss (DEC-0119, DEC-0106). The journal records exactly seven event types — decision, order, fill, risk transition, promotion, data quality, control action (`registry:journal_event_types`) — an enum addable in later versions but never redefined (DEC-0119). `correlation_id` is a linking annotation excluded from fp1 identity by explicit versioned declaration and propagated across every package boundary (DEC-0112, DEC-0108). Causal linkage across streams uses AD-16 typed edge records, never timestamps (DEC-0119, DEC-0114). Journals are evidence encoding (int64 UTC ns + writer + sequence); operator/diagnostic logs are ISO-8601-with-Z display and are a distinct thing (DEC-0112).
 
-The live requirement is an off-machine backup direction for retained evidence (DEC-0045). `registry:backup_cadence` is null, and CT-26 snapshot shape, completeness, and consistency plus CT-14 provider, encryption, retention, recovery, and verification behavior remain `GAP(GAP-0020)`, `GAP(GAP-0022)`, `GAP(GAP-0026)`, and `GAP(GAP-0027)`. Routine restore verification and disaster recovery are distinct from off-machine transfer; no operational recovery or cutover may be implemented until GAP-0027 is resolved.
+The wired QMF journal producers are `COMP-QMF-DATA` (data quality, control action) and `COMP-QMF-REGISTRY` (promotion, through the ratified `qmf-registry → qmf-data` edge, carrying only the promotion-card fp1 fingerprint plus `correlation_id`) (DEC-0119, DEC-0116, DEC-0120). `COMP-QMF-VENUE` produces order, fill, data-quality, and control-action events through the core-defined `JournalSink` injected at the composition root — the venue write path creates no import edge, so no edge is pending — a ratified shape that stays documentary until the factory ships it (DEC-0137, DEC-0138). Its fill events carry the mandatory identity fields (fill price, fill quantity, venue instant, receive instant), and CT-20's exhaustive (command kind × outcome) / (observation kind) mapping binds them under the cardinality law: exactly one journal event per recorded observation, per submission, per outcome (DEC-0137). `COMP-QMF-RISK` (risk transition) remains a **reserved** producer until its dependency edge is ratified (DEC-0120). Retention and trimming rules are set only after measured volume (DEC-0118). `GAP(GAP-0039): risk-transition event payload fields await the Book and BMS schema.`
+
+### Backup
+
+The ratified backup design is nightly, encrypted, versioned, off-machine to an object-storage bucket, with automated sample-restore tests and a periodic full-restore rehearsal (DEC-0118). `COMP-QMF-DATA` provides the backup/restore/verify **primitives** requirement (CT-14, CT-26); the schedule (`registry:backup_cadence` = nightly) and execution are application/ops-owned — the same split as all scheduling (DEC-0118). The backup room-role covers every room-role including the registry room, all under one retention, backup, and migration law and instantiated per world (DEC-0117). Restored backups still enforce the 12-month seal exactly as a live read does (DEC-0119). Topology: the trading-node VPS records and syncs down, the workstation holds the working archive, and the bucket catches nightly copies (DEC-0118). Numeric RPO/RTO/retention-depth and encryption key custody are named at the node/ops sitting (DEC-0118); the design itself is ratified.
 
 ### Acquisition seam
 
-Data-Ingest owns and calls CT-15 against external providers; `COMP-QMF-DATA` does not accept CT-15. QMF supports the first-install historical load, while clocks, scheduled acquisition, process supervision, and operator UI stay outside the library (DEC-0051, DEC-0052). Historical tick evidence begins with a Dukascopy-class source; broker tick capture waits for the broker application and connection (DEC-0053). `GAP(GAP-0028): What belongs to source adapters versus application lifecycle?` `GAP(GAP-0029): What provider, legal-retention, rate-limit, correction, and deduplication rules govern economic-calendar evidence?`
+Data-Ingest owns and calls CT-15 against external providers; `COMP-QMF-DATA` does not accept CT-15 and accepts Data-Ingest and Venue producer observation values through the Data-owned CT-10 boundary — venue market data specifically reaches that CT-10 boundary through the CT-15 intake path, application-mediated, with no fifth contract and no new dependency edge (DEC-0117, DEC-0138). qmf-data defines source contracts, normalization, validation, and idempotent intake keyed on `(source, source-native id, revision)` — a provider revision is a new artifact, never an fp1 collision — while applications own scheduling, retries, supervision, and UI (DEC-0119). QMF supports the first-install historical load; scheduled acquisition lifecycle stays outside the library (DEC-0051, DEC-0052). Historical tick evidence begins with a Dukascopy-class source; broker tick capture waits for the broker application and connection (DEC-0053). Tick sources are separately identified with bid and ask preserved and their source timestamps kept; disagreements between sources stay visible via `corroborates` / `disagrees-with` edges and are never merged away (DEC-0119).
+
+The trading venue is also a `source` (AD-19): a provider QMF trades at is a venue, and the same provider read for market data is a source, so its market-data intake reuses the source machinery without conflating the two roles (DEC-0138, DEC-0117). Its market-data kinds — ticks, bars, depth, gap-replay backfill, and historical paging — enter as CT-10 source observations through the same CT-15 intake path, application-mediated, adding no fifth contract and no new dependency edge (DEC-0138). Subscription lifecycle facts (a technical snapshot on subscribe, a non-instantaneous unsubscribe, `hasMore`-class paging) are declared intake surface, not silent behavior (DEC-0138). Every venue observation carries a venue-native identity key `(source, source-native id, revision)` so gap-replay redelivery deduplicates under the idempotent-intake split rather than colliding (DEC-0138, DEC-0119). The pinned canonical sensing feed carries a prohibition, not merely a capability: there is no silent sibling-feed failover — a sensing outage fails closed until the same feed gap-replays, so a gap is filled only by that feed's own replay and never by substituting a different feed (DEC-0138). Raw depth is recorded as the verbatim wire payload into the immutable raw archive, never an invented encoding (DEC-0138).
 
 ```mermaid
 flowchart LR
     core[COMP-QMF-CORE]
-    registry[COMP-QMF-REGISTRY]
     ingest[COMP-QMF-DATA-INGEST]
     venue[COMP-QMF-VENUE]
     data[COMP-QMF-DATA]
-    readers["Indicators / Structure / Venue / Risk"]
+    registry[COMP-QMF-REGISTRY]
     store[(COMP-QMF-DATA-STORE)]
     backup[COMP-QMF-DATA-BACKUP]
     object[(COMP-OBJECT-STORAGE)]
     core -->|"CT-01, CT-02, CT-03, CT-04, CT-05"| data
-    registry -->|"CT-08"| data
-    data -->|"CT-06, CT-07"| registry
-    ingest -->|"CT-10 producer input"| data
-    venue -->|"CT-10 producer input"| data
-    data -->|"CT-10 governed reads"| readers
-    data -->|"CT-11, CT-13"| store
-    store -->|"CT-26 provisional input"| backup
-    backup -->|"CT-14"| object
+    ingest -->|"CT-10 producer values (app-routed)"| data
+    venue -->|"CT-10 via CT-15 intake (app-routed)"| data
+    registry -->|"ratified edge: persists records + lineage via CT-11 / registry room"| data
+    registry -->|"CT-13 promotion event (card fp1)"| data
+    data -->|"CT-11 append-store, CT-13 journal"| store
+    store -->|"CT-26 store-to-backup input"| backup
+    backup -->|"CT-14 off-machine (primitives)"| object
 ```
 
 ## Configuration
 
 | Variable | Registry key | Notes |
 |---|---|---|
-| Final-holdout duration | `registry:historical_holdout_months` | `GAP(GAP-0024)`; the source direction is live but exact boundary arithmetic is unresolved. |
-| Raw-history retention | `registry:raw_history_retention_policy` | The registry value is authoritative; this spec does not duplicate it (DEC-0044). |
-| Backup cadence | `registry:backup_cadence` | `GAP(GAP-0027)`; no cadence or scheduling rule is ratified. |
-| Recovery-point objective | `registry:backup_recovery_point_objective` | `GAP(GAP-0027)`; no RPO is ratified. |
-| Recovery-time objective | `registry:backup_recovery_time_objective` | `GAP(GAP-0027)`; no RTO is ratified. |
-| Backup retention | `registry:backup_retention_period` | `GAP(GAP-0027)`; off-machine retention is unresolved. |
-| Restore-verification cadence | `registry:restore_verification_cadence` | `GAP(GAP-0027)`; no cadence is ratified. |
-| Local store engine | `registry:local_store_engine` | `GAP(GAP-0021)`; named study engines are candidates only. |
+| Final-holdout duration | `registry:historical_holdout_months` | Approximately twelve months; a no-peek seal, not retention; the boundary is a frozen TradingDate (DEC-0119). |
+| Raw-history retention | `registry:raw_history_retention_policy` | Raw originals and lineage kept forever; the registry value is authoritative (DEC-0118). |
+| Local store engine | `registry:local_store_engine` | Parquet, DuckDB, SQLite, JSONL behind the CT-11 owned contract; engines swappable; no database server (DEC-0117). |
+| Journal event types | `registry:journal_event_types` | The seven ratified event types in N append-only per-writer streams (DEC-0119). |
+| Backup cadence | `registry:backup_cadence` | Nightly (ratified design); schedule and execution are application/ops-owned (DEC-0118). |
+| Recovery-point objective | `registry:backup_recovery_point_objective` | Backup design ratified; the numeric RPO is named at the node/ops sitting (DEC-0118). |
+| Recovery-time objective | `registry:backup_recovery_time_objective` | Backup design ratified; the numeric RTO is named at the node/ops sitting (DEC-0118). |
+| Backup retention | `registry:backup_retention_period` | Backup design ratified; the numeric retention depth is named at the node/ops sitting (DEC-0118). |
+| Restore-verification cadence | `registry:restore_verification_cadence` | Automated sample-restore plus periodic full-restore rehearsal are ratified; the numeric cadence is named at the node/ops sitting (DEC-0118). |
 
 ## Failure modes
 
 | # | Condition | Behavior | Cites |
 |---|---|---|---|
-| FM-1 | An observation lacks the ratified event time, knowledge time, source, or canonical identity. | The observation does not enter governed CT-10 evidence; required fields and rejection evidence remain `GAP(GAP-0023)`. | DEC-0038, DEC-0042 |
-| FM-2 | A correction attempts to replace existing raw evidence in place. | The earlier evidence remains and the correction must append through CT-11 with a ratified revision relationship. | DEC-0044, DEC-0045 |
-| FM-3 | A default research request includes the final holdout. | CT-12 does not release the sealed portion; authorization, one-look, and audit evidence remain `GAP(GAP-0024)`. | DEC-0044, DEC-0046 |
-| FM-4 | CT-11 cannot persist required evidence. | The component does not report the evidence as persisted; transaction, retry, rollback, and recovery behavior remain `GAP(GAP-0022)`. | DEC-0038, DEC-0045 |
-| FM-5 | A proposed journal record lacks a ratified event kind or correlation identity. | The record is not valid CT-13 evidence; the exact schema and rejection result remain `GAP(GAP-0025)`. | DEC-0048 |
-| FM-6 | An off-machine transfer is presented as verified recovery or used for operational cutover. | The component does not make the claim or authorize the cutover; CT-26 completeness and CT-14 verification, recovery, and cutover remain `GAP(GAP-0027)`. | DEC-0045 |
-| FM-7 | Synthetic data is offered as evidence of trading edge. | The evidence is inadmissible for edge validation; synthetic data remains limited to infrastructure and failure testing. | DEC-0054 |
-| FM-8 | A caller asks `COMP-QMF-DATA` to schedule or supervise acquisition. | The request is outside the component boundary; the application-owned lifecycle seam remains `GAP(GAP-0028)`. | DEC-0051, DEC-0052 |
+| FM-1 | An observation lacks event-time, known-at, source, revision, writer, or fp1 identity. | The observation does not enter governed CT-10 evidence; the boundary returns an `invalid input` typed refusal. | DEC-0117, DEC-0109 |
+| FM-2 | A correction attempts to replace existing raw evidence in place. | The earlier evidence remains; the correction appends as an annotation referencing the corrected observation's fp1 fingerprint (DEC-0117). | DEC-0117, DEC-0118 |
+| FM-3 | A default research request would touch the sealed holdout. | CT-12 refuses the sealed rows with a `policy rejection`, enforced now at every read boundary including restored backups; the one permitted final look is journaled as a `control action` subtype. | DEC-0119, DEC-0121 |
+| FM-4 | A read requests evidence from a different world than the caller's. | The cross-world read is a `policy rejection` refusal; storage separation delivers world isolation. | DEC-0117, DEC-0110 |
+| FM-5 | A write targets `world = simulated`. | The write is a `policy rejection` refusal until the backtesting sitting defines simulated-time typing. | DEC-0110 |
+| FM-6 | The store engine cannot durably commit, or a file is locked, truncated, or corrupt. | The store-library exception is translated to a `storage failure` typed refusal at the qmf-data boundary and never propagated as an exception across a package boundary; migrations back up first and never mutate the only copy. | DEC-0109, DEC-0118 |
+| FM-7 | A stored write presents differing bytes under an existing fp1 fingerprint. | A byte-identical idempotent re-write is accepted silently; a true collision is refused and alarmed, never overwritten. | DEC-0108 |
+| FM-8 | Synthetic data is offered as evidence of trading edge. | The evidence is inadmissible for edge validation; synthetic data remains limited to infrastructure and failure testing. | DEC-0054 |
+| FM-9 | A caller asks `COMP-QMF-DATA` to schedule or supervise acquisition or backup runs. | The request is outside the component boundary; scheduling and execution are application/ops-owned. | DEC-0051, DEC-0118 |
+| FM-10 | A venue-native bar is presented as a governed `BarSpec`-anchored bar before the venue's daily boundary has been measured and minted as a venue-scoped market-hours calendar identity. | The bar is recorded as an ungoverned observation; promoting it to a governed `BarSpec`-anchored bar before the boundary is minted is a `policy rejection` refusal. | DEC-0138, DEC-0141 |
 
 ## Related
 
-Decisions: DEC-0038, DEC-0042, DEC-0044, DEC-0045, DEC-0046, DEC-0048, DEC-0051, DEC-0052, DEC-0053, DEC-0054. Scenarios: [SCN-0002 source correction](../scenarios/SCN-0002-source-correction.md), [SCN-0003 sealed holdout](../scenarios/SCN-0003-sealed-holdout.md), [SCN-0004 backup boundary](../scenarios/SCN-0004-off-machine-backup.md), [SCN-0008 pair-scoped news](../scenarios/SCN-0008-pair-scoped-news.md), [SCN-0009 synthetic stress](../scenarios/SCN-0009-synthetic-stress.md). Knowledge: none in the current provisional set.
+Decisions: DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0110, DEC-0113, DEC-0109, DEC-0108, DEC-0106, DEC-0105, DEC-0103, DEC-0044, DEC-0046, DEC-0053, DEC-0054, DEC-0126, DEC-0130, DEC-0131, DEC-0135, DEC-0138, DEC-0141. Spine: [ARCHITECTURE-SPINE.md](../../_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md) AD-19, AD-20, AD-21, AD-15, AD-28. Scenarios: [SCN-0002 source correction](../scenarios/SCN-0002-source-correction.md), [SCN-0003 sealed holdout](../scenarios/SCN-0003-sealed-holdout.md), [SCN-0004 backup boundary](../scenarios/SCN-0004-off-machine-backup.md), [SCN-0008 pair-scoped news](../scenarios/SCN-0008-pair-scoped-news.md), [SCN-0009 synthetic stress](../scenarios/SCN-0009-synthetic-stress.md). Knowledge: none in the current provisional set.

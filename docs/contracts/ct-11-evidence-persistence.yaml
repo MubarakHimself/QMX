@@ -1,27 +1,95 @@
 id: CT-11
 name: Evidence-persistence contract
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-DATA
-consumers: [COMP-QMF-DATA-STORE]
+consumers: [COMP-QMF-DATA-STORE, COMP-QMF-REGISTRY]
 layer_from: backend
 layer_to: data
-decisions: [DEC-0038, DEC-0042, DEC-0044, DEC-0045, DEC-0047]
-gaps: [GAP-0005, GAP-0020, GAP-0021, GAP-0022, GAP-0023, GAP-0026]
-purpose: "Persist immutable raw evidence, processed records, and their identities through a replaceable data-layer seam."
+decisions: [DEC-0103, DEC-0108, DEC-0109, DEC-0110, DEC-0117, DEC-0118, DEC-0119, DEC-0120]
+gaps: []  # all prior binding gaps (GAP-0005/0020/0021/0022/0023/0026) are answered; no still-open gap binds the persistence append-store
+purpose: >-
+  Persist evidence through a QMF-owned append-store seam that keeps storage engines swappable: raw
+  archive and journal are the only evidence-bearing formats, analytics are rebuildable views, artifacts
+  any result label cites are retained forever, the seven room-roles are instantiated per world with
+  cross-world reads refused, and the 12-month seal is enforced at every read boundary — so an engine
+  change costs a rebuild rather than evidence, and no upgrade destroys the only copy.
 invariants:
-  - "Retention follows registry:raw_history_retention_policy; this contract does not duplicate the configured value."
-  - "Corrections append evidence instead of silently overwriting prior observations."
-  - "Physical engines, schemas, partitions, indexes, compression, migrations, compaction, and retention mechanics remain unresolved."
+  - "This is an append-store: evidence is written once and never overwritten; corrections append rather than mutate, and raw originals and lineage are kept forever (DEC-0117, DEC-0118)."
+  - "Seven room-roles — ingest door, immutable raw archive, processed, journal, split-governed research door, backup, and the registry room (records and lineage under the same retention, backup, and migration law) — are each instantiated PER WORLD; a read that crosses worlds is a policy-rejection refusal (DEC-0117)."
+  - "Only raw-archive and journal formats are evidence-bearing; analytics engines (DuckDB) hold rebuildable views only, so an engine format break costs a rebuild and never evidence, and analytics engine major versions are pinned per release (DEC-0117, DEC-0103)."
+  - "'Rebuildable' licenses deletion only of artifacts no result label cites; an artifact cited by any result label is retained forever, and any rebuild pins the original calendar identity and tzdata version (DEC-0117, DEC-0118)."
+  - "Store engines (Parquet columnar time-series, DuckDB local analytics, SQLite transactional metadata, JSONL append streams) sit behind this QMF-owned contract with stdlib-typed boundary signatures; there is no database server (DEC-0117)."
+  - "Store-library exceptions are translated to storage-failure typed refusals at the qmf-data boundary and never propagated as exceptions across a package boundary; storage-failure covers disk-full, corrupt files, and locked or truncated stores (DEC-0109)."
+  - "COMP-QMF-REGISTRY persists its records and lineage through this contract via the single ratified inter-library edge qmf-registry → qmf-data (2026-08-20), with stdlib-typed signatures at the boundary; default-deny forbids any other inter-library persistence edge until it is ratified as a spine amendment (DEC-0120)."
+  - "The 12-month seal is a no-peek lock — not retention, data is kept regardless — enforced as a policy-rejection refusal at every read boundary of this contract: raw, processed, research door, and restored backups alike, independent of the deferred GAP-0016/0017 gates; the sealed period gets one logged final look journaled as a named control-action subtype and is never silently recycled (DEC-0119)."
+  - "Every stored artifact carries its contract's integer format version whose meaning never mutates; migrations run preflight checks → backup first → dry-run → migrate → verify, with a documented restore path and never in-place mutation of the only copy (DEC-0103, DEC-0118)."
+  - "The identity of every stored artifact is its fp1 fingerprint; an idempotent byte-identical re-write (the sandbox-merge normal case) is accepted silently, while a true collision (same hash, differing bytes) is refused and alarmed, never overwritten (DEC-0108)."
+  - "Simulated-world artifacts are unwritable in V1 — writing world=simulated into governed evidence is a policy-rejection refusal until the backtesting sitting defines simulated-time typing; storage separation, not identity distinctness alone, delivers world isolation (DEC-0110)."
 schema:
-  type: null
-  type_gap: GAP-0021
-  fields: null
-  fields_gap: GAP-0023
-  enums: null
-  enums_gap: GAP-0020
-  units: null
-  units_gap: GAP-0023
-  nullability: null
-  nullability_gap: GAP-0022
+  type: >-
+    A QMF-owned append-store boundary over swappable engines (Parquet raw archive, JSONL journal and
+    append streams, SQLite transactional metadata, DuckDB analytics views), with stdlib-typed boundary
+    signatures and no database server. It stores whole artifacts whose value-level encodings (int64 UTC ns
+    time, scaled-integer money, fp1 fingerprints) are defined by CT-01/CT-02/CT-05 and stored verbatim;
+    the identity of every stored artifact is its fp1 fingerprint.
+  fields:
+    fingerprint:
+      type: string-opaque
+      note: "the stored artifact's identity, form fp1:sha256:<hex>; write is idempotent on byte-identical content and refuses a true collision (DEC-0108)."
+    format_version:
+      type: int
+      note: "the artifact's integer contract format version stamped into every stored artifact; its meaning never mutates (DEC-0103)."
+    room_role:
+      type: string-enum
+      note: "which of the seven room-roles holds the artifact; see enums.room_role (DEC-0117)."
+    world:
+      type: string-enum
+      note: "the world whose room instance holds the artifact; each room-role is instantiated per world and cross-world reads refuse; see enums.world (DEC-0117, DEC-0110)."
+    is_evidence_bearing:
+      type: bool
+      note: "true only for raw-archive and journal formats; processed and analytics views are rebuildable, not evidence-bearing (DEC-0117)."
+    retained_forever:
+      type: bool
+      note: "true when any result label cites the artifact — cited artifacts are retained forever; an uncited rebuildable artifact is deletion-eligible (DEC-0117, DEC-0118)."
+    rebuild_calendar_identity:
+      type: string-opaque
+      note: "for a rebuildable/processed artifact, the original calendar identity a rebuild must pin; omitted for raw evidence (DEC-0117, DEC-0118)."
+    rebuild_tzdata_version:
+      type: string
+      note: "for a rebuildable/processed artifact, the original tzdata version a rebuild must pin; omitted for raw evidence (DEC-0117, DEC-0118)."
+    engine_major:
+      type: string
+      note: "the pinned major version of the analytics engine holding a rebuildable view; a format break costs a rebuild, never evidence; omitted for evidence-bearing raw and journal artifacts (DEC-0117, DEC-0103)."
+    writer:
+      type: string-opaque
+      note: "WriterId for an append or journal stream (one writer per stream, unlimited readers); omitted for non-stream artifacts (DEC-0119)."
+    sequence:
+      type: int
+      note: "gapless per-(writer, boot-epoch) sequence for journal/append streams — a gap signals loss; omitted for non-stream artifacts (DEC-0119)."
+  enums:
+    room_role:
+      values: ["ingest door", "immutable raw archive", "processed", "journal", "split-governed research door", "backup", "registry room"]
+      note: "the seven room-roles; only immutable-raw-archive and journal are evidence-bearing; the registry room holds qmf-registry records and lineage under the same retention, backup, and migration law; each role is instantiated per world (DEC-0117)."
+    world:
+      values: [live, replay, simulated]
+      note: "each room-role is instantiated per world; live and replay are writable, simulated is reserved-UNUSABLE in V1 (writing it is a policy-rejection refusal until the backtesting sitting); a cross-world read is a policy-rejection refusal (DEC-0117, DEC-0110)."
+    evidence_class:
+      values: ["evidence-bearing", "rebuildable-view"]
+      note: "raw-archive and journal formats are evidence-bearing; processed data and analytics engine views are rebuildable-views whose deletion is licensed only when no result label cites them (DEC-0117)."
+    refusal_categories:
+      values: ["invalid input", "unsupported capability", "unavailable dependency", "stale evidence", "policy rejection", "transient venue failure", "storage failure"]
+      note: "the CT-04 seven-category taxonomy this boundary refuses through; storage-failure translates store-library exceptions at the qmf-data boundary; a cross-world read and a sealed-period read are policy-rejection refusals; categories are addable, never redefined (DEC-0109, DEC-0119)."
+  units: >-
+    format_version is a unitless monotonic integer ordinal per contract; fingerprints are opaque
+    fp1:sha256:<hex> strings with no physical units; the sequence is a unitless per-(writer, boot-epoch)
+    monotonic integer; artifact-internal value encodings (int64 UTC nanoseconds for time, scaled integers
+    for money) are defined by CT-01/CT-02 and stored verbatim, not re-specified by this contract
+    (DEC-0103, DEC-0108).
+  nullability: >-
+    fingerprint, format_version, room_role, and world are required on every stored artifact; writer and
+    sequence are required for append/journal streams and omitted for non-stream artifacts;
+    rebuild_calendar_identity, rebuild_tzdata_version, and engine_major are required for rebuildable
+    artifacts and omitted for raw evidence; is_evidence_bearing and retained_forever are derived
+    properties of room_role and citation; null is prohibited in identity — an absent value is an omitted
+    key, never a null (fp1, DEC-0108).

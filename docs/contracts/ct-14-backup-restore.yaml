@@ -1,28 +1,37 @@
 id: CT-14
 name: Off-machine backup boundary contract
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-DATA-BACKUP
 consumers: [COMP-OBJECT-STORAGE]
 layer_from: data
 layer_to: external
-decisions: [DEC-0045]
-gaps: [GAP-0005, GAP-0026, GAP-0027]
-purpose: "Carry backup material off-machine while snapshot shape, cadence, verification, recovery, and cutover remain unresolved."
+decisions: [DEC-0118, DEC-0119, DEC-0117, DEC-0106, DEC-0109, DEC-0103]
+gaps: []
+purpose: "Carry encrypted, versioned backup copies off-machine to object storage through QMF's backup/restore/verify primitives, while the backup schedule and its execution stay application/ops-owned."
 invariants:
-  - "QMF maintains an off-machine backup direction; this contract does not claim a complete or consistent snapshot."
-  - "Cadence is registry:backup_cadence and is null under GAP-0027."
-  - "Routine restore verification, disaster recovery, operational recovery, and cutover are non-operational until GAP-0027 is resolved."
-  - "Provider, manifest fields, encryption, credentials, RPO, RTO, retention, deletion, restore procedure, and verification cadence remain unresolved."
+  - "QMF provides the backup, restore, and verify primitives only; the backup schedule and its execution are application/ops-owned, the same split as all scheduling (DEC-0118)."
+  - "The ratified backup design is nightly, encrypted, versioned, off-machine object-storage copies: the primitive produces the encrypted versioned copy and the application/ops cadence runs it nightly (DEC-0118)."
+  - "Verification is a first-class primitive: automated sample-restore tests and a periodic full-restore rehearsal are part of the ratified design, never optional add-ons (DEC-0118)."
+  - "Every off-machine copy is a new versioned artifact; a backup never mutates the only copy, and every migration backs up first (preflight -> backup-first -> dry-run -> migrate -> verify, with a documented restore path) (DEC-0118)."
+  - "Backup round-trips preserve stored timestamps as data: int64 UTC nanosecond values are stored and restored verbatim, never re-derived under a later calendar identity or tzdata version (DEC-0106)."
+  - "Restored backups still enforce the 12-month seal: a read against restored data refuses sealed rows as a policy rejection exactly as a live read does (DEC-0119)."
+  - "The backup room-role covers every room-role including the registry room, all under one retention, backup, and migration law and instantiated per world; a cross-world restore read is a policy-rejection refusal (DEC-0117)."
+  - "Boundary failures return typed refusals: storage failure covers an unreachable bucket, a failed upload, or a corrupt copy; refusals are returned, never raised across the boundary (DEC-0109)."
+  - "Encryption is required; encryption key custody and the crypto dependency are named at the node/ops sitting -- a pointer carried here, not resolved by this contract (DEC-0118)."
+  - "Topology: the trading-node VPS records and syncs down, the workstation holds the working archive, and the bucket catches nightly copies (DEC-0118)."
 schema:
-  type: null
-  type_gap: GAP-0027
-  fields: null
-  fields_gap: GAP-0027
-  enums: null
-  enums_gap: GAP-0027
-  units: null
-  units_gap: GAP-0027
-  nullability: null
-  nullability_gap: GAP-0027
+  type: off-machine-backup-copy  # an encrypted, versioned copy of a store's contents crossing to object storage
+  fields:
+    - "contract_format_version (int) -- stamped into every artifact (DEC-0103)"
+    - "world (string-enum) -- rooms are instantiated per world (DEC-0117)"
+    - "copy_version (int ordinal) -- each off-machine copy is a distinct version (DEC-0118)"
+    - "payload (encrypted-opaque-bytes) -- store contents as ciphertext (DEC-0118)"
+    - "payload timestamps (int64-utc-ns) -- stored and restored verbatim (DEC-0106)"
+  enums:
+    world: [live, replay, simulated]  # simulated reserved-unusable in V1 (DEC-0110)
+    boundary_refusal_categories: [storage failure, policy rejection]  # subset of the seven (DEC-0109)
+  units:
+    timestamps: int64-utc-ns
+  nullability: "contract_format_version and world are required; null is prohibited in identity content -- an absent value is an omitted key (DEC-0108)."
+  node_ops_pointer: "Object-key layout, retention depth, RPO/RTO targets, and encryption key custody are named at the node/ops sitting (DEC-0118); not pinned by this contract."

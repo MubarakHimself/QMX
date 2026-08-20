@@ -45,3 +45,59 @@ final_gate:
   strict_reasons:
   - 54 provisional Markdown documents
   - 45 unique blocking gaps
+change_mode:
+- date: '2026-08-20'
+  change: "Absorb the ratified foundation architecture sitting (spine AD-1..AD-21, 2026-08-19/20) into docs/"
+  sources: [SRC-03, SRC-04]
+  ledger: "DEC-0099..DEC-0125 minted (ratified, authority rider); DEC-0032/0036/0040/0043/0047 superseded"
+  gaps: "GAP-0001..0015 and GAP-0018..0030 answered; GAP-0016/0017 deferred to the backtesting sitting per DEC-0121"
+  status: complete
+  gates:
+    validate_ledger: pass
+    validate_registry: pass
+    validate_inventory: pass (warnings: 9 cross-cutting DECs feature-unassigned; registry-vs-data ordering heuristic)
+    check_citations: pass
+    lint_docs: clean
+    lint_docs_strict: expected-blocked (60 provisional docs awaiting operator ratification; open gaps GAP-0031..0046)
+  review: "independent consistency review, 26 findings, all in-scope findings fixed; 71 pending ENH entries collected in _docwork/enhancements.yaml"
+  pending_increment: "RESOLVED by the 2026-08-20 indicators/structure change-mode pass below."
+- date: '2026-08-20'
+  change: "Fold the 2026-08-20 indicators/structure increment (spine AD-22..AD-25 + amendments to AD-2/7/8/12/14/16/17/21) into docs/"
+  sources: [SRC-03, SRC-05]
+  provenance: "Memlog entries 50..62; re-finalized ARCHITECTURE-SPINE.md; increment-gate reviews (adversarial-3 + two edge-case lenses) distilled as the CT-16/CT-17 conformance input register"
+  ledger: "DEC-0126..DEC-0134 minted (ratified); DEC-0056 superseded by DEC-0128; DEC-0124 superseded by DEC-0134"
+  gaps: "GAP-0031..0034 answered (blocking flipped false per house convention); GAP-0033 was the catalog's last nonblocking gap; GAP-0016/0017 remain deferred (DEC-0121); GAP-0035+ untouched by operator instruction"
+  adr: "ADR-0006 rewritten in place (supersedes its GAP-defined placeholders); preflight verdict: reuse — no new component"
+  contracts: "CT-16 and CT-17 filled at version 1; CT-05 result label expanded (producer contract identity + evidence class); CT-07 gains four lifecycle edge kinds; CT-12 gains required purge/embargo fields"
+  laws: "L32 school-neutral vocabulary (DEC-0132); L33 plain-Python escape hatch + graduation path (DEC-0133)"
+  status: complete
+  gates:
+    validate_ledger: pass
+    validate_registry: pass
+    validate_inventory: pass (pre-existing warnings only)
+    check_citations: pass (27 pre-existing dead-decision-frontmatter warnings on gap-report)
+    lint_docs: clean
+    lint_docs_strict: expected-blocked (provisional corpus awaiting operator ratification; open gaps now GAP-0035..0046 only)
+  review: "fresh-agent stage-07 pass-1 mini-review (_docwork/review-consistency-increment.md): 1 critical + 3 major + 5 minor, all fixed at desk (two families: five-to-seven result-label residue; superseded DEC-0124/DEC-0056 cited as live). ADR-0013 deliberately left as a point-in-time record of the foundation sitting (immutable-ADR convention); supersession chains carried by gap-report and ADR-0006."
+- date: '2026-08-20'
+  change: "Fold the 2026-08-20 venue increment (spine AD-26..AD-28 + cross-AD amendments to AD-7/8/9/12/15, dependency direction, and Stack register) into docs/"
+  sources: [SRC-03]
+  provenance: "Memlog entries 63..83; re-finalized ARCHITECTURE-SPINE.md; ratified ctrader-venue-facts.md (bundles A/B/C) + research companions cited as evidence; 49-finding venue increment gate applied at desk in the sitting"
+  ledger: "DEC-0135..DEC-0142 minted (ratified); DEC-0123 superseded by DEC-0135 (cTrader research ratified with CORRECTED evidence grades — 2013-forum-grade 17:00-NY and BID-bar claims demoted to measure-per-broker adapter obligations); EXT-2042..EXT-2055 extractions added"
+  gaps: "GAP-0035..0038 answered (blocking flipped false per house convention); open now GAP-0039..0046 only (risk sitting); GAP-0016/0017 + 0047..0049 remain deferred"
+  adr: "ADR-0007 rewritten in place (supersedes its GAP-defined placeholders); preflight verdict: reuse COMP-QMF-VENUE — no new component; CT-18..21 filled not added; market data homed at CT-10/CT-15, no fifth contract"
+  contracts: "CT-18/CT-19/CT-20/CT-21 filled at version 1; CT-01..CT-07, CT-10, CT-13, CT-15 amended per the cross-AD rulings; CT-12 checked, already carried its increment-1 clauses"
+  laws: "L34 secret references never values (DEC-0136); L35 four-outcome law, timeout never a rejection (DEC-0137)"
+  registry: "venue_trendbar_price_basis -> measured-per-broker; minted venue_daily_bar_boundary, venue_broker_identity (deployment configuration), venue_protocol_artifact (Spotware proto tag 91)"
+  features: "FEAT-0023..0026 re-traced to DEC-0135..0140; blocked-posture notes replaced (implementation authorization still factory-pipeline-only)"
+  orchestration: "11 parallel bulk-worker drafting agents over disjoint file sets (workflow wf_410e208c-70a, 41 docs) + fresh-agent consistency review"
+  status: complete
+  gates:
+    validate_ledger: pass
+    validate_registry: pass
+    validate_inventory: pass (pre-existing warnings only)
+    check_citations: pass (pre-existing dead-decision-frontmatter warnings only)
+    lint_docs: clean
+    lint_docs_strict: expected-blocked (provisional corpus awaiting operator ratification; blocking gaps now GAP-0039..0046 only)
+  review: "fresh-agent ledger-grounded consistency review: 3 critical + 6 major + 12 minor findings; 18 fixed at desk (zombie GAP-0035..0038/DEC-0123 residue in qmf-data.md, qmf-data-ingest.md, glossary, qmf-core.md, qmf-calendar-forex.md, dukascopy.md, gap-report, traceability; frontmatter DEC-list gaps; contract citation fixes; missing changelog entry written), 3 no-change-needed (ADR-0013 kept immutable per point-in-time convention; span-cap/rollover/depth specifics are venue-facts-sheet-backed, the sheet being ratified by incorporation under DEC-0135)."
+  node_boundary: "DEC-0142 recorded — tracker/trading-node-notes.md is the standing cross-session node ledger, referenced as a pointer, never absorbed; node order-path/flatten material kept out of QMF docs"

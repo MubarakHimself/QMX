@@ -5,10 +5,10 @@ type: adr
 status: provisional
 component: COMP-QMF-CORE
 depends_on: []
-decisions: [DEC-0022, DEC-0026, DEC-0027, DEC-0028, DEC-0029, DEC-0030, DEC-0031]
-sources: [DEC-0022, DEC-0026, DEC-0027, DEC-0028, DEC-0029, DEC-0030, DEC-0031, DEC-0032]
+decisions: [DEC-0022, DEC-0026, DEC-0027, DEC-0028, DEC-0029, DEC-0030, DEC-0031, DEC-0127, DEC-0134]
+sources: [DEC-0022, DEC-0026, DEC-0027, DEC-0028, DEC-0029, DEC-0030, DEC-0031, DEC-0032, DEC-0127, DEC-0134]
 generated: 2026-08-18
-verified: 2026-08-18
+verified: 2026-08-20
 stale_after: 1y
 ---
 
@@ -32,4 +32,4 @@ qmf-core defines exact money and time primitives, asset-neutral market nouns, ty
 
 ## Consequences
 
-Later components share one versioned vocabulary. The six freeze choices remain open under DEC-0032 and their corresponding gaps; no implementation may infer those fields or algorithms.
+Later components share one versioned vocabulary. Four of the six freeze choices are now ratified (DEC-0106 time encoding, DEC-0107 instrument identity, DEC-0110 result label, DEC-0127 canonical indicator arithmetic); the remaining two are tracked by DEC-0134 (DEC-0032 and DEC-0124 superseded); no implementation may infer those fields or algorithms.

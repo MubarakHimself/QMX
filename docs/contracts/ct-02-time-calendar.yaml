@@ -1,27 +1,123 @@
 id: CT-02
 name: Exact time and trading-calendar contract
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-CORE
 consumers: [COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK]
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0022, DEC-0027, DEC-0030, DEC-0031]
-gaps: [GAP-0005, GAP-0008]
-purpose: "Distinguish exact instants, civil dates, trading dates, and venue or session calendar semantics."
+decisions: [DEC-0022, DEC-0031, DEC-0103, DEC-0106, DEC-0108, DEC-0109, DEC-0135, DEC-0138, DEC-0139, DEC-0141]
+gaps: []  # GAP-0037 answered 2026-08-20 (DEC-0135 venue facts, DEC-0139 broker identity); the forex-calendar holiday list is calendar-extension data pinned per extension, not a core-contract gap
+purpose: >
+  Define exact time in qmf-core: int64 UTC-nanosecond instants, the civil-date/trading-date split,
+  durations and intervals, wall-versus-monotonic clock kinds behind an injected Clock protocol,
+  per-writer ordering, and versioned rule-set market-hours, day-boundary, and news calendars — so
+  results stay identical across server moves, DST shifts, tzdata updates, and clock corrections.
 invariants:
-  - "The universal contract does not embed a Forex-only calendar or scheduler."
-  - "Timestamp precision, timezone rules, rollover, DST, and session boundaries remain unresolved."
+  # --- Instants and arithmetic (DEC-0106) ---
+  - "Every stored timestamp is an int64 count of UTC nanoseconds since the Unix epoch, POSIX no-leap-second semantics (DEC-0106)."
+  - "The representable range is 1677 through 2262, stated once; all nanosecond arithmetic is checked and overflow is an `invalid input` typed refusal, never a wrap (DEC-0106, DEC-0109)."
+  - "Instant 0 is a valid instant; an absent time is an absent field, never a zero sentinel (DEC-0106)."
+  - "Local and ISO-8601 time are display-only, always labelled, and excluded from identity (DEC-0106, DEC-0108)."
+  # --- Civil date vs trading date (DEC-0106) ---
+  - "CivilDate and TradingDate are distinct types; a TradingDate carries its calendar identity and version in-band (DEC-0106)."
+  - "TradingDate equality is defined only within one calendar identity; comparison across two calendar identities returns a typed refusal (DEC-0106, DEC-0109)."
+  - "A TradingDate derives only from a market-hours or day-boundary rule set; it is never derived by formatting an instant, and is never used as a causality proxy — causality is compared on instants only (DEC-0106)."
+  # --- Duration, Interval, SessionWindow (DEC-0106) ---
+  - "Duration is a signed int64 quantity of nanoseconds, clock-agnostic and freely storable; the restriction is on operations — a duration used for latency, timeout, cooldown, or cadence must be measured monotonically, and a duration derived from two wall instants is an evidence span, never an elapsed-time measurement (DEC-0106)."
+  - "Interval is a half-open [start, end) instant span exposing contains and overlaps (DEC-0106)."
+  # --- Clock kinds and injection (DEC-0022, DEC-0106) ---
+  - "Wall and monotonic clock kinds are type-separated; a monotonic reading is never an Instant and never a timestamp (DEC-0106)."
+  - "A monotonic reading is persistable only as a boot-scoped opaque diagnostic carrying its boot/epoch id — never compared across boots or machines, excluded from identity, never rendered as a time (DEC-0106)."
+  - "Clock access is a core-defined protocol (a definitions-only seam); the composition root injects the real clock and replay injects a data-driven one, and nothing below the root reads the system clock (DEC-0022, DEC-0106)."
+  # --- Ordering and WriterId (DEC-0106, DEC-0108) ---
+  - "Every record stream carries a per-writer strictly-increasing sequence; the tie-break (instant, writer, sequence) is a replay-determinism ordering device with no causal meaning, and causality tests refuse at equal instants rather than tie-break (DEC-0106)."
+  - "Timestamps are never primary or dedup keys; a stored record's identity is its fp1 fingerprint and (instant, writer, sequence) is an ordering key only (DEC-0106, DEC-0108)."
+  - "Each source's actual resolution is stored beside its nanosecond value (DEC-0106)."
+  - "WriterId is a first-class core noun — stable, durable, minted per (machine, role, stream), accompanied by a boot/epoch id so restarts are visible without changing writer identity (DEC-0106)."
+  # --- Calendars (DEC-0106) ---
+  - "Calendar identity is the rule set (for example forex-17NY v3), separate from its binding to venues or accounts; only the rule set plus tzdata version enter fingerprints, so a venue change that does not change the rule set does not change derived-artifact identity (DEC-0106, DEC-0108)."
+  - "A market-hours calendar carries two separately-named facts, each with its own zone: an accounting rollover (which trading date an instant belongs to) and a session schedule (when the market is open); every calendar supplies a rollover rule, 24/7 included, and session and trading-day length are data no consumer may assume constant (DEC-0106)."
+  - "The day-boundary calendar is a third named kind — an account-parameterized evaluation-day rule; it answers only which day an instant belongs to for evaluation, is never substituted for a market-hours calendar, and produces TradingDates carrying its own identity (DEC-0106)."
+  - "market-hours calendar, day-boundary calendar, and news calendar are three distinct named concepts and are never conflated; COMP-CALENDAR-FEED is the news-calendar feed (DEC-0106)."
+  - "The forex market-hours calendar ships first: 17:00 America/New_York accounting rollover (operator-adopted), weekend gaps, and holidays in scope; swap-Wednesday is dropped from V1 (operator accounts are swap-free), though a dated financing or admin-fee charge may still exist — no-swap does not mean no dated financing (DEC-0106)."
+  - "A measured, verified venue daily-bar boundary is minted as a venue-scoped market-hours calendar identity — identity being the rule set, so a measured boundary qualifies — giving venue-native bars a legal BarSpec anchor; until it is measured and verified, venue-native bars are ungoverned observations, never assumed aligned to QMF's forex-17NY calendar (DEC-0141, DEC-0138)."
+  - "The 17:00-New-York venue daily boundary is never hardcoded: the adapter measures the actual boundary per broker at first connection and re-verifies it with a continuous monitor, storing the result as per-broker configuration; the venue's own broker-supplied non-UTC schedule and holiday axes are ratified venue facts stored verbatim and never assumed to align to QMF's forex-17NY calendar (DEC-0135, DEC-0141)."
+  - "qmf-core embeds no market-hours calendar rule set; calendars ship as separate versioned extensions that force the timezone path to their pinned tzdata package and verify at import that the resolved tzdb version equals the pin, refusing `unavailable dependency` otherwise so a fingerprint never attests a tzdb that was not used (DEC-0106, DEC-0031, DEC-0109)."
+  # --- Foreign time as evidence (DEC-0106) ---
+  - "Foreign timestamps are evidence: stored verbatim with declared zone/offset/resolution plus a local receive wall time and an optional boot-scoped receive-monotonic diagnostic; conversions are derived values with lineage and corrections are annotations, never rewrites (DEC-0106)."
+  - "On the venue path both the receive wall time AND the boot-scoped monotonic stamp are MANDATORY on every inbound venue event — the venue path removes the general rule's optionality — and an AD-13 latency rung is a monotonic delta within one boot epoch on one machine, a wall-computed rung refused as a baseline (DEC-0138, DEC-0141)."
+  - "cTrader venue timestamps are ratified as per-field-documented Unix milliseconds UTC, trusted on that per-field documentation, with named epoch exceptions — trendbar minutes, maintenance-end seconds, holiday days-since-epoch, and schedule seconds-from-Sunday in the broker zone — while the spot-event timestamp unit is undocumented and verified-or-refused at first connection; the Open API exposes no server clock (closed-set proof), so receive-time recording is mandatory (DEC-0135, DEC-0138)."
+  # --- Versioning (DEC-0103) ---
+  - "This contract carries format version 1 stamped into every serialized artifact; the version's meaning never mutates, and an incompatible change mints the next version plus a migration note (DEC-0103)."
+boundary:
+  # authority boundary — what CT-02 does NOT carry (style rule 7)
+  - "Operational clock rules — chrony on the VPS, slew-only while live, drift bands with typed refusals, no-trade-before-sync, gap records for suspect windows, RTC-in-UTC — are node/ops obligations carried in the sitting companion time-audit-devops.md, NOT core schema (DEC-0106)."
+  - "The look-ahead/causality registration gate and attempt counter that consume this contract's instant ordering are registry concerns deferred to the backtesting sitting; CT-02 supplies the ordering primitives only, not the gate (DEC-0106; deferral tracked outside CT-02)."
 schema:
-  type: null
-  type_gap: GAP-0008
-  fields: null
-  fields_gap: GAP-0008
-  enums: null
-  enums_gap: GAP-0008
-  units: null
-  units_gap: GAP-0008
-  nullability: null
-  nullability_gap: GAP-0008
-
+  type:
+    Instant: "int64 UTC nanoseconds since the Unix epoch (POSIX, no-leap-second); wall-clock meaning (DEC-0106)"
+    CivilDate: "calendar-agnostic civil date; distinct type from TradingDate (DEC-0106)"
+    TradingDate: "trading date carrying its calendar identity + version in-band; equality only within one calendar identity (DEC-0106)"
+    Duration: "signed int64 nanoseconds; clock-agnostic quantity, freely storable (DEC-0106)"
+    Interval: "half-open [start, end) instant span; contains / overlaps (DEC-0106)"
+    SessionWindow: "a named open period drawn from a session schedule (DEC-0106)"
+    WriterId: "first-class core noun minted per (machine, role, stream) with a boot/epoch id (DEC-0106)"
+    MonotonicReading: "opaque boot-scoped diagnostic; never an Instant, never a timestamp (DEC-0106)"
+    Clock: "core-defined protocol seam, injected at the composition root (DEC-0022, DEC-0106)"
+    MarketHoursCalendar: "rule-set identity carrying accounting rollover + session schedule (DEC-0106)"
+    DayBoundaryCalendar: "third calendar kind: account-parameterized evaluation-day rule (DEC-0106)"
+    NewsCalendar: "news-event feed (COMP-CALENDAR-FEED); distinct concept, not a time-arithmetic calendar (DEC-0106)"
+  fields:
+    Instant: [value_ns]  # single int64 UTC nanosecond count
+    stored_instant:      # how an instant is recorded in an evidence stream
+      - value_ns          # int64 UTC ns
+      - source_resolution # the source's actual resolution, stored beside value_ns
+      - writer            # WriterId
+      - sequence          # per-writer strictly-increasing int64 (ordering key, not identity)
+    TradingDate: [calendar_identity, calendar_version, date_value]
+    Duration: [value_ns]  # signed int64
+    Interval: [start_instant, end_instant]  # half-open [start, end)
+    SessionWindow: [open_instant, close_instant, zone]
+    WriterId: [machine, role, stream, boot_epoch_id]
+    MonotonicReading: [value_ns, boot_epoch_id]  # never persisted as an Instant
+    MarketHoursCalendar:
+      - calendar_identity      # rule-set identity, e.g. forex-17NY
+      - rule_set_version       # e.g. v3
+      - tzdata_version         # pinned; participates in fingerprints
+      - accounting_rollover    # { rule, zone } — which trading date an instant belongs to
+      - session_schedule       # { rule, zone } — when the market is open
+    DayBoundaryCalendar:
+      - calendar_identity
+      - rule_set_version
+      - account                # the parameterizing account (evaluation only)
+      - evaluation_zone
+    foreign_timestamp:         # AD-8 foreign-time evidence shape
+      - raw_value              # stored verbatim
+      - declared_zone_offset
+      - declared_resolution
+      - local_receive_wall     # receiver wall Instant
+      - receive_monotonic      # optional boot-scoped diagnostic (carries boot_epoch_id)
+    # forex market-hours calendar holiday set is extension data, not core-contract schema
+    forex_holiday_set: "the forex calendar's holiday list is calendar-extension data, pinned and versioned per extension with its tzdata; the venue's own broker-supplied schedule and holiday axes are ratified venue facts stored verbatim, never assumed aligned to this calendar (DEC-0135, DEC-0141)"
+  enums:
+    clock_kind: [wall, monotonic]
+    calendar_kind: [market-hours, day-boundary, news]  # three distinct named concepts, never conflated
+    refusals_emitted:            # typed-refusal categories CT-02 boundaries return (DEC-0109; full vocabulary in CT-04)
+      - "invalid input"          # nanosecond arithmetic overflow; malformed instant
+      - "unavailable dependency" # resolved tzdb version != the extension's pinned tzdata version
+    cross_calendar_comparison: "returns a typed refusal (DEC-0106); the specific CT-04 category is not pinned by the spine"
+  units:
+    instant: "nanoseconds since the Unix epoch (int64), UTC, POSIX no-leap-second"
+    representable_range: "1677 through 2262 (int64 ns limit), stated once"
+    duration: "nanoseconds (signed int64)"
+    tzdata_version: "IANA tzdb version string, pinned per calendar extension, participates in fingerprints"
+    source_resolution: "each source's actual resolution, stored beside every nanosecond value (e.g. milliseconds for the cTrader wire, a ratified venue fact trusted as per-field-documented UTC per DEC-0135)"
+    rollover_reference: "17:00 America/New_York for the first forex market-hours calendar (operator-adopted)"
+    display_time: "local / ISO-8601 Z is display-only, always labelled, excluded from identity"
+  nullability:
+    absent_time: "an absent time is an absent field, never a zero (DEC-0106)"
+    instant_zero: "instant 0 is a valid instant, not a sentinel for absent (DEC-0106)"
+    identity_null: "null is prohibited in identity content — an absent value is an omitted key under the fp1 recipe (DEC-0108)"
+    monotonic: "a monotonic reading is persistable only as a boot-scoped opaque diagnostic carrying its boot/epoch id; it is never null-filled into an Instant slot (DEC-0106)"
+    trading_date_source: "a TradingDate is never derived by formatting an instant, and is never a causality proxy (DEC-0106)"

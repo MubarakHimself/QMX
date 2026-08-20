@@ -4,10 +4,10 @@ title: QMF V1 Glossary
 type: glossary
 status: provisional
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK]
-decisions: [DEC-0001, DEC-0017, DEC-0019, DEC-0024, DEC-0028, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0048, DEC-0055, DEC-0058, DEC-0059, DEC-0065, DEC-0066, DEC-0074, DEC-0076]
-sources: [_docwork/ledger.yaml, _docwork/gaps.yaml, docs/registry/variables.yaml, docs/architecture/dependencies.yaml, docs/contracts/]
+decisions: [DEC-0001, DEC-0017, DEC-0019, DEC-0024, DEC-0028, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0048, DEC-0055, DEC-0058, DEC-0059, DEC-0065, DEC-0066, DEC-0074, DEC-0076, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0114, DEC-0115, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0126, DEC-0128, DEC-0129, DEC-0130, DEC-0131, DEC-0132, DEC-0133, DEC-0134, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0142]
+sources: [_docwork/ledger.yaml, _docwork/gaps.yaml, docs/registry/variables.yaml, docs/architecture/dependencies.yaml, docs/contracts/, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md]
 generated: 2026-08-18
-verified: 2026-08-18
+verified: 2026-08-20
 stale_after: 30d
 ---
 
@@ -19,7 +19,15 @@ This glossary fixes names for the provisional QMF V1 documentation. A definition
 
 ### Account
 
-A qmf-core market noun for an execution or custody context. The exact account fields and the distinction among Book, broker account, venue account, live account, and demo account remain `GAP(GAP-0039)` and `GAP(GAP-0041)`.
+A first-class qmf-core noun, distinct from Venue: the nouns Venue and Account are defined in qmf-core, and their records are owned by qmf-registry. One Venue may hold many Accounts, each carrying a role — live, demo, paper-validation, paper-benched, or prop-firm — and Books bind to Accounts, not directly to Venues. A demo or paper-validation Account still carries `world = live` because the account role, not the world label, records money-reality (see **world**). (DEC-0107) Exact account fields and paper-mode transition semantics remain `GAP(GAP-0039)` and `GAP(GAP-0041)`.
+
+### Acknowledgement mode
+
+The CT-18-declared way a venue confirms each command kind's outcome, one of three values (`explicit-event | implicit-absence | none`). An outcome is never derived from absence alone: a `cancel_order` resolved by read-back is `accepted-by-venue` only if the read-back also shows no fill for that order at or after the cancel's submit stamp, and otherwise resolves `rejected-by-venue` (**superseded-by-fill**). Each adapter declares its acknowledgement mode per command kind; a consumer never assumes one. (DEC-0137)
+
+### Anchor span
+
+The frozen payload geometry of a structure object: start instant, end instant, and price bounds, fixed at observation and never revised. An anchor span is explicitly permitted to precede observed-at (an object may describe earlier bars once it becomes derivable) and is excluded from every causality test — causality is judged on observed-at and confirmed-at, never on where the object's geometry points. Anchor span is an identity field, never occurrence-classified. (DEC-0129)
 
 ### Attempt accounting
 
@@ -27,7 +35,15 @@ Immutable registry evidence that a governed registration or research attempt occ
 
 ### Bar
 
-An asset-neutral qmf-core market noun for aggregated observations. Its exact field and price-basis contract remains `GAP(GAP-0009)` and `GAP(GAP-0037)`.
+An asset-neutral qmf-core shared noun for aggregated observations: OHLC plus its interval and its **BarSpec** (DEC-0126). It references an instrument by its ratified `(venue, venue's own symbol)` identity (DEC-0107), and a bar series is well-defined only via its BarSpec, with aggregation itself a fingerprinted qmf-data derivation. The venue-native price basis of provider bars is measured per broker at first connection under the verify-or-refuse suite and stored in the venue-observation profile, never hardcoded; venue-native bars gain a legal BarSpec anchor only once the measured daily boundary is minted as a venue-scoped market-hours calendar identity (DEC-0135, DEC-0138, DEC-0141).
+
+### BarSpec
+
+The qmf-core shared noun that replaces the bare word "timeframe" everywhere — bare "timeframe" is retired vocabulary. A BarSpec is a discriminated aggregation rule (`registry:barspec_kinds`: time-interval, tick-count, volume-threshold, notional-threshold, price-brick, range, or session) carrying exact parameters and, for time-based kinds, the anchoring market-hours calendar identity and version — so the same ticks under two anchors can never share a fingerprint, and non-time bar kinds are first-class in governed evidence. An indicator or family receives its BarSpec as data and never derives bar boundaries itself. (DEC-0126, DEC-0130)
+
+### Binding identity
+
+The identity tuple of an account-binding record: `(VenueId, AccountId, role, world)`. A binding's secret reference is declared occurrence/display-only and excluded from `fp1` — a credential is a deployment fact, never a market fact — so two bindings that differ only by a rotated credential share one identity. Role is one of live, demo, paper-validation, paper-benched, or prop-firm (see **Account**), and world is one of live, replay, or simulated (see **World**). (DEC-0136)
 
 ### BMS
 
@@ -39,39 +55,107 @@ A versioned risk and money-management container to which a Bot is bound. The rec
 
 ### Bot
 
-A future QML-domain trading artifact that contains confluence logic and binds to a Book. Bot-to-confluence cardinality and the binding schema remain `GAP(GAP-0018)`.
+A future QML-domain trading artifact that contains confluence logic and binds to a Book. A Bot contains one-or-more confluences, and the Bot-Book-account binding is a separate dated record — one Bot bound to exactly one Book at a time (DEC-0115). The full Bot schema remains its own sitting.
+
+### Canonical sensing feed
+
+The single pinned market-data feed an adapter reads for a given sensing need, carrying a prohibition, not just a capability: no silent sibling-feed failover. A sensing outage fails closed until that same feed gap-replays, never quietly switching to another feed. Market data — ticks, bars, depth, gap-replay backfill, historical paging — enters as **source observation (CT-10)** through qmf-data's CT-15 intake, application-mediated, with no venue-specific market-data contract and no new dependency edge; raw depth is recorded as the verbatim wire payload. (DEC-0138)
+
+### Capability declaration
+
+One of the two artifacts of an adapter's capability surface (the other is the **venue-observation profile**): static, adapter-version-scoped, importable without credentials, containing no measured or tunable value, every field marked `static` or `measured-at-connection`. It carries the venue protocol artifact identity, and its fingerprint is identity-bearing for any artifact whose decode depended on it. CT-18 owns its field roster (market-data kinds, order-parameter subset, command scopes, acknowledgement modes, position model per account, session topology, throttle scope, rate limits, span caps and paging model, token lifecycle class, equity nativeness, server-clock availability, instrument-metadata surface, attribution-label support, protection primitives). Invoking anything undeclared is an `unsupported capability` refusal. (DEC-0138)
 
 ### Causality gate
 
 A qmf-registry registration precondition that checks whether submitted evidence was knowable by the applicable cutoff. Claim fields, comparison rules, and pass evidence remain `GAP(GAP-0016)`. See also **look-ahead**.
 
+### CivilDate
+
+A qmf-core time type for an ordinary civil (wall-clock) day, distinct from **TradingDate**. A CivilDate is display-oriented and never carries trading semantics: it is not a session boundary, not a trading-day identity, and never a causality proxy (causality is compared on Instants only). Civil and trading dates are separate types precisely so a formatted civil day is never mistaken for a trading day. (DEC-0106)
+
+### Command stream
+
+The `(VenueId, account)` pair — the unit of **UNKNOWN** blocking, of **WriterId** ownership, and of the gapless per-writer sequence. It is coarser than an account binding (all bindings on an account block together) and strictly finer than a connection (a shared connection never couples distinct accounts' uncertainty); sessions and bindings exist but neither is a stream. A **session epoch** id rides every venue observation; sequences reset only on boot, never on reconnect, and the sequence cursor is durable through the observation sink. Order-path internals below this contract surface are trading-node territory, referenced only as a pointer (`tracker/trading-node-notes.md`), never absorbed here. (DEC-0137, DEC-0142)
+
+### Command-id-binding record
+
+The durable record — `(venue client id, command fp1, account, session epoch)` — persisted through the observation sink **before** submission whenever the CT-18-declared mapping from a command's `fp1` into the venue's client-id field cannot be injective and total over the digest space. It is named reconciliation evidence. Idempotency and collision tests run against the full local fingerprint, never the venue-side id: re-presenting the same command is an idempotent accept, and differing content under a reused identity is refused and alarmed. (DEC-0137)
+
+### Compound command
+
+A command that fans out to N venue submissions. Each child carries a derived identity (parent `fp1` plus a declared ordinal) and is individually observation- and journal-bearing; the parent's outcome is the meet of its children — any child **UNKNOWN** makes the parent UNKNOWN, and any child rejected makes the parent **partially-executed**, a named outcome, never a success. (DEC-0137)
+
+### Compromise drill
+
+The documented, tested recovery when venue credential material may be compromised: venue-side invalidation (on the cTrader-platform profile, cTID re-authorization invalidates all outstanding refresh tokens), application-credential reset, store replacement, and session restart. Expiry and refusal paths ship as tested behavior; testing uses demo credentials only and factory sandboxes never hold live secrets. The drill turns the never-expiring refresh token from a standing hazard into a recoverable one; credential entry and management UI is platform territory. (DEC-0136, DEC-0135)
+
+### Computation identity
+
+The content-derived identity of a computed result, assembled from its result label parts — producer contract identity (the configured producer's fingerprint), producer contract format version, input fingerprints, evidence time range, evidence class, and world — so that identical work from two factory sandboxes deduplicates and merges (DEC-0110, DEC-0131). Computation identity is distinct from the **Occurrence** record (when, where, and by whom the work ran), which is separate provenance held outside identity. Human display names also live outside identity. (DEC-0110, DEC-0114)
+
 ### Confirmation
 
-A confluence element that confirms a candidate trading condition. Its exact schema and composition rules remain part of `GAP(GAP-0034)` and `GAP(GAP-0018)`.
+A confluence element that confirms a candidate trading condition. A confluence contains one-or-more confirmations under the ratified multiplicity rule (DEC-0115); its exact schema awaits the Bot sitting, and any structure evidence it consumes is governed by CT-17's lifecycle law (DEC-0129). Distinct from a structure object's **confirmation record**, the append-only lifecycle record carrying confirmed-at.
+
+### Confirmation delay
+
+The declared maximum bound, in observations at the family's **BarSpec**, between a structure object's observed-at and its confirmed-at (unbounded only for families excluded from split-governed evidence). Confirmation delay feeds purge and embargo widths together with **warm-up**, so early-entry research cannot leak evidence a confirmed read would exclude. Distinct from a structure object's confirmation record. (DEC-0129)
 
 ### Confluence
 
-Bot-side trading logic composed from Levels, Triggers, and Confirmations. Whether a Bot contains one or several confluences remains `GAP(GAP-0018)`. Exit ownership remains separate and unresolved under `GAP(GAP-0040)`.
+Bot-side trading logic composed from Levels, Triggers, and Confirmations. A Bot contains one-or-more confluences, and a confluence contains one-or-more levels, triggers, and confirmations, with no layer hardcoding exactly-one (DEC-0115). Exit ownership remains separate and unresolved under `GAP(GAP-0040)`.
+
+### Connection manager
+
+The single named adapter component permitted to hold **SecretValue** material in memory, for a session's lifetime, and the sole owner of venue sessions — no other component may construct a venue client. It receives a core-defined `SecretStore` port (read plus atomic replace) injected by the composition root; secret values never cross back out (no getter, log line, refusal context, health field, or metric label). On the venue path it holds the **WriterId** at granularity `(machine, adapter role, VenueId, account)`, stamps writer and sequence, and calls the injected **sink protocols** synchronously, so it is the component that sees every persistence failure and raises the command-pipe block. (DEC-0136, DEC-0138)
 
 ### Dataset release
 
-A reproducible identity and manifest for a fixed dataset partitioning. Release fields, split rules, reopening, and audit semantics remain `GAP(GAP-0024)`.
+A reproducible identity and manifest for a fixed dataset partitioning. Splits are fingerprinted, time-ordered, non-overlapping manifests, each pinning exactly one calendar identity and version in-band, with boundaries as explicit stored TradingDates or instants and the seal boundary a frozen TradingDate never re-derived under later tzdata (DEC-0119).
+
+### Day-boundary calendar
+
+One of three distinct named calendar concepts — always write "day-boundary calendar", never bare "calendar" (the other two are **market-hours calendar** and **news calendar**). A day-boundary calendar is an accounting-boundary rule parameterized by **Account**: it answers only "which day does this instant belong to for evaluation," and a prop firm's daily-loss day evaluated in its stated timezone is one example. It is never substituted for a market-hours calendar, and it produces TradingDates carrying its own calendar identity. V1 holds the seam only; no prop firm is modeled. (DEC-0106)
+
+### Denied-locally
+
+One of the four submission outcomes (`accepted-by-venue | rejected-by-venue | denied-locally | UNKNOWN`): a command the adapter declines before it reaches the venue. `denied-locally` is an **outcome, never a refusal** — typed refusals are reserved for malformed commands, undeclared capability, and a blocked stream — and like every outcome it mints an observation record and a journal event. (DEC-0137)
+
+### Derived-series identity
+
+The identity rule for computed or synthetic series: a series produced by a CT-16 or CT-17 configuration is identified by its result label — never by minting an Instrument. Any governed output series is a legal input to any CT-16/CT-17 configuration, and the upstream artifact's fingerprint enters the downstream identity, so chained computations stay individually attributable. (DEC-0126)
+
+### Duration
+
+A qmf-core time type: a signed int64 quantity of nanoseconds. A Duration is clock-agnostic and freely storable; the discipline sits on operations, not on the value. A Duration used for latency, timeout, cooldown, or cadence must be measured monotonically (see **WriterId** and the monotonic-clock rule); a Duration derived by subtracting two wall Instants is an evidence span, never an elapsed-time measurement. (DEC-0106)
 
 ### Event time
 
 The time at which an observed market or external event occurred. Event time is distinct from knowledge time under CT-10.
 
+### Evidence class
+
+A named part of the result label and a declared identity field with three values (`registry:evidence_classes`): **confirmed** (the object's confirmation rule has fired), **unconfirmed** (emitted before confirmation — legal, separately labeled, linked to its confirmed successor by a typed `confirmed-as` edge), and **provisional** (computed over an incomplete aggregation period — never enters governed evidence). A read requesting confirmed evidence refuses unconfirmed rows (`policy rejection`) rather than filtering silently, so early-entry research and confirmed evidence can never silently mix. (DEC-0129, DEC-0131)
+
+### Exact rational
+
+The parameter idiom extending exact money to every non-integer parameter: a scaled integer or a numerator/denominator pair. Ratios, multiples, and tolerances are exact rationals; binary floats never appear in parameters or identity content, so fingerprints stay deterministic across platforms. (DEC-0126, DEC-0131, DEC-0105)
+
 ### External source adapter (CT-15)
 
-The external-to-middleware provider boundary terminating at `COMP-QMF-DATA-INGEST`. CT-15 does not terminate at `COMP-QMF-DATA`; Data-Ingest translates provider evidence and produces CT-10 into the Data-owned governed boundary. Provider operations, source schemas, rate limits, retries, and correction behavior remain `GAP(GAP-0028)`, `GAP(GAP-0029)`, and `GAP(GAP-0030)`.
+The external-to-middleware provider boundary terminating at `COMP-QMF-DATA-INGEST`. CT-15 does not terminate at `COMP-QMF-DATA`; Data-Ingest translates provider evidence and produces CT-10 into the Data-owned governed boundary. qmf-data defines the source contracts, normalization, validation, and idempotent intake keyed on `(source, source-native id, revision)`, while applications own scheduling, retries, and supervision (DEC-0119). Tick sources are separately identified, bid and ask preserved with source timestamps, and disagreements kept visible via `corroborates` and `disagrees-with` edges, never merged (DEC-0119). The news-calendar recorder keeps provider-native identity and revisions through the same intake (DEC-0119); the provider legal archiving posture remains an open operator item.
 
 ### Exit
 
 The policy or action that closes or reduces a trading position. Whether ordinary exits are Bot organs or all exit policy belongs to the Book remains `GAP(GAP-0040)`.
 
+### Experimentation and backtesting
+
+An operator vocabulary direction recorded 2026-08-20, not a ratified contract: experimentation is the broad research activity, and backtesting is the verification step within it. This is a candidate rename for the future backtesting library (ticket 008), to be settled at the backtesting sitting; until that sitting rules, no contract or component renames. `GAP(GAP-0048)` owns the backtesting library's fidelity levels, fill models, and parity contracts, and the backtest fidelity taxonomy stays open under DEC-0134 (which supersedes DEC-0124). See also **Future backtesting library**.
+
 ### Fill
 
-An asset-neutral qmf-core market noun for an observed execution result. Its field and venue-reconciliation schema remains `GAP(GAP-0009)` and `GAP(GAP-0036)`.
+An asset-neutral qmf-core market noun for an observed execution result. It references an instrument by its ratified `(venue, venue's own symbol)` identity (DEC-0107); fill price, fill quantity, the venue instant, and the receive instant are mandatory identity fields of a fill observation under CT-20, and reconciliation read-back evidence is CT-20 surface (DEC-0137).
 
 ### Future backtesting library
 
@@ -79,19 +163,55 @@ A deferred modular, on-demand QMF consumer for testing Bot-by-Book behavior. It 
 
 ### Final holdout
 
-The sealed recent portion of retained history excluded from the default research path and reserved for a logged final evaluation. Exact boundary arithmetic and access evidence remain `GAP(GAP-0024)`.
+The sealed recent portion of retained history excluded from the default research path and reserved for a logged final evaluation. The 12-month seal is a no-peek lock enforced as a `policy rejection` refusal at every qmf-data read boundary, including restored backups; its boundary is a frozen TradingDate, and the one permitted final look is journaled as a control-action subtype and never silently recycled (DEC-0119).
 
-### Fingerprint
+### Fingerprint (fp1)
 
-A deterministic, versioned identity derived from canonical serialization. Canonical bytes, hash algorithm, collision policy, and result-key fields remain `GAP(GAP-0010)` and `GAP(GAP-0012)`.
+A deterministic, versioned identity derived from a canonical serialization, emitted as the string `fp1:sha256:<hex>`. The canonical serializer and fingerprint function live only in qmf-core; no other package computes a fingerprint except by calling it. The pinned `fp1` recipe is UTF-8 JSON with object keys sorted lexicographically at every depth, no insignificant whitespace, NFC-normalized strings, integer-only identity numerics (floats are refused in identity content), null prohibited (an absent value is an omitted key, never a null), and order-significant arrays, hashed with SHA-256. The `fp1` prefix versions the recipe: a recipe change mints `fp2` and old fingerprints stay valid forever. Every contract field is identity by default; display-only exclusion requires an explicit, versioned contract declaration, never an implementer's judgment. A byte-identical re-write of the same hash is accepted silently (the sandbox-merge normal case); a true collision — same hash, differing bytes — is refused and alarmed, never overwritten. Float-bearing artifacts take label-derived identity (see **Computation identity**) rather than a hash of float bytes. (DEC-0108)
+
+### First-connection verification suite
+
+The named CT-18 contract part that runs post-connect and is **verify-or-refuse** throughout: an unverified spot-timestamp unit refuses spot evidence; an unmeasured daily-bar boundary leaves venue daily bars ungoverned until it is measured and minted as a **venue-scoped market-hours calendar identity**; a failed bar-basis reconciliation refuses bar evidence; a failed pip-formula validation refuses metadata-derived parameters; an absent money exponent refuses that message's money decode. Its measurements and verdicts populate the **venue-observation profile** and journal as `data quality` events. (DEC-0138)
+
+### Foreign-float law
+
+The AD-7 rule extending foreign-money-verbatim to binary floats a venue delivers (cTrader execution prices and conversion rates are raw doubles): a foreign float is evidence, **never identity**. It crosses the named venue-adapter boundary at receipt to a scaled integer at a **per-value-class target scale** with a declared, identity-bearing rounding mode; the raw float is retained only as integrity-checked provenance and is never the value a consumer reads. (DEC-0141, DEC-0138)
+
+### Four-outcome law
+
+The rule that every well-formed venue submission resolves to exactly one of `accepted-by-venue | rejected-by-venue | denied-locally | UNKNOWN`, and every outcome mints an observation record and a journal event. A transport error, timeout, or disconnect yields **UNKNOWN** — a state, not an error; a venue-returned error resolves `rejected-by-venue` only where the CT-18 error table declares that outcome class, and every other path is UNKNOWN. No QMF component retries, assumes an outcome, flattens, or invents a terminal state; flatten is `close_position`/`close_all` executed mechanically, and its authority assignment is risk/node-sitting territory, referenced only as a pointer (`tracker/trading-node-notes.md`). (DEC-0137, DEC-0142)
+
+### Graduation path
+
+The route by which a working plain-Python research experiment enters governed evidence as a CT-16 indicator or CT-17 structure family through the AD-2 extension shape — a separate versioned package outside the seven-package roster, its own SemVer ladder, distribution identity and version as identity fields of every artifact it produces, explicit registration at the composition root — carrying a lineage edge back to the originating research artifact. Authoring outside the framework stays legal always; the graduation path keeps that freedom without losing provenance when an experiment becomes evidence-bearing. (DEC-0133)
+
+### Injected sink / sink protocols
+
+The qmf-core-defined ports (`ObservationSink`, `JournalSink`, `RecordSink`, `SecretStore`) the composition root injects into a venue adapter so its write path creates no dependency edge — sinks are core protocols, not a package import. The **connection manager** holds the **WriterId**, stamps writer and sequence, and calls the sinks synchronously; every sink returns success or a typed refusal to its caller, and a `storage failure` from any sink triggers the command-pipe block in the component that holds the WriterId. The root-mints pattern used for structure emissions does not extend to the venue path, because here the writer must see the failure. (DEC-0138)
+
+### Instant
+
+A qmf-core point in time: int64 UTC nanoseconds since the Unix epoch (POSIX, no-leap-second semantics), representable over 1677–2262. All nanosecond arithmetic is checked — overflow is an `invalid input` typed refusal, never a wrap. Instant `0` is a valid instant, and an absent time is an absent field, never a zero. Local time is display-only and always labelled. A wall clock produces Instants; a monotonic reading is never an Instant. Instants alone never totally order events — see **WriterId** for the ordering rule. (DEC-0106)
 
 ### Instrument
 
-An asset-neutral qmf-core market noun for a tradable market object. Identity shape, aliases, venue qualification, and metadata remain `GAP(GAP-0009)`.
+An asset-neutral qmf-core market noun for a tradable market object. Identity is `(venue, venue's own symbol)` with the symbol opaque and never parsed; aliases, renames, asset class, and mutable metadata are separate dated records pointing at the identity, and stored history never rewrites. (DEC-0107)
+
+### Interaction record
+
+The only permitted way a structure object's state evolves: an append-only record (instant, price, family-declared interaction measure) referencing the object's fingerprint. The object itself is never mutated; "still valid at T" or "still unmitigated" is a read-time fold over the object's edge stream under CT-17's read-resolution rule. Each interaction instant is an identity field of its own record. (DEC-0129)
+
+### Interval
+
+A qmf-core time type: a half-open interval over Instants, `[start, end)`, supporting `contains` and `overlaps`. Half-open boundaries let adjacent intervals tile a timeline without overlap or gap. (DEC-0106)
 
 ### Journal
 
-Durable operational and research evidence emitted through qmf-data. The Journal is not a runtime event bus or arbitrary application-log store. Append-only behavior is not adopted; event types, fields, mutation rules, cadence, retention, and redaction remain `GAP(GAP-0025)` and `GAP(GAP-0026)`.
+Durable evidence emitted through qmf-data as N append-only streams — one per producing component, each under its **WriterId** with gapless per-`(writer, boot-epoch)` sequences, where a gap signals loss. The Journal records seven event types: decision, order, fill, risk transition, promotion, data quality, and control action. It is an evidence encoding, not a runtime event bus or arbitrary application-log store; entries store int64 UTC nanoseconds plus writer and sequence (contrast operator logs, which render UTC ISO-8601 with an explicit `Z`). `correlation_id` is a linking annotation excluded from `fp1` identity by explicit versioned declaration, and causal linkage across streams uses typed lineage edges, never timestamps. Retention and trimming rules are set only after measured volume. (DEC-0119, DEC-0112, DEC-0118)
+
+### Knowable-at
+
+The per-sample instant every CT-16 output carries: the earliest instant at which every contributing input was knowable. Knowable-at is what split manifests and causality reasoning consume for indicator results — a projected or forward-shifted output keeps an honest knowable-at even when its index offset points elsewhere, which is what makes look-ahead visible instead of implicit. (DEC-0126)
 
 ### Knowledge time
 
@@ -99,35 +219,83 @@ The time at which an observation became knowable or entered the governed evidenc
 
 ### Level
 
-A confluence or market-structure element representing a causally derived price or market area. Supported families and exact fields remain `GAP(GAP-0034)`.
+A confluence or market-structure element representing a causally derived price or market area. As structure evidence it is one of the open family-declared geometries under CT-17's lifecycle law — minted at observation, confirmed by its precise rule, evolved only through interaction records (DEC-0129); as a confluence element its Bot-side schema awaits the Bot sitting (DEC-0115).
+
+### Light and heavy
+
+Two placements of the same CT-16 or CT-17 contract, not two species. A configuration is **light** only when it declares and benchmark-proves four bounds (per-update cost within the live-path latency rung, bounded declared state size, a bounded evidence window or an O(1) anchor-reset rule, and synchronous availability); otherwise it is **heavy**. Until the live-path rung has a recorded baseline, every configuration is heavy by default and a light claim is refused at the gate. A heavy configuration's synchronous entry point returns `unsupported capability`; heavy runs off the trading path, computed once and fanned out through the same contracts, each fanned-out value carrying the instant and input sequence of its last input. Classification is per configuration, never per name, and the light/heavy verdict is display-only, never in identity. (DEC-0128)
 
 ### Lineage
 
-Graph-shaped, append-only provenance among versioned identities, variants, and occurrences. Edge kinds, cardinalities, cycle rules, and persistence remain `GAP(GAP-0015)`.
+Graph-shaped, append-only provenance among versioned identities, variants, and occurrences. At-birth parent references live in the record header; lineage accruing after birth lives in append-only typed edge records — `supersedes`, `promoted-from`, `occurrence-of`, `corroborates`, `disagrees-with` — referencing fingerprints, stored as pinned JSONL with local rebuildable indexes and no database server (DEC-0114).
 
 ### Look-ahead
 
 Use **causality gate** for the registration control. Look-ahead is the prohibited use of evidence that was unavailable at the applicable decision cutoff.
 
+### Market-hours calendar
+
+One of three distinct named calendar concepts — always write "market-hours calendar", never bare "calendar" (the other two are **day-boundary calendar** and **news calendar**). A market-hours calendar carries two separately-named facts, each with its own zone: an accounting rollover (which trading date an instant belongs to) and a session schedule (when the market is open). Its calendar identity is the rule set (for example `forex-17NY` v3) plus the tzdata version — only these enter fingerprints — and is separate from its binding to venues or accounts. The forex market-hours calendar ships first: a `registry:forex_rollover` rollover, weekend gaps, and holidays in scope, with swap-Wednesday dropped from V1. Session and trading-day length is data; no consumer may assume a constant. A market-hours calendar ships as a calendar extension outside the seven-package roster, on its own SemVer ladder, with tzdata pinned and verified against the resolved version at import. (DEC-0106)
+
 ### MIS
 
 A future trading-node analytical or machine-learning ensemble consumer. MIS is not a QMF V1 library and is not `qmf-indicators`.
 
+### Money path
+
+A taint, not a location. Any value that transitively contributes to an order quantity, price, P&L, or balance is on the money path, regardless of which package computed it. Binary float is banned on the money path; a float crossing back to Money, Price, or Quantity must pass a named conversion boundary with an explicitly stated rounding mode (the venue adapter boundary is one such named boundary). Foreign money — a venue's raw wire integers — is stored verbatim as evidence with its declared scales, and conversions to framework values are derived with lineage, never rewrites. Analytic float series remain permitted off the money path; their identity is label-derived (see **Computation identity**), never a hash of float bytes. (DEC-0105)
+
+### News calendar
+
+One of three distinct named calendar concepts — always write "news calendar", never bare "calendar" (the other two are **market-hours calendar** and **day-boundary calendar**). The news calendar is the economic-events feed recorded by `COMP-CALENDAR-FEED`, the news-calendar recorder, which keeps provider-native event identity and revisions through idempotent `(source, source-native id, revision)` intake. It is never a market-hours or day-boundary calendar. Scheduling, auto-sync (for example FOMC reschedules), and UI are application territory outside QMF; the legal archiving posture remains an open operator item. (DEC-0119)
+
 ### Occurrence
 
-A candidate qmf-registry term for a concrete instance associated with a reproducible definition or charter. The exact kind catalog and occurrence schema are not adopted and remain `GAP(GAP-0014)`.
+A concrete provenance record — when, where, and by whom a computation ran — held separately from and outside artifact identity. In the registry, created-at and other occurrence facts are declared occurrence/display-only so that identical work from two sandboxes deduplicates on **Computation identity** rather than on run metadata. Reserved kinds such as Bot and Book are filled by their own sittings. (DEC-0110, DEC-0114)
+
+### One-refresher-per-credential
+
+The rotation-safety rule making a credential a one-writer stream: exactly one live refresher per credential, so a workstation tool never refreshes a credential a VPS session owns. It is the AD-15 one-writer-per-stream discipline applied to secret material, and it is what prevents two processes racing to rotate the same refresh token. (DEC-0136)
 
 ### Order
 
-An asset-neutral qmf-core market noun. Order-command fields, state, idempotency, and venue mapping remain `GAP(GAP-0036)` and `GAP(GAP-0038)`.
+An asset-neutral qmf-core market noun. The command vocabulary, order-parameter subset, command identity, and the venue client-id mapping are ratified in CT-19 and CT-18; order state is a read-time fold over CT-20 observations, never a stored state machine (DEC-0137, DEC-0138).
+
+### Out-of-sequence edge
+
+The typed annotation attached to an inbound venue observation that has no legal transition in the order-state fold. The observation is still recorded verbatim first (recording precedes interpretation), then annotated with the out-of-sequence edge, and it forces the owning command to **UNKNOWN** pending resolution. Adapters never synthesize venue observations; a derived state is a fold result, never a stored event. (DEC-0137)
+
+### Paired demo
+
+A demo binding run simultaneously alongside a live binding under the venue's declared session topology (two connections where demo and live are separate hosts). Paired-demo bindings are secret-reference-only records identified as ordinary account bindings; a shared-account order-lifecycle merge uses only the caller's sequencer evidence, never a venue-side id. (DEC-0138)
 
 ### Paper mode
 
 A Book-level execution mode in the recorded ruling: the Book and its attached Bots use a paper account rather than running parallel Bot twins. The direct operator wording is missing from the export; transition and account semantics remain `GAP(GAP-0041)`.
 
+### Partially-executed
+
+A named **compound command** outcome: some child submissions resolved and at least one child was rejected. It is never reported as a success. Any child **UNKNOWN** instead makes the parent UNKNOWN; partially-executed arises only when every child is a definite outcome and the set is mixed. (DEC-0137)
+
+### Per-value-class target scale
+
+The pinned integer scale a foreign value converts to at the named venue-adapter boundary, chosen by value class: an execution price to the instrument's declared digits; money to the account's declared money exponent, an absent exponent being a refusal; market data to the declared wire scale (cTrader's 1/100000). CT-18 pins the scale per value class, and the rounding mode is declared and identity-bearing. (DEC-0138, DEC-0141, DEC-0135)
+
+### Platform-vs-broker distinction
+
+The AD-9 rule that the trading **platform** (cTrader) fixes the wire protocol and the adapter, while the **broker** behind it is a per-deployment fact, never architecture. Opaque VenueId/AccountId identity and account bindings are sufficient — account IDs are enough — and a broker's measured behaviors (its daily-bar boundary, its trend-bar price basis) live in the **venue-observation profile** and per-broker configuration, never in code. No rule anywhere names a specific broker; IC Markets is the operator's stated intent, not a framework commitment. (DEC-0139)
+
 ### Position
 
-An asset-neutral qmf-core market noun representing market exposure. Its exact field, accounting, and risk contract remains `GAP(GAP-0009)` and `GAP(GAP-0039)`.
+An asset-neutral qmf-core market noun representing market exposure. It references an instrument by its ratified `(venue, venue's own symbol)` identity (DEC-0107); its exact field, accounting, and risk contract remains `GAP(GAP-0039)`.
+
+### Presence map
+
+The parallel integer-encoded map every bulk series carries, marking each position `present`, `provisional`, `not_ready`, `gap`, or `absent_by_schedule` (`registry:presence_map_states`). Positions are never omitted or shifted; NaN and sentinel markers are prohibited; equality compares presence maps first and values only at present positions. A market-hours-closed position is `absent_by_schedule`, never a `gap` — missing means calendar-open with no data. (DEC-0126)
+
+### PriceDelta
+
+The first-class qmf-core value for a price difference: price subtraction is closed and delta-typed, so a `PriceDelta(instrument, scale)` is distinct from a `Price` and never masquerades as one. The instrument-scoped pip or point is defined by instrument-metadata records, never hardcoded, so stop distances and range widths carry honest units. (DEC-0131, DEC-0105)
 
 ### Processed data
 
@@ -135,7 +303,7 @@ Data derived from raw evidence through an identified transformation. Processed d
 
 ### Promotion
 
-The human-controlled act that moves a registered artifact into the live zone. Required evidence and signatures remain `GAP(GAP-0019)`.
+The human-controlled act that moves a registered artifact into the live zone. The registry reserves a promotion-occurrence card kind: a human-only signer, a signed immutable record, and a mandatory plain-words summary declared an identity field; V1 signing is the operator's recorded approval attesting the record's `fp1` string, and the journal's promotion event carries only the card's fingerprint (DEC-0116). The evidence checklist accretes from the data, backtesting, and risk sittings, and the promotion gate itself is platform territory.
 
 ### qmf-core
 
@@ -147,7 +315,7 @@ The public data-policy and API library `COMP-QMF-DATA`. Middleware ingest, physi
 
 ### qmf-indicators
 
-The light indicator protocol and wrapper library `COMP-QMF-INDICATORS`. Heavy MIS and research analysis are consumers outside this component.
+The two-mode indicator library `COMP-QMF-INDICATORS`: one CT-16 contract, batch and streaming conformant modes bound by the equality law, consumer-blind across bots, structure, MIS, and backtesting. Light and heavy are placements of the same contract, not species — heavy configurations run off the trading path, computed once and fanned out (DEC-0126, DEC-0128).
 
 ### qmf-registry
 
@@ -155,7 +323,7 @@ The identity, lineage, and registration-gate library `COMP-QMF-REGISTRY`. Its V1
 
 ### qmf-structure
 
-The QMX-owned causal level, zone, and market-structure library `COMP-QMF-STRUCTURE`. Family selection and confirmation rules remain `GAP(GAP-0034)`.
+The QMX-owned causal chart-object library `COMP-QMF-STRUCTURE`, governed by CT-17's lifecycle law: objects minted once at observation, evolved only through append-only lifecycle and interaction records, evidence class identity-bearing, families admitted only under the precise-rule bar (DEC-0129).
 
 ### QMF
 
@@ -181,9 +349,21 @@ The canonical original pre-trade risk unit referenced by `registry:original_risk
 
 Source-preserving observations retained without destructive replacement by processed forms and kept available for verification. Retention is controlled by `registry:raw_history_retention_policy`; this glossary does not duplicate its configured value.
 
+### Read-time fold
+
+The rule that a current state is computed by folding an append-only observation stream at read time, never stored as a mutable record that recording must gate on. A structure object's "still valid at T" or "still unmitigated" is a read-time fold over its edge stream under CT-17's read-resolution rule (DEC-0129). A venue order's state — client-submitted, venue-accepted, partially-filled, filled, cancelled, expired, closed-by-venue — is likewise a read-time fold over the recorded venue-observation stream under CT-20's read-resolution rule, never a state machine that gates recording. (DEC-0129, DEC-0137)
+
+### Reconciliation verdicts
+
+The QMF-owned verdict vocabulary — `reconciled | drift | unknown` — of an on-demand complete read-back of venue orders, fills, positions, and balance over a stated lookback (equity derived where the venue has no native field). Reconciliation gates the command pipe only; the sensing pipe never blocks on it. When reconciliation runs and what a verdict triggers are node/BMS authority, referenced only as a pointer (`tracker/trading-node-notes.md`), not QMF's to decide. The reconciliation verdict `unknown` is a distinct notion from the **UNKNOWN** submission outcome. (DEC-0137, DEC-0142)
+
 ### Registration
 
-The qmf-registry act that admits a type-specific identity after applicable lineage and gate preconditions are represented. Object kinds, fields, transaction behavior, and evidence remain `GAP(GAP-0014)`, `GAP(GAP-0016)`, and `GAP(GAP-0017)`.
+The qmf-registry act that admits a type-specific identity after applicable lineage and gate preconditions are represented. Object kinds are per-kind record schemas, each its own versioned contract sharing a tiny header (kind, contract format version, at-birth parent references, writer, sequence), with the stable id derived from the record's `fp1` fingerprint and kinds addable but never redefined (DEC-0114). Causality-gate evidence and attempt accounting remain `GAP(GAP-0016)` and `GAP(GAP-0017)`.
+
+### resolve_unknown
+
+The explicit typed call by which an application clears an outstanding **UNKNOWN** block on a command stream — `resolve_unknown(command identity, resolution ∈ observed-accepted | observed-absent | operator-attested)` — itself recorded as an observation. The adapter never clears its own block: while an UNKNOWN is outstanding it refuses new commands on that stream, no QMF component retries or invents a terminal state, and the block clears only on this call, never on a reconciliation verdict. The application reaches its resolution from reconciliation read-back evidence. (DEC-0137)
 
 ### Risk module
 
@@ -193,45 +373,141 @@ The provisional reusable Book and BMS boundary `COMP-QMF-RISK`. The module owns 
 
 Reserved, provisional schema boundaries owned by `COMP-QMF-RISK`, not completed integration paths. The Registry and Data handoffs named by CT-22, CT-24, and CT-25, and the caller for CT-23, remain unwired; these contracts grant no implementation authority while `GAP(GAP-0039)` through `GAP(GAP-0046)` remain unresolved.
 
+### Schedulable duties
+
+The venue adapter's periodic session work — heartbeat, token refresh, reconnect, gap replay, verification monitors — declared by the adapter but driven by the application's scheduler, under the AD-15 carve-out: the adapter defines the work, the application runs it, and QMF never spawns threads or background work. Session recovery never resubmits a command. (DEC-0141)
+
+### Sealed-test / untouched-test
+
+Two names for the same split role: `sealed-test` (CT-12's enum member) is the untouched-test split of DEC-0046. CT-12 is the owning contract. (DEC-0046, DEC-0119)
+
+### Secret reference
+
+An opaque minted id standing in for a credential everywhere QMF handles secrets — components handle references, never values. It is minted under AD-9's identity discipline: stable, never reused, never encoding venue, broker, account, environment, or key material; any human-readable label is a separate field held outside evidence, and construction validates opacity (`invalid input` otherwise). A missing, expired, or rejected credential is an `unavailable dependency` refusal carrying the reference id, never the value. The typed carriers are **SecretRef** and **SecretValue**. (DEC-0136)
+
+### SecretRef
+
+The qmf-core typed value carrying a **secret reference** — an opaque minted id — through QMF code. QMF components pass SecretRef, never secret material; values are injected only at the composition root from the deployment environment's protected store (`systemd-creds`-class on the VPS). Distinct from **SecretValue**, which carries actual material and is held only by the **connection manager**. (DEC-0136)
+
+### SecretValue
+
+The qmf-core typed value that carries actual secret material and **never renders it**: repr, str, serialization, and logging all yield the reference id, and a tier-1 secret-scan gate rides `poe check`. Only the **connection manager** may hold a SecretValue in memory, for a session's lifetime, through the core-defined `SecretStore` port; the value never crosses back out. Secrets never appear in repositories, configuration artifacts, docs, `.env` files, CLI arguments, journals, evidence, fingerprints, or logs. (DEC-0136)
+
+### Session epoch
+
+A session-scoped id, distinct from the boot epoch, that rides every venue observation on a **command stream**. Per-writer sequences reset only on boot, never on reconnect, so the session epoch marks reconnect boundaries without breaking the gapless sequence; the sequence cursor is durable through the observation sink. The session epoch is a declared occurrence/display-only field in CT-20's exclusion list, never identity. (DEC-0137)
+
+### SessionWindow
+
+A qmf-core time type for a market session's open span, expressed over Instants and produced by a **market-hours calendar**'s session schedule. Session and trading-day length is data, never a constant a consumer may assume. (DEC-0106)
+
+### Six latency rungs
+
+The named stages of the live-path latency decomposition — tick received, evidence write, indicator update, decision, risk evaluation, order submitted — recorded as AD-13 rungs with no numeric budgets until measured. A latency rung is a monotonic delta within one boot epoch on one machine; a wall-computed rung is refused as a baseline. The adapter owns the arrival and submit stamps for its stages. No rung carries an invented number. (DEC-0138)
+
 ### SQS
 
 Spread Quality Sensor. SQS is distinct from news control. Formula, inputs, thresholds, cadence, and stale-data behavior remain `GAP(GAP-0043)`.
 
+### Source (provenance noun)
+
+A core provenance noun, orthogonal to **VenueId**: a provider you can trade at is a Venue, while a provider you only read from is a source. Every external fact carries event-time, known-at, source, and revision. Tick sources — for example Dukascopy history versus a broker feed — are separately identified, and disagreements between sources stay visible via `corroborates` and `disagrees-with` lineage edges, never merged away. (DEC-0117, DEC-0119)
+
 ### Source observation (CT-10)
 
-The Data-owned governed observation boundary. `COMP-QMF-DATA-INGEST` and `COMP-QMF-VENUE` produce CT-10 into `COMP-QMF-DATA`; Indicators, Structure, Venue, and Risk read the governed boundary through their dependency on Data rather than consuming directly from Data-Ingest. Fields, ordering, duplicate handling, source keys, units, and raw-payload behavior remain `GAP(GAP-0023)`, `GAP(GAP-0028)`, and `GAP(GAP-0030)`.
+The Data-owned governed observation boundary. `COMP-QMF-DATA-INGEST` and `COMP-QMF-VENUE` produce CT-10 into `COMP-QMF-DATA`; Indicators, Structure, Venue, and Risk read the governed boundary through their dependency on Data rather than consuming directly from Data-Ingest. Every external fact carries event-time, known-at, source, and revision, with corrections appended and never overwriting evidence (DEC-0117). Intake is idempotent, keyed on `(source, source-native id, revision)` (DEC-0119), and duplicate tick sources stay separately identified with bid and ask preserved and disagreements kept visible via `corroborates` and `disagrees-with` edges (DEC-0119).
+
+### Standing object
+
+A structure object derived from configuration rather than market observation — an a-priori level such as a round-number grid line. A standing object declares observed-at equal to its configuration instant, which keeps the causality law total: every object has an honest first-derivable instant even when no market data produced it. (DEC-0129)
+
+### Store-before-discard rotation
+
+The rule that where a venue rotates refresh material on use, the new secret is stored (atomic replace) **before** the old is discarded. A failed store after rotation is both an alarm and a command-pipe block (`unavailable dependency`, after-condition = successful store or operator re-provision), while the sensing pipe stays unaffected; where the venue already invalidated the old material, the session is marked degraded and the **compromise drill** triggers. (DEC-0136)
 
 ### Store-to-Backup input (CT-26)
 
-The internal boundary from `COMP-QMF-DATA-STORE` to `COMP-QMF-DATA-BACKUP`. Snapshot shape, consistency, completeness, identity, concurrent-write behavior, manifest binding, restore procedure, and verification remain unresolved under `GAP(GAP-0026)` and `GAP(GAP-0027)`; CT-26 does not itself assert successful recovery.
+The internal boundary from `COMP-QMF-DATA-STORE` to `COMP-QMF-DATA-BACKUP`. Backups are nightly, encrypted, versioned, and off-machine to an object-storage bucket, with automated sample-restore tests and a periodic full-restore rehearsal, and QMF provides the backup, restore, and verify primitives while applications own schedule and execution (DEC-0118). Raw originals and lineage are kept forever and time-series is partitioned by source, instrument, and time window (DEC-0118); the numeric retention, recovery objectives, and verification cadence await the node/ops sitting. CT-26 does not itself assert successful recovery.
 
 ### Stop-out
 
 An unresolved risk event term. Whether breakeven or other closes count and how stop-out drives BENCHED state remain `GAP(GAP-0045)`.
 
+### Superseded-by-fill
+
+The qualifier on a `rejected-by-venue` outcome when a `cancel_order` resolved by read-back is contradicted by a fill: a cancel is `accepted-by-venue` only if the read-back also shows no fill for that order at or after the cancel's submit stamp; otherwise it resolves `rejected-by-venue (superseded-by-fill)`. Command outcome and order state are separate streams — an order's terminal state is decided by fills and venue lifecycle events only — and this rule is why an outcome is never derived from absence alone. (DEC-0137)
+
 ### Tick
 
-An asset-neutral qmf-core market noun for a market observation. Exact source fields, bid and ask handling, depth, and reconciliation remain `GAP(GAP-0030)`.
+An asset-neutral qmf-core market noun for a market observation. Tick sources are separately identified, with bid and ask preserved alongside source timestamps and disagreements kept visible via `corroborates` and `disagrees-with` edges, never merged (DEC-0119). The venue depth surface is a Level-2 resting-liquidity book with no Level-3 tape, recorded as the verbatim wire payload; symbol metadata is declared CT-18 instrument-metadata surface (DEC-0135, DEC-0138).
+
+### Structure family
+
+A **type of chart object** — the word "family" in QMF means exactly this and nothing else: never a strategy, bot, or Book category, and never a trading-school name (L32). Geometry is family-declared and open (point, level, zone, span, distribution, graph). A family ships into the governed library only when its confirmation rule states "confirmed the moment X happens" with X knowable at that instant; the seed candidates (`registry:structure_seed_family_candidates`) hold no privilege over operator-authored families, which are first-class peers via the extension shape. (DEC-0129, DEC-0132)
 
 ### Trading Node
 
 A later QMX application that owns live-trading runtime and orchestration. The Trading Node is not qmf-core and is outside QMF V1 documentation scope.
 
+### TradingDate
+
+A qmf-core time type distinct from **CivilDate**. A TradingDate carries its calendar identity and version in-band; equality is defined only within one calendar identity, and comparing TradingDates across calendar identities is a typed refusal. A TradingDate derives only from a rollover rule — a market-hours calendar or a day-boundary calendar — never from formatting an Instant, and is never a causality proxy, since causality is compared on Instants only. (DEC-0106)
+
 ### Trigger
 
-The confluence element that represents the trade-entry event. Its exact schema and supported structure families remain `GAP(GAP-0034)`.
+The confluence element that represents the trade-entry event. Its exact schema awaits the Bot sitting (DEC-0115); any structure evidence it consumes is governed by CT-17's lifecycle law (DEC-0129).
+
+### Two-phase wiring
+
+The fixed wiring order for an adapter's capability surface: the **capability declaration** is present at construction (importable without credentials), and the **venue-observation profile** must exist before the first command and before any evidence-bearing decode. A `measured-at-connection` capability is `unavailable dependency` until its profile exists, and consuming a measured-but-unverified capability in evidence-bearing work is a `policy rejection`. (DEC-0138)
+
+### Typed close scope
+
+The required scope carried by `close_position` and `close_all`, one of `account | account-binding | instrument-within-binding`. CT-18 declares which scopes a venue supports natively; an unsupported scope is an `unsupported capability` refusal, never emulated at a wider scope. (DEC-0137)
 
 ### Typed refusal
 
-A versioned machine-readable failure outcome shared across QMF boundaries. Codes, payload, retryability, redaction, and exception mapping remain `GAP(GAP-0011)`.
+A versioned machine-readable failure outcome shared across every public QMF boundary: an operation succeeds or returns a typed refusal carrying a category, machine-readable context, and retryability (yes, no, or after-condition). The seven categories are invalid input, unsupported capability, unavailable dependency, stale evidence, policy rejection, transient venue failure, and storage failure. Categories are addable in later versions but never redefined. Public boundaries return refusals as result unions; exceptions are reserved for programmer error and never carry a refusal across a package boundary. Value-type construction is one pattern everywhere: an unchecked constructor for trusted internal use plus a validating `try_create` factory returning value-or-refusal. (DEC-0109)
+
+### UNKNOWN (outcome state)
+
+A submission outcome that is a **state, never an error**: the result of a transport error, timeout, or disconnect, and the outcome of any path the CT-18 error table does not resolve to `rejected-by-venue`. An UNKNOWN is minted as an explicit observation carrying its trigger (`timeout | transport-error | disconnect`), the monotonic elapsed measurement, the wall receive instant, and the submission deadline in force (a declared, application-injected adapter parameter under do-not-default). While an UNKNOWN is outstanding the adapter refuses new commands on that **command stream**; no component retries, assumes an outcome, flattens, or invents a terminal state, and the block clears only through an explicit **resolve_unknown** call. The UNKNOWN outcome is a distinct notion from the reconciliation verdict `unknown`. (DEC-0137)
 
 ### Venue
 
-An external execution or market-data destination. Venue identity and capability shape remain `GAP(GAP-0009)` and `GAP(GAP-0038)`.
+An external execution or market-data destination. VenueId is operator-minted, opaque, and stable — a distinct broker or legal entity is a distinct venue even on shared infrastructure (DEC-0107); the capability shape is CT-18's two artifacts, the static capability declaration and the per-`(VenueId, account)` venue-observation profile (DEC-0138).
 
 ### Venue module
 
 The middleware seam `COMP-QMF-VENUE` for cTrader Open API in Python and later venue adapters. The module translates capabilities, commands, events, sessions, and refusals; it does not own trading permission or risk policy.
+
+### Venue-native identity key
+
+The declared key every CT-20 venue observation carries — the AD-21 `(source, source-native id, revision)` idiom — so gap-replay redelivery deduplicates under the fingerprint's idempotent split. Receive stamps, monotonic values, epochs, and `correlation_id` are declared occurrence/display-only in CT-20's explicit exclusion list; fill price, fill quantity, the venue instant, and the receive instant are mandatory identity fields of a fill observation. (DEC-0137)
+
+### Venue-observation profile
+
+The second artifact of an adapter's capability surface (the first is the **capability declaration**): per `(VenueId, account)`, produced post-connect by the **first-connection verification suite**, append-only with `supersedes` edges, holding every measured fact and verdict. It is occurrence/provenance only, never identity-bearing downstream, so measured facts never split artifact identity across accounts. A `measured-at-connection` capability is `unavailable dependency` until its profile exists. (DEC-0138)
+
+### Venue-scoped market-hours calendar identity
+
+The **market-hours calendar** identity minted from a venue's daily-bar boundary once that boundary is measured and verified per broker — its identity is the rule set, so a measured boundary qualifies. It gives venue-native bars a legal **BarSpec** anchor. Until the boundary is measured, venue daily bars are ungoverned observations, never assumed aligned to QMF's own forex 17:00-New-York accounting rule (`registry:forex_rollover`), which stays independent of venue bars. (DEC-0138, DEC-0141)
+
+### Verify-or-refuse
+
+The adapter obligation attached to every undocumented or measured-per-broker venue behavior: assert the fact at connection and refuse the dependent evidence on mismatch rather than assume a default. An unverified spot-timestamp unit refuses spot evidence, an absent `moneyDigits` is a refusal never a default of 2, a `pipSize` formula is validated not assumed, and a measured-but-unverified capability used in evidence-bearing work is a `policy rejection`. The **first-connection verification suite** is verify-or-refuse throughout. (DEC-0138)
+
+### Warm-up
+
+An integer count of completed input observations in the input series' own sample unit that a configured indicator requires before it emits governed output — identical across batch and streaming modes and at least the arithmetic reference's lookback. Warm-up feeds purge and embargo widths together with a structure family's **confirmation delay**, so a split manifest excludes samples that depend on unavailable history. (DEC-0126)
+
+### World
+
+The world label carried by every computed result entering evidence, and one of the identity parts of a result label (DEC-0110, DEC-0131). Three values exist. `live` is real venue clocks and quotes with real or demo money — the **Account** role, not the world label, carries money-reality, so paper and demo runs are `world = live` and stay comparable to live for alpha-decay sensing. `replay` is a data-driven injected clock over recorded history (real UTC instants; implementable today). `simulated` is synthetic data and is reserved but unusable in V1: writing `world = simulated` into governed evidence is a `policy rejection` typed refusal until the backtesting sitting defines simulated-time typing. A non-live world may never write into the live evidence namespace, and factory sandboxes never produce timestamps that enter an evidence store; storage separation — not identity distinctness alone — delivers world separation, and data rooms are instantiated per world so a cross-world read is a `policy rejection`. (DEC-0110, DEC-0117)
+
+### WriterId
+
+A first-class qmf-core noun: a stable, durable writer identity minted per `(machine, role, stream)` and accompanied by a boot/epoch id, so a restart is visible without changing writer identity. Every record stream carries a per-writer strictly-increasing sequence, and the tie-break `(instant, writer, sequence)` is a replay-determinism ordering key with no causal meaning — causality tests refuse at equal instants rather than tie-break. The identity of a stored record is its `fp1` fingerprint, never its timestamp; timestamps are never primary or dedup keys. A persisted monotonic reading is an opaque boot-scoped diagnostic carrying its boot/epoch id, never compared across boots or machines and never rendered as a time. The one-writer-per-stream concurrency rule (unlimited readers) binds the holder of a WriterId. (DEC-0106, DEC-0113)
 
 ## Retired or prohibited names
 

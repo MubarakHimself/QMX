@@ -1,28 +1,61 @@
 id: CT-06
 name: Registry registration contract
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-REGISTRY
 consumers: [COMP-QMF-DATA, COMP-QMF-STRUCTURE, COMP-QMF-RISK]
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0033, DEC-0035, DEC-0038, DEC-0041]
-gaps: [GAP-0005, GAP-0014, GAP-0016, GAP-0017, GAP-0019]
-purpose: "Register type-specific identities only after the applicable lineage and gate preconditions are represented."
+decisions: [DEC-0103, DEC-0106, DEC-0108, DEC-0109, DEC-0110, DEC-0114, DEC-0115, DEC-0116, DEC-0120, DEC-0121, DEC-0137, DEC-0138]
+gaps: [GAP-0016, GAP-0017, GAP-0039, GAP-0047]
+purpose: >-
+  Register an artifact as a per-kind versioned record whose stable id is derived
+  from its fp1 fingerprint, so identical work from two sandboxes deduplicates and
+  no universal all-fields card is required.
 invariants:
-  - "Registration does not require one universal all-fields card."
-  - "Only a human may promote a registered artifact into the live zone."
-  - "Object kinds, fields, atomicity, signatures, evidence, and result shape remain unresolved."
+  - "Registration writes a per-kind versioned record (each kind its own contract); there is never one universal all-fields recipe card (DEC-0114)."
+  - "Every record carries the tiny common header — kind, contract format version, at-birth parent references, writer (WriterId), and per-writer sequence — plus a kind-specific body (DEC-0114, DEC-0106)."
+  - "A record's stable id is derived from its fp1 fingerprint and is never minted (DEC-0114, DEC-0108)."
+  - "created-at and every other occurrence fact are display-only, excluded from fp1 identity, so identical work from two sandboxes deduplicates by computation identity (DEC-0114, DEC-0110)."
+  - "At-birth parent references live in the header; lineage that accrues after birth is written only as CT-07 typed edges, never back into the record (DEC-0114)."
+  - "Kinds are addable and never redefined; Bot and Book are reserved kind names whose bodies come from their own sittings (DEC-0114)."
+  - "No layer of the bot vocabulary hardcodes exactly-one: a composite is its own registered artifact with lineage to its children, and multiplicity collections order canonically by child fingerprint ascending unless the owning contract declares order significance (DEC-0115)."
+  - "Bot identity is its content; the Bot-Book-account binding is a separate dated binding record outside Bot identity, and re-binding (paper to live) never mints a new Bot (DEC-0115)."
+  - "The promotion-occurrence card is a reserved kind: human-only signer, signed immutable record, and a mandatory plain-words summary declared an identity field so the signature attests the exact words read; a typo fix mints a new record with a CT-07 supersedes edge (DEC-0116)."
+  - "V1 signing is the operator's recorded approval captured as an immutable occurrence attesting the record's fp1 string (reviewer identity + instant); no cryptographic dependency exists now (DEC-0116)."
+  - "The registry promotion card is canonical: the journal's promotion event carries only the card's fingerprint plus correlation_id, never a second schema (DEC-0116)."
+  - "Registration currently records occurrence evidence but enforces no look-ahead causality gate and no attempt counter; both are deferred to the backtesting sitting, so artifacts registered before then carry no causality evidence (DEC-0121; GAP-0016, GAP-0017 deferred)."
+  - "Every registration operation succeeds or returns a typed refusal; a byte-identical idempotent re-write is accepted silently while a true fp1 collision on differing bytes is refused and alarmed, never overwritten (DEC-0109, DEC-0108)."
+  - "Registration never selects or requires a database server (DEC-0114)."
+  - "Per default-deny dependency direction no library imports qmf-registry (the only ratified inter-library edge is qmf-registry to qmf-data); registration is invoked by the application at the composition root, not by a consuming library's import (DEC-0120)."
+  - "On the venue path a record's WriterId granularity is (machine, adapter role, VenueId, account) — the same unit as the command stream — and the adapter's connection manager is the sole holder of that WriterId, stamping writer and sequence and calling the injected sinks; no other component constructs a venue client (DEC-0138, DEC-0137)."
+  - "A session-epoch id, distinct from the boot epoch, rides every venue observation; venue-path sequences reset only on boot, never on reconnect, and the sequence cursor is durable through the observation sink (DEC-0137)."
 schema:
-  type: null
-  type_gap: GAP-0014
-  fields: null
-  fields_gap: GAP-0014
-  enums: null
-  enums_gap: GAP-0014
-  units: null
-  units_gap: GAP-0014
-  nullability: null
-  nullability_gap: GAP-0014
-
+  type: "per-kind versioned registry record: a tiny common header shared by every kind plus a kind-specific body; the promotion-occurrence card is one reserved kind"
+  fields:
+    header:
+      kind: "string-opaque controlled kind name; addable, never redefined"
+      contract_format_version: "int; the per-kind contract's format version (DEC-0103)"
+      at_birth_parent_refs: "array of fp1 fingerprint strings (fp1:sha256:<hex>); identity-bearing; header-only, never unioned with CT-07 edges"
+      writer: "WriterId — opaque core noun, minted per (machine, role, stream) (DEC-0106)"
+      sequence: "int64 per-writer strictly-increasing ordering key; never an identity or dedup key (DEC-0106)"
+      stable_id: "fp1 fingerprint string (fp1:sha256:<hex>) derived from record content; never minted (DEC-0114, DEC-0108)"
+      created_at_and_occurrence_facts: "int64 UTC ns and related occurrence facts; display-only, excluded from fp1 identity (DEC-0114, DEC-0110)"
+    promotion_occurrence_card:
+      signer: "human-only signer (reviewer identity)"
+      signed_at: "int64 UTC ns instant of the recorded approval occurrence (DEC-0106)"
+      plain_words_summary: "string; mandatory; declared an identity field (DEC-0116)"
+      attested_fp1: "fp1 fingerprint string of the record the approval attests (DEC-0116)"
+    reserved_kind_bodies: "Bot and Book kind bodies are reserved and filled by their own sittings"
+  fields_gap: [GAP-0039, GAP-0047]  # Book/BMS kind body (GAP-0039) and full Bot kind body (GAP-0047)
+  enums:
+    reserved_kind_names: [Bot, Book, promotion-occurrence-card]
+  units:
+    contract_format_version: "dimensionless integer count"
+    sequence: "dimensionless int64 count"
+    instant_fields: "int64 UTC nanoseconds since the Unix epoch (DEC-0106)"
+  nullability:
+    header_fields: "kind, contract_format_version, writer, sequence, and stable_id are mandatory (never null)"
+    at_birth_parent_refs: "empty array when the record has no at-birth parents; an absent value is an omitted key, never null (DEC-0108)"
+    plain_words_summary: "mandatory on the promotion-occurrence card (identity field) (DEC-0116)"
+    reserved_kind_body_fields: "per-kind body nullability for Bot and Book awaits their sittings (GAP-0039, GAP-0047)"

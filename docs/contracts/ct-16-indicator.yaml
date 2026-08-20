@@ -1,31 +1,74 @@
 id: CT-16
-name: Incremental indicator component contract
+name: Two-mode indicator contract
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version; the shape is spine-ratified (AD-22), the doc stays provisional pending corpus re-ratification (DEC-0103, DEC-0126)
 owner: COMP-QMF-INDICATORS
-consumers: []
+consumers: []  # consumer-blind by design: bots, structure families, MIS, and backtesting all consume the same contract through the application composition root; no package import edge exists under default-deny (DEC-0126, DEC-0120)
 active_consumers: []
-intended_consumers: [COMP-QMF-STRUCTURE]
-wiring_status: reserved-consumer-unwired
+intended_consumers: [COMP-QMF-STRUCTURE]  # via the composition law: any CT-16/CT-17 output is a legal input to any CT-16/CT-17 configuration (DEC-0126)
+wiring_status: ratified-shape-application-mediated
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0055, DEC-0056]
-gaps: [GAP-0005, GAP-0031, GAP-0032, GAP-0033]
-purpose: "Let light indicator implementations consume causal observations through a package-neutral interface."
+decisions: [DEC-0126, DEC-0127, DEC-0128, DEC-0130, DEC-0132, DEC-0133, DEC-0055, DEC-0100, DEC-0103, DEC-0105, DEC-0106, DEC-0108, DEC-0109, DEC-0110, DEC-0111, DEC-0112, DEC-0113, DEC-0119, DEC-0120]
+gaps: []  # GAP-0031/0032/0033 answered 2026-08-20; numeric AD-13 rungs await first measured baselines, which is a deferred measurement, not a gap
+purpose: "One indicator contract with two conformant modes — batch over whole series and streaming over incremental updates — so research and the live path compute the same numbers by construction, with identity equal to the entire declared configuration."
 invariants:
-  - "Suitable TA-Lib-class arithmetic is wrapped instead of reimplemented."
-  - "Heavy MIS and research analysis are outside this component."
-  - "Structure is an intended consumer only; no active dependency or call path is assigned before the indicator protocol and first consumers are ratified."
-  - "Fields, input and output types, warm-up, readiness, state, replay equivalence, reference implementation, versions, and tolerances remain unresolved."
+  - "One contract, two conformant modes: a configuration declares its supported modes; batch-only and streaming-only are conformant, and a batch-only configuration is heavy on the live path by definition (DEC-0126, DEC-0128)."
+  - "Identity is the entire declared configuration — formula id, contract format version, exact-rational parameters, the ordered named input set, declared calendar requirements including tzdata version, alignment and missing-value policies, warm-up, output schema, supported modes, and the arithmetic-reference configuration; an element missing from the fingerprint is a contract defect, and that fp1 fingerprint is the only dedup key (DEC-0126, DEC-0108)."
+  - "The series vocabulary — Bar, Tick/Quote, BarSpec, series references, the exact-rational parameter type — is defined in qmf-core as shared nouns; no other package may define them; registry:barspec_kinds enumerates the BarSpec discriminants, and bare 'timeframe' is banned vocabulary (DEC-0126, DEC-0130, DEC-0100)."
+  - "Bar aggregation is a fingerprinted qmf-data derivation with lineage to source; a bar series is well-defined only via its BarSpec, and an indicator receives its BarSpec as data, never deriving bar boundaries itself (DEC-0126, DEC-0130)."
+  - "Outputs are full-length and index-aligned to the input with begin-index trimming prohibited; every position carries a registry:presence_map_states value in a parallel integer-encoded map; NaN and sentinel markers are prohibited; equality compares presence maps first, values only at present positions (DEC-0126)."
+  - "Every output sample carries a knowable-at instant — the earliest instant at which every contributing input was knowable — and the configuration declares its bar-closed versus in-progress emission policy; provisional samples never enter governed evidence (DEC-0126, DEC-0110)."
+  - "Warm-up is an integer count of completed input observations in the input series' own sample unit per its BarSpec — never ticks, never a Duration — one value per configuration, identical across modes, at least the reference's lookback; readiness is recurring where a calendar-anchored reset is declared; during warm-up the output is a marked not-ready value, never a number (DEC-0126)."
+  - "Only as-of alignment (last value known at or before the evaluation instant) is permitted for governed evidence; forward-fill or interpolation across the evaluation instant is a policy-rejection refusal; a market-hours-closed position is absent_by_schedule, never a gap; missing means calendar-open with no data and follows the declared policy, never silent filling (DEC-0126, DEC-0109)."
+  - "Where both modes are declared, the equality law binds as a tier-2 contract test: same-process, same-build, per-configuration comparator declared in integer ULPs (default 0), over canonical inputs = (series, exact parameters, cold initial state), with the seeding rule and the reference's leading-undefined-prefix-to-not-ready mapping declared contract surface; cross-OS or cross-build agreement is never this gate — it is an AD-23 registered comparison artifact (DEC-0126, DEC-0127)."
+  - "Restore-equivalence binds separately: restore-then-N-updates must equal cold-warm-then-the-same-N-updates; a state snapshot is a serialized contract with its own format version scoped to a declared (OS, arithmetic-reference build) tuple; restoring across tuples is an unavailable-dependency refusal, and a result computed from restored state carries the snapshot fingerprint as an input fingerprint (DEC-0126, DEC-0103, DEC-0109)."
+  - "Canonical arithmetic binds every governed producer, extensions included: wrapping the pinned reference (registry:canonical_indicator_reference) is mandatory where it implements a formula; the QMX implementation is canonical where it does not; upgrades are gated with per-configured-indicator contract format mints and recorded before/after evidence; re-implementing arithmetic a governed producer already publishes is a contract defect (DEC-0127)."
+  - "Light versus heavy is per configuration, never per name: light iff four bounds are declared and benchmark-proven (per-update cost within the live-path rung; bounded declared state size; bounded evidence window or declared anchor-reset rule with O(1) per-update cost; synchronous availability, which a marked not-ready value satisfies); the verdict is machine-scoped, display-only, and never identity; every configuration is heavy by default until the live-path rung has a recorded baseline; a heavy configuration's synchronous entry point returns unsupported capability, and consuming a fanned-out heavy value past its declared maximum age is a stale-evidence refusal (DEC-0128, DEC-0111, DEC-0109)."
+  - "A streaming instance is the named stateful class in the concurrency stance: exactly one feeder — one WriterId holder, not one input stream — and unlimited readers; every streaming output carries the input sequence number that produced it; dedup is per-process and application-owned; instance count scales with distinct configurations, not consumers; evidence emission granularity is declared contract surface and streaming updates are not individually evidence-bearing (DEC-0126, DEC-0113, DEC-0106)."
+  - "The two named money-path conversion boundaries have one qmf-core implementation each: the exact-to-analytic descale (pinned formula, stated rounding, refusal past float64's exact-integer range) and the analytic-to-exact return (any exact-price output channel and any evaluated object level declares rounding mode and target scale as fingerprinted surface); no package descales except by calling them (DEC-0126, DEC-0105)."
+  - "Composition is law: any CT-16 or CT-17 output series is a legal input to any CT-16/CT-17 configuration; the upstream artifact's fingerprint enters downstream identity; a computed or synthetic series is identified by its result label (derived-series identity) and never mints an Instrument (DEC-0126)."
+  - "Typed configuration inputs — market-hours, day-boundary, and news calendars, instrument-metadata snapshots (tick size, digits, pip, with the registry record's fingerprint identity-bearing), and external event anchors keyed (source, source-native id, revision) — are injected by the composition root against core protocols; declaring an input creates no package dependency edge (DEC-0126, DEC-0119, DEC-0120)."
+  - "Custom indicators are authorable as plain Python outside governed evidence, always; entering governed evidence requires CT-16 conformance as an extension — separate versioned package outside the roster, own SemVer ladder, distribution identity and version as identity fields of every artifact produced, discovered by explicit registration at the composition root through the one named catalog surface; a working plain-Python experiment graduates through this path with a lineage edge to its originating research artifact (DEC-0133, DEC-0100)."
+  - "No trading-school name appears in this contract's vocabulary; school concepts enter only as mechanically stated capability terms (DEC-0132)."
+  - "All failures are typed refusals per registry:typed_refusal_codes; correlation_id does not cross this pure value contract's signature — pure-computation boundaries are exempt and correlation rides the caller's context (DEC-0109, DEC-0112, DEC-0131)."
+  - "L2 depth and footprint-class nested data are outside the V1 series vocabulary — an ungoverned research lane until a later pass widens the bulk form (DEC-0126, DEC-0130)."
 schema:
-  type: null
-  type_gap: GAP-0031
-  fields: null
-  fields_gap: GAP-0031
-  enums: null
-  enums_gap: GAP-0031
-  units: null
-  units_gap: GAP-0031
-  nullability: null
-  nullability_gap: GAP-0031
+  type: configured-indicator + indicator-result  # the declaration record whose fp1 is the configuration's identity, and the result series it produces (DEC-0126, DEC-0108)
+  fields:
+    - "formula_id: opaque, stable, never reused, minted under the identity discipline of AD-9 (DEC-0126, DEC-0107)"
+    - "contract_format_version: the per-configured-indicator integer format version; mints on output-changing arithmetic upgrades (DEC-0127, DEC-0103)"
+    - "parameters: exact rationals only — scaled integers or numerator/denominator pairs; binary floats never appear in parameters or identity (DEC-0126, DEC-0105, DEC-0108)"
+    - "inputs: ordered named set of one or more series references, each carrying instrument-or-source identity, BarSpec, channel kind, quote side, and, for derived inputs, the upstream artifact's fingerprint (DEC-0126)"
+    - "calendar_requirements: declared rule-set identity + version + tzdata version per declared calendar; identity-bearing (DEC-0126, DEC-0106)"
+    - "alignment_policy: declared; as-of is the only governed-evidence-legal value (DEC-0126)"
+    - "missing_value_policy: declared per configuration; never silent filling (DEC-0126)"
+    - "warm_up: integer count of completed input observations in the input's own sample unit; identical across modes (DEC-0126)"
+    - "warm_up_time_bound: optional declared time bound; null for event-driven BarSpecs, affecting light-eligibility bound three (DEC-0126, DEC-0128)"
+    - "output_schema: ordered named channels, each with kind, arity (scalar-per-sample | fixed vector | keyed-by-price-bin), and index offset (DEC-0126)"
+    - "emission_policy: bar-closed vs in-progress, plus declared evidence emission granularity (DEC-0126)"
+    - "supported_modes: batch, streaming, or both; equality law binds only when both are declared (DEC-0126)"
+    - "arithmetic_reference_configuration: the identity-bearing reference-configuration record of registry:canonical_indicator_reference (DEC-0127)"
+    - "declared_budget: the light-claim bounds (per-update cost rung, state-size ceiling, window or anchor-reset rule with anchor kind, synchronous availability); contract surface, distinct from the display-only verdict (DEC-0128)"
+    - "result label: producer contract identity (the configured indicator's fingerprint), contract format version, input fingerprints, evidence time range, computation identity, evidence class, world (DEC-0110, DEC-0131)"
+    - "result samples: full-length, index-aligned, presence-mapped, each carrying knowable-at; streaming outputs additionally carry the producing input sequence number (DEC-0126)"
+    - "snapshot: own format version, (OS, arithmetic-reference build) scope tuple, fingerprint carried as an input fingerprint by restored-state results (DEC-0126)"
+  enums:
+    - "BarSpec kind: registry:barspec_kinds — time-interval | tick-count | volume-threshold | notional-threshold | price-brick | range | session (DEC-0126)"
+    - "presence: registry:presence_map_states — present | provisional | not_ready | gap | absent_by_schedule (DEC-0126)"
+    - "channel kind: exact-price | exact-quantity | float-analytic | integer-code | boolean | categorical (DEC-0126)"
+    - "quote side: bid | ask | mid | last; mid is a derived series with a stated rounding mode (DEC-0126)"
+    - "evidence class: registry:evidence_classes — confirmed | unconfirmed | provisional (DEC-0129, DEC-0131)"
+    - "refusal categories in this contract's paths: invalid input, unsupported capability (heavy synchronous entry), unavailable dependency (reference-configuration or tzdata mismatch at import; cross-tuple restore), stale evidence (fanned-out heavy value past maximum age), policy rejection (forward-fill or interpolation across the evaluation instant; provisional into governed evidence) per registry:typed_refusal_codes (DEC-0109, DEC-0126, DEC-0127, DEC-0128)"
+  units:
+    - "bulk values: little-endian int64 in a read-only memoryview over immutable bytes, per-channel out-of-band scale; checksums and serialization defined over exactly that byte layout; numpy/Arrow conversions private to the consuming package (DEC-0126)"
+    - "warm-up and confirmation-delay bounds: integer counts of observations at the declared BarSpec (DEC-0126)"
+    - "tolerances and mode comparators: integer ULP counts or scaled-integer pairs, never decimal text, never floats (DEC-0127)"
+    - "instants (knowable-at, staleness stamps): int64 UTC nanoseconds (DEC-0106)"
+    - "benchmark rungs: burst throughput and per-tick latency denominated per accepted input observation at the configured BarSpec, the no-op tick path measured separately (DEC-0126, DEC-0111)"
+  nullability:
+    - "positions are never omitted or shifted; absence of a value is a presence-map state, never a missing array slot, never NaN, never a sentinel (DEC-0126)"
+    - "per fp1, null is prohibited in identity content; an absent declared input is an omitted key (DEC-0108)"
+    - "warm_up_time_bound is null exactly when the BarSpec is event-driven (DEC-0126)"
+    - "during warm-up the output is a marked not-ready value, never a number (DEC-0126)"
+conformance_register: "The concept-walk test list this contract must keep expressible — multi-instrument and multi-BarSpec input sets, derived-series chaining, non-time bar kinds, calendar-scoped windows and calendar-anchored sampling, projected outputs under knowable-at, batch-only statistical methods, price-valued outputs re-entering the money path via the named boundary, delta-typed price differences with metadata-defined pip — derives from the increment gate's two edge-case lenses and adversarial pass (reviews/review-ict-edge-cases.md, review-general-ta-edge-cases.md, review-adversarial-3.md in the 2026-08-19 architecture workspace); their must-fix findings are folded into the invariants above and bind conformance tests at tier 2 (DEC-0130, DEC-0102)."

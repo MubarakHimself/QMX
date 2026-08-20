@@ -1,0 +1,2351 @@
+ ▐▛███▛█   Claude Code v2.1.236
+▝▜██████▀  Fable 5 · Claude Max
+  ▝▝ ▝▝    ~\Desktop\QMX
+
+
+❯ /model                                                                        
+  ⎿  Set model to Fable 5 and saved as your default for new sessions
+
+❯ /effort                                                                       
+  ⎿  Set effort level to ultracode (this session only): xhigh + dynamic workflow
+     orchestration
+
+❯ /bmad-architecture Update intent: resume from the memlog at                   
+_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/       
+(AD ids stable, add new ADs). Scope: GAP-0031..0034 only — the indicator        
+protocol (batch + incremental, warm-up, missing values, typed failures),        
+the TA-Lib canonical-arithmetic pin (verify current version on the web),        
+the light-vs-heavy indicator rule (GAP-0033, nonblocking), and the first        
+causal market-structure families (observed-at/confirmed-at, per AD-8).          
+Method: gap by gap, one recommendation, AskUserQuestion, recommended option     
+first, dumb it down on request — operator is non-technical and will brain-dump. 
+Consult reviews/five-hats-sweep.md for the researcher/trader conflict on the    
+indicator protocol (burst throughput vs per-tick latency — design two           
+conformant modes). Park everything venue/risk/backtesting.                      
+
+● Resuming the architecture run for GAP-0031..0034. First, resolving
+  customization/config and loading the existing memlog, spine, and the five-hats
+  review.
+
+  Searched for 1 pattern, read 1 file, ran 3 shell commands (ctrl+o to expand)
+
+● Memlog loaded — 20+ ratified decisions, sitting reopened for updates. Now
+  loading the spine, five-hats review, and gap tracker.
+
+  Read 2 files (ctrl+o to expand)
+
+● Spine and five-hats review loaded. Now pulling the GAP-0031..0034 definitions
+  from the gap report / tracker.
+
+  Searched for 2 patterns (ctrl+o to expand)
+
+● I have the four gap definitions. Now loading the indicator/structure component
+  docs and contracts (the corpus this sitting grounds on), and kicking off the
+  TA-Lib version check.
+
+  Searched for 1 pattern, read 4 files (ctrl+o to expand)
+
+● Web Search("TA-Lib Python wrapper latest version 2026 PyPI ta-lib")
+  ⎿  Did 1 search in 6s
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● TA-Lib wrapper 0.7.1 confirmed current. The arithmetic actually lives in the
+  underlying C library, so I need its version too for a proper pin.
+
+● Fetch(https://ta-lib.org/)
+  ⎿  Received 25.4KB (200 OK)
+
+● Fetch(https://github.com/TA-Lib/ta-lib/releases)
+  ⎿  Received 338.6KB (200 OK)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Welcome back, Mubarak — resuming the architecture sitting, indicator/structure
+  scope only, four gaps to close. Here's the first.
+
+  ---
+
+  GAP-0031 — the indicator rulebook
+
+  Plain words: an indicator is any computed reading on price — RSI, moving
+  average, ATR. QMF needs one rulebook every indicator obeys, so a hundred
+  indicators built by different factory agents all behave the same way. This is
+  the contract (CT-16) that qmf-indicators is built on.
+
+  The conflict your five-hats review found (X-4): the researcher and the trader
+  want opposite things from the same code. Research runs an indicator over a
+  year of data in one burst — what matters is how much it can chew at once. Live
+  trading feeds it one tick at a time — what matters is how fast each single
+  update lands, 40 bots at once. One design can't be optimized for both.
+
+  My recommendation — one rulebook, two modes, one equality law:
+
+  1. Two modes, both first-class. Batch (whole series in, whole series out — the
+     research/burst shape) and streaming (a running instance you feed one bar
+     at a time — the live shape).
+  2. The equality law: the same data through either mode must produce identical
+     answers, and that equality is an automatic test that runs at the merge gate
+     (AD-4). This is the piece that keeps research results honest about what
+     the live bot would actually have seen. Without it the two modes drift apart
+     silently — the worst outcome available.
+  3. Warm-up is declared, not discovered. An indicator that needs 200 bars
+     before its numbers mean anything must say so as part of its contract, and
+     that number enters its fingerprint (five-hats R-6 — the future causality
+     gate needs it). During warm-up the output is a marked "not ready," never a
+     fake number.
+  4. Missing data is marked, never guessed. A gap in the input produces a marked
+     gap in the output or a typed refusal, per the indicator's declared policy
+     — no silent filling.
+  5. Failures are typed refusals (AD-11 categories), same as everywhere else in
+     QMF.
+  6. One streaming instance, one owner (AD-15's one-writer rule), with a cheap
+     snapshot/restore so a node restart can re-warm 40 bots' indicators without
+     replaying a full day (feeds five-hats T-7).
+  7. Two benchmark rungs in the AD-13 ladder — burst throughput and per-tick
+     latency — so optimizing one can never silently wreck the other.
+  8. Inputs stay pure: the series-in-bulk shape (price arrays + their scale) is
+     defined in qmf-core, and qmf-indicators depends on qmf-core only — no new
+     dependency edges (closes five-hats D-1 and D-3 for this library). Indicator
+     math runs on floats, which AD-7 already permits off the money path; any
+     output that flows back into an order passes AD-7's named conversion
+     boundary.
+
+  Trade-off I weighed: streaming-only (loop it for research) is simpler but
+  leaves research burst speed on the floor; batch-only (recompute the window
+  each tick) can't meet a ~1s scalping cadence at 40 bots. Two modes costs more
+  build effort — the equality test is what makes that cost safe.
+
+● User answered Claude's questions:
+  ⎿  · GAP-0031: adopt the indicator rulebook as recommended — two modes (batch 
+     + streaming) with a tested equality law, declared fingerprinted warm-up, 
+     marked missing values, typed refusals, one-owner streaming state with 
+     snapshots, two benchmark rungs, core-only dependencies? → Dumb it down 
+     further
+● Here it is again through one concrete example — a single bot trading EURUSD
+  using RSI (a common indicator that reads 0–100 and needs 14 bars of history to
+  compute).
+
+  The two modes.
+  - Batch is the researcher's way: "here are 100,000 candles from last year —
+    give me the RSI for all of them at once." One big calculation, done in
+    seconds. This is what a genetic search does thousands of times an hour.
+  - Streaming is the live bot's way: the market produces one new candle, the bot
+    asks "what's RSI now?", and the answer must come back near-instantly
+    because 40 bots are asking at the same moment. The indicator keeps a little
+    running memory instead of recomputing everything.
+
+  The equality law. Danger: those are two different pieces of code. If they ever
+  disagree — even at the 8th decimal — then your research says "this bot would
+  have made money" using numbers the live bot never actually sees. The law says:
+  feed both the same candles, they must give byte-identical answers, and a
+  robot test proves it on every code change. Nobody has to remember to check;
+  the merge gate refuses code that breaks it.
+
+  Warm-up. RSI needs 14 candles before its first real number. The rule: the
+  indicator must state "I need 14" as part of its official identity — not bury
+  it in code. Why you care: your future look-ahead gate (the thing that catches
+  cheating strategies) can then automatically check "did this strategy's
+  evidence start after the indicator was warm?" During those first 14 candles
+  the output is a flag saying "not ready," never a made-up number a bot might
+  trade on.
+
+  Missing data. Broker feed drops for 2 minutes → those candles never arrived.
+  The indicator must not quietly pretend nothing happened. It either marks its
+  output "gap here" or refuses in the standard typed way — its choice is
+  declared up front, so every indicator handles gaps the same declared way
+  instead of 100 private behaviors.
+
+  One owner + snapshots. A streaming RSI has running memory. Rule: exactly one
+  feeder per instance (no two bots pushing candles into the same one — that
+  corrupts the memory silently). And the memory can be saved/restored, so when
+  the VPS restarts you reload 40 bots' indicators in seconds instead of
+  replaying the whole day.
+
+  Two speed benchmarks. The factory measures "candles chewed per second in a
+  burst" and "microseconds per single live update" as two separate numbers.
+  Otherwise an agent making research faster can accidentally make live trading
+  slower and no gate notices.
+
+  Inputs stay pure. qmf-indicators is a pure calculator: numbers in, numbers
+  out. It doesn't reach into your data store itself — the app hands it the
+  candles. That keeps it dependency-free, easy to test, and safe to run anywhere
+  (sandbox, laptop, VPS).
+
+  That's the whole thing. The "streaming-only" alternative would delete the
+  batch mode and make research loop candle-by-candle — simpler to build, but
+  your genetic searches would crawl.
+
+● User answered Claude's questions:
+  ⎿  · GAP-0031, plain version: every indicator gets a research mode (all 
+     history at once) AND a live mode (one candle at a time), a robot test 
+     proves both always agree, warm-up needs are stated on the tin, data gaps 
+     are flagged never guessed, one feeder per live instance with save/restore, 
+     and two separate speed measurements. Adopt? → Okay, I've taken time to read
+     through some of the recommendations. The two mods actually seem nice. The 
+     equality law is okay. The warm-up is what impressed me. It's good. Then 
+     missing data is number four. It's okay. This is standard failure modes. Now
+     I don't know if failure mods can happen. I mean, this is a very solid 
+     library. Unless, you know, you are looking at, for example, I've seen 
+     certain experiments where people are running a genetic algorithm across a 
+     population of synthetic indicators. So that's that. I don't know if that's 
+     possible with QMF, or it could be possible with QMF. So that's where things
+     can become, I don't know, messy and might require some structure. I don't 
+     know. Anyway, I still don't know. Then, moving on, number six, you talked 
+     about one streaming instance, one owner. It's okay, but the problem is that
+     you know, if you have let's say three different indicators on one boot, 
+     you know, and then you scale that up to up to 40 bots. Perhaps you can very
+     easily have 200 to 300 indicators very easily. Okay, because we could say 
+     we want to use some for exit mechanism. What are you going to do about 
+     that? I so I don't know, dude. number six is off, number seven. Okay, it 
+     feels off. Yeah, it's not that it's off. Number six, I've been talking 
+     about. Number six, it's shaky. That's what I would say. Then, moving on to 
+     number seven again: benchmarking ranks. I don't know about this. Okay, I 
+     feel like it is okay in development, but when we reach actual, you know, 
+     using it in production, I don't think it sits right. Then, number eight, 
+     yeah, maybe. Hang on, now let me see. So, you are saying you dumbed it down
+     for me again, but the modes are okay. Seriously, the mods I think make 
+     sense Oh, you can stream them. Okay, but okay, now we have a problem. You 
+     know, the indicators are not standing on their own. Actually, I had not 
+     seen them. Before you accept both modes, the indicators are not standing on
+     their own in the entire system, okay? Which means we have to consider 
+     things like the MIS, the books, the BMS, the entire thing that happens 
+     during live trading, and the bloody process that happens during live 
+     trading. You can't really just consider the bots alone. Okay, so before we 
+     actually accept that both modes, we have to consider those variables, 
+     please. Okay, I said, I think actually this goes also now to equality law. 
+     This can make things very complicated, especially if something fails. It 
+     can make things very complicated. But I think this goes back to the actual 
+     bot. Since the bot doesn't start from live trading, we code it out and all 
+     this. So, for maybe like whatever we are making, the library or the 
+     framework or whatever we are making. I look my bad, I'm a bit tired, but 
+     for everything we are making under the equality law, I feel like it would 
+     make sense. Okay, not even would we will catch most errors before anything 
+     even starts trading. So, because you know, we do research, then we most 
+     cases we do research or we are experimenting, then obviously we backtest 
+     and all that. It's a long journey before you even start trading live, so we
+     kind of catch those errors easily. Oh, the warm-up, a warm-up is the same.
+     Warm-up, it's the same logic, kinda. Just know that most times by the time
+     a bot reaches live training under QMX, seriously, there is almost zero 
+     error. Just know there is zero error. The code is perfect, it has been 
+     tested, you know, back tested, it has gone through a backtesting system, or
+     rather, the backtesting, it has been used. Okay, we've used the 
+     backtesting framework against it. Then we've also, you know, paper-traded 
+     it for a time, so it's not like new. So, I don't know if you get my issue. 
+     In fact, this applies to the entire thing, okay? You're saying one owner 
+     plus snapshots now th now this thing of one owner plus snapshots goes back 
+     to what I've just said about the two modes, because I've just realized I 
+     was reading two different outputs. But in the dumb-down version, seriously,
+     you really need to consider the fact that a boat is not alone. It's not 
+     alone and the machine is not alone in the system. It's a very in fact it's 
+     like a very small component of the entire thing. Okay, and not even a bot, 
+     an indicator, it's a very small component because an indicator can be part 
+     of, for example, a level, it can be used for confirmation, like it's very 
+     small, okay. And if it's taking up too much space or memory, that ruins the
+     scaling economics. Okay, all right, now even the speeding benchmarks. Now,
+     the speeding benchmarks, again, some stuff is not seeming logical. Reason 
+     being, I feel like by the time we reach actual live trading, we would have 
+     caught any error. Seriously, yeah, maybe if you want to do like performance
+     logging and monitoring, the same way they do for servers. But anyway, 
+     first half they say, you don't have any actual answer. So, you first 
+     clarify this, please.And I've been dictating, so forgive any gibberish
+
+● Good brain-dump — it changes one point, clarifies two, and answers one open
+  question. Taking your worries in order:
+
+  "The indicator is not alone — MIS, Books, BMS, the whole live process consume 
+  it." Correct, and that's exactly why the rulebook is written consumer-blind.
+  Nothing in it says "bot." Streaming mode serves any live consumer — a bot, a
+  confirmation inside a confluence, a level calculation, the future MIS shadow.
+  Batch mode serves any bulk consumer — research, the future backtesting
+  framework, MIS heavy analysis. We're specifying the brick, not who lays it;
+  how the node wires everything at runtime is node territory (already ratified
+  as outside QMF). The brick just has to be shaped so every one of those
+  consumers can hold it — which is what the next point fixes.
+
+  Your 200–300 instances worry — this one you're right about, and it amends 
+  point 6. The one-owner rule was about who feeds an instance, not who reads it
+  — AD-15 already says one writer, unlimited readers. Making that explicit for
+  indicators: if 40 bots all want EURUSD RSI(14) on the 1-minute chart, that is
+  one running instance, fed once by the tick stream, read by all 40. Two
+  indicators are "the same" when their fingerprint matches (same formula, same
+  parameters, same instrument, same timeframe) — so instance count scales with
+  distinct configurations, not with bot count. And each instance's memory is
+  small by design — an RSI holds a few dozen numbers, kilobytes — with the size
+  bound declared and benchmarked (that's the GAP-0033 light rule, next gap).
+  That's the scaling economics protected.
+
+  Benchmarks "don't sit right in production" — you've spotted a real 
+  distinction, and it's already handled. The two speed rungs are factory-time
+  machinery: they run when code changes, at the merge gate, in the sandbox —
+  never on your VPS. What you described wanting — performance logging and
+  monitoring like servers do — is AD-14, already ratified last sitting
+  (structured logs, exportable metrics, health checks), with full design landing
+  at the ops sitting. Two different tools, both already in the spine. Nothing
+  new to decide.
+
+  Synthetic indicators from genetic algorithms — yes, possible, and this 
+  protocol is what keeps it from getting messy. An indicator configuration is
+  just data (formula + parameters), so a GA can mint thousands of candidates and
+  run them in batch mode, each with its own fingerprint. Even a novel generated
+  formula just has to obey the same rulebook (declare its warm-up, mark its
+  gaps) before its results enter governed evidence. Outside governed evidence
+  you can experiment with anything in plain Python — the don't-box-in ruling
+  protects that.
+
+  Equality law + "by the time it's live there's zero error" — your instinct and
+  the law are the same thing. The equality test is the machine that makes "zero
+  error by live" true for indicator math: it runs at the factory merge gate,
+  months before any live trade. If it fails, the code never merges. Nothing
+  about it fires during live trading.
+
+  So the ruling as amended: points 1–5 and 8 unchanged, point 6 becomes "one 
+  feeder, unlimited readers, instances deduplicated by fingerprint, declared 
+  KB-scale state bound", point 7 stated as factory-gate-only with production
+  monitoring explicitly deferred to AD-14/ops.
+
+● User answered Claude's questions:
+  ⎿  · GAP-0031, amended: two modes (research batch + live streaming), 
+     merge-gate equality test, declared fingerprinted warm-up, flagged gaps, 
+     typed refusals, shared instances (one feeder, unlimited readers, 
+     deduplicated by fingerprint, declared small state bound), factory-only 
+     speed gates (production monitoring = AD-14/ops), pure core-only inputs. 
+     Adopt? → Okay, adopters Amanda. I really don't know what to tell you. 
+     Seriously, I don't. To be honest, for the indicator library, me, I just, in
+     fact, everything I put in the brain dump is everything I can say about the
+     bloody thing. I'm not technical, nor am I knowledgeable about this. Okay, 
+     so I don't know. The only thing I wanted to clarify, and is the very first 
+     thing I told you. It's not alone. So, everything you design makes right 
+     architecture patterns make sense. It, you know, the relationships are drawn
+     out properly in your memory or something. I don't know. So, yeah, even the
+     even the instances, 200 to 300 instances, I think we shall have to limit 
+     this because, again, it does bring back the whole idea of by the time it 
+     goes to live trading, we shall have tested it. So, I think what can happen 
+     is, I think, over time, I don't know if you are able to update this, but I 
+     think over time, one of the things that should happen is that a bot should 
+     show how much, should I say how much compute or resources it's taking up. 
+     Okay, because I'm certain there are some heavier indicators than the ones 
+     we have. Yeah, these ones I think are light. Most of the ones you are 
+     giving in examples are light. But if we are using heavy indicators, how 
+     because the idea at first was we get the heavy indicators and we offload 
+     them to the MIS, and then you know, we leave the light indicators on the 
+     bot level because the MIS does a calculation once and it fans out, okay? 
+     Which means that sequence remains for heavier ones. But for the lighter 
+     ones, we can take our swick ten because they don't take much. But the thing
+     I was talking about updating, I think we kind of need to have that. I 
+     don't know if we can have it in the UI, that thing of compute or resources,
+     because it might kind of be necessary as we are scaling seriously. I don't
+     know anyway, but it's just an idea. You can leave it out. I've noted it 
+     down, but that I really don't know. But maybe just make sure this thing is 
+     extensible. We can build custom indicators using whatever you are giving us
+     or using just normal Python. I think that's all I can say. Extensibility, 
+     flexibility, as well as upgradability. And it's not a menace, that's the 
+     other thing. Then, of course, the monitoring and deployment logic. Please, 
+     it's very important for us to know when something fails, how has it fallen,
+     and all that. Because I really can't say much. Reason being okay, apart 
+     from being tired because it's one in the morning, I think my creativity 
+     here will be limited, okay? Just think of it as if we are creating. Okay, 
+     you know, I just have this. I don't have anything else to add because I 
+     feel like I'm just going to be wasting time then But maybe that thing of by
+     the time we trade live, yeah, I think it's very important. But again, 
+     everything you've suggested kind of makes sense. It's not just because by 
+     the time we trade live, but also it's important because before we trade 
+     live, the agents need to know what is right, what is wrong. So your 
+     equality law is good. The same logic goes to the 200-300 instances, 
+     everything is good because if we are able to curb the problem before you 
+     deploy live, it's far better. I don't know if you get me there, because I 
+     feel like my logic is starting to drop. Yeah, have this. I don't think I 
+     have anything else to add
+
+● Adopted as amended — logging GAP-0031 with your three riders (resource
+  visibility, extensibility, failure monitoring), then straight to GAP-0032.
+  I'll keep the remaining three tight given the hour.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● GAP-0032 — which math library is "the truth"
+
+  Plain words: when two computers compute RSI and get slightly different
+  numbers, something must be the referee. This gap picks the referee and pins
+  its exact version, so "RSI(14)" means one thing everywhere, forever.
+
+  Recommendation — pin TA-Lib 0.7.1, upgrades never silent:
+
+  1. The referee is TA-Lib — the industry-standard indicator library (150+
+     indicators, 25 years old). Verified on the web today: current version is
+     0.7.1 for both its core C library (released 2026-07-03) and its Python
+     wrapper (2026-07-16), with official wheels for our pinned Python 3.14 on
+     Windows + Linux. That exact version pair gets pinned per QMF release.
+  2. Batch mode wraps TA-Lib directly — your existing law already says wrap
+     established formulas, never rewrite them just to own the math. Streaming 
+     mode is QMX-owned code where TA-Lib has no streaming form — and the
+     GAP-0031 equality law you just ratified is what proves the streaming code
+     gives the exact same numbers as the TA-Lib reference. The two gaps lock
+     together.
+  3. Upgrades are a gated event, never automatic. When a new TA-Lib version
+     appears, the factory runs a comparison suite first. If any indicator's
+     numbers change, that's a formal contract version change with recorded
+     before/after evidence — never a silent drift. Live proof this matters:
+     version 0.7.1 itself changed the output of four indicators (MACD among
+     them) in certain configurations. Anyone who upgraded blindly got different
+     backtest results with no record of why.
+  4. Every comparison check is recorded evidence: input fingerprint + parameter
+     fingerprint + declared tolerance + verdict, registered like everything else
+     — so "our numbers match the reference" is a checkable fact, not a claim.
+  5. Tolerances are declared per indicator: exact match required where possible;
+     a stated tiny float tolerance where cross-machine float wobble is expected
+     (the spine already says float bit-identity across OSes is never promised).
+
+● User answered Claude's questions:
+  ⎿  · GAP-0032: pin TA-Lib 0.7.1 (C + Python wrapper) as the canonical 
+     arithmetic referee per release; batch wraps it, streaming is our code 
+     proven equal by the equality law; upgrades gated by a recorded comparison 
+     suite; checks registered as evidence with declared tolerances. Adopt? → 
+     Adopt (Recommended)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● User answered Claude's questions:
+  ⎿  · GAP-0033: light vs heavy is decided by a declared four-part budget 
+     (update cost, memory, history window, instant availability) policed by the 
+     merge-gate benchmark — never by indicator name; anything unbounded runs 
+     MIS/research-side via the same contract. Adopt? → Dude, okay, I don't know 
+     what to say here because we need a clear definition of what a light and a 
+     heavy indicator are, so yeah, that's all I can say. So, you do as you say 
+     fit
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● GAP-0033 logged. Last one — and it's the one where your trading knowledge
+  matters, so it ends in a brain-dump invitation.
+
+  GAP-0034 — the first market-structure families
+
+  Plain words: qmf-structure turns raw candles into the things you actually
+  trade off — levels, zones, breaks of structure. The danger this gap exists to
+  kill is look-ahead: a support level that looks obvious on a chart after the 
+  fact wasn't knowable at the time — a backtest using it is quietly cheating.
+  Your spine already has the cure (AD-8: causality lives on instants); this gap
+  applies it.
+
+  Recommendation — ratify the lifecycle law now, pick the families from your 
+  brain-dump:
+
+  The law (every family obeys it, forever):
+  1. Every structure output carries two times: observed-at (when the pattern
+     first appeared) and confirmed-at (when its rule was definitively met). A
+     third, invalidated-at, is appended when it stops holding — never deleted,
+     history stays.
+  2. A family may only ship if its confirmation rule can be stated precisely as
+     "confirmed the moment X happens" — where X is knowable at that instant.
+     Example: a swing high is observed at a peak candle but only confirmed two
+     candles later, when both neighbors have closed lower. Any family whose rule
+     can't be stated that precisely is postponed — exactly what your gap report
+     recommends.
+  3. Evidence discipline: results consumed as evidence use confirmed-at. Acting
+     on a not-yet-confirmed pattern is allowed (scalpers do), but the output is
+     labeled unconfirmed — a different evidence class, never silently mixed with
+     confirmed.
+  4. The confirmation delay (those "2 candles later") is declared and
+     fingerprinted, like indicator warm-up — the researcher's data-split
+     protections need that number (five-hats R-5).
+  5. Families are QMX-owned, versioned, composable per your multiplicity ruling
+     (AD-17: a composite level is its own artifact with lineage to its
+     children).
+
+  Seed families I'd start with (the classic ones whose causal rules state
+  cleanly): swing points (the atom everything else builds on) → horizontal
+  levels from confirmed swings → zones (price bands around levels) → structure
+  breaks (price closing through a confirmed level/swing). But you're the trader
+  — the gap says start with the smallest operator-used set, and the corpus never
+  recorded which level/zone/structure concepts your confluences actually use.
+
+● User answered Claude's questions:
+  ⎿  · GAP-0034: adopt the lifecycle law 
+     (observed-at/confirmed-at/invalidated-at, precisely stated confirmation 
+     rules, declared fingerprinted confirmation delay, postpone anything vague) 
+     — and how do we pick the first families? → I'm actually too tired. Some of 
+     these things we are going to, it's as if I actually just want to tell you, 
+     let's just use normal Python. Seriously, because I didn't think the 
+     technical analysis lab is going to be this insane. Maybe things like chat 
+     patterns. Maybe I saw some cool stuff I could do with chat patterns. Maybe 
+     that, but it's even not important. I might not use jet patterns, but okay, 
+     let me read through this. You're saying artifact lifecycle law now, every 
+     structure output carries two times. Observe the art and confirm the art. A 
+     third. Oh, actually, that's good. That's good. That's good. Because it can 
+     help us with proper back testing and proper analysis. That's good. But it 
+     does interfere with time. So, first, understand how we handle time in the 
+     QRMF, unless I'm wrong, but I believe it does. But this is actually at a 
+     lower level, so maybe it does or doesn't. I don't know. So, question number
+     one: just be very sensitive because it does happen with time. But no, no, 
+     no, no. Now that I think about it, this just happens in a process, it's not
+     stored anywhere. Is it? I mean, we could record it, especially during 
+     backtesting and optimization, because we do have that level is very long 
+     and precious. But during live training, I don't think we need to store it. 
+     It will be insane to store all that. Then, number two: a family may only 
+     ship. What is a family? What are you calling a family? Because there are so
+     many things that can mean a family under QMX. It can be, for example, a 
+     scalper, it can be maybe the scalping family. I don't know if I'm getting 
+     that right. Oh, it can be a combination. Hang on. I mean, this is actually 
+     gold. Let me first read through this. You're saying a family may only ship 
+     if its confirmation rule can be stated precisely. now here is the funny 
+     part. I feel like yes, and I also feel like no. Because, trust me, 99% of 
+     the time we might not be able to state something precisely. But at the same
+     time, also, that means that we are actually shipping noise. So okay, I 
+     don't know, man. Let me see But okay, it's okay. It's just that now the 
+     family is now. This goes back to also like the bot itself. What family does
+     it belong to? Which book under BMS? Which rules? Like, I can't really 
+     specify this exactly because there are so many combinations and 
+     permutations that can really come out of thin air. You know, there are 
+     things I have not thought about, there are things I'm thinking about, there
+     are things that can go deep and deep and deep. So I really don't have a 
+     family to give you, but the idea is okay though. But let's try to keep this
+     at an indicator level, please, in terms of even logic and architecture. 
+     Because I really didn't think through all this, but it's okay, it's just 
+     that I think, especially point number two, point number two is something I 
+     feel like it shouldn't be only at an indicator level because of the blast 
+     radius it can have. Okay, because if we are doing exactly that, swing high 
+     is observed at peak. True, but under which strategy, under you know, which 
+     time frame, under which I don't know if you're understanding all this, 
+     okay? So, there are so many conditions, and it's a very small, should I 
+     call it a fractal inside a very, very large system. Okay, so you need to 
+     think through also the actual lens of QMX as a whole. I know it has very 
+     little context, but as a whole, you know, because it has so many things 
+     going on. This is not the only boat, surely. Okay, in its context, it's the
+     only boat trading that you know that oh my god, that session. I would say,
+     but not session as in the trading session, but the actual actual session, 
+     yeah, think of it like that. But it's not the only one in the entire 
+     system. Remember, the system also has to manage the bloody thing one of 
+     many. So, think through that lens, also. So, some of these points that's 
+     where I'm a bit concerned. One and two are showing that very, very much. 
+     And I don't think I can say anything more than that. Now, moving on to 
+     point number three: evidence disciplined. Maybe I think I'm soon requesting
+     for a simpler version of this because, okay, even the prompt that started 
+     in the session, I'm not the one who wrote it. Another agent gave it to me. 
+     But what exactly are we actually going to be, you know, what are we doing 
+     in this session? Isn't it just a technical analysis library? I mean, okay, 
+     don't get me wrong, I get it, but why is this all so much? I'm just tired, 
+     my bad. So, point number three: we are talking about results consumed as 
+     evidence used confirmed at trust me, one and three are very lovely, but the
+     problem is you are looking at the indicator level without zooming out to 
+     consider the bloody entire system, and that's something I really want you 
+     to consider before even proposing them. Okay, so that's why I can't give 
+     you any answer there because if you're looking at a scalper, what type of 
+     scalper is it? Are you saying that at what time frame? You know, is it the 
+     only thing in the entire boat? Because a boat can have multiple things all 
+     working together to make it a bot. You know, which book? Because according 
+     to how things stand, we can have multiple books of one perhaps methodology 
+     of trading. I can have a scalper that we only use at specific times. I can 
+     have a scalper that we use that trades a specific pair. So, from a book 
+     level, even to a bot, there is so much. That's why I said earlier, there 
+     are so many combinations and permutations that are in here. I can't say, I 
+     can't even start calculating and fathoming all of them. So, what does this 
+     mean? We need to change the way we are looking at this. We need to make it 
+     adjustable and flexible. It goes back to my bloody thing. Oh, this is 
+     market structure. I actually hadn't noticed. This is market structure. It 
+     was still in technical analysis. My bad. Oh, but yeah, it's still the same 
+     logic. It's still the bloody same logic. I know. Actually, it's not. Okay, 
+     structure kinda changes things, but in a way, it does borrow the same 
+     logic. I actually hadn't looked at that gap number 34 is market structure. 
+     I thought we are still in technical analysis. My bad, but I believe most of
+     these things are to be carried out. For example, sorry, carried forward. 
+     For example, that thing I was talking about, that thing of you need to 
+     really zoom out because there's so many things coming together to make one 
+     singular bot. If not even a bot, for example, one singular level or one 
+     singular trigger, or you know, so many things making a confluence, and a 
+     confluence is like it makes up a big chunk of the bot, but it's not the 
+     entire boat. Then, when you go from a boat, okay, the boat is shaped, it's 
+     very specific and whatnot. Then you move on to the book, which book, you 
+     know, the book is if it's templatized. Now we are entering the bloody 
+     trading node, and I didn't want to enter that. But there is so much to 
+     consider, so many variables, so many moving parts, and it can get 
+     overwhelming. So, we need to look at okay, maybe which software or which 
+     existing things, whether in software, in nature, do exist that we can use 
+     to try and turn the tables because, in my opinion, there is a lot that is 
+     going on here, okay? Because if you factor in compute, you factor in, you 
+     know, time, there is so much, okay? That's why architecture and the way we 
+     think through this is very, very important because we need to be 
+     intentional with the design. Okay, that's my brain dump or answer
+
+● That brain-dump untangles into four misunderstandings I can clear quickly —
+  and one of them is my fault. Plain answers, then one short decision.
+
+  "Family" here does NOT mean strategy family, scalper type, bot category, or 
+  Book. My word choice misled you. A structure family is just a type of chart 
+  object: "swing point" is a family, "horizontal level" is a family, "zone" is a
+  family. That's all. Which strategy uses it, on which timeframe, inside which
+  confluence, under which Book — none of that is in this gap. You couldn't name
+  your strategy combinations because I accidentally asked you to — I wasn't.
+
+  Your zoom-out concern is the reason for the design, not an objection to it.
+  You said it yourself: one level is a tiny fractal inside confluences inside
+  bots inside Books inside a node managing everything, and the combinations are
+  unfathomable. That is exactly why the atoms must be small, uniform, and
+  self-describing — a system with unfathomable combinations on top only stays
+  manageable if every atom carries its own facts (what am I, what are my
+  parameters, when was I knowable). Your multiplicity ruling (AD-17) already
+  guarantees the composing freedom; this gap just makes each atom honest. The
+  system-level wiring (which bot, which session, which Book) stays exactly where
+  you put it — node territory.
+
+  Storage: the law binds evidence, not live trading. During live trading a
+  structure object lives in memory and stores nothing — no new storage load. The
+  two timestamps only get written when a result enters governed evidence
+  (research, backtesting, promotion material — the "long and precious" case you
+  named yourself). And they're two tiny numbers, not a data stream. Your
+  instinct — record it for backtesting/optimization, don't hoard it live — is
+  precisely what the rule already says.
+
+  Time: nothing new. Observed-at/confirmed-at is your already-ratified time law
+  (AD-8: event-time vs knowledge-time) applied to chart objects. Zero new time
+  machinery.
+
+  "99% can't be stated precisely, but vague means shipping noise" — both halves 
+  are true, and the system already holds both. Vague ideas stay completely free
+  in research lanes — plain Python, anything you want, the don't-box-in ruling
+  protects it. Only what enters governed evidence needs a precise rule, and the
+  unconfirmed/confirmed labels cover the middle ground scalpers live in. Strict
+  only at the evidence gate — your own standing principle.
+
+  "Which existing software can we borrow?" — none solves this. Retail structure
+  libraries are notorious look-ahead offenders (patterns that repaint history —
+  the exact cheat this gap kills), and your standing rulings already made
+  structure families QMX-owned (DEC-0058) with borrow-ideas-never-code. TA-Lib
+  covers classic indicators (previous gap); structure is where QMX's own edge
+  lives.
+
+  So the decision shrinks to this: adopt the lifecycle law + my seed four (swing
+  points, horizontal levels, zones, structure breaks) as V1 candidates — each
+  ships only once its rule is precisely stated — and your chart objects get
+  added family-by-family later, whenever you brain-dump them, fresh-headed.
+  Nothing is foreclosed; families are addable forever.
+
+● User answered Claude's questions:
+  ⎿  · GAP-0034, cleared up: "family" = type of chart object only (swing point, 
+     level, zone — not strategies/bots/Books); the two-times law binds evidence 
+     only (live trading stores nothing new); vague ideas stay free in research. 
+     Adopt the law + seed four candidates, your own chart objects addable later?
+     → Oh my god, the fact that I'm not even that good of a trader, in fact I'm
+     just trying to learn trading is ironic that I'm building this system, so I
+     might need you to carry most of the heavy lifting. So a family, I get 
+     where you are coming from, but still my points do stand, yeah. So we need 
+     to factor all that in regard it kind of doesn't factor. It's actually a 
+     component of what I'm talking about. Oh yeah, oh yeah, yeah, yeah. By the 
+     way, what we are designing is the fracto itself. Unless I'm wrong. Yo, what
+     am I even adding? I actually don't know what to add. Just do as you see. 
+     As long as you've considered everything I told you earlier, adjustable, 
+     maintainable, of course, industry grade. You are seriously, I'm too tired. 
+     You, you, I won't say think for me, but let me just try. Think for me. Let 
+     me trust you
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● All four gaps ratified and logged. Now distilling the new ADs into the spine,
+  then running the reviewer gate.
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 2 lines, removed 2 lines
+       4  purpose: build-substrate
+       5  altitude: initiative
+       6  paradigm: 'Contract-hub library workspace (hexagonal): definiti
+          ons-only core, ports outward, extensions via protocols'
+       7 -scope: 'QMF V1 foundation + registry + data invariants — gaps G
+         -AP-0001..GAP-0030 (0016/0017 deferred to backtesting) + concurr
+         -ency stance + observability convention. Bot/Book/exit/venue-beh
+         -avior and all node runtime behavior excluded (later sittings).'
+       7 +scope: 'QMF V1 foundation + registry + data + indicator/structu
+         +re invariants — gaps GAP-0001..GAP-0034 (0016/0017 deferred to 
+         +backtesting) + concurrency stance + observability convention. B
+         +ot/Book/exit/venue-behavior and all node runtime behavior exclu
+         +ded (later sittings).'                                         
+       8  status: final
+       9  created: '2026-08-19'
+      10  updated: '2026-08-20'
+      11 -binds: [GAP-0001, GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0
+         -006, GAP-0007, GAP-0008, GAP-0009, GAP-0010, GAP-0011, GAP-0012
+         -, GAP-0013, GAP-0014, GAP-0015, GAP-0018, GAP-0019, GAP-0020, G
+         -AP-0021, GAP-0022, GAP-0023, GAP-0024, GAP-0025, GAP-0026, GAP-
+         -0027, GAP-0028, GAP-0029, GAP-0030, CT-01, CT-02, CT-03, CT-04,
+         - CT-05, CT-06, CT-07, CT-09, CT-10, CT-11, CT-12, CT-13, CT-14,
+         - CT-15, CT-26]                                                 
+      11 +binds: [GAP-0001, GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0
+         +006, GAP-0007, GAP-0008, GAP-0009, GAP-0010, GAP-0011, GAP-0012
+         +, GAP-0013, GAP-0014, GAP-0015, GAP-0018, GAP-0019, GAP-0020, G
+         +AP-0021, GAP-0022, GAP-0023, GAP-0024, GAP-0025, GAP-0026, GAP-
+         +0027, GAP-0028, GAP-0029, GAP-0030, GAP-0031, GAP-0032, GAP-003
+         +3, GAP-0034, CT-01, CT-02, CT-03, CT-04, CT-05, CT-06, CT-07, C
+         +T-09, CT-10, CT-11, CT-12, CT-13, CT-14, CT-15, CT-16, CT-17, C
+         +T-26]                                                          
+      12  sources: [docs/gap-report.md, docs/constitution.md, docs/contra
+          cts/ct-01..ct-05, tracker/map.md, .memlog.md]
+      13  companions: [time-audit-architect.md, time-audit-devops.md, ctr
+          ader-time-research.md]
+      14  ---
+
+❯ okay, maybe something to note. I saw you were talking about swing points,     
+  horizontal levels. I want to be able to create those from scratch, most       
+  likely because the resources we are using might not have normal things. Also, 
+  if you look at, for example, strategies or things like SMC, ICT, and all      
+  that nonsense. They might require specific things, okay? So it means I don't  
+  want to be locked in under any circumstance. I don't know if you get me.      
+  Sorry, I've just tried to reread through some of your stuff                   
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now the four new ADs into the spine:
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 40 lines
+      188  - **Prevents:** research quietly consuming its own exam questi
+           ons; untraceable events; source disagreements merged away
+      189  - **Rule:** dataset splits are fingerprinted, time-ordered, no
+           n-overlapping manifests; **each manifest pins exactly one cale
+           ndar identity + version in-band** and refuses rows carrying an
+           other calendar identity; boundaries are explicit stored Tradin
+           gDates or instants (never civil dates), and the seal boundary 
+           is a **frozen** TradingDate never re-derived under later tzdat
+           a. The 12-month seal is a no-peek lock (not retention — data i
+           s kept regardless), **enforced now as a `policy rejection` ref
+           usal at every qmf-data read boundary — raw, processed, researc
+           h door, and restored backups alike — independent of the deferr
+           ed GAP-0016/0017 gates**; the sealed period gets one logged fi
+           nal look, journaled as a named `control action` subtype, and i
+           s never silently recycled. The journal is N streams — one per 
+           producing component, each under its AD-8 `WriterId` with gaple
+           ss per-(writer, boot-epoch) sequences (a gap signals loss) — r
+           ecording seven event types (decision, order, fill, risk transi
+           tion, promotion, data quality, control action); `correlation_i
+           d` is a linking annotation **excluded from `fp1` identity by e
+           xplicit versioned declaration**; causal linkage across streams
+            uses AD-16 typed edges, never timestamps. Source adapters: qm
+           f-data defines contracts, normalization, validation, and idemp
+           otent intake keyed on (source, source-native id, revision) — a
+            provider revision is a new artifact, never an AD-10 collision
+           ; applications own scheduling, retries, supervision, and UI. T
+           he **news-calendar recorder** keeps provider-native identity a
+           nd revisions (legal archiving posture remains an open operator
+            item). Tick sources are separately identified (Dukascopy hist
+           ory vs broker feed), bid and ask preserved with source timesta
+           mps; disagreements between sources stay visible via `corrobora
+           tes` / `disagrees-with` edges, never merged.
+      190  
+      191 +### AD-22 — Indicator protocol: two modes, one equality law [A
+          +DOPTED 2026-08-20]                                            
+      192 +                                                              
+      193 +- **Binds:** CT-16; qmf-core (bulk series form), qmf-indicator
+          +s                                                             
+      194 +- **Prevents:** research computed on numbers the live path nev
+          +er sees; per-agent indicator behavior drift; instance count sc
+          +aling with bot count instead of configurations                
+      195 +- **Rule:**                                                   
+      196 +  - One consumer-blind contract, two conformant modes: **batch
+          +** (whole series in, whole series out) and **streaming** (a st
+          +ateful incremental instance). Identical canonical inputs MUST 
+          +produce identical outputs across modes; that equivalence is an
+          + AD-4 tier-2 contract test.                                   
+      197 +  - Every configured indicator declares its **warm-up length**
+          + as contract surface entering its AD-10 fingerprint. During wa
+          +rm-up the output is a marked not-ready value, never a number. 
+      198 +  - Missing input yields a marked output gap or a typed refusa
+          +l per the indicator's **declared** missing-value policy — neve
+          +r silent filling. All failures are AD-11 typed refusals.      
+      199 +  - Streaming instances follow AD-15: exactly one feeder, unli
+          +mited readers. Instances deduplicate by content fingerprint (f
+          +ormula + parameters + instrument + timeframe) — count scales w
+          +ith distinct configurations, not consumers. Each instance decl
+          +ares its state bound and supports snapshot/restore so restart 
+          +re-warm never replays a day.                                  
+      200 +  - Input series: the **bulk form** of exact values is defined
+          + in `qmf-core` — int64 arrays plus out-of-band scale/metadata 
+          +(AD-7 values in bulk); one representation workspace-wide. Indi
+          +cator arithmetic runs on floats off the money path per AD-7's 
+          +carve-out; re-entry to the money path crosses AD-7's named con
+          +version boundary.                                             
+      201 +  - `qmf-indicators` depends on `qmf-core` only (D-1 answer: n
+          +o new edges). Custom indicators are authorable as CT-16-confor
+          +mant extensions **or** as plain Python outside governed eviden
+          +ce; conformance is required only to enter governed evidence.  
+      202 +  - The AD-13 ladder carries two rungs per indicator — burst t
+          +hroughput and per-tick latency — both factory-gate machinery; 
+          +production visibility is AD-14's job.                         
+      203 +  - Public surface: the CT-16 protocol and core value types ar
+          +e public; everything else in the package is private (underscor
+          +e convention).                                                
+      204 +                                                              
+      205 +### AD-23 — Canonical arithmetic: TA-Lib pinned, upgrades gate
+          +d [ADOPTED 2026-08-20]                                        
+      206 +                                                              
+      207 +- **Binds:** CT-16; qmf-indicators; the AD-6 register         
+      208 +- **Prevents:** silent arithmetic drift under dependency upgra
+          +des; "the same indicator" meaning different numbers across rel
+          +eases                                                         
+      209 +- **Rule:** the canonical arithmetic reference is **TA-Lib, pi
+          +nned per QMF release as a version pair** — C library + Python 
+          +wrapper (0.7.1 + 0.7.1, verified current 2026-08-20). Batch mo
+          +de wraps the reference (wrap-not-reimplement); streaming imple
+          +mentations are QMX-owned and held equal by AD-22's equality la
+          +w. A reference upgrade runs the comparison suite first: any ou
+          +tput change for identical canonical inputs mints a contract fo
+          +rmat version (AD-5) with recorded before/after evidence; an ou
+          +tput-identical upgrade re-pins without a mint. (Precedent: TA-
+          +Lib 0.7.1 itself changed MACD/MACDFIX/TRIX/ULTOSC period=1 out
+          +puts.) Dual-reference checks are registered comparison artifac
+          +ts: input fingerprint + parameter fingerprint + declared toler
+          +ance + verdict. Tolerances are declared per indicator — exact 
+          +where possible, a stated float tolerance where cross-OS wobble
+          + is expected (AD-10).                                         
+      210 +                                                              
+      211 +### AD-24 — Light vs heavy: budget-declared, benchmark-policed
+          + [ADOPTED 2026-08-20]                                         
+      212 +                                                              
+      213 +- **Binds:** CT-16; qmf-indicators; the AD-13 ladder          
+      214 +- **Prevents:** heavy computation on the live decision path; c
+          +lassification by indicator name or vibe                       
+      215 +- **Rule:** a configured indicator is **light** iff it declare
+          +s AND benchmark-proves all four bounds: per-update cost within
+          + the live-path latency rung; bounded declared state size; boun
+          +ded declared evidence window (its warm-up); synchronous availa
+          +bility on the trading path. Everything else is **heavy**: comp
+          +uted off the trading path (MIS/research side, node territory —
+          + computed once and fanned out) through the same CT-16 contract
+          +; different placement, not a different species. Classification
+          + is per configuration, never per name. The declaration is cont
+          +ract surface; a light claim that fails its rung is refused at 
+          +the merge gate.                                               
+      216 +                                                              
+      217 +### AD-25 — Causal structure lifecycle [ADOPTED 2026-08-20]   
+      218 +                                                              
+      219 +- **Binds:** CT-17; qmf-structure                             
+      220 +- **Prevents:** repainted/look-ahead structure entering eviden
+          +ce; strategy vocabulary leaking into the chart-object taxonomy
+          +; lock-in to a built-in family set                            
+      221 +- **Rule:**                                                   
+      222 +  - A structure **family is a type of chart object** (swing po
+          +int, horizontal level, zone, structure break) — never a strate
+          +gy, bot, or Book category.                                    
+      223 +  - Every structure output carries **observed-at** and **confi
+          +rmed-at** (AD-8 instants — the bitemporal law applied to chart
+          + objects); invalidation appends **invalidated-at**, never dele
+          +tes. The law binds **governed evidence only**: live in-memory 
+          +use persists nothing.                                         
+      224 +  - A family ships into the governed library only when its con
+          +firmation rule is stated precisely — "confirmed the moment X h
+          +appens," with X knowable at that instant. Imprecise concepts s
+          +tay free in research lanes (plain Python, ungoverned) per don'
+          +t-box-in.                                                     
+      225 +  - Evidence consumed as confirmed uses confirmed-at; unconfir
+          +med outputs are a separately-labeled evidence class, never sil
+          +ently mixed.                                                  
+      226 +  - The confirmation delay is declared contract surface enteri
+          +ng the fingerprint; with AD-22's warm-up it feeds future split
+          + purge/embargo widths.                                        
+      227 +  - **No privileged families:** the V1 seed candidates (swing 
+          +points, horizontal levels from confirmed swings, zones, struct
+          +ure breaks) are candidates only; operator-authored from-scratc
+          +h families (SMC/ICT-class objects included) are first-class pe
+          +ers under the identical law — family authoring is the primary 
+          +use case of the extension shape (same shape as AD-22's custom 
+          +indicators). Families are QMX-owned, versioned, addable never 
+          +redefined, composable per AD-17 (a composite is its own artifa
+          +ct with lineage to its children).                             
+      228 +  - `qmf-structure` depends on `qmf-core` only in V1; its regi
+          +stry/data emissions (CT-06/07/08) go through the application/c
+          +omposition layer until an inter-library edge is ratified.     
+      229 +  - Public surface: the CT-17 protocol and core value types; e
+          +verything else private.                                       
+      230 +                                                              
+      231  ### Dependency direction
+      232  
+      233  ```mermaid
+
+● Now the Stack, Conventions, structural seed, and Deferred updates:
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 2 lines, removed 1 line
+      282  | pytest | 9.x (9.1.1) |
+      283  | poethepoet | 0.48.0 |
+      284  | numpy / pandas / pyarrow | 2.5.2 / 3.0.5 / 25.0.1 (outer pac
+           kages only; pandas 3.0 is a young major — watch ecosystem lag)
+            |
+      285 -| duckdb / TA-Lib | 1.5.5 / 0.7.1 (candidates pending data/ind
+          -icator sittings) |                                            
+      285 +| duckdb | 1.5.5 (AD-19 analytics store — rebuildable views on
+          +ly; engine majors pinned per release) |                       
+      286 +| TA-Lib (C library + Python wrapper) | 0.7.1 + 0.7.1 (AD-23 c
+          +anonical arithmetic reference; verified 2026-08-20) |         
+      287  | tzdata (PyPI) | pinned in calendar extensions only; TZPATH f
+           orced to the pin; version participates in fingerprints |
+      288  
+      289  ## Structural Seed
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+      266  
+      267  | Concern | Convention |
+      268  | --- | --- |
+      269 -| Naming | Packages `qmf-<name>`, imports `qmf.<name>` (PEP 42
+          -0, no `qmf/__init__.py`); "market-hours calendar" / "day-bound
+          -ary calendar" / "news calendar" — never bare "calendar"; banne
+          -d vocabulary honored (no "kernel", "plugins", "engine" for bac
+          -ktesting, "exam") |                                           
+      269 +| Naming | Packages `qmf-<name>`, imports `qmf.<name>` (PEP 42
+          +0, no `qmf/__init__.py`); "market-hours calendar" / "day-bound
+          +ary calendar" / "news calendar" — never bare "calendar"; struc
+          +ture "family" = chart-object type, never a strategy/bot/Book g
+          +rouping; banned vocabulary honored (no "kernel", "plugins", "e
+          +ngine" for backtesting, "exam") |                             
+      270  | Data & formats | Timestamps int64 UTC ns + per-writer sequen
+           ce + stored source resolution; money as scaled integers with d
+           eclared scale; fingerprints `fp1:sha256:…` via the single qmf-
+           core implementation; journals = evidence encoding, logs = ISO-
+           8601 Z display; every serialized artifact stamps its contract 
+           format version and result label |
+      271  | State & cross-cutting | Evidence is append-only, corrections
+            are annotations; public boundaries fail only via returned typ
+           ed refusals; no component below the composition root reads the
+            system clock; display-only fields are declared in the contrac
+           t, never assumed; public value types are frozen dataclasses, s
+           eams are Protocols; `correlation_id` propagates across every b
+           oundary |
+      272  
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 2 lines, removed 1 line
+      320  | Full Bot/QML schema, Book binding contract | Own session; AD
+           -17 multiplicity invariant binds it |
+      321  | Promotion evidence checklist + the gate itself | Accretes fr
+           om data/backtesting/risk sittings; gate is platform work, code
+           d late |
+      322  | Five-hats sweep findings (44 items, reviews/five-hats-sweep.
+           md) | Input register for every remaining sitting |
+      323 -| Indicator protocol, TA-Lib canonical pin, structure families
+          - (GAP-0031..0034) | Indicator/structure sitting |             
+      323 +| Operator-used structure families beyond the seed four (SMC/I
+          +CT-class objects, chart patterns) | Added family-by-family und
+          +er AD-25's precise-rule bar; nothing forecloses them |        
+      324 +| MIS fan-out wiring for heavy indicators; which indicators sh
+          +ip in the V1 catalog | Node territory (wiring) / documentation
+          + time (catalog); AD-22/AD-24 bind both |                      
+      325  | Venue secrets, order state machine, first broker, adapter co
+           ntract, cTrader time/BID verification (GAP-0035..0038) | Venue
+            sitting; cTrader time research delivered as input |
+      326  | Book/BMS, exits, paper mode, news windows, SQS, formulas, st
+           op-out, same-tick priority (GAP-0039..0046) | Risk sittings; a
+           pplication behavior stays out of the framework |
+      327  | Backtesting (GAP-0048, ticket 008) incl. simulated-time typi
+           ng (unlocks `world = simulated`) and backtest-mimics-live idea
+            | Own sitting; operator not ready |
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 2 lines, removed 2 lines
+      301        examples/             # L27 reference usage
+      302      qmf-registry/           # same skeleton; identity, lineage
+           , gates (next sitting)
+      303      qmf-data/               # evidence layers (data sitting)
+      304 -    qmf-indicators/         # light indicator protocol (indica
+          -tor sitting)                                                  
+      305 -    qmf-structure/          # causal market structure (indicat
+          -or sitting)                                                   
+      304 +    qmf-indicators/         # AD-22/23/24: two-mode protocol, 
+          +TA-Lib wrap, light/heavy budgets                              
+      305 +    qmf-structure/          # AD-25: causal chart-object famil
+          +ies, observed-at/confirmed-at                                 
+      306      qmf-venue/              # module: venue seam + cTrader ada
+           pter (venue sitting)
+      307      qmf-risk/               # module: Books/BMS v1 (risk sitti
+           ng)
+      308    extensions/
+
+❯ okay, I know I'm over adding in a lot of things while you are working, but    
+  try to run maybe an agent or two to do some edge cases because the I'm        
+  getting I'm coming from a world of ICT traders, retail traders. So trust me,  
+  some stuff is very random, some experiments might be very random, and trust   
+  me, if they work, there is a very high chance we shall use them. So make sure 
+  that what we are building can handle all that                                 
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Lint clean. Dispatching five parallel reviewers — the two configured lenses
+  (adversarial, currency), the rubric walker, an input-reconcile check, and your
+  requested ICT/retail edge-case agent.
+
+● 5 background agents launched (↓ to manage)
+   ├ ICT edge-case review
+   ├ Adversarial spine review
+   ├ Currency verification review
+   ├ Rubric walker review
+   └ Input reconcile review
+
+❯ Yo, not only ICT, oh my god, first of all, that's a very very wrong way to    
+  look at it. That's a very, very wrong way, okay? Not only ICT, general forex  
+  trading, please, or general crypto trading, in general market structure, in   
+  general, please okay, don't be very, very specific. That's very wrong. You're 
+  going to be very biased, trust me                                             
+
+● Agent(General TA edge-case review) Opus 5 (1M context)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+✻ Crunched for 13m 30s
+
+❯ I've actually just noted this is I think one of the reasons why I would       
+  prefer using both the things we are creating and normal Python because those  
+  are some of the limiting scenarios we can find. For example, if there is a    
+  lot of ambiguity around a certain concept, and for us we are trying to        
+  experiment if our framework or library cannot, you know, articulate it in     
+  detail, we would rather use normal Python than you know sticking to the       
+  framework. Then over time we can see how to refactor it. But I think this is  
+  something, this is a very good example of why I was saying such. So for you,  
+  you went ahead and did the ICT edge case, and I said, No, don't do ICT edge   
+  case. Reason being, you're going to be very biased and you're going to only   
+  be looking at ICT, but it's a very wrong way to look at it. Please refine and 
+  refrain from that                                                             
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Logged. The six reviewers are still working; when their reports land I'll fold
+  everything — including the graduation-path clause — into the spine in one
+  pass, school-neutral, and give you the closing summary.
+
+✻ Crunched for 36s
+● Agent "Currency verification review" finished · 3m 14s
+
+● Currency check is back clean — TA-Lib 0.7.1 (both halves) and DuckDB 1.5.5
+  confirmed accurate as of today, no stale pins. Five reviewers still running;
+  I'll fold everything in one pass when they're all in.
+
+✻ Cogitated for 5s
+
+❯ Did you understand my last message? Why are you not responding? My last two,  
+  in fact                                                                       
+
+● Yes — both messages landed, and I acted on each; my replies may have gotten
+  buried between the background-agent status lines, so here's the recap in one
+  place:
+
+  Message 1 (don't be ICT-biased): I added a second, general edge-case reviewer
+  covering forex, crypto, classic technical analysis, statistical methods, and
+  market structure broadly — multi-instrument indicators, renko/tick/volume
+  bars, trendlines and channels, volume tools, chart patterns, 24/7 crypto
+  structure. It, not the ICT one, is the primary lens. I also logged a standing
+  rule in the sitting's record: no spine ruling may name or privilege any 
+  trading school, and school-specific findings get translated into general
+  capability terms ("can an object mutate partially," "can an object anchor to a
+  time of day") before anything reaches the spine.
+
+  Message 2 (plain-Python escape hatch + refactor over time): confirmed that's
+  already the ratified law — the framework's rules only bite when a result
+  enters governed evidence; ambiguous concepts live in normal Python freely.
+  Your "refactor it over time" point I'm turning into an explicit clause when I
+  apply the review fixes: a working plain-Python experiment graduates into a
+  proper indicator/structure family through the extension path, with a lineage
+  link back to the original experiment. Both points are logged in the memlog
+  (entries 57 and 58).
+
+  Where things stand right now: all four gaps (GAP-0031..0034) are ratified and
+  written into the spine as AD-22 through AD-25. Six reviewers were dispatched
+  against it; one (the version/currency check) is back — clean, TA-Lib 0.7.1 and
+  DuckDB 1.5.5 confirmed current. The other five (rubric, adversarial,
+  input-reconcile, and the two edge-case lenses) are still running. When they're
+  in, I apply the fixes in one pass — school-neutral, graduation clause
+  included — and give you the closing summary. Nothing is needed from you until
+  then.
+
+✻ Cogitated for 15s
+
+● Agent "Input reconcile review" finished · 4m 2s
+
+● The input-reconcile reviewer is back: nothing dropped outright, but it caught
+  five real gaps between what was ratified and what my spine text actually says
+  — the sharpest being that I never explicitly ruled output alignment (how an
+  indicator's output series lines up 1:1 with its input bars), plus an orphaned
+  data-sitting clause (split purge/embargo widths), missing extension packaging
+  mechanics, an un-deferred latency-decomposition obligation, and a half-stated
+  resource-visibility chain. All five have clean fixes; I'm holding them until
+  the remaining four reviewers report so the spine gets one coherent editing
+  pass instead of five.
+
+✻ Baked for 14s
+
+● Agent "Rubric walker review" finished · 5m 31s
+
+● Rubric walker is in: one critical finding — I pinned the indicator input
+  format but never the output format (type, shape, how batch output arrays and
+  streaming output values are typed) — plus confirmation of the
+  extension-packaging hole, and three mediums with clean resolutions (including
+  a nice one: the structure library deserves its own automatic "no-repaint"
+  test, the twin of the indicator equality law, so look-ahead prevention is
+  machine-checked instead of self-declared). Three reviewers left — the
+  adversarial attack and the two edge-case lenses — then the single fix pass.
+
+✻ Crunched for 17s
+
+● Agent "Adversarial spine review" finished · 11m 34s
+
+● The adversarial reviewer landed the heaviest report: 36 ways two build agents
+  could each obey the new rules to the letter and still produce incompatible
+  packages — 14 of them serious. The pattern behind most: I named laws without
+  pinning their mechanisms (which comparator "identical" means, where
+  Bar/Timeframe live, how a not-ready marker serializes, how a mutable-looking
+  lifecycle sits on an immutable store). All come with smallest-closing-clause
+  fixes in the report. Waiting on the two edge-case lenses, then I read all six
+  full reports and do the one repair pass.
+
+✻ Cogitated for 8s
+
+● Agent "ICT edge-case review" finished · 12m 32s
+
+● The school-specific lens is back, and translated into general terms it found
+  real capability gaps — all additive, none requiring a ratified decision to be
+  reversed: components can't declare a calendar as an input (kills any
+  time-of-day-anchored object, any school), the instance-dedup tuple must carry
+  calendar+tzdata identity, "observed-at" needs one precise definition plus an
+  anchor span for retro-anchored objects, structure families need a sanctioned
+  way to consume an indicator (or they'd be forced to reimplement arithmetic,
+  breaking the TA-Lib law), partially-filled/mitigated zones need an append-only
+  interaction-state shape, two identical-looking events on different days must
+  not silently merge, and structure scans need their own light/heavy budget. One
+  reviewer to go, then the repair pass.
+
+✻ Churned for 10s
+
+● Agent "General TA edge-case review" finished · 11m 47s
+
+● All six reviews are in. Reading the full reports now to assemble the single
+  repair pass — the summaries agree on the diagnosis: every ratified decision
+  survives, but the contract surface needs ~30 small additive clauses to make
+  the rulings unambiguous and school-neutral in practice.
+
+  Read 3 files (ctrl+o to expand)
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 35 lines, removed 19 lines
+      188  - **Prevents:** research quietly consuming its own exam questi
+           ons; untraceable events; source disagreements merged away
+      189  - **Rule:** dataset splits are fingerprinted, time-ordered, no
+           n-overlapping manifests; **each manifest pins exactly one cale
+           ndar identity + version in-band** and refuses rows carrying an
+           other calendar identity; boundaries are explicit stored Tradin
+           gDates or instants (never civil dates), and the seal boundary 
+           is a **frozen** TradingDate never re-derived under later tzdat
+           a. The 12-month seal is a no-peek lock (not retention — data i
+           s kept regardless), **enforced now as a `policy rejection` ref
+           usal at every qmf-data read boundary — raw, processed, researc
+           h door, and restored backups alike — independent of the deferr
+           ed GAP-0016/0017 gates**; the sealed period gets one logged fi
+           nal look, journaled as a named `control action` subtype, and i
+           s never silently recycled. The journal is N streams — one per 
+           producing component, each under its AD-8 `WriterId` with gaple
+           ss per-(writer, boot-epoch) sequences (a gap signals loss) — r
+           ecording seven event types (decision, order, fill, risk transi
+           tion, promotion, data quality, control action); `correlation_i
+           d` is a linking annotation **excluded from `fp1` identity by e
+           xplicit versioned declaration**; causal linkage across streams
+            uses AD-16 typed edges, never timestamps. Source adapters: qm
+           f-data defines contracts, normalization, validation, and idemp
+           otent intake keyed on (source, source-native id, revision) — a
+            provider revision is a new artifact, never an AD-10 collision
+           ; applications own scheduling, retries, supervision, and UI. T
+           he **news-calendar recorder** keeps provider-native identity a
+           nd revisions (legal archiving posture remains an open operator
+            item). Tick sources are separately identified (Dukascopy hist
+           ory vs broker feed), bid and ask preserved with source timesta
+           mps; disagreements between sources stay visible via `corrobora
+           tes` / `disagrees-with` edges, never merged.
+      190  
+      191 -### AD-22 — Indicator protocol: two modes, one equality law [A
+          -DOPTED 2026-08-20]                                            
+      191 +### AD-22 — Indicator protocol and series vocabulary [ADOPTED 
+          +2026-08-20, amended by increment gate]                        
+      192  
+      193 -- **Binds:** CT-16; qmf-core (bulk series form), qmf-indicator
+          -s                                                             
+      194 -- **Prevents:** research computed on numbers the live path nev
+          -er sees; per-agent indicator behavior drift; instance count sc
+          -aling with bot count instead of configurations                
+      193 +- **Binds:** CT-16; qmf-core (series vocabulary), qmf-indicato
+          +rs                                                            
+      194 +- **Prevents:** research computed on numbers the live path nev
+          +er sees; per-agent indicator drift; identities that silently m
+          +erge non-equal computations; instance count scaling with bot c
+          +ount instead of configurations                                
+      195  - **Rule:**
+      196 -  - One consumer-blind contract, two conformant modes: **batch
+          -** (whole series in, whole series out) and **streaming** (a st
+          -ateful incremental instance). Identical canonical inputs MUST 
+          -produce identical outputs across modes; that equivalence is an
+          - AD-4 tier-2 contract test.                                   
+      197 -  - Every configured indicator declares its **warm-up length**
+          - as contract surface entering its AD-10 fingerprint. During wa
+          -rm-up the output is a marked not-ready value, never a number. 
+      198 -  - Missing input yields a marked output gap or a typed refusa
+          -l per the indicator's **declared** missing-value policy — neve
+          -r silent filling. All failures are AD-11 typed refusals.      
+      199 -  - Streaming instances follow AD-15: exactly one feeder, unli
+          -mited readers. Instances deduplicate by content fingerprint (f
+          -ormula + parameters + instrument + timeframe) — count scales w
+          -ith distinct configurations, not consumers. Each instance decl
+          -ares its state bound and supports snapshot/restore so restart 
+          -re-warm never replays a day.                                  
+      200 -  - Input series: the **bulk form** of exact values is defined
+          - in `qmf-core` — int64 arrays plus out-of-band scale/metadata 
+          -(AD-7 values in bulk); one representation workspace-wide. Indi
+          -cator arithmetic runs on floats off the money path per AD-7's 
+          -carve-out; re-entry to the money path crosses AD-7's named con
+          -version boundary.                                             
+      201 -  - `qmf-indicators` depends on `qmf-core` only (D-1 answer: n
+          -o new edges). Custom indicators are authorable as CT-16-confor
+          -mant extensions **or** as plain Python outside governed eviden
+          -ce; conformance is required only to enter governed evidence.  
+      202 -  - The AD-13 ladder carries two rungs per indicator — burst t
+          -hroughput and per-tick latency — both factory-gate machinery; 
+          -production visibility is AD-14's job.                         
+      203 -  - Public surface: the CT-16 protocol and core value types ar
+          -e public; everything else in the package is private (underscor
+          -e convention).                                                
+      196 +  - **Series vocabulary (qmf-core; shared nouns per AD-2):** `
+          +Bar` (OHLC + interval + BarSpec), `Tick`/`Quote` (bid/ask with
+          + source timestamps per AD-21), `BarSpec`, series references, a
+          +nd the exact-rational parameter type are defined in `qmf-core`
+          +; no other package may define them. **`BarSpec` replaces the b
+          +are word "timeframe" everywhere:** a discriminated aggregation
+          + rule — time-interval | tick-count | volume-threshold | notion
+          +al-threshold | price-brick | range | session — with exact para
+          +meters and, for time-based kinds, the anchoring calendar ident
+          +ity + version. Bar aggregation is a fingerprinted qmf-data der
+          +ivation (processed room, lineage to source); a bar series is w
+          +ell-defined only via its BarSpec.                             
+      197 +  - **Bulk form, pinned:** a frozen value over a read-only `me
+          +moryview` of immutable `bytes` (little-endian int64), explicit
+          + length, and per-channel out-of-band metadata — scale, declare
+          +d kind (exact-price / exact-quantity / float-analytic / intege
+          +r-code / boolean / categorical), unit, and quote side (bid / a
+          +sk / mid / last; `mid` is a derived series with a stated round
+          +ing mode). Checksums and serialization are defined over exactl
+          +y that byte layout; numpy/Arrow conversions are private to the
+          + consuming package. A parallel integer-encoded **presence map*
+          +* marks every position `present | provisional | not_ready | ga
+          +p | absent_by_schedule`; positions are never omitted or shifte
+          +d; NaN and sentinel markers are prohibited; equality compares 
+          +presence maps first, values only at present positions. L2 dept
+          +h / footprint-class nested data is outside the V1 series vocab
+          +ulary — ungoverned research lane until a later pass widens the
+          + form.                                                        
+      198 +  - **Two named AD-7 conversion boundaries, one qmf-core imple
+          +mentation each:** the exact→analytic descale (pinned formula, 
+          +stated rounding, refusal past float64's exact-integer range — 
+          +no package descales except by calling it), and the analytic→ex
+          +act return (any output channel declared exact-price, and any e
+          +valuated object level, declares rounding mode + target scale a
+          +s fingerprinted contract surface).                            
+      199 +  - **Identity = the entire declared configuration,** declared
+          + explicitly and versioned per AD-10 — never an enumerated shor
+          +tcut; an element missing from the fingerprint is a contract de
+          +fect. It includes: formula id (AD-9 minting discipline — opaqu
+          +e, stable, never reused), contract format version, exact param
+          +eters (exact rationals — scaled integers or numerator/denomina
+          +tor — never binary floats), the **ordered named input set** (o
+          +ne or more series references, each carrying instrument-or-sour
+          +ce identity, BarSpec, channel kind, quote side, and — for deri
+          +ved inputs — the upstream artifact's fingerprint), declared ca
+          +lendar requirements (rule-set identity + version + tzdata vers
+          +ion), alignment policy, missing-value policy, warm-up, output 
+          +schema, supported modes, and the arithmetic-reference configur
+          +ation. That fingerprint is the only dedup key.                
+      200 +  - **Typed configuration inputs:** a configuration may declar
+          +e market-hours / day-boundary / news calendars, instrument-met
+          +adata snapshots (tick size, digits, pip — the registry record'
+          +s fingerprint is identity-bearing), and external event anchors
+          + (`(source, source-native id, revision)` per AD-21) — injected
+          + by the composition root against core protocols. Declaring an 
+          +input creates no package dependency edge.                     
+      201 +  - **Composition:** any CT-16 or CT-17 output series is a leg
+          +al input to any CT-16/CT-17 configuration; the upstream finger
+          +print enters downstream identity. A computed/synthetic series 
+          +is identified by its result label (derived-series identity) an
+          +d never mints an Instrument. Re-implementing arithmetic a gove
+          +rned producer already publishes is a contract defect under AD-
+          +23.                                                           
+      202 +  - **Modes:** a configuration declares its supported modes; b
+          +atch-only and streaming-only are conformant (a batch-only conf
+          +iguration is heavy on the live path by definition). Where both
+          + are declared, the **equality law** binds as an AD-4 tier-2 co
+          +ntract test: a same-process, same-build comparison against a p
+          +er-configuration comparator declared in integer ULPs (default 
+          +0), over canonical inputs = (series, exact parameters, cold in
+          +itial state); the seeding rule and the reference's leading-und
+          +efined-prefix → not-ready mapping are declared contract surfac
+          +e. Cross-OS/cross-build agreement is never this gate — it is a
+          +n AD-23 registered comparison artifact. A separate **restore-e
+          +quivalence** test binds snapshot/restore: restore-then-N-updat
+          +es ≡ cold-warm-then-the-same-N-updates.                       
+      203 +  - **Warm-up** is an integer count of completed input observa
+          +tions in the input series' own sample unit (per its BarSpec) —
+          + never ticks, never a Duration — one value per configuration, 
+          +identical across modes, at least the reference's lookback; an 
+          +optional declared time bound is null for event-driven BarSpecs
+          + (affecting AD-24 eligibility). Readiness is recurring: a conf
+          +iguration may declare a calendar-anchored reset that re-enters
+          + not-ready. A streaming implementation needing more observatio
+          +ns than declared is non-conformant, not differently warmed. Du
+          +ring warm-up the output is a marked not-ready value, never a n
+          +umber.                                                        
+      204 +  - **Outputs:** CT-16 declares an output schema — ordered nam
+          +ed channels, each with kind, arity (scalar-per-sample / fixed 
+          +vector / keyed-by-price-bin), and index offset. Outputs are fu
+          +ll-length and index-aligned to the input (begin-index trimming
+          + prohibited). Every sample carries a **knowable-at instant** —
+          + the earliest instant at which every contributing input was kn
+          +owable — and the configuration declares its bar-closed vs in-p
+          +rogress emission policy; `provisional` samples (incomplete agg
+          +regation period) never enter governed evidence.               
+      205 +  - **Missing vs closed:** a position the market-hours calenda
+          +r declares closed is `absent_by_schedule`, never a gap; missin
+          +g = calendar-open with no data, handled per the declared polic
+          +y — never silent filling. Multi-series alignment is a declared
+          + policy; only **as-of last value known at or before the evalua
+          +tion instant** is permitted for governed evidence; forward-fil
+          +l or interpolation across the evaluation instant is a `policy 
+          +rejection`. All failures are AD-11 typed refusals.            
+      206 +  - **Streaming instances** are the named stateful class in AD
+          +-15's exemption: a mutable instance with exactly one feeder — 
+          +one `WriterId` holder, not one input stream — and unlimited re
+          +aders; every streaming output carries the input sequence numbe
+          +r that produced it. Dedup is per-process and application-owned
+          + (equal fingerprints guarantee substitutability; the library s
+          +hips no global registry); instance count scales with distinct 
+          +configurations, not consumers. A state snapshot is an AD-5 ser
+          +ialized contract with its own format version, scoped to a decl
+          +ared (OS, arithmetic-reference build) tuple; restoring across 
+          +tuples is an `unavailable dependency` refusal; a result comput
+          +ed from restored state carries the snapshot fingerprint as an 
+          +input fingerprint. Evidence emission granularity is declared c
+          +ontract surface (per-window); streaming updates are not indivi
+          +dually evidence-bearing.                                      
+      207 +  - **Extensions:** custom indicators are authorable as plain 
+          +Python outside governed evidence, always. To enter governed ev
+          +idence they conform to CT-16 as extensions under AD-2's extens
+          +ion mechanics — separate versioned packages outside the roster
+          +, own SemVer ladder, distribution identity + version as identi
+          +ty fields of every artifact produced, discovered by **explicit
+          + registration at the composition root** (never ambient scannin
+          +g) through the package's one named catalog surface (the single
+          + public registration point). A working plain-Python experiment
+          + **graduates** through this path with a lineage edge to its or
+          +iginating research artifact.                                  
+      208 +  - Two AD-13 rungs per configuration — burst throughput and p
+          +er-tick latency, denominated per accepted input observation at
+          + the configured BarSpec (the no-op tick path measured separate
+          +ly) — both factory-gate machinery; production visibility is AD
+          +-14's job.                                                    
+      209 +  - `qmf-indicators` depends on `qmf-core` only (D-1 answer: n
+          +o new edges). Public surface: the CT-16 protocol, the series v
+          +ocabulary, and the catalog surface; everything else private (u
+          +nderscore convention).                                        
+      210  
+      205 -### AD-23 — Canonical arithmetic: TA-Lib pinned, upgrades gate
+          -d [ADOPTED 2026-08-20]                                        
+      211 +### AD-23 — Canonical arithmetic: pinned references, upgrades 
+          +gated [ADOPTED 2026-08-20, amended by increment gate]         
+      212  
+      207 -- **Binds:** CT-16; qmf-indicators; the AD-6 register         
+      208 -- **Prevents:** silent arithmetic drift under dependency upgra
+          -des; "the same indicator" meaning different numbers across rel
+          -eases                                                         
+      209 -- **Rule:** the canonical arithmetic reference is **TA-Lib, pi
+          -nned per QMF release as a version pair** — C library + Python 
+          -wrapper (0.7.1 + 0.7.1, verified current 2026-08-20). Batch mo
+          -de wraps the reference (wrap-not-reimplement); streaming imple
+          -mentations are QMX-owned and held equal by AD-22's equality la
+          -w. A reference upgrade runs the comparison suite first: any ou
+          -tput change for identical canonical inputs mints a contract fo
+          -rmat version (AD-5) with recorded before/after evidence; an ou
+          -tput-identical upgrade re-pins without a mint. (Precedent: TA-
+          -Lib 0.7.1 itself changed MACD/MACDFIX/TRIX/ULTOSC period=1 out
+          -puts.) Dual-reference checks are registered comparison artifac
+          -ts: input fingerprint + parameter fingerprint + declared toler
+          -ance + verdict. Tolerances are declared per indicator — exact 
+          -where possible, a stated float tolerance where cross-OS wobble
+          - is expected (AD-10).                                         
+      213 +- **Binds:** CT-16, CT-17; **every producer of governed eviden
+          +ce, extensions included**; the AD-6 register                  
+      214 +- **Prevents:** silent arithmetic drift under dependency upgra
+          +des; two owners of one formula's numbers                      
+      215 +- **Rule:**                                                   
+      216 +  - Where the pinned reference implements a formula, wrapping 
+          +it is mandatory and it is canonical (wrap-not-reimplement). **
+          +Where it does not** (VWAP, Ichimoku, session-anchored levels, 
+          +structure arithmetic, QMX-original formulas), **the QMX implem
+          +entation is the canonical arithmetic for that formula**, pinne
+          +d by its own contract format version under the identical upgra
+          +de gate. Streaming implementations are QMX-owned and held equa
+          +l to the canonical batch arithmetic by AD-22's equality law.  
+      217 +  - The pinned reference is TA-Lib, pinned per QMF release as 
+          +the **lockfile-resolved artifacts (distribution filename + has
+          +h) of both the C library and the Python wrapper** (0.7.1 + 0.7
+          +.1, verified current 2026-08-20) — the artifact identity, not 
+          +a version string, is what AD-10 float provenance records. The 
+          +reference's process-global configuration (compatibility mode, 
+          +candle settings) is a declared, identity-bearing **reference-c
+          +onfiguration record**: fixed at stated values, asserted at imp
+          +ort (`unavailable dependency` on mismatch, exactly as AD-8 tre
+          +ats tzdata), never mutated at runtime; a configuration change 
+          +mints exactly like a version upgrade.                         
+      218 +  - Upgrades are gated, never silent: the comparison suite run
+          +s first; an output change for identical canonical inputs mints
+          + the **per-configured-indicator contract format version** — ne
+          +ver a protocol-wide bump, so unchanged indicators keep dedupli
+          +cating — with recorded before/after evidence; an output-identi
+          +cal upgrade re-pins without a mint. (Precedent: TA-Lib 0.7.1 i
+          +tself changed MACD/MACDFIX/TRIX/ULTOSC period=1 outputs.)     
+      219 +  - Dual-reference checks are registered comparison artifacts 
+          +— input fingerprint + parameter fingerprint + declared toleran
+          +ce + verdict — required wherever a second reference exists. To
+          +lerances, and AD-22's mode comparator, are declared as **integ
+          +er ULP counts** (or a scaled-integer pair), never decimal text
+          +, never floats.                                               
+      220 +  - No governed producer re-implements arithmetic another gove
+          +rned producer publishes: a structure family needing an indicat
+          +or consumes it as a declared input (AD-22 composition), never 
+          +inline.                                                       
+      221  
+      211 -### AD-24 — Light vs heavy: budget-declared, benchmark-policed
+          - [ADOPTED 2026-08-20]                                         
+      222 +### AD-24 — Light vs heavy: budget-declared, benchmark-policed
+          + [ADOPTED 2026-08-20, amended by increment gate]              
+      223  
+      213 -- **Binds:** CT-16; qmf-indicators; the AD-13 ladder          
+      214 -- **Prevents:** heavy computation on the live decision path; c
+          -lassification by indicator name or vibe                       
+      215 -- **Rule:** a configured indicator is **light** iff it declare
+          -s AND benchmark-proves all four bounds: per-update cost within
+          - the live-path latency rung; bounded declared state size; boun
+          -ded declared evidence window (its warm-up); synchronous availa
+          -bility on the trading path. Everything else is **heavy**: comp
+          -uted off the trading path (MIS/research side, node territory —
+          - computed once and fanned out) through the same CT-16 contract
+          -; different placement, not a different species. Classification
+          - is per configuration, never per name. The declaration is cont
+          -ract surface; a light claim that fails its rung is refused at 
+          -the merge gate.                                               
+      224 +- **Binds:** CT-16 **and CT-17**; qmf-indicators, qmf-structur
+          +e; the AD-13 ladder                                           
+      225 +- **Prevents:** heavy computation on the live decision path; c
+          +lassification by name or vibe; machine-scoped verdicts leaking
+          + into identity                                                
+      226 +- **Rule:**                                                   
+      227 +  - A configuration is **light** iff it declares AND benchmark
+          +-proves: (1) per-update cost within the live-path latency rung
+          +; (2) bounded declared state size within the ceiling stated in
+          + the owning contract; (3) **either** a bounded declared eviden
+          +ce window **or** a declared anchor-reset rule with O(1) per-up
+          +date cost inside bound 2 — an anchored configuration (session 
+          +VWAP, cumulative "since X" statistics) declares its **anchor k
+          +ind** so embargo widths compute from the anchor, not a window;
+          + (4) synchronous availability on the trading path — a marked n
+          +ot-ready value satisfies it.                                  
+      228 +  - The same four bounds bind **structure families**: per-upda
+          +te cost, bounded live-object-set size, bounded scan/lookback w
+          +indow, synchronous availability — same benchmark policing, sam
+          +e refusal for a failed light claim.                           
+      229 +  - **The verdict never enters identity:** the declared budget
+          + is contract surface; the light/heavy verdict is a machine-sco
+          +ped AD-13 benchmark artifact, declared display-only for finger
+          +print purposes. **Until the live-path rung has a recorded base
+          +line, every configuration is heavy by default and a light clai
+          +m is refused at the gate.**                                   
+      230 +  - A heavy configuration's synchronous entry point returns `u
+          +nsupported capability`. Every fanned-out heavy value carries t
+          +he instant + input sequence of its last input; consuming one p
+          +ast its declared maximum age is a `stale evidence` refusal. He
+          +avy runs off the trading path (MIS/research side, node territo
+          +ry — computed once and fanned out) through the same contracts;
+          + different placement, not a different species.                
+      231 +  - Classification is per configuration, never per name. Decla
+          +ration = the promise, AD-13 measurement = the proof, AD-14 met
+          +rics = runtime visibility, UI display = platform territory.   
+      232  
+      233  ### AD-25 — Causal structure lifecycle [ADOPTED 2026-08-20]
+      234  
+● Now AD-25:
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 15 lines, removed 11 lines
+      230    - A heavy configuration's synchronous entry point returns `u
+           nsupported capability`. Every fanned-out heavy value carries t
+           he instant + input sequence of its last input; consuming one p
+           ast its declared maximum age is a `stale evidence` refusal. He
+           avy runs off the trading path (MIS/research side, node territo
+           ry — computed once and fanned out) through the same contracts;
+            different placement, not a different species.
+      231    - Classification is per configuration, never per name. Decla
+           ration = the promise, AD-13 measurement = the proof, AD-14 met
+           rics = runtime visibility, UI display = platform territory.
+      232  
+      233 -### AD-25 — Causal structure lifecycle [ADOPTED 2026-08-20]   
+      233 +### AD-25 — Causal structure lifecycle [ADOPTED 2026-08-20, am
+          +ended by increment gate]                                      
+      234  
+      235 -- **Binds:** CT-17; qmf-structure                             
+      236 -- **Prevents:** repainted/look-ahead structure entering eviden
+          -ce; strategy vocabulary leaking into the chart-object taxonomy
+          -; lock-in to a built-in family set                            
+      235 +- **Binds:** CT-17; qmf-structure; AD-16 record kinds         
+      236 +- **Prevents:** repainted/look-ahead structure entering eviden
+          +ce; strategy vocabulary leaking into the chart-object taxonomy
+          +; lock-in to a built-in family set; a mutable state machine si
+          +tting on the immutable store                                  
+      237  - **Rule:**
+      238 -  - A structure **family is a type of chart object** (swing po
+          -int, horizontal level, zone, structure break) — never a strate
+          -gy, bot, or Book category.                                    
+      239 -  - Every structure output carries **observed-at** and **confi
+          -rmed-at** (AD-8 instants — the bitemporal law applied to chart
+          - objects); invalidation appends **invalidated-at**, never dele
+          -tes. The law binds **governed evidence only**: live in-memory 
+          -use persists nothing.                                         
+      240 -  - A family ships into the governed library only when its con
+          -firmation rule is stated precisely — "confirmed the moment X h
+          -appens," with X knowable at that instant. Imprecise concepts s
+          -tay free in research lanes (plain Python, ungoverned) per don'
+          -t-box-in.                                                     
+      241 -  - Evidence consumed as confirmed uses confirmed-at; unconfir
+          -med outputs are a separately-labeled evidence class, never sil
+          -ently mixed.                                                  
+      242 -  - The confirmation delay is declared contract surface enteri
+          -ng the fingerprint; with AD-22's warm-up it feeds future split
+          - purge/embargo widths.                                        
+      243 -  - **No privileged families:** the V1 seed candidates (swing 
+          -points, horizontal levels from confirmed swings, zones, struct
+          -ure breaks) are candidates only; operator-authored from-scratc
+          -h families (SMC/ICT-class objects included) are first-class pe
+          -ers under the identical law — family authoring is the primary 
+          -use case of the extension shape (same shape as AD-22's custom 
+          -indicators). Families are QMX-owned, versioned, addable never 
+          -redefined, composable per AD-17 (a composite is its own artifa
+          -ct with lineage to its children).                             
+      244 -  - `qmf-structure` depends on `qmf-core` only in V1; its regi
+          -stry/data emissions (CT-06/07/08) go through the application/c
+          -omposition layer until an inter-library edge is ratified.     
+      245 -  - Public surface: the CT-17 protocol and core value types; e
+          -verything else private.                                       
+      238 +  - A structure **family is a type of chart object** — never a
+          + strategy, bot, or Book category, and never named after a trad
+          +ing school. Geometry is family-declared and **open**: point, l
+          +evel, zone, span, distribution, graph. Clock-confirmed (degene
+          +rate) confirmation is legal — "confirmed the instant the windo
+          +w opens under calendar C" meets the bar. A standing object (an
+          + a-priori level such as a round number) declares observed-at =
+          + its configuration instant.                                   
+      239 +  - **Lifecycle on the immutable store:** an object is minted 
+          +**once, at observation**, carrying its family identity + versi
+          +on, exact parameters, declared confirmation rule, **anchor spa
+          +n** (start instant, end instant, price bounds — frozen at obse
+          +rvation, explicitly permitted to precede observed-at, excluded
+          + from every causality test), and **observed-at** — defined as 
+          +the earliest instant the object was derivable from causally-av
+          +ailable data (known-at, never event time). Confirmation, inval
+          +idation (its instant = the detection instant), and **interacti
+          +on records** (instant, price, family-declared interaction meas
+          +ure — the only permitted way an object's state evolves) are se
+          +parate append-only AD-16 records/edges referencing the object'
+          +s fingerprint, each instant an identity field of its own recor
+          +d; the object itself is never mutated. Current state ("still v
+          +alid at T?", "still unmitigated?") is a **read-time fold** ove
+          +r the object's edge stream per CT-17's stated read-resolution 
+          +rule — the lifecycle/interaction-fold half of the deferred ann
+          +otation rule lands here, now. Anchor span, observed-at, and ev
+          +ery lifecycle instant are **identity fields, never occurrence-
+          +classified**: a structure object is a fact about the market at
+          + a time, not a computation (mirrored in AD-16).               
+      240 +  - **Emission invariant, checked in-component:** `anchor.star
+          +t ≤ anchor.end ≤ observed-at ≤ confirmed-at ≤ invalidated-at`,
+          + and observed-at ≥ the maximum evidence-time of every input ac
+          +tually consumed — violation is an `invalid input` refusal. Thi
+          +s cheap look-ahead guard binds now, independent of the deferre
+          +d GAP-0016 gate.                                              
+      241 +  - **Precise-rule bar:** a family ships into the governed lib
+          +rary only when its confirmation rule states "confirmed the mom
+          +ent X happens," with X knowable at that instant; imprecise con
+          +cepts stay free in research lanes (plain Python, ungoverned); 
+          +a mechanically-stated variant of any school's concept is admis
+          +sible under the same bar. **Evidence class (confirmed / unconf
+          +irmed / provisional) is a named part of the AD-12 label and a 
+          +declared identity field**; an unconfirmed output links to its 
+          +confirmed successor via a typed `confirmed-as` edge; a read re
+          +questing confirmed evidence **refuses** unconfirmed rows (`pol
+          +icy rejection`) rather than filtering silently. A decision at 
+          +instant T may consume evidence with confirmed-at ≤ T — equalit
+          +y is consumption, not look-ahead; AD-8's refuse-at-equal rule 
+          +governs causality tests between derived artifacts.            
+      242 +  - **Continuous and calendar-anchored objects:** a sloped obj
+          +ect (trendline, channel, decaying rail) is identified by integ
+          +er **anchors** — (instant, exact Price) pairs — plus a declare
+          +d versioned evaluation rule; slope is derived, never stored, n
+          +ever identity. Evaluation at an instant crosses the named anal
+          +ytic→exact boundary (AD-22). A calendar-anchored level declare
+          +s its sampling policy (`last-known-at-or-before` | `refuse`) a
+          +nd schedule-gap policy (`refuse` | `nearest-open-instant` | `c
+          +arry-previous-session`), fingerprinted. Observing a news insta
+          +nt or release as evidence is ordinary input consumption, bound
+          + to the revision known at observed-at; **acting** on news stay
+          +s node territory.                                             
+      243 +  - **Confirmation delay** is a declared **maximum bound** — a
+          +n integer count of observations at the family's BarSpec; an `u
+          +nbounded` declaration is legal only for families excluded from
+          + split-governed evidence. With AD-22's warm-up it feeds AD-21'
+          +s purge/embargo widths; a composite declares the sum of its ch
+          +ildren's bounds.                                              
+      244 +  - **Composites (AD-17):** a composite's confirmed-at is the 
+          +maximum of its children's confirmed-at and its observed-at the
+          + maximum of theirs — never earlier than any child. Children of
+          + a causal composite are **order-significant by default** (a fa
+          +mily declares a collection unordered explicitly). Children may
+          + be of any governed kind — indicator results, structure object
+          +s, calendar windows. Invalidation **never cascades automatical
+          +ly**: a family declares its own invalidation predicate (which 
+          +may reference a parent's lifecycle facts); readers may compute
+          + cascade at read time from lineage. A refit is a new artifact 
+          +with a `supersedes` edge, anchors frozen at each fit, the line
+          +age head keeping the first observed-at.                       
+      245 +  - **Routing test:** a value per evaluation instant is CT-16;
+          + a discrete object with a birth and a lifetime is CT-17; a con
+          +cept expressible both ways declares which it is; either consum
+          +es the other per AD-22's composition rule.                    
+      246 +  - **Persistence:** the law binds governed evidence; live in-
+          +memory use persists nothing — but any object **cited** by a jo
+          +urnal event or result label becomes governed evidence by that 
+          +act and is persisted (or its fingerprint-bearing content inlin
+          +ed into the citing record). Scanners are expected to run ungov
+          +erned and promote only confirmed objects. AD-22's state bound 
+          +and snapshot/restore obligations apply to families verbatim. C
+          +T-17's AD-13 rungs: active object-set size, objects minted per
+          + bar, interaction records per bar.                            
+      247 +  - **Emissions:** structure objects, lifecycle records, and c
+          +omparison artifacts are **registry record kinds** (CT-06/CT-07
+          +), minted by the composition root, which holds the WriterId an
+          +d the gapless per-(writer, kind) sequence; the library returns
+          + fingerprintable content, never stamped records.              
+      248 +  - **No privileged families:** the V1 seed candidates (swing 
+          +points, horizontal levels from confirmed swings, zones, struct
+          +ure breaks) are candidates only; operator-authored from-scratc
+          +h families are first-class peers under identical law — family 
+          +authoring via the AD-22 extension shape (graduation path inclu
+          +ded) is the primary use case. Families are QMX-owned, versione
+          +d, addable never redefined. Family ids follow AD-9's minting d
+          +iscipline.                                                    
+      249 +  - `qmf-structure` depends on `qmf-core` only in V1. Public s
+          +urface: the CT-17 protocol and core value types; everything el
+          +se private.                                                   
+      250  
+      251  ### Dependency direction
+      252  
+
+● Now the nine cross-AD amendments the findings require:
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+      47  
+      48  - **Binds:** all
+      49  - **Prevents:** cross-repo coordination tax; sandboxes forced t
+          o install the whole framework; namespace shadowing; silent sibl
+          ing-dependency leaks
+      50 -- **Rule:** single repository as a uv workspace; seven installa
+         -ble packages (`qmf-core`, `qmf-registry`, `qmf-data`, `qmf-indi
+         -cators`, `qmf-structure`, `qmf-venue`, `qmf-risk`) importing as
+         - the `qmf.*` namespace; `uv_build` backend; one committed `uv.l
+         -ock`; lockstep release versioning for the seven roster packages
+         -. Mechanics: `qmf` is a PEP 420 implicit namespace — **no distr
+         -ibution may ever contain `qmf/__init__.py`**; every package use
+         -s `src/` layout (`src/qmf/<name>/`); every dependency (includin
+         -g sibling packages) is declared explicitly in that package's `p
+         -yproject.toml`; tier-2 runs each package's tests in an isolated
+         - per-package environment so an undeclared import fails rather t
+         -han resolving through the shared workspace venv. A package may 
+         -declare a **test-only** dependency on a contract's owning packa
+         -ge purely to run its AD-4 contract tests — that is not a ratifi
+         -ed runtime edge. Calendar extensions are separate versioned pac
+         -kages outside the roster, in the same workspace, on **their own
+         - SemVer ladder outside lockstep** (a tzdata pin change is at mi
+         -nimum a minor bump). Shared nouns (Venue, Account, Instrument, 
+         -WriterId) are **defined** in `qmf-core` and their records/lifec
+         -ycle **owned** by `qmf-registry`; edge modules never define sha
+         -red nouns.                                                     
+      50 +- **Rule:** single repository as a uv workspace; seven installa
+         +ble packages (`qmf-core`, `qmf-registry`, `qmf-data`, `qmf-indi
+         +cators`, `qmf-structure`, `qmf-venue`, `qmf-risk`) importing as
+         + the `qmf.*` namespace; `uv_build` backend; one committed `uv.l
+         +ock`; lockstep release versioning for the seven roster packages
+         +. Mechanics: `qmf` is a PEP 420 implicit namespace — **no distr
+         +ibution may ever contain `qmf/__init__.py`**; every package use
+         +s `src/` layout (`src/qmf/<name>/`); every dependency (includin
+         +g sibling packages) is declared explicitly in that package's `p
+         +yproject.toml`; tier-2 runs each package's tests in an isolated
+         + per-package environment so an undeclared import fails rather t
+         +han resolving through the shared workspace venv. A package may 
+         +declare a **test-only** dependency on a contract's owning packa
+         +ge purely to run its AD-4 contract tests — that is not a ratifi
+         +ed runtime edge. Extensions — calendar, indicator, and structur
+         +e alike — are separate versioned packages outside the roster, i
+         +n the same workspace, on **their own SemVer ladder outside lock
+         +step** (a tzdata pin change is at minimum a minor bump); an ext
+         +ension's distribution identity + version are identity fields of
+         + every artifact it produces, and discovery is explicit registra
+         +tion at the composition root, never ambient scanning. Shared no
+         +uns (Venue, Account, Instrument, WriterId, **Bar, Tick/Quote, B
+         +arSpec** — per AD-22) are **defined** in `qmf-core` and their r
+         +ecords/lifecycle **owned** by `qmf-registry`; edge modules neve
+         +r define shared nouns.                                         
+      51  
+      52  ### AD-3 — Quality toolchain [ADOPTED 2026-08-19]
+      53  
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line
+      83    - **The money path is a taint, not a location:** any value th
+          at transitively contributes to an order quantity, price, P&L, o
+          r balance is on the money path regardless of which package comp
+          uted it. Binary float is banned on the money path; a float cros
+          sing back to Money/Price/Quantity passes a **named conversion b
+          oundary with an explicitly stated rounding mode**. The venue ad
+          apter boundary is one such named boundary.
+      84    - **Foreign money is evidence** (mirror of AD-8's foreign-tim
+          e rule): a venue's raw integers are stored verbatim with their 
+          declared scales (e.g. cTrader's 1/100000 wire price scale, per-
+          symbol `digits`, per-account `moneyDigits`); conversions to fra
+          mework values are derived with lineage; corrections are annotat
+          ions, never rewrites.
+      85    - Analytic float series remain permitted off the money path; 
+          their identity is label-derived (AD-10), never a hash of float 
+          bytes.
+      86 +  - **Price subtraction is closed and delta-typed:** `PriceDelt
+         +a(instrument, scale)` is a first-class value distinct from Pric
+         +e; the instrument-scoped pip/point is defined by AD-9's metadat
+         +a records, never hardcoded. The **exact-rational** type (scaled
+         + integer or numerator/denominator) extends this idiom to every 
+         +non-integer parameter (ratios, multiples, tolerances); binary f
+         +loats never appear in parameters or identity. The exact→analyti
+         +c and analytic→exact crossings are the named boundaries pinned 
+         +in AD-22.                                                      
+      87  
+      88  ### AD-8 — Exact time [ADOPTED 2026-08-19, two-lens audited, am
+          ended by contradiction sweep]
+      89  
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line
+      100    - Calendar extensions **force the timezone path to their pin
+           ned `tzdata` package and verify at import** that the resolved 
+           tzdb version equals the pinned one, refusing (`unavailable dep
+           endency`) otherwise — the fingerprint must never attest a tzdb
+            that wasn't used.
+      101    - Foreign timestamps are evidence: stored verbatim with decl
+           ared zone/offset/resolution, plus local receive wall time and 
+           (per the monotonic rule above) an optional boot-scoped receive
+           -monotonic diagnostic; conversions are derived values with lin
+           eage; corrections are annotations, never rewrites. No cTrader 
+           timestamp is trusted as UTC until venue verification (GAP-0037
+           ).
+      102    - "Market-hours calendar", "day-boundary calendar", and "new
+           s calendar" are distinct named concepts; docs rename apart (CO
+           MP-CALENDAR-FEED is the news feed).
+      103 +  - A **civil-time bucket key** — derived from an instant plus
+          + a declared zone and tzdata version — is a legitimate computed
+          + value (seasonality, session-of-day statistics): never a times
+          +tamp, never a causality proxy, and identity-bearing including 
+          +its zone and tzdata version. "Local time is display-only" gove
+          +rns evidence timestamps, not computed grouping keys.          
+      104    - Operational clock rules (chrony on the VPS, slew-only whil
+           e live, no-trade-before-sync, drift bands with typed refusals,
+            gap records for suspect windows, RTC-in-UTC, prop-firm day bo
+           undaries via account-scoped day-boundary calendars) are stated
+            obligations for node/ops docs — carried in companion `time-au
+           dit-devops.md`, binding on later sittings.
+      105  
+      106  ### AD-9 — Instrument, venue, and account identity [ADOPTED 20
+           26-08-19, amended by contradiction sweep]
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+      131  - **Binds:** CT-05; every computed result entering evidence
+      132  - **Prevents:** two computations sharing a label, or one compu
+           tation wearing two; worlds mixing in merged ledgers
+      133  - **Rule:**
+      134 -  - Every result carries: producer **contract format version**
+          - (AD-5's second ladder — package SemVer never enters identity 
+          -and may ride only as display-only provenance), input fingerpri
+          -nts, evidence time range, computation/occurrence identity, and
+          - world. Together these are its identity. Human display names l
+          -ive outside identity.                                         
+      134 +  - Every result carries: **producer contract identity** (the 
+          +configured producer's fingerprint — the CT-16 configured indic
+          +ator, the CT-17 configured family — distinct from the format v
+          +ersion, so `EMA(20)` and `SMA(20)` can never share a label), p
+          +roducer **contract format version** (AD-5's second ladder — pa
+          +ckage SemVer never enters identity and may ride only as displa
+          +y-only provenance), input fingerprints, evidence time range, c
+          +omputation/occurrence identity, **evidence class** (confirmed 
+          +/ unconfirmed / provisional, per AD-25), and world. Together t
+          +hese are its identity. Human display names live outside identi
+          +ty.                                                           
+      135    - **Computation identity vs occurrence:** the computation id
+           entity is content-derived (from label parts) so identical work
+            from two sandboxes deduplicates and merges; the occurrence re
+           cord (when/where/by whom it ran) is separate provenance outsid
+           e identity.
+      136    - **Worlds, defined:** `live` = real venue clocks and quotes
+           , real or demo money — the account role (AD-9) carries money-r
+           eality, so paper/demo runs are `world = live` and stay compara
+           ble to live for alpha-decay sensing; `replay` = a data-driven 
+           injected clock over recorded history (real UTC instants; imple
+           mentable today); `simulated` = synthetic data — **reserved but
+            unusable in V1**: writing `world = simulated` into governed e
+           vidence is a `policy rejection` refusal until the backtesting 
+           sitting defines simulated-time typing.
+      137    - **Namespace rule:** a non-live world may never write into 
+           the live evidence namespace; factory sandboxes never produce t
+           imestamps that enter an evidence store. Identity distinctness 
+           alone does not deliver world separation — storage separation d
+           oes.
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+      146  
+      147  - **Binds:** all packages
+      148  - **Prevents:** silent failures; multi-hour what-broke hunts f
+           or a solo operator
+      149 -- **Rule:** errors and refusals always carry context and are n
+          -ever swallowed; structured logging with a correlation id — fie
+          -ld name `correlation_id`, propagated across every package boun
+          -dary — follows one event across components; every component ex
+          -poses a no-argument `health()` returning a typed health report
+          -. **Logs are not journals:** operator/diagnostic log text rend
+          -ers timestamps as UTC ISO-8601 with explicit Z; journals and e
+          -very evidence stream store int64 UTC ns + writer + sequence pe
+          -r AD-8, with ISO-8601 permitted only as an additional display-
+          -only field excluded from identity. Emitted signals must be exp
+          -ortable to standard monitoring stacks (Prometheus-class metric
+          -s, push alerts); the stack choice itself is node/ops territory
+          -. Full monitoring/evaluation design lands in the data/ops sitt
+          -ing; this obligation binds now.                               
+      149 +- **Rule:** errors and refusals always carry context and are n
+          +ever swallowed; structured logging with a correlation id — fie
+          +ld name `correlation_id`, propagated across every package boun
+          +dary — follows one event across components (pure-computation b
+          +oundaries are exempt: correlation rides the caller's context, 
+          +never a pure value contract's signature); every component expo
+          +ses a no-argument `health()` returning a typed health report —
+          + a "component" here is an owner of external resources or long-
+          +lived state (streaming indicator instances and structure famil
+          +y instances included; pure batch functions excluded). **Logs a
+          +re not journals:** operator/diagnostic log text renders timest
+          +amps as UTC ISO-8601 with explicit Z; journals and every evide
+          +nce stream store int64 UTC ns + writer + sequence per AD-8, wi
+          +th ISO-8601 permitted only as an additional display-only field
+          + excluded from identity. Emitted signals must be exportable to
+          + standard monitoring stacks (Prometheus-class metrics, push al
+          +erts); the stack choice itself is node/ops territory. Full mon
+          +itoring/evaluation design lands in the data/ops sitting; this 
+          +obligation binds now.                                         
+      150  
+      151  ### AD-15 — Concurrency stance [ADOPTED 2026-08-20]
+      152  
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+      158  
+      159  - **Binds:** CT-06, CT-07, CT-09; qmf-registry
+      160  - **Prevents:** a universal recipe card by the back door; a gr
+           aph-database dependency; unrebuildable indexes
+      161 -- **Rule:** per-kind record schemas (each its own versioned co
+          -ntract) share a tiny common header: kind, contract format vers
+          -ion, at-birth parent references (identity-bearing), plus write
+          -r and sequence per AD-8. A record's **stable id is derived fro
+          -m its `fp1` fingerprint** (never minted); created-at and other
+          - occurrence facts are declared occurrence/display-only per AD-
+          -10 — so identical work from two sandboxes deduplicates. Lineag
+          -e that accrues after birth (supersedes, promoted-from, occurre
+          -nce-of, corroborates, disagrees-with) lives **exclusively** in
+          - append-only typed edge records referencing fingerprints; read
+          -ers never union header refs with edges. Edge files are pinned 
+          -JSONL: one `fp1`-canonical JSON object per line, LF-terminated
+          -, append-with-fsync, no rewrite, size-based rotation with a mo
+          -notonic file ordinal; indexes are local and rebuildable. Kinds
+          - are addable, never redefined; Bot and Book kinds are reserved
+          - names whose contents come from their own sittings. No databas
+          -e server.                                                     
+      161 +- **Rule:** per-kind record schemas (each its own versioned co
+          +ntract) share a tiny common header: kind, contract format vers
+          +ion, at-birth parent references (identity-bearing), plus write
+          +r and sequence per AD-8. A record's **stable id is derived fro
+          +m its `fp1` fingerprint** (never minted); created-at and other
+          + occurrence facts are declared occurrence/display-only per AD-
+          +10 — so identical work from two sandboxes deduplicates. Lineag
+          +e that accrues after birth (supersedes, promoted-from, occurre
+          +nce-of, corroborates, disagrees-with, **confirmed-as**, and th
+          +e AD-25 lifecycle/interaction record kinds — confirmation, inv
+          +alidation, interaction) lives **exclusively** in append-only t
+          +yped edge records referencing fingerprints; readers never unio
+          +n header refs with edges. The occurrence/display-only classifi
+          +cation applies to **computations**; a structure object's ancho
+          +r span and lifecycle instants are identity fields and may neve
+          +r be classified away (AD-25). Edge files are pinned JSONL: one
+          + `fp1`-canonical JSON object per line, LF-terminated, append-w
+          +ith-fsync, no rewrite, size-based rotation with a monotonic fi
+          +le ordinal; indexes are local and rebuildable. Kinds are addab
+          +le, never redefined; Bot and Book kinds are reserved names who
+          +se contents come from their own sittings. No database server. 
+      162  
+      163  ### AD-17 — Multiplicity at every layer [ADOPTED 2026-08-20, r
+           esolves DEC-0040]
+      164  
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+      164  
+      165  - **Binds:** qmf-registry; the future Bot/QML schema sessions
+      166  - **Prevents:** hardcoded cardinality-one anywhere in the bot 
+           vocabulary foreclosing experiments
+      167 -- **Rule:** a Bot contains one-or-more confluences; a confluen
+          -ce contains one-or-more levels, triggers, and confirmations; c
+          -omponents may compose (several levels forming one composite le
+          -vel — a composite is its own artifact with lineage to its chil
+          -dren). No layer of the bot vocabulary may hardcode "exactly on
+          -e." Multiplicity collections are canonically ordered by child 
+          -fingerprint ascending unless the owning contract explicitly de
+          -clares the collection order-significant (AD-10 corollary). **B
+          -ot identity is its content**; the Bot↔Book↔account binding is 
+          -a separate dated binding record outside Bot identity — one Bot
+          - at exactly one Book at any time, but re-binding (paper → live
+          -) never mints a new Bot, so paper and live performance stay co
+          -mparable for alpha-decay sensing. Exits are Book/risk/node ter
+          -ritory.                                                       
+      167 +- **Rule:** a Bot contains one-or-more confluences; a confluen
+          +ce contains one-or-more levels, triggers, and confirmations; c
+          +omponents may compose (several levels forming one composite le
+          +vel — a composite is its own artifact with lineage to its chil
+          +dren). No layer of the bot vocabulary may hardcode "exactly on
+          +e." Multiplicity collections are canonically ordered by child 
+          +fingerprint ascending unless the owning contract explicitly de
+          +clares the collection order-significant (AD-10 corollary) — **
+          +causal structure composites invert that default** (children or
+          +der-significant unless declared unordered, per AD-25), and a c
+          +omposite's children may be of **any governed kind** (indicator
+          + results, structure objects, calendar windows), each reference
+          +d by fingerprint. **Bot identity is its content**; the Bot↔Boo
+          +k↔account binding is a separate dated binding record outside B
+          +ot identity — one Bot at exactly one Book at any time, but re-
+          +binding (paper → live) never mints a new Bot, so paper and liv
+          +e performance stay comparable for alpha-decay sensing. Exits a
+          +re Book/risk/node territory.                                  
+      168  
+      169  ### AD-18 — Promotion record skeleton [ADOPTED 2026-08-20]
+      170  
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+      188  
+      189  - **Binds:** CT-12, CT-13, CT-15; qmf-data
+      190  - **Prevents:** research quietly consuming its own exam questi
+           ons; untraceable events; source disagreements merged away
+      191 -- **Rule:** dataset splits are fingerprinted, time-ordered, no
+          -n-overlapping manifests; **each manifest pins exactly one cale
+          -ndar identity + version in-band** and refuses rows carrying an
+          -other calendar identity; boundaries are explicit stored Tradin
+          -gDates or instants (never civil dates), and the seal boundary 
+          -is a **frozen** TradingDate never re-derived under later tzdat
+          -a. The 12-month seal is a no-peek lock (not retention — data i
+          -s kept regardless), **enforced now as a `policy rejection` ref
+          -usal at every qmf-data read boundary — raw, processed, researc
+          -h door, and restored backups alike — independent of the deferr
+          -ed GAP-0016/0017 gates**; the sealed period gets one logged fi
+          -nal look, journaled as a named `control action` subtype, and i
+          -s never silently recycled. The journal is N streams — one per 
+          -producing component, each under its AD-8 `WriterId` with gaple
+          -ss per-(writer, boot-epoch) sequences (a gap signals loss) — r
+          -ecording seven event types (decision, order, fill, risk transi
+          -tion, promotion, data quality, control action); `correlation_i
+          -d` is a linking annotation **excluded from `fp1` identity by e
+          -xplicit versioned declaration**; causal linkage across streams
+          - uses AD-16 typed edges, never timestamps. Source adapters: qm
+          -f-data defines contracts, normalization, validation, and idemp
+          -otent intake keyed on (source, source-native id, revision) — a
+          - provider revision is a new artifact, never an AD-10 collision
+          -; applications own scheduling, retries, supervision, and UI. T
+          -he **news-calendar recorder** keeps provider-native identity a
+          -nd revisions (legal archiving posture remains an open operator
+          - item). Tick sources are separately identified (Dukascopy hist
+          -ory vs broker feed), bid and ask preserved with source timesta
+          -mps; disagreements between sources stay visible via `corrobora
+          -tes` / `disagrees-with` edges, never merged.                  
+      191 +- **Rule:** dataset splits are fingerprinted, time-ordered, no
+          +n-overlapping manifests; **each manifest pins exactly one cale
+          +ndar identity + version in-band** and refuses rows carrying an
+          +other calendar identity; boundaries are explicit stored Tradin
+          +gDates or instants (never civil dates), and the seal boundary 
+          +is a **frozen** TradingDate never re-derived under later tzdat
+          +a. **Records partition into splits by knowledge time** — confi
+          +rmed-at for structure objects, the knowable-at of the last con
+          +tributing input for indicator results; a manifest refuses any 
+          +record whose observed-at precedes a boundary while its confirm
+          +ed-at follows it, unless the manifest's declared embargo cover
+          +s the gap. **Purge and embargo widths are required manifest fi
+          +elds now**, entering the split fingerprint, defaulting to the 
+          +maximum declared (warm-up + confirmation-delay bound) across e
+          +very producer the split cites — a split reused with a longer-h
+          +orizon artifact refuses rather than leaks. The 12-month seal i
+          +s a no-peek lock (not retention — data is kept regardless), **
+          +enforced now as a `policy rejection` refusal at every qmf-data
+          + read boundary — raw, processed, research door, and restored b
+          +ackups alike — independent of the deferred GAP-0016/0017 gates
+          +**; the sealed period gets one logged final look, journaled as
+          + a named `control action` subtype, and is never silently recyc
+          +led. The journal is N streams — one per producing component, e
+          +ach under its AD-8 `WriterId` with gapless per-(writer, boot-e
+          +poch) sequences (a gap signals loss) — recording seven event t
+          +ypes (decision, order, fill, risk transition, promotion, data 
+          +quality, control action); `correlation_id` is a linking annota
+          +tion **excluded from `fp1` identity by explicit versioned decl
+          +aration**; causal linkage across streams uses AD-16 typed edge
+          +s, never timestamps. Source adapters: qmf-data defines contrac
+          +ts, normalization, validation, and idempotent intake keyed on 
+          +(source, source-native id, revision) — a provider revision is 
+          +a new artifact, never an AD-10 collision; applications own sch
+          +eduling, retries, supervision, and UI. The **news-calendar rec
+          +order** keeps provider-native identity and revisions (legal ar
+          +chiving posture remains an open operator item). Tick sources a
+          +re separately identified (Dukascopy history vs broker feed), b
+          +id and ask preserved with source timestamps; disagreements bet
+          +ween sources stay visible via `corroborates` / `disagrees-with
+          +` edges, never merged.                                        
+      192  
+      193  ### AD-22 — Indicator protocol and series vocabulary [ADOPTED 
+           2026-08-20, amended by increment gate]
+      194  
+
+● Now the Conventions and Deferred table updates:
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+      288  
+      289  | Concern | Convention |
+      290  | --- | --- |
+      291 -| Naming | Packages `qmf-<name>`, imports `qmf.<name>` (PEP 42
+          -0, no `qmf/__init__.py`); "market-hours calendar" / "day-bound
+          -ary calendar" / "news calendar" — never bare "calendar"; struc
+          -ture "family" = chart-object type, never a strategy/bot/Book g
+          -rouping; banned vocabulary honored (no "kernel", "plugins", "e
+          -ngine" for backtesting, "exam") |                             
+      291 +| Naming | Packages `qmf-<name>`, imports `qmf.<name>` (PEP 42
+          +0, no `qmf/__init__.py`); "market-hours calendar" / "day-bound
+          +ary calendar" / "news calendar" — never bare "calendar"; struc
+          +ture "family" = chart-object type, never a strategy/bot/Book g
+          +rouping; `BarSpec`, never bare "timeframe"; banned vocabulary 
+          +honored (no "kernel", "plugins", "engine" for backtesting, "ex
+          +am") |                                                        
+      292  | Data & formats | Timestamps int64 UTC ns + per-writer sequen
+           ce + stored source resolution; money as scaled integers with d
+           eclared scale; fingerprints `fp1:sha256:…` via the single qmf-
+           core implementation; journals = evidence encoding, logs = ISO-
+           8601 Z display; every serialized artifact stamps its contract 
+           format version and result label |
+      293  | State & cross-cutting | Evidence is append-only, corrections
+            are annotations; public boundaries fail only via returned typ
+           ed refusals; no component below the composition root reads the
+            system clock; display-only fields are declared in the contrac
+           t, never assumed; public value types are frozen dataclasses, s
+           eams are Protocols; `correlation_id` propagates across every b
+           oundary |
+      294  
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+      338  | Deferred | Why it can wait / where it lands |
+      339  | --- | --- |
+      340  | Look-ahead registration gate + attempt counter (GAP-0016, GA
+           P-0017) | Operator-deferred to the backtesting sitting, conseq
+           uence accepted: artifacts registered before then carry no caus
+           ality evidence |
+      341 -| Annotation read-resolution rule | Data-store contract detail
+          - at documentation time; until then no package folds correction
+          -s inline |                                                    
+      341 +| Annotation read-resolution rule (corrections half) | Data-st
+          +ore contract detail at documentation time; until then no packa
+          +ge folds **corrections** inline — the lifecycle/interaction fo
+          +ld half was pulled forward and ratified in AD-25 |            
+      342  | Full Bot/QML schema, Book binding contract | Own session; AD
+           -17 multiplicity invariant binds it |
+      343  | Promotion evidence checklist + the gate itself | Accretes fr
+           om data/backtesting/risk sittings; gate is platform work, code
+           d late |
+      344  | Five-hats sweep findings (44 items, reviews/five-hats-sweep.
+           md) | Input register for every remaining sitting |
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 3 lines
+      344  | Five-hats sweep findings (44 items, reviews/five-hats-sweep.
+           md) | Input register for every remaining sitting |
+      345  | Operator-used structure families beyond the seed four (SMC/I
+           CT-class objects, chart patterns) | Added family-by-family und
+           er AD-25's precise-rule bar; nothing forecloses them |
+      346  | MIS fan-out wiring for heavy indicators; which indicators sh
+           ip in the V1 catalog | Node territory (wiring) / documentation
+            time (catalog); AD-22/AD-24 bind both |
+      347 +| Six-stage live-path latency decomposition (tick received → e
+          +vidence write → indicator update → decision → risk evaluation 
+          +→ order submitted), each stage its own AD-13 rung | Venue sitt
+          +ing records it, with the indicator rungs (AD-22) already in pl
+          +ace — five-hats T-3 |                                         
+      348 +| L2 depth / footprint / order-book series vocabulary | Outsid
+          +e V1 series form (AD-22); ungoverned research lane until a lat
+          +er pass widens it |                                           
+      349 +| Bar-builder derivation contract details (renko/tick/volume a
+          +ggregation rules per BarSpec kind) | qmf-data derivation, deta
+          +iled per contract at documentation time; BarSpec noun ratified
+          + in AD-22 |                                                   
+      350  | Venue secrets, order state machine, first broker, adapter co
+           ntract, cTrader time/BID verification (GAP-0035..0038) | Venue
+            sitting; cTrader time research delivered as input |
+      351  | Book/BMS, exits, paper mode, news windows, SQS, formulas, st
+           op-out, same-tick priority (GAP-0039..0046) | Risk sittings; a
+           pplication behavior stays out of the framework |
+      352  | Backtesting (GAP-0048, ticket 008) incl. simulated-time typi
+           ng (unlocks `world = simulated`) and backtest-mimics-live idea
+            | Own sitting; operator not ready |
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line
+      329      qmf-risk/               # module: Books/BMS v1 (risk sitti
+           ng)
+      330    extensions/
+      331      qmf-calendar-forex/     # first market-hours calendar (tzd
+           ata pinned, own SemVer)
+      332 +    (custom indicator / structure-family extensions land here 
+          +too — AD-2/AD-22 mechanics)                                   
+      333  ```
+      334  
+      335  Deployment & environments (seed): operator workstation Windows
+            11 → planned Linux; always-on Linux VPS runs the trading node
+            + tick recorder (clock rules per AD-8); factory agents in dis
+           posable sandboxes (why AD-6's zero-dep core and AD-13's import
+            budget exist).
+
+● Spine repaired. Logging the gate and amendments to the memlog, then the final
+  lint:
+
+  Ran 4 shell commands (ctrl+o to expand)
+
+● Lint clean, sitting closed. Updating the persistent memory so the next session
+  starts current:
+
+  Recalled 1 memory, wrote 3 memories (ctrl+o to expand)
+
+● The sitting is closed: all four gaps ratified, the spine stress-tested by six
+  reviewers, every fix applied, lint clean, and the memlog and memory updated.
+
+  What you now have (in plain words):
+
+  - GAP-0031 — the indicator rulebook (AD-22). Two modes (research burst + live
+    streaming) with an automatic always-agree test, warm-up on the tin, gaps
+    flagged never guessed, shared instances so 40 bots read one calculation. The
+    stress test forced it wider than my first draft: indicators can now take
+    several inputs (correlations, spreads), any bar type (renko, tick, volume —
+    not just time candles), calendars and news events as declared inputs, and
+    one indicator can feed another. Every output now records when it became 
+    knowable — which kills the single most common cheat in retail backtesting
+    (reading a 4-hour bar before it closes).
+  - GAP-0032 — the arithmetic referee (AD-23). TA-Lib 0.7.1 pinned down to the
+    exact build hash and its hidden settings (which really do change numbers).
+    Where TA-Lib has no formula — VWAP, Ichimoku, anything you invent — our
+    implementation becomes the official one, under the same no-silent-changes
+    law.
+  - GAP-0033 — light vs heavy (AD-24). A clear definition: light means declared
+    and proven — speed, memory, history window, instant answer. Everything is
+    heavy by default until real measurements exist, so nothing sneaks onto the
+    live path on a promise. Session-long running statistics (like session VWAP)
+    stay eligible for the live path — the first draft would wrongly have exiled
+    them.
+  - GAP-0034 — chart objects (AD-25). Every level/zone/swing carries when it
+    appeared, when it was confirmed, and when it died — appended, never
+    rewritten — plus a new interaction record so "how much of this zone has been
+    used up" works without breaking the never-rewrite law. No trading school is
+    named anywhere; your from-scratch objects are equal citizens, and a working
+    plain-Python experiment has an official graduation path into the library.
+
+  The stress test you asked for delivered. The two edge-case agents walked 46
+  concepts from across traditions plus two deliberately absurd mixed
+  experiments. Before the fixes, most couldn't be written into governed
+  evidence; after, all of them can — and not one fix reversed anything you
+  ratified. The adversarial reviewer separately found 36 ways two build agents
+  could have diverged; all closed.
+
+  Two honest notes, eyes open: a bot leg that depends on a discretionary human
+  read ("the narrative is bullish") can never carry governed evidence — that's
+  the system working as you agreed, but it's a real trade-off. And research in
+  plain Python remains completely free; all this rigor sits only at the evidence
+  door.
+
+  Where things stand: the spine now covers GAP-0001..0034 (AD-1..AD-25). Venue
+  (35–38), risk (39–46), and backtesting sittings remain parked, with
+  paste-ready prompts in next-session-prompts.md. After those and the PRD, the
+  exit path is unchanged: /documentation-factory to build the docs knowledge
+  base, then /queue-publish for the factory. Everything is in
+  _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ —
+  spine, memlog, and the six review reports (the two edge-case reports are worth
+  keeping; they're the test list for when the contracts get written). Good
+  night.
+
+✻ Baked for 1h 6m 22s
+❯ Alright you give me a prompt for the documentation factory for your run       
+  please in chat pleaseI'm going to use the venue setting prompt in the next    
+  session prompts document                                                      
+
+● Here it is — paste this into a fresh session:
+
+  /documentation-factory Change mode: fold the 2026-08-20 indicator/structure
+  architecture increment into the existing docs/ knowledge base. Do NOT
+  re-document the whole project — scope is exactly what this increment ratified.
+
+  AUTHORITY (in order):
+  1. _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/AR
+  CHITECTURE-SPINE.md
+     — AD-22..AD-25 are new (indicator protocol + series vocabulary, canonical
+     arithmetic, light/heavy, causal structure lifecycle); AD-2, AD-7, AD-8,
+     AD-12, AD-14, AD-16, AD-17, AD-21 carry increment-gate amendments; the
+     Stack, Conventions, Structural Seed, and Deferred tables changed too.
+  2. The run memlog (.memlog.md, entries dated 2026-08-20 for GAP-0031..0034)
+     — rationale, operator riders, and provenance; the ledger entries cite it.
+  3. reviews/review-ict-edge-cases.md and
+  reviews/review-general-ta-edge-cases.md
+     — the input register for CT-16/CT-17 contract writing: their concept walks
+     are the test list the contracts must express.
+  reviews/review-adversarial-3.md
+     holds the closing clauses' reasoning.
+
+  UPDATE AT MINIMUM:
+  - docs/gap-report.md — GAP-0031, 0032, 0033, 0034 move from open to answered
+    (0033 was the sole nonblocking gap; now closed).
+  - docs/components/qmf-indicators.md and qmf-structure.md — authority
+    boundaries, behavior, failure modes now derive from AD-22..25; remove the
+    resolved GAP() markers.
+  - docs/contracts/ct-16-indicator.yaml and ct-17-causal-structure.yaml — fill
+    schema/invariants from the ADs (identity = entire declared configuration;
+    output schema + knowable-at + presence map; lifecycle records + anchor span
+    + interaction records; evidence class).
+  - docs/decisions/ADR-0006-indicators-and-structure.md — supersede its
+    GAP-defined placeholders.
+  - docs/glossary.md — add BarSpec (retire bare "timeframe"), presence map,
+    knowable-at, evidence class (confirmed/unconfirmed/provisional), anchor
+    span, interaction record, exact rational, PriceDelta, derived-series
+    identity, standing object; "family" = chart-object type only.
+  - docs/registry/variables.yaml — canonical_indicator_reference is now
+    TA-Lib 0.7.1 + 0.7.1 pinned by lockfile artifact hash + reference-
+    configuration record.
+  - docs/architecture/stack.md, lenses (performance budgets: new AD-13 rungs;
+    observability: AD-14 component definition + correlation exemption),
+    traceability, and the decision ledger (one entry per ruling, provenance =
+    memlog entries 50..62).
+
+  STANDING RULES (operator-ratified, binding on doc prose):
+  - School-neutral: no trading-school names in any rule or contract; school
+    examples may appear only as illustrations, never as vocabulary.
+  - Document the plain-Python escape hatch and the graduation path (experiment
+    → extension with lineage edge) prominently — it is the design's point.
+  - AD ids stable; banned vocabulary honored; decisions in docs, rationale in
+    the ledger; append-only history conventions unchanged.
+  - Venue/risk/backtesting gaps (0035+) stay open — do not touch their docs.
+
+  One sequencing note, so you decide with eyes open: the ratified pipeline runs
+  documentation-factory after BMad fully exits (venue, risk, backtesting
+  sittings plus the PRD are still ahead), and each remaining sitting will amend
+  the spine again — meaning docs updated now will need another change-mode pass
+  later. Running it now is still reasonable if you want the closed areas
+  queryable by agents immediately; it just isn't free. Your call, and the prompt
+  works either way.
+
+✻ Churned for 40s
+
+❯ c:\Users\Mubarak\Desktop\QMX\_bmad-output\planning-artifacts\architecture\arc 
+  hitecture-QMX-2026-08-19\next-session-prompts.md    No, no, no, no, no, no.   
+  Hey, hey, hey. No, the idea was you see, if you look at this file, where all  
+  your prompts were, even the prompt that started this session. You will        
+  realize that I'm actually, I can run all these sessions differently and I can 
+  be updating the documentation factory. So, right now, I'm actually not        
+  because there is one run still going on. It has run around 40, okay, no,      
+  there are around 21 agents. That's a lot, okay. And it's still, and it's      
+  still not done. That's because the documentation factory skill is very        
+  thorough. Okay, so which means for now I won't run it, but I'm going to run   
+  the other prompts, okay? And it's not that with my eyes open, my eyes are     
+  open, yeah, and we are running this. Okay, I'll, you know what? Never mind.   
+  In fact, let me go to venue. Venue is next. But what is venue about? Seems    
+  like a simple thing. Alright, nice talk though                                
+
+● Venue is the opposite of simple — it's the sitting where QMF stops being math
+  on your own disk and starts talking to a broker with real money behind it. It
+  covers GAP-0035..0038, and your five-hats review routed ten findings there,
+  including the one it called the highest-consequence undefined behavior in the
+  whole system.
+
+  In plain words, four decisions:
+
+  1. Secrets (GAP-0035). Where broker credentials and login tokens live, how
+     they rotate, what happens when one leaks. Boring until the day it isn't.
+  2. Safe connectivity (GAP-0036) — the heavy one. What an order's life looks
+     like (sent → accepted → filled → or lost?), how the system makes sure a
+     retried order can't accidentally fire twice, how it re-checks reality with
+     the broker after every disconnection, and who has authority to flatten
+     everything when the VPS dies. This is also where your kill switch gets its
+     contract — including the nasty case the tracker flagged: what "kill" means
+     when the broker connection is down at the moment you press it. A kill
+     switch that returns an error message has not killed anything.
+  3. First broker (GAP-0037). Which cTrader broker/account goes first, and
+     verifying against primary docs how their candles are priced (bid vs mid) —
+     the research file from the earlier subagent dig (ctrader-time-research.md)
+     is already sitting in the workspace as input.
+  4. The adapter doorway (GAP-0038). The neutral shape every future venue
+     (crypto exchange, stock broker) must fit through, so adding broker number
+     six never means rewriting the framework — the same no-lock-in principle
+     you've been enforcing everywhere else, applied to brokers.
+
+  One thing the venue sitting must settle that sounds technical but decides a
+  lot downstream: whether the broker connection is async or synchronous (the
+  five-hats review called it the single largest un-asked developer question —
+  getting it wrong means rewriting the adapter later). And a sequencing fact
+  already baked into the prompts: venue runs before risk deliberately, because
+  the risk sitting's same-tick priority rules can only be written against what
+  the broker can actually do.
+
+  So no — not a simple one. It's arguably the most consequential sitting left.
+  Good luck with the run, and good night.
+
+✻ Crunched for 27s
+
+✻ Claude resuming /loop wakeup (Aug 20 1:58am)
+
+● This was the fallback timer from earlier — everything it guarded is already
+  done: all six reviewers reported, fixes applied, spine re-finalized, summary
+  delivered. Wakeup cancelled; nothing left running.
+
+✻ Baked for 13s

@@ -1,35 +1,56 @@
 ---
 id: ADR-0007
-title: Venue-neutral integration with cTrader first
+title: Venue-neutral integration — secret lifecycle, command uncertainty, and the adapter contract
 type: adr
 status: provisional
 component: COMP-QMF-VENUE
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-CTRADER]
-decisions: [DEC-0059, DEC-0060, DEC-0061]
-sources: [DEC-0059, DEC-0060, DEC-0061, DEC-0064]
-generated: 2026-08-18
-verified: 2026-08-18
+decisions: [DEC-0059, DEC-0060, DEC-0061, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0140, DEC-0141, DEC-0142]
+sources: [DEC-0059, DEC-0060, DEC-0061, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0140, DEC-0141, DEC-0142, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-venue-facts.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/.memlog.md]
+generated: 2026-08-20
+verified: 2026-08-20
 stale_after: 1y
 ---
 
-# ADR-0007: Venue-neutral integration with cTrader first
+# ADR-0007: Venue-neutral integration — secret lifecycle, command uncertainty, and the adapter contract
 
-Date: 2026-08-18. Status: provisional pending operator ratification.
+Date: 2026-08-20 (supersedes the 2026-08-18 placeholder text of this ADR, which recorded only the venue-neutral module split and its cTrader-first intent and left capability discovery, command fields, order state, idempotency, reconciliation, and secrets GAP-defined). Status: provisional pending corpus re-ratification; the underlying rulings are operator-ratified (venue architecture sitting, 2026-08-20).
 
 ## Context
 
-QMF needs a first broker connection without placing cTrader assumptions inside qmf-core or conflating connectivity with future backtesting parity.
+The 2026-08-18 baseline established `COMP-QMF-VENUE` as a small venue-neutral integration module whose first adapter targets the cTrader Open API from Python (never MQL), with a public seam neutral enough for later stock and crypto adapters (DEC-0059, DEC-0060, DEC-0061). It left GAP-0035 through GAP-0038 open: no secret lifecycle, no command vocabulary or uncertainty law, no ratified venue facts, and no adapter contract or capability-discovery mechanism.
+
+The cTrader venue research was parked as forum-grade evidence and then re-verified against primary sources. The earlier claims (a 17:00-New-York daily-bar boundary; BID-derived trendbars) carried only 2013-forum staff authority with counter-evidence on record; primary-source re-verification demoted them, replacing DEC-0123 (DEC-0135). The operator rejected premature closure: declining to freeze the broker on first ask, then ruling broker identity out of architecture entirely (DEC-0139), and requiring a trading-node order-path study before the command and reconciliation scoping could be settled (DEC-0137). The node study stays reference-only evidence — its runtime material lives in the standing node ledger, not in QMF docs (DEC-0142).
 
 ## Options considered
 
-1. **MQL implementation** — rejected in favor of the Python cTrader Open API path.
-2. **One broker-exam bundle** — rejected; the term is dead and parity belongs to future backtesting.
-3. **Small venue-neutral module with a first adapter** — selected.
+1. **Adopt the official Spotware `OpenApiPy` SDK** versus consuming the proto message definitions only — rejected: the SDK's pinned Twisted reactor imposes a runtime and violates AD-6's platform-imposing rule; only the proto message definitions (data, not code) are consumed, and zero Spotware code runs in QMX (DEC-0141).
+2. **Mint a fifth market-data contract** versus homing venue market data at the existing evidence intake — rejected: ticks, bars, depth, gap-replay backfill, and historical paging enter as CT-10 source observations through qmf-data's CT-15 intake, application-mediated, with no fifth contract and no new dependency edge (DEC-0138).
+3. **Hardcode the 17:00-New-York daily boundary and BID-derived bars** versus measure-per-broker at first connection — rejected with the corrected evidence grades: both are forum-grade claims, never invariants; the adapter measures the actual daily boundary and bar price basis per broker at first connection, re-verifies with a continuous monitor, and stores the result as per-broker configuration; QMF's own forex 17:00-NY market-hours calendar remains its accounting rule, independent of venue bars (DEC-0135, DEC-0141).
+4. **Freeze the broker (IC Markets) as a framework commitment** versus broker identity as deployment configuration — rejected: opaque `VenueId`/`AccountId` identity and account bindings are sufficient; the platform (cTrader) fixes the protocol and the adapter, while the broker behind it is a per-deployment fact whose measured behaviors live in the venue-observation profile, never in code (DEC-0139).
 
-## Decision
+## Ruling
 
-COMP-QMF-VENUE is a small Python integration module. Its first adapter targets cTrader Open API, and its public seam remains neutral enough for later stock and crypto adapters. (DEC-0059, DEC-0060, DEC-0061)
+- **Venue facts (DEC-0135):** the consolidated `ctrader-venue-facts.md` bundles are ratified as venue facts and standing adapter obligations. Documentation-grade facts include per-field Unix ms UTC timestamps with named epoch exceptions, no server clock (so receive-time recording is mandatory), BID/ASK-selectable historical ticks, rate limits of 50 req/s non-historical plus 5 req/s historical per connection, a 10-second heartbeat safe bound, a ~30-day access token with a never-expiring refresh token, three independent numeric scale systems (market-data prices in the 1/100000 wire scale, execution prices as raw doubles, a `moneyDigits` exponent on nine messages), newest-first delta-encoded tick history with a documented one-week span cap, and gappy-by-design trendbars. Demoted claims (the 17:00-NY boundary, BID-derived bars) are never hardcoded; every undocumented behavior is a verify-or-refuse obligation.
+- **AD-26 — secret lifecycle (DEC-0136):** QMF components handle secret **references**, never values. qmf-core ships typed `SecretRef` and `SecretValue`; a `SecretValue` never renders its value (repr, str, serialization, and logging all yield the reference id) and a tier-1 secret-scan gate rides the check pipeline. A secret reference is an opaque minted id that never encodes venue, broker, account, environment, or key material. Values are injected at the composition root from the deployment environment's protected store. An account-binding record's identity is `(VenueId, AccountId, role, world)`; its secret reference is occurrence/display-only and excluded from `fp1`. The adapter's connection manager is the single component permitted to hold secret values in memory, for a session's lifetime, through a core-defined `SecretStore` port; a credential is a one-writer stream (exactly one live refresher), rotation stores the new secret before discarding the old, and compromise recovery is a documented, tested drill (cTID re-authorization, credential reset, store replacement, session restart).
+- **AD-27 — commands and the uncertainty law (DEC-0137):** the command stream — the unit of `UNKNOWN` blocking, `WriterId` ownership, and the gapless per-writer sequence — is the `(VenueId, account)` pair. The command vocabulary is exactly four kinds — `place_order`, `cancel_order`, `close_position`, `close_all` — typed per kind on qmf-core nouns, addable never redefined, with QMF-owned order-parameter vocabulary and required typed close scopes. Every well-formed submission resolves to `accepted-by-venue | rejected-by-venue | denied-locally | UNKNOWN`; `denied-locally` is an outcome, never a refusal. `UNKNOWN` is a state, not an error: a transport error, timeout, or disconnect mints an explicit `UNKNOWN` observation carrying its trigger and the submission deadline (a declared, application-injected adapter parameter under do-not-default). While an `UNKNOWN` is outstanding the adapter refuses new commands on that stream and never clears its own block; unblocking is an explicit `resolve_unknown` call by the application. Recording precedes interpretation: every inbound venue event is stored verbatim and journaled before any state evaluation, and the order-state machine is a read-time fold over the observation stream. No QMF component retries, flattens, or invents terminal state on `UNKNOWN`.
+- **AD-28 — adapter contract and capability discovery (DEC-0138):** one neutral port, four contracts — CT-18 (capability), CT-19 (command), CT-20 (event + reconciliation), CT-21 (secret/session) — defined by qmf-venue on qmf-core nouns; per-venue adapters implement them; nothing imports qmf-venue; the composition root wires. The venue write path creates no dependency edge: qmf-venue emits through qmf-core-defined sink protocols (`ObservationSink`, `JournalSink`, `RecordSink`, `SecretStore`) injected at the root, and a storage failure triggers AD-27's command-pipe block in the component that holds the `WriterId`. The capability surface is two artifacts: a static, credential-free capability declaration and a per-`(VenueId, account)` venue-observation profile produced post-connect by the verify-or-refuse verification suite. Foreign values store verbatim (floats included); a binary float is never identity and crosses AD-7's named boundary at receipt to a scaled integer. The six-stage live-path latency decomposition is recorded as named rungs with no numeric budgets until measured.
+- **Broker identity (DEC-0139):** which broker fronts the cTrader platform is deployment configuration, never architecture; AD-9 gains the platform-vs-broker distinction, with measured behaviors (daily-bar boundary, trendbar price basis) living in the venue-observation profile and per-broker configuration.
+- **Amendments (DEC-0140, DEC-0141):** the increment reviewer gate produced 49 findings, all applied at desk in one pass with AD ids stable, rewriting AD-26/27/28 in place (DEC-0140). Seven ratified areas outside the venue ADs were amended (DEC-0141): AD-7 gained the foreign-float law; AD-8's cTrader clauses resolved on the ratified facts, minting a measured, verified daily boundary as a venue-scoped market-hours calendar identity that gives venue-native bars a legal BarSpec anchor; AD-9 gained the platform-vs-broker distinction; AD-12 gained role-scoped namespaces and the sandbox provenance field; AD-15 gained the schedulable-duties carve-out for periodic session duties; the dependency-direction section gained the venue-sink note; and the Stack register pinned the Spotware proto integer release tag (currently 91) with the official SDK ruled reference-only. No ratified ruling was reversed; every fix is additive contract surface.
+- **Node boundary (DEC-0142):** trading-node runtime material stays out of QMF documentation. The order path, protection funnel, startup semantics, and flatten-authority assignment are node/risk-sitting territory; QMF records only the contract surface AD-26 through AD-28 define and references `tracker/trading-node-notes.md` as a pointer, never absorbing it.
+
+## Architecture preflight — reuse-or-new verdict
+
+Preflight verdict: reuse COMP-QMF-VENUE — the ratified design lands entirely in the existing venue module and its four reserved contracts; no new component. CT-18..CT-21 existed as reserved shapes and are filled, not added; market data reuses CT-10/CT-15 rather than minting a fifth contract; the sink protocols land in qmf-core as core-owned ports. No status:dead entry covers any of this ground.
 
 ## Consequences
 
-Capability discovery, command fields, order state, idempotency, reconciliation, and secrets remain GAP-defined. Connectivity does not authorize trading, size risk, or claim broker parity.
+- CT-18, CT-19, CT-20, and CT-21 carry ratified schemas and invariants; their component specs derive authority boundaries and failure modes from AD-26..AD-28 instead of GAP markers. GAP-0035 through GAP-0038 move to answered.
+- Vocabulary is binding on all documentation: `UNKNOWN` is a state, never an error; `denied-locally` is an outcome, never a refusal; `BarSpec` never bare "timeframe". A venue-native daily boundary becomes a legal BarSpec anchor only once measured and verified.
+- The venue write path stays default-deny: qmf-venue emits through core-owned sink protocols injected at the root, creating no dependency edge; the connection manager is the sole owner of venue sessions and the sole holder of secret values in memory.
+- The design is ratified, but connectivity authorizes nothing on its own: no credential use, external connection, order submission, or live-money action follows from these docs. Implementation authorization arrives only through the factory pipeline.
+- Deferred by design, not omitted: order-path internals, the protection funnel, and flatten-authority assignment are node/risk territory (DEC-0142); GAP-0039 through GAP-0046 (risk sitting) stay open and untouched here.
+
+## Blast radius
+
+Component specs qmf-venue (rewritten), qmf-core (SecretRef/SecretValue, sink ports, foreign-float boundary), qmf-data (market data homed at CT-10/CT-15), and ctrader (venue-facts amendment ripple); contracts CT-18, CT-19, CT-20, CT-21 (filled) plus amendment ripple across CT-01..CT-07, CT-10, CT-13, CT-15; registry `variables.yaml` (`venue_trendbar_price_basis` and related measured-per-broker configuration keys); constitution (L34, L35 — the venue secret-reference and command-uncertainty laws); glossary (secret reference, connection manager, command stream, four-outcome law, UNKNOWN, denied-locally, venue-observation profile, capability declaration, compound command, reconciliation verdict); scenario SCN-0005 (uncertain venue submission, now ratified behavior); security, observability, ops, performance, testing, and data lenses; gap report; index and architecture overview counts.

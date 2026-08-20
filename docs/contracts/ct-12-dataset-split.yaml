@@ -1,31 +1,53 @@
 id: CT-12
 name: Dataset release, split, and holdout contract
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-DATA
-consumers: []
-active_consumers: []
-intended_consumers: [COMP-QMF-REGISTRY, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE]
-wiring_status: reserved-consumers-unwired
+consumers: [COMP-QMF-DATA]
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0044, DEC-0046]
-gaps: [GAP-0005, GAP-0024]
-purpose: "Identify reproducible research datasets and keep the final recent holdout outside the default research path."
+decisions: [DEC-0119, DEC-0117, DEC-0106, DEC-0108, DEC-0110, DEC-0109, DEC-0103, DEC-0044, DEC-0046, DEC-0121, DEC-0131]
+gaps: [GAP-0016, GAP-0017]
+purpose: "Define fingerprinted, time-ordered, non-overlapping dataset-split manifests and enforce the newest sealed-window no-peek lock as a read-boundary refusal, so research never consumes its own held-out evaluation period."
 invariants:
-  - "Research data is split by default."
-  - "All history remains stored while the newest approximately twelve months form a sealed final holdout."
-  - "Registry, Indicators, and Structure are intended consumers only; no active dependency or read handoff is assigned before GAP-0024 resolves release and access semantics."
-  - "Release fields, split names, exact boundary arithmetic, reopening, one-look authorization, audit, and leakage rules remain unresolved."
+  - "Every dataset split is a fingerprinted, time-ordered, non-overlapping manifest; its stable id is derived from its fp1 fingerprint, never minted (DEC-0119, DEC-0108)."
+  - "Each manifest pins exactly one calendar identity and version in-band and refuses any row carrying a different calendar identity as a policy rejection, never a silent rescale (DEC-0119, DEC-0106, DEC-0109)."
+  - "Split and seal boundaries are explicit stored TradingDates or Instants, never civil dates (DEC-0119, DEC-0106)."
+  - "The seal boundary is a frozen TradingDate, never re-derived under a later tzdata version; re-derivation under a newer calendar rule-set or tzdata version mints a new manifest with its own fingerprint and a lineage edge, never a rewrite (DEC-0119, DEC-0106, DEC-0103)."
+  - "Research data is split by default into train, validation, and a sealed-test holdout (DEC-0046, DEC-0119)."
+  - "The newest sealed window (registry:historical_holdout_months) is a no-peek lock, not a retention rule; all history is kept forever regardless (DEC-0044, DEC-0119)."
+  - "The seal is enforced now as a policy-rejection refusal at every qmf-data read boundary (raw archive, processed, research door, and restored backups alike), independent of the deferred look-ahead and attempt-counter gates (DEC-0119, DEC-0121, DEC-0109)."
+  - "The sealed period gets exactly one logged final look, journaled as a named control-action subtype in CT-13, and is never silently recycled into research (DEC-0119)."
+  - "Purge and embargo widths are required manifest fields, entering the split fingerprint and defaulting to the maximum declared warm-up-plus-confirmation-delay bound across every producer the split cites; a split reused with a longer-horizon artifact refuses rather than leaks (DEC-0131)."
+  - "Records partition into splits by knowledge time — confirmed-at for structure objects, the knowable-at of the last contributing input for indicator results; a manifest refuses any record whose observed-at precedes a boundary while its confirmed-at follows it unless the declared embargo covers the gap (DEC-0131)."
+  - "Split manifests are instantiated per world; a read that crosses worlds is a policy-rejection refusal (DEC-0117, DEC-0110, DEC-0109)."
+  - "No package outside the ratified qmf-registry to qmf-data edge may consume split manifests until its dependency edge is ratified under default-deny (DEC-0120)."
+  - "Every manifest stamps its integer contract format version; an incompatible change mints the next version plus a migration note (DEC-0103)."
 schema:
-  type: null
-  type_gap: GAP-0024
-  fields: null
-  fields_gap: GAP-0024
-  enums: null
-  enums_gap: GAP-0024
-  units: null
-  units_gap: GAP-0024
-  nullability: null
-  nullability_gap: GAP-0024
+  type: split-manifest  # fp1-canonical serialized artifact, one manifest per dataset split (DEC-0119, DEC-0108)
+  fields:
+    - "split_id: stable id derived from the manifest fp1 fingerprint, never minted (DEC-0108)"
+    - "calendar_identity: the one calendar rule-set identity the manifest pins in-band, e.g. forex-17NY (DEC-0119, DEC-0106)"
+    - "calendar_version: the pinned calendar rule-set plus tzdata version, carried in-band and identity-bearing (DEC-0119, DEC-0106)"
+    - "segments: ordered, time-ordered, non-overlapping list of split segments (DEC-0119)"
+    - "segment.role: the split role of each segment (DEC-0046)"
+    - "segment.boundary: an explicit stored TradingDate or Instant, never a civil date (DEC-0119, DEC-0106)"
+    - "seal_boundary: a frozen TradingDate marking the newest sealed window, never re-derived under later tzdata (DEC-0119, DEC-0106, DEC-0044)"
+    - "purge_width: required manifest field entering the split fingerprint; defaults to the maximum declared producer warm-up-plus-confirmation-delay bound the split cites (DEC-0131)"
+    - "embargo_width: required manifest field entering the split fingerprint; covers the observed-at/confirmed-at knowledge-time gap at a split boundary (DEC-0131)"
+    - "world: the world this manifest is instantiated for; splits are per-world (DEC-0117, DEC-0110)"
+    - "format_version: the integer contract format version stamped into every manifest (DEC-0103)"
+  enums:
+    - "segment.role: train | validation | sealed-test  (default research split; DEC-0046, DEC-0119). sealed-test = the untouched-test split of DEC-0046; 'seal' vocabulary per DEC-0119"
+    - "world: live | replay | simulated  (simulated reserved-unusable in V1; DEC-0110)"
+    - "seal-read and cross-calendar and cross-world refusal category: policy rejection (DEC-0119, DEC-0109)"
+  units:
+    - "segment.boundary and seal_boundary: TradingDate bound to the manifest's pinned calendar identity (DEC-0106)"
+    - "instant-form boundary alternative: int64 UTC nanoseconds since the Unix epoch, POSIX no-leap-second (DEC-0106)"
+    - "split_id and referenced fingerprints: fp1:sha256:<hex> (DEC-0108)"
+    - "sealed window length: registry:historical_holdout_months, approximately twelve months (DEC-0044, DEC-0119)"
+  nullability:
+    - "calendar_identity and calendar_version are mandatory in-band; a manifest without a pinned calendar identity is an invalid input refusal (DEC-0119, DEC-0109)"
+    - "every segment boundary and the seal_boundary are present; a boundary is a TradingDate or Instant, never a civil date, and per fp1 an absent value is an omitted key, never null (DEC-0119, DEC-0108)"
+    - "a row whose calendar identity differs from the manifest's pinned one is refused as a policy rejection and never silently rescaled (DEC-0119, DEC-0106)"
+    - "purge_width and embargo_width are mandatory manifest fields; a manifest omitting either is an invalid input refusal, and both enter the split fingerprint (DEC-0131, DEC-0109)"

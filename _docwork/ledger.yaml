@@ -295,11 +295,12 @@ ledger:
   - id: DEC-0032
     title: "Six qmf-core freeze choices"
     statement: "The UTC clock encoding, instrument identity, canonical indicator arithmetic, backtest fidelity taxonomy, SR* threshold, and result-label tuple are not frozen contracts."
-    status: open
-    rationale: "The source explicitly calls all six proposals pending confirmation during documentation."
+    status: superseded
+    rationale: "The source explicitly calls all six proposals pending confirmation during documentation; the 2026-08-19/20 architecture sitting ratified three of the six."
     sources: [EXT-0097, EXT-0098, EXT-0099, EXT-0100, EXT-0101, EXT-0177]
     component: COMP-QMF-CORE
-    tags: [open-design, source-unratified]
+    tags: [historical, open-design]
+    superseded_by: DEC-0124
 
   - id: DEC-0033
     title: "qmf-registry V1 boundary"
@@ -332,11 +333,12 @@ ledger:
   - id: DEC-0036
     title: "Registry identity study model"
     statement: "The study-proposed fingerprint, charter, occurrence, kind-plus-id, and Bot revision model remains a candidate design rather than a frozen registry schema."
-    status: open
-    rationale: "The study was delivered but the transcript warns that study output does not auto-adopt."
+    status: superseded
+    rationale: "The study was delivered but the transcript warns that study output does not auto-adopt; the 2026-08-20 sitting ratified the per-kind record and lineage design."
     sources: [EXT-0194, EXT-0195, EXT-0196, EXT-0203]
     component: COMP-QMF-REGISTRY
-    tags: [study-delivered, source-unratified]
+    tags: [historical, study-delivered]
+    superseded_by: DEC-0114
 
   - id: DEC-0037
     title: "Graph database in QMF V1"
@@ -369,15 +371,15 @@ ledger:
   - id: DEC-0040
     title: "Bot-to-confluence cardinality"
     statement: "The number of confluences contained by one Bot is unresolved."
-    status: conflict
-    rationale: "An earlier definition describes the Bot around a single confluence and Book binding, while the later direct correction permits multiple confluences."
+    status: superseded
+    rationale: "The conflict was resolved by the operator's GAP-0018 ruling (2026-08-20): one-or-more confluences, generalized to multiplicity at every layer."
     sources: [EXT-0161, EXT-1126]
     component: COMP-QMF-REGISTRY
-    tags: [conflict, contract]
+    tags: [historical, contract]
     conflict:
       - "A Bot is built around one confluence plus a not-yet-designed Book binding."
       - "A Bot may contain multiple confluences."
-    recommendation: "Adopt one-or-more confluences per Bot because the multiple-confluence statement is the later direct correction, but ratify it explicitly before defining the Bot schema."
+    superseded_by: DEC-0115
 
   - id: DEC-0041
     title: "Human-controlled promotion"
@@ -400,11 +402,12 @@ ledger:
   - id: DEC-0043
     title: "Six-layer qmf-data study"
     statement: "The proposed six qmf-data layers are not yet a ratified storage or API contract."
-    status: open
-    rationale: "The study is plausible and delivered, but the source explicitly requires a dedicated ratification session."
+    status: superseded
+    rationale: "The dedicated ratification happened at the 2026-08-20 sitting, which adopted seven room-roles per world."
     sources: [EXT-0198, EXT-0203, EXT-0205, EXT-0249]
     component: COMP-QMF-DATA
-    tags: [study-delivered, source-unratified]
+    tags: [historical, study-delivered]
+    superseded_by: DEC-0117
 
   - id: DEC-0044
     title: "Historical data retention and sealed holdout"
@@ -436,11 +439,12 @@ ledger:
   - id: DEC-0047
     title: "Proposed local data stack"
     statement: "Parquet, DuckDB, SQLite, and append-only JSONL are candidate V1 persistence choices, not adopted engine contracts."
-    status: open
-    rationale: "These engines came from the data study, and study completion is explicitly weaker than ratification."
+    status: superseded
+    rationale: "The 2026-08-20 sitting ratified this stack behind QMF-owned contracts with swappable engines."
     sources: [EXT-0199, EXT-0200, EXT-0203, EXT-0217]
     component: COMP-QMF-DATA
-    tags: [study-delivered, source-unratified, persistence]
+    tags: [historical, study-delivered, persistence]
+    superseded_by: DEC-0117
 
   - id: DEC-0048
     title: "Cross-domain journal and observability"
@@ -918,3 +922,409 @@ ledger:
     sources: [EXT-0212]
     component: COMP-QMF-CORE
     tags: [direction-agreed, performance]
+
+  # --- Foundation architecture sitting 2026-08-19/20: ratified spine AD-1..AD-21 (SRC-03), transcript SRC-04 ---
+
+  - id: DEC-0099
+    title: "Runtime matrix (AD-1)"
+    statement: "CPython 3.14 is pinned across all packages, CI, and factory sandboxes; tier-1 tested targets are Windows 11 x86-64 and Ubuntu LTS x86-64; QMF code stays pure-Python and OS-neutral, with other platforms working by construction but untested in V1."
+    status: ratified
+    rationale: "One pinned interpreter prevents version skew from making results non-comparable across factory sandboxes; the two tier-1 targets are the operator's real machines."
+    sources: [EXT-2001, EXT-2028]
+    component: COMP-QMF-CORE
+    tags: [architecture-spine, runtime]
+
+  - id: DEC-0100
+    title: "One repo, seven packages (AD-2)"
+    statement: "QMF is a single uv workspace repository with seven installable packages (qmf-core, qmf-registry, qmf-data, qmf-indicators, qmf-structure, qmf-venue, qmf-risk) importing as the qmf.* PEP 420 namespace with no qmf/__init__.py anywhere, src/ layout, uv_build backend, one committed uv.lock, lockstep roster versioning, explicit per-package dependency declarations verified by isolated per-package test environments, and a test-only dependency carve-out for running a contract's conformance tests; calendar extensions are separate versioned packages outside the roster on their own SemVer ladder; shared nouns are defined in qmf-core and their records owned by qmf-registry."
+    status: ratified
+    rationale: "One workspace avoids cross-repo coordination tax, namespace shadowing, and silent sibling-dependency leaks while keeping sandboxes able to install single packages."
+    sources: [EXT-2002, EXT-2028]
+    component: COMP-QMF-CORE
+    tags: [architecture-spine, packaging]
+
+  - id: DEC-0101
+    title: "Quality toolchain (AD-3)"
+    statement: "QMF's own source is governed by ruff (format and lint), pyright strict workspace-wide, and pytest; coverage is measured per package on every change with an 80% floor and 100% branch coverage on the modules implementing CT-01 and CT-02 primitives; public value types are frozen dataclasses and seams are typing.Protocols; canonical commands are poe fmt, lint, types, test, check; every package ships executable tests and reference usage as tier-1 artifacts."
+    status: ratified
+    rationale: "One toolchain prevents per-agent tool drift in factory-written code; strictness governs QMF's own source while consumers stay unconstrained per the don't-box-in ruling."
+    sources: [EXT-2003, EXT-2028]
+    component: COMP-QMF-CORE
+    tags: [architecture-spine, quality]
+
+  - id: DEC-0102
+    title: "Three quality tiers bound to factory events (AD-4)"
+    statement: "Tier 1 (poe check) runs on every factory work unit; tier 2 (poe check-integration, adding integration and contract tests with each package in an isolated environment) runs on landing into the integration branch; tier 3 (poe check-release, adding package builds and clean-install smoke on both tier-1 OSes) runs on ship; a contract test is an executable conformance suite for a CT-* contract's public shape, owned by the contract's owning package and run by producer and consumers at tier 2; commands stay host-neutral until a CI remote exists."
+    status: ratified
+    rationale: "Binding gates to factory events instead of Git-host mechanics keeps 'tests pass' meaning one defined thing on every machine."
+    sources: [EXT-2004, EXT-2028]
+    component: COMP-QMF-CORE
+    tags: [architecture-spine, gates]
+
+  - id: DEC-0103
+    title: "Two version ladders; meanings never mutate (AD-5)"
+    statement: "Code packages use SemVer in lockstep across the roster (0.x until the V1 blueprint ships) with a one-release deprecation window; every serialized contract carries its own integer format version stamped into every artifact, and a format version's meaning never changes after the fact — incompatible change mints the next version plus a migration note; QMF never loses the ability to read old stored evidence; re-derivation under a newer calendar or tzdata version produces a new artifact with its own fingerprint and a lineage edge, never a rewrite."
+    status: ratified
+    rationale: "Separating the code ladder from contract format versions is what keeps history readable forever while packages evolve."
+    sources: [EXT-2005, EXT-2028]
+    component: COMP-QMF-CORE
+    tags: [architecture-spine, versioning]
+
+  - id: DEC-0104
+    title: "Dependency and licence tiers; zero-dependency core (AD-6)"
+    statement: "Permissive licences (MIT, BSD, Apache, PSF) are freely allowed; LGPL only unmodified and separately installed; GPL and AGPL are prohibited; strategy-family libraries and platform-imposing dependencies (own event loop, runtime, or data model) are prohibited; qmf-core takes zero outside dependencies; every dependency gets one line in the workspace-root DEPENDENCIES.md register stating name, licence, and why."
+    status: ratified
+    rationale: "The tiers prevent licence contamination and foreign-platform capture while keeping the sandbox-critical core weightless."
+    sources: [EXT-2006, EXT-2028]
+    component: COMP-QMF-CORE
+    tags: [architecture-spine, dependency-policy]
+
+  - id: DEC-0105
+    title: "Exact money (AD-7)"
+    statement: "Money, Price, and Quantity are whole-number integer counts at a declared scale — Money(currency, scale), Price(instrument, scale) as an instrument-tagged ratio never tagged with a single currency, Quantity(unit, scale) with opaque units; mixed-scale arithmetic auto-promotes losslessly or refuses, never silently rescales; the money path is a taint — any value transitively contributing to an order quantity, price, P&L, or balance bans binary float regardless of computing package, and floats cross back only at named conversion boundaries with an explicitly stated rounding mode; foreign money is stored verbatim as evidence with declared scales; analytic float series stay permitted off the money path with label-derived identity."
+    status: ratified
+    rationale: "Scaled integers with a taint-rule money path prevent float drift, non-deterministic fingerprints, and unreconcilable broker disputes."
+    sources: [EXT-2007, EXT-2028]
+    component: COMP-QMF-CORE
+    tags: [architecture-spine, money, contract]
+
+  - id: DEC-0106
+    title: "Exact time and calendars (AD-8)"
+    statement: "Every stored timestamp is int64 UTC nanoseconds since the Unix epoch (POSIX no-leap-second semantics, range 1677–2262, checked arithmetic); civil date and trading date are distinct types with TradingDate carrying its calendar identity and version in-band; Duration (signed int64 ns, clock-agnostic) and half-open Interval live in core; wall and monotonic clocks are type-separated and a monotonic reading is never an Instant; clock access is a core protocol injected at the composition root; record streams carry per-writer strictly-increasing sequences with (instant, writer, sequence) as a replay-determinism device without causal meaning, and WriterId is a first-class core noun; calendar identity is the rule set (plus tzdata version in fingerprints), split into accounting rollover and session schedule, with the account-scoped day-boundary calendar a third named kind; the forex market-hours calendar ships first with a 17:00 America/New_York rollover, weekend gaps, and holidays in scope, swap-Wednesday dropped; calendar extensions pin tzdata and verify the resolved version at import; foreign timestamps are stored verbatim as evidence with conversions derived under lineage."
+    status: ratified
+    rationale: "The two-lens-audited time model keeps results identical across server moves, DST shifts, tzdata updates, and clock corrections."
+    sources: [EXT-2008, EXT-2029, EXT-2028]
+    component: COMP-QMF-CORE
+    tags: [architecture-spine, time, contract]
+
+  - id: DEC-0107
+    title: "Instrument, venue, and account identity (AD-9)"
+    statement: "Instrument identity is (venue, venue's own symbol) with the symbol opaque and never parsed; VenueId is operator-minted, opaque, stable, never derived from mutable broker attributes and never reused, with a distinct broker or legal entity a distinct venue even on shared infrastructure; renames and mutable metadata are separate dated records and stored history never rewrites; Venue and Account are distinct first-class nouns defined in qmf-core with records owned by qmf-registry; one venue may hold many accounts, each with a role (live, demo, paper-validation, paper-benched, prop-firm), and Books bind to accounts; multi-broker operation and broker migration are normal cases."
+    status: ratified
+    rationale: "Opaque operator-minted identity keeps brokers' records separate, survives renames, and carries the ~6-broker specialization plan without framework change."
+    sources: [EXT-2009, EXT-2028]
+    component: COMP-QMF-CORE
+    tags: [architecture-spine, identity, contract]
+
+  - id: DEC-0108
+    title: "Deterministic fingerprints, fp1 recipe (AD-10)"
+    statement: "The canonical serializer and fingerprint function live only in qmf-core; the pinned fp1 recipe is UTF-8 JSON with lexicographically sorted keys at every depth, no insignificant whitespace, NFC-normalized strings, integer-only identity numerics with floats refused in identity content, null prohibited (absent value = omitted key), order-significant arrays, hashed SHA-256 and emitted as fp1:sha256:<hex>; recipe upgrades mint fp2 while old fingerprints stay valid forever; every field is identity by default and display-only exclusion requires an explicit versioned contract declaration; float-bearing artifacts take label-derived identity with integrity checksums and provenance; idempotent byte-identical re-writes are accepted silently while true collisions are refused and alarmed."
+    status: ratified
+    rationale: "One pinned implementation is the only way two conformant producers and merging sandboxes agree on identity."
+    sources: [EXT-2010, EXT-2028]
+    component: COMP-QMF-CORE
+    tags: [architecture-spine, fingerprints, contract]
+
+  - id: DEC-0109
+    title: "Typed refusals, seven categories (AD-11)"
+    statement: "Every public QMF operation succeeds or returns a typed refusal carrying category, machine-readable context, and retryability (yes, no, or after-condition); the seven categories are invalid input, unsupported capability, unavailable dependency, stale evidence, policy rejection, transient venue failure, and storage failure; categories are addable in later versions, never redefined; public boundaries return refusals as result unions and exceptions are reserved for programmer error; value types construct through one pattern everywhere — an unchecked constructor plus a validating try_create factory returning value-or-refusal."
+    status: ratified
+    rationale: "Returned typed refusals let agents and consumers reason about failure without parsing prose, and the storage-failure category covers the I/O surface the data area added."
+    sources: [EXT-2011, EXT-2028]
+    component: COMP-QMF-CORE
+    tags: [architecture-spine, refusals, contract]
+
+  - id: DEC-0110
+    title: "Result label and worlds (AD-12)"
+    statement: "Every computed result entering evidence carries producer contract format version, input fingerprints, evidence time range, computation identity, and world — together its identity, with human display names outside identity; computation identity is content-derived so identical work from two sandboxes deduplicates, while the occurrence record is separate provenance; worlds are live (real venue clocks and quotes — account role carries money-reality, so paper and demo runs are world live and stay comparable for alpha-decay sensing), replay (data-driven injected clock over recorded history), and simulated (reserved but unusable in V1 — writing it into governed evidence is a policy rejection until the backtesting sitting defines simulated-time typing); a non-live world may never write into the live evidence namespace and factory sandboxes never produce timestamps that enter an evidence store."
+    status: ratified
+    rationale: "The five-part label makes results self-identifying and mergeable across sandboxes while storage separation, not identity alone, delivers world isolation."
+    sources: [EXT-2012, EXT-2028]
+    component: COMP-QMF-CORE
+    tags: [architecture-spine, result-label, contract]
+
+  - id: DEC-0111
+    title: "Measure-then-budget performance (AD-13)"
+    statement: "QMF invents no performance numbers: every component ships a benchmark harness with the same status as unit tests, measuring speed and peak memory at a load ladder in framework-native units sized around the roughly-forty-bot scenario (with 10/100/200 marks); first real measurements are recorded as fingerprinted baselines scoped to a declared (OS, CPU-class) tuple, with per-benchmark regression thresholds stated as multiples of measured run-to-run variance; regressions beyond threshold — memory equally with speed — fail the tier-2 merge gate; the one stated design constraint is that qmf-core imports in well under one second; benchmark and test data are generated or controlled fixtures, never shipped product artifacts."
+    status: ratified
+    rationale: "Baselines from real measurement stop the factory optimizing against invented numbers and make slow rot attributable."
+    sources: [EXT-2013, EXT-2028]
+    component: COMP-QMF-CORE
+    tags: [architecture-spine, performance]
+
+  - id: DEC-0112
+    title: "Loud failure and traceable behavior (AD-14)"
+    statement: "Errors and refusals always carry context and are never swallowed; structured logging propagates a correlation_id field across every package boundary; every component exposes a no-argument health() returning a typed report; logs are not journals — operator-facing log text renders UTC ISO-8601 with explicit Z while journals and evidence streams store int64 UTC ns plus writer and sequence, with ISO-8601 permitted only as a display-only field excluded from identity; emitted signals must be exportable to Prometheus-class monitoring stacks, with the stack choice and full monitoring design owned by the node/ops sitting."
+    status: ratified
+    rationale: "A solo operator cannot afford multi-hour what-broke hunts; the obligation binds now even though the monitoring stack lands later."
+    sources: [EXT-2014, EXT-2028]
+    component: COMP-QMF-CORE
+    tags: [architecture-spine, observability]
+
+  - id: DEC-0113
+    title: "Concurrency stance (AD-15)"
+    statement: "QMF values are immutable and safe to share by construction; purity binds the pure-computation libraries (core, indicators, structure); components owning an external resource (stores, recorders, adapters) are the stateful class and follow one-writer-per-stream with unlimited readers, where the writer is the holder of an AD-8 WriterId; QMF never spawns threads or background work — applications own all concurrency; async APIs exist only at the venue network edge, never in core or the libraries."
+    status: ratified
+    rationale: "The stance supports unlimited parallel experimentation safely and prevents async contagion through every signature."
+    sources: [EXT-2015, EXT-2028]
+    component: COMP-QMF-CORE
+    tags: [architecture-spine, concurrency]
+
+  - id: DEC-0114
+    title: "Registry records and lineage (AD-16)"
+    statement: "The registry uses per-kind record schemas — each its own versioned contract — sharing a tiny common header of kind, contract format version, at-birth parent references, writer, and sequence; a record's stable id is derived from its fp1 fingerprint, never minted, with created-at and occurrence facts declared display-only so identical work from two sandboxes deduplicates; lineage accruing after birth lives exclusively in append-only typed edge records (supersedes, promoted-from, occurrence-of, corroborates, disagrees-with) referencing fingerprints, stored as pinned JSONL (one fp1-canonical object per line, LF-terminated, append-with-fsync, size-based rotation with monotonic ordinals) with local rebuildable indexes; kinds are addable and never redefined, Bot and Book kinds are reserved names, and no database server exists."
+    status: ratified
+    rationale: "Per-kind cards honor the dead universal-recipe-card ruling while fingerprint-derived ids make sandbox merges deduplicate by construction."
+    sources: [EXT-2016, EXT-2028]
+    component: COMP-QMF-REGISTRY
+    tags: [architecture-spine, registry, lineage]
+    supersedes: [DEC-0036]
+
+  - id: DEC-0115
+    title: "Multiplicity at every layer (AD-17)"
+    statement: "A Bot contains one-or-more confluences; a confluence contains one-or-more levels, triggers, and confirmations; components may compose, with a composite its own artifact carrying lineage to its children; no layer of the bot vocabulary may hardcode exactly-one; multiplicity collections are canonically ordered by child fingerprint ascending unless the owning contract declares order significance; Bot identity is its content, while the Bot-Book-account binding is a separate dated binding record outside Bot identity — one Bot at exactly one Book at any time, with re-binding (paper to live) never minting a new Bot so paper and live performance stay comparable; exits remain Book, risk, and node territory."
+    status: ratified
+    rationale: "The operator's zoom-out ruling generalizes the one-or-more answer recursively so no cardinality-one assumption forecloses experiments."
+    sources: [EXT-2017, EXT-2028]
+    component: COMP-QMF-REGISTRY
+    tags: [architecture-spine, bot, contract]
+    supersedes: [DEC-0040]
+
+  - id: DEC-0116
+    title: "Promotion record skeleton (AD-18)"
+    statement: "The registry reserves a promotion-occurrence card kind: human-only signer, signed immutable record, and a mandatory plain-words summary field explicitly declared an identity field so the signature attests the exact words the human read (a typo fix mints a new record with a supersedes edge); V1 signing is the operator's recorded approval captured as an immutable occurrence attesting the record's fp1 string with reviewer identity and instant — no cryptographic dependency now; the registry card is canonical and the journal's promotion event carries only the card's fingerprint plus correlation_id; the evidence checklist accretes from the data, backtesting, and risk sittings; the promotion gate itself — workflow, UI, timing — is platform territory outside QMF."
+    status: ratified
+    rationale: "The skeleton preserves the human-only promotion law with a durable, human-legible record while later sittings fill the evidence list."
+    sources: [EXT-2018, EXT-2028]
+    component: COMP-QMF-REGISTRY
+    tags: [architecture-spine, promotion, live-money-gate]
+
+  - id: DEC-0117
+    title: "Data rooms, stores, and bitemporal law (AD-19)"
+    statement: "qmf-data defines seven room-roles — ingest door, immutable raw archive, processed, journal, split-governed research door, backup, and the registry room (holding qmf-registry's records and lineage under the same retention, backup, and migration law) — instantiated per world, with a cross-world read a policy-rejection refusal; the stores are Parquet for columnar time-series, DuckDB for local analytics, SQLite for transactional metadata, and JSONL for append streams, each behind a QMF-owned contract with stdlib-typed boundary signatures and no database server; only raw-archive and journal formats are evidence-bearing — analytics engines hold rebuildable views, engine majors are pinned per release, and 'rebuildable' licenses deletion only of artifacts no result label cites; every external fact carries event-time, known-at, source, and revision, where source is a core provenance noun orthogonal to VenueId, and corrections are appended, never overwritten."
+    status: ratified
+    rationale: "Right-stack-for-the-right-job behind owned contracts keeps engines swappable and makes an engine format break cost a rebuild, never evidence."
+    sources: [EXT-2019, EXT-2028]
+    component: COMP-QMF-DATA
+    tags: [architecture-spine, data, persistence]
+    supersedes: [DEC-0043, DEC-0047]
+
+  - id: DEC-0118
+    title: "Migrations, retention, backup (AD-20)"
+    statement: "Migrations run preflight checks, backup first, dry-run, migrate, verify, with a documented restore path and never in-place mutation of the only copy; raw originals and lineage are kept forever; time-series is partitioned by source, instrument, and time window; journal trimming rules are set only after measured volume; the ratified backup design is nightly, encrypted, versioned, off-machine to an object-storage bucket, with automated sample-restore tests and periodic full-restore rehearsal — QMF provides the backup, restore, and verify primitives (CT-14, CT-26) while applications own schedule and execution; encryption key custody and the crypto dependency are named at the node/ops sitting; topology: the trading-node VPS records and syncs down, the workstation holds the working archive, the bucket catches nightly copies."
+    status: ratified
+    rationale: "Backup-first migration and keep-raw-forever remove the class of upgrade that destroys the only copy; the primitives-versus-schedule split preserves the toolbox boundary."
+    sources: [EXT-2020, EXT-2028]
+    component: COMP-QMF-DATA
+    tags: [architecture-spine, backup, migrations]
+
+  - id: DEC-0119
+    title: "Splits, journal events, and the doors to outside (AD-21)"
+    statement: "Dataset splits are fingerprinted, time-ordered, non-overlapping manifests, each pinning exactly one calendar identity and version in-band and refusing rows carrying another; boundaries are explicit stored TradingDates or instants, never civil dates, and the seal boundary is a frozen TradingDate never re-derived under later tzdata; the 12-month seal is a no-peek lock (not retention) enforced now as a policy-rejection refusal at every qmf-data read boundary — raw, processed, research door, and restored backups alike — independent of the deferred GAP-0016/0017 gates, with one logged final look journaled as a named control-action subtype; the journal is N streams, one per producing component under its WriterId with gapless per-(writer, boot-epoch) sequences, recording seven event types (decision, order, fill, risk transition, promotion, data quality, control action), with correlation_id a linking annotation excluded from fp1 identity by explicit versioned declaration and causal linkage via typed edges, never timestamps; source adapters get qmf-data-defined contracts, normalization, validation, and idempotent intake keyed on (source, source-native id, revision), while applications own scheduling, retries, supervision, and UI; the news-calendar recorder keeps provider-native identity and revisions; tick sources are separately identified with bid and ask preserved and disagreements kept visible via corroborates and disagrees-with edges, never merged."
+    status: ratified
+    rationale: "The seal as an enforced read-boundary refusal stops research consuming its own exam questions today, without waiting for the deferred causality gate."
+    sources: [EXT-2021, EXT-2028]
+    component: COMP-QMF-DATA
+    tags: [architecture-spine, splits, journal, adapters]
+
+  - id: DEC-0120
+    title: "Default-deny dependency direction; first ratified edge registry-to-data"
+    statement: "qmf-core depends on nothing; every package may depend on qmf-core; nothing imports qmf-venue or qmf-risk; until an inter-library edge is ratified as a spine amendment, no package may depend on any package other than qmf-core; the first and only ratified edge is qmf-registry to qmf-data (2026-08-20), through which the registry persists records and lineage via the CT-11 append-store contract with stdlib-typed signatures at the boundary; calendar extensions implement core protocols from outside the roster."
+    status: ratified
+    rationale: "Default-deny keeps the dependency graph a governed artifact instead of an accretion; the one ratified edge keeps registry records in the same filing room as all other evidence."
+    sources: [EXT-2022, EXT-2028]
+    component: COMP-QMF-CORE
+    tags: [architecture-spine, dependencies, law]
+
+  - id: DEC-0121
+    title: "Look-ahead gate and attempt counter deferred to the backtesting sitting"
+    statement: "GAP-0016 (look-ahead/causality registration gate) and GAP-0017 (attempt counter) are operator-deferred to the backtesting sitting, with the consequence knowingly accepted that artifacts registered before then carry no causality evidence and that evidence is not retroactively reconstructible; the bitemporal ingredients (event-time versus knowledge-time) remain ratified via AD-8 and CT-10, and registry occurrence records still log every run so the tally's raw material accrues without policy."
+    status: ratified
+    rationale: "The operator reads both mechanisms as backtesting-entangled; deferring them keeps the foundation sitting from freezing half-designed research governance."
+    sources: [EXT-2023]
+    component: COMP-QMF-REGISTRY
+    tags: [architecture-spine, deferral, causality]
+
+  - id: DEC-0122
+    title: "Everything downstream is built with QMF libraries"
+    statement: "Everything downstream of QMF — the trading node, backtesting, the agentic system, and the UI — is built with QMF libraries; no downstream deliverable re-implements or bypasses the framework's contracts."
+    status: ratified
+    rationale: "The operator's standing principle (2026-08-19) makes QMF the single quantitative foundation so every later layer lands as a consumer, not a rebuild."
+    sources: [EXT-2024]
+    component: COMP-QMF-CORE
+    tags: [law, scope, foundation]
+
+  - id: DEC-0123
+    title: "cTrader time-handling research is evidence pending GAP-0037"
+    statement: "The delivered cTrader Open API time research (UTC milliseconds platform-wide; 17:00 America/New_York daily bar boundary; trendbars BID-derived per staff confirmation; no server-clock primitive; 50/s and 5/s rate limits with 1-week tick spans) is recorded evidence for the venue sitting and is not adopted; no cTrader timestamp is trusted as UTC until venue verification under GAP-0037."
+    status: superseded
+    superseded_by: DEC-0135
+    rationale: "The research protocol never auto-adopts findings; the venue sitting ratified them 2026-08-20 as DEC-0135 with corrected evidence grades — the 2013-forum-grade claims (17:00-NY boundary, BID-derived trendbars) were demoted and replaced by measure-per-broker adapter obligations."
+    sources: [EXT-2025]
+    component: COMP-QMF-VENUE
+    tags: [study-delivered, source-unratified, ctrader]
+
+  - id: DEC-0124
+    title: "Freeze-choice status after the foundation sitting"
+    statement: "Of the six qmf-core freeze choices, three are now ratified contracts — the UTC time encoding (DEC-0106), instrument identity (DEC-0107), and the result-label tuple (DEC-0110) — while canonical indicator arithmetic (GAP-0032), the backtest fidelity taxonomy (GAP-0048), and the SR* threshold (GAP-0049) remain open for their own sittings."
+    status: ratified
+    rationale: "The foundation sitting resolved the encoding-level choices; the remaining three belong to the indicator and backtesting areas."
+    sources: [EXT-2027, EXT-2028]
+    component: COMP-QMF-CORE
+    tags: [architecture-spine, scope]
+    supersedes: [DEC-0032]
+
+  - id: DEC-0125
+    title: "Five-hats sweep is an input register for remaining sittings"
+    statement: "The five-hats sweep (44 findings, reviews/five-hats-sweep.md in the architecture sitting workspace) is an input register feeding the indicator/structure, venue, risk, backtesting, and ops sittings; it is referenced by the documentation, not resolved by it."
+    status: ratified
+    rationale: "The operator commissioned the sweep as forward-looking input; resolving its items here would pre-empt sittings he has not held."
+    sources: [EXT-2026]
+    component: null
+    tags: [architecture-spine, backlog]
+
+  - id: DEC-0126
+    title: "CT-16 indicator protocol and series vocabulary (AD-22)"
+    statement: "CT-16 is one contract with two conformant modes, batch and streaming, consumer-blind across bots, structure, MIS, and backtesting; the series vocabulary (Bar, Tick/Quote, BarSpec, series references, the exact-rational parameter type) is defined in qmf-core as shared nouns, and BarSpec — a discriminated aggregation rule (time-interval, tick-count, volume-threshold, notional-threshold, price-brick, range, session) with exact parameters and, for time-based kinds, the anchoring calendar identity and version — replaces the bare word timeframe everywhere; bar aggregation is a fingerprinted qmf-data derivation. The bulk form is a frozen value over a read-only memoryview of immutable little-endian int64 bytes with per-channel out-of-band metadata (scale, kind, unit, quote side) and a parallel integer-encoded presence map (present, provisional, not_ready, gap, absent_by_schedule) with NaN and sentinels prohibited. A configured indicator's identity is the entire declared configuration — formula id, contract format version, exact-rational parameters, the ordered named input set with upstream fingerprints, declared calendar requirements including tzdata version, alignment and missing-value policies, warm-up, output schema, supported modes, and the arithmetic-reference configuration — and that fingerprint is the only dedup key. Warm-up is an integer count of completed input observations in the input series' own sample unit, identical across modes, at least the reference's lookback. Outputs declare an ordered named channel schema, are full-length and index-aligned, and every sample carries a knowable-at instant; provisional samples never enter governed evidence. Only as-of alignment is permitted for governed evidence; a market-hours-closed position is absent_by_schedule, never a gap. Where both modes are declared, a tier-2 equality law binds them (same-process, same-build, integer-ULP comparator, cold initial state) with a separate restore-equivalence test. Streaming instances are the named AD-15 stateful class with exactly one WriterId-holding feeder and unlimited readers; snapshots are AD-5 serialized contracts scoped to a declared (OS, arithmetic-reference build) tuple. Two named AD-7 conversion boundaries (exact-to-analytic descale, analytic-to-exact return) have one qmf-core implementation each. Custom indicators are authorable as plain Python outside governed evidence, always; entering governed evidence requires CT-16 conformance as an AD-2 extension registered explicitly at the composition root. qmf-indicators depends on qmf-core only."
+    status: ratified
+    rationale: "Answers GAP-0031 (memlog entries 51 and 60): one consumer-blind contract keeps research and the live path computing the same numbers; identity as the entire declared configuration prevents silent merges of non-equal computations; shared instances keyed by configuration fingerprint resolve the operator's scaling concern; the presence map and knowable-at make missingness and knowledge time first-class instead of NaN folklore."
+    sources: [EXT-2032, EXT-2040, EXT-2031]
+    component: COMP-QMF-INDICATORS
+    tags: [architecture-spine, indicators, ct-16, series-vocabulary, gap-0031]
+
+  - id: DEC-0127
+    title: "Canonical arithmetic: TA-Lib 0.7.1 pinned by artifact, upgrades gated (AD-23)"
+    statement: "Where the pinned reference implements a formula, wrapping it is mandatory and it is canonical; where it does not (VWAP, Ichimoku, session-anchored levels, structure arithmetic, QMX-original formulas), the QMX implementation is the canonical arithmetic for that formula under the identical upgrade gate. The pinned reference is TA-Lib, pinned per QMF release as the lockfile-resolved artifacts (distribution filename plus hash) of both the C library and the Python wrapper — 0.7.1 + 0.7.1, verified current 2026-08-20 — with the reference's process-global configuration held in a declared, identity-bearing reference-configuration record asserted at import (unavailable dependency on mismatch) and never mutated at runtime. Upgrades are gated, never silent: the comparison suite runs first; an output change for identical canonical inputs mints the per-configured-indicator contract format version with recorded before/after evidence; an output-identical upgrade re-pins without a mint. Dual-reference checks are registered comparison artifacts (input fingerprint, parameter fingerprint, declared tolerance, verdict); tolerances and the mode comparator are declared as integer ULP counts or scaled-integer pairs, never decimal text or floats. AD-23 binds every producer of governed evidence, extensions included; no governed producer re-implements arithmetic another governed producer publishes. Streaming implementations are QMX-owned and held equal to the canonical batch arithmetic by the CT-16 equality law."
+    status: ratified
+    rationale: "Answers GAP-0032 (memlog entries 52 and 60): the artifact-hash pin plus the reference-configuration record make the attested arithmetic reproducible rather than a version string's promise; TA-Lib 0.7.1's own MACD/MACDFIX/TRIX/ULTOSC period=1 change is the recorded precedent that reference upgrades are contract events; per-configured-indicator mints keep unchanged indicators deduplicating across an upgrade."
+    sources: [EXT-2033, EXT-2040, EXT-2031]
+    component: COMP-QMF-INDICATORS
+    tags: [architecture-spine, indicators, talib, arithmetic, gap-0032]
+
+  - id: DEC-0128
+    title: "Light vs heavy: budget-declared, benchmark-policed (AD-24)"
+    statement: "A configuration is light iff it declares and benchmark-proves four bounds: per-update cost within the live-path latency rung; bounded declared state size within the owning contract's ceiling; either a bounded declared evidence window or a declared anchor-reset rule with O(1) per-update cost (an anchored configuration declares its anchor kind so embargo widths compute from the anchor); and synchronous availability on the trading path, which a marked not-ready value satisfies. The same four bounds bind structure families (per-update cost, bounded live-object-set size, bounded scan window, synchronous availability). The declared budget is contract surface; the light/heavy verdict is a machine-scoped AD-13 benchmark artifact declared display-only and never enters identity. Until the live-path rung has a recorded baseline, every configuration is heavy by default and a light claim is refused at the gate. A heavy configuration's synchronous entry point returns unsupported capability; heavy runs off the trading path (MIS/research side, node territory), computed once and fanned out through the same contracts, and every fanned-out heavy value carries the instant and input sequence of its last input — consuming one past its declared maximum age is a stale-evidence refusal. Classification is per configuration, never per name."
+    status: ratified
+    rationale: "Answers GAP-0033 (memlog entries 53 and 60), the sole nonblocking gap: classification by declared budget plus benchmark proof replaces classification by name or vibe; keeping the verdict out of identity stops machine-scoped measurements from splitting artifact identity across hosts."
+    sources: [EXT-2034, EXT-2040]
+    component: COMP-QMF-INDICATORS
+    tags: [architecture-spine, indicators, light-heavy, budgets, gap-0033]
+    supersedes: [DEC-0056]
+
+  - id: DEC-0129
+    title: "CT-17 causal structure lifecycle (AD-25)"
+    statement: "A structure family is a type of chart object — never a strategy, bot, or Book category, and never named after a trading school — with family-declared open geometry (point, level, zone, span, distribution, graph). An object is minted once, at observation, on the immutable store, carrying family identity and version, exact parameters, its declared confirmation rule, an anchor span (start instant, end instant, price bounds — frozen at observation, explicitly permitted to precede observed-at, excluded from every causality test), and observed-at defined as the earliest instant the object was derivable from causally-available data. Confirmation, invalidation, and interaction records are separate append-only AD-16 records/edges referencing the object's fingerprint; the object is never mutated; current state is a read-time fold under CT-17's stated read-resolution rule. Anchor span, observed-at, and every lifecycle instant are identity fields, never occurrence-classified. The emission invariant anchor.start <= anchor.end <= observed-at <= confirmed-at <= invalidated-at, with observed-at >= the maximum evidence time of every consumed input, is checked in-component now, independent of the deferred GAP-0016 gate. A family ships into the governed library only when its confirmation rule states 'confirmed the moment X happens' with X knowable at that instant; clock-confirmed rules are legal; imprecise concepts stay free in ungoverned research lanes. Evidence class (confirmed, unconfirmed, provisional) is a named AD-12 label part and identity field; an unconfirmed output links to its confirmed successor via a confirmed-as edge; a read requesting confirmed evidence refuses unconfirmed rows. Confirmation delay is a declared maximum bound in observations at the family's BarSpec (unbounded only for families excluded from split-governed evidence) and feeds purge/embargo widths with warm-up. Sloped objects are integer anchors plus a versioned evaluation rule with slope derived, never stored; calendar-anchored levels declare sampling and schedule-gap policies. Composites take the maximum of their children's confirmed-at and observed-at, are order-significant by default, and may hold any governed kind; invalidation never cascades automatically; a refit is a new artifact with a supersedes edge. The V1 seed candidates (swing points, horizontal levels from confirmed swings, zones, structure breaks) are candidates only — operator-authored from-scratch families are first-class peers under identical law, and family authoring via the extension shape is the primary use case. Emissions are registry record kinds minted by the composition root, which holds the WriterId; qmf-structure depends on qmf-core only in V1."
+    status: ratified
+    rationale: "Answers GAP-0034 (memlog entries 54, 55, 56, and 61): the observed-at/confirmed-at law applied to chart objects keeps repainted or look-ahead structure out of evidence; the precise-rule bar admits any school's concept once mechanically stated while vague ones stay in research lanes; the operator's no-lock-in ruling makes from-scratch family authoring the primary use case rather than a privileged built-in set."
+    sources: [EXT-2035, EXT-2036, EXT-2041]
+    component: COMP-QMF-STRUCTURE
+    tags: [architecture-spine, structure, ct-17, lifecycle, gap-0034]
+
+  - id: DEC-0130
+    title: "Increment-gate amendments, indicator side (AD-22/23/24 and AD-2)"
+    statement: "The increment reviewer gate's must-fix findings were applied in one desk pass with AD ids stable: the series vocabulary and BarSpec moved into qmf-core as shared nouns under AD-2; the bulk form and presence map were pinned; the two AD-7 conversion boundaries were named with one qmf-core implementation each; the four-tuple identity shortcut was deleted in favor of identity = the entire declared configuration; typed configuration inputs (calendars, instrument-metadata snapshots, event anchors) create no package edges; the composition law made any CT-16/CT-17 output a legal input with the upstream fingerprint entering downstream identity; the equality law was scoped to same-process/same-build with an integer-ULP comparator and a separate restore-equivalence test; the output schema gained channels, knowable-at, and the bar-closed/in-progress emission policy with provisional barred from governed evidence; AD-2's extension mechanics were generalized to calendar, indicator, and structure extensions with explicit registration and the graduation path; AD-23 was extended to bind every governed producer with the QMX implementation canonical where the reference is absent and the pin expressed as lockfile artifact hashes plus a reference-configuration record; AD-24 gained the window-or-anchor-reset third bound, CT-17 coverage, and heavy-by-default until a rung baseline exists. No ratified ruling was reversed; every fix is additive contract surface."
+    status: ratified
+    rationale: "The adversarial pass found 36 conformant-but-divergent implementation pairs and the two edge-case lenses found 20 must-fix expressibility failures; the amendments close them by pinning contract surface, under the operator's adopt-as-amended delegation (memlog entries 59 and 60)."
+    sources: [EXT-2039, EXT-2040]
+    component: COMP-QMF-INDICATORS
+    tags: [architecture-spine, amendments, gate, indicators]
+
+  - id: DEC-0131
+    title: "Increment-gate amendments, structure and cross-AD side"
+    statement: "The same desk pass rewrote AD-25 in place (observed-at as known-at, anchor span, in-component emission invariant, lifecycle on the immutable store with read-time folds, identity classification of structure instants, evidence class with confirmed-as edges and refusing reads, sloped and calendar-anchored objects, bounded confirmation delay, composite instant arithmetic, no automatic cascade, refit as supersedes, the CT-16-vs-CT-17 routing test, cited-objects-become-evidence, composition-root emissions) and amended eight other ADs: AD-7 gained PriceDelta, the metadata-defined pip/point, and the exact-rational idiom; AD-8 gained the civil-time bucket key; AD-12's label gained producer contract identity and evidence class; AD-14 gained the component definition (an owner of external resources or long-lived state, streaming indicator and structure family instances included, pure batch functions excluded) and the pure-boundary correlation exemption; AD-16 gained the confirmed-as, confirmation, invalidation, and interaction record/edge kinds plus the computation-vs-market-fact classification split; AD-17 made causal composites order-significant by default with children of any governed kind; AD-21 gained knowledge-time split partitioning and purge/embargo as required manifest fields now, defaulting from producer-chain horizons; the Deferred table gained the latency-decomposition, L2/footprint-vocabulary, and bar-builder rows."
+    status: ratified
+    rationale: "The structure-side and cross-AD fixes carry the same gate provenance and the same additive-only verdict (memlog entries 59 and 61); recording them separately from the indicator side keeps each ruling's blast radius auditable."
+    sources: [EXT-2039, EXT-2041]
+    component: COMP-QMF-STRUCTURE
+    tags: [architecture-spine, amendments, gate, structure, cross-ad]
+
+  - id: DEC-0132
+    title: "School-neutral vocabulary law"
+    statement: "No QMF rule, contract, or vocabulary may name or privilege any trading school; school-specific edge-case findings are translated into general capability terms (mutable partial-state objects, time-anchored objects, derived objects) at synthesis; a mechanically-stated variant of any school's concept is admissible under the same precise-rule bar; a school name may appear only as an illustration, never as vocabulary."
+    status: ratified
+    rationale: "Operator correction 2026-08-20 (memlog entry 57): coverage must be general — general forex, crypto, and market structure alongside any single tradition — because a school-shaped framework would bias every later design."
+    sources: [EXT-2037]
+    component: null
+    tags: [law, naming, school-neutral]
+
+  - id: DEC-0133
+    title: "Plain-Python escape hatch and the graduation path"
+    statement: "Authoring outside the framework is always legal: when a concept is ambiguous or the framework cannot yet articulate it, plain Python in ungoverned research lanes is the intended route, never a forced framework fit. A working plain-Python experiment graduates into governed evidence as a CT-16 indicator or CT-17 family through the AD-2 extension shape — a separate versioned package outside the roster, own SemVer ladder, distribution identity and version as identity fields of every artifact produced, explicit registration at the composition root — with a lineage edge back to the originating research artifact."
+    status: ratified
+    rationale: "Operator philosophy reaffirmed 2026-08-20 (memlog entries 51 and 58): the escape hatch is the design's point; the graduation path with lineage keeps the freedom without losing provenance when an experiment becomes evidence-bearing."
+    sources: [EXT-2038, EXT-2032]
+    component: null
+    tags: [law, extensibility, graduation, escape-hatch]
+
+  - id: DEC-0134
+    title: "Freeze-choice status after the indicators/structure sitting"
+    statement: "Of the six qmf-core freeze choices, four are now ratified contracts — the UTC time encoding (DEC-0106), instrument identity (DEC-0107), the result-label tuple (DEC-0110), and canonical indicator arithmetic (DEC-0127) — while the backtest fidelity taxonomy (GAP-0048) and the SR* threshold (GAP-0049) remain open for their own sittings."
+    status: ratified
+    rationale: "GAP-0032's ratification closes the fourth freeze choice; the remaining two belong to the backtesting and research-threshold areas."
+    sources: [EXT-2033, EXT-2031]
+    component: COMP-QMF-CORE
+    tags: [architecture-spine, scope]
+    supersedes: [DEC-0124]
+
+  - id: DEC-0135
+    title: "cTrader venue facts ratified with corrected evidence grades"
+    statement: "The consolidated venue-facts sheet (ctrader-venue-facts.md, bundles A/B/C) plus the depth-and-connectivity findings are ratified as venue facts and standing adapter obligations. Bundle A (documentation-grade): timestamps are Unix ms UTC asserted per field — no global statement exists — with named epoch exceptions (trendbar minutes, maintenance-end seconds, holiday days, schedule seconds-from-Sunday in the broker zone) and the spot-event timestamp unit genuinely undocumented; the Open API exposes no server clock (closed-set proof over the full payload-type enums), so receive-time recording is mandatory; historical ticks are BID/ASK-selectable; rate limits are 50 req/s non-historical plus 5 req/s historical per connection, breach codes 108/11/67/35, no documented ban or backoff policy; tick history is newest-first delta-encoded (price deltas staff-demonstrated only — a first-connection assertion) with hasMore-only paging and a documented one-week span cap; three independent numeric scale systems (market-data prices uint64 in 1/100000; execution prices raw doubles; a moneyDigits exponent on nine messages; volumes in cents, LightSymbol carrying no scaling metadata so the full symbol record is required before any price decode); two broker-supplied non-UTC timezone axes (symbol schedule and holidays); heartbeat adopted at the safe 10-second bound; trendbars gappy by design; swap-free accounts still pay a dated rollover commission. Bundle B (demoted): the 17:00-New-York daily boundary and BID-derived trendbars — both 2013-forum-grade claims — are NEVER hardcoded; the adapter measures the actual daily boundary and bar price basis per broker at first connection and re-verifies with a continuous background monitor, storing the result as per-broker configuration; QMF's own forex 17:00-NY market-hours calendar remains its accounting rule, independent of venue bars. Bundle C: every undocumented behavior (spot-timestamp unit, spot coalescing, rate-window semantics, absent moneyDigits, pip formula, live-trendbar semantics, historical classification, per-period span caps) is a verify-or-refuse adapter obligation. Depth/connectivity: a Level-2 resting-liquidity book exists with differential updates; no Level-3/time-and-sales stream exists (closed-catalog proof); demo and live are separate hosts requiring two simultaneous connections, each serving unlimited accounts of one environment; token lifecycle: ~30-day access token, a never-expiring refresh token as the crown-jewel secret, and cTID re-authorization as the invalidation anchor."
+    status: ratified
+    rationale: "Primary-source re-verification demoted the forum-grade claims DEC-0123 recorded (17:00-NY staff-only with counter-evidence; BID-bars ex-staff) and replaced them with measure-per-broker adapter obligations; the operator ratified the package 2026-08-20 (memlog entry 75), satisfying AD-8's cTrader distrust clause and closing GAP-0037's venue-facts half."
+    sources: [EXT-2043, EXT-2044, EXT-2046, EXT-2048]
+    component: COMP-QMF-VENUE
+    tags: [architecture-spine, venue, ctrader, venue-facts, gap-0037]
+    supersedes: [DEC-0123]
+
+  - id: DEC-0136
+    title: "AD-26 venue secret lifecycle (GAP-0035)"
+    statement: "QMF components handle secret references, never values. qmf-core ships typed SecretRef and SecretValue; a SecretValue never renders its value — repr, str, serialization, and logging all yield the reference id — and a tier-1 secret-scan gate rides poe check. A secret reference is an opaque minted id under AD-9's discipline: stable, never reused, never encoding venue, broker, account, environment, or key material; any human-readable label is a separate field held outside evidence; construction validates opacity. Values are injected at the composition root from the deployment environment's protected store (systemd-creds-class on the VPS; store mechanics and key custody land at the node/ops sitting). Secrets never appear in repositories, configuration artifacts, docs, .env files, CLI arguments, journals, evidence, fingerprints, or logs; a missing, expired, or rejected credential is an unavailable-dependency refusal carrying the reference id, never the value. An account-binding record's identity is (VenueId, AccountId, role, world); its secret reference is occurrence/display-only and excluded from fp1 — a credential is a deployment fact, never a market fact. The adapter's connection manager is the single named component permitted to hold secret values in memory, for a session's lifetime, through a core-defined SecretStore port (read + atomic replace) injected by the root; values never cross back out. A credential is a one-writer stream: exactly one live refresher per credential — a workstation tool never refreshes a credential a VPS session owns; where the venue rotates refresh material on use, the new secret is stored atomically before the old is discarded, and a failed store after rotation is an alarm plus a command-pipe block (unavailable dependency, after-condition = successful store or operator re-provision) with the sensing pipe unaffected. Compromise recovery is a documented, tested drill: cTID re-authorization (invalidating all outstanding refresh tokens), application-credential reset, store replacement, session restart; expiry and refusal paths ship as tested behavior; testing uses demo credentials only and factory sandboxes never hold live secrets; credential entry and management UI is platform territory."
+    status: ratified
+    rationale: "Answers GAP-0035 (memlog entries 77 and 82): references-not-values makes leak surfaces mechanical to scan; the single value-holder plus one-refresher-per-credential prevents rotation races; store-before-discard plus the cTID drill turns the never-expiring refresh token from a standing hazard into a recoverable one."
+    sources: [EXT-2046, EXT-2050, EXT-2054]
+    component: COMP-QMF-VENUE
+    tags: [architecture-spine, venue, secrets, ad-26, ct-21, gap-0035, law]
+
+  - id: DEC-0137
+    title: "AD-27 venue commands and the uncertainty law (GAP-0036)"
+    statement: "The command stream — the unit of UNKNOWN blocking, of WriterId ownership, and of the gapless per-writer sequence — is the (VenueId, account) pair, coarser than an account binding and strictly finer than a connection; a session-epoch id distinct from the boot epoch rides every venue observation, sequences reset only on boot, and the sequence cursor is durable through the observation sink. The command vocabulary is exactly four kinds — place_order, cancel_order, close_position, close_all — each typed per kind on qmf-core nouns with no free-form payload; kinds are addable never redefined; amend_order arrives only by explicit later mint; the caller stays unassigned in QMF. Order-parameter vocabulary (market | limit | stop | stop-limit; time-in-force; protective-stop attachment) is QMF-owned, with each adapter declaring its supported subset in CT-18. close_position and close_all carry a required typed scope (account | account-binding | instrument-within-binding); an unsupported scope is an unsupported-capability refusal, never emulated at a wider scope. A command fanning out to N venue submissions is a compound command: each child carries a derived identity (parent fp1 + declared ordinal) and is individually observation- and journal-bearing; the parent's outcome is the meet of its children — any child UNKNOWN makes the parent UNKNOWN, any child rejected makes the parent partially-executed, a named outcome, never a success. Command identity derives from the command record's fp1 (including the stream qualification, session epoch, and the caller's opaque ordering ordinal); the CT-18-declared mapping into the venue's client-id field must be injective and total, or a durable command-id-binding record persists through the sink before submission; idempotency and collision tests run against the full local fingerprint — re-presenting the same command is an idempotent accept, differing content under a reused identity is refused and alarmed. Four-outcome law: every well-formed submission resolves to accepted-by-venue | rejected-by-venue | denied-locally | UNKNOWN; denied-locally is an outcome, never a refusal, and every outcome mints an observation record and a journal event. A transport error, timeout, or disconnect yields UNKNOWN — a state, not an error; a venue-returned error resolves rejected-by-venue only where the CT-18 error table declares that outcome class. An UNKNOWN is minted as an explicit observation carrying its trigger (timeout | transport-error | disconnect), the monotonic elapsed measurement, the wall receive instant, and the submission deadline in force — a declared, application-injected adapter parameter under do-not-default. While an UNKNOWN is outstanding the adapter refuses new commands on that stream; cancel/close dispatch ahead of place_order on every shared throttle (scope declared in CT-18); suspend-new takes local effect instantly. No QMF component retries, assumes an outcome, flattens, or invents terminal state on UNKNOWN; the adapter never clears its own block — unblocking is an explicit typed resolve_unknown(command identity, resolution ∈ observed-accepted | observed-absent | operator-attested) call by the application, itself recorded as an observation. Recording precedes interpretation: every inbound venue event is stored verbatim and journaled before any state evaluation; the order-state machine is a read-time fold over the observation stream per CT-20's read-resolution rule, never a gate on recording; an observation with no legal transition is recorded, annotated with a typed out-of-sequence edge, and forces the owning command to UNKNOWN; adapters never synthesize venue observations. Command outcome and order state are separate streams, never merged — an order's terminal state is decided by fills and venue lifecycle events only; CT-18 declares each command kind's acknowledgement mode (explicit-event | implicit-absence | none) and an outcome is never derived from absence alone (a cancel resolved by read-back is accepted only if the read-back also shows no fill at or after the cancel's submit stamp, else rejected-by-venue superseded-by-fill). Fill price, fill quantity, the venue instant, and the receive instant are mandatory identity fields of a fill observation; every CT-20 observation carries a declared venue-native identity key for gap-replay dedup; CT-20 ships an exhaustive versioned journal-event mapping with the cardinality law — exactly one journal event per recorded observation, per submission, per outcome; an unpersistable journal event or partial multi-room write is a storage-failure refusal that blocks the command stream. Reconciliation is an on-demand complete read-back of venue orders, fills, positions, and balance over a stated lookback (equity derived where non-native), with QMF-owned verdict vocabulary reconciled | drift | unknown; reconciliation gates the command pipe only — the sensing pipe never blocks on it; when it runs and what a verdict triggers are node/BMS authority. Outage is fail-closed: on disconnect in-flight commands become UNKNOWN, recovered fills commit through evidence before a session reports healthy; session recovery never resubmits a command; command retry is prohibited — retryability rides typed refusals; flatten is close commands executed mechanically, never adapter-initiated, with authority assignment (VPS-death included) belonging to the risk/node sittings."
+    status: ratified
+    rationale: "Answers GAP-0036 (memlog entries 79, 80, and 82): the operator confirmed the four-command vocabulary and command-pipe-only reconciliation scoping after the node order-path study resolved the startup tension; the four-outcome law with explicit UNKNOWN minting and the resolve_unknown protocol makes uncertainty a recorded state rather than an invented terminal, and read-time folding keeps the immutable store ungated."
+    sources: [EXT-2047, EXT-2051, EXT-2052, EXT-2054]
+    component: COMP-QMF-VENUE
+    tags: [architecture-spine, venue, commands, uncertainty, ad-27, gap-0036, law]
+
+  - id: DEC-0138
+    title: "AD-28 venue adapter contract and capability discovery (GAP-0038)"
+    statement: "One neutral port, four contracts: CT-18 (capability), CT-19 (command), CT-20 (event + reconciliation), and CT-21 (secret/session, shaped by AD-26) are defined by qmf-venue on qmf-core nouns; per-venue adapters implement them; nothing imports qmf-venue; the composition root wires. The adapter's connection manager is the sole owner of venue sessions; on the venue path the WriterId granularity is (machine, adapter role, VenueId, account) — the same unit as AD-27's command stream — and no other component may construct a venue client. Injected-sink wiring is pinned: the root injects qmf-core-defined sink protocols (ObservationSink, JournalSink, RecordSink, SecretStore); the connection manager holds the WriterId, stamps writer and sequence, and calls sinks synchronously; every sink returns success or a typed refusal to its caller, and a storage failure triggers AD-27's command-pipe block in the component that holds the WriterId — the root-mints pattern does not extend to the venue path; no dependency edge is created because sinks are core protocols. Every adapter artifact is a qmf-core value type; the registry record wrapping it is minted by the root through qmf-registry; the fingerprint consumers cite is the content fingerprint, never the record fingerprint. CT-20 declares each multi-room write as one ordered unit with a named transaction boundary (atomic | ordered-with-recovery); a partial write is a storage failure that blocks the command stream and is journaled on recovery. Market data has a named home: ticks, bars, depth, gap-replay backfill, and historical paging enter as CT-10 source observations through qmf-data's CT-15 intake — application-mediated, no fifth contract, no new edge; subscription lifecycle facts (technical snapshot on subscribe, non-instantaneous unsubscribe, hasMore-class paging) are declared CT-18/CT-15 surface; the pinned canonical sensing feed carries a prohibition — no silent sibling-feed failover; a sensing outage fails closed until the same feed gap-replays; raw depth recording is the verbatim wire payload. The capability surface is two artifacts: (1) the capability declaration — static, adapter-version-scoped, importable without credentials, containing no measured or tunable value, every field marked static or measured-at-connection, carrying the venue protocol artifact identity, its fingerprint identity-bearing for any artifact whose decode depended on it; (2) the venue-observation profile — per (VenueId, account), produced post-connect by the verification suite, append-only with supersedes edges, holding every measured fact and verdict, occurrence/provenance only. A measured-at-connection capability is unavailable until its profile exists; consuming a measured-but-unverified capability in evidence-bearing work is a policy rejection; wiring order is fixed — declaration at construction, profile before the first command and before any evidence-bearing decode. CT-18 owns the field roster (market-data kinds, order-parameter subset, command scopes, acknowledgement modes, netting-versus-hedging position model per account, session topology, throttle scope, rate limits, span caps and paging model, token lifecycle class, equity nativeness, server-clock availability, instrument-metadata surface, attribution-label support, protection primitives suspend-new | drain | close_all); invoking anything undeclared is an unsupported-capability refusal; a CCXT-class crypto venue slots in later by declaring a different record through the same port. Instrument resolution maps venue-native symbols to opaque (venue, symbol) identity, with adapter-produced instrument/account metadata snapshots as typed configuration inputs and declared full-metadata prerequisites. Foreign values store verbatim, floats included: a foreign binary float is never identity — it crosses AD-7's named boundary at receipt to a scaled integer at a per-value-class pinned target scale (execution price → the instrument's declared digits; money → the account's declared money exponent, an absent exponent being a refusal; market data → the declared wire scale) with a declared, identity-bearing rounding mode, the raw float retained only as integrity-checked provenance. Receive wall time and the boot-scoped monotonic stamp are mandatory on every inbound venue event, and a latency rung is a monotonic delta within one boot epoch on one machine — a wall-computed rung is refused as a baseline. Error mapping rows are pinned as (venue code, command-or-event context) → (refusal category, retryability, after-condition, submission-outcome class ∈ rejected-by-venue | UNKNOWN), versioned per adapter; the unmapped default is (transient venue failure, retryable = no, outcome = UNKNOWN) plus an alarm; category alone never implies retryability. Sessions follow the venue's declared topology (two connections where demo and live are separate hosts); paired-demo bindings are secret-reference-only records; shared-account order-lifecycle merges use only the caller's sequencer evidence. The venue protocol artifact is pinned in the AD-6 register (cTrader profile: the Spotware proto integer release tag, currently 91); a tag change mints a new capability declaration plus re-verification, bumping a contract format version only where the wire change alters that contract's public shape. The first-connection verification suite is a named contract part, verify-or-refuse throughout: an unverified spot-timestamp unit refuses spot evidence; an unmeasured daily boundary leaves venue daily bars ungoverned — once measured and verified the boundary is minted as a venue-scoped market-hours calendar identity, giving venue-native bars a legal BarSpec anchor; a failed bar-basis reconciliation refuses bar evidence; a failed pip-formula validation refuses metadata-derived parameters; an absent money exponent refuses that message's money decode. Measurements and verification verdicts journal as data-quality events; adapter-initiated state changes (suspend-new, drain, session restart, throttle engaged, reconnect) journal as control actions. The six-stage live-path latency decomposition (tick received → evidence write → indicator update → decision → risk evaluation → order submitted) is recorded as named rungs with no numeric budgets until measured; the adapter owns the arrival/submit stamps for its stages."
+    status: ratified
+    rationale: "Answers GAP-0038 (memlog entries 81 and 82): four contracts through one neutral port keep venue specifics out of qmf-core while the injected-sink wiring preserves default-deny with the writer seeing every persistence failure; splitting the static capability declaration from the measured venue-observation profile stops measured facts from splitting artifact identity across accounts; homing market data at CT-10/CT-15 avoids a fifth contract and a new edge."
+    sources: [EXT-2047, EXT-2051, EXT-2053, EXT-2054]
+    component: COMP-QMF-VENUE
+    tags: [architecture-spine, venue, adapter, capability, ad-28, gap-0038]
+
+  - id: DEC-0139
+    title: "Broker identity is deployment configuration (GAP-0037 broker half)"
+    statement: "Which broker fronts the cTrader platform is deployment configuration, never architecture: opaque VenueId/AccountId identity and account bindings are sufficient — 'account IDs are enough.' IC Markets is the operator's stated intent and deliberately not a framework commitment; account-type confirmation is config-time work per broker. AD-9 gains the platform-vs-broker distinction: the platform (cTrader) fixes the protocol and the adapter; the broker behind it is a per-deployment fact whose measured behaviors (daily-bar boundary, trendbar price basis) live in the venue-observation profile and per-broker configuration, never in code."
+    status: ratified
+    rationale: "Operator ruling 2026-08-20 (memlog entries 70-72): the operator declined to freeze the broker on first ask and then ruled broker identity out of architecture entirely, which closes GAP-0037's which-broker half without a commitment that would bias later multi-broker deployments."
+    sources: [EXT-2045, EXT-2054]
+    component: COMP-QMF-VENUE
+    tags: [architecture-spine, venue, broker, deployment, gap-0037]
+
+  - id: DEC-0140
+    title: "Venue increment gate amendments, venue-AD side"
+    statement: "The venue increment reviewer gate produced 49 findings (rubric 19, adversarial 30 conformant-but-incompatible implementation pairs, 12 critical in total) and all were applied at desk in one pass with AD ids stable, rewriting AD-26/27/28 in place: opaque SecretRef ids with construction-validated opacity, the SecretValue render guard, the tier-1 secret scan, binding identity (VenueId, AccountId, role, world), one-refresher-per-credential, and rotation store-failure as a command-pipe block; the command stream defined once as (VenueId, account) for blocking, WriterId, and sequence, with the session epoch and durable cursor; the injective-or-bound command-id mapping; the four-outcome law with denied-locally as an outcome; the explicit UNKNOWN observation with a declared deadline and the resolve_unknown protocol with the adapter never self-clearing; recording-precedes-interpretation with order state as a read-time fold, no synthesized observations, the outcome-versus-order-state stream split, declared acknowledgement modes, and the superseded-by-fill rule; typed close scopes and the compound-command meet law with partially-executed as a named outcome; protection-command dispatch priority and the declared throttle scope; the venue-native idempotency key, CT-20 exclusion list, journal-event mapping table, and cardinality law; injected-sink wiring with the writer seeing every failure and the content-fingerprint citation rule; atomic/ordered multi-room writes; market data homed at CT-10/CT-15 with the no-silent-sibling-failover prohibition; CT-18 split into the static capability declaration versus the per-account venue-observation profile with two-phase wiring; the pinned error-map row shape with the fail-closed unmapped default; the verify-or-refuse verification suite; the QMF-owned order-parameter vocabulary with netting/hedging declared; mandatory monotonic receive stamps and monotonic-only latency rungs; and the pinned raw-depth encoding. No ratified ruling was reversed; every fix is additive contract surface."
+    status: ratified
+    rationale: "The rubric's three criticals (no market-data contract in the port; the write path versus default-deny; raw-double execution prices unhandled) and the adversarial pass's nine criticals each named a way two conformant adapters could diverge or fail open; the amendments close them by pinning contract surface under the operator's adopt-as-amended delegation (memlog entry 82)."
+    sources: [EXT-2054]
+    component: COMP-QMF-VENUE
+    tags: [architecture-spine, venue, amendments, gate]
+
+  - id: DEC-0141
+    title: "Venue increment gate amendments, cross-AD side"
+    statement: "The same desk pass amended seven ratified areas outside the venue ADs: AD-7 gained the foreign-float law — a venue value delivered as a binary float is evidence, never identity; it converts at the named boundary at receipt to a scaled integer at a per-value-class pinned target scale with a declared rounding mode, the raw float retained only as integrity-checked provenance. AD-8's cTrader clauses resolved on the ratified venue facts: per-field ms-UTC timestamps are trusted on per-field documentation; the 17:00-New-York daily boundary and BID-derived bars are never hardcoded — measured per broker at first connection with a continuous monitor; a measured, verified daily boundary is minted as a venue-scoped market-hours calendar identity (identity is the rule set), giving venue-native bars a legal BarSpec anchor, and until then venue bars are ungoverned observations. AD-9 gained the platform-vs-broker distinction with broker identity as deployment configuration. AD-12 gained role-scoped namespaces and the sandbox provenance field. AD-15 gained the schedulable-duties carve-out: the adapter's periodic session duties (heartbeat, token refresh, reconnect, gap replay, verification monitors) are declared work the application's scheduler drives — the adapter defines the work, the application runs it, and session recovery never resubmits a command. The dependency-direction section gained the venue-sink note: the venue write path creates no edge because qmf-venue emits through core-defined sink protocols injected at the composition root. The Stack register gained the Spotware openapi-proto-messages integer release tag (91) and a protobuf-runtime row; the official OpenApiPy SDK is ruled reference-only because its pinned Twisted reactor violates AD-6's platform-imposing rule — only the proto message definitions (data, not code) are consumed, and zero Spotware code runs in QMX."
+    status: ratified
+    rationale: "The venue rules exposed gaps in seven ratified areas the gate reviewers caught as conformant-but-incompatible seams; recording the cross-AD side separately from the venue-AD side keeps each ruling's blast radius auditable (memlog entry 82), mirroring the indicators-increment convention."
+    sources: [EXT-2043, EXT-2054]
+    component: null
+    tags: [architecture-spine, amendments, cross-ad, venue]
+
+  - id: DEC-0142
+    title: "Node-material boundary and the standing node ledger"
+    statement: "Trading-node runtime material stays out of QMF documentation. tracker/trading-node-notes.md is the standing cross-session node ledger: anything discussed that concerns the trading node is noted there durably for the node sittings, and QMF docs reference it as a pointer, never absorb it. The trading-node order-path study and the node corpus brief remain reference-only evidence — the order path, protection funnel, startup semantics, and flatten-authority assignment are node/risk-sitting territory, and QMF records only the contract surface AD-26 through AD-28 define. Venue research companions are cited as evidence, never duplicated into docs."
+    status: ratified
+    rationale: "Operator standing instruction 2026-08-20 (memlog entry 76): 'I don't like repeating myself' — node knowledge must survive across sessions without leaking node runtime design into framework documentation, whose scope L31 and the framework-vs-node split already bound."
+    sources: [EXT-2049, EXT-2051]
+    component: null
+    tags: [scope, boundary, node, standing-instruction]

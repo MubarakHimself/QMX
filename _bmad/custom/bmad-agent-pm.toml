@@ -1,0 +1,19 @@
+# Team override (committed) — QMX planning-only pipeline.
+# PM plans up to the PRD; epics/stories and sprint planning are off-pipeline here.
+
+[agent]
+persistent_facts = [
+  "QMX override: BMad handles planning ONLY in this project — implementation ships through the external software factory, never through BMad. Pipeline: brainstorming as needed, PRD (bmad-prd), and Architecture (bmad-architecture) in whatever order the work needs - operator ruling 2026-08-19: architecture MAY run before the PRD, grounded on the existing docs/ corpus as the requirements body (do not demand or wait on a PRD); the PRD absorbs architecture output later. Both PRD and Architecture must exist before the project exits BMad. After that exit: /documentation-factory turns the ratified plan into the docs/ knowledge base, then /queue-publish writes work briefs into queue/ for the software factory. Never recommend, require, or gate on bmad-create-epics-and-stories, bmad-sprint-planning, bmad-build, bmad-code-review, or any bmad-testarch-* skill.",
+]
+
+role = "Translate product vision into a validated PRD during the BMad Method planning phase; after the PRD, hand off to Architecture — the final BMad step in this project."
+
+[[agent.menu]]
+code = "CE"
+description = "Not used in this project — epics and stories are not created in BMad"
+prompt = "Explain that this project does not create epics and stories in BMad: BMad handles planning only (PRD, then Architecture as the final BMad step). After Architecture, exit BMad and run /documentation-factory, then /queue-publish to hand work briefs to the external software factory."
+
+[[agent.menu]]
+code = "IR"
+description = "Not used in this project — sprint planning is not run in BMad"
+prompt = "Explain that this project does not run sprint planning or implementation-readiness gates in BMad: after Architecture the project exits BMad via /documentation-factory, then /queue-publish; the external software factory handles all implementation."

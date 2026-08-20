@@ -1,27 +1,45 @@
 id: CT-07
 name: Registry lineage-edge contract
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-REGISTRY
 consumers: [COMP-QMF-DATA, COMP-QMF-STRUCTURE, COMP-QMF-RISK]
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0035, DEC-0039]
-gaps: [GAP-0005, GAP-0015]
-purpose: "Represent immutable graph-shaped provenance between versioned identities and occurrences."
+decisions: [DEC-0103, DEC-0106, DEC-0108, DEC-0109, DEC-0113, DEC-0114, DEC-0116, DEC-0119, DEC-0120, DEC-0131, DEC-0137, DEC-0138]
+gaps: []
+purpose: >-
+  Represent lineage that accrues after a record's birth as append-only typed edge
+  records referencing fp1 fingerprints, giving graph-shaped provenance without a
+  graph database.
 invariants:
-  - "Graph shape does not require a graph database."
-  - "Edge kinds, endpoint cardinality, cycle policy, amendment behavior, and query guarantees remain unresolved."
+  - "Lineage that accrues after a record's birth lives exclusively in append-only typed edge records; at-birth parent references stay in the CT-06 record header, and readers never union header references with edges (DEC-0114)."
+  - "The V1 edge types are supersedes, promoted-from, occurrence-of, corroborates, disagrees-with, the AD-25 lifecycle edge kinds confirmed-as, confirmation, invalidation, and interaction, and the AD-27 out-of-sequence edge; edge types are addable in later versions and never redefined (DEC-0114, DEC-0131, DEC-0137)."
+  - "The confirmed-as, confirmation, invalidation, and interaction edge kinds carry AD-25 structure-object lifecycle that accrues after observation, each referencing the object's fp1 fingerprint; an unconfirmed output links to its confirmed successor via a confirmed-as edge (DEC-0131)."
+  - "The out-of-sequence edge is an AD-27 venue edge kind: an inbound venue observation with no legal state transition is recorded, annotated with this typed edge, and forces its owning command to UNKNOWN pending resolution — adapters never synthesize venue observations (DEC-0137)."
+  - "A durable command-id-binding record — (venue client id, command fp1, account, session epoch) — persists through the sink before submission wherever the venue's client-id field cannot injectively and totally carry a command's fp1; it is named reconciliation evidence that edges reference by fingerprint (DEC-0137)."
+  - "The per-account venue-observation profile is append-only, each measured-fact revision linked to its predecessor by a supersedes edge (DEC-0138)."
+  - "Every edge references records by their fp1 fingerprint (fp1:sha256:<hex>), never by a mutable or minted id (DEC-0114, DEC-0108)."
+  - "Edge files are pinned JSONL: one fp1-canonical JSON object per line, LF-terminated, appended with fsync, never rewritten, and size-rotated with a monotonic file ordinal (DEC-0114, DEC-0108)."
+  - "Indexes over edges are local and rebuildable; losing an index costs a rebuild, never evidence, and no database server is used (DEC-0114)."
+  - "An edge stream has exactly one writer and unlimited readers; the writer holds a WriterId (DEC-0113, DEC-0106)."
+  - "Edges are immutable and append-only: a correction is a new edge and a superseding relationship is a supersedes edge — never an in-place edit and never an overwrite of the superseded record (DEC-0114, DEC-0103)."
+  - "A promotion typo fix records a new promotion card and links it to the prior card with a supersedes edge (DEC-0116)."
+  - "corroborates and disagrees-with edges keep source disagreements visible and are never merged away — the same mechanism tick-source disagreements use (DEC-0114, DEC-0119)."
+  - "Every edge append succeeds or returns a typed refusal; a byte-identical idempotent re-append is accepted while a true fp1 collision on differing bytes is refused and alarmed (DEC-0109, DEC-0108)."
+  - "Edges persist in qmf-registry's registry room through qmf-data's CT-11 append-store contract (DEC-0120)."
 schema:
-  type: null
-  type_gap: GAP-0015
-  fields: null
-  fields_gap: GAP-0015
-  enums: null
-  enums_gap: GAP-0015
-  units: null
-  units_gap: GAP-0015
-  nullability: null
-  nullability_gap: GAP-0015
-
+  type: "append-only typed lineage-edge record serialized as pinned JSONL — one fp1-canonical JSON object per line, LF-terminated"
+  fields:
+    edge_type: "string enum; one of the ratified V1 edge types"
+    from_ref: "fp1 fingerprint string (fp1:sha256:<hex>) — the accruing/derived endpoint (e.g. the newer record for supersedes, the promoted record for promoted-from, the occurrence for occurrence-of)"
+    to_ref: "fp1 fingerprint string (fp1:sha256:<hex>) — the referenced endpoint (e.g. the superseded record, the source record, the computation identity)"
+    contract_format_version: "int; the edge contract's format version stamped on every line (DEC-0103)"
+    writer: "WriterId of the single edge-stream writer (DEC-0106, DEC-0113)"
+  enums:
+    edge_type: [supersedes, promoted-from, occurrence-of, corroborates, disagrees-with, confirmed-as, confirmation, invalidation, interaction, out-of-sequence]
+  units:
+    contract_format_version: "dimensionless integer count"
+  nullability:
+    all_fields: "edge_type, from_ref, to_ref, contract_format_version, and writer are mandatory (never null); an absent value is an omitted key, never null (DEC-0108)"
+    endpoint_roles: "corroborates and disagrees-with relate two source-observation fingerprints; both endpoints are always present"

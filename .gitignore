@@ -26,3 +26,8 @@ _bmad/*
 # OS noise
 Thumbs.db
 .DS_Store
+
+# sssf runtime
+adws/adw_data/sessions/
+adws/adw_data/sssf.db*
+.env

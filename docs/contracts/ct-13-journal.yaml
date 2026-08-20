@@ -1,33 +1,57 @@
 id: CT-13
 name: Durable journal-evidence contract
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-DATA
-producer: COMP-QMF-DATA
+producers: [COMP-QMF-DATA, COMP-QMF-REGISTRY, COMP-QMF-VENUE]  # qmf-data and qmf-registry wired; qmf-venue produces via the core-defined JournalSink injected at the root — ratified shape, no import edge (DEC-0138), documentary until the factory ships; COMP-QMF-RISK reserved pending its edge (DEC-0120)
 consumers: [COMP-QMF-DATA-STORE]
-intended_producers: [COMP-QMF-REGISTRY, COMP-QMF-VENUE, COMP-QMF-RISK]
-wiring_status: data-to-store-only; cross-domain producers reserved-unwired
 layer_from: backend
 layer_to: data
-decisions: [DEC-0042, DEC-0048]
-gaps: [GAP-0005, GAP-0022, GAP-0025, GAP-0026]
-purpose: "Persist durable operational and research journal evidence without introducing a runtime event bus."
+decisions: [DEC-0119, DEC-0112, DEC-0106, DEC-0108, DEC-0114, DEC-0116, DEC-0113, DEC-0118, DEC-0117, DEC-0109, DEC-0103, DEC-0120, DEC-0137, DEC-0138]
+gaps: [GAP-0039]  # GAP-0036 answered 2026-08-20 (DEC-0137 venue commands/uncertainty law); GAP-0039 (Book/BMS risk-transition payload) stays open
+purpose: "Persist durable operational and research journal evidence as N append-only per-writer streams, distinct from arbitrary application logging and without a runtime event bus."
 invariants:
-  - "Journal evidence is durable and separate from arbitrary application logging."
-  - "COMP-QMF-DATA owns the schema and is the only currently wired producer into COMP-QMF-DATA-STORE."
-  - "Registry, Venue, and Risk are intended cross-domain producers only; their CT-13 handoffs are not wired until GAP-0025 defines producer, consumer, and failure semantics."
-  - "The journal does not own notification, workflow, recovery, or trading-node orchestration."
-  - "Mutation, amendment, immutability, and ordering semantics are not adopted and remain unresolved under GAP-0025 and GAP-0026."
-  - "Event kinds, fields, correlation identities, cadence, retention, redaction, and query guarantees remain unresolved."
+  - "Journal evidence is durable and distinct from operator or diagnostic logging: journals store int64 UTC nanoseconds plus writer plus sequence, while logs render UTC ISO-8601 with an explicit Z (DEC-0112, DEC-0106)."
+  - "The journal is N append-only streams, one per producing component, each written under a single AD-8 WriterId following one-writer-per-stream with unlimited readers (DEC-0119, DEC-0113, DEC-0106)."
+  - "Each stream's sequence is strictly increasing and gapless per (writer, boot-epoch); a detected gap signals loss (DEC-0119, DEC-0106)."
+  - "The journal records exactly seven event types, decision, order, fill, risk transition, promotion, data quality, and control action, an enum addable in later versions but never redefined (DEC-0119, DEC-0109)."
+  - "correlation_id is a linking annotation excluded from fp1 identity by an explicit versioned declaration, and it propagates across every package boundary (DEC-0112, DEC-0108)."
+  - "Causal linkage across streams uses AD-16 typed edge records, never timestamps and never the (instant, writer, sequence) ordering key (DEC-0119, DEC-0114, DEC-0106)."
+  - "The promotion event carries only the promotion-card fp1 fingerprint plus correlation_id; the registry card is canonical and the journal never holds a second promotion schema (DEC-0116)."
+  - "The sealed-period final look is journaled as a named control-action subtype and is never a silent recycle (DEC-0119)."
+  - "qmf-data owns the CT-13 schema and persists journal streams through the store; retention and trimming rules are set only after measured volume (DEC-0117, DEC-0118)."
+  - "qmf-data (data quality, control action) and qmf-registry (promotion, via the ratified qmf-registry to qmf-data edge) are wired producers; qmf-venue produces order, fill, data-quality, and control-action events through the core-defined JournalSink injected at the composition root — no import edge, since the venue write path creates none — a ratified shape that stays documentary until the factory ships; qmf-risk (risk transition) remains a reserved producer until its dependency edge is ratified under default-deny (DEC-0138, DEC-0120, DEC-0119)."
+  - "CT-20 ships an exhaustive versioned mapping — (command kind × outcome) → journal event type and (observation kind) → event type — under a cardinality law: exactly one journal event per recorded observation, per submission, and per outcome (DEC-0137, DEC-0138)."
+  - "Adapter measurements and verification verdicts journal as data-quality events; adapter-initiated state changes — suspend-new, drain, session restart, throttle engaged, reconnect — journal as control-action events (DEC-0138)."
+  - "An unpersistable journal event, or a partial multi-room write, is a storage-failure refusal that blocks the command stream in the component holding the WriterId and is journaled on recovery (DEC-0137, DEC-0138)."
+  - "The journal is instantiated per world; a read or write that crosses worlds is a policy-rejection refusal (DEC-0117, DEC-0110, DEC-0109)."
+  - "The journal owns no notification, workflow, recovery, or trading-node orchestration (DEC-0119)."
 schema:
-  type: null
-  type_gap: GAP-0025
-  fields: null
-  fields_gap: GAP-0025
-  enums: null
-  enums_gap: GAP-0025
-  units: null
-  units_gap: GAP-0025
-  nullability: null
-  nullability_gap: GAP-0025
+  type: journal-event  # append-only fp1-canonical JSONL record; the journal is N streams, one per producing component (DEC-0119, DEC-0114)
+  fields:
+    - "event_type: which of the seven journal event types this record is (DEC-0119)"
+    - "writer: the producing component's AD-8 WriterId; one writer owns one stream (DEC-0106, DEC-0113)"
+    - "boot_epoch: the writer's boot or epoch id, so restarts are visible without changing writer identity (DEC-0106)"
+    - "sequence: strictly-increasing int64, gapless per (writer, boot-epoch); a gap signals loss (DEC-0119, DEC-0106)"
+    - "instant: event time as int64 UTC nanoseconds since the Unix epoch (DEC-0112, DEC-0106)"
+    - "correlation_id: linking annotation propagated across package boundaries, excluded from fp1 identity by explicit versioned declaration (DEC-0112, DEC-0108)"
+    - "world: the world this stream is instantiated for (DEC-0117, DEC-0110)"
+    - "display_time: optional ISO-8601-with-Z rendering, display-only and excluded from identity (DEC-0112)"
+    - "promotion payload: only the promotion-card fp1 fingerprint plus correlation_id (DEC-0116)"
+    - "order and fill event payloads follow the ratified CT-19/CT-20 venue mapping; a fill event carries the fill's identity fields — fill price, fill quantity, venue instant, receive instant (DEC-0137)"
+    - "GAP(GAP-0039): risk-transition event payload fields await the Book and BMS schema"
+  enums:
+    - "event_type: decision | order | fill | risk transition | promotion | data quality | control action (DEC-0119)"
+    - "control-action subtype includes the sealed-period final look (CT-12 seal; DEC-0119) and the adapter-initiated venue state changes suspend-new, drain, session restart, throttle engaged, and reconnect (DEC-0138)"
+    - "world: live | replay | simulated  (simulated reserved-unusable in V1; DEC-0110)"
+    - "append or store failure refusal category: storage failure (DEC-0109)"
+  units:
+    - "instant: int64 UTC nanoseconds, POSIX no-leap-second (DEC-0106)"
+    - "sequence: int64, per (writer, boot-epoch) (DEC-0106)"
+    - "fingerprints (promotion card, causal-edge references): fp1:sha256:<hex> (DEC-0108)"
+    - "display_time: ISO-8601 with explicit Z (DEC-0112)"
+  nullability:
+    - "event_type, writer, boot_epoch, sequence, and instant are always present; per fp1 null is prohibited and an absent value is an omitted key (DEC-0108)"
+    - "correlation_id may be absent (omitted key, not null) when no cross-component linkage applies (DEC-0108, DEC-0112)"
+    - "display_time is optional and, when present, is excluded from identity (DEC-0112)"
+    - "causal linkage across streams is carried only by AD-16 typed edge records, never inferred from timestamps or the (instant, writer, sequence) key (DEC-0119, DEC-0114, DEC-0106)"

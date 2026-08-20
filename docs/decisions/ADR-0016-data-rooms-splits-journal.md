@@ -1,0 +1,67 @@
+---
+id: ADR-0016
+title: Data rooms, splits, journal streams, and the first ratified edge
+type: adr
+status: provisional
+component: COMP-QMF-DATA
+depends_on: [COMP-QMF-DATA, COMP-QMF-DATA-STORE, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-BACKUP, COMP-QMF-CORE, COMP-QMF-REGISTRY]
+decisions: [DEC-0117, DEC-0118, DEC-0119, DEC-0120]
+sources: [DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0106, DEC-0109, DEC-0110, DEC-0114, EXT-2019, EXT-2020, EXT-2021, EXT-2022, EXT-2028, "_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md", "archive/qmf-3.txt"]
+generated: 2026-08-20
+verified: 2026-08-20
+stale_after: 1y
+---
+
+# ADR-0016: Data rooms, splits, journal streams, and the first ratified edge
+
+Date: 2026-08-20. Status: provisional — AD-19, AD-20, and AD-21 are operator-ratified 2026-08-20 in the reopened foundation architecture sitting, with the registry-room and dependency-edge rulings added at the increment reviewer gate; this document stays provisional until the knowledge base is re-ratified.
+
+## Context
+
+`qmf-data` is where evidence either survives or quietly stops being evidence. Without ratified rules, each factory agent would choose its own storage, a research run could consume the period held back to test it, a library upgrade could take the only copy of a file format with it, and two disagreeing price sources would be merged into one number nobody could later separate. The operator's topology is two machines plus a bucket — a trading-node VPS that records and syncs down, a workstation holding the working archive, and an object-storage bucket catching nightly copies — and the data volumes are small enough that keeping everything is affordable. The sitting ratified storage, migration, and door rules as AD-19, AD-20, and AD-21, then ratified the dependency direction that lets the registry use them.
+
+## Options considered
+
+1. **One store for everything** — rejected as the wrong tool for at least three of the four jobs; right-stack-per-job was selected, each behind a QMF-owned contract with stdlib-typed boundary signatures so implementations stay swappable (DEC-0117).
+2. **A database server** — rejected: the topology is two machines and a bucket, and a server would add an operational surface with no evidence benefit (DEC-0117).
+3. **Analytics formats as evidence** — rejected after the currency pass flagged DuckDB v2.0's new storage format (previewed 2026-08-17): only raw-archive and journal formats are evidence-bearing, analytics stores hold rebuildable views, and store majors are pinned per release, so a format break costs a rebuild rather than evidence (DEC-0117).
+4. **Six room-roles** — the sitting first ratified six; the increment reviewer gate raised the registry's storage as an open question and the operator answered "keep the same filing room", adding the registry room as a seventh under the same retention, backup, and migration law (DEC-0117, DEC-0120).
+5. **Rooms shared across worlds** — rejected: rooms are instantiated per world and a read that crosses worlds is a `policy rejection` refusal, because identity distinctness alone never delivered world separation (DEC-0110, DEC-0117).
+6. **The 12-month seal as a retention rule** — rejected: the seal is a no-peek lock, not a deletion policy; data is kept regardless (DEC-0119).
+7. **Enforcing the seal only once the deferred causality gate exists** — rejected at the increment reviewer gate: the seal is enforced now as a `policy rejection` refusal at every `qmf-data` read boundary — raw, processed, research door, and restored backups alike — independent of the deferred GAP-0016 and GAP-0017 gates (DEC-0119, DEC-0121).
+8. **One journal stream for the whole system** — rejected: the journal is N streams, one per producing component under its own `WriterId`, with gapless per-(writer, boot-epoch) sequences so a gap signals loss rather than being absorbed by an interleaved single stream (DEC-0119).
+9. **`correlation_id` as an identity field** — rejected: it is a linking annotation excluded from `fp1` identity by explicit versioned declaration, and causal linkage across streams uses typed edges rather than timestamps (DEC-0119, DEC-0114).
+10. **Merging disagreeing sources into one series** — rejected: tick sources are separately identified, bid and ask are preserved with source timestamps, and disagreements stay visible through `corroborates` and `disagrees-with` edges (DEC-0119).
+11. **QMF owning the backup schedule** — rejected as a toolbox-boundary violation: QMF provides backup, restore, and verify primitives while applications own schedule and execution, the same split as all scheduling (DEC-0118).
+12. **In-place migration** — rejected outright: migrations run preflight checks, backup first, dry-run, migrate, verify, with a documented restore path and never in-place mutation of the only copy (DEC-0118).
+13. **Permitting inter-library dependencies as needed** — rejected: the dependency graph is default-deny, and each edge is a spine amendment; exactly one edge is ratified (DEC-0120).
+
+## Decision
+
+**Rooms and stores.** `qmf-data` defines seven room-roles — ingest door, immutable raw archive, processed, journal, split-governed research door, backup, and the registry room holding `qmf-registry`'s records and lineage under the same retention, backup, and migration law — instantiated per world (DEC-0110), where a read that crosses worlds is a `policy rejection` refusal. The stores are Parquet for columnar time-series, DuckDB for local analytics, SQLite for transactional metadata, and JSONL for append streams (`registry:local_store_engine`), each behind a QMF-owned contract with stdlib-typed boundary signatures; store-library exceptions are translated to `storage failure` refusals at the `qmf-data` boundary and never propagated (DEC-0109). Only raw-archive and journal formats are evidence-bearing. "Rebuildable" licenses deletion only of artifacts no result label cites: a processed artifact cited as an input is retained forever, and any rebuild pins the original market-hours calendar and tzdata version. Every external fact carries event-time, known-at, source, and revision, where `source` is a core provenance noun orthogonal to `VenueId` — a provider you can trade at is a venue, a provider you only read from is a source — and corrections are appended, never overwritten. (DEC-0117)
+
+**Migrations, retention, backup.** Migrations run preflight checks, backup first, dry-run, migrate, verify, with a documented restore path. Raw originals and lineage are kept forever (`registry:raw_history_retention_policy`); time-series is partitioned by source, instrument, and time window; journal trimming rules are set only after measured volume. The ratified backup design is nightly, encrypted, versioned, and off-machine to an object-storage bucket (`registry:backup_cadence`, `registry:backup_retention_period`), with automated sample-restore tests and a periodic full-restore rehearsal (`registry:restore_verification_cadence`); QMF provides the backup, restore, and verify primitives while the schedule and its execution are application and ops owned. Encryption key custody and the cryptographic dependency are named at the node and ops sitting. (DEC-0118)
+
+**Splits and the sealed period.** Dataset splits are fingerprinted, time-ordered, non-overlapping manifests. Each manifest pins exactly one calendar rule-set identity and version in-band and refuses rows carrying another. Boundaries are explicit stored TradingDates or instants, never civil dates, and the seal boundary is a frozen TradingDate never re-derived under later tzdata. The 12-month seal (`registry:historical_holdout_months`) is a no-peek lock rather than a retention rule, enforced now as a `policy rejection` refusal at every `qmf-data` read boundary — raw, processed, research door, and restored backups alike. The sealed period gets one logged final look, journaled as a named `control action` subtype, and is never silently recycled. (DEC-0119)
+
+**Journal streams.** The journal is N streams, one per producing component, each under its `WriterId` with gapless per-(writer, boot-epoch) sequences so a gap signals loss. Seven event types are recorded (`registry:journal_event_types`): decision, order, fill, risk transition, promotion, data quality, and control action. `correlation_id` is a linking annotation excluded from `fp1` identity by explicit versioned declaration; causal linkage across streams uses typed edge records, never timestamps. (DEC-0119)
+
+**Doors to outside.** `qmf-data` defines source contracts, normalization, validation, and idempotent intake keyed on (source, source-native id, revision) — a provider revision is a new artifact, never a fingerprint collision. Applications own scheduling, retries, supervision, and UI. The news-calendar recorder keeps provider-native identity and revisions; the legal archiving posture for recorded provider content remains an open operator item recorded rather than resolved (DEC-0119). Tick sources are separately identified — Dukascopy history against a broker feed — with bid and ask preserved alongside source timestamps. (DEC-0119)
+
+**Dependency direction.** `qmf-core` depends on nothing; every package may depend on `qmf-core`; nothing imports `qmf-venue` or `qmf-risk`. Until an inter-library edge is ratified as a spine amendment, no package may depend on any package other than `qmf-core`. One edge is ratified: `qmf-registry` to `qmf-data` (2026-08-20), through which the registry persists records and lineage via the CT-11 append-store contract with stdlib-typed signatures at that boundary. Market-hours calendar extensions implement core protocols from outside the roster. (DEC-0120)
+
+## Consequences
+
+Evidence outlives its tooling: a store library can break its own format and cost a rebuild rather than a loss, and an upgrade can never destroy the only copy. Keeping raw originals and lineage forever is affordable at the operator's stated volumes and stops being a judgment call. Per-world rooms mean a replay run physically cannot write into live evidence, which costs storage duplication and buys isolation that identity alone never provided. The seal enforced at every read boundary means a research process asking for a date inside the sealed window fails loudly today, before any causality gate exists — the strictest available answer while GAP-0016 and GAP-0017 stay deferred. N journal streams remove the single-writer bottleneck and make loss detectable per writer, at the cost of readers having to merge streams themselves through typed edges instead of trusting timestamps. The ratified `qmf-registry` to `qmf-data` edge keeps registry records in the same filing room as all other evidence, and it also means the registry cannot be used without the data package. Every further edge stays forbidden until ratified, so a package that discovers it needs a sibling raises a spine amendment rather than adding an import.
+
+## Blast radius
+
+- **Component specs:** COMP-QMF-DATA carries rooms, bitemporal law, splits, journal, and doors; COMP-QMF-DATA-STORE carries the store contracts, `storage failure` translation, and store-major pinning; COMP-QMF-DATA-INGEST carries idempotent intake and source normalization; COMP-QMF-DATA-BACKUP carries the backup, restore, and verify primitives; COMP-QMF-REGISTRY gains the registry room and the ratified dependency on `qmf-data`; COMP-QMF-CORE supplies instants, `WriterId`, fingerprints, refusals, and the `source` noun; COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-INDICATORS, and COMP-QMF-STRUCTURE are intended journal producers and research-door readers, wired through the application composition root; under default-deny none of them imports qmf-data today (DEC-0120).
+- **External boundaries:** COMP-DUKASCOPY and COMP-CTRADER are separately identified tick sources whose disagreements are preserved; COMP-CALENDAR-FEED is the news-calendar recorder keeping provider-native identity and revisions; COMP-OBJECT-STORAGE is the off-machine backup target.
+- **Contracts:** CT-10 source observation, CT-11 evidence persistence, CT-12 dataset split, CT-13 journal, CT-14 backup and restore, CT-15 external source adapter, CT-26 store backup input are filled by this ruling; CT-09 registry persistence rides the ratified edge; CT-07 lineage edge carries `corroborates` and `disagrees-with`.
+- **Registry:** `registry:historical_holdout_months`, `registry:raw_history_retention_policy`, `registry:local_store_engine`, `registry:journal_event_types`, `registry:backup_cadence`, `registry:backup_retention_period`, `registry:restore_verification_cadence`, `registry:backup_recovery_point_objective`, `registry:backup_recovery_time_objective`.
+- **Architecture docs:** the dependency-direction diagram and the dependency register in `docs/architecture/`.
+
+## Architecture preflight
+
+Verdict: **reuse**. No new component, no authority shrink. COMP-QMF-DATA and its three seams — COMP-QMF-DATA-STORE, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-BACKUP — gain specified behavior inside authority they already held; COMP-QMF-REGISTRY gains a room and a ratified dependency without losing ownership of records or lineage; COMP-QMF-CORE is unchanged; COMP-DUKASCOPY, COMP-CTRADER, COMP-CALENDAR-FEED, and COMP-OBJECT-STORAGE remain external boundaries reached through the ingest and backup seams. Scheduling, retries, supervision, and UI stay outside QMF and belong to consuming applications.

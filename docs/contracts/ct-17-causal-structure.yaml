@@ -1,27 +1,69 @@
 id: CT-17
-name: Causal market-structure component contract
+name: Causal structure lifecycle contract
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version; the shape is spine-ratified (AD-25), the doc stays provisional pending corpus re-ratification (DEC-0103, DEC-0129)
 owner: COMP-QMF-STRUCTURE
-consumers: []
+consumers: []  # consumer-blind like CT-16: consumers reach structure evidence through the application composition root; the composition law lets any CT-16/CT-17 configuration consume CT-17 outputs (DEC-0126, DEC-0120)
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0033, DEC-0058]
-gaps: [GAP-0005, GAP-0034]
-purpose: "Let QMX-owned structure families consume ordered facts and emit causally justified level, zone, or market-structure evidence."
+decisions: [DEC-0129, DEC-0131, DEC-0126, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0058, DEC-0103, DEC-0106, DEC-0108, DEC-0109, DEC-0110, DEC-0114, DEC-0115, DEC-0119, DEC-0120, DEC-0121]
+gaps: [GAP-0016]  # the full look-ahead/causality registration gate stays deferred to the backtesting sitting (DEC-0121); the in-component emission invariant below is the interim guard, not that gate
+purpose: "Let QMX-owned chart-object families emit causally justified structure evidence — objects minted once at observation, evolved only through append-only lifecycle and interaction records, with evidence class and knowledge time first-class."
 invariants:
-  - "Structure families are QMX-owned and do not transplant third-party strategy-family contracts."
-  - "Outputs must remain compatible with registration causality checks."
-  - "Family taxonomy, fields, composition, parameters, confirmation, invalidation, output shape, and first supported family remain unresolved."
+  - "A family is a type of chart object — never a strategy, bot, or Book category, and never named after a trading school; geometry is family-declared and open: point, level, zone, span, distribution, graph (DEC-0129, DEC-0132)."
+  - "An object is minted once, at observation, carrying family identity + version, exact parameters, its declared confirmation rule, its anchor span, and observed-at; the object is never mutated afterward (DEC-0129, DEC-0114)."
+  - "observed-at is the earliest instant the object was derivable from causally-available data — known-at, never event time; invalidated-at is the detection instant; a standing (a-priori) object declares observed-at = its configuration instant (DEC-0129)."
+  - "The anchor span (start instant, end instant, price bounds) is payload geometry frozen at observation, explicitly permitted to precede observed-at, and excluded from every causality test (DEC-0129)."
+  - "Anchor span, observed-at, and every lifecycle instant are identity fields and may never be occurrence-classified: a structure object is a fact about the market at a time, not a computation (DEC-0129, DEC-0131, DEC-0108)."
+  - "Emission invariant, checked in-component now, independent of the deferred GAP-0016 gate: anchor.start <= anchor.end <= observed-at <= confirmed-at <= invalidated-at, and observed-at >= the maximum evidence time of every input actually consumed; violation is an invalid-input refusal (DEC-0129, DEC-0121, DEC-0109)."
+  - "Confirmation, invalidation, and interaction records (instant, price, family-declared interaction measure) are separate append-only typed records/edges referencing the object's fingerprint, each instant an identity field of its own record; interaction records are the only permitted way an object's state evolves; current state is a read-time fold over the object's edge stream per this contract's stated read-resolution rule (DEC-0129, DEC-0114)."
+  - "A family ships into the governed library only when its confirmation rule states 'confirmed the moment X happens' with X knowable at that instant; clock-confirmed (degenerate) confirmation is legal; imprecise concepts stay free in ungoverned research lanes, and a mechanically stated variant of any school's concept is admissible under the same bar (DEC-0129, DEC-0132, DEC-0133)."
+  - "Evidence class (registry:evidence_classes) is a named part of the result label and a declared identity field; an unconfirmed output links to its confirmed successor via a typed confirmed-as edge; a read requesting confirmed evidence refuses unconfirmed rows (policy rejection) rather than filtering silently (DEC-0129, DEC-0131, DEC-0110, DEC-0109)."
+  - "A decision at instant T may consume evidence with confirmed-at <= T — equality is consumption, not look-ahead; refuse-at-equal governs causality tests between derived artifacts, not consumption (DEC-0129, DEC-0106)."
+  - "Confirmation delay is a declared maximum bound — an integer count of observations at the family's BarSpec; an unbounded declaration is legal only for families excluded from split-governed evidence; with CT-16 warm-up it feeds the split manifests' required purge/embargo widths, and a composite declares the sum of its children's bounds (DEC-0129, DEC-0131, DEC-0119)."
+  - "Records partition into splits by knowledge time — confirmed-at for structure objects; a manifest refuses any record whose observed-at precedes a boundary while its confirmed-at follows it, unless the declared embargo covers the gap (DEC-0131, DEC-0119)."
+  - "A sloped or continuous object is identified by integer anchors — (instant, exact Price) pairs — plus a declared versioned evaluation rule; slope is derived, never stored, never identity; evaluation at an instant crosses the named analytic-to-exact boundary (DEC-0129, DEC-0126, DEC-0105)."
+  - "A calendar-anchored level declares its sampling policy (last-known-at-or-before | refuse) and schedule-gap policy (refuse | nearest-open-instant | carry-previous-session), both fingerprinted; observing an external event or release as evidence is ordinary input consumption bound to the revision known at observed-at — acting on it stays node territory (DEC-0129, DEC-0119)."
+  - "Composites: confirmed-at is the maximum of the children's confirmed-at and observed-at the maximum of theirs, never earlier than any child; children are order-significant by default (a family declares a collection unordered explicitly) and may be of any governed kind — indicator results, structure objects, calendar windows — each referenced by fingerprint; a composite is its own artifact with lineage to its children (DEC-0129, DEC-0131, DEC-0115)."
+  - "Invalidation never cascades automatically: a family declares its own invalidation predicate, which may reference a parent's lifecycle facts; readers may compute cascade at read time from lineage; a refit is a new artifact with a supersedes edge, anchors frozen at each fit, the lineage head keeping the first observed-at (DEC-0129, DEC-0114)."
+  - "Routing test: a value per evaluation instant is CT-16; a discrete object with a birth and a lifetime is CT-17; a concept expressible both ways declares which it is; either consumes the other per the composition law, and a family needing an indicator consumes it as a declared input, never inline (DEC-0129, DEC-0126, DEC-0127)."
+  - "The law binds governed evidence: live in-memory use persists nothing, but any object cited by a journal event or result label becomes governed evidence by that act and is persisted or its fingerprint-bearing content inlined into the citing record; scanners run ungoverned and promote only confirmed objects (DEC-0129, DEC-0119)."
+  - "The four light/heavy bounds bind families — per-update cost, bounded live-object-set size, bounded scan/lookback window, synchronous availability — under the same benchmark policing and refusal for a failed light claim; CT-16's state bound and snapshot/restore obligations apply to families verbatim (DEC-0128, DEC-0129)."
+  - "Emissions are registry record kinds: structure objects, lifecycle records, and comparison artifacts are minted by the composition root, which holds the WriterId and the gapless per-(writer, kind) sequence; the library returns fingerprintable content, never stamped records (DEC-0129, DEC-0131, DEC-0114, DEC-0106)."
+  - "No privileged families: registry:structure_seed_family_candidates are candidates only; operator-authored from-scratch families are first-class peers under identical law via the extension shape with the graduation path, which is the primary use case; families are QMX-owned, versioned, addable never redefined, with family ids under the identity minting discipline (DEC-0129, DEC-0133, DEC-0058)."
+  - "An object computed on a revised input receives a different result label through its input fingerprints rather than silently changing; no second revision mechanism exists (DEC-0129, DEC-0110)."
+  - "All failures are typed refusals per registry:typed_refusal_codes; qmf-structure depends on qmf-core only in V1, all evidence flowing through the composition root under default-deny (DEC-0109, DEC-0120)."
 schema:
-  type: null
-  type_gap: GAP-0034
-  fields: null
-  fields_gap: GAP-0034
-  enums: null
-  enums_gap: GAP-0034
-  units: null
-  units_gap: GAP-0034
-  nullability: null
-  nullability_gap: GAP-0034
+  type: structure-object + lifecycle-record + interaction-record  # registry record kinds referencing each other by fp1 fingerprint (DEC-0129, DEC-0114)
+  fields:
+    - "family_id: opaque, stable, never reused; family version rides beside it (DEC-0129)"
+    - "parameters: exact rationals only, declared tolerances included as ordinary fingerprinted parameters (DEC-0129, DEC-0126)"
+    - "confirmation_rule: the declared 'confirmed the moment X happens' rule; identity-bearing (DEC-0129)"
+    - "anchor_span: start instant, end instant, price bounds as exact Prices; frozen at observation; identity (DEC-0129)"
+    - "observed_at: known-at instant of first derivability; identity (DEC-0129)"
+    - "confirmation record: instant (identity of its own record), confirmed-as edge target where it supersedes an unconfirmed output (DEC-0129, DEC-0131)"
+    - "invalidation record: detection instant; identity of its own record (DEC-0129)"
+    - "interaction record: instant, price, family-declared interaction measure, object fingerprint reference (DEC-0129)"
+    - "confirmation_delay_bound: integer observations at the family's BarSpec, or the declared 'unbounded' exclusion (DEC-0129)"
+    - "sloped-object anchors: ordered (instant, exact Price) pairs plus the versioned evaluation rule id (DEC-0129)"
+    - "sampling_policy and schedule_gap_policy: declared for calendar-anchored families; fingerprinted (DEC-0129)"
+    - "composite children: fingerprint references of any governed kind, order-significant unless declared unordered (DEC-0129, DEC-0115)"
+    - "result label: producer contract identity (the configured family's fingerprint), contract format version, input fingerprints, evidence time range, computation identity, evidence class, world (DEC-0110, DEC-0131)"
+  enums:
+    - "geometry: point | level | zone | span | distribution | graph — open, family-declared (DEC-0129)"
+    - "evidence class: registry:evidence_classes — confirmed | unconfirmed | provisional (DEC-0129)"
+    - "lifecycle/interaction edge kinds (additions to the lineage vocabulary): confirmed-as | confirmation | invalidation | interaction (DEC-0131, DEC-0114)"
+    - "sampling policy: last-known-at-or-before | refuse; schedule-gap policy: refuse | nearest-open-instant | carry-previous-session (DEC-0129)"
+    - "seed family candidates: registry:structure_seed_family_candidates — candidates only, no privilege (DEC-0129)"
+    - "refusal categories in this contract's paths: invalid input (emission-invariant violation), policy rejection (confirmed read over unconfirmed rows; cross-world read), stale evidence, unsupported capability, unavailable dependency per registry:typed_refusal_codes (DEC-0109, DEC-0129)"
+  units:
+    - "all lifecycle instants: int64 UTC nanoseconds (DEC-0106)"
+    - "price bounds and anchors: exact Price / PriceDelta at declared scales; pip/point is instrument-scoped from metadata records, never hardcoded (DEC-0129, DEC-0131, DEC-0105)"
+    - "confirmation delay: integer count of observations at the family's BarSpec (DEC-0129)"
+    - "benchmark rungs: active object-set size, objects minted per bar, interaction records per bar (DEC-0129, DEC-0111)"
+    - "fingerprints: fp1:sha256:<hex> (DEC-0108)"
+  nullability:
+    - "per fp1, null is prohibited; an absent value is an omitted key; invalidated-at is absent until an invalidation record exists — never a placeholder instant (DEC-0108, DEC-0129)"
+    - "anchor span, observed-at, family identity, parameters, and the confirmation rule are always present at mint (DEC-0129)"
+    - "current state (still-valid, still-unmitigated) is never a stored field — always a read-time fold over the append-only edge stream (DEC-0129)"
+conformance_register: "The concept-walk test list this contract must keep expressible — retro-anchored zones with consumption state, objects born from another object's invalidation, cluster objects over tolerance-grouped extremes, threshold-breach-then-reversal objects, ordered multi-phase calendar composites, multi-BarSpec nests, cross-instrument divergence objects, distribution-over-price objects, a-priori price grids, projected levels, pattern refits — derives from the increment gate's two edge-case lenses and adversarial pass (reviews/review-ict-edge-cases.md, review-general-ta-edge-cases.md, review-adversarial-3.md in the 2026-08-19 architecture workspace); their must-fix findings are folded into the invariants above and bind conformance tests at tier 2 (DEC-0131, DEC-0102)."

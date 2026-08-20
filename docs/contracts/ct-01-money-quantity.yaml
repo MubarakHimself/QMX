@@ -1,27 +1,50 @@
 id: CT-01
 name: Money, price, and quantity value contract
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-CORE
 consumers: [COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-VENUE, COMP-QMF-RISK]
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0022, DEC-0026, DEC-0030]
-gaps: [GAP-0005, GAP-0007]
-purpose: "Provide one exact value vocabulary for amounts, prices, and quantities."
+decisions: [DEC-0105, DEC-0103, DEC-0108, DEC-0109, DEC-0131, DEC-0135, DEC-0138, DEC-0141]  # DEC-0123 (recorded-not-adopted cTrader research) superseded by DEC-0135 (venue facts ratified)
+gaps: []
+purpose: "Provide one exact value vocabulary — Money, Price, and Quantity as scaled integers — and define the money-path taint that bans binary float from any value transitively contributing to an order quantity, price, P&L, or balance."
 invariants:
-  - "Monetary contracts do not use binary floating-point representation."
-  - "Precision, quantization, rounding, units, and overflow behavior remain unresolved."
+  - "Money, Price, and Quantity are whole-number integer counts at a declared scale (number of decimal places): Money(currency, scale); Price(instrument, scale) — an instrument-tagged ratio, never tagged with a single currency; Quantity(unit, scale) with opaque unit such as lot, share, coin, or contract (DEC-0105)."
+  - "Mixed-scale arithmetic on the same currency or unit auto-promotes losslessly to the finer scale or returns a typed refusal — never an implicit rescale or silent rounding (DEC-0105, DEC-0109)."
+  - "The money path is a taint, not a location: any value that transitively contributes to an order quantity, price, P&L, or balance is on the money path regardless of which package computed it, and binary float is banned there (DEC-0105)."
+  - "A float crossing back to Money, Price, or Quantity must pass a named conversion boundary that states its rounding mode explicitly; the venue adapter boundary is one such named boundary (DEC-0105)."
+  - "Foreign money is stored verbatim as evidence with its declared scales; conversions to framework values are derived with lineage, and corrections are annotations, never rewrites (DEC-0105)."
+  - "A venue value delivered as a binary float is evidence, never identity: it converts at the named venue-adapter boundary at receipt to a scaled integer at a per-value-class pinned target scale — execution price to the instrument's declared digits; money to the account's declared money exponent, an absent exponent being a typed refusal; market data to the declared wire scale — with a declared, identity-bearing rounding mode, and the raw float is retained only as integrity-checked provenance, never the value a consumer reads (DEC-0141, DEC-0138)."
+  - "Price subtraction is closed and delta-typed: PriceDelta(instrument, scale) is a first-class value distinct from Price, and the instrument-scoped pip or point is defined by CT-03 instrument-metadata records, never hardcoded; the exact-rational parameter type — a scaled integer or a numerator/denominator pair — extends the same idiom to every non-integer parameter (ratios, multiples, tolerances), and binary floats never appear in parameters or identity (DEC-0131)."
+  - "Identity numerics are integers: scaled-integer money enters fp1 fingerprints directly and floats are refused in identity content; analytic float series stay off the money path with label-derived identity, never a hash of float bytes (DEC-0108, DEC-0105)."
+  - "Every serialized Money, Price, or Quantity artifact stamps this contract's integer format version, whose meaning never mutates — an incompatible change mints the next version (DEC-0103)."
 schema:
-  type: null
-  type_gap: GAP-0007
-  fields: null
-  fields_gap: GAP-0007
-  enums: null
-  enums_gap: GAP-0007
-  units: null
-  units_gap: GAP-0007
-  nullability: null
-  nullability_gap: GAP-0007
-
+  type: "Three frozen-dataclass value types — Money, Price, Quantity — each a scaled integer (an integer count at a declared integer scale). Public construction is one pattern everywhere: an unchecked constructor for trusted internal use plus a validating try_create factory returning value-or-refusal (CT-04)."
+  fields:
+    Money:
+      - "value: scaled-int — whole-number count of the currency's minor units at `scale` (concrete field name not pinned by the spine)"
+      - "currency: string-opaque — currency tag, stored opaque"
+      - "scale: int — number of decimal places the count is quoted at"
+    Price:
+      - "value: scaled-int — whole-number ratio count at `scale`"
+      - "instrument: Instrument identity (venue, venue symbol) per CT-03 — a price is a ratio quoted for an instrument, never tagged with a single currency"
+      - "scale: int — number of decimal places"
+    Quantity:
+      - "value: scaled-int — whole-number count at `scale`"
+      - "unit: string-opaque — opaque unit (lot, share, coin, contract), never parsed"
+      - "scale: int — number of decimal places"
+  enums:
+    currency: "string-opaque — not a closed enum; stored as the tag verbatim"
+    unit: "string-opaque — open set (examples: lot, share, coin, contract); never parsed as a closed enum"
+    rounding_mode: "stated explicitly at each named conversion boundary; the enumerated member set is not pinned in the foundation spine (venue/accounting-boundary detail)"
+    mixed_scale_refusal: "a non-promotable scale mismatch returns a typed refusal from the CT-04 seven-category vocabulary"
+  units:
+    - "Money.value: currency minor units at the declared scale (scale 2 = hundredths)"
+    - "Price.value: instrument-quoted ratio at the declared scale (e.g. the cTrader market-data wire price scale of 1/100000, a ratified venue fact per DEC-0135, stored verbatim as evidence; a venue execution price arrives as a raw double and crosses the named boundary to the instrument's declared digits per DEC-0141)"
+    - "Quantity.value: opaque-unit count at the declared scale"
+    - "scale is a per-value declared integer (number of decimal places), not a global constant"
+  nullability:
+    - "value, tag (currency/instrument/unit), and scale are all required and non-nullable; an invalid or missing part returns a typed refusal via try_create, never a default (DEC-0109)"
+    - "null is prohibited in identity content (fp1): an absent value is an omitted key, never a null (DEC-0108)"
+    - "foreign-money evidence stores declared scales verbatim; an absent scale is a refusal, not an assumed default — for venue money specifically, an absent declared money exponent is a typed refusal, never defaulted (DEC-0105, DEC-0141, DEC-0135)"

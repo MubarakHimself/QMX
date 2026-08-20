@@ -1,27 +1,83 @@
 id: CT-05
-name: Canonical serialization, fingerprint, and compatibility contract
+name: Version, fingerprint, and result-label contract
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-CORE
 consumers: [COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK]
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0029, DEC-0030]
-gaps: [GAP-0005, GAP-0010, GAP-0012]
-purpose: "Give semantic definitions and result artifacts deterministic versioned identities."
+decisions: [DEC-0108, DEC-0103, DEC-0110, DEC-0131, DEC-0136, DEC-0137, DEC-0138]
+gaps: [GAP-0048]
+purpose: >-
+  Give every semantic definition and every computed result a deterministic, versioned identity — the
+  pinned fp1 fingerprint over canonical bytes, the two version ladders, and the result label
+  with its world — all computed by one qmf-core implementation so two conformant producers and merging
+  sandboxes always agree on identity.
 invariants:
-  - "Incompatible semantic changes mint new versions rather than mutating old meaning."
-  - "Canonical bytes, hash algorithm, collision behavior, result-key fields, and deprecation rules remain unresolved."
+  - "Two version ladders never conflated: code packages use SemVer in lockstep (display-only provenance that never enters identity), and every serialized artifact stamps its own integer contract format version whose meaning never mutates — an incompatible change mints the next version plus a migration note, and QMF never loses the ability to read old stored evidence (DEC-0103)."
+  - "Re-derivation of a value under a newer calendar identity or tzdata version produces a new artifact with its own fingerprint and a lineage edge to the old one — never a rewrite, never a silent equality (DEC-0103)."
+  - "One implementation: the canonical serializer and fingerprint function live only in qmf-core; no other package computes a fingerprint except by calling it (DEC-0108)."
+  - "The fp1 recipe is pinned: UTF-8 JSON; object keys sorted lexicographically at every depth; no insignificant whitespace; strings NFC-normalized; all identity numerics are integers (floats are refused in identity content); null is prohibited (an absent value is an omitted key); arrays are order-significant; hash SHA-256; emitted as fp1:sha256:<hex>. The prefix versions the recipe: an upgrade mints fp2 and old fingerprints stay valid forever (DEC-0108)."
+  - "Every contract field is identity by default; a display-only exclusion requires an explicit, versioned declaration in the contract — never an implementer's judgment call (DEC-0108)."
+  - "Float-bearing artifacts (analytic series) take identity from the result label, never from hashing float bytes; the float payload carries an integrity checksum plus (OS, library-version) provenance, and cross-OS bit-identity of float content is not promised (DEC-0108, DEC-0110)."
+  - "An idempotent re-write (same hash, byte-identical content) is accepted silently; a true collision (same hash, differing bytes) is refused and alarmed, never overwritten (DEC-0108)."
+  - "Every result entering evidence carries the label — producer contract identity (the configured producer's fingerprint, distinct from the format version, so two formulas can never share a label), producer contract format version, input fingerprints, evidence time range, computation identity, evidence class (registry:evidence_classes), and world — and together those parts ARE its identity; human display names live outside identity; parts are addable in later label versions, never redefined (DEC-0110, DEC-0131)."
+  - "Computation identity is content-derived from the label parts so identical work from two sandboxes deduplicates and merges; the occurrence record (when, where, by whom it ran) is separate provenance outside identity (DEC-0110)."
+  - "World is one of live, replay, or simulated. simulated is reserved but UNUSABLE in V1 — writing world=simulated into governed evidence is a policy-rejection refusal (CT-04) until the backtesting sitting defines simulated-time typing (DEC-0110, GAP-0048)."
+  - "A non-live world may never write into the live evidence namespace; world separation is delivered by storage separation, not by identity distinctness alone (DEC-0110)."
+  - "A venue command's identity derives from the command record's fp1, which includes the (VenueId, account) stream qualification, the session epoch, and the caller's opaque ordering ordinal; a venue-native id is never sufficient alone, and idempotency and collision tests run against this full local fingerprint (DEC-0137)."
+  - "The fingerprint consumers cite for any adapter-produced artifact is the CONTENT fingerprint — qmf-core's single implementation over the value — never the wrapping registry record's fingerprint; the same rule governs structure emissions (DEC-0138)."
+  - "The capability declaration's fingerprint is identity-bearing for any artifact whose decode depended on it; the per-account venue-observation profile is occurrence/provenance only and never identity-bearing downstream (DEC-0138)."
+  - "A secret reference is occurrence/display-only and excluded from fp1 identity — a credential is a deployment fact, never a market fact — and an account-binding record's identity is (VenueId, AccountId, role, world) (DEC-0136)."
 schema:
-  type: null
-  type_gap: GAP-0010
-  fields: null
-  fields_gap: GAP-0012
-  enums: null
-  enums_gap: GAP-0005
-  units: null
-  units_gap: GAP-0012
-  nullability: null
-  nullability_gap: GAP-0012
-
+  type: >-
+    Two related value families, frozen dataclasses per the AD-3 convention: the Fingerprint string
+    fp1:sha256:<hex> over canonical fp1 bytes, and the ResultLabel that is a computed
+    result's identity. Both are produced only by the single qmf-core implementation.
+  fields:
+    fingerprint:
+      type: string-opaque
+      note: "self-describing identity string, form fp1:sha256:<hex>; the fp1 prefix names the recipe, sha256 the hash; lowercase hex digest (DEC-0108)."
+    result_label:
+      producer_contract_identity:
+        type: fp1-fingerprint
+        note: "the configured producer's fingerprint — the CT-16 configured indicator or CT-17 configured family — distinct from the format version (DEC-0131)."
+      producer_contract_format_version:
+        type: int
+        note: "the artifact's integer contract format version — AD-5's second ladder; package SemVer never enters here (DEC-0110, DEC-0103)."
+      input_fingerprints:
+        type: array-of-fp1-strings
+        note: "the fp1 fingerprints of every identity-bearing input. Whether this collection is order-significant or canonically ordered is not pinned by AD-12; the fp1 array rule makes any stored ordering significant once chosen."
+      evidence_time_range:
+        type: interval-int64-utc-ns
+        note: "half-open Interval over int64 UTC nanoseconds per AD-8 (DEC-0110, DEC-0106)."
+      computation_identity:
+        type: fp1-fingerprint
+        note: "content-derived from the label parts so identical work deduplicates (DEC-0110)."
+      evidence_class:
+        type: string-enum
+        note: "confirmed / unconfirmed / provisional per registry:evidence_classes; a named identity-bearing label part (DEC-0131)."
+      world:
+        type: string-enum
+        note: "one of live / replay / simulated; see enums.world (DEC-0110)."
+    occurrence_record:
+      type: display-only-provenance
+      note: "when, where, and by whom a computation ran; separate provenance OUTSIDE identity, never folded into the result label (DEC-0110)."
+  enums:
+    fingerprint_recipe_prefix:
+      values: [fp1]
+      note: "fp1 is the only minted recipe; a recipe upgrade mints fp2 while old fingerprints remain valid forever (DEC-0108)."
+    hash_algorithm:
+      values: [sha256]
+      note: "SHA-256, emitted in the fingerprint string after the recipe prefix (DEC-0108)."
+    world:
+      values: [live, replay, simulated]
+      note: "live = real venue clocks and quotes with account role carrying money-reality (paper and demo runs are world=live and stay comparable for alpha-decay sensing); replay = a data-driven injected clock over recorded history; simulated = synthetic data, reserved-unusable in V1 (a policy-rejection refusal to write into governed evidence until the backtesting sitting, GAP-0048) (DEC-0110)."
+  units: >-
+    evidence time range is int64 UTC nanoseconds (AD-8); the producer contract format version is a
+    unitless monotonic integer ordinal; fingerprints and the hex digest are opaque strings with no
+    physical units; all identity numerics are integers (floats are refused in identity content).
+  nullability: >-
+    null is prohibited in identity (fp1 recipe: an absent value is an omitted key, never a null); every
+    result-label part is required and identity-bearing; the occurrence record and any declared
+    display-only fields sit outside identity and are governed separately from the fingerprint.

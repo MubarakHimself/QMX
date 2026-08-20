@@ -1,0 +1,8 @@
+# Team override (committed) — QMX planning-only pipeline.
+# Change proposals may only route within the planning pipeline or to the factory.
+
+[workflow]
+persistent_facts = [
+  "QMX override: BMad handles planning ONLY in this project — implementation ships through the external software factory, never through BMad. Pipeline: brainstorming as needed, PRD (bmad-prd), and Architecture (bmad-architecture) in whatever order the work needs - operator ruling 2026-08-19: architecture MAY run before the PRD, grounded on the existing docs/ corpus as the requirements body (do not demand or wait on a PRD); the PRD absorbs architecture output later. Both PRD and Architecture must exist before the project exits BMad. After that exit: /documentation-factory turns the ratified plan into the docs/ knowledge base, then /queue-publish writes work briefs into queue/ for the software factory. Never recommend, require, or gate on bmad-create-epics-and-stories, bmad-sprint-planning, bmad-build, bmad-code-review, or any bmad-testarch-* skill.",
+  "Change proposals in this project may only route backwards to bmad-prd or bmad-architecture, or forwards to /documentation-factory and /queue-publish. Never propose sprint-change, sprint planning, or corrections to epics and stories.",
+]

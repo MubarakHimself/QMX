@@ -4,8 +4,7 @@ components:
     kind: library
     layer: backend
     roster_role: public-library
-    distribution: null
-    distribution_gap: GAP-0002
+    distribution: uv-workspace-lockstep
     depends_on: []
     interfaces: [CT-01, CT-02, CT-03, CT-04, CT-05]
     spec: docs/components/qmf-core.md
@@ -15,10 +14,9 @@ components:
     kind: library
     layer: backend
     roster_role: public-library
-    distribution: null
-    distribution_gap: GAP-0002
-    depends_on: [COMP-QMF-CORE, COMP-QMF-DATA-STORE]
-    interfaces: [CT-02, CT-03, CT-04, CT-05, CT-06, CT-07, CT-08, CT-09, CT-13]
+    distribution: uv-workspace-lockstep
+    depends_on: [COMP-QMF-CORE, COMP-QMF-DATA]
+    interfaces: [CT-02, CT-03, CT-04, CT-05, CT-06, CT-07, CT-08, CT-09, CT-11, CT-13]
     spec: docs/components/qmf-registry.md
 
   - id: COMP-QMF-DATA
@@ -26,9 +24,8 @@ components:
     kind: library
     layer: backend
     roster_role: public-library
-    distribution: null
-    distribution_gap: GAP-0002
-    depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA-STORE]
+    distribution: uv-workspace-lockstep
+    depends_on: [COMP-QMF-CORE, COMP-QMF-DATA-STORE]
     interfaces: [CT-01, CT-02, CT-03, CT-04, CT-05, CT-06, CT-07, CT-08, CT-10, CT-11, CT-12, CT-13, CT-14]
     spec: docs/components/qmf-data.md
 
@@ -37,9 +34,8 @@ components:
     kind: library
     layer: backend
     roster_role: public-library
-    distribution: null
-    distribution_gap: GAP-0002
-    depends_on: [COMP-QMF-CORE, COMP-QMF-DATA]
+    distribution: uv-workspace-lockstep
+    depends_on: [COMP-QMF-CORE]
     interfaces: [CT-01, CT-02, CT-03, CT-04, CT-05, CT-10, CT-16]
     spec: docs/components/qmf-indicators.md
 
@@ -48,10 +44,9 @@ components:
     kind: library
     layer: backend
     roster_role: public-library
-    distribution: null
-    distribution_gap: GAP-0002
-    depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA]
-    interfaces: [CT-02, CT-03, CT-04, CT-05, CT-06, CT-07, CT-08, CT-10, CT-17]
+    distribution: uv-workspace-lockstep
+    depends_on: [COMP-QMF-CORE]
+    interfaces: [CT-02, CT-03, CT-04, CT-05, CT-06, CT-07, CT-08, CT-10, CT-16, CT-17]
     spec: docs/components/qmf-structure.md
 
   - id: COMP-QMF-VENUE
@@ -59,30 +54,43 @@ components:
     kind: middleware
     layer: middleware
     roster_role: public-module
-    distribution: null
-    distribution_gap: GAP-0002
-    depends_on: [COMP-QMF-CORE, COMP-QMF-DATA]
+    distribution: uv-workspace-lockstep
+    depends_on: [COMP-QMF-CORE]
     interfaces: [CT-01, CT-02, CT-03, CT-04, CT-05, CT-10, CT-13, CT-18, CT-19, CT-20, CT-21]
     spec: docs/components/qmf-venue.md
+    notes: >-
+      Venue write path creates no dependency edge: qmf-venue emits through
+      qmf-core-defined sink protocols (ObservationSink, JournalSink, RecordSink,
+      SecretStore) injected at the composition root; the adapter connection
+      manager holds the WriterId and sees every sink refusal. depends_on stays
+      [COMP-QMF-CORE] only. (DEC-0138, DEC-0141)
 
   - id: COMP-QMF-RISK
     name: QMF risk module
     kind: library
     layer: backend
     roster_role: public-module
-    distribution: null
-    distribution_gap: GAP-0002
-    depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA]
+    distribution: uv-workspace-lockstep
+    depends_on: [COMP-QMF-CORE]
     interfaces: [CT-01, CT-02, CT-03, CT-04, CT-05, CT-06, CT-07, CT-10, CT-13, CT-22, CT-23, CT-24, CT-25]
     spec: docs/components/qmf-risk.md
+
+  - id: COMP-QMF-CALENDAR-FOREX
+    name: qmf-calendar-forex (forex market-hours calendar extension)
+    kind: library
+    layer: backend
+    roster_role: extension
+    distribution: separate-versioned-package-own-semver
+    depends_on: [COMP-QMF-CORE]
+    interfaces: [CT-02]
+    spec: docs/components/qmf-calendar-forex.md
 
   - id: COMP-QMF-DATA-INGEST
     name: qmf-data source-ingest seam
     kind: middleware
     layer: middleware
     roster_role: internal-seam
-    distribution: null
-    distribution_gap: GAP-0002
+    distribution: uv-workspace-lockstep
     depends_on: [COMP-QMF-CORE, COMP-QMF-DATA, COMP-DUKASCOPY, COMP-CALENDAR-FEED]
     interfaces: [CT-03, CT-04, CT-10, CT-15]
     spec: docs/components/qmf-data-ingest.md
@@ -92,8 +100,7 @@ components:
     kind: store
     layer: data
     roster_role: internal-seam
-    distribution: null
-    distribution_gap: GAP-0002
+    distribution: uv-workspace-lockstep
     depends_on: []
     interfaces: [CT-09, CT-11, CT-13, CT-26]
     spec: docs/components/qmf-data-store.md
@@ -103,8 +110,7 @@ components:
     kind: process
     layer: data
     roster_role: internal-seam
-    distribution: null
-    distribution_gap: GAP-0002
+    distribution: uv-workspace-lockstep
     depends_on: [COMP-QMF-DATA-STORE, COMP-OBJECT-STORAGE]
     interfaces: [CT-14, CT-26]
     spec: docs/components/qmf-data-backup.md
@@ -115,7 +121,6 @@ components:
     layer: external
     roster_role: external
     distribution: null
-    distribution_gap: GAP-0002
     depends_on: []
     interfaces: [CT-15, CT-18, CT-19, CT-20, CT-21]
     spec: docs/components/ctrader.md
@@ -126,18 +131,16 @@ components:
     layer: external
     roster_role: external
     distribution: null
-    distribution_gap: GAP-0002
     depends_on: []
     interfaces: [CT-15]
     spec: docs/components/dukascopy.md
 
   - id: COMP-CALENDAR-FEED
-    name: Economic-calendar feed
+    name: News-calendar feed (economic calendar)
     kind: external
     layer: external
     roster_role: external
     distribution: null
-    distribution_gap: GAP-0002
     depends_on: []
     interfaces: [CT-15]
     spec: docs/components/calendar-feed.md
@@ -148,7 +151,6 @@ components:
     layer: external
     roster_role: external
     distribution: null
-    distribution_gap: GAP-0002
     depends_on: []
     interfaces: [CT-14]
     spec: docs/components/object-storage.md

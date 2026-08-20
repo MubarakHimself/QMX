@@ -1,32 +1,77 @@
 id: CT-18
 name: Venue capability-discovery contract
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version; the shape is spine-ratified (AD-28), the doc stays provisional pending corpus re-ratification (DEC-0138, DEC-0140)
 owner: COMP-QMF-VENUE
-consumers: []
+consumers: []  # consumer-blind by design: per-venue adapters implement the four venue contracts and the composition root wires them; nothing imports qmf-venue under default-deny, so no package import edge exists (DEC-0138)
 active_consumers: []
-intended_consumers: [COMP-QMF-DATA, COMP-QMF-RISK]
-wiring_status: reserved-unwired
+intended_consumers: [COMP-QMF-DATA, COMP-QMF-RISK]  # Data gates CT-10/CT-15 intake on declared market-data kinds; Risk gates command capability; both are wired by the composition root when the factory ships, documentary until then (DEC-0138)
+wiring_status: ratified-shape-wiring-intended  # AD-28 ratified the capability shape; adapter implementation and root wiring stay intended and documentary until the software factory ships them (DEC-0138)
 layer_from: middleware
 layer_to: backend
-decisions: [DEC-0059, DEC-0060, DEC-0061]
-gaps: [GAP-0005, GAP-0036, GAP-0037, GAP-0038]
-purpose: "Reserve a venue-neutral capability shape for later Data and Risk consumers without creating an active QMF V1 handoff."
+decisions: [DEC-0059, DEC-0060, DEC-0061, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0140, DEC-0141]
+gaps: []  # GAP-0005 answered by minting version 1; GAP-0036/0037/0038 answered 2026-08-20 (DEC-0135, DEC-0137, DEC-0138); measured-at-connection values await first-connection verification, a deferred measurement, not a gap
+purpose: "One venue-neutral capability contract carried as two artifacts — a static, credential-free capability declaration and a per-(VenueId, account) venue-observation profile — so a caller learns exactly what a venue supports before invoking it, and no measured fact ever splits artifact identity across accounts."
 invariants:
-  - "cTrader Open API from Python is the first adapter, not a qmf-core assumption."
-  - "Later crypto and stock adapters use the same venue-neutral seam."
-  - "No active QMF V1 downstream consumer is wired; the intended consumers are documentary targets only."
-  - "No capability contract is buildable until GAP-0036 and GAP-0038 define the caller, state, fields, and wiring."
-  - "Capability values, symbol catalog, price basis, order types, account modes, limits, and negotiation remain unresolved."
+  - "The capability shape is ratified (DEC-0138); adapters implement it and the composition root wires it through qmf-core-defined sink protocols, but no wiring is authorized from this doc — CT-18 wiring stays intended and documentary until the software factory ships it (DEC-0138, DEC-0140)."
+  - "The capability surface is two artifacts, never one: a static capability declaration and a per-(VenueId, account) venue-observation profile; consuming a measured-but-unverified capability in evidence-bearing work is a policy-rejection refusal (DEC-0138, DEC-0140)."
+  - "The capability declaration is static and adapter-version-scoped: importable without credentials, containing no measured or tunable value, every field marked static or measured-at-connection, carrying the venue protocol artifact identity, and its fingerprint identity-bearing for any artifact whose decode depended on it (DEC-0138, DEC-0140)."
+  - "The venue-observation profile is per (VenueId, account): produced post-connect by the first-connection verification suite, append-only with supersedes edges, holding every measured fact and verdict, occurrence/provenance only and never identity-bearing downstream (DEC-0138, DEC-0140)."
+  - "Wiring order is fixed: the capability declaration is present at adapter construction; the venue-observation profile exists before the first command and before any evidence-bearing decode; a measured-at-connection capability is an unavailable-dependency refusal until its profile exists (DEC-0138, DEC-0140)."
+  - "Throttle and window tuning live in neither artifact — they are node configuration under the do-not-default standing; the token lifecycle class is declared here, but retry, pool, and deadline constants are node values, never CT-18 defaults (DEC-0138, DEC-0137)."
+  - "CT-18 owns the field roster: market-data kinds, order-parameter subset, command scopes, acknowledgement modes per command kind, position model netting|hedging per account, session topology, throttle scope, rate limits, span caps and paging model, token lifecycle class, equity nativeness, server-clock availability, instrument-metadata surface, attribution-label support, and protection primitives suspend-new|drain|close_all (DEC-0138)."
+  - "Invoking anything undeclared is an unsupported-capability refusal; an unsupported close scope is refused, never emulated at a wider scope, and a heavy or absent capability is never silently substituted (DEC-0138, DEC-0137)."
+  - "Error mapping is a pinned row shape: (venue code, command-or-event context) -> (refusal category, retryability, after-condition, submission-outcome class in rejected-by-venue|UNKNOWN), versioned per adapter; a venue code reads as rejected-by-venue only where the table declares it, category alone never implies retryability, and every other path is UNKNOWN (DEC-0138, DEC-0137)."
+  - "The unmapped-code default is fail-closed: (transient venue failure, retryable = no, outcome = UNKNOWN) plus an alarm; UNKNOWN is a state, never an error (DEC-0138, DEC-0137)."
+  - "Per-value-class float target scales are pinned here: a foreign binary float is never identity — it crosses AD-7's named boundary at receipt to a scaled integer at the CT-18-declared target scale (execution price -> the instrument's declared digits; money -> the account's declared money exponent, an absent exponent being a refusal; market data -> the declared wire scale) with a declared, identity-bearing rounding mode, the raw float retained only as integrity-checked provenance (DEC-0141, DEC-0138)."
+  - "The command-id mapping is a declared capability: the mapping into the venue's client-id field must be injective and total over the digest space, or a durable command-id-binding record persists through the sink before submission; any separate attribution label is declared surface distinct from the client-id mapping (DEC-0137, DEC-0138)."
+  - "The first-connection verification suite is a named contract part, verify-or-refuse throughout: an unverified spot-timestamp unit refuses spot evidence; an unmeasured daily boundary leaves venue daily bars ungoverned, and once measured and verified the boundary is minted as a venue-scoped market-hours calendar identity giving venue-native bars a legal BarSpec anchor; a failed bar-basis reconciliation refuses bar evidence; a failed pip-formula validation refuses metadata-derived parameters; an absent money exponent refuses that message's money decode (DEC-0138, DEC-0135)."
+  - "A CCXT-class crypto venue slots in later by declaring a different capability record through the same neutral port; nothing venue-shaped enters qmf-core (DEC-0138, DEC-0061)."
+  - "The venue protocol artifact is pinned in the AD-6 register (cTrader-platform profile: the Spotware proto integer release tag, currently 91); a tag change mints a new capability declaration plus re-verification, bumping a contract format version only where the wire change alters this contract's public shape (DEC-0138, DEC-0135)."
+  - "The six-stage live-path latency decomposition (tick received -> evidence write -> indicator update -> decision -> risk evaluation -> order submitted) is declared as named rungs with no numeric budgets until measured; a latency rung is a monotonic delta within one boot epoch on one machine and a wall-computed rung is refused as a baseline (DEC-0138)."
 schema:
-  type: null
-  type_gap: GAP-0038
-  fields: null
-  fields_gap: GAP-0038
-  enums: null
-  enums_gap: GAP-0038
-  units: null
-  units_gap: GAP-0037
-  nullability: null
-  nullability_gap: GAP-0038
+  type: capability-declaration + venue-observation-profile  # the static, adapter-version-scoped declaration whose fingerprint is identity-bearing for dependent decodes, and the per-(VenueId, account) post-connect profile that holds every measured fact and verdict (DEC-0138, DEC-0140)
+  fields:
+    - "venue_protocol_artifact: the pinned AD-6 register identity of the venue protocol (cTrader-platform profile carries the Spotware proto integer release tag, currently 91); identity-bearing in the declaration (DEC-0138, DEC-0135)"
+    - "market_data_kinds: the declared set among tick, bar, depth (and their subscription lifecycle facts); market data enters as CT-10 source observations through qmf-data's CT-15 intake, not a fifth contract (DEC-0138)"
+    - "order_parameter_subset: the adapter's supported subset of the QMF-owned order-parameter vocabulary — order type market|limit|stop|stop-limit, time-in-force, protective-stop attachment (DEC-0137, DEC-0138)"
+    - "command_scopes: the natively supported close scopes among account|account-binding|instrument-within-binding for close_position and close_all; an unsupported scope is refused, never widened (DEC-0137, DEC-0138)"
+    - "acknowledgement_modes: per command kind, one of explicit-event|implicit-absence|none; an outcome is never derived from absence alone (DEC-0137, DEC-0138)"
+    - "position_model: netting|hedging, declared per account (DEC-0138)"
+    - "session_topology: the venue's declared connection topology (two connections where demo and live are separate hosts); paired-demo bindings are secret-reference-only records per CT-21 (DEC-0138)"
+    - "throttle_scope: the shared-throttle scope, one of connection|account|binding, on which cancel/close dispatch ahead of place_order (DEC-0137, DEC-0138)"
+    - "rate_limits: the venue's declared per-connection request-rate ceilings, a static declaration field (cTrader-platform: 50 req/s non-historical plus 5 req/s historical, per connection, documentation-grade per DEC-0135); rate-window semantics are the measured-at-connection part and ride the venue-observation profile (DEC-0135, DEC-0138)"
+    - "span_caps_and_paging: per-request span caps and the paging model (cTrader-platform: a documented one-week historical span cap, newest-first delta-encoded ticks, hasMore-only paging) (DEC-0135, DEC-0138)"
+    - "token_lifecycle_class: the credential lifecycle class the adapter presents (cTrader-platform: ~30-day access token, never-expiring refresh token); the secret handling itself is CT-21 (DEC-0135, DEC-0136)"
+    - "equity_nativeness: whether the venue exposes a native equity field or equity is derived (reconciliation reads it per CT-20) (DEC-0138, DEC-0137)"
+    - "server_clock_availability: whether the venue exposes a server clock; the cTrader-platform Open API exposes none (closed-set proof), so receive-time recording is mandatory (DEC-0135, DEC-0138)"
+    - "instrument_metadata_surface: the declared instrument/account metadata snapshots (tick size, digits, pip, money exponent) with full-metadata prerequisites — a light symbol list is insufficient where scaling metadata lives only on the full record (DEC-0138)"
+    - "attribution_label_support: whether the venue offers a separate attribution label, declared distinct from the client-id mapping (DEC-0137, DEC-0138)"
+    - "protection_primitives: the declared subset among suspend-new|drain|close_all; suspend-new takes local effect instantly with no venue round-trip (DEC-0137, DEC-0138)"
+    - "command_id_mapping: injective-and-total into the venue client-id field, or the durable command-id-binding record shape when the venue field cannot carry the digest (DEC-0137, DEC-0138)"
+    - "float_target_scales: the per-value-class pinned target scale and rounding mode for AD-7's named foreign-float boundary (execution price -> declared digits; money -> account money exponent; market data -> wire scale) (DEC-0141, DEC-0138)"
+    - "error_map: the versioned table of (venue code, context) -> (refusal category, retryability, after-condition, outcome class) rows, with the fail-closed unmapped default (DEC-0138, DEC-0137)"
+    - "verification_suite: the named first-connection verify-or-refuse checks — spot-timestamp unit, daily-boundary measurement and calendar mint, bar-basis reconciliation, pip-formula validation, money-exponent presence (DEC-0138, DEC-0135)"
+    - "measured_facts: the venue-observation profile's append-only measured values and verdicts, each carrying a supersedes edge to the value it replaces; occurrence/provenance only (DEC-0138, DEC-0140)"
+  enums:
+    - "field marking: static | measured-at-connection — every declaration field carries exactly one (DEC-0138, DEC-0140)"
+    - "position model: netting | hedging (DEC-0138)"
+    - "acknowledgement mode: explicit-event | implicit-absence | none (DEC-0137, DEC-0138)"
+    - "close scope: account | account-binding | instrument-within-binding (DEC-0137, DEC-0138)"
+    - "throttle scope: connection | account | binding (DEC-0137, DEC-0138)"
+    - "protection primitive: suspend-new | drain | close_all (DEC-0137, DEC-0138)"
+    - "order type: market | limit | stop | stop-limit (DEC-0137, DEC-0138)"
+    - "submission-outcome class in the error map: rejected-by-venue | UNKNOWN (DEC-0137, DEC-0138)"
+    - "refusal categories in this contract's paths: unsupported capability (undeclared invocation, unsupported close scope), unavailable dependency (measured-at-connection capability before its profile exists), policy rejection (measured-but-unverified capability in evidence-bearing work), invalid input, transient venue failure (fail-closed unmapped venue code) per registry:typed_refusal_codes (DEC-0138, DEC-0137)"
+  units:
+    - "rate limits: requests per second, declared per connection; cTrader-platform 50 non-historical + 5 historical (DEC-0135)"
+    - "historical span caps: milliseconds; cTrader-platform documented one-week cap (604800000 ms), runtime-enforced (DEC-0135)"
+    - "market-data wire scale: the declared foreign integer scale (cTrader-platform market-data prices are uint64 in 1/100000) (DEC-0135, DEC-0141)"
+    - "token lifecycle: the declared lifecycle class in wall duration (cTrader-platform access token ~30 days, refresh token never-expiring); actual refresh cadence and submission deadline are do-not-default node values (DEC-0135, DEC-0137)"
+    - "latency rungs: monotonic deltas within one boot epoch on one machine, no numeric budgets until measured; a wall-computed rung is refused as a baseline (DEC-0138)"
+    - "heartbeat: the declared inactivity bound (cTrader-platform safe bound 10 seconds) (DEC-0135)"
+  nullability:
+    - "a measured-at-connection field is absent from the capability declaration and is an unavailable-dependency refusal until the venue-observation profile supplies it (DEC-0138, DEC-0140)"
+    - "an absent money exponent is a refusal, never a default to 2; an absent required metadata field refuses the dependent decode (DEC-0138, DEC-0135)"
+    - "the venue-observation profile is occurrence/provenance only and never enters a downstream fingerprint; the capability declaration's fingerprint is identity-bearing for dependent decodes (DEC-0138, DEC-0140)"
+conformance_register: "The venue increment gate produced 49 findings (19 rubric, 30 adversarial conformant-but-incompatible pairs, 12 critical) all applied at desk, folding into these invariants the two-artifact split, the pinned error-map row shape with the fail-closed default, the injective-or-bound command-id mapping, the per-value-class float target scales, and the verify-or-refuse verification suite; the reviews are cited as evidence, never copied, and bind conformance tests when the factory ships (DEC-0140, DEC-0138)."

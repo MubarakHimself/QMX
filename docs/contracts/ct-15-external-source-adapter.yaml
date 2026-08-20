@@ -1,8 +1,7 @@
 id: CT-15
 name: External data-source adapter contract
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-DATA-INGEST
 active_providers: [COMP-DUKASCOPY, COMP-CALENDAR-FEED]
 intended_providers: [COMP-CTRADER]
@@ -14,25 +13,43 @@ response_from: [COMP-DUKASCOPY, COMP-CALENDAR-FEED]
 response_to: COMP-QMF-DATA-INGEST
 layer_from: external
 layer_to: middleware
-decisions: [DEC-0051, DEC-0052, DEC-0053]
-gaps: [GAP-0005, GAP-0028, GAP-0029, GAP-0030]
-purpose: "Define the external-provider request and response port owned and called by COMP-QMF-DATA-INGEST without owning provider behavior."
+decisions: [DEC-0119, DEC-0117, DEC-0108, DEC-0107, DEC-0109, DEC-0106, DEC-0103, DEC-0135, DEC-0138]  # DEC-0123 (recorded-not-adopted cTrader research) superseded by DEC-0135 (venue facts ratified)
+gaps: []  # GAP-0037 answered 2026-08-20: cTrader wire schema, rate limits, tick span, and trendbar basis ratified as venue facts (DEC-0135); the adapter contract homing market-data intake here is ratified (DEC-0138)
+purpose: "Define the qmf-data-owned request/response port for external data providers -- source contracts, normalization, validation, and idempotent intake -- without owning provider behavior, scheduling, or lifecycle."
 invariants:
-  - "COMP-QMF-DATA-INGEST is the QMF owner and caller; COMP-DUKASCOPY and COMP-CALENDAR-FEED are external providers."
-  - "COMP-CTRADER is an intended future provider under GAP-0030, not an active CT-15 provider."
-  - "Requests flow from Data-Ingest to a provider and responses flow from that provider to Data-Ingest."
-  - "COMP-QMF-DATA does not accept CT-15; it accepts Data-Ingest producer observations through the Data-owned CT-10 boundary."
-  - "Scheduled process lifecycle stays outside the qmf-data library."
-  - "Dukascopy-class history and broker ticks remain separately identified sources."
-  - "External schemas, legal terms, source identities, rate limits, retries, capabilities, and correction behavior remain unresolved."
+  - "qmf-data defines the source contracts, normalization, validation, and idempotent intake; applications own scheduling, retries, supervision, and UI (DEC-0119)."
+  - "Intake is idempotent keyed on (source, source-native id, revision); a provider revision is a NEW artifact, never an fp1 collision (DEC-0119, DEC-0108)."
+  - "source is a core provenance noun orthogonal to VenueId: a provider you can trade at is a venue, a provider you only read from is a source; COMP-DUKASCOPY and COMP-CALENDAR-FEED are sources (DEC-0117, DEC-0107)."
+  - "COMP-QMF-DATA-INGEST is the QMF owner and caller; requests flow from Data-Ingest to a provider and responses flow from that provider back to Data-Ingest (DEC-0119)."
+  - "COMP-QMF-DATA does not accept CT-15; it accepts Data-Ingest producer observations through the Data-owned CT-10 boundary (DEC-0117)."
+  - "Tick sources are separately identified -- Dukascopy history versus the broker feed -- with bid and ask preserved and their source timestamps kept (DEC-0119)."
+  - "Source disagreements stay visible via corroborates / disagrees-with typed edges and are never merged away (DEC-0119)."
+  - "The news-calendar recorder keeps provider-native identity and revisions; the legal archiving posture remains an open operator item, recorded not resolved (DEC-0119)."
+  - "Foreign timestamps and foreign money in provider payloads are stored verbatim as evidence with their declared zone and scale; conversions are derived under lineage and corrections are appended, never overwritten (DEC-0106, DEC-0117)."
+  - "Scheduled process lifecycle stays outside the qmf-data library; the adapter is a called port, not a running downloader (DEC-0119)."
+  - "COMP-CTRADER's venue facts are ratified (DEC-0135): timestamps, the three numeric scale systems, rate limits, and tick spans are documented, while the trendbar price basis is measured per broker at first connection, never assumed; venue market data reaches this intake application-mediated as CT-10 source observations, and cTrader remains an intended provider whose adapter ships through the software factory, not from these docs (DEC-0138, DEC-0135)."
+  - "Boundary failures return typed refusals -- transient venue failure, unavailable dependency, or invalid input for a malformed provider payload -- returned, never raised across the boundary (DEC-0109)."
+  - "Venue market-data intake is homed in CT-15: ticks, bars, depth, gap-replay backfill, and historical paging enter as CT-10 source observations through this intake -- the venue is also a source -- application-mediated, with no fifth contract and no new dependency edge (DEC-0138)."
+  - "Subscription lifecycle is declared CT-18/CT-15 surface: a technical snapshot event on subscribe, a non-instantaneous unsubscribe, and hasMore-class paging that re-requests with a shifted bound (DEC-0138, DEC-0135)."
+  - "The pinned canonical sensing feed carries a prohibition, not just a capability: no silent sibling-feed failover -- a sensing outage fails closed until the same feed gap-replays (DEC-0138)."
+  - "Raw depth recording is the verbatim wire payload through this same intake into the raw archive, never an invented encoding (DEC-0138)."
 schema:
-  type: null
-  type_gap: GAP-0030
-  fields: null
-  fields_gap: GAP-0030
-  enums: null
-  enums_gap: GAP-0029
-  units: null
-  units_gap: GAP-0030
-  nullability: null
-  nullability_gap: GAP-0029
+  type: source-observation-intake  # a provider response normalized into the qmf-data intake shape
+  fields:
+    - "contract_format_version (int) -- stamped into every artifact (DEC-0103)"
+    - "source (string-opaque) -- provenance identity of the provider, never a VenueId (DEC-0117)"
+    - "source_native_id (string-opaque) -- the provider's own id, never parsed (DEC-0119, DEC-0107)"
+    - "revision (string-opaque) -- the provider's own revision token, never parsed (DEC-0119, DEC-0108)"
+    - "event_time (int64-utc-ns) and known_at (int64-utc-ns) -- bitemporal fact shape (DEC-0117)"
+    - "source_timestamp (foreign, stored verbatim with declared zone/offset/resolution) -- until conversion to UTC ns under lineage (DEC-0106)"
+    - "bid (scaled-int) and ask (scaled-int) -- tick prices preserved separately, never merged (DEC-0119, DEC-0105)"
+  enums:
+    world: [live, replay, simulated]  # simulated reserved-unusable in V1 (DEC-0110)
+    disagreement_edges: [corroborates, disagrees-with]  # source-disagreement lineage edges (DEC-0119)
+    boundary_refusal_categories: [transient venue failure, unavailable dependency, invalid input, storage failure]  # subset of the seven (DEC-0109)
+  units:
+    normalized_timestamps: int64-utc-ns
+    foreign_source_timestamps: stored-verbatim-with-declared-zone-offset-resolution
+    prices: scaled-int at a declared per-instrument scale; binary float is banned on the money path (DEC-0105)
+  nullability: "source, source_native_id, and revision are the intake key and are required; null is prohibited in identity content -- an absent value is an omitted key (DEC-0108)."
+  venue_facts_ratified: "cTrader wire schema, the three numeric scale systems, rate limits (50/5 req/s per connection), the one-week tick span cap, and hasMore-only paging are ratified venue facts (DEC-0135); the trendbar bid/ask/mid basis is measured per broker at first connection, never assumed (DEC-0135); the adapter contract that homes this market-data intake is ratified (DEC-0138)."

@@ -47,3 +47,19 @@ sources:
   kind: transcript
   role: primary
   status: harvested
+- id: SRC-03
+  path: _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/
+  kind: rider
+  role: primary
+  status: harvested
+- id: SRC-04
+  path: archive/qmf-3.txt
+  kind: transcript
+  role: primary
+  status: harvested
+- id: SRC-05
+  path: archive/qmf-4.txt
+  kind: transcript
+  role: primary
+  status: harvested
+  note: "2026-08-20 indicators/structure sitting (GAP-0031..0034) and its increment reviewer gate; distilled into SRC-03's .memlog.md entries 50..62 and the re-finalized ARCHITECTURE-SPINE.md AD-22..AD-25 plus cross-AD amendments, which are the citation surface. Later portions of the transcript (venue sitting, GAP-0035..0038) are outside this pass's intake and deliberately unharvested."

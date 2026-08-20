@@ -1,147 +1,190 @@
 variables:
   - name: monetary_representation
     symbol: null
-    value: null
+    value: scaled-integer
     formula: null
     units: null
     type: enum
     component: COMP-QMF-CORE
-    decision: DEC-0026
+    decision: DEC-0105
     configurable: false
-    gap: GAP-0007
-    notes: "Exact representation is unresolved; binary floating point is prohibited for monetary contracts."
+    notes: "Money, Price, and Quantity are whole-number integer counts at a declared scale; binary floating point is banned on the money path (DEC-0105, AD-7)."
 
   - name: money_decimal_scale
     symbol: null
-    value: null
+    value: declared-per-value
     formula: null
     units: decimal-places
-    type: count
+    type: enum
     component: COMP-QMF-CORE
-    decision: DEC-0026
+    decision: DEC-0105
     configurable: false
-    gap: GAP-0007
-    notes: "No precision is ratified."
+    notes: "Scale is declared per value on Money(currency, scale); foreign scales are stored verbatim as evidence, never rescaled (DEC-0105, AD-7)."
 
   - name: price_decimal_scale
     symbol: null
-    value: null
+    value: declared-per-value
     formula: null
     units: decimal-places
-    type: count
+    type: enum
     component: COMP-QMF-CORE
-    decision: DEC-0026
+    decision: DEC-0105
     configurable: false
-    gap: GAP-0007
-    notes: "Venue-specific precision metadata is not yet specified."
+    notes: "Scale is declared per value on Price(instrument, scale) — a price is an instrument-tagged ratio, never tagged with a single currency; foreign venue scales are stored verbatim (DEC-0105, AD-7)."
 
   - name: quantity_decimal_scale
     symbol: null
-    value: null
+    value: declared-per-value
     formula: null
     units: decimal-places
-    type: count
+    type: enum
     component: COMP-QMF-CORE
-    decision: DEC-0026
+    decision: DEC-0105
     configurable: false
-    gap: GAP-0007
-    notes: "Quantity precision and quantization boundaries are unresolved."
+    notes: "Scale is declared per value on Quantity(unit, scale) with an opaque unit (lot, share, coin, contract); foreign scales are stored verbatim (DEC-0105, AD-7)."
 
   - name: money_rounding_mode
     symbol: null
-    value: null
+    value: explicit-at-named-boundaries
     formula: null
     units: null
     type: enum
     component: COMP-QMF-CORE
-    decision: DEC-0026
+    decision: DEC-0105
     configurable: false
-    gap: GAP-0007
-    notes: "Rounding is a blocking operator choice."
+    notes: "Rounding occurs only at named conversion boundaries (the venue adapter boundary is one) with an explicitly stated rounding mode; mixed-scale arithmetic auto-promotes losslessly or refuses (DEC-0105, AD-7)."
 
   - name: timestamp_precision
     symbol: null
-    value: null
+    value: int64-utc-nanoseconds
     formula: null
     units: null
     type: enum
     component: COMP-QMF-CORE
-    decision: DEC-0032
+    decision: DEC-0106
     configurable: false
-    gap: GAP-0008
-    notes: "UTC nanoseconds is a proposal, not a contract."
+    notes: "Every stored timestamp is int64 UTC nanoseconds since the Unix epoch (POSIX, no-leap-second); all nanosecond arithmetic is checked (DEC-0106, AD-8)."
+
+  - name: timestamp_valid_range
+    symbol: null
+    value: "1677..2262"
+    formula: null
+    units: null
+    type: string
+    component: COMP-QMF-CORE
+    decision: DEC-0106
+    configurable: false
+    notes: "int64 UTC ns representable range; overflow is a checked invalid-input refusal, never a wrap (DEC-0106, AD-8)."
+
+  - name: forex_rollover
+    symbol: null
+    value: "17:00 America/New_York"
+    formula: null
+    units: null
+    type: string
+    component: COMP-QMF-CORE
+    decision: DEC-0106
+    configurable: false
+    notes: "Accounting rollover of QMF's own first forex market-hours calendar; operator-adopted and independent of venue bars. GAP-0037 verification completed 2026-08-20 (DEC-0135): the venue's actual daily-bar boundary is measured per broker, never assumed equal to this rule, so this rollover stays QMF's accounting rule regardless of what a venue slices (DEC-0106, DEC-0135, AD-8)."
 
   - name: instrument_identity_shape
     symbol: null
-    value: null
+    value: "(venue, opaque-venue-symbol)"
     formula: null
     units: null
     type: string
     component: COMP-QMF-CORE
-    decision: DEC-0032
+    decision: DEC-0107
     configurable: false
-    gap: GAP-0009
-    notes: "Venue plus opaque symbol is a recommendation only."
+    notes: "Instrument identity is (venue, the venue's own symbol); the symbol is opaque and never parsed; aliases and renames are separate dated records (DEC-0107, AD-9)."
 
   - name: canonical_hash_algorithm
     symbol: null
-    value: null
+    value: "fp1:sha256"
     formula: null
     units: null
     type: enum
     component: COMP-QMF-CORE
-    decision: DEC-0029
+    decision: DEC-0108
     configurable: false
-    gap: GAP-0010
-    notes: "The fingerprint algorithm and canonical bytes are unresolved."
+    notes: "The fp1 recipe hashed with SHA-256, emitted fp1:sha256:<hex>; the single implementation lives only in qmf-core; recipe upgrades mint fp2 and old fingerprints stay valid forever (DEC-0108, AD-10)."
 
   - name: contract_version_syntax
     symbol: null
-    value: null
+    value: "per-contract-integer-format-version; packages semver-lockstep-0.x"
     formula: null
     units: null
     type: string
     component: COMP-QMF-CORE
-    decision: DEC-0030
+    decision: DEC-0103
     configurable: false
-    gap: GAP-0005
-    notes: "Versioning from birth is decided; syntax and compatibility policy are not."
+    notes: "Two ladders: every serialized contract carries its own integer format version stamped into each artifact; code packages use SemVer in lockstep, 0.x until the V1 blueprint ships (DEC-0103, AD-5)."
 
   - name: typed_refusal_codes
     symbol: null
-    value: null
+    value: [invalid-input, unsupported-capability, unavailable-dependency, stale-evidence, policy-rejection, transient-venue-failure, storage-failure]
     formula: null
     units: null
     type: enum
     component: COMP-QMF-CORE
-    decision: DEC-0029
+    decision: DEC-0109
     configurable: false
-    gap: GAP-0011
-    notes: "The refusal taxonomy remains unratified."
+    notes: "Seven refusal categories, each carrying machine-readable context and retryability; categories are addable in later versions, never redefined (DEC-0109, AD-11)."
 
   - name: result_identity_key
     symbol: null
-    value: null
+    value: "(producer-contract-identity, producer-contract-format-version, input-fingerprints, evidence-time-range, computation-identity, evidence-class, world)"
     formula: null
     units: null
     type: string
     component: COMP-QMF-CORE
-    decision: DEC-0032
+    decision: DEC-0110
     configurable: false
-    gap: GAP-0012
-    notes: "The result-label tuple is one of the six open freeze choices."
+    notes: "The result label is the result's identity — producer contract identity, producer contract format version, input fingerprints, evidence time range, computation identity, evidence class, and world; human display names live outside identity; the occurrence record is separate provenance (DEC-0110, DEC-0131, AD-12)."
 
   - name: design_bot_concurrency
     symbol: null
-    value: null
+    value: 40
     formula: null
     units: bots
     type: count
     component: COMP-QMF-CORE
-    decision: DEC-0098
+    decision: DEC-0111
     configurable: false
-    gap: GAP-0013
-    notes: "The source names about forty Bots as a real design case, not an exact capacity or SLO."
+    notes: "Motivating reference for sizing benchmark ladders (10/100/200 marks); not an SLO (DEC-0111, AD-13)."
+
+  - name: python_version
+    symbol: null
+    value: "3.14"
+    formula: null
+    units: null
+    type: string
+    component: COMP-QMF-CORE
+    decision: DEC-0099
+    configurable: false
+    notes: "CPython 3.14 pinned across all packages, CI, and factory sandboxes (DEC-0099, AD-1)."
+
+  - name: coverage_floor_percent
+    symbol: null
+    value: 80
+    formula: null
+    units: percent
+    type: count
+    component: COMP-QMF-CORE
+    decision: DEC-0101
+    configurable: false
+    notes: "Per package, every change; CT-01/CT-02 primitive modules require 100% branch coverage (DEC-0101, AD-3)."
+
+  - name: core_import_time_budget
+    symbol: null
+    value: well-under-1s
+    formula: null
+    units: null
+    type: string
+    component: COMP-QMF-CORE
+    decision: DEC-0111
+    configurable: false
+    notes: "Stated design constraint, not a measured baseline; qmf-core is sandbox-critical (DEC-0111, AD-13)."
 
   - name: registry_attempt_scope
     symbol: null
@@ -150,10 +193,10 @@ variables:
     units: null
     type: enum
     component: COMP-QMF-REGISTRY
-    decision: DEC-0033
+    decision: DEC-0121
     configurable: false
     gap: GAP-0017
-    notes: "The counter target and scope are unresolved."
+    notes: "Deferred to the backtesting sitting (DEC-0121); the counter target and scope are unresolved."
 
   - name: registry_attempt_budget
     symbol: null
@@ -162,10 +205,10 @@ variables:
     units: attempts
     type: count
     component: COMP-QMF-REGISTRY
-    decision: DEC-0033
+    decision: DEC-0121
     configurable: true
     gap: GAP-0017
-    notes: "No attempt budget is ratified."
+    notes: "Deferred to the backtesting sitting (DEC-0121); no attempt budget is ratified."
 
   - name: registry_attempt_reset_policy
     symbol: null
@@ -174,22 +217,21 @@ variables:
     units: null
     type: enum
     component: COMP-QMF-REGISTRY
-    decision: DEC-0033
+    decision: DEC-0121
     configurable: false
     gap: GAP-0017
-    notes: "Whether and when attempt accounting resets is unresolved."
+    notes: "Deferred to the backtesting sitting (DEC-0121); whether and when attempt accounting resets is unresolved."
 
   - name: historical_holdout_months
     symbol: null
-    value: null
+    value: 12
     formula: null
     units: months
     type: duration
     component: COMP-QMF-DATA
-    decision: DEC-0044
+    decision: DEC-0119
     configurable: true
-    gap: GAP-0024
-    notes: "The source says approximately twelve months; the exact boundary and date arithmetic are unresolved."
+    notes: "No-peek seal, not retention (data is kept regardless); the seal boundary is a frozen TradingDate never re-derived under later tzdata (DEC-0119, AD-21)."
 
   - name: raw_history_retention_policy
     symbol: null
@@ -198,21 +240,20 @@ variables:
     units: null
     type: enum
     component: COMP-QMF-DATA
-    decision: DEC-0044
+    decision: DEC-0118
     configurable: false
-    notes: "Retain the full obtainable history for each source."
+    notes: "Raw originals and lineage are kept forever for each source (DEC-0118, AD-20)."
 
   - name: backup_cadence
     symbol: null
-    value: null
+    value: nightly
     formula: null
     units: schedule
     type: enum
     component: COMP-QMF-DATA
-    decision: DEC-0045
+    decision: DEC-0118
     configurable: true
-    gap: GAP-0027
-    notes: "Off-machine backup direction is decided; cadence and scheduling remain unresolved."
+    notes: "Ratified backup design is nightly, encrypted, versioned, off-machine; QMF provides the primitives while schedule and execution are application/ops-owned (DEC-0118, AD-20)."
 
   - name: backup_recovery_point_objective
     symbol: null
@@ -221,10 +262,10 @@ variables:
     units: duration
     type: duration
     component: COMP-QMF-DATA
-    decision: DEC-0045
+    decision: DEC-0118
     configurable: true
     gap: GAP-0027
-    notes: "No RPO is ratified."
+    notes: "Backup design ratified (DEC-0118, AD-20); the numeric RPO is named at the node/ops sitting."
 
   - name: backup_recovery_time_objective
     symbol: null
@@ -233,10 +274,10 @@ variables:
     units: duration
     type: duration
     component: COMP-QMF-DATA
-    decision: DEC-0045
+    decision: DEC-0118
     configurable: true
     gap: GAP-0027
-    notes: "No RTO is ratified."
+    notes: "Backup design ratified (DEC-0118, AD-20); the numeric RTO is named at the node/ops sitting."
 
   - name: backup_retention_period
     symbol: null
@@ -245,10 +286,10 @@ variables:
     units: duration
     type: duration
     component: COMP-QMF-DATA
-    decision: DEC-0045
+    decision: DEC-0118
     configurable: true
     gap: GAP-0027
-    notes: "Off-machine retention is unresolved."
+    notes: "Backup design ratified (DEC-0118, AD-20); the numeric retention period is named at the node/ops sitting."
 
   - name: restore_verification_cadence
     symbol: null
@@ -257,46 +298,131 @@ variables:
     units: duration
     type: duration
     component: COMP-QMF-DATA
-    decision: DEC-0045
+    decision: DEC-0118
     configurable: true
     gap: GAP-0027
-    notes: "Restore-verification cadence is unresolved."
+    notes: "Backup design ratified (DEC-0118, AD-20) with automated sample-restore tests plus periodic full-restore rehearsal; the numeric cadence is named at the node/ops sitting."
 
   - name: local_store_engine
     symbol: null
-    value: null
+    value: [parquet, duckdb, sqlite, jsonl]
     formula: null
     units: null
     type: enum
     component: COMP-QMF-DATA
-    decision: DEC-0047
+    decision: DEC-0117
     configurable: false
-    gap: GAP-0021
-    notes: "Parquet, DuckDB, SQLite, and JSONL are study candidates only."
+    notes: "Behind QMF-owned contracts; engines swappable; only raw-archive and journal formats are evidence-bearing (DEC-0117, AD-19)."
+
+  - name: journal_event_types
+    symbol: null
+    value: [decision, order, fill, risk-transition, promotion, data-quality, control-action]
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-DATA
+    decision: DEC-0119
+    configurable: false
+    notes: "Seven journal event types recorded in N append-only streams, one per producing component under its WriterId (DEC-0119, AD-21)."
 
   - name: canonical_indicator_reference
     symbol: null
-    value: null
+    value: "TA-Lib C library 0.7.1 + Python wrapper 0.7.1"
     formula: null
     units: null
     type: string
     component: COMP-QMF-INDICATORS
-    decision: DEC-0055
+    decision: DEC-0127
     configurable: false
-    gap: GAP-0032
-    notes: "No implementation, version, or oracle tolerance is ratified."
+    notes: "Pinned per QMF release as the lockfile-resolved artifacts (distribution filename + hash) of both the C library and the Python wrapper — the artifact identity, not a version string, is what AD-10 float provenance records — plus a declared, identity-bearing reference-configuration record (compatibility mode, candle settings) asserted at import and never mutated at runtime; a configuration change mints exactly like a version upgrade. Where the reference lacks a formula, the QMX implementation is canonical for that formula under the identical upgrade gate (DEC-0127, AD-23). Verified current 2026-08-20."
+
+  - name: barspec_kinds
+    symbol: null
+    value: "time-interval | tick-count | volume-threshold | notional-threshold | price-brick | range | session"
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-CORE
+    decision: DEC-0126
+    configurable: false
+    notes: "BarSpec is the discriminated aggregation rule that replaces the bare word 'timeframe' everywhere; each kind carries exact parameters and, for time-based kinds, the anchoring market-hours calendar identity + version. A bar series is well-defined only via its BarSpec; aggregation itself is a fingerprinted qmf-data derivation (DEC-0126, DEC-0130, AD-22)."
+
+  - name: presence_map_states
+    symbol: null
+    value: "present | provisional | not_ready | gap | absent_by_schedule"
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-CORE
+    decision: DEC-0126
+    configurable: false
+    notes: "Every position of a bulk series carries a presence state in a parallel integer-encoded map; positions are never omitted or shifted; NaN and sentinel markers are prohibited; equality compares presence maps first, values only at present positions (DEC-0126, DEC-0130, AD-22)."
+
+  - name: evidence_classes
+    symbol: null
+    value: "confirmed | unconfirmed | provisional"
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-CORE
+    decision: DEC-0129
+    configurable: false
+    notes: "Named part of the AD-12 result label and a declared identity field; an unconfirmed output links to its confirmed successor via a typed confirmed-as edge; a read requesting confirmed evidence refuses unconfirmed rows (policy rejection) rather than filtering silently (DEC-0129, DEC-0131, AD-25, AD-12)."
+
+  - name: structure_seed_family_candidates
+    symbol: null
+    value: "swing points | horizontal levels from confirmed swings | zones | structure breaks"
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-STRUCTURE
+    decision: DEC-0129
+    configurable: false
+    notes: "Candidates only, not a privileged set: each ships only once its confirmation rule states 'confirmed the moment X happens' with X knowable at that instant; operator-authored from-scratch families are first-class peers under identical law, and family authoring via the extension shape is the primary use case (DEC-0129, AD-25)."
 
   - name: venue_trendbar_price_basis
     symbol: null
-    value: null
+    value: measured-per-broker
     formula: null
     units: null
     type: enum
     component: COMP-QMF-VENUE
-    decision: DEC-0059
+    decision: DEC-0135
     configurable: false
-    gap: GAP-0037
-    notes: "Bid, ask, mid, and provider-native handling remain unresolved."
+    notes: "Never hardcoded: the trend-bar price basis (bid, ask, mid, or provider-native) is measured per broker at first connection and re-verified by a continuous background monitor, stored as per-broker configuration; a failed bar-basis reconciliation refuses bar evidence (DEC-0135, DEC-0141, AD-8, AD-28). The earlier BID-derived staff claim is demoted evidence — a 2013-forum-grade quote with structural corroboration only, never an invariant; DEC-0123 (recorded, not adopted) is superseded by DEC-0135."
+
+  - name: venue_daily_bar_boundary
+    symbol: null
+    value: measured-per-broker
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-VENUE
+    decision: DEC-0135
+    configurable: false
+    notes: "Never hardcoded: the venue's actual daily-bar boundary is derived per broker from trendbar timestamps at first connection (and across DST transitions), re-verified by a continuous background monitor, and stored as per-broker configuration; once verified it is minted as a venue-scoped market-hours calendar identity that anchors venue-native BarSpec, and until then venue daily bars are ungoverned observations (DEC-0135, DEC-0141, AD-8, AD-28). The 17:00-New-York claim is demoted 2013-forum-grade evidence, never an invariant; QMF's own forex_rollover accounting rule is independent of venue bars (DEC-0106)."
+
+  - name: venue_broker_identity
+    symbol: null
+    value: deployment-configuration
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-VENUE
+    decision: DEC-0139
+    configurable: true
+    notes: "Broker identity is deployment configuration, never architecture: opaque VenueId/AccountId identity and account bindings are sufficient, and measured per-broker behaviors live in the venue-observation profile (DEC-0139, AD-9). IC Markets is the operator's stated intent, deliberately not a framework commitment; account-type confirmation is config-time work per broker."
+
+  - name: venue_protocol_artifact
+    symbol: null
+    value: 91
+    formula: null
+    units: spotware-proto-release-tag
+    type: integer
+    component: COMP-QMF-VENUE
+    decision: DEC-0141
+    configurable: false
+    notes: "The Spotware openapi-proto-messages integer release tag pinned in the AD-6 register (verified current 2026-08-20); a tag change mints a new capability declaration plus gated re-verification on the second version ladder, bumping a contract format version only where the wire change alters that contract's public shape (DEC-0141, DEC-0138, AD-6, AD-28). Message definitions only — data, not code; zero Spotware code runs in QMX (the OpenApiPy SDK is reference-only under the platform-imposing rule)."
 
   - name: original_risk_unit
     symbol: R

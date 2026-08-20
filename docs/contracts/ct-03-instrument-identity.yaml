@@ -1,26 +1,54 @@
 id: CT-03
 name: Instrument and venue identity contract
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-CORE
 consumers: [COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST]
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0028, DEC-0030, DEC-0031]
-gaps: [GAP-0005, GAP-0009]
-purpose: "Provide asset-neutral identity and market nouns without leaking one venue's symbol model."
+decisions: [DEC-0107, DEC-0100, DEC-0103, DEC-0108, DEC-0109, DEC-0135, DEC-0138, DEC-0139]
+gaps: []
+purpose: "Define instrument, venue, and account identity as (venue, opaque venue symbol), with Venue and Account as first-class nouns defined in qmf-core and their records owned by qmf-registry, so multiple brokers' records never mix and renames never rewrite history."
 invariants:
-  - "The identity contract does not assume Forex, cTrader, scalping, or a deployment environment."
-  - "Identity tuple, aliases, symbol changes, asset-class values, and metadata remain unresolved."
+  - "Instrument identity is (venue, venue's own symbol); the symbol is opaque and never parsed (DEC-0107)."
+  - "VenueId is operator-minted, opaque, stable, never derived from a mutable broker attribute, and never reused; a distinct broker or legal entity is a distinct venue even on shared infrastructure — a prop firm white-labeling cTrader is its own venue (DEC-0107)."
+  - "Aliases, renames, asset class, and mutable metadata are separate dated records pointing at identities; stored history never rewrites — a correction is a new dated record (DEC-0107)."
+  - "Venue and Account are distinct first-class nouns defined in qmf-core, with their records and lifecycle owned by qmf-registry; edge modules never define shared nouns (DEC-0107, DEC-0100)."
+  - "One venue may hold many accounts, each carrying exactly one role from the fixed role set; Books bind to accounts, never to venues (DEC-0107)."
+  - "Multi-broker operation (about six venues) and broker migration are normal cases, not special ones; a migration is a new venue plus accounts, and old evidence is untouched (DEC-0107)."
+  - "Platform and broker are distinct: the platform — a cTrader-platform adapter profile — fixes the protocol and the adapter, while the broker behind it is deployment configuration, never architecture; no rule names a specific broker, which broker fills a venue slot is a deploy-time decision, and a broker's measured behaviours (daily-bar boundary, trendbar price basis) live in the venue-observation profile and per-broker configuration, never in code (DEC-0139)."
+  - "Venue-native symbols map to the opaque (venue, symbol) identity; instrument and account metadata snapshots are adapter-produced qmf-core value types recorded by the composition root, and a full-metadata record is a prerequisite before any price decode — a LightSymbol-class record carrying no scaling metadata is insufficient (DEC-0138, DEC-0135)."
+  - "Identity is asset-neutral: the contract assumes no forex, cTrader, scalping, or deployment environment, and opaque symbols keep forex assumptions from leaking (DEC-0107)."
+  - "Every serialized identity artifact stamps this contract's integer format version, whose meaning never mutates — an incompatible change mints the next version (DEC-0103)."
 schema:
-  type: null
-  type_gap: GAP-0009
-  fields: null
-  fields_gap: GAP-0009
-  enums: null
-  enums_gap: GAP-0009
-  units: null
-  units_gap: GAP-0009
-  nullability: null
-  nullability_gap: GAP-0009
+  type: "Identity value types (frozen dataclasses): VenueId (opaque token), Instrument identity ((venue, opaque symbol)), and the first-class nouns Venue and Account — defined in qmf-core, records owned by qmf-registry. Public construction is one pattern: an unchecked constructor plus a validating try_create factory returning value-or-refusal (CT-04)."
+  fields:
+    VenueId:
+      - "value: string-opaque — operator-minted, stable, never reused, never derived from a mutable broker attribute"
+    Instrument:
+      - "venue: VenueId"
+      - "symbol: string-opaque — the venue's own symbol, never parsed"
+    Venue:
+      - "venue_id: VenueId — the identity; noun defined in qmf-core, record owned by qmf-registry"
+      - "dated metadata (name, legal entity, asset class, aliases): separate dated records pointing at the VenueId, append-only (concrete field names not pinned by the spine)"
+    Account:
+      - "account identity: opaque, scoped to its venue (concrete identity field name not pinned by the spine)"
+      - "venue: VenueId — the owning venue"
+      - "role: account-role enum (see enums)"
+      - "noun defined in qmf-core, record owned by qmf-registry; Books bind to accounts"
+    dated_record:
+      - "target: the identity (VenueId or Instrument) the record points at"
+      - "date: the effective/observed date of the alias, rename, asset-class, or metadata fact"
+      - "append-only; a correction is a new dated record, and history never rewrites"
+  enums:
+    account_role: [live, demo, paper-validation, paper-benched, prop-firm]
+    account_role_note: "exhaustive per DEC-0107; prop-firm is a reserved seam only in V1 — no prop firm is modeled"
+    asset_class: "carried on a dated metadata record with an open, extensible value set (not a closed enum); no futures and no options ever (DEC-0015)"
+    symbol: "string-opaque — no enumeration, never parsed"
+    venue_id: "string-opaque — no enumeration"
+  units: "none — identity fields are opaque tokens, not measured quantities"
+  nullability:
+    - "venue and symbol are both required for an Instrument identity and are non-nullable; a missing or invalid part returns a typed refusal via try_create (DEC-0109)"
+    - "account role is required and non-nullable — exactly one value from the account-role enum"
+    - "null is prohibited in identity content (fp1): absent metadata is an omitted key or simply no dated record, never a null field (DEC-0108)"
+    - "alias and metadata records are optional and additive; their absence is the lack of a record, not a null"

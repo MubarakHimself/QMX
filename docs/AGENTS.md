@@ -3,21 +3,31 @@ id: DOC-AGENTS
 title: QMF V1 Agent Entry Point
 type: agents
 status: provisional
-sources: [docs/constitution.md, docs/architecture/overview.md, docs/architecture/dependencies.yaml, docs/architecture/stack.md, docs/registry/variables.yaml, docs/contracts/, docs/components/, docs/decisions/, docs/gap-report.md, docs/scenarios/]
+decisions: [DEC-0099, DEC-0100, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0114, DEC-0115, DEC-0116, DEC-0117, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0126, DEC-0127, DEC-0128, DEC-0129, DEC-0130, DEC-0131, DEC-0132, DEC-0133, DEC-0134, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0140, DEC-0141, DEC-0142]
+sources: [docs/constitution.md, docs/architecture/overview.md, docs/architecture/dependencies.yaml, docs/architecture/stack.md, docs/registry/variables.yaml, docs/contracts/, docs/components/, docs/decisions/, docs/gap-report.md, docs/scenarios/, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md]
 generated: 2026-08-18
-verified: 2026-08-18
+verified: 2026-08-20
 stale_after: 30d
 ---
 
 # AGENTS.md — Read This First
 
-QMF V1 is a reusable Python toolbox from which QMX trading applications will be built; it is not itself a trading application. Its fixed public roster is five libraries plus the Venue and Risk modules, with internal data seams and external providers kept distinct. This knowledge base is **provisional design**, not implementation or live-operation authority: unresolved gaps and conflicts must be ratified by the operator before affected work begins.
+QMF V1 is a reusable Python toolbox from which QMX trading applications will be built; it is not itself a trading application. Its fixed public roster is five libraries plus the Venue and Risk modules, with internal data seams and external providers kept distinct; market-hours calendar extensions (the first is `COMP-QMF-CALENDAR-FOREX`) live in the workspace but outside that roster, on their own SemVer ladder. This knowledge base is **provisional design**, not implementation or live-operation authority: unresolved gaps and conflicts must be ratified by the operator before affected work begins.
+
+The **foundation, the indicators/structure increment, and the venue increment are now operator-ratified**. The 2026-08-19/20 foundation architecture sitting ratified the spine AD-1 through AD-21 (ledger DEC-0099 through DEC-0125); the 2026-08-20 indicators/structure increment ratified AD-22 through AD-25 (ledger DEC-0126 through DEC-0134); and the 2026-08-20 venue architecture sitting ratified AD-26 through AD-28 (ledger DEC-0135 through DEC-0142). Together they answer 36 gaps. The rulings are authoritative, but the documents absorbing them stay `status: provisional` until the whole knowledge base is re-ratified: an answered gap is an operator ruling, never on its own implementation or live-money authority. See [`gap-report.md`](gap-report.md) for what is answered, open, and deferred.
+
+## What is ratified vs still open
+
+- **Ratified foundation content** (build against it as the source of truth, still under the provisional-corpus gate): exact money (AD-7, DEC-0105), exact time and calendar rule sets (AD-8, DEC-0106), instrument/venue/account identity (AD-9, DEC-0107), the `fp1` fingerprint recipe (AD-10, DEC-0108), typed refusals (AD-11, DEC-0109), the result label and worlds (AD-12, DEC-0110); packaging and runtime (AD-1/AD-2), toolchain and gates (AD-3/AD-4), version ladders (AD-5), dependency tiers (AD-6); performance/observability/concurrency (AD-13/AD-14/AD-15); registry per-kind records, multiplicity, and the promotion skeleton (AD-16/AD-17/AD-18, DEC-0114/DEC-0115/DEC-0116); data rooms, migrations, backup primitives, and splits/journal/adapters (AD-19/AD-20/AD-21, DEC-0117/DEC-0118/DEC-0119); the two-mode indicator protocol and series vocabulary/BarSpec (AD-22, DEC-0126), canonical TA-Lib 0.7.1 arithmetic (AD-23, DEC-0127), the light/heavy four-bound rule (AD-24, DEC-0128, superseding DEC-0056), and the causal structure lifecycle (AD-25, DEC-0129).
+- **Ratified venue content** (build against it as the source of truth, still under the provisional-corpus gate): the cTrader venue facts and their per-broker measured obligations (DEC-0135, superseding DEC-0123), the secret lifecycle of references-not-values (AD-26, DEC-0136), the four-command vocabulary and the four-outcome uncertainty law where `UNKNOWN` is a state and `denied-locally` is an outcome (AD-27, DEC-0137), the one-port four-contract adapter with static capability declaration versus per-account venue-observation profile and market data homed at CT-10/CT-15 (AD-28, DEC-0138), broker identity as deployment configuration (DEC-0139), and the venue and cross-AD amendments (DEC-0140, DEC-0141). The qmf-venue design is ratified; connectivity authorizes nothing on its own, and implementation authorization arrives only through the factory pipeline.
+- **Still open** — owned by the risk sitting: Book/BMS/exits/risk (GAP-0039–GAP-0046). qmf-risk remains the fenced stub with those open gaps. Deferred: the look-ahead gate and attempt counter (GAP-0016/GAP-0017 → backtesting sitting, DEC-0121), and consumer products (GAP-0047–GAP-0049). `world = simulated` stays reserved-unusable until the backtesting sitting (DEC-0110).
+- **Node-material boundary** (DEC-0142): trading-node runtime material stays out of QMF documentation. The order path, protection funnel, startup semantics, and flatten-authority assignment are node/risk-sitting territory; QMF records only the contract surface AD-26 through AD-28 define and references [`tracker/trading-node-notes.md`](../tracker/trading-node-notes.md) as a pointer, never absorbing it.
 
 ## Reading order
 
 1. [`docs/constitution.md`](constitution.md) — the laws; violating one is a bug by definition.
 2. [`docs/architecture/overview.md`](architecture/overview.md) — system context, component boundaries, and layers.
-3. [`docs/gap-report.md`](gap-report.md) — conflicts, blockers, graveyard, and deferred scope.
+3. [`docs/gap-report.md`](gap-report.md) — the 32 answered gaps, the open and deferred gaps, the remaining conflict, the graveyard, and out-of-scope standing.
 4. The spec for every component you will touch in [`docs/components/`](components/).
 5. Every boundary named by those specs in [`docs/contracts/`](contracts/).
 6. [`docs/registry/variables.yaml`](registry/variables.yaml) for values and [`docs/glossary.md`](glossary.md) for terminology.
@@ -31,7 +41,11 @@ Do not start with a transcript or a study recommendation. The reference docs and
 - Documentation and review precede code generation or trading-node implementation. See [L4](constitution.md#laws).
 - QMF is a toolbox, not an application: loops, scheduling, orchestration, and product UI stay outside it. See [L7–L8](constitution.md#laws).
 - qmf-core is definitions-only and asset-neutral; broker, runtime, download, backtest, and node behavior do not belong there. See [L13 and L16](constitution.md#laws).
-- The public roster remains five libraries and two modules. Internal seams do not become public packages by implication. See [L14](constitution.md#laws).
+- The public roster remains five libraries and two modules. Internal seams do not become public packages by implication; market-hours calendar extensions live outside the roster on their own SemVer ladder. See [L14](constitution.md#laws) and DEC-0100.
+- **Default-deny dependency direction.** `qmf-core` depends on nothing; every package may depend on `qmf-core`; nothing imports `qmf-venue` or `qmf-risk`. No package may depend on any package other than `qmf-core` until an inter-library edge is ratified as a spine amendment. Exactly one edge is ratified: `qmf-registry → qmf-data`. See [L30](constitution.md#laws) and DEC-0120.
+- **Three-calendar naming rule.** Never write bare "calendar". Three distinct named concepts exist: the **market-hours calendar** (session schedule + accounting rollover, e.g. `COMP-QMF-CALENDAR-FOREX`), the **day-boundary calendar** (an account-scoped accounting-boundary rule), and the **news calendar** (`COMP-CALENDAR-FEED`, the external event feed). They are never substituted for one another. See DEC-0106 (AD-8).
+- Everything downstream of QMF — the trading node, backtesting, the agentic system, and the UI — is built with QMF libraries and must not re-implement or bypass its contracts. See [L31](constitution.md#laws) and DEC-0122.
+- Banned vocabulary: say **extensions** not "plugins"; backtesting is a **library**, never an "engine"; the retired terms "kernel" and "exam" (broker conformance) must not return. See the [graveyard](gap-report.md#dead-decisions--18).
 - Public contracts are versioned from birth; incompatible meaning mints a new version. See [L15](constitution.md#laws).
 - Only a human may promote an artifact into the live zone. See [L17](constitution.md#laws).
 - Preserve complete raw evidence, keep the off-machine direction, and expose research data through explicit splits. See [L18–L19](constitution.md#laws).
@@ -56,7 +70,7 @@ Answer these items in the plan and the new ADR before writing code for a compone
 
 1. **Read the inventory.** Cite [`dependencies.yaml`](architecture/dependencies.yaml), [`stack.md`](architecture/stack.md), and every plausible existing component spec.
 2. **Prove reuse-or-new.** For each candidate component, state the exact authority boundary or contract mismatch that prevents reuse. If an existing component can own the behavior, extend it and stop.
-3. **Keep the axes separate.** `layer`, `kind`, `roster_role`, and `distribution` mean different things. Distribution and package identity remain null until GAP-0002 is ratified.
+3. **Keep the axes separate.** `layer`, `kind`, `roster_role`, and `distribution` mean different things. Distribution is ratified (DEC-0100): the seven roster packages are `uv-workspace-lockstep`; calendar extensions are `separate-versioned-package-own-semver` outside the roster.
 4. **If new is required,** state what unique authority it owns, what it may never do, every contract at its boundary, and which existing authority becomes narrower.
 5. **Check the graveyard.** A dead decision ends reuse of that idea unless a later operator ruling explicitly replaces it.
 6. **Record the verdict.** Write `reuse COMP-<NAME>` or `new COMP-<NAME>` and the evidence in the ADR. An unrecorded verdict means the preflight did not happen.
@@ -88,4 +102,4 @@ Before modifying component X:
 
 ## Current release gate
 
-No QMF implementation, live venue connection, order submission, paper-mode transition, operational restore, destructive migration, or release-quality acceptance claim is authorized by this provisional corpus. The operator must resolve the two conflicts and the applicable blocking gaps, then ratify the packet before provisional statuses can be removed.
+No QMF implementation, live venue connection, order submission, paper-mode transition, operational restore, destructive migration, or release-quality acceptance claim is authorized by this provisional corpus. The foundation, indicators/structure, and venue sittings answered 36 gaps (DEC-0099–DEC-0119, DEC-0126–DEC-0129, and DEC-0135–DEC-0138), but the corpus stays provisional: the operator must resolve the remaining exit-ownership conflict (DEC-0067), close or knowingly defer the applicable open blocking gaps (GAP-0039–GAP-0046, the risk sitting), and re-ratify the knowledge base before provisional statuses can be removed.

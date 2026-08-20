@@ -4,10 +4,10 @@ title: QMF V1 Constitution
 type: constitution
 status: provisional
 depends_on: []
-decisions: [DEC-0001, DEC-0002, DEC-0003, DEC-0004, DEC-0006, DEC-0007, DEC-0008, DEC-0009, DEC-0011, DEC-0013, DEC-0017, DEC-0019, DEC-0022, DEC-0024, DEC-0030, DEC-0031, DEC-0041, DEC-0045, DEC-0046, DEC-0054, DEC-0060, DEC-0061, DEC-0074, DEC-0076, DEC-0080, DEC-0092, DEC-0096, DEC-0097]
-sources: [DEC-0001, DEC-0002, DEC-0003, DEC-0004, DEC-0006, DEC-0007, DEC-0008, DEC-0009, DEC-0011, DEC-0013, DEC-0017, DEC-0019, DEC-0022, DEC-0024, DEC-0030, DEC-0031, DEC-0041, DEC-0045, DEC-0046, DEC-0054, DEC-0060, DEC-0061, DEC-0074, DEC-0076, DEC-0080, DEC-0092, DEC-0096, DEC-0097]
+decisions: [DEC-0001, DEC-0002, DEC-0003, DEC-0004, DEC-0006, DEC-0007, DEC-0008, DEC-0009, DEC-0011, DEC-0013, DEC-0017, DEC-0019, DEC-0022, DEC-0024, DEC-0030, DEC-0031, DEC-0041, DEC-0045, DEC-0046, DEC-0054, DEC-0060, DEC-0061, DEC-0074, DEC-0076, DEC-0080, DEC-0092, DEC-0096, DEC-0097, DEC-0120, DEC-0122, DEC-0132, DEC-0133, DEC-0136, DEC-0137]
+sources: [DEC-0001, DEC-0002, DEC-0003, DEC-0004, DEC-0006, DEC-0007, DEC-0008, DEC-0009, DEC-0011, DEC-0013, DEC-0017, DEC-0019, DEC-0022, DEC-0024, DEC-0030, DEC-0031, DEC-0041, DEC-0045, DEC-0046, DEC-0054, DEC-0060, DEC-0061, DEC-0074, DEC-0076, DEC-0080, DEC-0092, DEC-0096, DEC-0097, DEC-0120, DEC-0122, DEC-0132, DEC-0133, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md]
 generated: 2026-08-18
-verified: 2026-08-18
+verified: 2026-08-20
 stale_after: 1y
 ---
 
@@ -72,3 +72,15 @@ stale_after: 1y
 **L28.** QMF must evolve through durable versioned extension rather than repeated foundational replacement. (DEC-0097)
 
 **L29.** Provisional recommendations, provisional contracts, and unresolved GAPs grant neither implementation authority nor live-money authority; destructive or live action still requires a ratified contract and explicit human authority. (DEC-0003, DEC-0004, DEC-0041)
+
+**L30.** QMF inter-library dependencies are default-deny: qmf-core depends on nothing, every package may depend on qmf-core, and no package may depend on any package other than qmf-core until an inter-library edge is ratified as a spine amendment; the one ratified edge is qmf-registry to qmf-data, and nothing imports qmf-venue or qmf-risk. (DEC-0120)
+
+**L31.** Everything downstream of QMF — the trading node, backtesting, the agentic system, and the product UI — must be built with QMF libraries and must not re-implement or bypass the framework's contracts. (DEC-0122)
+
+**L32.** No QMF rule, contract, or vocabulary may name or privilege any trading school; school-specific concepts enter only as mechanically stated, school-neutral capability terms, and a school name may appear only as an illustration, never as vocabulary. (DEC-0132)
+
+**L33.** Plain-Python authoring outside governed evidence is always legal; a working plain-Python experiment enters governed evidence only by graduating through the extension shape — a separate versioned package, explicitly registered at the composition root — with a lineage edge back to the originating research artifact. (DEC-0133)
+
+**L34.** QMF components handle secret references, never values; secret values live only in the adapter's connection manager for a session's lifetime, and secrets never appear in repositories, configuration artifacts, journals, evidence, fingerprints, or logs. (DEC-0136)
+
+**L35.** Every venue submission resolves to accepted-by-venue, rejected-by-venue, denied-locally, or UNKNOWN; a timeout is never a rejection, an UNKNOWN blocks its command stream until an explicit recorded resolution, and no QMF component retries, assumes an outcome, or invents terminal state. (DEC-0137)

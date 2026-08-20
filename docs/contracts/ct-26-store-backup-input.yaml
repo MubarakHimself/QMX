@@ -1,33 +1,37 @@
 id: CT-26
 name: Store-to-backup input boundary
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-DATA-STORE
 consumers: [COMP-QMF-DATA-BACKUP]
 layer_from: data
 layer_to: data
-decisions: [DEC-0042, DEC-0045]
-gaps: [GAP-0005, GAP-0020, GAP-0022, GAP-0026, GAP-0027]
-purpose: "Reserve the Store-to-Backup input seam without defining snapshot shape, completeness, consistency, recovery, or cutover."
+decisions: [DEC-0118, DEC-0117, DEC-0113, DEC-0106, DEC-0109, DEC-0103]
+gaps: []
+purpose: "Present a store's room contents to the backup primitive as a consistent, restorable input, without the store or the backup mutating evidence."
 invariants:
-  - "This provisional boundary does not claim a complete or consistent snapshot."
-  - "Record set, snapshot boundary, concurrency, schema compatibility, abort and cleanup, manifest binding, and recovery behavior remain unresolved."
-  - "No operational recovery or cutover may be implemented until GAP-0027 is resolved."
+  - "COMP-QMF-DATA-STORE presents room contents to COMP-QMF-DATA-BACKUP through this internal data-to-data seam; the store owns the records and the backup consumes them (DEC-0118)."
+  - "QMF provides the backup, restore, and verify primitives across this seam; the schedule and its execution are application/ops-owned (DEC-0118)."
+  - "The backup reads the store as an unlimited reader under one-writer-per-stream; the store is the stateful resource-owner and the read never mutates evidence (DEC-0113)."
+  - "The input covers every room-role including the registry room, all under one retention, backup, and migration law and instantiated per world; a cross-world backup read is a policy-rejection refusal (DEC-0117)."
+  - "Backup input preserves stored timestamps as data: int64 UTC nanosecond values pass through verbatim, never re-derived (DEC-0106)."
+  - "Store-boundary signatures are stdlib-typed so the store engine stays swappable behind the QMF-owned store contract (DEC-0117)."
+  - "Failures return typed refusals: storage failure covers a locked, truncated, or corrupt store; refusals are returned, never raised across the boundary (DEC-0109)."
+  - "This is an input seam only: it does not define the off-machine copy (CT-14 owns that), the manifest, or the schedule."
 schema:
-  type: null
-  type_gap: GAP-0020
-  fields: null
-  fields_gap: GAP-0027
-  enums: null
-  enums_gap: GAP-0022
-  units: null
-  units_gap: GAP-0026
-  nullability: null
-  nullability_gap: GAP-0027
-shape: null
-shape_gap: GAP-0020
-completeness: null
-completeness_gap: GAP-0027
-consistency: null
-consistency_gap: GAP-0022
+  type: store-room-record-set  # the records of one room-role handed to the backup primitive
+  fields:
+    - "contract_format_version (int) -- stamped into every artifact (DEC-0103)"
+    - "world (string-enum) -- rooms are instantiated per world (DEC-0117)"
+    - "source_room_role (string-enum) -- which room-role is being backed up (DEC-0117)"
+    - "records (store-native, behind the QMF-owned store contract) -- read verbatim, never mutated (DEC-0113)"
+    - "record timestamps (int64-utc-ns) -- passed through verbatim (DEC-0106)"
+  enums:
+    world: [live, replay, simulated]  # simulated reserved-unusable in V1 (DEC-0110)
+    source_room_role: ["ingest door", "immutable raw archive", "processed", "journal", "split-governed research door", "backup", "registry room"]  # the seven room-roles; input draws from the evidence rooms into the backup room (DEC-0117)
+    boundary_refusal_categories: [storage failure, policy rejection]  # subset of the seven (DEC-0109)
+  units:
+    timestamps: int64-utc-ns
+  nullability: "contract_format_version, world, and source_room_role are required; null is prohibited in identity content -- an absent value is an omitted key (DEC-0108)."
+  room_role_vocabulary: "The room-role vocabulary is defined once in CT-11's owning enum and reused verbatim here (DEC-0117)."
+  node_ops_pointer: "Per-engine snapshot-isolation mechanics are each store contract's own detail; retention depth and RPO/RTO targets are named at the node/ops sitting (DEC-0118)."

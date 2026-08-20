@@ -1,27 +1,46 @@
 id: CT-09
 name: Registry persistence contract
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-REGISTRY
 consumers: [COMP-QMF-DATA-STORE]
 layer_from: backend
 layer_to: data
-decisions: [DEC-0035, DEC-0038, DEC-0047]
-gaps: [GAP-0005, GAP-0015, GAP-0021, GAP-0022]
-purpose: "Persist registry identities, lineage, versions, and occurrences behind a storage-neutral seam."
+decisions: [DEC-0103, DEC-0106, DEC-0108, DEC-0109, DEC-0110, DEC-0114, DEC-0117, DEC-0118, DEC-0120]
+gaps: []
+purpose: >-
+  Persist qmf-registry records and CT-07 lineage edges through qmf-data's CT-11
+  append-store contract into the per-world registry room, behind a storage-neutral,
+  stdlib-typed seam and with no database server.
 invariants:
-  - "Persistence does not select a graph database or adopt the study stack automatically."
-  - "The data layer does not own registry business rules."
-  - "Records, transactions, engines, indexes, migrations, compaction, and recovery remain unresolved."
+  - "The registry selects no graph database and no database server: records persist as per-kind versioned records and lineage as pinned JSONL edges (DEC-0114)."
+  - "Registry records and lineage persist through qmf-data's CT-11 append-store contract — the single ratified inter-library edge qmf-registry to qmf-data — with stdlib-typed signatures at that boundary (DEC-0120)."
+  - "The registry room is one of qmf-data's seven room-roles and is held under the same retention, backup, and migration law as every other evidence room (DEC-0117, DEC-0118, DEC-0120)."
+  - "Rooms are instantiated per world; a read that crosses worlds is a policy-rejection refusal and a non-live world never writes the live evidence namespace (DEC-0117, DEC-0110)."
+  - "The data layer owns physical persistence only; kinds, lineage semantics, gates, and identity remain qmf-registry business rules (DEC-0120, DEC-0114)."
+  - "Persistence is append-only: records and edges are never rewritten in place, corrections append and supersede via CT-07 edges, and raw records plus lineage are kept forever (DEC-0114, DEC-0118)."
+  - "Storage keys on a record's fp1 fingerprint, never on a timestamp or minted id; a byte-identical idempotent re-write is accepted silently while a true collision is refused and alarmed (DEC-0108, DEC-0114)."
+  - "Store-library exceptions are translated to a storage-failure typed refusal at the qmf-data boundary and never propagated across the package seam (DEC-0109)."
+  - "Every serialized registry artifact stamps its contract format version; history stays readable forever and an incompatible change mints the next version plus a migration note (DEC-0103)."
+  - "Migrations run preflight checks then backup-first then dry-run then migrate then verify, with a documented restore path and never in-place mutation of the only copy (DEC-0118)."
+  - "Only the record and edge stores are evidence-bearing; analytics engines over registry data hold rebuildable views, so an engine format break costs a rebuild, never evidence (DEC-0117)."
 schema:
-  type: null
-  type_gap: GAP-0021
-  fields: null
-  fields_gap: GAP-0015
-  enums: null
-  enums_gap: GAP-0015
-  units: null
-  units_gap: GAP-0021
-  nullability: null
-  nullability_gap: GAP-0022
+  type: "storage-neutral persistence seam: qmf-registry per-kind records and CT-07 lineage edges written through qmf-data's CT-11 append-store contract into the per-world registry room"
+  fields:
+    record_payload: "a CT-06 per-kind versioned record, keyed by its fp1 stable id (fp1:sha256:<hex>)"
+    edge_payload: "a CT-07 pinned-JSONL typed lineage edge"
+    world: "room-instance selector; one of live, replay, simulated (DEC-0110)"
+    room_role: "registry room — one of qmf-data's seven AD-19 room-roles (DEC-0117)"
+    boundary_signatures: "stdlib-typed at the qmf-registry to qmf-data seam (DEC-0120)"
+  enums:
+    world: [live, replay, simulated]  # simulated reserved-unusable in V1 (DEC-0110)
+    evidence_bearing_stores: [record-store, jsonl-edge-store]  # only these hold evidence (DEC-0117)
+    rebuildable_stores: [sqlite-index, duckdb-view]  # local, rebuildable, never evidence-bearing (DEC-0117)
+  units:
+    contract_format_version: "dimensionless integer count"
+    sequence: "dimensionless int64 count"
+    occurrence_instants: "int64 UTC nanoseconds since the Unix epoch (DEC-0106)"
+  nullability:
+    world_and_room_role: "mandatory; every persisted record and edge belongs to exactly one world and the registry room"
+    record_stable_id: "mandatory; the fp1 fingerprint string is the storage key (DEC-0108)"
+    physical_index_layout: "the on-disk index and partition layout is a rebuildable CT-11 engine detail, not part of the identity-bearing contract (DEC-0117)"

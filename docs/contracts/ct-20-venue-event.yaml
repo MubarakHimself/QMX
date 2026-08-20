@@ -1,31 +1,59 @@
 id: CT-20
 name: Venue event and reconciliation contract
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version; the event-and-reconciliation law is spine-ratified (AD-27, AD-28), the doc stays provisional pending operator corpus re-ratification (DEC-0137, DEC-0138, DEC-0140)
 owner: COMP-QMF-VENUE
-consumers: []
+consumers: []  # recording is via qmf-core-defined sink protocols injected at the composition root; no package imports qmf-venue, so no dependency edge exists and consumers are application-mediated (DEC-0138)
 active_consumers: []
-intended_consumers: [COMP-QMF-DATA, COMP-QMF-RISK]
-wiring_status: reserved-unwired
+intended_consumers: [COMP-QMF-DATA, COMP-QMF-RISK]  # documentary targets until the factory wires them: Data records the observations and journal, Risk consumes reconciliation verdicts (DEC-0138)
+wiring_status: ratified-shape-application-mediated  # shape ratified (AD-27, AD-28); no downstream consumer is wired and no build is authorized outside the factory pipeline
 layer_from: middleware
 layer_to: backend
-decisions: [DEC-0048, DEC-0059, DEC-0061]
-gaps: [GAP-0005, GAP-0030, GAP-0036, GAP-0037, GAP-0038]
-purpose: "Reserve a normalized venue-event and reconciliation shape for later Data and Risk consumers without creating an active QMF V1 handoff."
+decisions: [DEC-0048, DEC-0059, DEC-0061, DEC-0137, DEC-0138, DEC-0140, DEC-0141, DEC-0142]
+gaps: []  # GAP-0005 (version policy), GAP-0030 (tick sources), GAP-0036 (command/uncertainty law), GAP-0037 (venue facts + broker), and GAP-0038 (adapter contract) answered 2026-08-20; reconciliation-verdict consequences are node/BMS authority, referenced as a pointer, never specified here (DEC-0142)
+purpose: "The venue-neutral event and reconciliation contract: every inbound venue event is recorded verbatim and journaled before any interpretation, the order-state machine is a read-time fold over that observation stream, and reconciliation is an on-demand read-back whose verdict gates the command pipe only — the sensing pipe never blocks on it (DEC-0137, DEC-0138)."
 invariants:
-  - "Connection and real-venue outcomes remain separate from future simulator parity."
-  - "No active QMF V1 downstream consumer is wired; the intended consumers are documentary targets only."
-  - "Uncertain submission is implementation-blocking until GAP-0036 defines the complete state and transition table."
-  - "Event kinds, order and fill shapes, sequence guarantees, deduplication, cursors, outage recovery, and price basis remain unresolved."
+  - "Recording precedes interpretation: every inbound venue event is stored verbatim (with the mandatory receive stamps) and journaled BEFORE any state evaluation; no state machine gates the immutable store (DEC-0137, DEC-0138)."
+  - "The order-state machine — client-submitted -> venue-accepted | venue-rejected | UNKNOWN; venue-accepted -> partially-filled* -> filled | cancelled | expired | closed-by-venue; server-initiated events the same shape, never errors — is a read-time fold over the observation stream per this contract's read-resolution rule, never a gate on recording; the accepted/rejected/UNKNOWN prefix states are the fold's projection of the command-outcome stream and are never the order's terminal state, which only fills and venue lifecycle events decide (DEC-0137)."
+  - "An observation with no legal transition is recorded, annotated with a typed out-of-sequence edge, and forces the owning command to UNKNOWN pending resolution; adapters never synthesize venue observations — a derived state is a fold result, never a stored event (DEC-0137)."
+  - "Command outcome and order state are separate streams, never merged: an order's terminal state is decided by fills and venue lifecycle events only, never by a command outcome (DEC-0137, DEC-0140)."
+  - "CT-18 declares each command kind's acknowledgement mode (explicit-event | implicit-absence | none); an outcome is never derived from absence alone — a cancel resolved by read-back is accepted-by-venue only if the read-back also shows no fill for that order at or after the cancel's submit stamp, otherwise it resolves rejected-by-venue (superseded-by-fill) (DEC-0137, DEC-0138)."
+  - "Fill price, fill quantity, the venue instant, and the receive instant are mandatory identity fields of a fill observation (DEC-0137)."
+  - "Every observation carries a declared venue-native identity key — (source, source-native id, revision) — so gap-replay redelivery deduplicates under the idempotent split; receive stamps, monotonic values, epochs, and correlation_id are declared occurrence/display-only in this contract's explicit exclusion list and never enter identity content (DEC-0137, DEC-0138)."
+  - "This contract ships an exhaustive versioned mapping — (command kind x outcome) -> journal event type, (observation kind) -> journal event type — under the cardinality law: exactly one journal event per recorded observation, one per submission, one per outcome (DEC-0137, DEC-0138, DEC-0140)."
+  - "Each multi-room write (raw archive, journal, registry room) is declared as one ordered unit with a named transaction boundary — atomic | ordered-with-recovery; a partial write is a storage-failure refusal that blocks the command stream and is journaled on recovery (DEC-0138, DEC-0140)."
+  - "Reconciliation is an on-demand complete read-back of venue orders, fills, positions, and balance over a stated lookback (equity derived where the venue has no native field — nativeness declared in CT-18), with QMF-owned verdict vocabulary reconciled | drift | unknown; reconciliation gates the command pipe only — the sensing pipe never blocks on it — and when it runs and what a verdict triggers are node/BMS authority, recorded in tracker/trading-node-notes.md as a pointer, never specified here (DEC-0137, DEC-0138, DEC-0142)."
+  - "Receive wall time AND the boot-scoped monotonic stamp are mandatory on every inbound venue event; a latency rung is a monotonic delta within one boot epoch on one machine, and a wall-computed rung is refused as a baseline (DEC-0138)."
+  - "Market data is not carried by this contract: ticks, bars, depth, gap-replay backfill, and historical paging enter as CT-10 source observations through qmf-data's CT-15 intake — application-mediated, no fifth contract, no new edge; a venue-native daily bar is ungoverned until its measured boundary is verified and minted as a venue-scoped market-hours calendar identity giving the bar a legal BarSpec anchor; this contract carries order-lifecycle events and reconciliation evidence only (DEC-0138)."
+  - "All failures are typed refusals per registry:typed_refusal_codes; the correlation_id rides the recording context and is occurrence/display-only, never identity content (DEC-0109, DEC-0137)."
 schema:
-  type: null
-  type_gap: GAP-0038
-  fields: null
-  fields_gap: GAP-0036
-  enums: null
-  enums_gap: GAP-0038
-  units: null
-  units_gap: GAP-0037
-  nullability: null
-  nullability_gap: GAP-0036
+  type: venue-observation + reconciliation-evidence  # every inbound event recorded verbatim before interpretation; the order-state fold and reconciliation read-back are derived at read time (DEC-0137, DEC-0138)
+  fields:
+    - "raw_payload: the verbatim venue wire payload, stored and journaled before any state evaluation (DEC-0137, DEC-0138)"
+    - "venue_native_identity: the (source, source-native id, revision) key used for gap-replay deduplication (DEC-0137, DEC-0138)"
+    - "receive_wall_time: the mandatory wall receive instant on every inbound event (DEC-0138)"
+    - "monotonic_stamp: the mandatory boot-scoped monotonic stamp; latency rungs are monotonic deltas within one boot epoch (DEC-0138)"
+    - "observation_kind: the venue lifecycle event driving the read-time fold — submission acknowledgement, fill, cancel acknowledgement, expiry, close-by-venue — plus the typed out-of-sequence edge (DEC-0137)"
+    - "fill_fields: fill price, fill quantity, venue instant, receive instant — the mandatory identity fields of a fill observation (DEC-0137)"
+    - "out_of_sequence_edge: the typed annotation on an observation with no legal transition, forcing the owning command to UNKNOWN (DEC-0137)"
+    - "journal_event: the mapped journal event type under the exhaustive versioned mapping and the cardinality law — one per recorded observation, per submission, per outcome (DEC-0137, DEC-0138)"
+    - "transaction_boundary: per multi-room write — atomic | ordered-with-recovery (DEC-0138)"
+    - "reconciliation_readback: the on-demand read-back of orders, fills, positions, and balance over a stated lookback; equity derived where non-native (nativeness declared CT-18) (DEC-0137, DEC-0138)"
+    - "reconciliation_verdict: reconciled | drift | unknown; gates the command pipe only, never the sensing pipe (DEC-0137, DEC-0142)"
+  enums:
+    - "order state (read-time fold, never stored): client-submitted | venue-accepted | venue-rejected | UNKNOWN | partially-filled | filled | cancelled | expired | closed-by-venue (DEC-0137)"
+    - "observation kind: submission-acknowledgement | fill | cancel-acknowledgement | expiry | close-by-venue | out-of-sequence; each maps to exactly one journal event type (DEC-0137, DEC-0140)"
+    - "acknowledgement mode (declared per command kind in CT-18): explicit-event | implicit-absence | none; an outcome is never derived from absence alone (DEC-0137, DEC-0138)"
+    - "transaction boundary: atomic | ordered-with-recovery (DEC-0138)"
+    - "reconciliation verdict: reconciled | drift | unknown (DEC-0137)"
+    - "occurrence/display-only exclusion list (never identity content): receive stamps, monotonic values, epochs, correlation_id (DEC-0137)"
+    - "refusal categories in this contract's paths: registry:typed_refusal_codes — storage-failure (unpersistable journal event or partial multi-room write, blocking the command stream), policy-rejection (consuming a measured-but-unverified capability in evidence-bearing work), unavailable-dependency (an absent money exponent refusing that message's money decode) (DEC-0138, DEC-0109)"
+  units:
+    - "instants (venue instant, receive wall time): int64 UTC nanoseconds (DEC-0138)"
+    - "monotonic stamp: a boot-scoped monotonic counter; latency rungs are monotonic deltas within one boot epoch on one machine, never wall-computed (DEC-0138)"
+    - "fill price and quantity: foreign values stored verbatim with declared scales; a foreign binary float is never identity — it crosses the named boundary at receipt to a scaled integer at the per-value-class pinned target scale with a declared rounding mode, the raw float retained only as integrity-checked provenance (DEC-0138, DEC-0141)"
+  nullability:
+    - "the raw payload is never absent — recording precedes interpretation, so a verbatim store exists before any fold (DEC-0137)"
+    - "fill identity fields (fill price, fill quantity, venue instant, receive instant) are never null on a fill observation (DEC-0137)"
+    - "order state is never stored — it is a read-time fold result, so it has no persisted slot to be null (DEC-0137)"
+    - "a reconciliation verdict is absent until a read-back runs, and it never gates the sensing pipe (DEC-0137, DEC-0142)"

@@ -1,33 +1,117 @@
 id: CT-10
 name: Source-observation and bitemporal fact contract
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-DATA
 producers: [COMP-QMF-DATA-INGEST, COMP-QMF-VENUE]
 consumers: [COMP-QMF-DATA]
 governed_readers: [COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK]
 layer_from: middleware
 layer_to: backend
-decisions: [DEC-0038, DEC-0042, DEC-0051, DEC-0053]
-gaps: [GAP-0005, GAP-0020, GAP-0023, GAP-0028, GAP-0030]
-purpose: "Define the QMF-owned public observation boundary without erasing when an observation occurred or when it became knowable."
+decisions: [DEC-0103, DEC-0105, DEC-0106, DEC-0108, DEC-0109, DEC-0110, DEC-0117, DEC-0120, DEC-0135, DEC-0138, DEC-0139]
+gaps: []  # GAP-0037 answered 2026-08-20: cTrader wire schema and UTC-trust ratified (DEC-0135), broker/account identity is deployment configuration (DEC-0139)
+purpose: >-
+  Define the QMF-owned public boundary for external facts as bitemporal, source-attributed evidence:
+  every observation preserves when it occurred (event time) and when it became knowable (known-at),
+  stores foreign timestamps and foreign money verbatim with their declared zones and scales, and records
+  corrections as appended annotations rather than rewrites — so the framework never loses when, or from
+  whom, a fact was learned, and derived framework values always trace back to the raw evidence.
 invariants:
-  - "COMP-QMF-DATA owns the CT-10 schema and public boundary."
-  - "COMP-QMF-DATA-INGEST and COMP-QMF-VENUE are CT-10 producers; producer submissions enter through COMP-QMF-DATA."
-  - "COMP-QMF-DATA is the direct consumer; COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, and COMP-QMF-RISK are governed readers of the Data-owned public boundary."
-  - "Only COMP-QMF-DATA consumes CT-10 directly from COMP-QMF-DATA-INGEST; no downstream reader consumes CT-10 directly from Data-Ingest."
-  - "Event time and knowledge or ingestion time are distinct."
-  - "Raw evidence and processed data remain distinct concerns."
-  - "Fields, timestamps, source keys, duplicate rules, ordering, quality flags, units, and raw-payload handling remain unresolved."
+  - "Every external fact carries event-time, known-at, source, and revision; source is a core provenance noun ORTHOGONAL to VenueId — a provider QMF can trade at is a venue, a provider it only reads from is a source — and the same read-only provider is never conflated with a tradeable one (DEC-0117)."
+  - "The venue is also a source: venue market data — ticks, bars, depth, gap-replay backfill, and historical paging — enters as CT-10 source observations through qmf-data's CT-15 intake, application-mediated with no new dependency edge; the venue's (venue, symbol) and its native ids populate the (source, source-native id, revision) intake key so gap-replay redelivery deduplicates under the idempotent split (DEC-0138)."
+  - "Corrections are appended as annotation records referencing the corrected observation's fp1 fingerprint; an observation is never overwritten or rewritten. No package folds corrections inline in V1 — the annotation read-resolution rule is deferred (DEC-0117)."
+  - "Foreign timestamps are stored verbatim with their declared zone, offset, and source resolution, alongside a local receive wall time in int64 UTC nanoseconds; conversions to framework time are derived values carrying lineage, never rewrites (DEC-0106)."
+  - "A receive-monotonic reading, when kept, is an opaque boot-scoped diagnostic carrying its boot/epoch id — never an Instant, never rendered as a time, and excluded from identity; it is never compared across boots or machines (DEC-0106)."
+  - "Foreign money is stored verbatim as scaled integers with the source's declared scales (for example a wire price scale, a per-symbol digits count, a per-account money-digits count); conversions to Money or Price are derived with lineage, never a silent rescale (DEC-0105)."
+  - "Each observation carries an AD-8 WriterId with its boot/epoch id and a per-writer strictly-increasing sequence; (instant, writer, sequence) is a replay-ordering key with no causal meaning, timestamps are never primary or dedup keys, and the record's identity is its fp1 fingerprint (DEC-0106, DEC-0108)."
+  - "Each source's actual resolution is stored beside the nanosecond value; a coarser source resolution is never presented as finer than it was received (DEC-0106)."
+  - "cTrader venue timestamps are ratified as per-field-documented Unix milliseconds UTC, trusted on that per-field documentation, with named epoch exceptions and the spot-event timestamp unit verified-or-refused at first connection; the venue exposes no server clock, so receive-time recording is mandatory, and which broker and account fill a venue slot is deployment configuration, not a framework commitment (DEC-0135, DEC-0139, DEC-0106)."
+  - "This contract carries its own integer format version stamped into every observation artifact; a format version's meaning never mutates, and re-derivation of a value under a newer calendar identity or tzdata version mints a new artifact with a lineage edge to the old one — never a rewrite (DEC-0103)."
+  - "Every public read or write on this boundary succeeds or returns a typed refusal from the CT-04 seven-category taxonomy; store-library exceptions are translated to storage-failure refusals at the qmf-data boundary and never propagated as exceptions across a package boundary (DEC-0109)."
+  - "Source observations are world-scoped evidence; a read that crosses worlds is a policy-rejection refusal, and simulated-world observations are unwritable in V1 — writing world=simulated into governed evidence is a policy-rejection refusal until the backtesting sitting defines simulated-time typing (DEC-0117, DEC-0110)."
+  - "COMP-QMF-DATA owns the CT-10 boundary and is its only ratified reader today; the downstream governed_readers list is design intent, not a live edge — under default-deny (DEC-0120) COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, and COMP-QMF-RISK may read this boundary only once a qmf-data inter-library edge is ratified as a spine amendment. Producers (the ingest door and venue-originated facts) submit observation VALUES routed by the application; producing a value creates no package dependency on qmf-data (DEC-0120)."
 schema:
-  type: null
-  type_gap: GAP-0023
-  fields: null
-  fields_gap: GAP-0023
-  enums: null
-  enums_gap: GAP-0030
-  units: null
-  units_gap: GAP-0030
-  nullability: null
-  nullability_gap: GAP-0023
+  type: >-
+    Append-only bitemporal source-observation record (a frozen dataclass per the AD-3 convention). Its
+    identity is its fp1 fingerprint computed by the single qmf-core implementation; (instant, writer,
+    sequence) is an ordering key only, never identity. A correction is a further append referencing the
+    corrected record's fingerprint, never an in-place edit.
+  fields:
+    event_time:
+      type: int64-utc-ns
+      note: "when the observed fact occurred — event time; int64 UTC nanoseconds since the Unix epoch, POSIX no-leap-second (DEC-0117, DEC-0106)."
+    known_at:
+      type: int64-utc-ns
+      note: "when the fact became knowable to QMF — knowledge/ingestion time; distinct from event_time so late-arriving and revised facts stay honest (DEC-0117)."
+    source:
+      type: string-opaque
+      note: "provenance source id, a core noun ORTHOGONAL to VenueId; opaque and never parsed; identifies a read-only provider (DEC-0117)."
+    source_native_id:
+      type: string-opaque
+      note: "the provider's own id for the fact; part of the idempotent intake key (source, source-native id, revision) whose mechanics are owned by CT-15 (DEC-0119)."
+    revision:
+      type: string-opaque
+      note: "the provider's revision of the fact; a new revision is a new artifact with its own fingerprint, never an fp1 collision (DEC-0117, DEC-0119)."
+    foreign_timestamp:
+      verbatim:
+        type: string-opaque
+        note: "the source's timestamp stored exactly as received, never reformatted (DEC-0106)."
+      zone:
+        type: string
+        note: "the timestamp's declared zone as stated by the source (DEC-0106)."
+      offset:
+        type: string
+        note: "the timestamp's declared UTC offset as stated by the source (DEC-0106)."
+      resolution:
+        type: string
+        note: "the source's actual resolution stored beside the ns value (for example milliseconds); a stored per-source datum, not a fixed enum (DEC-0106)."
+    receive_wall_time:
+      type: int64-utc-ns
+      note: "local receive wall time recorded on ingest; a wall Instant, not a monotonic reading (DEC-0106)."
+    receive_monotonic_diagnostic:
+      type: opaque-boot-scoped
+      note: "optional boot-scoped diagnostic carrying its boot/epoch id; never an Instant, never rendered as a time, excluded from identity, never compared across boots (DEC-0106)."
+    foreign_money:
+      verbatim:
+        type: scaled-int
+        note: "the source's raw integer amount stored verbatim; present only on money- or price-bearing observations (DEC-0105)."
+      scale:
+        type: int
+        note: "the source's declared scale (decimal places) for the verbatim amount — for example a wire price scale, per-symbol digits, or per-account money digits (DEC-0105)."
+    writer:
+      type: string-opaque
+      note: "WriterId, a first-class core noun minted per (machine, role, stream), stable and durable across restarts (DEC-0106)."
+    boot_epoch_id:
+      type: string-opaque
+      note: "boot/epoch id accompanying the WriterId so restarts are visible without changing writer identity (DEC-0106)."
+    sequence:
+      type: int
+      note: "per-writer strictly-increasing sequence; with (instant, writer) it forms a replay-ordering key that carries no causal meaning (DEC-0106)."
+    correction_of:
+      type: fp1-fingerprint
+      note: "present only on a correction/annotation record; the fp1 fingerprint of the observation this record corrects; corrections append, never overwrite (DEC-0117)."
+    world:
+      type: string-enum
+      note: "the world this observation belongs to; source observations are world-scoped evidence; see enums.world (DEC-0117, DEC-0110)."
+    fingerprint:
+      type: string-opaque
+      note: "the record's identity, form fp1:sha256:<hex>, computed by the single qmf-core implementation (DEC-0108)."
+  enums:
+    world:
+      values: [live, replay, simulated]
+      note: "live = real venue clocks and quotes with account role carrying money-reality (paper and demo included); replay = a data-driven injected clock over recorded history; simulated = synthetic data, reserved-UNUSABLE in V1 (writing it into governed evidence is a policy-rejection refusal until the backtesting sitting) (DEC-0110, DEC-0117)."
+    refusal_categories:
+      values: ["invalid input", "unsupported capability", "unavailable dependency", "stale evidence", "policy rejection", "transient venue failure", "storage failure"]
+      note: "the CT-04 seven-category taxonomy every read or write on this boundary refuses through; storage-failure specifically translates store-library exceptions at the qmf-data boundary; categories are addable in later versions, never redefined (DEC-0109)."
+  units: >-
+    event_time, known_at, and receive_wall_time are int64 UTC nanoseconds since the Unix epoch (POSIX
+    no-leap-second); the source resolution is stored beside the ns value in the source's own terms;
+    foreign money is scaled integers at the source's declared scale (decimal places); sequence is a
+    unitless monotonic integer ordinal; the receive-monotonic diagnostic is an opaque, unitless
+    boot-scoped value that is never rendered as a time (DEC-0106, DEC-0105).
+  nullability: >-
+    event_time, known_at, source, source_native_id, revision, receive_wall_time, writer, boot_epoch_id,
+    sequence, world, and fingerprint are required and identity-bearing; the foreign_timestamp block is
+    required for any external fact carrying a source timestamp; the foreign_money block is present only on
+    money- or price-bearing observations; receive_monotonic_diagnostic and correction_of are optional;
+    null is prohibited in identity — an absent value is an omitted key, never a null (fp1, DEC-0108).

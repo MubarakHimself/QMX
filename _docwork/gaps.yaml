@@ -2,306 +2,382 @@ gaps:
   - id: GAP-0001
     question: "Which CPython minor version, supported operating systems, and architecture targets define the QMF V1 runtime matrix?"
     needed_by: [COMP-QMF-CORE, COMP-QMF-VENUE]
-    blocking: true
+    blocking: false
     recommendation: "Pin one currently supported CPython minor across all components and CI, and list Windows plus the intended Linux VPS explicitly before implementation."
-    status: open
-    answer: null
+    status: answered
+    answer: "CPython 3.14 pinned across all packages, CI, and factory sandboxes; tier-1 targets are Windows 11 x86-64 and Ubuntu LTS x86-64; QMF stays pure-Python and OS-neutral, other platforms untested in V1 (DEC-0099, AD-1)."
+    answered_by: operator (architecture sitting 2026-08-19)
+    date: 2026-08-19
 
   - id: GAP-0002
     question: "What repository layout, package namespaces, build backend, dependency manager, and lockfile policy will QMF V1 use?"
     needed_by: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK]
-    blocking: true
+    blocking: false
     recommendation: "Use a single versioned workspace with one package per final component, a standards-based pyproject build, and one reproducible lock policy; do not encode the obsolete module graph."
-    status: open
-    answer: null
+    status: answered
+    answer: "One repository as a uv workspace; seven packages importing as the qmf.* PEP 420 namespace (no qmf/__init__.py), src/ layout, uv_build backend, one committed uv.lock, lockstep roster versioning, explicit per-package dependencies verified in isolated test environments; calendar extensions live outside the roster on their own SemVer ladder (DEC-0100, AD-2)."
+    answered_by: operator (architecture sitting 2026-08-19)
+    date: 2026-08-19
 
   - id: GAP-0003
     question: "Which formatter, linter, type checker, test runner, coverage policy, and canonical local commands are mandatory?"
     needed_by: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK]
-    blocking: true
+    blocking: false
     recommendation: "Choose one fast formatter/linter, one strict static type checker, and pytest; expose stable commands for format-check, lint, type-check, unit, integration, and all."
-    status: open
-    answer: null
+    status: answered
+    answer: "ruff (format + lint), pyright strict workspace-wide, pytest; coverage per package on every change with an 80% floor and 100% branch coverage on CT-01/CT-02 primitive modules; canonical commands poe fmt | lint | types | test | check (DEC-0101, AD-3)."
+    answered_by: operator (architecture sitting 2026-08-19)
+    date: 2026-08-19
 
   - id: GAP-0004
     question: "What CI/CD tiers run on pull requests, protected-branch merges, and releases, and which exact commands gate each tier?"
     needed_by: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK]
-    blocking: true
+    blocking: false
     recommendation: "Gate pull requests on formatting, lint, types, and unit tests; gate merges on integration and contract tests; gate releases on package build, install, migration, and smoke tests."
-    status: open
-    answer: null
+    status: answered
+    answer: "Three tiers bound to factory events, not Git-host mechanics: tier 1 poe check on every work unit; tier 2 poe check-integration (adds integration + contract tests, isolated per-package environments) on landing into the integration branch; tier 3 poe check-release (adds builds + clean-install smoke on both tier-1 OSes) on ship; host-neutral until a remote exists (DEC-0102, AD-4)."
+    answered_by: operator (architecture sitting 2026-08-19)
+    date: 2026-08-19
 
   - id: GAP-0005
     question: "What release, semantic-versioning, deprecation, and compatibility policy applies to packages and serialized contracts?"
     needed_by: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK]
-    blocking: true
+    blocking: false
     recommendation: "Version packages and serialized schemas separately, prohibit silent semantic mutation, and require an explicit deprecation window plus migration note for every incompatible public change."
-    status: open
-    answer: null
+    status: answered
+    answer: "Two ladders: SemVer lockstep code packages (0.x until the V1 blueprint ships; one-release deprecation window) and per-contract integer format versions stamped into every artifact, whose meaning never mutates — incompatible change mints the next version plus a migration note; history stays append-only and readable forever (DEC-0103, AD-5)."
+    answered_by: operator (architecture sitting 2026-08-19)
+    date: 2026-08-19
 
   - id: GAP-0006
     question: "Which dependency categories and software licences are permitted, conditionally permitted, or prohibited?"
     needed_by: [COMP-QMF-CORE, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-VENUE]
-    blocking: true
+    blocking: false
     recommendation: "Publish a small allowlist that permits unmodified separately installed compatible libraries and wrappers, while prohibiting copied strategy-family contracts and dependencies that impose their platform architecture."
-    status: open
-    answer: null
+    status: answered
+    answer: "Permissive (MIT/BSD/Apache/PSF) freely allowed; LGPL only unmodified and separately installed; GPL/AGPL prohibited; strategy-family and platform-imposing dependencies prohibited; qmf-core takes zero outside dependencies; every dependency registered in DEPENDENCIES.md (DEC-0104, AD-6)."
+    answered_by: operator (architecture sitting 2026-08-19)
+    date: 2026-08-19
 
   - id: GAP-0007
     question: "What decimal precision, currency metadata, quantity scale, rounding mode, and quantization boundary define exact money?"
     needed_by: [COMP-QMF-CORE, COMP-QMF-VENUE, COMP-QMF-RISK]
-    blocking: true
+    blocking: false
     recommendation: "Represent amounts as decimal or scaled integers with currency and venue precision metadata; allow rounding only at named venue or accounting boundaries."
-    status: open
-    answer: null
+    status: answered
+    answer: "Money/Price/Quantity are whole-number integer counts at a declared per-value scale; Price is instrument-tagged; mixed-scale arithmetic auto-promotes losslessly or refuses; binary float is banned on the money path (a taint rule), crossed only at named conversion boundaries with an explicit rounding mode; foreign money is stored verbatim as evidence (DEC-0105, AD-7)."
+    answered_by: operator (architecture sitting 2026-08-19)
+    date: 2026-08-19
 
   - id: GAP-0008
     question: "What exact instant encoding, timezone rules, trading-day identity, session calendar, DST behavior, and Forex rollover semantics does qmf-core expose?"
     needed_by: [COMP-QMF-CORE, COMP-QMF-DATA, COMP-QMF-RISK]
-    blocking: true
+    blocking: false
     recommendation: "Use an unambiguous UTC instant plus an explicit venue/session calendar and separate civil date from trading date; keep Forex rollover in a Forex calendar extension rather than the universal primitive."
-    status: open
-    answer: null
+    status: answered
+    answer: "int64 UTC nanoseconds (POSIX no-leap-second, 1677–2262, checked arithmetic); CivilDate/TradingDate as distinct types with calendar identity carried in-band; Duration and half-open Interval in core; wall vs monotonic clocks type-separated; Clock protocol injected at the composition root; (instant, writer, sequence) replay ordering; calendar identity is the rule set (rollover vs session schedule split; day-boundary calendars account-scoped; tzdata pinned in extensions and fingerprint-participating); forex market-hours calendar ships first with 17:00 America/New_York rollover, weekend gaps, holidays in scope, swap-Wednesday dropped (DEC-0106, AD-8)."
+    answered_by: operator (architecture sitting 2026-08-19, two-lens audited)
+    date: 2026-08-19
 
   - id: GAP-0009
     question: "Is Instrument identity venue-plus-opaque-symbol, and how are aliases, symbol changes, asset class, and contract metadata represented?"
     needed_by: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-VENUE]
-    blocking: true
+    blocking: false
     recommendation: "Adopt venue plus opaque symbol as the stable identity seed and store aliases and mutable metadata separately so renames do not rewrite evidence."
-    status: open
-    answer: null
+    status: answered
+    answer: "Yes: instrument identity is (venue, venue's own symbol) with the symbol opaque and never parsed; VenueId is operator-minted, opaque, and stable (a white-label broker is its own venue); aliases, renames, asset class, and mutable metadata are separate dated records; Venue and Account are first-class nouns — defined in qmf-core, records owned by qmf-registry — with accounts carrying roles and Books binding to accounts (DEC-0107, AD-9)."
+    answered_by: operator (architecture sitting 2026-08-19)
+    date: 2026-08-19
 
   - id: GAP-0010
     question: "What canonical serialization, normalization, hash algorithm, fingerprint version, and collision policy define deterministic identity?"
     needed_by: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA]
-    blocking: true
+    blocking: false
     recommendation: "Define a versioned canonical byte representation before hashing, exclude presentation-only fields, and make the algorithm identifier part of every fingerprint."
-    status: open
-    answer: null
+    status: answered
+    answer: "The pinned fp1 recipe: UTF-8 JSON, keys sorted at every depth, NFC strings, integer-only identity numerics (floats refused in identity), null prohibited, order-significant arrays; SHA-256; emitted fp1:sha256:<hex>; one implementation in qmf-core only; display-only exclusions are explicit versioned contract declarations; idempotent re-writes accepted, true collisions refused and alarmed (DEC-0108, AD-10)."
+    answered_by: operator (architecture sitting 2026-08-19)
+    date: 2026-08-19
 
   - id: GAP-0011
     question: "What typed refusal taxonomy and error payload are public QMF contracts required to share?"
     needed_by: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-VENUE, COMP-QMF-RISK]
-    blocking: true
+    blocking: false
     recommendation: "Start with stable categories for invalid input, unsupported capability, unavailable dependency, stale evidence, policy rejection, and transient venue failure, each carrying machine-readable context."
-    status: open
-    answer: null
+    status: answered
+    answer: "Seven categories — invalid input, unsupported capability, unavailable dependency, stale evidence, policy rejection, transient venue failure, storage failure — each carrying machine-readable context and retryability (yes/no/after-condition); refusals are returned as result unions, never raised across package boundaries; value construction is one pattern: unchecked constructor plus validating try_create factory (DEC-0109, AD-11)."
+    answered_by: operator (architecture sitting 2026-08-19; storage failure added 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0012
     question: "What is the canonical result-label tuple and which parts participate in artifact identity?"
     needed_by: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA]
-    blocking: true
+    blocking: false
     recommendation: "Keep producer contract version, input fingerprint, run or occurrence identity, and evidence-time range in the label; keep human display names outside identity."
-    status: open
-    answer: null
+    status: answered
+    answer: "Five parts, all identity: producer contract format version, input fingerprints, evidence time range, computation identity (content-derived; the occurrence record is separate provenance), and world (live — paper/demo included via account role; replay; simulated reserved-unusable until the backtesting sitting); display names stay outside identity; non-live worlds never write the live evidence namespace (DEC-0110, AD-12)."
+    answered_by: operator (architecture sitting 2026-08-19)
+    date: 2026-08-19
 
   - id: GAP-0013
     question: "What concrete latency, throughput, memory, startup, and persistence budgets must each component meet under the roughly forty-Bot reference scenario?"
     needed_by: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK]
-    blocking: true
+    blocking: false
     recommendation: "Ratify a benchmark scenario first, then record numeric p50/p95/p99 latency, sustained and burst throughput, peak RSS, and recovery-time budgets per component; the transcripts do not support inventing the numbers."
-    status: open
-    answer: null
+    status: answered
+    answer: "Measure-then-budget: no invented numbers; every component ships a benchmark harness measuring speed and peak memory at framework-native load ladders (the ~40-bot scenario with 10/100/200 marks sizes the ladder); first measurements become fingerprinted (OS, CPU-class)-scoped baselines with variance-scaled regression thresholds gating tier-2 merges; the one design constraint stated now is qmf-core importing in well under one second (DEC-0111, AD-13). Numeric budgets intentionally await first baselines."
+    answered_by: operator (architecture sitting 2026-08-19)
+    date: 2026-08-19
 
   - id: GAP-0014
     question: "Which registry object kinds are V1, and what minimum identity, version, ownership, lifecycle, and evidence fields does each kind require?"
     needed_by: [COMP-QMF-REGISTRY]
-    blocking: true
+    blocking: false
     recommendation: "Use type-specific records sharing only kind, stable id, contract version, created-at, and lineage references; do not resurrect a universal recipe card."
-    status: open
-    answer: null
+    status: answered
+    answer: "Per-kind record schemas, each its own versioned contract, sharing a tiny header: kind, contract format version, at-birth parent references, writer, and sequence; the stable id is derived from the record's fp1 fingerprint (never minted) and created-at is occurrence/display-only; kinds are addable, never redefined; Bot and Book kinds are reserved names filled by their own sittings; no universal recipe card (DEC-0114, AD-16)."
+    answered_by: operator (architecture sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0015
     question: "What lineage edge types, revision rules, append format, indexing strategy, and compaction policy implement graph-shaped registry history without a graph database?"
     needed_by: [COMP-QMF-REGISTRY, COMP-QMF-DATA]
-    blocking: true
+    blocking: false
     recommendation: "Use immutable append-only edge records with typed parent, derived-from, supersedes, promoted-from, and occurrence-of relations, plus rebuildable local indexes."
-    status: open
-    answer: null
+    status: answered
+    answer: "At-birth parent references live in the record header; lineage accruing after birth lives exclusively in append-only typed edge records (supersedes, promoted-from, occurrence-of, corroborates, disagrees-with) referencing fingerprints; edge files are pinned JSONL — one fp1-canonical object per line, LF-terminated, append-with-fsync, no rewrite, size-rotated with monotonic ordinals; indexes are local and rebuildable; no database server (DEC-0114, AD-16)."
+    answered_by: operator (architecture sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0016
     question: "What exact causality and look-ahead registration test must an artifact pass, and what evidence proves the pass?"
     needed_by: [COMP-QMF-REGISTRY, COMP-QMF-DATA]
-    blocking: true
+    blocking: false
     recommendation: "Require every consumed fact's knowledge time to be no later than the decision time and persist the tested input fingerprint, test version, and counterexample details."
-    status: open
+    status: deferred
     answer: null
+    note: "Operator-deferred to the backtesting sitting (DEC-0121), consequence knowingly accepted: artifacts registered before then carry no causality evidence, not retroactively reconstructible. The bitemporal ingredients stay ratified via AD-8/CT-10. Do NOT close this gap here."
+    date: 2026-08-20
 
   - id: GAP-0017
     question: "What does the attempt counter count, at which scope, when does it reset, and how does it constrain registration or research budget?"
     needed_by: [COMP-QMF-REGISTRY]
-    blocking: true
+    blocking: false
     recommendation: "Count immutable research attempts against a declared charter and dataset split, never reset silently, and require explicit human authorization for a new budget."
-    status: open
+    status: deferred
     answer: null
+    note: "Operator-deferred to the backtesting sitting (DEC-0121); registry occurrence records still log every run, so the tally's raw material accrues without policy. Do NOT close this gap here."
+    date: 2026-08-20
 
   - id: GAP-0018
     question: "What is the Bot schema, how many confluences may it contain, and what exact contract binds one Bot to exactly one Book?"
     needed_by: [COMP-QMF-REGISTRY, COMP-QMF-RISK]
-    blocking: true
+    blocking: false
     recommendation: "Model one Bot as one-or-more confluences plus one explicit Book-binding reference, but require operator ratification because cardinality is a transcript conflict."
-    status: open
-    answer: null
+    status: answered
+    answer: "A Bot contains one-or-more confluences, generalized recursively: no layer of the bot vocabulary may hardcode cardinality one, components may compose (a composite is its own artifact with lineage), and collections order canonically by child fingerprint unless declared order-significant; Bot identity is its content, and the Bot↔Book↔account binding is a separate dated record outside Bot identity — one Bot at exactly one Book at a time, re-binding never mints a new Bot (DEC-0115, AD-17; resolves DEC-0040). The full Bot schema remains its own session."
+    answered_by: operator (architecture sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0019
     question: "Which human-reviewed evidence, sign-offs, and immutable records are required to promote an artifact from lab to live?"
     needed_by: [COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-RISK]
-    blocking: true
+    blocking: false
     recommendation: "Require a fingerprinted artifact, lineage, declared charter, causality pass, untouched-test evidence, risk binding, reviewer identity, and signed promotion occurrence."
-    status: open
-    answer: null
+    status: answered
+    answer: "Ratified as a skeleton: the registry reserves a promotion-occurrence card kind — human-only signer, signed immutable record, mandatory plain-words summary declared an identity field; V1 signing is the operator's recorded approval attesting the record's fp1 (reviewer identity + instant, no crypto dependency); the card is canonical and the journal's promotion event carries only its fingerprint; the evidence checklist accretes from the data, backtesting, and risk sittings; the gate itself is platform territory (DEC-0116, AD-18)."
+    answered_by: operator (architecture sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0020
     question: "What are the exact qmf-data layer names, responsibilities, schemas, and read/write ownership rules?"
     needed_by: [COMP-QMF-DATA]
-    blocking: true
+    blocking: false
     recommendation: "Ratify the study's ingest, immutable raw archive, processed, journal, split-governed research door, and backup responsibilities, but specify schemas and ownership before adopting the layer count."
-    status: open
-    answer: null
+    status: answered
+    answer: "Seven room-roles: ingest door, immutable raw archive, processed, journal, split-governed research door, backup, and the registry room (records + lineage under the same retention/backup/migration law), instantiated per world with cross-world reads refused as policy rejection; per-room schemas are detailed per contract at documentation time (DEC-0117, AD-19)."
+    answered_by: operator (architecture sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0021
     question: "Which exact store engines and file formats are adopted for raw evidence, processed analytics, registry indexes, journals, and metadata?"
     needed_by: [COMP-QMF-REGISTRY, COMP-QMF-DATA]
-    blocking: true
+    blocking: false
     recommendation: "Begin the ratification session with the study stack—Parquet for columnar evidence, DuckDB for local analytics, SQLite for transactional metadata, and JSONL for append history—while keeping each behind a QMF-owned contract."
-    status: open
-    answer: null
+    status: answered
+    answer: "Parquet (columnar time-series), DuckDB (local analytics), SQLite (transactional metadata), JSONL (append streams), each behind a QMF-owned contract with stdlib-typed boundary signatures so engines stay swappable; no database server; only raw-archive and journal formats are evidence-bearing — analytics engines hold rebuildable views and engine majors are pinned per release (DEC-0117, AD-19)."
+    answered_by: operator (architecture sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0022
     question: "How are data and registry schemas versioned, migrated, rolled back, and verified across application upgrades?"
     needed_by: [COMP-QMF-REGISTRY, COMP-QMF-DATA]
-    blocking: true
+    blocking: false
     recommendation: "Use explicit schema versions and forward migrations with preflight validation, backup, idempotent dry run, post-migration verification, and a documented restore path rather than destructive in-place mutation."
-    status: open
-    answer: null
+    status: answered
+    answer: "Migrations run preflight checks → backup first → dry-run → migrate → verify, with a documented restore path and never in-place mutation of the only copy; contract format versions per DEC-0103 stamp every artifact (DEC-0118, AD-20)."
+    answered_by: operator (architecture sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0023
     question: "What canonical bitemporal fact shape preserves event time, knowledge time, source, revision, and late correction semantics?"
     needed_by: [COMP-QMF-DATA, COMP-QMF-REGISTRY]
-    blocking: true
+    blocking: false
     recommendation: "Make event_time and known_at mandatory for mutable external facts, attach immutable source and revision identity, and append corrections instead of overwriting evidence."
-    status: open
-    answer: null
+    status: answered
+    answer: "Every external fact carries event-time, known-at, source, and revision; source is a core provenance noun orthogonal to VenueId (a provider you trade at is a venue; one you only read from is a source); corrections are appended, never overwrite; foreign timestamps and money are stored verbatim with conversions derived under lineage (DEC-0117, AD-19; DEC-0106 foreign-evidence rules)."
+    answered_by: operator (architecture sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0024
     question: "How are train, validation, and sealed-test splits produced, registered, reopened, and audited across time-series data?"
     needed_by: [COMP-QMF-DATA, COMP-QMF-REGISTRY]
-    blocking: true
+    blocking: false
     recommendation: "Use time-ordered non-overlapping split manifests identified by fingerprints; permit the newest sealed period one logged final look and never silently recycle it into research."
-    status: open
-    answer: null
+    status: answered
+    answer: "Splits are fingerprinted, time-ordered, non-overlapping manifests, each pinning exactly one calendar identity + version in-band; boundaries are explicit stored TradingDates or instants, never civil dates, and the seal boundary is a frozen TradingDate never re-derived under later tzdata; the 12-month seal is a no-peek lock (not retention) enforced now as a policy-rejection refusal at every qmf-data read boundary including restored backups; the sealed period gets one logged final look journaled as a control-action subtype and is never silently recycled (DEC-0119, AD-21)."
+    answered_by: operator (architecture sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0025
     question: "Which journal event types, correlation identifiers, sampling cadence, retention period, and redaction rules are required?"
     needed_by: [COMP-QMF-DATA, COMP-QMF-REGISTRY, COMP-QMF-VENUE, COMP-QMF-RISK]
-    blocking: true
+    blocking: false
     recommendation: "Define append-only decision, order, fill, risk-transition, promotion, data-quality, and control-action events linked by occurrence and causation ids; choose retention only after measuring volume."
-    status: open
-    answer: null
+    status: answered
+    answer: "Seven event types — decision, order, fill, risk transition, promotion, data quality, control action — in N append-only streams, one per producing component under its WriterId with gapless per-(writer, boot-epoch) sequences (a gap signals loss); correlation_id is a linking annotation excluded from fp1 identity by explicit versioned declaration; causal linkage uses typed edges, never timestamps; retention/trimming rules are set only after measured volume (DEC-0119, AD-21; DEC-0118, AD-20)."
+    answered_by: operator (architecture sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0026
     question: "What retention, compaction, partitioning, and capacity rules apply to raw, processed, journal, and live-performance data?"
     needed_by: [COMP-QMF-DATA]
-    blocking: true
+    blocking: false
     recommendation: "Keep source evidence and lineage permanently, partition immutable time-series data by source, instrument, and bounded time window, and set journal compaction only after measuring event volume."
-    status: open
-    answer: null
+    status: answered
+    answer: "Raw originals and lineage are kept forever; time-series is partitioned by source, instrument, and time window; journal trimming only after measured volume; 'rebuildable' licenses deletion only of artifacts no result label cites — a cited processed artifact is retained forever and rebuilds pin the original calendar/tzdata version (DEC-0118, AD-20; DEC-0117, AD-19)."
+    answered_by: operator (architecture sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0027
     question: "What backup schedule, encryption, retention, restore procedure, recovery-time objective, recovery-point objective, and restore-verification cadence are required?"
     needed_by: [COMP-QMF-REGISTRY, COMP-QMF-DATA]
-    blocking: true
+    blocking: false
     recommendation: "Start from the source-backed nightly off-machine backup, add encrypted versioned copies, and require automated sample restores plus a periodic full disaster-recovery rehearsal before calling backup complete."
-    status: open
-    answer: null
+    status: answered
+    answer: "Ratified design: nightly, encrypted, versioned, off-machine (object-storage bucket), automated sample-restore tests plus periodic full-restore rehearsal; QMF provides the backup/restore/verify primitives (CT-14, CT-26) while schedule and execution are application/ops-owned; encryption key custody and the crypto dependency are named at the node/ops sitting; topology: VPS records and syncs down, workstation holds the working archive, bucket catches nightly copies (DEC-0118, AD-20). Numeric RPO/RTO await the node/ops sitting."
+    answered_by: operator (architecture sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0028
     question: "Where is the exact boundary between qmf-data source adapters and application-owned downloading, scheduling, retries, and lifecycle control?"
     needed_by: [COMP-QMF-DATA]
-    blocking: true
+    blocking: false
     recommendation: "Let qmf-data define source contracts, normalization, validation, and idempotent ingest calls; let standalone applications own clocks, scheduling, process supervision, and operator UI."
-    status: open
-    answer: null
+    status: answered
+    answer: "qmf-data defines source contracts, normalization, validation, and idempotent intake keyed on (source, source-native id, revision) — a provider revision is a new artifact, never a fingerprint collision; applications own scheduling, retries, supervision, and UI (DEC-0119, AD-21)."
+    answered_by: operator (architecture sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0029
     question: "What economic-calendar provider contract, schedule, deduplication key, correction semantics, rate limits, and legal retention posture apply to the standalone recorder?"
     needed_by: [COMP-QMF-DATA]
-    blocking: true
+    blocking: false
     recommendation: "Persist provider-native event identity and revisions through an idempotent recorder, keep scheduling outside QMF, and do not operationalize the feed until its licence and long-term retention rights are confirmed."
-    status: open
-    answer: null
+    status: answered
+    answer: "The news-calendar recorder (renamed apart from market-hours and day-boundary calendars) keeps provider-native identity and revisions through the idempotent (source, source-native id, revision) intake; scheduling stays outside QMF; the legal archiving posture remains an open operator item recorded, not resolved (DEC-0119, AD-21)."
+    answered_by: operator (architecture sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0030
     question: "Which historical and live tick sources, symbols, depth, bid/ask fields, retention granularity, and reconciliation rules define the V1 evidence set?"
     needed_by: [COMP-QMF-DATA, COMP-QMF-VENUE]
-    blocking: true
+    blocking: false
     recommendation: "Use Dukascopy-class historical ticks and the later broker feed as separately identified sources, preserve bid and ask plus source timestamps, and never merge disagreements without lineage."
-    status: open
-    answer: null
+    status: answered
+    answer: "Tick sources are separately identified (Dukascopy history vs the broker feed); bid and ask are preserved with source timestamps; disagreements between sources stay visible via corroborates / disagrees-with edges and are never merged away (DEC-0119, AD-21). Symbol lists and depth specifics remain venue-sitting detail under GAP-0037."
+    answered_by: operator (architecture sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0031
     question: "What indicator protocol defines input series, output alignment, missing values, warm-up, statefulness, streaming updates, and typed failures?"
     needed_by: [COMP-QMF-CORE, COMP-QMF-INDICATORS]
-    blocking: true
+    blocking: false
     recommendation: "Define a small deterministic batch-and-incremental protocol with explicit warm-up and missing-output markers; keep library-specific objects behind adapters."
-    status: open
-    answer: null
+    status: answered
+    answer: "CT-16 is one contract with two conformant modes (batch + streaming), consumer-blind, bound by a tier-2 equality law; the series vocabulary (Bar, Tick/Quote, BarSpec, exact rationals) lives in qmf-core; identity is the entire declared configuration and that fingerprint is the only dedup key; outputs are full-length, index-aligned, carry per-sample knowable-at, and use a presence map (NaN and sentinels banned); warm-up is an integer count in the input's own sample unit; failures are typed refusals; streaming instances are shared one-feeder objects deduplicated by configuration fingerprint; plain-Python authoring stays legal outside governed evidence (DEC-0126, DEC-0130, AD-22)."
+    answered_by: operator (indicators/structure sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0032
     question: "Which TA-Lib-class implementation and version is the canonical arithmetic reference, and how are dual-reference checks recorded?"
     needed_by: [COMP-QMF-INDICATORS, COMP-QMF-REGISTRY]
-    blocking: true
+    blocking: false
     recommendation: "Pin one reference implementation and version per release, record parameter and input fingerprints with comparison tolerances, and treat arithmetic changes as versioned contract changes."
-    status: open
-    answer: null
+    status: answered
+    answer: "TA-Lib is the canonical arithmetic reference, pinned per QMF release as the lockfile-resolved artifacts (distribution filename + hash) of the C library and Python wrapper, 0.7.1 + 0.7.1, with an identity-bearing reference-configuration record asserted at import; wrap-not-reimplement where the reference implements a formula, the QMX implementation canonical where it does not; upgrades run the comparison suite first and an output change mints the per-configured-indicator contract format version with before/after evidence; dual-reference checks are registered comparison artifacts with integer-ULP tolerances (DEC-0127, AD-23)."
+    answered_by: operator (indicators/structure sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0033
     question: "What objective rule separates a light Bot-path indicator from a heavy MIS or research indicator?"
     needed_by: [COMP-QMF-INDICATORS]
     blocking: false
     recommendation: "Classify by declared execution budget, state size, required evidence window, and whether the result must be available synchronously on the trading path, not by indicator name."
-    status: open
-    answer: null
+    status: answered
+    answer: "A configuration is light iff it declares AND benchmark-proves four bounds: per-update cost within the live-path latency rung, bounded declared state size, a bounded evidence window or a declared anchor-reset rule, and synchronous availability on the trading path; anything else is heavy and runs off the trading path through the same CT-16 contract, computed once and fanned out with staleness stamps; classification is per configuration, never per name; the verdict is machine-scoped and display-only, and every configuration is heavy by default until the live-path rung has a recorded baseline; the same four bounds bind structure families (DEC-0128, AD-24)."
+    answered_by: operator (indicators/structure sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0034
     question: "Which level, zone, and market-structure families ship first, and what causal confirmation rule prevents look-ahead in each?"
     needed_by: [COMP-QMF-STRUCTURE, COMP-QMF-REGISTRY, COMP-QMF-DATA]
-    blocking: true
+    blocking: false
     recommendation: "Begin with the smallest operator-used causal families, require every output to carry observed-at and confirmed-at times, and postpone any family whose causal rule cannot be stated precisely."
-    status: open
-    answer: null
+    status: answered
+    answer: "A family is a type of chart object only; an object is minted once at observation carrying observed-at (known-at semantics), its anchor span, and its declared confirmation rule, with confirmation, invalidation, and interaction records as append-only edges and current state a read-time fold; the emission invariant is checked in-component now; a family ships into the governed library only when its rule states 'confirmed the moment X happens' with X knowable then; evidence class (confirmed/unconfirmed/provisional) is an identity-bearing label part and reads refuse unconfirmed rows; the seed four families (swing points, horizontal levels from confirmed swings, zones, structure breaks) are candidates only — operator-authored families are first-class peers via the extension shape (DEC-0129, DEC-0131, AD-25)."
+    answered_by: operator (indicators/structure sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0035
     question: "What is the complete secret lifecycle for broker application credentials, OAuth tokens, refresh material, VPS storage, rotation, revocation, and incident response?"
     needed_by: [COMP-QMF-VENUE]
-    blocking: true
+    blocking: false
     recommendation: "Keep secrets outside repositories and configuration artifacts, use the operating environment's protected secret store, document rotation and revocation, and test token expiry and compromise recovery."
-    status: open
-    answer: null
+    status: answered
+    answer: "AD-26 secret lifecycle (DEC-0136, CT-21): QMF components handle typed SecretRef references, never values — qmf-core ships SecretRef and SecretValue with a render guard and a tier-1 secret scan; reference ids are opaque minted ids; binding identity is (VenueId, AccountId, role, world) with the secret reference occurrence-only; the adapter's connection manager is the single component permitted to hold values in memory, through an injected SecretStore port; exactly one live refresher per credential; rotated refresh material is stored before the old is discarded, a failed store blocks the command pipe while sensing continues; compromise recovery is a documented tested drill anchored on cTID re-authorization; testing uses demo credentials only."
+    answered_by: operator (venue sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0036
     question: "What venue order-state machine, idempotency keys, reconciliation loop, retry limits, outage behavior, and VPS-failure flattening authority define safe connectivity?"
     needed_by: [COMP-QMF-VENUE, COMP-QMF-RISK]
-    blocking: true
+    blocking: false
     recommendation: "Use client-generated idempotency keys and append-only order observations, reconcile broker state after every uncertainty, and require an explicitly authorized flatten path rather than assuming one."
-    status: open
-    answer: null
+    status: answered
+    answer: "AD-27 venue commands and the uncertainty law (DEC-0137, CT-19/CT-20): the command stream is (VenueId, account); the vocabulary is exactly four typed kinds with typed close scopes and the compound-command meet law; command identity is fp1-derived with an injective-or-bound venue mapping and full-fingerprint idempotency; the four-outcome law resolves every submission to accepted-by-venue | rejected-by-venue | denied-locally | UNKNOWN — a timeout is never a rejection, UNKNOWN is minted as an explicit observation and blocks new commands on that stream until an explicit resolve_unknown call; recording precedes interpretation and order state is a read-time fold over append-only observations; reconciliation is an on-demand read-back with verdicts reconciled | drift | unknown, gating the command pipe only — sensing never blocks; outage is fail-closed, command retry is prohibited, retry/pool constants stay do-not-default node values; flatten is mechanical close commands with authority assignment left to the risk/node sittings."
+    answered_by: operator (venue sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0037
     question: "Which broker and account type is the first cTrader target, and do trend bars use bid, ask, mid, or provider-native prices?"
     needed_by: [COMP-QMF-VENUE, COMP-QMF-DATA]
-    blocking: true
-    recommendation: "Do not freeze the tentative broker until account access is confirmed; preserve provider-native bid and ask and derive mid explicitly instead of treating it as source evidence."
-    status: open
-    answer: null
+    blocking: false
+    recommendation: "Do not freeze the tentative broker until account access is confirmed; preserve provider-native bid and ask and derive mid explicitly instead of treating it as source evidence. Research evidence on file (DEC-0123): platform UTC milliseconds, 17:00 New York daily boundary, trendbars BID-derived per staff confirmation, no server-clock primitive, 50/s + 5/s rate limits — recorded, not adopted; the venue sitting ratifies."
+    status: answered
+    answer: "Two halves, both closed. Broker half (DEC-0139): broker identity is deployment configuration, never architecture — opaque VenueId/AccountId identity and account bindings suffice; IC Markets is the operator's intent, deliberately not a framework commitment; account-type confirmation is config-time per broker. Venue-facts half (DEC-0135, superseding DEC-0123 with corrected evidence grades): timestamps are per-field ms-UTC with named epoch exceptions; the 17:00-New-York daily boundary and BID-derived trendbars were demoted to 2013-forum-grade claims and are NEVER hardcoded — the adapter measures the daily boundary and bar price basis per broker at first connection and re-verifies with a continuous monitor, storing per-broker configuration; provider-native bid and ask are preserved and every undocumented behavior is a verify-or-refuse adapter obligation."
+    answered_by: operator (venue sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0038
     question: "What minimum venue-adapter contract lets later crypto and stock integrations coexist with cTrader without leaking venue-specific concepts into qmf-core?"
     needed_by: [COMP-QMF-CORE, COMP-QMF-VENUE]
-    blocking: true
+    blocking: false
     recommendation: "Standardize capability discovery, instrument resolution, market-data subscriptions, order commands, execution observations, and typed refusals; keep optional venue features capability-gated."
-    status: open
-    answer: null
+    status: answered
+    answer: "AD-28 adapter contract (DEC-0138, CT-18): one neutral port of four contracts (CT-18 capability, CT-19 command, CT-20 event + reconciliation, CT-21 secret/session) defined by qmf-venue on qmf-core nouns, implemented per venue, wired by the composition root through injected qmf-core sink protocols — no new dependency edge; the connection manager is the sole session owner and WriterId holder; the capability surface splits into a static capability declaration and a per-account measured venue-observation profile with two-phase wiring; market data is homed at CT-10/CT-15 with no fifth contract and no silent sibling-feed failover; error mapping rows are pinned with a fail-closed unmapped default (retryable no, outcome UNKNOWN); the first-connection verification suite is verify-or-refuse throughout, and a measured daily boundary mints a venue-scoped market-hours calendar identity; a CCXT-class crypto venue slots in later by declaring a different capability record through the same port — nothing venue-shaped enters qmf-core."
+    answered_by: operator (venue sitting 2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0039
     question: "What are the exact Book and BMS schemas, cardinalities, lifecycle states, version-compatibility rules, and ownership boundaries?"
@@ -379,7 +455,7 @@ gaps:
     question: "What fidelity levels, fill models, statistics, Bot-by-Book matrix, isolated sandbox, and parity contracts define the future backtesting library?"
     needed_by: [COMP-QMF-CORE, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-RISK]
     blocking: false
-    recommendation: "Keep bar-close, intrabar, and tick fidelity as candidate labels only, recover the missing brainstorm, and ratify backtesting in its own session before any engine or central service is built."
+    recommendation: "Keep bar-close, intrabar, and tick fidelity as candidate labels only, recover the missing brainstorm, and ratify backtesting in its own session before any engine or central service is built. The backtesting sitting also owns simulated-time typing (unlocks world = simulated per DEC-0110) and the deferred GAP-0016/0017 (DEC-0121)."
     status: deferred
     answer: null
 

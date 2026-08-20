@@ -1,26 +1,55 @@
 id: CT-04
-name: Typed refusal and invariant-violation contract
+name: Typed refusal contract
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-CORE
 consumers: [COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST]
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0022, DEC-0029, DEC-0030]
-gaps: [GAP-0005, GAP-0011]
-purpose: "Carry machine-readable refusal outcomes across public QMF boundaries without embedding recovery policy."
+decisions: [DEC-0109, DEC-0103, DEC-0112, DEC-0136, DEC-0137, DEC-0138]
+gaps: []
+purpose: >-
+  Carry every public QMF failure as a typed, machine-readable value returned across a package
+  boundary — category, context, and retryability — so callers and agents branch on structure, never
+  on error prose, and so value-type construction has exactly one refusal-bearing factory pattern.
 invariants:
-  - "Refusals are typed and versioned."
-  - "Codes, detail fields, retryability, redaction, and exception mapping remain unresolved."
+  - "Every public QMF operation either succeeds or returns a typed refusal; a refusal carries a category, machine-readable context, and a retryability answer (DEC-0109)."
+  - "The refusal category is one of exactly seven values — invalid input, unsupported capability, unavailable dependency, stale evidence, policy rejection, transient venue failure, storage failure; categories are addable in later contract format versions, never redefined (DEC-0109, DEC-0103)."
+  - "Refusals are RETURNED across public boundaries as one arm of a result union; exceptions are reserved for programmer error and never carry a refusal across a package boundary (DEC-0109)."
+  - "Value-type construction is one pattern everywhere: an unchecked constructor for trusted internal use plus a validating try_create factory returning value-or-refusal — try_create's refusal arm is a CT-04 value (DEC-0109)."
+  - "storage failure covers disk-full, corrupt, locked, or truncated stores; store-library exceptions are translated into a storage-failure refusal at the qmf-data boundary, never propagated (DEC-0109)."
+  - "Refusals always carry context and are never swallowed (DEC-0112)."
+  - "denied-locally is a command OUTCOME, never a refusal: on the venue path typed refusals are reserved for a malformed command (invalid input), an undeclared capability (unsupported capability), and a blocked command stream (transient venue failure while an UNKNOWN is outstanding); every command outcome, denied-locally included, mints an observation record and a journal event rather than a refusal (DEC-0137)."
+  - "A transient-venue-failure refusal is the venue path's retry vehicle: a venue-supplied retryAfter becomes the refusal's after-condition, and category alone never implies retryability — the unmapped venue-error default is transient venue failure, not-retryable, outcome UNKNOWN, plus an alarm (DEC-0137, DEC-0138)."
+  - "A missing, expired, or rejected venue credential is an unavailable-dependency refusal carrying the secret reference id, never the secret value; refusal context, logs, health reports, and metrics carry the reference id only (DEC-0136)."
+  - "An invocation of an undeclared venue capability, and a close-scope the adapter does not natively support, are unsupported-capability refusals, never emulated at a wider scope (DEC-0138, DEC-0137)."
 schema:
-  type: null
-  type_gap: GAP-0011
-  fields: null
-  fields_gap: GAP-0011
-  enums: null
-  enums_gap: GAP-0011
-  units: null
-  units_gap: GAP-0011
-  nullability: null
-  nullability_gap: GAP-0011
+  type: >-
+    TypedRefusal — a frozen dataclass value type (AD-3 public-value-type convention) returned, never
+    raised, across public boundaries as one arm of a result union.
+  fields:
+    category:
+      type: string-enum
+      required: true
+      note: "one of the seven refusal categories; see enums.category (DEC-0109)."
+    context:
+      type: machine-readable-structured
+      required: true
+      note: "structured, machine-readable diagnostic facts a caller needs to act; opaque to this contract; present but may be an empty structured object, never null (DEC-0109)."
+    retryability:
+      type: string-enum
+      required: true
+      note: "one of yes / no / after-condition; see enums.retryability (DEC-0109)."
+    after_condition_descriptor:
+      type: unpinned
+      required: conditional
+      note: "present only when retryability = after-condition; carries the condition under which a retry may succeed. The descriptor's exact shape is not pinned by AD-11 and no open gap governs it — the retryability enum is fixed, the descriptor's field-level shape awaits later specification."
+  enums:
+    category: [invalid input, unsupported capability, unavailable dependency, stale evidence, policy rejection, transient venue failure, storage failure]
+    retryability: [yes, no, after-condition]
+  units: >-
+    not applicable — a refusal is a categorical outcome and carries no physical units.
+  nullability: >-
+    category and retryability are required and non-null; context is required and present (may be an
+    empty structured object, never null); the after-condition descriptor is present only when
+    retryability = after-condition and absent otherwise.

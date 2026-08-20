@@ -32,4 +32,4 @@ qmf-registry owns identity, lineage, causality registration preconditions, and a
 
 ## Consequences
 
-The registry kind catalog, edge schema, causality evidence, and attempt semantics remain GAP-defined. Bot-to-confluence cardinality remains the unresolved DEC-0040 conflict and cannot be fixed by this ADR.
+The kind catalog and edge schema are now ratified (DEC-0114) and cardinality is resolved (DEC-0115, superseding DEC-0040); causality evidence and attempt semantics remain deferred to the backtesting sitting (DEC-0121, GAP-0016/GAP-0017).

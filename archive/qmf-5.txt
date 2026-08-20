@@ -1,0 +1,3047 @@
+ ▐▛███▛█   Claude Code v2.1.236
+▝▜██████▀  Fable 5 · Claude Max
+  ▝▝ ▝▝    ~\Desktop\QMX
+
+
+❯ /model                                                                        
+  ⎿  Set model to Fable 5 and saved as your default for new sessions
+
+❯ /effort                                                                       
+  ⎿  Set effort level to ultracode (this session only): xhigh + dynamic workflow
+     orchestration
+
+❯ /bmad-architecture Update intent: resume from the memlog at                   
+_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/.      
+Scope: GAP-0035..0038 — secret lifecycle (OAuth, VPS storage, rotation,         
+compromise recovery), the venue order-state machine (idempotency keys,          
+reconciliation, outage behavior, flatten authority), first broker + account     
+confirmation, and the venue-adapter contract (capability discovery, so crypto   
+and stocks slot in later). FIRST: present ctrader-time-research.md for          
+ratification (UTC ms, BID bars, 17:00-NY boundary, no server clock, rate        
+limits) — research protocol: present, discuss, ratify; never auto-adopt.        
+Honor AD-8's operational clock rules and AD-9's VenueId discipline. Same        
+gap-loop method; operator brain-dumps, park node runtime behavior.              
+
+  Searched for 3 patterns, read 4 files, ran 3 shell commands (ctrl+o to expand)
+
+● Resuming the venue sitting from the memlog. Logging the reopen, then
+  presenting the research.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Welcome back, Mubarak — venue sitting is open. Scope this session: GAP-0035
+  (secrets), GAP-0036 (order-state machine), GAP-0037 (first broker + price
+  basis), GAP-0038 (adapter contract). Node runtime behavior stays parked as
+  always.
+
+  First order of business, as you directed: the cTrader time research goes in
+  front of you for ratification. It has been sitting in the file as evidence, 
+  not adopted (DEC-0123), and AD-8 currently says "no cTrader timestamp is 
+  trusted as UTC until venue verification (GAP-0037)." Your ruling today decides
+  whether that distrust clause lifts.
+
+  The seven findings, graded honestly
+
+  I'm giving you each finding with how solid the evidence actually is, because
+  they are not all equally solid.
+
+  #: 1
+  Finding: All timestamps are UTC milliseconds (orders, deals, ticks). One
+  oddball: trendbars use UTC minutes.
+  Evidence strength: Strong — read directly from Spotware's own protocol files
+  My read: Safe to adopt
+  ────────────────────────────────────────
+  #: 2
+  Finding: The trading day rolls at 17:00 New York time, same for every cTrader
+  broker
+  Evidence strength: Medium — official 2013 announcement + staff reaffirmation,
+  but never stated in the API's own primary docs
+  My read: Adopt, with a catch (below)
+  ────────────────────────────────────────
+  #: 3
+  Finding: Chart bars are built from BID prices, and you can't switch that
+  Evidence strength: Medium — years of consistent staff answers, but Spotware
+  never wrote it in a doc
+  My read: Adopt, with a catch (below)
+  ────────────────────────────────────────
+  #: 4
+  Finding: There is no way to ask the server what time it thinks it is
+  Evidence strength: Confirmed-absent
+  My read: Adopt — it makes our existing rule mandatory
+  ────────────────────────────────────────
+  #: 5
+  Finding: DST consequence: once a year the daily bar is 23 hours, once 25 hours
+  Evidence strength: Follows from #2
+  My read: No new rule needed — our calendar already handles it
+  ────────────────────────────────────────
+  #: 6
+  Finding: Rate limits: 50 requests/sec normal, 5/sec for historical data,
+  historical tick requests capped at 1 week each
+  Evidence strength: Strong for the numbers; how the limit window works is
+  unverified
+  My read: Adopt numbers, stay conservative on the window
+  ────────────────────────────────────────
+  #: 7
+  Finding: Millisecond is the finest resolution that exists on this platform
+  Evidence strength: Strong
+  My read: Adopt — our nanosecond storage is headroom, as designed
+
+  What adopting this actually changes
+
+  - The AD-8 distrust clause lifts for cTrader: its timestamps get treated as
+    UTC (stored as nanoseconds, with "source resolution: milliseconds" recorded
+    beside them, exactly as AD-8 already requires).
+  - Bar identity records "BID-derived" as source metadata — so five years from
+    now, nobody wonders whether an old cTrader bar was bid, ask, or mid. This
+    closes the old bid-vs-mid open item.
+  - Receive-time recording becomes mandatory, not best-practice — since the
+    server can't be asked for its clock, our own arrival timestamp is the only
+    way to detect when something's off.
+  - The rate limits and 1-week cap become declared venue capabilities — they'll
+    shape the adapter contract (GAP-0038) and historical backfill design.
+
+  The two catches — my hard-truth riders
+
+  Findings #2 and #3 rest on staff forum answers, not machine-readable 
+  documentation. They're almost certainly true — the evidence is consistent
+  across years — but "almost certainly" is not the same grade as "read from the
+  protocol source." So I recommend ratifying both with their evidence grade 
+  recorded plus one cheap insurance policy: on first live connection, the
+  adapter empirically checks both (watch where the daily bar actually rolls;
+  compare a live bar's close against the bid tick at the same instant). If
+  reality disagrees with the forum, we find out on day one with an alarm — not
+  three months into collected evidence. That check is node-side work, filed for
+  the ops sitting, costing us nothing now.
+
+  The unverified leftovers (spot-event timestamp unit, exact tick chunk size,
+  how the rate-limit window slides, server-side tick coalescing) stay on the
+  open list — none of them blocks a ruling today, and the adapter contract will
+  treat each conservatively until observed.
+
+  The ask
+
+  Ratify the seven findings as venue facts for cTrader, with the two riders
+  (evidence grades recorded on #2/#3 + first-connection empirical check)? Or
+  pull any item out for discussion first — #2 and #3 are the ones where pushing
+  back is legitimate. Once you rule, we move straight into GAP-0035: secrets.
+
+✻ Churned for 2m 27s
+
+❯ [[https://help.ctrader.com/open-api/]] Exactly. Please next time use the Ask  
+  User tool. I will prefer that. And if you do need to do research, feel free   
+  to either use a sub-agent or dynamic workflows with bulk workers or Opus 5    
+  models or even Sonnet. I really don't give a damn. So let me first have a     
+  read through your stuff. So I was saying seven findings graded honestly. You  
+  really did this research. When did you do this research? Okay, safe to adopt  
+  for number one. All time stamped. I don't see any problem, but I feel like    
+  you should first really do research. Seriously because SidTrader uses         
+  OpenAPI, we all know that. So do some actual research. Let me see if I can    
+  get for you this thing. Or you can yep Yeah, then for number 12 I in fact     
+  first do some research I'm not going to answer anything                       
+
+● Research pass launched before any ratification ask — you're right to demand
+  it, and the two shaky items (#2, #3) are exactly why. To answer your question:
+  the research was done on 2026-08-19, during the foundation sitting, when you
+  asked for "a subagent dig into cTrader Open API time handling" — a
+  web-research subagent pulled Spotware's protocol source files from GitHub,
+  parts of help.ctrader.com, and forum staff replies. The honest weakness:
+  findings #2 (17:00 New York) and #3 (BID bars) came from forum answers, not
+  the documentation you just linked. So nothing gets ratified until a proper
+  primary-source pass runs against help.ctrader.com/open-api/.
+
+  Launching that now as a parallel workflow — seven researchers against the
+  official docs and proto sources, each finding adversarially verified, then
+  synthesized:
+
+● Workflow(Verify cTrader Open API time/rate-limit/price-basis findings against
+          primary sources)
+  ⎿  /workflows to view dynamic workflow runs
+
+● While that runs, filing your two standing instructions — the memlog gets the
+  protocol ruling, memory gets the working-style preference:
+
+  Ran 1 shell command, recalled 1 memory, wrote 2 memories (ctrl+o to expand)
+
+● Both instructions are filed — ratification asks come through the
+  AskUserQuestion tool from now on, and that preference is saved to persistent
+  memory so it survives this session.
+
+  The state of things:
+
+  - Research is running now: seven parallel researchers against
+    https://help.ctrader.com/open-api/ and Spotware's protocol source files —
+    one per finding, plus the six previously-unverified items (spot-event
+    timestamp unit, tick chunk size, rate-limit window mechanics, spot
+    coalescing) and a new sweep of the symbol/account metadata fields (price
+    scales, moneyDigits, schedule timezones) that GAP-0037/0038 will need
+    anyway. Every researcher's citations get adversarially spot-checked by a
+    second agent before synthesis. You can watch it with /workflows.
+  - Nothing is adopted. The memlog records ratification as parked pending this
+    pass; DEC-0123 stays open.
+  - On the prior research's honesty: it did cite the proto files (primary) for
+    the timestamp and rate-limit findings — those will likely survive. The
+    17:00-New-York boundary and BID-bars findings were forum-grade, which is
+    exactly what this pass either upgrades to documentation-grade or reports as
+    still-not-in-the-docs, in which case the ruling ask will say so plainly.
+
+  When it completes I'll bring you the verdict table — what the official docs
+  actually confirmed, what got corrected, what stays forum-grade — and the
+  ratification ask will come as a structured question. If you want to brain-dump
+  on GAP-0035 (secrets: OAuth, VPS storage, rotation, compromise recovery)
+  while the research runs, go ahead — I'll capture it.
+
+✻ Brewed for 4m 7s
+
+❯ The reason for research is that I believe most of this won't actually take    
+  long. This is one of the easiest things. If you just look at CTrader, you     
+  look at the crypto platforms, it's really very, very simple. It actually      
+  won't take a minute, even for prop firms. Matter of fact, C trade alone is    
+  enough. It won't take a minute, trust me. Those documents can answer          
+  everything                                                                    
+
+● You're half right, and the half that's right is why I expect the workflow back
+  quickly. The seven findings are lookup-grade facts — timestamp units, rate
+  limits, field scales — and cTrader's Open API docs are unusually complete: a
+  full message reference, a dedicated limits page, and the proto source files
+  with commented fields. That part really is minutes, and the verification pass
+  will confirm or correct it with citations.
+
+  Here's the half to be careful with: the docs answer what the API offers, and
+  that fully covers GAP-0037 (price basis, account facts) and most of GAP-0038
+  (what capability discovery has to expose). But GAP-0035 and GAP-0036 are
+  decisions no vendor document makes for you:
+
+  - Secrets (GAP-0035): the docs tell you cTrader uses OAuth and tokens expire.
+    They don't decide where refresh tokens live on your VPS, how rotation works,
+    or what you do the day a credential leaks. That's our design call.
+  - Order-state machine (GAP-0036): the docs list order events. They don't
+    decide what your system does when it sends an order and the connection dies
+    before any reply — retry, wait, reconcile, or flatten — and who has the
+    authority to flatten. Every trading-system blowup story lives in that gap,
+    which is why it's ratified here and not left to whoever codes the adapter.
+
+  So the sitting splits cleanly: the doc-answerable parts get settled fast off
+  the research, and the two design gaps get settled from your rulings — with my
+  recommendations laid out as structured choices, per your preference. On the
+  "cTrader alone is enough" point — agreed for V1, and the spine already
+  protects you there: AD-9 and the GAP-0038 adapter contract exist precisely so
+  crypto or stocks later slot in as new venues without reopening anything we
+  ratify now.
+
+  Research is still running; when it lands you get the verdict table and the
+  first AskUserQuestion.
+
+✻ Cooked for 26s
+
+❯ [[https://github.com/spotware]]So, I gave you just I don't know if I gave you 
+  proper documentation, I'm not going to lie because, dude, there is a lot      
+  from GitHub projects to Spotwire to there is so much. Even look, check up     
+  this GitHub. And I don't know if you split the actuary search across the      
+  entire because that link I gave you earlier, you know, it has indexes, so     
+  it's not like it's a set of documentation, you know how they are. They have   
+  menus, then they compact, they compact. So, by the time you click through one 
+  menu and read through the entire thing, it's a whole lot. Okay, so it's not   
+  as simple, so it's actually not much. I've just seen it, but you get the      
+  idea.So let me wait patiently while you work or while you wait also           
+● Your coverage worry is handled, and the GitHub pointer is worth its own sweep
+  — launching that now.
+
+  On coverage: the researchers aren't clicking through menus. They were
+  instructed to run a site map over help.ctrader.com/open-api/ first, which
+  enumerates every page URL under that root regardless of how the menus nest and
+  compact, then fetch the specific pages that bear on their one question. And
+  for the hard facts, the protocol source files on GitHub are the ground truth —
+  one flat file per message catalog, no menus at all.
+
+  The Spotware GitHub org is a genuinely separate thing, and it matters for a
+  different reason than the seven findings: Spotware publishes its own client
+  libraries there (including a Python SDK), and whether QMF's adapter builds on
+  Spotware's own library or speaks the protocol directly through a thin
+  QMX-owned layer is a real GAP-0038 decision — one with an AD-6 angle, since
+  that rule prohibits dependencies that impose their own event loop, and vendor
+  SDKs often do exactly that. So I'm sending one researcher to inventory the org
+  properly:
+
+● bulk-worker(Inventory Spotware GitHub org)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Two research tracks are now running in parallel:
+
+  1. Primary-docs verification (the workflow) — seven questions against the
+     mapped docs site + proto files, each adversarially cite-checked.
+  2. Spotware GitHub org inventory (just launched per your pointer) — every
+     relevant repo: what the official Python SDK actually is and whether its
+     dependencies would even be legal under our AD-6 rule, how the protocol repo
+     versions itself, what their own OAuth examples do with tokens (that feeds
+     straight into GAP-0035), and which repos are abandoned — dead official SDKs
+     are a signal too.
+
+  Nothing for you to do but wait — I'll bring both back together: the verdict
+  table on the seven findings, the org report, and then the first ratification
+  as a structured question. Rest your eyes; you'll be clicking options, not
+  reading walls.
+
+✻ Worked for 1m 17s
+
+● Agent "Inventory Spotware GitHub org" finished · 2m 37s
+
+● The GitHub sweep is back — and it settled something important before we even
+  reached GAP-0038. Filing it, then the brief:
+
+● Write(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-19
+       \spotware-org-inventory.md)
+  ⎿  Wrote 54 lines to _bmad-output\planning-artifacts\architecture\archite
+     cture-QMX-2026-08-19\spotware-org-inventory.md
+       1 # Spotware GitHub org inventory (2026-08-20)
+       3 Research agent report against https://github.com/spotware (37 re
+         apter contract). Research protocol: findings presented, NOT adop
+         ted — the venue sitting ratifies. Claims graded [primary] (read 
+       4 
+       6 
+         imposes Twisted's reactor as a hard, pinned runtime dependency**
+          — verbatim from `pyproject.toml` [primary, https://raw.githubus
+       8 
+      10 python = "^3.8"
+     … +98 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The GitHub sweep you pointed me at is done, and it pre-answered one of this
+  sitting's biggest questions. Report saved to the workspace
+  (spotware-org-inventory.md) and logged. In plain words:
+
+  1. We cannot build on Spotware's own Python library — and that's now a fact, 
+  not an opinion. Their official Python SDK is built on something called
+  Twisted: a framework that takes over the entire program's engine loop. Our
+  ratified dependency law (AD-6) bans exactly that kind of dependency, because a
+  library that owns the engine dictates how everything else runs. License is
+  fine; the engine takeover is the blocker. It's also gone stale — the version
+  you'd actually install is from June 2024, and the newer one was pulled off the
+  package index.
+
+  2. The clean path exists and is better anyway. Spotware publishes the raw
+  protocol definitions — four files that ARE the API's vocabulary, MIT-licensed,
+  versioned by numbered releases (currently release 91). We compile those
+  ourselves and write our own thin connection layer. That fits the build-our-own
+  ruling you made back on day one, and it means every protocol change Spotware
+  ships arrives as a numbered, diffable release we can track — instead of hoping
+  a stale SDK catches up.
+
+  3. Bad news for GAP-0035, worth knowing early: Spotware's official examples do
+  nothing responsible with credentials — secrets pasted straight into the code,
+  no storage, no rotation, no refresh handling. There is no vendor pattern to
+  inherit. The secret-lifecycle design is entirely ours to make — which is fine,
+  but nobody gets to say "just do what the vendor does."
+
+  4. License landscape is clean. Everything badged in their org is MIT or Apache
+  — nothing from the prohibited tiers anywhere near us.
+
+  None of this is adopted yet — it's evidence on file, and the SDK-vs-own-layer
+  ruling gets ratified inside GAP-0038 with the rest of the adapter contract, as
+  a structured question.
+
+  The main verification workflow (the seven timestamp/rate-limit/price-basis
+  findings against the official docs) is still running. When it lands, you get
+  the verdict table and the first ratification ask.
+
+✻ Cooked for 1m 4s
+
+● Dynamic workflow "Verify cTrader Open API time/rate-limit/price-basis findings
+against primary sources" completed · 11m 41s
+
+● The verification workflow is back — and it vindicated your skepticism hard:
+  two findings got downgraded, one got corrected, and the rate-limit researcher
+  failed on output formatting, so I'm re-running that question plus one other
+  right now. Extracting the full report and relaunching the two failed
+  questions:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● 2 background agents launched (↓ to manage)
+   ├ Re-research cTrader rate limits
+   └ Re-research tick/spot mechanics
+
+● Both re-run agents are away. The output file has a different shape —
+  inspecting:
+
+  Read 1 file, ran 2 shell commands (ctrl+o to expand)
+
+❯ Matter of fact, I've just realized, I've just glanced at the documentation.   
+  Seems like it might provide us with more than what we are thinking, actually. 
+  I don't know what this session is about. No, credentials, man. Credentials    
+  we can build our own. Some stuff we really don't have to rely on the thing,   
+  okay? So, credentials we can build our own. And I really didn't think this is 
+  hard. It's in the UI settings panel, like the normal dashboard setup. Come    
+  on, that's not so difficult. Then, the license, we are not going to use their 
+  code. That was a bloody example for you to understand what you know Spotwear  
+  perhaps uses. Okay, but the documentation ready is the one we want most,      
+  okay? Because it does a lot, it's going to even not just enhance the          
+  session's primary idea, which is closing out the gaps, but it is going to     
+  provide us with more and more information to help us, or in fact, not just    
+  help us, but to help us, you know, lay ground for the DevOps layer, the       
+  deployment layer, the UI, it's going to help us with a lot because we would   
+  obviously know how things are going to be working. And one agent has failed.  
+  But oh, red limits, what's going on? Well, one agent has failed. I wonder     
+  why. Anyway, you will synthesize when the workflow is back. I've just noticed 
+  one agent failing. Let me first send this,But I don't know if you understood  
+  me. This should really be simple. Seriously, this should really be simple.    
+  Some of these things we don't have to reinvent the wheel. So, where are       
+  credentials stored? Where are they stored in normal apps? But just to note    
+  that we haven't really discussed the UI and we aren't, and nor are we         
+  intending to discuss it anytime soon. Right now, we are fast closing all the  
+  gaps. Okay, so by the time we start building the trading node, we are set.    
+  This session is about, let me first see the prompt I gave you, venue setting, 
+  memlog. What was it about venue order? Hang on, let me see connection to      
+  CTrader, that one is simple. Yeah, and when you want to ask a question,       
+  please use the ask user tool. All right, let me wait for the other things to  
+  come back,Unless you need anything from me, then I am willing to answer, but  
+  I don't think you need because for number three, I've told you this is not    
+  rocket science. Many you built enough apps to know how to do this. Number     
+  four, we can borrow mental models, but we're not using anyone's code. That's  
+  that. Number one, yeah, we can't build, but but it's still Python, we can use 
+  it. Okay, what we are changing for us, the reason why we are having QMF and   
+  all this is to build our own bots. I don't know if that's a difference. Am I  
+  confusing the two? You are saying the Artur SDK is built on something called  
+  Twisted, a framework that takes over the entire program's engine loop. come   
+  on. So, how do we fix actually? I hadn't seen part number one. How do you     
+  propose we fix it? Do we change the platform? But that's a huge ask. It's a   
+  huge, huge ask. Wow, that's a blow, an actual one. Then, number two, clean    
+  path exists and is better. Spotware publishes raw protocol definitions. Okay, 
+  I think isn't there a way whereby we could our app could be different and we  
+  just do platform execution or trade execution on whatever C trader because    
+  for me, in my opinion, I really feel like we could separate some of these     
+  things. I know we could build custom apps, but if someone is looking us in    
+  their platform, I don't know, dude. Why can't we use Normal python /(our      
+  framework qmf)? That doesn't add up, and the dynamic workflow is back. So,    
+  let me wait for it.Alright, so this message was recorded before the dynamic   
+  workflow came back                                                            
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● What the official docs actually confirmed (rock solid now):
+  - Timestamps are milliseconds nearly everywhere, with exactly two odd ones out
+    (bars use minutes, one maintenance field uses seconds) — all read straight
+    from the protocol files.
+  - No server clock exists — proven by walking the complete list of every
+    message the API has. Our receive-time rule isn't just validated, it's
+    mandatory.
+  - Historical ticks: you explicitly choose BID or ASK per request — hard API
+    guarantee. Ticks arrive newest-first, compressed, in chunks whose size is
+    officially unknowable — the docs literally say it "depends on the backend
+    configuration," so the adapter pages on the "more data" flag, never on an
+    assumed size.
+
+  What got downgraded — the two you'd want to know about:
+  - The 17:00 New York daily boundary is stated nowhere in any official 
+    documentation. Its only source is one 2013 forum post, and we found
+    counter-evidence suggesting some daily rollovers follow broker server time.
+    So it will NOT be hard-coded. Fix: at first connection the adapter pulls a
+    handful of daily bars and measures where the broker actually rolls, storing
+    it as per-broker fact. Our own trading-day calendar stays our choice
+    regardless — this only affects whether we trust their daily bars or build
+    our own from smaller ones.
+  - The "bars are BID prices" confirmation partially collapsed: the
+    Open-API-specific answer turned out to be from the Spotware community
+    manager after he left the company. The API's structure still points to
+    bid-only (bar requests have no ask option), and the fix is the same:
+    reconcile a bar against bid ticks at first connection. And since tick data
+    IS explicitly selectable, worst case we build bars ourselves — we're covered
+    either way.
+
+  The unexpected goldmine — you were right that these docs give more than we 
+  thought: the protocol files spell out cTrader's entire money arithmetic, and
+  it's three separate scaling systems — market prices as integers divided by
+  100,000, execution prices as plain decimals (an adapter that applies the same
+  divisor everywhere would corrupt every fill record — a landmine now mapped),
+  and account money with a per-message exponent that appears on nine message
+  types including margin and P&L. Plus: broker-supplied timezones hide in two
+  places (schedules AND holidays), the docs contradict themselves on heartbeat
+  timing (30s vs 10s — we use 10), and bars simply don't exist for quiet
+  periods. This is exactly the raw material GAP-0037/0038 and the DevOps
+  groundwork you mentioned need.
+
+  Status: the failed agent was the rate-limits one (it choked on output
+  formatting, not on the research) — I relaunched it and the tick-mechanics one
+  as two fresh agents; they're running now. When they land, you get the full
+  ratification as an AskUserQuestion — nothing needed from you until then.
+
+✻ Baked for 3m 11s
+
+● Agent "Re-research cTrader rate limits" finished · 2m 45s
+
+● The rate-limits re-run is back and it closed the biggest hole — logging it
+  while the last agent (tick/spot mechanics) finishes:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Rate limits are now settled at documentation grade: 50 requests/second normal 
+  and 5/second historical, per connection — stated verbatim in the official 
+  Getting Started page, so the numbers you asked about are no longer forum lore.
+  The breach signals are mapped to exact error codes, and one correction
+  landed: the "1-week cap on tick requests" from the old research was
+  misattributed — the only hard-coded 1-week cap in the protocol is on cash-flow
+  history; for ticks it comes from a docs page and oversized requests just
+  bounce with a specific error code at runtime. What stays undocumented (how the
+  limit window is measured, any ban policy) gets handled by building the
+  throttle conservatively — no guessing.
+
+  One agent left — tick delivery and live-quote mechanics. When it lands you get
+  the consolidated verdict and the ratification ask as a structured question.
+✻ Churned for 32s
+
+● Agent "Re-research tick/spot mechanics" finished · 4m 18s
+
+● All research is in. Saving the two final reports plus a consolidated
+  ratification sheet, logging, and then — as requested — the ruling comes as a
+  structured question.
+
+● Write(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-19
+       \ctrader-rate-limits-research.md)
+  ⎿  Wrote 54 lines to _bmad-output\planning-artifacts\architecture\archite
+     cture-QMX-2026-08-19\ctrader-rate-limits-research.md
+       1 # cTrader Open API — rate limits & historical-data caps (re-rese
+       2 
+         researcher failed on output format). Grades: primary-doc > prima
+         ry-proto > staff-forum > community/inference. Research protocol:
+       4 
+       6 
+         p.ctrader.com/open-api/ #essential-functionality):
+       8 
+         certain requests to the cTrader backend.
+         ection for any non-historical data requests.
+     … +86 lines (ctrl+o to expand)
+
+● Write(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-19
+       \ctrader-tick-spot-mechanics-research.md)
+  ⎿  Wrote 57 lines to _bmad-output\planning-artifacts\architecture\archite
+     cture-QMX-2026-08-19\ctrader-tick-spot-mechanics-research.md
+      1 # cTrader Open API — tick history & live spot delivery mechanics 
+      2 
+        esearcher failed on output format). Grades: primary-doc > primary
+        esented, not adopted.
+      5 ## 1. ProtoOAGetTickDataRes [primary-proto, OpenApiMessages.proto
+        ]
+      7 ```proto
+         chronological order (newest first). The first tick contains Unix
+        fference in milliseconds between the previous and the current one
+      9 required bool hasMore = 4; // If TRUE the
+     … +99 lines (ctrl+o to expand)
+
+❯ Oh, yeah, almost forgot. According to QMF, are we actually handling DOM data, 
+  so order flow and all that stuff? Yeah, so level three data, in other words,  
+  I believe certain brokers like IC Markets, the one we are using, even IBKR,   
+  I believe, do provide it. yo, by the way, man, I'm too tired. I'm not going   
+  to be able to read all this, yeah. So try to dumb it down or just ask me      
+  questions where you actually need because trust me, I'm not going to read     
+  through all these. So, what got downgraded? These agents are also finishing   
+  before I finish dictating. Yeah, trust me that those documents were going to  
+  in fact you didn't even need to do anything. You'd have just read the         
+  documents and you could have passed this entire thing. Maybe the one thing we 
+  need to look at is crypto. So, maybe crypto, crypto can come in. But I feel   
+  like let's crypto, you can also do some research. Because we can use          
+  something like CCTX, and I believe we can sort ourselves. I mean, if you      
+  reverse engineer and study things, for example, if you look at a platform     
+  like oh my god, a platform like Hummingboard. Yeah, so hummingboard, rather,  
+  yeah, it's hummingbot. My bad, the dictation is yes, that last one I've just  
+  said. That's the version. If you look at a project like that one, there is a  
+  way it connects if you just reverse engineer it. In fact, we did a study      
+  about it. I don't know where it is, but I believe we have it documented       
+  somewhere. Yeah, so seriously, at this point, yeah, if there is something you 
+  need me to clarify or ask, but I feel like we already have everything sorted  
+  out, unless there is ambiguity. 'Cause I want to sort this out, then move on  
+  to risk sitting, then backtest backtesting. I'll do it tomorrow. Then I go    
+  to documentation factory. So what's left? And also, it seems like you didn't  
+  really answer my question. Can we use our library or framework QMF without    
+  actually you know being locked in these guys normal thing and also are we     
+  actually going to be able to build our own thing you get me I'm so sorry it's 
+  two in the morning I'm tired but do you get me because we are spending time   
+  building our own framework building libraries for bots and whatnot so if we   
+  can't use them what's the point and the question I asked you last time was do 
+  we change the platform entirely or do we wait or do we just use it I don't    
+  know if you answered it though because I'm just seeing a block of text yeah   
+  any of us send you this but I recorded this while the agents were working and 
+  apparently they have returned before I finished dictating so here you go      
+
+● Write(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-19
+       \ctrader-venue-facts.md)
+  ⎿  Wrote 38 lines to _bmad-output\planning-artifacts\architecture\archite
+     cture-QMX-2026-08-19\ctrader-venue-facts.md
+      1 # cTrader venue facts — consolidated ratification sheet (2026-08-
+      2 
+        trader-primary-verification.md (workflow synthesis, 5/7 questions
+         + adversarial verify), ctrader-rate-limits-research.md, ctrader-
+        sheet is the ratification target for the venue-facts portion of G
+      4 
+        oto)
+      6 
+        atement exists). Exceptions: `ProtoOATrendbar.utcTimestampInMinut
+        ), `ProtoOAHol
+     … +114 lines (ctrl+o to expand)
+
+  Searched for 1 pattern, ran 1 shell command (ctrl+o to expand)
+
+● User answered Claude's questions:
+  ⎿  · Ratify the cTrader research package? This closes the venue-facts half of 
+     GAP-0037 and feeds GAP-0038. It means: (1) all documentation-proven facts 
+     adopted (timestamps, rate limits, no server clock, tick mechanics, the 
+     three money-scaling systems, broker timezones); (2) the two forum-grade 
+     claims — 5pm-New-York daily boundary and bid-built bars — are NEVER 
+     hardcoded: the adapter measures the real behavior at first connection and 
+     stores it per broker; (3) anything undocumented: the adapter verifies at 
+     startup or refuses — no guessing, ever. → Okay, now the thing that I 
+     thought would not confuse you, but seems like it is: what do you understand
+     when we say New York Daily Boundary? Because hear me out. Yeah, if let's 
+     say we consider a full trading day, okay, let's say we split it across all 
+     sessions. Let's say we have Europe, we have Asia, we have, of course, 
+     Southeast Asia or Australia. Then we have New York, obviously. In the 
+     north, I don't think there are any. It's part of Europe. So, for me, I 
+     believe all those sessions have specific times depending on which broker, 
+     not even broker, depending on the location you are in. Yeah, it's just a 
+     time-zoning thing. Unless I'm wrong. Okay, so I don't think we need a forum
+     grade claim. I feel like it's something simple. And yes, I feel like it's 
+     never hard-coded, but it's logical. In fact, it's just logical. I'm not 
+     going to lie to you. Yeah, because maybe I did not get the problem 
+     properly. The 17-hour New York Daily Boundary is stated nowhere in the 
+     official documentation, obviously, because they expect the trader to know 
+     that this is New York, this is London, this is Tokyo. Okay, they expect you
+     as a trader to know. Now, remember, our system runs unmonitored, so we 
+     take what the trader is meant to know and then put it. It's like a time 
+     zone. I don't know how to even explain it, really. I really don't, but it 
+     seems like it's something very simple. I don't know why, I'm just too tired
+     to think through it because you're going to take 2013 forum posts. Are you
+     sure the times haven't changed seriously? That is too far back. Almost ten
+     years ago, fourteen years almost, in fact, that's too fall bug. Okay, that
+     can't work. So, me, okay, maybe dumb down that 5 p.m. or 17 hours, 
+     whatever timing issue because for me, I need to understand it. I don't want
+     to make a mistake. Yes, I'm tired, but trust me, I want to understand. 
+     What you have to understand is, yeah, let's take it like this. If a session
+     is open, when do you classify that a session is open? Yeah, isn't it 
+     doesn't it or rather depend on two variables, the actual time zone the 
+     session is in, and the time at which it opens in that time zone or in the 
+     location. For example, if I'm to trade the London session, I will wait for 
+     the time, I think it's nine AM London time when the markets open. Is that 
+     not what we are meant to be chasing? Then, when the markets close, or when 
+     they go for lunch when time is no longer there, that's the same use case. 
+     if New York opens, obviously, I believe we start with Tokyo last time I 
+     recall. It's Tokyo, London, New York, or Tokyo, New York, London, but 
+     somehow in that nature. Yeah, don't forget Australia. So, I believe that is
+     how it should be. I really don't think it's rocket science. Am I wrong or 
+     right? First, correct me. It may be too terrible to think. Then wow, you 
+     still didn't ananswer my bloody question Are we on power to actually create
+     the library or not? Because last time you claimed, let me say what you 
+     claimed. You said that these guys have their own library called Is It 
+     Twisted? Yes, the Twisted Framework. He said we cannot build on Spotware's 
+     own Python library, and that's now a fact, not an opinion. You said their 
+     official Python SDK is built on something called Twisted, a framework that 
+     takes over the entire program's Indian loop. Now that makes me wonder: do 
+     we actually still need QMF? And if that's the case, why can't we trade with
+     normal Python? Explain that to me. I really haven't understood that, and 
+     you've refused to explain it every time I'm asking for about it. You are 
+     not explaining it. What did you mean by that? Well, you are saying again, 
+     you continue to say, I'll ratify dependency law 86 bans exactly that kind 
+     of dependency because a library that owns the engine, yes, I refused it 
+     because these guys can manipulate my trades if I don't control them. So, 
+     and if that's the case, how can we trade with just normal Python? Which 
+     platforms can we use? Because trust me, I'm not willing to use those guys' 
+     platforms. If it's a prop form, I'm okay. I can swallow and use this guy's 
+     platform. But if it's not a prop form, trust me, you're not going to find 
+     me treading on them
+     · First broker for GAP-0037: you said in passing that IC Markets is the one
+     you're using. Confirm it as the first cTrader target? (Migration and 
+     adding brokers later is already designed-in — this just names broker #1.) →
+     Not yet — confirm later
+
+● Good — you asked to understand before ruling, so no ratification recorded yet,
+  and broker #1 stays open (logged). Let me correct and explain both things
+  properly, because your session intuition is actually right — you were just
+  handed the wrong problem.
+
+  Sessions vs. the 5pm thing — two different questions
+
+  Sessions (Tokyo, London, New York opens/closes): you're completely right. It's
+  plain timezone logic — "London opens at 8am London time" — and it's already
+  designed exactly the way you described: our market-hours calendar stores each
+  session's schedule in its own timezone. Simple, done, ratified. No forum posts
+  involved.
+
+  The 5pm-New-York question is a different, smaller thing: where does one DAILY 
+  CANDLE end and the next begin? Forex never sleeps during the week — there's no
+  midnight where the whole market stops. So every charting platform must pick
+  an artificial "midnight" to slice the continuous week into daily candles. The
+  industry habit is 5pm New York, because that's when the global trading day
+  hands over. The only question we researched was: does cTrader slice its daily 
+  candles at 5pm NY, for every broker? The only written answer that exists
+  anywhere is that 2013 forum post — and you spotted the problem yourself: "are 
+  you sure the times haven't changed? That's too far back." Exactly. That's why
+  the recommendation is never trust it — measure it: on first connection, the
+  adapter downloads a few daily candles from the broker and simply reads off
+  where they were sliced. Seconds of work, gives certainty, re-checks after
+  clock-change weekends. Why it matters at all: "yesterday's high" must mean the
+  same 24 hours in our system and in the broker's candles, or indicators
+  silently disagree. Your instinct — "logical, never hardcoded" — IS the
+  recommendation.
+
+  Twisted, finally explained properly
+
+  Think of cTrader's API as a language their server speaks. Spotware publishes
+  the dictionary for that language publicly — just word definitions, not a
+  program. Anyone can write their own speaker of that language, in any
+  programming language, including plain Python.
+
+  Separately, Spotware also gives away a ready-made Python speaking-machine
+  (their SDK) so hobbyists don't have to write one. That machine is the thing
+  built on Twisted — a machine that insists on being the engine of whatever
+  program it's placed in. The finding said one thing only: don't use their 
+  machine. Nothing more.
+
+  So, your questions, straight:
+
+  - Can we trade with normal Python? Yes, fully. We write our own small speaker
+    — our code, does only what we tell it.
+  - Do we still need QMF? More than ever. QMF is everything around the speaker:
+    exact money, exact time, evidence, the safety refusals. Plain Python gives
+    you none of that by itself.
+  - "They could manipulate my trades if I don't control them" — running their
+    code inside our system is precisely what we refused. After this, zero 
+    Spotware code runs in QMX. The only thing of theirs we touch is the public
+    dictionary — definitions on paper, not running code. Our bots run on our
+    VPS; the only thing that crosses the wire is the orders we chose to send.
+  - Do we use "their platform"? We connect to the broker's service over the wire
+    — their app, their UI, their bot-hosting feature are all uninvolved. If you
+    meant "I refuse to run my bots inside their platform" — agreed, and it was
+    never the plan. QMX is standalone.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● User answered Claude's questions:
+  ⎿  · With that explained — ratify the cTrader research package? In one line 
+     each: (1) everything the official docs prove becomes adopted fact 
+     (timestamps, rate limits, no server clock, tick mechanics, money scales, 
+     broker timezones); (2) the daily-candle slice point and the bid-bars claim 
+     are never hardcoded — the adapter measures the broker's real behavior at 
+     first connection and stores it; (3) anything undocumented: the adapter 
+     proves it at startup or refuses to proceed — no guessing. → So the reason I
+     said the broker stays open because there is no reason to hard code 
+     anything, seriously. Okay? The broker is. I mean, I'm going to use IC 
+     markets. I already decided, but I've never really used them. I've been 
+     using other brokers, so I don't see the point, yeah. And it really is very 
+     irrelevant for the platform. Very irrelevant for QMX, it doesn't add up. I 
+     mean, I can just decide to just decide to use account IDs. That's enough. 
+     For me, I can go withdraw my money because I know which account is which. 
+     You feel me? I don't really need to give you the exact broker, that's 
+     irrelevant. Now, the session versus the 5 p.m. thing. Let me first read 
+     through now. The session thing, remember, it has to be, I think, 
+     cross-referenced against the server time. Do I recall properly? But that 
+     logic is simple, I believe you will understand. So, okay, what I'm just 
+     trying to point out there is that, for example, right now I'm in Nairobi. 
+     So, if I'm in Nairobi, how would I know, or how does QMX know that, okay, 
+     now London is open? Because trust me, the time difference is quite, it's 
+     not big, but it's quite big. Or Tokyo, same thing, and there are so many 
+     sessions. In fact, we most likely might want to trade all sessions. Okay, 
+     as anything we can get our hands on, we shall see. Oh, where does the whoa 
+     whoa. Okay, now the 5 p.m. New York question is a bloody good question, I 
+     will say. So, you're saying every chatting platform must pick an artificial
+     midnight, no slice to slice the continuous week into daily candles. Wow, 
+     okay, I have a few solutions for this. Hear me out, yeah. There are a few 
+     ways we could do this because you are saying that 5 p.m. New York, you are 
+     saying because it's when the Global Trading Day hands over. Oh, so 5 p.m. 
+     New York, what time is it in Tokyo? Because I believe Tokyo is almost 
+     awake. By the way, Tokyo is the one that comes first, right? So, remember, 
+     our system doesn't sleep for it, it trades continuously as long as there is
+     a bot to thread the session or bots to trade the session, so it means it 
+     trades continuously. That is also an actual big problem, by the way. And 
+     this is why this discussion is going on, you know, you can, you could, I 
+     mean, we could do this, how can I say? Okay, hear me out. I was saying 
+     there are so many ways you could adapt this. Solution number one was a kill
+     switch. Yeah, you see, the time difference is really not that big. What we
+     could do, in fact, this was in the very first version of KMX. The 
+     proposition was simple. We relax forwards, it's called the dead zone. Okay,
+     we used to call it the dead zone. All we do is that we leave the system to
+     relax. Well, you get what I'm saying, it doesn't get that, but the reason 
+     for relaxing is to give time for the market to reset. Trust me we wouldn't 
+     want to jump in. Okay, I mean, we want to catch the opening range breakouts
+     and all that stuff, but hear me out. We don't want to jump in and I 
+     believe by the one-hour mark the market really hasn't moved much. We can 
+     even reduce it to like 45 minutes. Because, okay, one hour is too high. It 
+     could be like 45 minutes, then all systems begin, then in 15 minutes, the 
+     bots begin trading. Trading is live. That's one way we could do it. So, 
+     it's like analysis before execution. Or, or we could go what we could go 
+     with what you're proposing. Your proposition makes sense, but it would be 
+     on first connection, exactly. It's a simple adapter, it's a simple check. 
+     That's simpler, in fact. The adapter downloads a few candles, you could 
+     even stream them. You do know that this system on fast release is not going
+     to trade right away. You do know that, right? So, which means in like one 
+     week it can be able to just set itself. So, we could write a simple script,
+     but that has to be very, you have to be very certain because, trust me, 
+     I'm not going to be looking at that code. There is too much code, we are 
+     shipping too much code, you know. So, I would like you to handle that very 
+     well. Okay, so we could go with your recommendation whereby we do that. 
+     Okay, your recommendation is saying the adapter downloads a few daily 
+     candles from the broker. I don't know, dude. I don't know because I feel 
+     like you could just monitor a life system continuously until you find out 
+     what fails, and you know, you cross-reference with the actual time on the 
+     server, and the actual time in which my device location is. And yeah, you I
+     don't know if you're getting the logic I'm pointing at here instead of you
+     using historical data because getting your hands on clean historical data 
+     to that level. Trust me, historical data for backtesting and all this is 
+     possible, but historical data from the broker themselves. Good luck with 
+     that, all right. So, second of work, yeah, it gives certainty because okay,
+     the truth is, I'm planning on giving this system. Okay, not so long, but I
+     believe I'll give it some warm-up period, like a week in a way, to just 
+     get it up and running, okay? So it can, you know, we can do all the tests 
+     we want. So, I believe some things could just be in-house. I don't, and 
+     don't do something very high and complex. It can be a simple script that 
+     runs the very first time we deploy. Because this system is still very 
+     large. Okay, this is a very small component. yeah, that's that. So, if you 
+     can pull through, those are my ideas. I agree with you, but I disagree with
+     you. Then the kill switch thing is also existing. I don't know, and also 
+     that the first deployment normal monitoring is still okay. It can actually 
+     now if you if you do zoom out and think about it, you can still make it run
+     continuously regardless. Because it can just run in the background and 
+     update certain metrics over time. Who knows? Hang on, did you answer this 
+     question I was asking? Can we trade with normal Python? So, everything 
+     under QMF, don't just look at your own gaps, look at the entire project. 
+     Everything under QMF with the library, not actually under QMF, QMX, in 
+     fact, okay, so QMF is the framework for QMX. Okay, so everything in the 
+     framework, in the library, are we on the right track? I really don't want 
+     to reach somewhere, and we are being told it can't work because it's not in
+     twisted. So he said, I think of Sea Traders' open API as a language 
+     server, their server speaks, Spotware publishes a dictionary, just words. 
+     So we just need to write a good adapter. Isn't that so? It can also work 
+     with plain Python, which means it should also be able to work with our own 
+     languages. Now, what you also need to look into, I almost forgot, is how 
+     all these things, for example, the MIS because now we need to look at the 
+     actual architecture of the entire platform. Okay, not the entire platform, 
+     the trading node. So you have a deeper study of the trading node, perhaps, 
+     and see where it actually should connect to OpenAPI because we have two 
+     issues: we have a demo account and a live account, both are needed. Live 
+     for actual execution, demo for as a fail safe, and then you will see the 
+     use cases if you read through the trending node. And this is just for 
+     reference, we haven't reached that building, but we need to be clear and 
+     understand before we wrap this session up. Okay, yeah, so you understand 
+     that so that it's more like data points, and also you see what is being 
+     underscored, what we need to cater for, and all that. And you still didn't 
+     answer my question of level three data order flow and all that data. I need
+     a bloody question. I know I see, I know C trader does provide it, but does
+     it do it via Open API? So that's my opinion. I really don't think I have 
+     more to add on. But first, answer my questions clearly. Why are you 
+     skipping them? Am I being ambiguous in my responses and you're not 
+     understanding my dictations
+
+● No, you're not being ambiguous — the dictation is clear. I owed you numbered
+  answers instead of prose blocks. Here they are, every question:
+
+  1. How does QMX-in-Nairobi know London is open? It never looks at your
+  location, your device, or the broker. Every session rule is stored as "London:
+  08:00–16:30, London time" and converted to universal time by the timezone
+  database. Nairobi, the VPS's country, server time — all irrelevant. This is
+  already ratified law (AD-8), not new work.
+
+  2. Cross-referenced against server time? No — and it can't be: we proved
+  cTrader has no way to even ask its server for the time. QMX trusts only its
+  own disciplined clock (the VPS time-sync rules already on file). Broker
+  timestamps are stored as evidence, never as our clock.
+
+  3. Your Tokyo instinct is exactly why 5pm NY is the convention. 5pm New York =
+  6–7am Tokyo — the handover lands right as Asia wakes (Sydney actually opens
+  first, then Tokyo, London, New York). Your dead-zone idea (relax ~45min around
+  handover, analysis before execution) is a good trading policy — it's
+  node/risk-sitting territory, so I've filed it there; the framework already
+  carries the session seams it needs. And on how we detect the boundary: your
+  worry about historical data doesn't apply here — we ask the broker for its own
+  recent daily candles, so it's authoritative about its own slicing, no
+  third-party data involved. Final design merges your idea with mine: a dumb
+  one-time script at first deploy plus your continuous background monitor that
+  keeps re-checking as each new daily candle arrives — through the warm-up week
+  and forever, as a cheap metric. Simple, no complexity, and nobody has to read
+  the code for it to be trustworthy: it either matches reality or refuses
+  loudly.
+
+  4. Can we trade with normal Python — the whole of QMF/QMX? Yes, 
+  unconditionally. Nothing anywhere in QMF or QMX touches Twisted or any
+  Spotware code. You will never hit "this can't work because it's not Twisted" —
+  that trap only exists for people who build on their helper, which we don't.
+  Your sentence is exactly right: we just need to write a good adapter. That's
+  the entire cTrader surface — one small component in a big system.
+
+  5. Broker name — you're right, and the framework already agrees. Nothing
+  hardcodes a broker anywhere: a venue is just an ID you mint, accounts under it
+  carry the roles, and "IC Markets" becomes a one-line configuration entry on
+  deploy day. So GAP-0037's "which broker" question gets closed as "deployment 
+  configuration, never architecture" — your ruling.
+
+  6. Demo + live accounts: already first-class — account roles (live/demo/paper)
+  are ratified nouns, and demo runs stay comparable with live by design. Your
+  fail-safe use case needs the adapter to hold demo and live sessions at the 
+  same time — I'm verifying now whether cTrader puts demo and live on separate
+  server addresses (likely yes), which the adapter contract must then state.
+
+  7. DOM / order flow via Open API — direct answer: YES, depth is in the Open 
+  API. Primary docs confirm depth-quote streaming (we even captured their
+  size-decoding rule). What I'm verifying right now: the exact messages and
+  whether it's order-book depth (Level 2) only — a full order-by-order tape
+  (true Level 3) does not appear to exist in their message catalog. Answer lands
+  shortly with citations.
+
+  8. Trading node study: launching a reader over the corpus now to pull the
+  node's venue-relevant expectations (demo fail-safe, MIS wiring, where the
+  adapter sits) as data points before we wrap — reference only, nothing built.
+
+● 2 background agents launched (↓ to manage)
+   ├ Explore (Mine corpus for trading-node constraints)
+   └ bulk-worker (Verify depth messages and endpoints)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Both checkers are running — the corpus reader pulling the trading node's venue
+  expectations (demo fail-safe, MIS, kill-switch statements) and the web
+  checker nailing the DOM message details plus the demo/live server question.
+
+  Where this leaves the sitting:
+
+  - Answered and logged as your rulings: broker = configuration, never
+    architecture (that closes half of GAP-0037 your way); boundary detection =
+    simple first-deploy check + your continuous background monitor; dead-zone
+    idea filed for the risk sitting.
+  - Answered flat: yes, all of QMF/QMX trades with normal Python — the Twisted
+    thing can never block you; depth data exists in the Open API (details
+    incoming).
+  - Pending the two checkers: exact DOM granularity, demo/live endpoints, and
+    the node data points you asked for.
+
+  When they report, you get one final structured question that ratifies the
+  whole cTrader package with your riders baked in — then we move to secrets and
+  order safety, which are the real remaining meat of this sitting.
+
+✻ Baked for 8m 27s
+
+● Agent "Verify depth messages and endpoints" finished · 3m 10s
+
+● The depth and connectivity answers are in — filing them, and your DOM question
+  now has a definitive answer:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● I have the full report in hand — writing it to the workspace directly:
+
+● Write(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-19
+       \ctrader-depth-and-connectivity-research.md)
+  ⎿  Wrote 52 lines to _bmad-output\planning-artifacts\architecture\archite
+     cture-QMX-2026-08-19\ctrader-depth-and-connectivity-research.md
+      1 # cTrader Open API — depth (DOM) and demo/live connectivity (2026
+      2 
+      3 Single-agent primary-source pass, prompted by operator questions 
+        ly). Grades: primary-doc > primary-proto > staff-forum > communit
+        y/inference. Research protocol: presented, not adopted.
+      5 ## A. Market depth — Level-2-class, NOT a trade tape
+      6 
+        odelMessages.proto]:** `ProtoOASubscribeDepthQuotesReq/Res` (2156
+        /2157), `ProtoOAUnsubscribeDepthQuotesReq/Res` (2158/2159), `Prot
+         + `repeated uint64 deletedQuotes` (differential b
+     … +94 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+● Agent "Mine corpus for trading-node constraints" finished · 4m 11s
+
+● The corpus study is back too — everything is now in hand. Saving the node
+  brief and logging, then the final ask:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Write(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-19
+       \trading-node-corpus-brief.md)
+  ⎿  Wrote 67 lines to _bmad-output\planning-artifacts\architecture\archite
+     cture-QMX-2026-08-19\trading-node-corpus-brief.md
+      1 # Venue-relevant constraints on the future trading node — corpus 
+      2 
+      3 Explore-agent sweep over the QMX corpus, operator-requested befor
+        ere. Corpus authority order (tracker/map.md line 23): current ope
+        rator rulings > GitBook baseline (workroom/reference/05-trading-n
+        vidence requiring fresh ratification.
+      4 
+      6 
+      7 - **~50ms full-round-trip target** — operator direction, explicit
+        mbers: "tick-to-MIS 35 ms, order 10–45 ms, end-to-end 100 ms" 
+     … +173 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● User answered Claude's questions:
+  ⎿  · Ratify the complete cTrader research package? Plain terms: (1) every 
+     documentation-proven fact becomes adopted venue fact — timestamps, rate 
+     limits (50/5 per connection), no server clock, tick mechanics, the three 
+     money-scaling systems, broker timezones, depth = Level-2 book / no trade 
+     tape, demo+live = two connections, token lifecycle; (2) the daily-candle 
+     slice point and bid-bars are never hardcoded — first-deploy check plus your
+     continuous background monitor, stored per broker; (3) anything 
+     undocumented: the adapter proves it at startup or refuses. Your riders 
+     (keep it simple, warm-up week, broker = config not architecture) are baked 
+     in. → Yeah, no problem. Rerify the package. I really don't see anything 
+     remaining for this session. It's just that I have a message I was meant to 
+     send you. I'll send it after
+     · Pace for the rest of the venue sitting — what's left is the three design 
+     rulings: GAP-0035 secrets (a few choices: rotation cadence, leak drill), 
+     GAP-0036 order safety (the UNKNOWN-outcome rule, who may flatten), GAP-0038
+     adapter contract (mostly delegated to my recommendation). It's 2am your 
+     side. → No, there are certain things that I'm really not understanding why 
+     they are actually actual gaps. For example, secrets. What do you mean by 
+     secrets? What's so difficult in that nature? Okay, I don't want to assume 
+     you know, but isn't this something quite simple to build on top? It's like 
+     how do you manage secrets in any application? I feel like it's a very 
+     simple thing to close. It doesn't really need me. Then order safety is 
+     where maybe you need to first correlate. Now, this is touching the trading 
+     node a lot, a lot, by the way. It's not even funny. Okay, so I don't think 
+     it's my gap to fill. I think if you dig with a trading node a lot, you will
+     understand. Because remember, we have things like correlation, SQS, skill 
+     switches, there is so much in there. It's not even funny for an order to go
+     through, yeah, and even for an order to close. Just know the system has 
+     gone through a number of checks. Okay, so GAP36 is not mine to really 
+     answer because I've done the biggest part of brainstorming and documenting 
+     of the trading node, in my opinion. So first understand it and see whether 
+     you can close it without me. Then gap thirty-eight adapter contract which 
+     adapter? The one for C trader to QMX now that also is going to be 
+     correlated to that trading node, trust me very, very much. But first, dig 
+     deep, I feel like this is no longer even about QMF because most of these 
+     sessions are meant to be for QMF. First, dig deep and understand trading 
+     node. And plus, and plus, something I've noted: if something is about a 
+     trading node and it really does concern it, please note it down. Because 
+     any other session that I'm going to be looking at the trading node, or I'm 
+     going to be using to look at the trading node, shall need to know what was 
+     discussed. I don't like repeating myself every now and then, please
+
+● Package ratified — logging the decision, setting up your standing node-notes
+  instruction, then I dig into the trading node and close the rest myself as you
+  directed.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Write(tracker\trading-node-notes.md)
+  ⎿  Wrote 34 lines to tracker\trading-node-notes.md
+      1 # Trading-node notes — running cross-session ledger
+      3 Standing operator instruction (2026-08-20, venue sitting): anythi
+        ng discussed in ANY session that concerns the trading node gets n
+        epeating himself. Append-only; date every entry; cite the session
+      4 
+      5 ## 2026-08-20 — venue sitting (architecture-QMX-2026-08-19 worksp
+      6 
+      7 **Ratified venue facts the node inherits** (full detail: `_bmad-o
+        /ctrader-venue-facts.md` + research companions):
+        eously REQUIRES two connections (one demo, one live)
+     … +76 lines (ctrl+o to expand)
+
+❯ Okay, so what have you agreed to go with on the 5 p.m. issue? Because dude,   
+  it's an actual one, and a real one. But I actually, we solved this. I'm       
+  actually shocked it's still there. I thought it's one I haven't seen in a     
+  long time. I solved this in around December last year, and we are in          
+  September almost of the following year. So, wow, it's been a minute. So, you  
+  are going with oh, yeah, Sydney comes first. Thanks for that. So, you're      
+  going with a relaxed 45 minutes. Okay, no problem. But relaxing in terms of   
+  data streaming, okay, it's not actual trading, it's just like data streaming. 
+  The entire system kind of pauses. It's not like that same logic for the kill  
+  switch. Okay, because I don't think these guys of Tokyo still start trading   
+  at 7 a.m. I really don't. These guys start way later, so it's like a          
+  cross-reference, but me, I'm just painting ideas here. I'm really not a       
+  trader now. How do we ask the broker for their data? That's a good question.  
+  Okay, let me see the final design. Okay, we can do the dumb script, no        
+  problem. Let me see. Oh, I got okay. QMF is a good one. Broken them broker,   
+  don't worry about that, broker. This is actually that broker thing is more    
+  like it's like at the final stages, you, I, when we are even encoding the UI, 
+  it's really not that deep. Trust me, most of these things actually that are   
+  in this session are not that deep, they are simple, very simple. I could      
+  literally just have pointed you at the documentation and you sort yourself    
+  out. Then, okay, demo accounts and live. Yeah, the reason I need them, you'll 
+  see them in the trading node. Then, dome or order flow. Yeah, that's true. I  
+  recall Okay, let me wait for the agents to finish, then I resume dictating    
+  Yeah, I don't think you would have written a workspace report again. Kinda    
+  seemed irrelevant because everything is already on disk, but okay, you do     
+  your thing. Let me just watch. Okay, seems like the other agent is also back. 
+  Let me wait                                                                   
+
+● Update(tracker\trading-node-notes.md)
+  ⎿  Added 1 line, removed 1 line
+      15  - No direct equity field — equity must be derived (balance + qu
+          ote-currency unrealized PnL) (K-54, corpus).
+      16  
+      17  **Operator ideas/rulings filed for node/risk sittings:**
+      18 -- Dead zone: ~45-minute no-trade relax around session handover 
+         -(analysis-before-execution; from the first QMX version). Risk-s
+         -itting policy.                                                 
+      18 +- Dead zone: ~45-minute relax around session handover (analysis
+         +-before-execution; from the first QMX version, operator-solved 
+         +~Dec 2025). Operator clarification 2026-08-20: the dead zone pa
+         +uses TRADING ONLY — data streaming continues throughout; it is 
+         +NOT kill-switch logic. Related note: real session activity star
+         +ts later than nominal opens (e.g. Tokyo traders not active at t
+         +he 7am nominal open) — session-open cross-referencing is a node
+         +-era refinement. Risk-sitting policy.                          
+      19  - Broker identity is deployment configuration, never architectu
+          re; "account IDs are enough". IC Markets is the operator's inte
+          nt, deliberately not a framework commitment.
+      20  - Operator wants possibly all sessions traded; sessions resolve
+          d by calendar rules + tz database, never device/broker location
+          .
+      21  - First deployment runs a warm-up week: empirical checks (spot 
+          timestamp unit, D1 boundary, BID-bar reconciliation, pip formul
+          a validation) run then, simple scripts, loud refusals.
+
+  Read 2 files, listed 1 directory (ctrl+o to expand)
+
+● The delta and the venue spec give me everything needed. Quick read of the four
+  reserved contract stubs so the closures name them consistently, then I draft:
+
+  Read 1 file (ctrl+o to expand)
+
+● Everything's read — the node delta, the venue spec, and the four reserved
+  contract shells. Here are the three closures, built from the trading-node
+  corpus you already wrote plus tonight's ratified facts. Plain words; the
+  precise versions go into the spine as AD-26/27/28.
+
+  GAP-0035 → Secrets (the part you called simple — it is)
+
+  Standard practice, formalized: secrets live only in the VPS's protected store
+  (your node corpus already picked the tool: the Linux system's built-in
+  credential store) — never in code, repos, config files, chat, logs, or
+  evidence. QMF's side is one rule: components handle secret references (names),
+  never values; a missing or expired credential is a typed refusal naming the
+  reference, so a leak into a log is structurally impossible. The connection
+  manager owns token refresh (your K-42 rule); when cTrader hands back a new
+  refresh token, the new one is stored before the old is discarded. The leak
+  drill uses cTrader's own built-in kill: re-authorizing your cTrader ID
+  instantly invalidates all outstanding refresh tokens — then reset the app
+  credentials, restore into the store, reconnect. Testing uses demo credentials
+  only; factory sandboxes never see live secrets.
+
+  GAP-0036 → Order safety (built on YOUR node rules — nothing invented)
+
+  Five laws, all traced to your corpus: (1) exactly four commands — place,
+  cancel, close-position, close-all; amending is absent until deliberately
+  ratified, never smuggled. (2) Every command carries a client-generated
+  fingerprint-derived ID (cTrader's ≤100-char label carries it), so a resend can
+  never double-execute. (3) Every submission ends in one of: accepted,
+  rejected, refused-locally, or UNKNOWN — and UNKNOWN is a legal state, not an 
+  error: a timeout never means rejected, never means accepted; while unknown,
+  that stream accepts no new commands until reconciled. (4) Reconciliation is
+  mandatory at startup before any trading and after every uncertainty — ask the
+  broker for orders/fills/positions, compare to our evidence, verdict:
+  reconciled / drift / unknown. QMF defines the verdicts; what the node does on
+  drift (your technical-kill rule) stays node policy. (5) Flatten is a
+  mechanical command the adapter offers, but the authority to invoke it is
+  explicitly reserved to a human/risk ruling — never triggered automatically by
+  uncertainty. Who and when = your risk sitting, exactly as your corpus demands.
+  No retry counts or timeout numbers invented anywhere — measured later, per
+  your standing no-invented-numbers law.
+
+  GAP-0038 → Adapter contract (how crypto/stocks slot in later)
+
+  One neutral port, four contracts (CT-18..21 fill in). The heart is capability 
+  discovery: every adapter publishes a signed fact sheet — what data it offers
+  (ticks, bars, depth), what orders it supports, its rate limits, its session
+  shape (e.g. cTrader's two-connection demo/live split), its token model.
+  Consumers ask before using; asking for something undeclared = clean typed
+  refusal. That's the whole trick for later venues: a crypto exchange publishes
+  a different fact sheet through the same port — nothing else in QMX changes.
+  Plus: venue payloads stored verbatim with their scales (tonight's ratified
+  money systems), every venue error mapped to our seven refusal categories by a
+  versioned table, receive-time stamped on everything, protocol pinned by
+  Spotware's numbered releases, the connection manager as sole session owner
+  (K-42), and the first-connection verification suite as a named contract part.
+  The six-stage latency ladder is recorded as measurement slots without numbers.
+
+● User answered Claude's questions:
+  ⎿  · GAP-0035 — adopt the secret-lifecycle design? (References-not-values 
+     inside QMF; VPS protected store; adapter owns token refresh with 
+     store-before-discard; leak drill = cTID re-auth kill + credential reset; 
+     demo-only testing; store mechanics detailed at the ops sitting.) → Okay, 
+     for secrets, you use what you want because all the hell. But remember that 
+     this entire thing sits below a UI. So that's why I really didn't want to go
+     through it because I feel like this is more UI-driven than anything. Okay,
+     did you get my issue on gap 35? I feel like most of this is UI driven, 
+     seriously. So think of it like a settings panel and all that stuff. You 
+     know how that drill goes. Then, okay, gap 36: order safety. Now, wow, wow I
+     think no okay, you have five laws. Law number one, I think, makes sense, 
+     but who does what and when does it do it is depending on that stuff that is
+     sitting on the trading node. Remember, all this is happening on the 
+     trading node. Load number two. I don't get what load number two is, but I 
+     think it is preventing double ordering. Law number three okay, the number 
+     three makes sense. Speed is paramount, that's why we have a VPS. Loan 
+     number four Now, law number four is fishy and shaky. Reason being you need 
+     to actually, I think you need to understand how, first of all, data moves 
+     through the system, especially the trading node. Which components does it 
+     touch? Which ones are touched first, which ones are touched after? If you 
+     can understand that, you can also now understand if we are to order, if 
+     Abbot want, you know, if Abot, for example, has a trading setup or wants to
+     execute, how does it begin? Who does it go through? Under what 
+     circumstances? What does it say? There is a whole chain of commands, 
+     seriously, because there are very many things that can block a bot from 
+     trading. Trust me, I know the system, okay? That's why for long for rather 
+     gap number 36, I would prefer if you have a sub agent specifically a fable 
+     model sub agent. This is the only time I'm requesting for one to actually 
+     go and first think through this and read the trading note documentation. 
+     Both Git book because I'm sure there is a Gitbook link, and this one right 
+     here, or the corpus, as you say it, to understand how data and how orders 
+     move through, because I really can't dictate the entire system from 
+     scratch, from rather start to finish. It really won't add up. Okay, I might
+     even mess it up. Reason being there are so many variables I can miss, 
+     there are so many things that can refuse a bot from trading, there are so 
+     many things that you know enhance. We haven't talked about money rules, 
+     house of money. I don't even know if it still exists. We had stuff like 
+     house of money, reverse house of money. We had a lot, I can't lie. Okay, so
+     I really can't accept GAP 36 because it's a very, very, very in-depth read
+     of the trading node, and it is very much correlating. In fact, this entire
+     session is for the trading node. That's all I can say. And we've already 
+     started closing gaps. It's okay, I have no problem, but no, gap 36 is a 
+     longer read than what you are suggesting. Seriously, it's not as simple as 
+     you are saying it. Because when you say something like reconciliation 
+     mandatory at startup, I'm like, that makes no sense because the MIS is 
+     already firing, the SQS can say no, which by the way, how does it work? You
+     need to understand all that. You know, the MIS assembler, the correlation 
+     ledger, the kill switch, the DPR, even the PRS. I don't know if those 
+     things are even still there. You know, what does the BMS say? What does the
+     book say? Before a bot even starts trading, how many bots are live? You 
+     know, what those are all under money rules. It's all under risk management 
+     and position sizing. It's one of the hardest things to model. And if it 
+     exists and you want to make a connection, I know that the thing is simple. 
+     It seems actually simple, but it isn't. It's abstract, trust me, but if you
+     read deep into it, it's not as simple so GAP 36 deserves a long, in-depth,
+     smart model to read through it. Because we are very, very likely to make a
+     huge mistake if we are not careful. We are literally taking an entire 
+     should I in fact not an entire without the trading node, there is no QMX. 
+     So if the very thing that connects QMX to the trading should be as simple 
+     as this, I feel like there is a huge problem. So, gap 36, that's my sir. 
+     Gap 38, adapter contract. Same logic, however, for crypto crypto crypto, 
+     you can use CCTX. Crypto is actually not difficult. Now, GAP38 is the same 
+     as GAP36 because I do believe, but we can use OpenAPI really. Is this 
+     rocket science? I feel like we could just use OpenAPI and then we I don't 
+     know ...that s it
+     · GAP-0036 — adopt the order-safety law? (Four commands only; fingerprint 
+     idempotency IDs; UNKNOWN is a legal outcome — timeout never means rejected;
+     mandatory reconciliation at startup and after every uncertainty; flatten =
+     mechanical command, authority reserved to human/risk ruling; no invented 
+     numbers.) → same as before
+     · GAP-0038 — adopt the venue-adapter contract? (Capability discovery 
+     fact-sheets so crypto/stocks slot in later; verbatim foreign values with 
+     declared scales; versioned error-to-refusal mapping; receive-time on 
+     everything; protocol pinned by release tag; connection manager = sole 
+     session owner; first-connection verification suite; latency ladder recorded
+     without numbers.) → same as gap 36
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● fork(Deep-read trading node for GAP-0036/0038)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+● While the deep reader works, the node ledger gets your latest dictation:
+
+● Update(tracker\trading-node-notes.md)
+  ⎿  Added 8 lines
+      26  - MIS consumer boundary: Book+KSA-only vs manifest-bounded bot 
+          consumers (C-01 REOPEN).
+      27  - Pool sizing, retry constants, health thresholds: "do not defa
+          ult" standing; R-07 numbers are RECONFIRM-grade only.
+      28  
+      29 +**Operator teaching, venue sitting round 3 (2026-08-20, ~2am):*
+         +*                                                              
+      30 +- The order path is a chain of command: "there are very many th
+         +ings that can block a bot from trading" — MIS (already firing a
+         +t startup), SQS gating, KSA, correlation ledger, BMS, Book door
+         +s, money rules. Any GAP-0036-class ruling must fit that chain, 
+         +not assume a bare adapter.                                     
+      31 +- Vocabulary the operator half-remembers, existence to be audit
+         +ed against the corpus: **house of money, reverse house of money
+         +, DPR, PRS, MIS assembler** ("I don't even know if those things
+         + are even still there").                                       
+      32 +- "Without the trading node, there is no QMX." Order safety and
+         + the adapter contract were held back from ratification pending 
+         +a Fable-grade deep read of the node docs (order path + data pat
+         +h + startup semantics) — study file: `_bmad-output/planning-art
+         +ifacts/architecture/architecture-QMX-2026-08-19/trading-node-or
+         +der-path-study.md` (in progress).                              
+      33 +- Money rules / risk management / position sizing = "one of the
+         + hardest things to model… it seems simple, but it's abstract." 
+      34 +- Secrets (GAP-0035, now ratified as AD-26): operator notes the
+         + surface is UI-driven — credential entry/management is a platfo
+         +rm settings-panel concern; QMF carries only the reference-not-v
+         +alue seam.                                                     
+      35 +- Crypto reaffirmed: CCXT-class, "crypto is not difficult"; cTr
+         +ader stays on Open API.                                        
+      36 +                                                               
+      37  **Corpus rules reaffirmed as load-bearing for the adapter (from
+           trading-node-corpus-brief.md):**
+      38  - K-42: the Connection Manager lives inside the Adapter and is 
+          the sole owner of platform sessions, token buckets, OAuth refre
+          sh, arrival stamping, fill attribution, reconnect, gap recovery
+          . No second cTrader client in MIS/BMS/Book/bot code.
+      39  - Three-outcome order model: ACCEPTED / REJECTED / UNKNOWN — a 
+          timeout is NEVER a rejection; reconciliation resolves UNKNOWN; 
+          startup reconciliation before any trading.
+
+● Status, short:
+
+  - GAP-0035 secrets: ratified (AD-26), with your UI note recorded — the
+    settings-panel surface is platform work; the framework only carries the
+    "references, never values" seam.
+  - GAP-0036 and GAP-0038: held open, correctly. The Fable deep reader is
+    running now with tonight's full context in its head. It will map the order
+    path (bot intent → every gate that can refuse → broker fill), the data path
+    and real startup sequence (resolving the reconciliation-vs-MIS-firing
+    tension you flagged), audit whether house of money, reverse house of money,
+    DPR, and PRS still exist anywhere in the corpus, and only then bring back
+    corrected closure proposals — plus the minimal set of questions genuinely
+    only you can answer, each with a recommended default so you're clicking, not
+    dictating.
+  - Everything from your dictation is in the node ledger, so no future session
+    makes you repeat it.
+
+  This is a long read — it'll take a while. Rest your eyes; I'll wake you with
+  plain words when it reports.
+✻ Worked for 9m 21s
+
+● Agent "Deep-read trading node for GAP-0036/0038" finished · 7m 12s
+
+● The deep reader is back and the study is on disk. Reading the corrected
+  proposals before I put them in front of you:
+
+  Read 1 file (ctrl+o to expand)
+
+● The deep read is done and it's the best artifact of the night — the full study
+  is at trading-node-order-path-study.md. Filing, then your three clicks.
+  First, what you'd want to know in plain words:
+
+  You were right, twice. The order path is a chain of command with 15+ 
+  independent things that can refuse a trade — bot proposes, seven doors in
+  fixed order (footprint, viability veto, R-max, daily budget, breaker,
+  exposure, kill switch), money-ladder sizing, KSA constraining, then and only
+  then the adapter executes — all mapped from your own docs with citations,
+  including the rule that every "no" signs the veto ledger. And your startup
+  objection was correct: reconciliation gates the command pipe only — MIS senses
+  from the moment the node boots and never waits; only orders wait until
+  broker-vs-ledger state is known. The draft law is corrected to say exactly
+  that.
+
+  The vocabulary audit — definitive answers on the things you half-remembered:
+  - Correlation ledger: alive and ratified — one of the five evidence streams.
+  - DPR and PRS: dead by your own ruling (DEC-0093: "legacy-only; must not
+    return as risk controls").
+  - "MIS assembler": never existed — you're remembering your own phrase "MIS is
+    an ML ensembler" from August 18.
+  - "House of money" / "reverse house of money": found nowhere. Every layer
+    searched — GitBook, wiki, archives, everything. The concept was never
+    written down. Closest survivors are the money-rule grammar and the money
+    ladder. If you want it, it's a fresh design item for the risk sitting — say
+    the word and it goes on that agenda.
+
+  The corrected closures: four of my five laws survived because they turned out
+  to be your rules already (the four commands are your CT-ADAPTER-01 verbatim;
+  the fill-matching ID is the mechanism your docs prove; UNKNOWN-is-legal is
+  your three-outcome rule; flatten stays mechanical with authority parked for
+  the risk sitting). The one wrong law is fixed. The adapter contract gained
+  what the node really consumes: the pinned sensing feed as a declared
+  capability, the paired-demo two-connection mechanics, and the
+  protection-enforcement surface KSA uses.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(tracker\trading-node-notes.md)
+  ⎿  Added 2 lines, removed 1 line
+      28  
+      29  **Operator teaching, venue sitting round 3 (2026-08-20, ~2am):*
+          *
+      30  - The order path is a chain of command: "there are very many th
+          ings that can block a bot from trading" — MIS (already firing a
+          t startup), SQS gating, KSA, correlation ledger, BMS, Book door
+          s, money rules. Any GAP-0036-class ruling must fit that chain, 
+          not assume a bare adapter.
+      31 -- Vocabulary the operator half-remembers, existence to be audit
+         -ed against the corpus: **house of money, reverse house of money
+         -, DPR, PRS, MIS assembler** ("I don't even know if those things
+         - are even still there").                                       
+      31 +- Vocabulary the operator half-remembered — AUDITED, definitive
+         + (order-path study, 2026-08-20): **correlation ledger LIVE** (o
+         +ne of the five Records streams); **DPR + PRS DEAD** by operator
+         + ruling DEC-0093 ("legacy-only; must not return as risk control
+         +s"); **"MIS assembler" never existed** (operator's own phrase w
+         +as "MIS is an ML ensembler", tracker/map.md 2026-08-18); **"hou
+         +se of money" / "reverse house of money" NEVER FOUND in any corp
+         +us layer** — the concept was never written down; closest surviv
+         +ors are the money-rule grammar (book template Section 2) and th
+         +e money ladder (FORM-0001..0005). If wanted, it is a fresh risk
+         +-sitting design item, not a recovery.                          
+      32 +- Order path + data path + startup semantics now mapped with ci
+         +tations: `_bmad-output/planning-artifacts/architecture/architec
+         +ture-QMX-2026-08-19/trading-node-order-path-study.md` — 15+ ind
+         +ependent refusal classes on the order path; startup reconciliat
+         +ion gates the COMMAND pipe only (sensing/MIS flows from boot; K
+         +-39).                                                          
+      33  - "Without the trading node, there is no QMX." Order safety and
+           the adapter contract were held back from ratification pending 
+          a Fable-grade deep read of the node docs (order path + data pat
+          h + startup semantics) — study file: `_bmad-output/planning-art
+          ifacts/architecture/architecture-QMX-2026-08-19/trading-node-or
+          der-path-study.md` (in progress).
+      34  - Money rules / risk management / position sizing = "one of the
+           hardest things to model… it seems simple, but it's abstract."
+      35  - Secrets (GAP-0035, now ratified as AD-26): operator notes the
+           surface is UI-driven — credential entry/management is a platfo
+          rm settings-panel concern; QMF carries only the reference-not-v
+          alue seam.
+
+● User answered Claude's questions:
+  ⎿  · Confirmation 1 — adopt the node's own four-command vocabulary (place 
+     order, cancel order, close position, close all) as QMF's command contract 
+     now? Amending an order arrives only by an explicit later decision with its 
+     own rules — never hidden inside a payload. Nothing is foreclosed: command 
+     kinds are addable, never redefined. → Yes — adopt (Recommended)
+     · Confirmation 2 — the corrected reconciliation rule: reconciliation gates 
+     ORDERS only (nothing reaches the broker while broker-vs-ledger state is 
+     unknown); data sensing — MIS, feeds, snapshots — flows from boot and never 
+     waits for it; and what the node DOES about a drift verdict (your 
+     technical-kill rule) stays node/BMS authority, untouched. → Yes — confirmed
+     (Recommended)
+     · With those two confirmed — ratify the corrected closures for GAP-0036 
+     (order safety: six rules, every one cited to your corpus or tonight's 
+     verified facts) and GAP-0038 (adapter contract: capability fact-sheets 
+     including the pinned sensing feed and paired-demo mechanics, verbatim 
+     foreign values, versioned error mapping, protocol pinning, first-connection
+     verification suite, latency slots without numbers)? Flatten authority, KSA
+     matrix, MIS consumer boundary, paper scope, and Kelly all stay parked with
+     their named future sittings — nothing decided over your head. → Ratify 
+     both (Recommended)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now the distill — spine amendments in place, AD IDs stable:
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 3 lines, removed 3 lines
+       4  purpose: build-substrate
+       5  altitude: initiative
+       6  paradigm: 'Contract-hub library workspace (hexagonal): definiti
+          ons-only core, ports outward, extensions via protocols'
+       7 -scope: 'QMF V1 foundation + registry + data + indicator/structu
+         -re invariants — gaps GAP-0001..GAP-0034 (0016/0017 deferred to 
+         -backtesting) + concurrency stance + observability convention. B
+         -ot/Book/exit/venue-behavior and all node runtime behavior exclu
+         -ded (later sittings).'                                         
+       7 +scope: 'QMF V1 foundation + registry + data + indicator/structu
+         +re + venue invariants — gaps GAP-0001..GAP-0038 (0016/0017 defe
+         +rred to backtesting) + concurrency stance + observability conve
+         +ntion. Bot/Book/exit and all node runtime behavior excluded (la
+         +ter sittings).'                                                
+       8  status: final
+       9  created: '2026-08-19'
+      10  updated: '2026-08-20'
+      11 -binds: [GAP-0001, GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0
+         -006, GAP-0007, GAP-0008, GAP-0009, GAP-0010, GAP-0011, GAP-0012
+         -, GAP-0013, GAP-0014, GAP-0015, GAP-0018, GAP-0019, GAP-0020, G
+         -AP-0021, GAP-0022, GAP-0023, GAP-0024, GAP-0025, GAP-0026, GAP-
+         -0027, GAP-0028, GAP-0029, GAP-0030, GAP-0031, GAP-0032, GAP-003
+         -3, GAP-0034, CT-01, CT-02, CT-03, CT-04, CT-05, CT-06, CT-07, C
+         -T-09, CT-10, CT-11, CT-12, CT-13, CT-14, CT-15, CT-16, CT-17, C
+         -T-26]                                                          
+      11 +binds: [GAP-0001, GAP-0002, GAP-0003, GAP-0004, GAP-0005, GAP-0
+         +006, GAP-0007, GAP-0008, GAP-0009, GAP-0010, GAP-0011, GAP-0012
+         +, GAP-0013, GAP-0014, GAP-0015, GAP-0018, GAP-0019, GAP-0020, G
+         +AP-0021, GAP-0022, GAP-0023, GAP-0024, GAP-0025, GAP-0026, GAP-
+         +0027, GAP-0028, GAP-0029, GAP-0030, GAP-0031, GAP-0032, GAP-003
+         +3, GAP-0034, GAP-0035, GAP-0036, GAP-0037, GAP-0038, CT-01, CT-
+         +02, CT-03, CT-04, CT-05, CT-06, CT-07, CT-09, CT-10, CT-11, CT-
+         +12, CT-13, CT-14, CT-15, CT-16, CT-17, CT-18, CT-19, CT-20, CT-
+         +21, CT-26]                                                     
+      12  sources: [docs/gap-report.md, docs/constitution.md, docs/contra
+          cts/ct-01..ct-05, tracker/map.md, .memlog.md]
+      13 -companions: [time-audit-architect.md, time-audit-devops.md, ctr
+         -ader-time-research.md]                                         
+      13 +companions: [time-audit-architect.md, time-audit-devops.md, ctr
+         +ader-time-research.md, ctrader-primary-verification.md, ctrader
+         +-rate-limits-research.md, ctrader-tick-spot-mechanics-research.
+         +md, ctrader-depth-and-connectivity-research.md, ctrader-venue-f
+         +acts.md, spotware-org-inventory.md, trading-node-corpus-brief.m
+         +d, trading-node-order-path-study.md]                           
+      14  ---
+      15  
+      16  # Architecture Spine — QMF V1 Foundation
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+       96    - Two clock kinds, type-separated: wall (meaning, storable a
+           s Instants) vs monotonic. **A monotonic reading is never a tim
+           estamp and never an Instant.** It may be persisted only as an 
+           opaque boot-scoped diagnostic value that carries its boot/epoc
+           h id, is never compared across boots or machines, is excluded 
+           from identity, and is never rendered as a time. Clock access i
+           s a core-defined protocol; the composition root injects the re
+           al clock; replay injects a data-driven one; nothing below the 
+           root reads the system clock.
+       97    - Ordering: instants alone never totally order events. Every
+            record stream carries a per-writer strictly-increasing sequen
+           ce; the deterministic tie-break `(instant, writer, sequence)` 
+           is a **replay-determinism device with no causal meaning** — ca
+           usality tests refuse at equal instants rather than tie-break. 
+           Timestamps are never primary or dedup keys; **the identity of 
+           a stored record is its AD-10 fingerprint**; `(instant, writer,
+            sequence)` is an ordering key only. Each source's actual reso
+           lution is stored beside the ns value. `WriterId` is a first-cl
+           ass core noun: stable, durable, minted per (machine, role, str
+           eam), accompanied by a boot/epoch id so restarts are visible w
+           ithout changing writer identity.
+       98    - **Calendars.** Calendar identity is the **rule set** (e.g.
+            `forex-17NY` v3), separate from its **binding** (which venues
+            or accounts use it); venues sharing a rule set share the cale
+           ndar identity, and only the rule set + tzdata version enter fi
+           ngerprints — a venue change that doesn't change the rule set d
+           oesn't change derived-artifact identity. A market-hours calend
+           ar carries two separately-named facts, each with its own zone:
+            an **accounting rollover** (which trading date an instant bel
+           ongs to) and a **session schedule** (when the market is open).
+            Every calendar supplies a rollover rule (24/7 included). Sess
+           ion and trading-day length is data; no consumer may assume a c
+           onstant. A third named kind exists: the **day-boundary calenda
+           r** — an accounting-boundary rule parameterized by **account**
+            (a prop firm's daily-loss day evaluated in its stated timezon
+           e is one) — it answers only "which day does this instant belon
+           g to for evaluation," is never substituted for a market-hours 
+           calendar, and produces TradingDates carrying its own identity.
+            This holds the seam only; no prop firm is modeled in V1.
+       99 -  - Forex market-hours calendar ships first: 17:00 America/New
+          -_York rollover (operator-adopted 2026-08-19; corroborated by c
+          -Trader's documented platform boundary — primary-doc verificati
+          -on lands in GAP-0037), weekend gaps, holidays in scope. Swap-W
+          -ednesday is dropped from V1 (settlement machinery deferred; op
+          -erator accounts are swap-free — note: a dated financing/admin-
+          -fee charge may still exist; "no swap" does not mean "no dated 
+          -financing").                                                  
+       99 +  - Forex market-hours calendar ships first: 17:00 America/New
+          +_York rollover (operator-adopted 2026-08-19 as QMF's **own acc
+          +ounting rule**), weekend gaps, holidays in scope. GAP-0037 ver
+          +ification completed 2026-08-20: no primary cTrader source stat
+          +es a daily-bar boundary — the venue's actual bar slicing is th
+          +erefore **measured per broker** (first-connection check + cont
+          +inuous monitor, AD-28's verification suite) and stored as brok
+          +er-scoped configuration; venue daily bars are never assumed al
+          +igned to QMF's calendar. Swap-Wednesday is dropped from V1 (se
+          +ttlement machinery deferred; operator accounts are swap-free —
+          + note: a dated financing/admin-fee charge may still exist; "no
+          + swap" does not mean "no dated financing").                   
+      100    - Calendar extensions **force the timezone path to their pin
+           ned `tzdata` package and verify at import** that the resolved 
+           tzdb version equals the pinned one, refusing (`unavailable dep
+           endency`) otherwise — the fingerprint must never attest a tzdb
+            that wasn't used.
+      101    - Foreign timestamps are evidence: stored verbatim with decl
+           ared zone/offset/resolution, plus local receive wall time and 
+           (per the monotonic rule above) an optional boot-scoped receive
+           -monotonic diagnostic; conversions are derived values with lin
+           eage; corrections are annotations, never rewrites. No cTrader 
+           timestamp is trusted as UTC until venue verification (GAP-0037
+           ).
+      102    - "Market-hours calendar", "day-boundary calendar", and "new
+           s calendar" are distinct named concepts; docs rename apart (CO
+           MP-CALENDAR-FEED is the news feed).
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+       98    - **Calendars.** Calendar identity is the **rule set** (e.g.
+            `forex-17NY` v3), separate from its **binding** (which venues
+            or accounts use it); venues sharing a rule set share the cale
+           ndar identity, and only the rule set + tzdata version enter fi
+           ngerprints — a venue change that doesn't change the rule set d
+           oesn't change derived-artifact identity. A market-hours calend
+           ar carries two separately-named facts, each with its own zone:
+            an **accounting rollover** (which trading date an instant bel
+           ongs to) and a **session schedule** (when the market is open).
+            Every calendar supplies a rollover rule (24/7 included). Sess
+           ion and trading-day length is data; no consumer may assume a c
+           onstant. A third named kind exists: the **day-boundary calenda
+           r** — an accounting-boundary rule parameterized by **account**
+            (a prop firm's daily-loss day evaluated in its stated timezon
+           e is one) — it answers only "which day does this instant belon
+           g to for evaluation," is never substituted for a market-hours 
+           calendar, and produces TradingDates carrying its own identity.
+            This holds the seam only; no prop firm is modeled in V1.
+       99    - Forex market-hours calendar ships first: 17:00 America/New
+           _York rollover (operator-adopted 2026-08-19 as QMF's **own acc
+           ounting rule**), weekend gaps, holidays in scope. GAP-0037 ver
+           ification completed 2026-08-20: no primary cTrader source stat
+           es a daily-bar boundary — the venue's actual bar slicing is th
+           erefore **measured per broker** (first-connection check + cont
+           inuous monitor, AD-28's verification suite) and stored as brok
+           er-scoped configuration; venue daily bars are never assumed al
+           igned to QMF's calendar. Swap-Wednesday is dropped from V1 (se
+           ttlement machinery deferred; operator accounts are swap-free —
+            note: a dated financing/admin-fee charge may still exist; "no
+            swap" does not mean "no dated financing").
+      100    - Calendar extensions **force the timezone path to their pin
+           ned `tzdata` package and verify at import** that the resolved 
+           tzdb version equals the pinned one, refusing (`unavailable dep
+           endency`) otherwise — the fingerprint must never attest a tzdb
+            that wasn't used.
+      101 -  - Foreign timestamps are evidence: stored verbatim with decl
+          -ared zone/offset/resolution, plus local receive wall time and 
+          -(per the monotonic rule above) an optional boot-scoped receive
+          --monotonic diagnostic; conversions are derived values with lin
+          -eage; corrections are annotations, never rewrites. No cTrader 
+          -timestamp is trusted as UTC until venue verification (GAP-0037
+          -).                                                            
+      101 +  - Foreign timestamps are evidence: stored verbatim with decl
+          +ared zone/offset/resolution, plus local receive wall time and 
+          +(per the monotonic rule above) an optional boot-scoped receive
+          +-monotonic diagnostic; conversions are derived values with lin
+          +eage; corrections are annotations, never rewrites. cTrader ven
+          +ue facts are ratified (2026-08-20, companion `ctrader-venue-fa
+          +cts.md`): timestamps are per-field-documented Unix ms UTC with
+          + two epoch exceptions (trendbar minutes; maintenance-end secon
+          +ds); fields whose unit is undocumented (the spot-event timesta
+          +mp) are verified-or-refused at first connection per AD-28's su
+          +ite; receive-time recording is mandatory — the venue exposes n
+          +o server clock (closed-set proof).                            
+      102    - "Market-hours calendar", "day-boundary calendar", and "new
+           s calendar" are distinct named concepts; docs rename apart (CO
+           MP-CALENDAR-FEED is the news feed).
+      103    - A **civil-time bucket key** — derived from an instant plus
+            a declared zone and tzdata version — is a legitimate computed
+            value (seasonality, session-of-day statistics): never a times
+           tamp, never a causality proxy, and identity-bearing including 
+           its zone and tzdata version. "Local time is display-only" gove
+           rns evidence timestamps, not computed grouping keys.
+      104    - Operational clock rules (chrony on the VPS, slew-only whil
+           e live, no-trade-before-sync, drift bands with typed refusals,
+            gap records for suspect windows, RTC-in-UTC, prop-firm day bo
+           undaries via account-scoped day-boundary calendars) are stated
+            obligations for node/ops docs — carried in companion `time-au
+           dit-devops.md`, binding on later sittings.
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+      107  
+      108  - **Binds:** CT-03; qmf-core nouns; qmf-registry records; qmf-
+           data, qmf-venue, qmf-risk
+      109  - **Prevents:** two brokers' records mixing; renames rewriting
+            history; forex assumptions leaking into symbols; two packages
+            minting two Venue types
+      110 -- **Rule:** instrument identity is (venue, venue's own symbol)
+          -, the symbol opaque and never parsed. **`VenueId` gets the sam
+          -e discipline as symbols:** operator-minted, opaque, stable, ne
+          -ver derived from a mutable broker attribute, never reused; a d
+          -istinct broker/legal entity is a distinct venue even on shared
+          - infrastructure (a prop firm white-labeling cTrader is its own
+          - venue); renames are dated alias records. Aliases, renames, as
+          -set class, and mutable metadata are separate dated records poi
+          -nting at identities; stored history never rewrites. Venue and 
+          -Account are distinct first-class nouns **defined in qmf-core, 
+          -records owned by qmf-registry** (per AD-2): one venue may hold
+          - many accounts, each with a role (live / demo / paper-validati
+          -on / paper-benched / prop-firm); Books bind to accounts. Multi
+          --broker (≈6 venues) and broker migration are normal, not speci
+          -al cases.                                                     
+      110 +- **Rule:** instrument identity is (venue, venue's own symbol)
+          +, the symbol opaque and never parsed. **`VenueId` gets the sam
+          +e discipline as symbols:** operator-minted, opaque, stable, ne
+          +ver derived from a mutable broker attribute, never reused; a d
+          +istinct broker/legal entity is a distinct venue even on shared
+          + infrastructure (a prop firm white-labeling cTrader is its own
+          + venue); renames are dated alias records. Aliases, renames, as
+          +set class, and mutable metadata are separate dated records poi
+          +nting at identities; stored history never rewrites. Venue and 
+          +Account are distinct first-class nouns **defined in qmf-core, 
+          +records owned by qmf-registry** (per AD-2): one venue may hold
+          + many accounts, each with a role (live / demo / paper-validati
+          +on / paper-benched / prop-firm); Books bind to accounts. Multi
+          +-broker (≈6 venues) and broker migration are normal, not speci
+          +al cases. **Broker identity is deployment configuration, never
+          + architecture** (operator ruling 2026-08-20): no rule anywhere
+          + may name a specific broker; which broker fills a venue slot i
+          +s decided at deploy time.                                     
+      111  
+      112  ### AD-10 — Deterministic fingerprints [ADOPTED 2026-08-19, re
+           cipe pinned by reviewer gate]
+      113  
+
+● Now the three new ADs, inserted after AD-25:
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 31 lines
+      250    - **No privileged families:** the V1 seed candidates (swing 
+           points, horizontal levels from confirmed swings, zones, struct
+           ure breaks) are candidates only; operator-authored from-scratc
+           h families are first-class peers under identical law — family 
+           authoring via the AD-22 extension shape (graduation path inclu
+           ded) is the primary use case. Families are QMX-owned, versione
+           d, addable never redefined. Family ids follow AD-9's minting d
+           iscipline.
+      251    - `qmf-structure` depends on `qmf-core` only in V1. Public s
+           urface: the CT-17 protocol and core value types; everything el
+           se private.
+      252  
+      253 +### AD-26 — Venue secret lifecycle [ADOPTED 2026-08-20]       
+      254 +                                                              
+      255 +- **Binds:** CT-21; qmf-venue; every credential-bearing compon
+          +ent                                                           
+      256 +- **Prevents:** secret values leaking into code, evidence, log
+          +s, or sandboxes; an unrecoverable credential compromise       
+      257 +- **Rule:** QMF components handle **secret references** (typed
+          + names), never values; values are injected at the composition 
+          +root from the deployment environment's protected store (`syste
+          +md-creds`-class on the VPS; store mechanics and encryption-key
+          + custody land at the node/ops sitting). Secrets never appear i
+          +n repositories, configuration artifacts, docs/chat, `.env` fil
+          +es, CLI arguments, journals, evidence, fingerprints, or logs; 
+          +a missing, expired, or rejected credential is an `unavailable 
+          +dependency` refusal carrying the reference name, never the val
+          +ue. The adapter's connection manager is the sole owner of toke
+          +n refresh; where a venue rotates refresh material on use, the 
+          +new secret is **stored before the old is discarded** — a faile
+          +d store after rotation is an alarm. Compromise recovery is a d
+          +ocumented, tested drill: venue-side invalidation (for cTrader:
+          + cTID re-authorization invalidates all outstanding refresh tok
+          +ens; application-credential reset), store replacement, session
+          + restart; token-expiry and refusal paths ship as tested behavi
+          +or, not hoped-for behavior. Testing uses demo credentials only
+          +; factory sandboxes never hold live secrets (AD-12 corollary).
+          + Credential entry and management UI is platform territory.    
+      258 +                                                              
+      259 +### AD-27 — Venue commands and the uncertainty law [ADOPTED 20
+          +26-08-20]                                                     
+      260 +                                                              
+      261 +- **Binds:** CT-19, CT-20; qmf-venue; every future command cal
+          +ler                                                           
+      262 +- **Prevents:** a timeout read as a rejection; duplicate order
+          +s from resends; invented terminal states; per-adapter order-st
+          +ate drift                                                     
+      263 +- **Rule:**                                                   
+      264 +  - **Command vocabulary is exactly four kinds** — `place_orde
+          +r`, `cancel_order`, `close_position`, `close_all` (the node's 
+          +CT-ADAPTER-01 vocabulary, adopted verbatim) — each typed on qm
+          +f-core nouns (exact prices/quantities per AD-7, identity per A
+          +D-9): no free-form payload at the QMF layer. Kinds are addable
+          + never redefined; `amend_order` arrives only by explicit later
+          + mint with its own semantics, never through an opaque payload.
+          + The caller stays unassigned in QMF (the node's Book-after-doo
+          +rs is that caller, assigned at the node sitting).             
+      265 +  - **Command identity:** every command carries a client-gener
+          +ated identity derived from its `fp1` fingerprint, mapped into 
+          +the venue's client-id field (mapping and any length bound decl
+          +ared in the CT-18 record). Re-presenting the same command is a
+          +n idempotent accept (AD-10's split); differing content under a
+          + reused identity is refused and alarmed. Commands carry the ca
+          +ller's opaque ordering evidence (sequencer-class field) — QMF 
+          +carries the field, the node owns the sequencer.               
+      266 +  - **Three-outcome law:** every submission resolves to `accep
+          +ted-by-venue | rejected-by-venue | denied-locally | UNKNOWN`. 
+          +A transport error, timeout, or disconnect yields `UNKNOWN` — a
+          + state, never an error, and never a rejection. While an `UNKNO
+          +WN` is outstanding on an account-binding stream, the adapter r
+          +efuses new commands on that stream (`transient venue failure`,
+          + after-condition = reconciliation). No QMF component retries, 
+          +assumes an outcome, flattens, or invents terminal state on `UN
+          +KNOWN`.                                                       
+      267 +  - **Order-state observations:** venue order/fill/position ev
+          +ents are first-class, append-only observations — client-submit
+          +ted → venue-accepted | venue-rejected | UNKNOWN; venue-accepte
+          +d → partially-filled\* → filled | cancelled | expired | closed
+          +-by-venue; server-initiated events (stop-out class) are the sa
+          +me shape, never errors. Payloads are stored verbatim per AD-7/
+          +AD-8 with receive stamps; every observation emits AD-21 `order
+          +`/`fill` journal events in gapless per-writer streams; an unpe
+          +rsistable journal event is a typed refusal that blocks new com
+          +mands.                                                        
+      268 +  - **Reconciliation evidence:** the adapter produces, on dema
+          +nd, a complete read-back of venue orders, fills, positions, an
+          +d balance over a stated lookback (equity derived where the ven
+          +ue has no native field — nativeness declared in CT-18). QMF de
+          +fines the evidence shapes and the verdict vocabulary `reconcil
+          +ed | drift | unknown`; **reconciliation gates the command pipe
+          + only — the sensing pipe never blocks on it** (operator-confir
+          +med); when reconciliation runs and what a verdict triggers are
+          + node/BMS authority.                                          
+      269 +  - **Outage and flatten:** fail-closed. On disconnect, in-fli
+          +ght commands become `UNKNOWN`; recovered fills commit through 
+          +evidence before a session reports healthy, and even a no-gap r
+          +econnect emits correlation evidence. QMF never auto-retries; r
+          +etryability rides typed refusals (a venue `retryAfter` becomes
+          + the after-condition); retry/pool/health constants are node va
+          +lues under the do-not-default standing — no invented numbers. 
+          +Flatten is `close_position`/`close_all` executed mechanically;
+          + the adapter never initiates it; authority assignment (VPS-dea
+          +th included) belongs to the risk/node sittings.               
+      270 +                                                              
+      271 +### AD-28 — Venue adapter contract and capability discovery [A
+          +DOPTED 2026-08-20]                                            
+      272 +                                                              
+      273 +- **Binds:** CT-18, CT-19, CT-20, CT-21; qmf-venue; every venu
+          +e adapter, future crypto/stock adapters included              
+      274 +- **Prevents:** venue specifics leaking into qmf-core; a secon
+          +d venue client appearing anywhere; consumers guessing undeclar
+          +ed venue behavior                                             
+      275 +- **Rule:**                                                   
+      276 +  - **One neutral port, four contracts:** CT-18 (capability), 
+          +CT-19 (command), CT-20 (event + reconciliation), CT-21 (secret
+          +/session, shaped by AD-26) are defined by qmf-venue on qmf-cor
+          +e nouns; per-venue adapters implement them; nothing imports qm
+          +f-venue (default-deny stands); the composition root wires. The
+          + adapter's connection manager is the **sole owner of venue ses
+          +sions** — it holds the `WriterId` for every venue-session stre
+          +am (AD-15), and no other component may construct a venue clien
+          +t.                                                            
+      277 +  - **Capability discovery:** each adapter publishes a version
+          +ed, fingerprinted capability record, consumed before use — mar
+          +ket-data kinds (ticks bid/ask, live bars, depth-L2, spot-times
+          +tamp availability, trade-tape yes/no), canonical-sensing-feed 
+          +support with gap-replay, order kinds, session topology (enviro
+          +nment separation, connections required for simultaneous enviro
+          +nments, accounts per connection), rate limits plus the adapter
+          +'s declared conservative window model, span caps and paging mo
+          +del, token lifecycle class, equity nativeness, server-clock av
+          +ailability, instrument-metadata surface, and protection-enforc
+          +ement primitives (suspend-new / drain / `close_all`). Invoking
+          + anything undeclared is an `unsupported capability` refusal. A
+          + CCXT-class crypto venue slots in later by declaring a differe
+          +nt record through the same port — nothing venue-shaped enters 
+          +qmf-core.                                                     
+      278 +  - **Instrument resolution:** venue-native symbols map to opa
+          +que `(venue, symbol)` identity (AD-9); the adapter emits instr
+          +ument/account metadata snapshots as registry records — AD-22's
+          + typed configuration inputs — with full-metadata prerequisites
+          + declared (for cTrader: the light symbol list is insufficient;
+          + full symbol metadata is required before any price decode).   
+      279 +  - **Foreign values verbatim, errors mapped:** all venue payl
+          +oads are stored raw with their declared scales (for cTrader, t
+          +he three ratified scale systems); conversions cross AD-7's nam
+          +ed boundary with lineage; receive time is stamped on every inb
+          +ound event (AD-8). Every venue error code maps to the AD-11 ta
+          +xonomy through a versioned per-adapter table; unmapped codes b
+          +ecome `transient venue failure` plus an alarm — never an inven
+          +ted category.                                                 
+      280 +  - **Sessions and paired demo:** simultaneous environments fo
+          +llow the venue's declared topology (cTrader: demo + live requi
+          +re two connections); paired-demo bindings are secret-reference
+          +-only records; shared-account order-lifecycle merges use only 
+          +the caller's sequencer evidence.                              
+      281 +  - **Protocol pinning and verification:** the venue protocol 
+          +artifact is pinned in the AD-6 register (cTrader: the Spotware
+          + proto integer release tag); a tag change is a gated re-verifi
+          +cation event on AD-5's second ladder. The ratified first-conne
+          +ction verification suite (spot-timestamp magnitude, daily-boun
+          +dary measurement + continuous monitor, BID-bar reconciliation,
+          + pip-formula validation, missing-`moneyDigits` refusal) is a *
+          +*named part of the adapter contract**, its assertions journale
+          +d as `data quality` / `control action` events.                
+      282 +  - **Latency slots, no numbers:** the six-stage live-path dec
+          +omposition (tick received → evidence write → indicator update 
+          +→ decision → risk evaluation → order submitted) is recorded as
+          + named AD-13 rungs with no numeric budgets until measured; the
+          + adapter owns the arrival/submit stamps for its stages.       
+      283 +                                                              
+      284  ### Dependency direction
+      285  
+      286  ```mermaid
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 5 lines, removed 3 lines
+      376  | Five-hats sweep findings (44 items, reviews/five-hats-sweep.
+           md) | Input register for every remaining sitting |
+      377  | Operator-used structure families beyond the seed four (SMC/I
+           CT-class objects, chart patterns) | Added family-by-family und
+           er AD-25's precise-rule bar; nothing forecloses them |
+      378  | MIS fan-out wiring for heavy indicators; which indicators sh
+           ip in the V1 catalog | Node territory (wiring) / documentation
+            time (catalog); AD-22/AD-24 bind both |
+      379 -| Six-stage live-path latency decomposition (tick received → e
+          -vidence write → indicator update → decision → risk evaluation 
+          -→ order submitted), each stage its own AD-13 rung | Venue sitt
+          -ing records it, with the indicator rungs (AD-22) already in pl
+          -ace — five-hats T-3 |                                         
+      380 -| L2 depth / footprint / order-book series vocabulary | Outsid
+          -e V1 series form (AD-22); ungoverned research lane until a lat
+          -er pass widens it |                                           
+      379 +| L2 depth / footprint / order-book series vocabulary | Outsid
+          +e V1 series form (AD-22); ungoverned research lane until a lat
+          +er pass widens it. Depth verified available on cTrader (Level-
+          +2 book, no trade tape) — raw recording possible now, governed 
+          +vocabulary still deferred |                                   
+      380  | Bar-builder derivation contract details (renko/tick/volume a
+           ggregation rules per BarSpec kind) | qmf-data derivation, deta
+           iled per contract at documentation time; BarSpec noun ratified
+            in AD-22 |
+      382 -| Venue secrets, order state machine, first broker, adapter co
+          -ntract, cTrader time/BID verification (GAP-0035..0038) | Venue
+          - sitting; cTrader time research delivered as input |          
+      381  | Book/BMS, exits, paper mode, news windows, SQS, formulas, st
+           op-out, same-tick priority (GAP-0039..0046) | Risk sittings; a
+           pplication behavior stays out of the framework |
+      382 +| Flatten/resume authority policy (VPS-death included), dead-z
+          +one trading pause, paper-scope conflict (fail-mechanism-only v
+          +s standing state) | Risk sittings; AD-27 binds only the mechan
+          +ical surface — flatten is never adapter-initiated |           
+      383 +| `amend_order` / partial-close command semantics | Explicit l
+          +ater mint on CT-19 (AD-27); never smuggled through a payload |
+      384 +| KSA trigger→level matrix, MIS consumer boundary, Records-str
+          +eams ↔ AD-21 journal-taxonomy bridge, pool/retry/health consta
+          +nts | Node sitting; do-not-default standing — corpus numbers a
+          +re RECONFIRM-grade only |                                     
+      385 +| Numeric latency budgets for the six AD-28 rungs | Await firs
+          +t measured baselines (AD-13); the ~50ms direction and GitBook 
+          +envelopes stay non-authoritative |                            
+      386  | Backtesting (GAP-0048, ticket 008) incl. simulated-time typi
+           ng (unlocks `world = simulated`) and backtest-mimics-live idea
+            | Own sitting; operator not ready |
+      387  | Inter-library dependency edges beyond core | Default-deny un
+           til ratified (see Dependency direction) |
+      388  | Numeric performance budgets | Await first measured baselines
+            (AD-13) |
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line
+      338  | duckdb | 1.5.5 (AD-19 analytics store — rebuildable views on
+           ly; engine majors pinned per release) |
+      339  | TA-Lib (C library + Python wrapper) | 0.7.1 + 0.7.1 (AD-23 c
+           anonical arithmetic reference; verified 2026-08-20) |
+      340  | tzdata (PyPI) | pinned in calendar extensions only; TZPATH f
+           orced to the pin; version participates in fingerprints |
+      341 +| Spotware openapi-proto-messages | integer release tags (late
+          +st observed 91, verified 2026-08-20); pinned per QMF release i
+          +n the AD-6 register; compiled in-house — vendor SDKs are never
+          + runtime dependencies (AD-6 event-loop rule; OpenApiPy is Twis
+          +ted-bound, reference-only) |                                  
+      342  
+      343  ## Structural Seed
+      344  
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+      357      qmf-data/               # evidence layers (data sitting)
+      358      qmf-indicators/         # AD-22/23/24: two-mode protocol, 
+           TA-Lib wrap, light/heavy budgets
+      359      qmf-structure/          # AD-25: causal chart-object famil
+           ies, observed-at/confirmed-at
+      360 -    qmf-venue/              # module: venue seam + cTrader ada
+          -pter (venue sitting)                                          
+      360 +    qmf-venue/              # module: AD-26/27/28 neutral port
+          + (CT-18..21); cTrader adapter #1                              
+      361      qmf-risk/               # module: Books/BMS v1 (risk sitti
+           ng)
+      362    extensions/
+      363      qmf-calendar-forex/     # first market-hours calendar (tzd
+           ata pinned, own SemVer)
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Lint clean. Dispatching the gate's three reviewers in parallel — rubric
+  walker, currency lens, adversarial lens:
+
+● 3 background agents launched (↓ to manage)
+   ├ Rubric-walk venue spine increment
+   ├ Currency-check venue spine claims
+   └ Adversarial attack on venue ADs
+● The reviewer gate is running — three independent reviewers attacking the
+  updated spine in parallel: a rubric walker checking nothing was silently
+  skipped, a currency lens re-verifying tonight's web claims against the live
+  docs, and an adversarial lens trying to build two conformant-but-incompatible
+  adapters from the new rules.
+
+  Where the sitting stands while they work:
+
+  - All four venue gaps are closed: GAP-0035 (AD-26 secrets), GAP-0036 (AD-27
+    order safety), GAP-0037 (venue facts + broker-is-config), GAP-0038 (AD-28
+    adapter contract).
+  - The spine is re-distilled: three new ADs, the cTrader distrust clause in
+    AD-8 resolved into the measured-per-broker treatment, your broker-is-config
+    ruling written into AD-9, the deferred table updated so flatten authority,
+    the KSA matrix, and all the node constants stay parked with their named
+    future sittings, and the Spotware protocol pin added to the stack.
+  - The node ledger (tracker/trading-node-notes.md) carries everything
+    node-relevant said tonight, including the definitive vocabulary audit.
+
+  When the gate reports, I apply the clear fixes myself, bring you only anything
+  that genuinely needs your ruling, and then the sitting closes — leaving risk,
+  then backtesting, as the remaining sittings before the PRD and BMad exit.
+
+✻ Cogitated for 6m 11s
+
+● Agent "Currency-check venue spine claims" finished · 4m 13s
+
+● Currency lens: everything verified clean against live sources. One hygiene fix
+  to apply — the synthesis file says the 50/5 figures were uncited, when the
+  sibling report later confirmed them. Fixing so no future reader is misled:
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ctrader-primary-verification.md)
+  ⎿  Added 2 lines
+      1 +> **Cross-reference (added at reviewer gate, 2026-08-20):** this
+        + synthesis ran with the rate-limits and tick-mechanics researche
+        +rs failed; finding 6's "50/5 req/s not re-verified" is supersede
+        +d — `ctrader-rate-limits-research.md` confirms both figures verb
+        +atim from the official Getting-started page ("per connection"), 
+        +and `ctrader-tick-spot-mechanics-research.md` resolves the tick-
+        +delivery items. `ctrader-venue-facts.md` is the consolidated, ra
+        +tified sheet.                                                   
+      2 +                                                                
+      3  ## Verdict table — the seven prior findings
+      4  
+      5  | # | Prior finding | Status | Corrected precise statement | Bes
+         t citation |
+
+● Currency fix applied. Waiting on the rubric walker and the adversarial
+  reviewer — they're the heavier lenses; findings get applied at the desk when
+  they land.
+
+✻ Sautéed for 24s
+
+● Agent "Rubric-walk venue spine increment" finished · 7m 26s
+
+● The rubric walker came back tougher — verdict REVISE, with three critical
+  holes that are all real: the port covers commands and order events but never
+  names how market data enters (the answer exists in AD-21's source-adapter
+  contract — it needs saying); the adapter's write path quietly assumed
+  dependency edges the spine's own default-deny rule forbids (the fix is the
+  same returns-content pattern AD-25 already uses); and cTrader's raw-double
+  execution prices currently have no exact treatment at the very boundary AD-7
+  calls the money-path crossing. Plus solid highs: inbound fill redelivery needs
+  a dedup key, and the adapter's background duties (heartbeat, refresh, your
+  continuous boundary monitor) need wording that doesn't contradict the
+  no-threads rule.
+
+  All fixable at the desk with existing law — no new operator rulings needed.
+  I'm holding the fixes until the adversarial reviewer lands so everything is
+  applied in one pass without conflicts.
+
+✻ Crunched for 55s
+
+● Agent "Adversarial attack on venue ADs" finished · 10m 11s
+
+● All three reviewers are in — 30 adversarial pairs plus 19 rubric findings to
+  apply. Reading both full reviews, then one amendment pass at the desk:
+
+  Read 2 files (ctrl+o to expand)
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 9 lines, removed 3 lines
+      250    - **No privileged families:** the V1 seed candidates (swing 
+           points, horizontal levels from confirmed swings, zones, struct
+           ure breaks) are candidates only; operator-authored from-scratc
+           h families are first-class peers under identical law — family 
+           authoring via the AD-22 extension shape (graduation path inclu
+           ded) is the primary use case. Families are QMX-owned, versione
+           d, addable never redefined. Family ids follow AD-9's minting d
+           iscipline.
+      251    - `qmf-structure` depends on `qmf-core` only in V1. Public s
+           urface: the CT-17 protocol and core value types; everything el
+           se private.
+      252  
+      253 -### AD-26 — Venue secret lifecycle [ADOPTED 2026-08-20]       
+      253 +### AD-26 — Venue secret lifecycle [ADOPTED 2026-08-20, amende
+          +d by increment gate]                                          
+      254  
+      255  - **Binds:** CT-21; qmf-venue; every credential-bearing compon
+           ent
+      256 -- **Prevents:** secret values leaking into code, evidence, log
+          -s, or sandboxes; an unrecoverable credential compromise       
+      257 -- **Rule:** QMF components handle **secret references** (typed
+          - names), never values; values are injected at the composition 
+          -root from the deployment environment's protected store (`syste
+          -md-creds`-class on the VPS; store mechanics and encryption-key
+          - custody land at the node/ops sitting). Secrets never appear i
+          -n repositories, configuration artifacts, docs/chat, `.env` fil
+          -es, CLI arguments, journals, evidence, fingerprints, or logs; 
+          -a missing, expired, or rejected credential is an `unavailable 
+          -dependency` refusal carrying the reference name, never the val
+          -ue. The adapter's connection manager is the sole owner of toke
+          -n refresh; where a venue rotates refresh material on use, the 
+          -new secret is **stored before the old is discarded** — a faile
+          -d store after rotation is an alarm. Compromise recovery is a d
+          -ocumented, tested drill: venue-side invalidation (for cTrader:
+          - cTID re-authorization invalidates all outstanding refresh tok
+          -ens; application-credential reset), store replacement, session
+          - restart; token-expiry and refusal paths ship as tested behavi
+          -or, not hoped-for behavior. Testing uses demo credentials only
+          -; factory sandboxes never hold live secrets (AD-12 corollary).
+          - Credential entry and management UI is platform territory.    
+      256 +- **Prevents:** secret values or deployment identity leaking i
+          +nto code, evidence, logs, or sandboxes; an undetectable bindin
+          +g-identity collision; an unrecoverable credential compromise  
+      257 +- **Rule:**                                                   
+      258 +  - QMF components handle **secret references**, never values.
+          + A secret reference is an **opaque minted id** under AD-9's di
+          +scipline — stable, never reused, never encoding venue, broker,
+          + account, environment, or key material; any human-readable lab
+          +el is a separate field held outside evidence; construction val
+          +idates opacity (`invalid input`). Values are injected at the c
+          +omposition root from the deployment environment's protected st
+          +ore (`systemd-creds`-class on the VPS; store mechanics and key
+          + custody land at the node/ops sitting).                       
+      259 +  - **Mechanism, not policy:** `qmf-core` ships typed `SecretR
+          +ef` and `SecretValue`; a `SecretValue` never renders its value
+          + — repr, str, serialization, and logging all yield the referen
+          +ce id — and a tier-1 secret-scan gate rides `poe check`. Secre
+          +ts never appear in repositories, configuration artifacts, docs
+          +/chat, `.env` files, CLI arguments, journals, evidence, finger
+          +prints, or logs; a missing, expired, or rejected credential is
+          + an `unavailable dependency` refusal carrying the reference id
+          +, never the value; refusal context, logs, health reports, and 
+          +metrics carry the reference id only.                          
+      260 +  - **Identity:** an account-binding record's identity is `(Ve
+          +nueId, AccountId, role, world)`; its secret reference is decla
+          +red occurrence/display-only and excluded from `fp1` — a creden
+          +tial is a deployment fact, never a market fact.               
+      261 +  - **The connection manager is the single named component per
+          +mitted to hold secret values in memory**, for a session's life
+          +time; it receives a core-defined `SecretStore` port (read + at
+          +omic replace) injected by the root; values never cross back ou
+          +t — no getter, no log line, no refusal context, no health fiel
+          +d, no metric label.                                           
+      262 +  - **Rotation:** a credential is a one-writer stream (AD-15):
+          + exactly one live refresher per credential — a workstation too
+          +l never refreshes a credential a VPS session owns. Where a ven
+          +ue rotates refresh material on use, the new secret is stored (
+          +atomic replace) **before** the old is discarded; a failed stor
+          +e after rotation is an alarm **and** a command-pipe block (`un
+          +available dependency`, after-condition = successful store or o
+          +perator re-provision) — the sensing pipe is unaffected; where 
+          +the venue already invalidated the old material, the session is
+          + marked degraded and the compromise drill triggers.           
+      263 +  - **Compromise recovery** is a documented, tested drill: ven
+          +ue-side invalidation (cTrader-platform profile: cTID re-author
+          +ization invalidates all outstanding refresh tokens; applicatio
+          +n-credential reset), store replacement, session restart; expir
+          +y and refusal paths ship as tested behavior. Testing uses demo
+          + credentials only; factory sandboxes never hold live secrets (
+          +AD-12). Credential entry and management UI is platform territo
+          +ry.                                                           
+      264  
+      265  ### AD-27 — Venue commands and the uncertainty law [ADOPTED 20
+           26-08-20]
+      266  
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 9 lines, removed 8 lines
+      262    - **Rotation:** a credential is a one-writer stream (AD-15):
+            exactly one live refresher per credential — a workstation too
+           l never refreshes a credential a VPS session owns. Where a ven
+           ue rotates refresh material on use, the new secret is stored (
+           atomic replace) **before** the old is discarded; a failed stor
+           e after rotation is an alarm **and** a command-pipe block (`un
+           available dependency`, after-condition = successful store or o
+           perator re-provision) — the sensing pipe is unaffected; where 
+           the venue already invalidated the old material, the session is
+            marked degraded and the compromise drill triggers.
+      263    - **Compromise recovery** is a documented, tested drill: ven
+           ue-side invalidation (cTrader-platform profile: cTID re-author
+           ization invalidates all outstanding refresh tokens; applicatio
+           n-credential reset), store replacement, session restart; expir
+           y and refusal paths ship as tested behavior. Testing uses demo
+            credentials only; factory sandboxes never hold live secrets (
+           AD-12). Credential entry and management UI is platform territo
+           ry.
+      264  
+      265 -### AD-27 — Venue commands and the uncertainty law [ADOPTED 20
+          -26-08-20]                                                     
+      265 +### AD-27 — Venue commands and the uncertainty law [ADOPTED 20
+          +26-08-20, amended by increment gate]                          
+      266  
+      267  - **Binds:** CT-19, CT-20; qmf-venue; every future command cal
+           ler
+      268 -- **Prevents:** a timeout read as a rejection; duplicate order
+          -s from resends; invented terminal states; per-adapter order-st
+          -ate drift                                                     
+      268 +- **Prevents:** a timeout read as a rejection; duplicate or lo
+          +st orders through identity mapping; invented terminal states; 
+          +a mutable state machine gating the immutable store; per-adapte
+          +r forks in stream topology or journal taxonomy                
+      269  - **Rule:**
+      270 -  - **Command vocabulary is exactly four kinds** — `place_orde
+          -r`, `cancel_order`, `close_position`, `close_all` (the node's 
+          -CT-ADAPTER-01 vocabulary, adopted verbatim) — each typed on qm
+          -f-core nouns (exact prices/quantities per AD-7, identity per A
+          -D-9): no free-form payload at the QMF layer. Kinds are addable
+          - never redefined; `amend_order` arrives only by explicit later
+          - mint with its own semantics, never through an opaque payload.
+          - The caller stays unassigned in QMF (the node's Book-after-doo
+          -rs is that caller, assigned at the node sitting).             
+      271 -  - **Command identity:** every command carries a client-gener
+          -ated identity derived from its `fp1` fingerprint, mapped into 
+          -the venue's client-id field (mapping and any length bound decl
+          -ared in the CT-18 record). Re-presenting the same command is a
+          -n idempotent accept (AD-10's split); differing content under a
+          - reused identity is refused and alarmed. Commands carry the ca
+          -ller's opaque ordering evidence (sequencer-class field) — QMF 
+          -carries the field, the node owns the sequencer.               
+      272 -  - **Three-outcome law:** every submission resolves to `accep
+          -ted-by-venue | rejected-by-venue | denied-locally | UNKNOWN`. 
+          -A transport error, timeout, or disconnect yields `UNKNOWN` — a
+          - state, never an error, and never a rejection. While an `UNKNO
+          -WN` is outstanding on an account-binding stream, the adapter r
+          -efuses new commands on that stream (`transient venue failure`,
+          - after-condition = reconciliation). No QMF component retries, 
+          -assumes an outcome, flattens, or invents terminal state on `UN
+          -KNOWN`.                                                       
+      273 -  - **Order-state observations:** venue order/fill/position ev
+          -ents are first-class, append-only observations — client-submit
+          -ted → venue-accepted | venue-rejected | UNKNOWN; venue-accepte
+          -d → partially-filled\* → filled | cancelled | expired | closed
+          --by-venue; server-initiated events (stop-out class) are the sa
+          -me shape, never errors. Payloads are stored verbatim per AD-7/
+          -AD-8 with receive stamps; every observation emits AD-21 `order
+          -`/`fill` journal events in gapless per-writer streams; an unpe
+          -rsistable journal event is a typed refusal that blocks new com
+          -mands.                                                        
+      274 -  - **Reconciliation evidence:** the adapter produces, on dema
+          -nd, a complete read-back of venue orders, fills, positions, an
+          -d balance over a stated lookback (equity derived where the ven
+          -ue has no native field — nativeness declared in CT-18). QMF de
+          -fines the evidence shapes and the verdict vocabulary `reconcil
+          -ed | drift | unknown`; **reconciliation gates the command pipe
+          - only — the sensing pipe never blocks on it** (operator-confir
+          -med); when reconciliation runs and what a verdict triggers are
+          - node/BMS authority.                                          
+      275 -  - **Outage and flatten:** fail-closed. On disconnect, in-fli
+          -ght commands become `UNKNOWN`; recovered fills commit through 
+          -evidence before a session reports healthy, and even a no-gap r
+          -econnect emits correlation evidence. QMF never auto-retries; r
+          -etryability rides typed refusals (a venue `retryAfter` becomes
+          - the after-condition); retry/pool/health constants are node va
+          -lues under the do-not-default standing — no invented numbers. 
+          -Flatten is `close_position`/`close_all` executed mechanically;
+          - the adapter never initiates it; authority assignment (VPS-dea
+          -th included) belongs to the risk/node sittings.               
+      270 +  - **Command stream, defined once:** the unit of `UNKNOWN` bl
+          +ocking, of `WriterId` ownership, and of the gapless per-writer
+          + sequence is the **(VenueId, account)** pair — coarser than an
+          + account binding (all bindings on an account block together), 
+          +strictly finer than a connection (a shared connection never co
+          +uples distinct accounts' uncertainty). Sessions and bindings e
+          +xist; neither is a stream. A **session-epoch id**, distinct fr
+          +om the boot epoch, rides every venue observation; sequences ne
+          +ver reset on reconnect — only on boot — and the sequence curso
+          +r is durable through the observation sink.                    
+      271 +  - **Command vocabulary is exactly four kinds** — `place_orde
+          +r`, `cancel_order`, `close_position`, `close_all` — each typed
+          + per kind on qmf-core nouns (exact prices/quantities per AD-7,
+          + identity per AD-9): no free-form payload. Kinds are addable n
+          +ever redefined; `amend_order` arrives only by explicit later m
+          +int, never through a payload. **Order-parameter vocabulary** (
+          +order type: market | limit | stop | stop-limit; time-in-force;
+          + protective-stop attachment) is QMF-owned, addable never redef
+          +ined; each adapter declares its supported subset in CT-18. The
+          + caller stays unassigned in QMF. `close_position` and `close_a
+          +ll` carry a **required typed scope** (`account | account-bindi
+          +ng | instrument-within-binding`); CT-18 declares natively supp
+          +orted scopes; an unsupported scope is an `unsupported capabili
+          +ty` refusal, never emulated at a wider scope. A command fannin
+          +g out to N venue submissions is a **compound command**: each c
+          +hild carries a derived identity (parent `fp1` + declared ordin
+          +al) and is individually observation- and journal-bearing; the 
+          +parent's outcome is the meet of its children — any child `UNKN
+          +OWN` makes the parent `UNKNOWN`; any child rejected makes the 
+          +parent `partially-executed`, a named outcome, never a success.
+      272 +  - **Command identity:** derived from the command record's `f
+          +p1`, which includes the (VenueId, account) qualification, the 
+          +session epoch, and the caller's opaque ordering ordinal (a ven
+          +ue-native id is never sufficient alone; QMF carries the ordina
+          +l field, the node owns the sequencer). The CT-18-declared mapp
+          +ing into the venue's client-id field **must be injective and t
+          +otal** over the digest space; where the venue field cannot car
+          +ry one, a durable `command-id-binding` record — (venue client 
+          +id, command `fp1`, account, session epoch) — persists through 
+          +the sink **before** submission and is named reconciliation evi
+          +dence. Idempotency and collision tests run against the full lo
+          +cal fingerprint, never the venue-side id: re-presenting the sa
+          +me command is an idempotent accept (AD-10's split); differing 
+          +content under a reused identity is refused and alarmed. Where 
+          +the venue offers a separate attribution label, it is declared 
+          +CT-18 surface distinct from the client-id mapping.            
+      273 +  - **Four-outcome law:** every well-formed submission resolve
+          +s to `accepted-by-venue | rejected-by-venue | denied-locally |
+          + UNKNOWN`. `denied-locally` is an **outcome, never a refusal**
+          + — typed refusals are reserved for malformed commands, undecla
+          +red capability, and a blocked stream; every outcome, `denied-l
+          +ocally` included, mints an observation record and a journal ev
+          +ent. A transport error, timeout, or disconnect yields `UNKNOWN
+          +` — a state, not an error; a venue-returned error resolves `re
+          +jected-by-venue` **only** where the CT-18 error table declares
+          + that outcome class — every other path is `UNKNOWN`. An `UNKNO
+          +WN` is **minted as an explicit observation** carrying its trig
+          +ger (`timeout | transport-error | disconnect`), the monotonic 
+          +elapsed measurement, the wall receive instant, and the submiss
+          +ion deadline in force — the deadline is a declared adapter par
+          +ameter the application injects (do-not-default: its existence 
+          +and declaration are mandatory, its value is not QMF's). While 
+          +an `UNKNOWN` is outstanding on a command stream, the adapter r
+          +efuses new commands on that stream (`transient venue failure`,
+          + after-condition = resolution); protection commands are not ex
+          +empt from the block, but `cancel_order`/`close_position`/`clos
+          +e_all` dispatch ahead of `place_order` on every shared throttl
+          +e (CT-18 declares the throttle's scope: `connection | account 
+          +| binding`), and `suspend-new` takes local effect instantly wi
+          +th no venue round-trip. No QMF component retries, assumes an o
+          +utcome, flattens, or invents terminal state on `UNKNOWN`; the 
+          +adapter **never clears its own block** — unblocking is an expl
+          +icit typed `resolve_unknown(command identity, resolution ∈ obs
+          +erved-accepted | observed-absent | operator-attested)` call by
+          + the application, itself recorded as an observation; the block
+          + is per command and clears on resolution, never on a reconcili
+          +ation verdict.                                                
+      274 +  - **Recording precedes interpretation:** every inbound venue
+          + event is stored verbatim (AD-7/AD-8 stamps) and journaled **b
+          +efore** any state evaluation. The order-state machine — client
+          +-submitted → venue-accepted | venue-rejected | UNKNOWN; venue-
+          +accepted → partially-filled\* → filled | cancelled | expired |
+          + closed-by-venue; server-initiated events the same shape, neve
+          +r errors — is a **read-time fold** over the observation stream
+          + per CT-20's read-resolution rule (mirroring AD-25), never a g
+          +ate on recording. An observation with no legal transition is r
+          +ecorded, annotated with a typed `out-of-sequence` edge, and fo
+          +rces the owning command to `UNKNOWN` pending resolution; **ada
+          +pters never synthesize venue observations** — a derived state 
+          +is a fold result, never a stored event. **Command outcome and 
+          +order state are separate streams, never merged:** an order's t
+          +erminal state is decided by fills and venue lifecycle events o
+          +nly. CT-18 declares each command kind's **acknowledgement mode
+          +** (`explicit-event | implicit-absence | none`); an outcome is
+          + never derived from absence alone — a cancel resolved by read-
+          +back is `accepted-by-venue` only if the read-back also shows n
+          +o fill for that order at or after the cancel's submit stamp; o
+          +therwise it resolves `rejected-by-venue (superseded-by-fill)`.
+          + **Fill price, fill quantity, the venue instant, and the recei
+          +ve instant are mandatory identity fields of a fill observation
+          +.** Every CT-20 observation carries a declared **venue-native 
+          +identity key** (AD-21's `(source, source-native id, revision)`
+          + idiom) so gap-replay redelivery deduplicates under AD-10's id
+          +empotent split; receive stamps, monotonic values, epochs, and 
+          +`correlation_id` are declared occurrence/display-only in CT-20
+          +'s explicit exclusion list. CT-20 ships an exhaustive versione
+          +d mapping — (command kind × outcome) → journal event type, (ob
+          +servation kind) → event type — with the cardinality law: exact
+          +ly one journal event per recorded observation, one per submiss
+          +ion, one per outcome. An unpersistable journal event or a part
+          +ial multi-room write is a `storage failure` refusal that block
+          +s the command stream (write ordering per AD-28).              
+      275 +  - **Reconciliation evidence:** the adapter produces, on dema
+          +nd, a complete read-back of venue orders, fills, positions, an
+          +d balance over a stated lookback (equity derived where the ven
+          +ue has no native field — nativeness declared in CT-18). QMF de
+          +fines the evidence shapes and the verdict vocabulary `reconcil
+          +ed | drift | unknown`; **reconciliation gates the command pipe
+          + only — the sensing pipe never blocks on it**; when reconcilia
+          +tion runs and what a verdict triggers are node/BMS authority. 
+      276 +  - **Outage and flatten:** fail-closed. On disconnect, in-fli
+          +ght commands become `UNKNOWN`; recovered fills commit through 
+          +evidence before a session reports healthy, and even a no-gap r
+          +econnect emits correlation evidence. **Session recovery** (con
+          +nect, reconnect, heartbeat, token refresh, gap replay) is CM-o
+          +wned policy driven by the application's scheduler and never re
+          +submits a command; **command retry is prohibited** — retryabil
+          +ity rides typed refusals (a venue `retryAfter` becomes the aft
+          +er-condition); retry/pool/health constants are node values und
+          +er the do-not-default standing. Flatten is `close_position`/`c
+          +lose_all` executed mechanically; the adapter never initiates i
+          +t; authority assignment (VPS-death included) belongs to the ri
+          +sk/node sittings.                                             
+      277  
+      278  ### AD-28 — Venue adapter contract and capability discovery [A
+           DOPTED 2026-08-20]
+      279  
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 12 lines, removed 9 lines
+      275    - **Reconciliation evidence:** the adapter produces, on dema
+           nd, a complete read-back of venue orders, fills, positions, an
+           d balance over a stated lookback (equity derived where the ven
+           ue has no native field — nativeness declared in CT-18). QMF de
+           fines the evidence shapes and the verdict vocabulary `reconcil
+           ed | drift | unknown`; **reconciliation gates the command pipe
+            only — the sensing pipe never blocks on it**; when reconcilia
+           tion runs and what a verdict triggers are node/BMS authority.
+      276    - **Outage and flatten:** fail-closed. On disconnect, in-fli
+           ght commands become `UNKNOWN`; recovered fills commit through 
+           evidence before a session reports healthy, and even a no-gap r
+           econnect emits correlation evidence. **Session recovery** (con
+           nect, reconnect, heartbeat, token refresh, gap replay) is CM-o
+           wned policy driven by the application's scheduler and never re
+           submits a command; **command retry is prohibited** — retryabil
+           ity rides typed refusals (a venue `retryAfter` becomes the aft
+           er-condition); retry/pool/health constants are node values und
+           er the do-not-default standing. Flatten is `close_position`/`c
+           lose_all` executed mechanically; the adapter never initiates i
+           t; authority assignment (VPS-death included) belongs to the ri
+           sk/node sittings.
+      277  
+      278 -### AD-28 — Venue adapter contract and capability discovery [A
+          -DOPTED 2026-08-20]                                            
+      278 +### AD-28 — Venue adapter contract and capability discovery [A
+          +DOPTED 2026-08-20, amended by increment gate]                 
+      279  
+      280 -- **Binds:** CT-18, CT-19, CT-20, CT-21; qmf-venue; every venu
+          -e adapter, future crypto/stock adapters included              
+      281 -- **Prevents:** venue specifics leaking into qmf-core; a secon
+          -d venue client appearing anywhere; consumers guessing undeclar
+          -ed venue behavior                                             
+      280 +- **Binds:** CT-18, CT-19, CT-20, CT-21; market data via CT-10
+          +/CT-15; qmf-venue; every venue adapter, future crypto/stock ad
+          +apters included                                               
+      281 +- **Prevents:** venue specifics leaking into qmf-core; a secon
+          +d venue client appearing anywhere; market data with no contrac
+          +t; fail-open evidence wiring; consumers guessing undeclared ve
+          +nue behavior                                                  
+      282  - **Rule:**
+      283 -  - **One neutral port, four contracts:** CT-18 (capability), 
+          -CT-19 (command), CT-20 (event + reconciliation), CT-21 (secret
+          -/session, shaped by AD-26) are defined by qmf-venue on qmf-cor
+          -e nouns; per-venue adapters implement them; nothing imports qm
+          -f-venue (default-deny stands); the composition root wires. The
+          - adapter's connection manager is the **sole owner of venue ses
+          -sions** — it holds the `WriterId` for every venue-session stre
+          -am (AD-15), and no other component may construct a venue clien
+          -t.                                                            
+      284 -  - **Capability discovery:** each adapter publishes a version
+          -ed, fingerprinted capability record, consumed before use — mar
+          -ket-data kinds (ticks bid/ask, live bars, depth-L2, spot-times
+          -tamp availability, trade-tape yes/no), canonical-sensing-feed 
+          -support with gap-replay, order kinds, session topology (enviro
+          -nment separation, connections required for simultaneous enviro
+          -nments, accounts per connection), rate limits plus the adapter
+          -'s declared conservative window model, span caps and paging mo
+          -del, token lifecycle class, equity nativeness, server-clock av
+          -ailability, instrument-metadata surface, and protection-enforc
+          -ement primitives (suspend-new / drain / `close_all`). Invoking
+          - anything undeclared is an `unsupported capability` refusal. A
+          - CCXT-class crypto venue slots in later by declaring a differe
+          -nt record through the same port — nothing venue-shaped enters 
+          -qmf-core.                                                     
+      285 -  - **Instrument resolution:** venue-native symbols map to opa
+          -que `(venue, symbol)` identity (AD-9); the adapter emits instr
+          -ument/account metadata snapshots as registry records — AD-22's
+          - typed configuration inputs — with full-metadata prerequisites
+          - declared (for cTrader: the light symbol list is insufficient;
+          - full symbol metadata is required before any price decode).   
+      286 -  - **Foreign values verbatim, errors mapped:** all venue payl
+          -oads are stored raw with their declared scales (for cTrader, t
+          -he three ratified scale systems); conversions cross AD-7's nam
+          -ed boundary with lineage; receive time is stamped on every inb
+          -ound event (AD-8). Every venue error code maps to the AD-11 ta
+          -xonomy through a versioned per-adapter table; unmapped codes b
+          -ecome `transient venue failure` plus an alarm — never an inven
+          -ted category.                                                 
+      287 -  - **Sessions and paired demo:** simultaneous environments fo
+          -llow the venue's declared topology (cTrader: demo + live requi
+          -re two connections); paired-demo bindings are secret-reference
+          --only records; shared-account order-lifecycle merges use only 
+          -the caller's sequencer evidence.                              
+      288 -  - **Protocol pinning and verification:** the venue protocol 
+          -artifact is pinned in the AD-6 register (cTrader: the Spotware
+          - proto integer release tag); a tag change is a gated re-verifi
+          -cation event on AD-5's second ladder. The ratified first-conne
+          -ction verification suite (spot-timestamp magnitude, daily-boun
+          -dary measurement + continuous monitor, BID-bar reconciliation,
+          - pip-formula validation, missing-`moneyDigits` refusal) is a *
+          -*named part of the adapter contract**, its assertions journale
+          -d as `data quality` / `control action` events.                
+      283 +  - **One neutral port, four contracts:** CT-18 (capability), 
+          +CT-19 (command), CT-20 (event + reconciliation), CT-21 (secret
+          +/session, shaped by AD-26) are defined by qmf-venue on qmf-cor
+          +e nouns; per-venue adapters implement them; nothing imports qm
+          +f-venue (default-deny stands); the composition root wires. The
+          + adapter's connection manager is the **sole owner of venue ses
+          +sions**; on the venue path the `WriterId` granularity is **(ma
+          +chine, adapter role, VenueId, account)** — the same unit as AD
+          +-27's command stream — and no other component may construct a 
+          +venue client.                                                 
+      284 +  - **Injected-sink wiring, pinned:** the composition root inj
+          +ects qmf-core-defined sink protocols (`ObservationSink`, `Jour
+          +nalSink`, `RecordSink`, `SecretStore`); the connection manager
+          + holds the `WriterId`, stamps writer + sequence, and calls sin
+          +ks **synchronously**; every sink returns success or an AD-11 r
+          +efusal to its caller, and a `storage failure` from any sink tr
+          +iggers AD-27's command-pipe block **in the component that hold
+          +s the WriterId** — the block-on-unpersistable rule requires th
+          +e writer to see the failure, so AD-25's root-mints pattern doe
+          +s **not** extend to the venue path. No dependency edge is crea
+          +ted: sinks are core protocols. Every artifact an adapter produ
+          +ces is a **qmf-core value type**; the registry record wrapping
+          + it is minted by the root through qmf-registry; the fingerprin
+          +t consumers cite is the **content fingerprint** (qmf-core's si
+          +ngle implementation), never the record fingerprint — the same 
+          +rule governs AD-25's structure emissions. CT-20 declares each 
+          +multi-room write (raw archive, journal, registry room per AD-1
+          +9) as one ordered unit with a named transaction boundary (`ato
+          +mic` | `ordered-with-recovery`); a partial write is a `storage
+          + failure` that blocks the command stream and is journaled on r
+          +ecovery.                                                      
+      285 +  - **Market data has a named home:** ticks, bars, depth, gap-
+          +replay backfill, and historical paging enter as CT-10 source o
+          +bservations through qmf-data's CT-15 intake (the venue is also
+          + a `source` per AD-19) — application-mediated, no fifth contra
+          +ct, no new edge. Subscription lifecycle facts (technical snaps
+          +hot on subscribe, non-instantaneous unsubscribe, `hasMore`-cla
+          +ss paging) are declared CT-18/CT-15 surface. **The pinned cano
+          +nical sensing feed carries a prohibition, not just a capabilit
+          +y: no silent sibling-feed failover — a sensing outage fails cl
+          +osed until the same feed gap-replays.** Raw depth recording is
+          + the verbatim wire payload through the same intake (AD-19 raw 
+          +room), never an invented encoding.                            
+      286 +  - **Capability surface is two artifacts.** (1) The **capabil
+          +ity declaration** — static, adapter-version-scoped, importable
+          + without credentials, containing no measured or tunable value,
+          + every field marked `static` or `measured-at-connection`; it c
+          +arries the venue protocol artifact identity, and its fingerpri
+          +nt is identity-bearing for any artifact whose decode depended 
+          +on it. (2) The **venue-observation profile** — per (VenueId, a
+          +ccount), produced post-connect by the verification suite, appe
+          +nd-only with `supersedes` edges, holding every measured fact a
+          +nd verdict; occurrence/provenance, never identity-bearing down
+          +stream. A `measured-at-connection` capability is `unavailable 
+          +dependency` until its profile exists; consuming a measured-but
+          +-unverified capability in evidence-bearing work is a `policy r
+          +ejection`. Wiring order is fixed: declaration at construction;
+          + profile before the first command and before any evidence-bear
+          +ing decode. Throttle and window tuning live in neither artifac
+          +t (node configuration, do-not-default). The spine states only 
+          +that the capability record is versioned, fingerprinted, consum
+          +ed-before-use, and refusal-backed; **CT-18 owns the field rost
+          +er** (market-data kinds, order-parameter subset, command scope
+          +s, acknowledgement modes, position model `netting | hedging` p
+          +er account, session topology, throttle scope, rate limits, spa
+          +n caps + paging model, token lifecycle class, equity nativenes
+          +s, server-clock availability, instrument-metadata surface, att
+          +ribution-label support, protection primitives `suspend-new | d
+          +rain | close_all`). Invoking anything undeclared is an `unsupp
+          +orted capability` refusal. A CCXT-class crypto venue slots in 
+          +later by declaring a different record through the same port — 
+          +nothing venue-shaped enters qmf-core.                         
+      287 +  - **Instrument resolution:** venue-native symbols map to opa
+          +que `(venue, symbol)` identity (AD-9); instrument/account meta
+          +data snapshots are adapter-produced core value types recorded 
+          +by the root — AD-22's typed configuration inputs — with full-m
+          +etadata prerequisites declared (a light symbol list is insuffi
+          +cient where scaling metadata lives only on the full record).  
+      288 +  - **Foreign values verbatim, floats included:** integer payl
+          +oads store verbatim with declared scales; a foreign **binary f
+          +loat is never identity** — it crosses AD-7's named boundary at
+          + receipt to a scaled integer whose target scale is pinned per 
+          +value class in CT-18 (execution price → the instrument's decla
+          +red digits; money → the account's declared money exponent, an 
+          +absent exponent being a refusal; market data → the declared wi
+          +re scale), rounding mode declared and identity-bearing; the ra
+          +w float is retained only as integrity-checked provenance. Rece
+          +ive wall time **and** the boot-scoped monotonic stamp are **ma
+          +ndatory** on every inbound venue event — the venue path remove
+          +s AD-8's optionality — and an AD-13 latency rung is a monotoni
+          +c delta within one boot epoch on one machine; a wall-computed 
+          +rung is refused as a baseline.                                
+      289 +  - **Error mapping, row shape pinned:** `(venue code, command
+          +-or-event context) → (AD-11 category, retryability, after-cond
+          +ition, submission-outcome class ∈ rejected-by-venue | UNKNOWN)
+          +`, versioned per adapter. A venue code reads as `rejected-by-v
+          +enue` only where the table declares it; the unmapped default i
+          +s `(transient venue failure, retryable = no, outcome = UNKNOWN
+          +)` plus an alarm; category alone never implies retryability.  
+      290 +  - **Sessions and paired demo:** simultaneous environments fo
+          +llow the venue's declared topology (two connections where demo
+          + and live are separate hosts); paired-demo bindings are secret
+          +-reference-only records identified per AD-26; shared-account o
+          +rder-lifecycle merges use only the caller's sequencer evidence
+          +.                                                             
+      291 +  - **Protocol pinning and verification:** the venue protocol 
+          +artifact is pinned in the AD-6 register (cTrader-platform prof
+          +ile: the Spotware proto integer release tag); a tag change min
+          +ts a new capability declaration plus re-verification on AD-5's
+          + second ladder, and bumps a CT-* format version only where the
+          + wire change alters that contract's public shape. The first-co
+          +nnection verification suite is a named contract part and is **
+          +verify-or-refuse throughout**: an unverified spot-timestamp un
+          +it refuses spot evidence; an unmeasured daily boundary leaves 
+          +venue daily bars ungoverned — once measured and verified, the 
+          +boundary is **minted as a venue-scoped market-hours calendar i
+          +dentity** (AD-8's rule-set definition), giving venue-native ba
+          +rs a legal BarSpec anchor; a failed bar-basis reconciliation r
+          +efuses bar evidence; a failed pip-formula validation refuses m
+          +etadata-derived parameters; an absent money exponent refuses t
+          +hat message's money decode. Measurements and verification verd
+          +icts journal as `data quality`; adapter-initiated state change
+          +s (suspend-new, drain, session restart, throttle engaged, reco
+          +nnect) journal as `control action`.                           
+      292    - **Latency slots, no numbers:** the six-stage live-path dec
+           omposition (tick received → evidence write → indicator update 
+           → decision → risk evaluation → order submitted) is recorded as
+            named AD-13 rungs with no numeric budgets until measured; the
+            adapter owns the arrival/submit stamps for its stages.
+      293  
+      294  ### Dependency direction
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+      81    - Money/Price/Quantity are whole-number integer counts at a d
+          eclared **scale** (number of decimal places). Tags: `Money(curr
+          ency, scale)`; `Price(instrument, scale)` — a price is a ratio 
+          quoted for an instrument, never tagged with a single currency; 
+          `Quantity(unit, scale)` where `unit` is opaque (lot, share, coi
+          n, contract).
+      82    - Mixed-scale arithmetic on the same currency/unit auto-promo
+          tes losslessly to the finer scale or refuses (typed refusal) — 
+          never an implicit rescale or rounding.
+      83    - **The money path is a taint, not a location:** any value th
+          at transitively contributes to an order quantity, price, P&L, o
+          r balance is on the money path regardless of which package comp
+          uted it. Binary float is banned on the money path; a float cros
+          sing back to Money/Price/Quantity passes a **named conversion b
+          oundary with an explicitly stated rounding mode**. The venue ad
+          apter boundary is one such named boundary.
+      84 -  - **Foreign money is evidence** (mirror of AD-8's foreign-tim
+         -e rule): a venue's raw integers are stored verbatim with their 
+         -declared scales (e.g. cTrader's 1/100000 wire price scale, per-
+         -symbol `digits`, per-account `moneyDigits`); conversions to fra
+         -mework values are derived with lineage; corrections are annotat
+         -ions, never rewrites.                                          
+      84 +  - **Foreign money is evidence** (mirror of AD-8's foreign-tim
+         +e rule): a venue's raw integers are stored verbatim with their 
+         +declared scales (e.g. cTrader's 1/100000 wire price scale, per-
+         +symbol `digits`, per-account `moneyDigits`); conversions to fra
+         +mework values are derived with lineage; corrections are annotat
+         +ions, never rewrites. **Foreign floats are evidence too, but ne
+         +ver identity:** a venue value delivered as a binary float conve
+         +rts at the named boundary at receipt to a scaled integer at a p
+         +er-value-class pinned target scale with a declared rounding mod
+         +e (pinned in CT-18 per AD-28); the raw float is retained only a
+         +s integrity-checked provenance and is never the value a consume
+         +r reads.                                                       
+      85    - Analytic float series remain permitted off the money path; 
+          their identity is label-derived (AD-10), never a hash of float 
+          bytes.
+      86    - **Price subtraction is closed and delta-typed:** `PriceDelt
+          a(instrument, scale)` is a first-class value distinct from Pric
+          e; the instrument-scoped pip/point is defined by AD-9's metadat
+          a records, never hardcoded. The **exact-rational** type (scaled
+           integer or numerator/denominator) extends this idiom to every 
+          non-integer parameter (ratios, multiples, tolerances); binary f
+          loats never appear in parameters or identity. The exact→analyti
+          c and analytic→exact crossings are the named boundaries pinned 
+          in AD-22.
+      87  
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+       96    - Two clock kinds, type-separated: wall (meaning, storable a
+           s Instants) vs monotonic. **A monotonic reading is never a tim
+           estamp and never an Instant.** It may be persisted only as an 
+           opaque boot-scoped diagnostic value that carries its boot/epoc
+           h id, is never compared across boots or machines, is excluded 
+           from identity, and is never rendered as a time. Clock access i
+           s a core-defined protocol; the composition root injects the re
+           al clock; replay injects a data-driven one; nothing below the 
+           root reads the system clock.
+       97    - Ordering: instants alone never totally order events. Every
+            record stream carries a per-writer strictly-increasing sequen
+           ce; the deterministic tie-break `(instant, writer, sequence)` 
+           is a **replay-determinism device with no causal meaning** — ca
+           usality tests refuse at equal instants rather than tie-break. 
+           Timestamps are never primary or dedup keys; **the identity of 
+           a stored record is its AD-10 fingerprint**; `(instant, writer,
+            sequence)` is an ordering key only. Each source's actual reso
+           lution is stored beside the ns value. `WriterId` is a first-cl
+           ass core noun: stable, durable, minted per (machine, role, str
+           eam), accompanied by a boot/epoch id so restarts are visible w
+           ithout changing writer identity.
+       98    - **Calendars.** Calendar identity is the **rule set** (e.g.
+            `forex-17NY` v3), separate from its **binding** (which venues
+            or accounts use it); venues sharing a rule set share the cale
+           ndar identity, and only the rule set + tzdata version enter fi
+           ngerprints — a venue change that doesn't change the rule set d
+           oesn't change derived-artifact identity. A market-hours calend
+           ar carries two separately-named facts, each with its own zone:
+            an **accounting rollover** (which trading date an instant bel
+           ongs to) and a **session schedule** (when the market is open).
+            Every calendar supplies a rollover rule (24/7 included). Sess
+           ion and trading-day length is data; no consumer may assume a c
+           onstant. A third named kind exists: the **day-boundary calenda
+           r** — an accounting-boundary rule parameterized by **account**
+            (a prop firm's daily-loss day evaluated in its stated timezon
+           e is one) — it answers only "which day does this instant belon
+           g to for evaluation," is never substituted for a market-hours 
+           calendar, and produces TradingDates carrying its own identity.
+            This holds the seam only; no prop firm is modeled in V1.
+       99 -  - Forex market-hours calendar ships first: 17:00 America/New
+          -_York rollover (operator-adopted 2026-08-19 as QMF's **own acc
+          -ounting rule**), weekend gaps, holidays in scope. GAP-0037 ver
+          -ification completed 2026-08-20: no primary cTrader source stat
+          -es a daily-bar boundary — the venue's actual bar slicing is th
+          -erefore **measured per broker** (first-connection check + cont
+          -inuous monitor, AD-28's verification suite) and stored as brok
+          -er-scoped configuration; venue daily bars are never assumed al
+          -igned to QMF's calendar. Swap-Wednesday is dropped from V1 (se
+          -ttlement machinery deferred; operator accounts are swap-free —
+          - note: a dated financing/admin-fee charge may still exist; "no
+          - swap" does not mean "no dated financing").                   
+       99 +  - Forex market-hours calendar ships first: 17:00 America/New
+          +_York rollover (operator-adopted 2026-08-19 as QMF's **own acc
+          +ounting rule**), weekend gaps, holidays in scope. GAP-0037 ver
+          +ification completed 2026-08-20: no primary cTrader source stat
+          +es a daily-bar boundary — the venue's actual bar slicing is th
+          +erefore **measured per broker** (first-connection check + cont
+          +inuous monitor, AD-28's verification suite); once verified it 
+          +is **minted as a venue-scoped market-hours calendar identity**
+          + (identity is the rule set, so a measured boundary qualifies),
+          + giving venue-native bars a legal BarSpec anchor; until then v
+          +enue bars are ungoverned observations, never assumed aligned t
+          +o QMF's calendar. Swap-Wednesday is dropped from V1 (settlemen
+          +t machinery deferred; operator accounts are swap-free — note: 
+          +a dated financing/admin-fee charge may still exist; "no swap" 
+          +does not mean "no dated financing").                          
+      100    - Calendar extensions **force the timezone path to their pin
+           ned `tzdata` package and verify at import** that the resolved 
+           tzdb version equals the pinned one, refusing (`unavailable dep
+           endency`) otherwise — the fingerprint must never attest a tzdb
+            that wasn't used.
+      101    - Foreign timestamps are evidence: stored verbatim with decl
+           ared zone/offset/resolution, plus local receive wall time and 
+           (per the monotonic rule above) an optional boot-scoped receive
+           -monotonic diagnostic; conversions are derived values with lin
+           eage; corrections are annotations, never rewrites. cTrader ven
+           ue facts are ratified (2026-08-20, companion `ctrader-venue-fa
+           cts.md`): timestamps are per-field-documented Unix ms UTC with
+            two epoch exceptions (trendbar minutes; maintenance-end secon
+           ds); fields whose unit is undocumented (the spot-event timesta
+           mp) are verified-or-refused at first connection per AD-28's su
+           ite; receive-time recording is mandatory — the venue exposes n
+           o server clock (closed-set proof).
+      102    - "Market-hours calendar", "day-boundary calendar", and "new
+           s calendar" are distinct named concepts; docs rename apart (CO
+           MP-CALENDAR-FEED is the news feed).
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+      107  
+      108  - **Binds:** CT-03; qmf-core nouns; qmf-registry records; qmf-
+           data, qmf-venue, qmf-risk
+      109  - **Prevents:** two brokers' records mixing; renames rewriting
+            history; forex assumptions leaking into symbols; two packages
+            minting two Venue types
+      110 -- **Rule:** instrument identity is (venue, venue's own symbol)
+          -, the symbol opaque and never parsed. **`VenueId` gets the sam
+          -e discipline as symbols:** operator-minted, opaque, stable, ne
+          -ver derived from a mutable broker attribute, never reused; a d
+          -istinct broker/legal entity is a distinct venue even on shared
+          - infrastructure (a prop firm white-labeling cTrader is its own
+          - venue); renames are dated alias records. Aliases, renames, as
+          -set class, and mutable metadata are separate dated records poi
+          -nting at identities; stored history never rewrites. Venue and 
+          -Account are distinct first-class nouns **defined in qmf-core, 
+          -records owned by qmf-registry** (per AD-2): one venue may hold
+          - many accounts, each with a role (live / demo / paper-validati
+          -on / paper-benched / prop-firm); Books bind to accounts. Multi
+          --broker (≈6 venues) and broker migration are normal, not speci
+          -al cases. **Broker identity is deployment configuration, never
+          - architecture** (operator ruling 2026-08-20): no rule anywhere
+          - may name a specific broker; which broker fills a venue slot i
+          -s decided at deploy time.                                     
+      110 +- **Rule:** instrument identity is (venue, venue's own symbol)
+          +, the symbol opaque and never parsed. **`VenueId` gets the sam
+          +e discipline as symbols:** operator-minted, opaque, stable, ne
+          +ver derived from a mutable broker attribute, never reused; a d
+          +istinct broker/legal entity is a distinct venue even on shared
+          + infrastructure (a prop firm white-labeling cTrader is its own
+          + venue); renames are dated alias records. Aliases, renames, as
+          +set class, and mutable metadata are separate dated records poi
+          +nting at identities; stored history never rewrites. Venue and 
+          +Account are distinct first-class nouns **defined in qmf-core, 
+          +records owned by qmf-registry** (per AD-2): one venue may hold
+          + many accounts, each with a role (live / demo / paper-validati
+          +on / paper-benched / prop-firm); Books bind to accounts. Multi
+          +-broker (≈6 venues) and broker migration are normal, not speci
+          +al cases. **Broker identity is deployment configuration, never
+          + architecture** (operator ruling 2026-08-20): no rule anywhere
+          + may name a specific broker; which broker fills a venue slot i
+          +s decided at deploy time. Broker/venue **legal identity** and 
+          +**platform/protocol family** are distinct: the prohibition bin
+          +ds broker entities and VenueIds; platform-family clauses (a cT
+          +rader-platform adapter profile, a FIX profile, a CCXT-class pr
+          +ofile) are legitimate adapter-scoped contract surface.        
+      111  
+      112  ### AD-10 — Deterministic fingerprints [ADOPTED 2026-08-19, re
+           cipe pinned by reviewer gate]
+      113  
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+      134    - Every result carries: **producer contract identity** (the 
+           configured producer's fingerprint — the CT-16 configured indic
+           ator, the CT-17 configured family — distinct from the format v
+           ersion, so `EMA(20)` and `SMA(20)` can never share a label), p
+           roducer **contract format version** (AD-5's second ladder — pa
+           ckage SemVer never enters identity and may ride only as displa
+           y-only provenance), input fingerprints, evidence time range, c
+           omputation/occurrence identity, **evidence class** (confirmed 
+           / unconfirmed / provisional, per AD-25), and world. Together t
+           hese are its identity. Human display names live outside identi
+           ty.
+      135    - **Computation identity vs occurrence:** the computation id
+           entity is content-derived (from label parts) so identical work
+            from two sandboxes deduplicates and merges; the occurrence re
+           cord (when/where/by whom it ran) is separate provenance outsid
+           e identity.
+      136    - **Worlds, defined:** `live` = real venue clocks and quotes
+           , real or demo money — the account role (AD-9) carries money-r
+           eality, so paper/demo runs are `world = live` and stay compara
+           ble to live for alpha-decay sensing; `replay` = a data-driven 
+           injected clock over recorded history (real UTC instants; imple
+           mentable today); `simulated` = synthetic data — **reserved but
+            unusable in V1**: writing `world = simulated` into governed e
+           vidence is a `policy rejection` refusal until the backtesting 
+           sitting defines simulated-time typing.
+      137 -  - **Namespace rule:** a non-live world may never write into 
+          -the live evidence namespace; factory sandboxes never produce t
+          -imestamps that enter an evidence store. Identity distinctness 
+          -alone does not deliver world separation — storage separation d
+          -oes.                                                          
+      137 +  - **Namespace rule:** a non-live world may never write into 
+          +the live evidence namespace; factory sandboxes never produce t
+          +imestamps that enter an evidence store. Identity distinctness 
+          +alone does not deliver world separation — storage separation d
+          +oes. **Namespaces are also role-scoped within `world = live`:*
+          +* the live evidence namespace admits only records whose accoun
+          +t-binding role is `live`; demo, paper-validation, and paper-be
+          +nched records write to role-scoped namespaces. Evidence produc
+          +ed in a factory sandbox carries an identity-bearing `provenanc
+          +e = sandbox` field, blocking dedup-merge into the operator sto
+          +re.                                                           
+      138  
+      139  ### AD-13 — Measure-then-budget performance [ADOPTED 2026-08-1
+           9]
+      140  
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+      152  
+      153  - **Binds:** all packages
+      154  - **Prevents:** two packages disagreeing on whether QMF is saf
+           e to use simultaneously; async contagion through every signatu
+           re
+      155 -- **Rule:** QMF values are immutable (safe to share by constru
+          -ction); purity binds the pure-computation libraries (core, ind
+          -icators, structure); components that own an external resource 
+          -(stores, recorders, adapters) are the stateful class and follo
+          -w one-writer-per-stream with unlimited readers — a "writer" he
+          -re IS the holder of an AD-8 `WriterId`. QMF never spawns threa
+          -ds or background work — the application owns all concurrency; 
+          -async APIs exist only at the venue network edge, never in core
+          - or the libraries.                                            
+      155 +- **Rule:** QMF values are immutable (safe to share by constru
+          +ction); purity binds the pure-computation libraries (core, ind
+          +icators, structure); components that own an external resource 
+          +(stores, recorders, adapters) are the stateful class and follo
+          +w one-writer-per-stream with unlimited readers — a "writer" he
+          +re IS the holder of an AD-8 `WriterId`. QMF never spawns threa
+          +ds or background work — the application owns all concurrency; 
+          +async APIs exist only at the venue network edge, never in core
+          + or the libraries. The venue adapter's periodic session duties
+          + (heartbeat, token refresh, reconnect, gap replay, verificatio
+          +n monitors) are **declared schedulable duties the application'
+          +s scheduler drives** — the adapter defines the work, the appli
+          +cation runs it; session recovery never resubmits a command (AD
+          +-27).                                                         
+      156  
+      157  ### AD-16 — Registry records and lineage [ADOPTED 2026-08-20]
+      158  
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+      309    end
+      310  ```
+      311  
+      312 -- **Rule (default-deny):** `qmf-core` depends on nothing; ever
+          -y package may depend on `qmf-core`; nothing imports `qmf-venue
+          -` or `qmf-risk`. **Until an inter-library edge is ratified, no
+          - package may depend on any package other than `qmf-core`; addi
+          -ng an edge is a spine amendment.** One edge is ratified: `qmf-
+          -registry → qmf-data` (2026-08-20) — the registry persists reco
+          -rds and lineage through qmf-data's append-store contract, with
+          - stdlib-typed signatures at that boundary. Extensions implemen
+          -t core protocols.                                             
+      312 +- **Rule (default-deny):** `qmf-core` depends on nothing; ever
+          +y package may depend on `qmf-core`; nothing imports `qmf-venue
+          +` or `qmf-risk`. **Until an inter-library edge is ratified, no
+          + package may depend on any package other than `qmf-core`; addi
+          +ng an edge is a spine amendment.** One edge is ratified: `qmf-
+          +registry → qmf-data` (2026-08-20) — the registry persists reco
+          +rds and lineage through qmf-data's append-store contract, with
+          + stdlib-typed signatures at that boundary. Extensions implemen
+          +t core protocols. The venue write path creates **no** edge: `q
+          +mf-venue` emits through qmf-core-defined sink protocols inject
+          +ed at the composition root (AD-28), with the adapter's connect
+          +ion manager holding the `WriterId` and seeing every sink refus
+          +al.                                                           
+      313  
+      314  ### Clock injection seam
+      315  
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+      335  
+      336  ## Stack
+      337  
+      338 -| Name | Version (verified 2026-08-19, re-verified at reviewer
+          - gate) |                                                      
+      338 +| Name | Version (verified 2026-08-19/2026-08-20, re-verified 
+          +at each reviewer gate) |                                      
+      339  | --- | --- |
+      340  | CPython | 3.14 (3.14.7 current) |
+      341  | uv (workspace + lockfile) | 0.12.5 |
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line
+      349  | TA-Lib (C library + Python wrapper) | 0.7.1 + 0.7.1 (AD-23 c
+           anonical arithmetic reference; verified 2026-08-20) |
+      350  | tzdata (PyPI) | pinned in calendar extensions only; TZPATH f
+           orced to the pin; version participates in fingerprints |
+      351  | Spotware openapi-proto-messages | integer release tags (late
+           st observed 91, verified 2026-08-20); pinned per QMF release i
+           n the AD-6 register; compiled in-house — vendor SDKs are never
+            runtime dependencies (AD-6 event-loop rule; OpenApiPy is Twis
+           ted-bound, reference-only) |
+      352 +| protobuf runtime (qmf-venue only) | BSD-3; required at impor
+          +t by the in-house-compiled proto modules; named in the AD-6 re
+          +gister; version pinned in `uv.lock`, current pin verified at t
+          +he implementation gate |                                      
+      353  
+      354  ## Structural Seed
+      355  
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+      388  | Five-hats sweep findings (44 items, reviews/five-hats-sweep.
+           md) | Input register for every remaining sitting |
+      389  | Operator-used structure families beyond the seed four (SMC/I
+           CT-class objects, chart patterns) | Added family-by-family und
+           er AD-25's precise-rule bar; nothing forecloses them |
+      390  | MIS fan-out wiring for heavy indicators; which indicators sh
+           ip in the V1 catalog | Node territory (wiring) / documentation
+            time (catalog); AD-22/AD-24 bind both |
+      391 -| L2 depth / footprint / order-book series vocabulary | Outsid
+          -e V1 series form (AD-22); ungoverned research lane until a lat
+          -er pass widens it. Depth verified available on cTrader (Level-
+          -2 book, no trade tape) — raw recording possible now, governed 
+          -vocabulary still deferred |                                   
+      391 +| L2 depth / footprint / order-book series vocabulary | Outsid
+          +e V1 series form (AD-22); ungoverned research lane until a lat
+          +er pass widens it. Depth verified available on cTrader (Level-
+          +2 book, no trade tape) — raw recording possible now as **verba
+          +tim wire payloads through CT-10/CT-15 into the AD-19 raw room*
+          +* (never an invented encoding); governed vocabulary still defe
+          +rred |                                                        
+      392  | Bar-builder derivation contract details (renko/tick/volume a
+           ggregation rules per BarSpec kind) | qmf-data derivation, deta
+           iled per contract at documentation time; BarSpec noun ratified
+            in AD-22 |
+      393  | Book/BMS, exits, paper mode, news windows, SQS, formulas, st
+           op-out, same-tick priority (GAP-0039..0046) | Risk sittings; a
+           pplication behavior stays out of the framework |
+      394  | Flatten/resume authority policy (VPS-death included), dead-z
+           one trading pause, paper-scope conflict (fail-mechanism-only v
+           s standing state) | Risk sittings; AD-27 binds only the mechan
+           ical surface — flatten is never adapter-initiated |
+
+● All 49 findings addressed. Re-linting, logging the gate, and updating the node
+  ledger with the node-facing consequences:
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Update(tracker\trading-node-notes.md)
+  ⎿  Added 7 lines
+      41  - Adapter command vocabulary is exactly four (place_order, canc
+          el_order, close_position, close_all); amend/partial-close may n
+          ot be smuggled through an opaque payload (K-44 REOPEN).
+      42  - Protection funnel: MIS senses → KSA decides (escalate-only; h
+          uman A1 de-escalates) → Adapter enforces as an effect. Flatten 
+          authority was explicitly unassigned — the venue sitting's GAP-0
+          036 ruling reserves it as a human-authorized path, never assume
+          d, never automatic (policy assignment lands in the risk/node si
+          ttings).
+      43  - Fills correlate by clientMsgId (≤100-char label); recovered f
+          ills commit through Records before the connection reports healt
+          hy.
+      44 +                                                               
+      45 +**Node-facing consequences of the ratified venue ADs (AD-26/27/
+         +28, gate-amended 2026-08-20) — the node sitting inherits these:
+         +**                                                             
+      46 +- The node (not the adapter) clears an UNKNOWN block, via an ex
+         +plicit typed `resolve_unknown(command identity, resolution ∈ ob
+         +served-accepted | observed-absent | operator-attested)` call — 
+         +the resolution is itself an observation. The block is per comma
+         +nd stream = (VenueId, account) and clears on resolution, never 
+         +on a reconciliation verdict (so PE-7's open-position `unknown` 
+         +verdict cannot livelock the pipe).                             
+      47 +- The application injects and owns: the submission deadline tha
+         +t triggers UNKNOWN (declared, do-not-default), all retry/pool/h
+         +ealth constants, the adapter's schedulable session duties (hear
+         +tbeat/refresh/reconnect/monitors run on the app's scheduler), a
+         +nd the sink protocols (ObservationSink/JournalSink/RecordSink/S
+         +ecretStore).                                                   
+      48 +- Protection commands (cancel/close/close_all) dispatch ahead o
+         +f place_order on shared throttles; suspend-new takes local effe
+         +ct instantly. close_position/close_all carry a required typed s
+         +cope (account | account-binding | instrument-within-binding) — 
+         +the node's kill path must state its scope.                     
+      49 +- Exactly one live refresher per credential (a workstation tool
+         + must never refresh a credential the VPS session owns — the ref
+         +resh token dies on use).                                       
+      50 +- Demo/paper evidence is role-scoped within world=live; sandbox
+         +-produced evidence carries provenance=sandbox and cannot merge 
+         +into the operator store.                                       
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The venue sitting is closed. Final state, in plain words:
+
+  All four gaps ratified and gate-hardened. The reviewer gate earned its keep
+  tonight — three independent reviewers found 49 real issues in my first draft
+  of the venue rules, including three that would have cost money: fill prices
+  arriving as decimals had no exact-arithmetic treatment at the money boundary
+  (an adapter could have silently swallowed one of two fills), the word "stream"
+  meant three different things (which could have let a close-all slip through
+  during an uncertainty freeze), and unmapped broker errors defaulted to "retry"
+  inside a law built to never retry blindly. All 49 are fixed in the spine;
+  lint is clean; every fix traces to law you already ratified — no new decisions
+  were made over your head.
+
+  What the spine now guarantees at the broker boundary: orders can't double or
+  vanish silently (fingerprint identity, injective mapping or a persisted
+  binding), a timeout is never read as a rejection (UNKNOWN is a real state that
+  freezes that account's commands until the node explicitly resolves it), every
+  venue event is recorded before it's interpreted (no adapter ever invents what
+  the broker "must have meant"), secrets are opaque references that
+  structurally cannot leak into logs or evidence, and a future crypto venue
+  plugs in by declaring a different fact-sheet through the same port.
+
+  Bookkeeping: the memlog holds every ruling (83 entries), the spine is
+  re-finalized covering GAP-0001..0038, six research companions and the
+  order-path study sit in the workspace, and tracker/trading-node-notes.md now
+  carries everything the node sitting inherits — including the five obligations
+  the venue rules place on the node, so you never re-explain them.
+
+  What's left of architecture: the risk sitting (Books, BMS, exits, paper mode —
+  GAP-0039..0046, where flatten authority, the dead zone, and possibly your
+  house-of-money idea land) and the backtesting sitting tomorrow. Then PRD, then
+  BMad exits to the documentation factory. Whenever your held-back message is
+  ready, I'm here.
+
+✻ Cogitated for 1h 43m 57s
+
+※ recap: QMX architecture planning: the venue sitting is finished, with all four cTrader gaps ratified, review-hardened, and written into the spine and node ledger. Next up is the risk sitting (Books, BMS, exits), then backtesting tomorrow. (disable recaps in /config)
