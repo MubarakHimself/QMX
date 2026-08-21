@@ -1,14 +1,23 @@
 """qmf.core — exact domain foundation.
 
 Roster package of the QMF V1 uv workspace. It declares the package identity and
-version and re-exports the public CT-* surface as it lands story by story; the
-first is CT-04, the typed refusal envelope. Nothing here reaches across a sibling
-boundary — the default-deny dependency direction (L30) is preserved by
-construction, and qmf-core takes zero outside dependencies (DEC-0104).
+version and re-exports the public CT-* surface as it lands story by story: CT-04,
+the typed refusal envelope, and CT-03, the instrument/venue/account identity
+nouns. Nothing here reaches across a sibling boundary — the default-deny
+dependency direction (L30) is preserved by construction, and qmf-core takes zero
+outside dependencies (DEC-0104).
 """
 
 from __future__ import annotations
 
+from qmf.core.identity import (
+    Account,
+    AccountRole,
+    DatedRecord,
+    Instrument,
+    Venue,
+    VenueId,
+)
 from qmf.core.refusal import (
     Ok,
     RefusalCategory,
@@ -20,11 +29,17 @@ from qmf.core.refusal import (
 )
 
 __all__ = [
+    "Account",
+    "AccountRole",
+    "DatedRecord",
+    "Instrument",
     "Ok",
     "RefusalCategory",
     "Result",
     "Retryability",
     "TypedRefusal",
+    "Venue",
+    "VenueId",
     "__version__",
     "is_ok",
     "is_refusal",
