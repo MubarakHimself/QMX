@@ -1,12 +1,14 @@
 name: Skylos
-# Quality gate for the factory lanes: dead code + SAST on everything headed
-# for main. Runs on Linux, where Skylos is fully armed (the local Windows
-# install stays "incomplete" by design - MSVC-only build dependency).
+# Gates the code the factory SHIPS: the ratified layout is packages/ (roster)
+# and extensions/ (off-roster). Tooling folders (adws/, recorder/, workroom/)
+# are deliberately not scanned - they are not factory output.
 on:
   push:
     branches: [integration]
+    paths: ['packages/**', 'extensions/**']
   pull_request:
     branches: [main]
+    paths: ['packages/**', 'extensions/**']
 
 permissions:
   contents: read
@@ -19,4 +21,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: duriantaco/skylos@v4.33.2
+      - id: dirs
+        run: |
+          { [ -d packages ] && echo "packages=true" || echo "packages=false"; } >> "$GITHUB_OUTPUT"
+          { [ -d extensions ] && echo "extensions=true" || echo "extensions=false"; } >> "$GITHUB_OUTPUT"
+      - name: Skylos on packages
+        if: steps.dirs.outputs.packages == 'true'
+        uses: duriantaco/skylos@v4.33.2
+        with:
+          path: packages
+      - name: Skylos on extensions
+        if: steps.dirs.outputs.extensions == 'true'
+        uses: duriantaco/skylos@v4.33.2
+        with:
+          path: extensions
