@@ -10,9 +10,6 @@ real package operations as `qmf.indicators` gains primitives. Stdlib only.
 
 from __future__ import annotations
 
-# ambient-scan: allow — benchmark harness; measures real wall-clock speed and peak
-# memory (AR-22 / NFR-04), so its time.perf_counter() reads are the sanctioned
-# exception to FR-002 (no system-clock reads below the composition root) for this file.
 import time
 import tracemalloc
 from dataclasses import dataclass
@@ -40,9 +37,9 @@ def _workload(load: int) -> int:
 
 def _measure(load: int) -> BenchResult:
     tracemalloc.start()
-    start = time.perf_counter()
+    start = time.perf_counter()  # ambient-scan: allow - AR-22 benchmark wall-clock
     _workload(load)
-    seconds = time.perf_counter() - start
+    seconds = time.perf_counter() - start  # ambient-scan: allow - AR-22 benchmark wall-clock
     _, peak_bytes = tracemalloc.get_traced_memory()
     tracemalloc.stop()
     return BenchResult(module=MODULE, load=load, seconds=seconds, peak_bytes=peak_bytes)

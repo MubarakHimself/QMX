@@ -109,6 +109,9 @@ _SCOPE_NODES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)
 
 RULE_CONSTRUCTION = "money-path-float"
 RULE_UNDECLARED_BOUNDARY = "undeclared-rounding-boundary"
+# A file the gate could not parse or read. A fail-closed gate must not pass a file
+# it could not inspect, so an unparseable/unreadable file is a finding, not silence.
+RULE_UNSCANNABLE = "unscannable-source"
 
 
 @dataclass(frozen=True)
@@ -456,25 +459,45 @@ class _Analyzer:
 
 
 def scan_source(source: str, filename: str) -> list[Finding]:
-    """Scan one module's source. Unparseable source yields no findings (the gate
-    never crashes on a malformed file; ruff owns syntax)."""
+    """Scan one module's source. Unparseable source is itself a finding — a
+    fail-closed gate must not silently pass a file it could not inspect (ruff owns
+    syntax, but the gate never fails open)."""
     try:
         tree = ast.parse(source, filename=filename)
-    except SyntaxError:
-        return []
+    except SyntaxError as exc:
+        return [
+            Finding(
+                filename,
+                exc.lineno or 1,
+                (exc.offset or 0) + 1,
+                RULE_UNSCANNABLE,
+                f"source could not be parsed ({exc.msg}); the gate fails closed on it",
+            )
+        ]
     return _Analyzer(filename).run(tree)
 
 
 def scan_file(path: Path, *, root: Path = ROOT) -> list[Finding]:
-    """Scan one file, reporting its path relative to ``root``."""
-    try:
-        source = path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
-        return []
+    """Scan one file, reporting its path relative to ``root``.
+
+    An unreadable file (a read or decode error) is itself a finding, not silence: a
+    fail-closed gate must not pass a file it could not inspect."""
     try:
         rel = path.resolve().relative_to(root).as_posix()
     except ValueError:
         rel = path.as_posix()
+    try:
+        source = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        return [
+            Finding(
+                rel,
+                1,
+                1,
+                RULE_UNSCANNABLE,
+                f"file could not be read ({exc}); the gate fails closed",
+            )
+        ]
     return scan_source(source, rel)
 
 

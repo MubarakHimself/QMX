@@ -27,11 +27,11 @@ CPython 3.14.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Final, Generic, TypeAlias, TypeIs, TypeVar
+from typing import Final, Generic, TypeAlias, TypeIs, TypeVar, cast
 
 __all__ = [
     "Ok",
@@ -77,6 +77,40 @@ class Retryability(StrEnum):
 _EMPTY_CONTEXT: Final[Mapping[str, object]] = MappingProxyType({})
 
 
+def _deep_freeze(value: object) -> object:
+    """Recursively snapshot ``value`` into a shared-safe, read-only form.
+
+    A ``Mapping`` becomes a :class:`~types.MappingProxyType` over deep-frozen
+    values and a list/tuple becomes a tuple of deep-frozen items — so a nested
+    container reached through a caller's dict can never be mutated through the
+    reference a frozen value keeps. One-level freezing left nested dicts and lists
+    shared and mutable; this closes that.
+    """
+    if isinstance(value, Mapping):
+        mapping = cast("Mapping[object, object]", value)
+        return MappingProxyType({key: _deep_freeze(item) for key, item in mapping.items()})
+    if isinstance(value, (list, tuple)):
+        sequence = cast("Sequence[object]", value)
+        return tuple(_deep_freeze(item) for item in sequence)
+    return value
+
+
+def _hashable(value: object) -> object:
+    """A hashable, order-independent canonical form of a (deep-frozen) value.
+
+    Mirrors :func:`_deep_freeze` for hashing: a mapping becomes a ``frozenset`` of
+    ``(key, hashable-value)`` pairs (so two equal mappings hash alike regardless of
+    key order, matching ``==``), and sequences become tuples.
+    """
+    if isinstance(value, Mapping):
+        mapping = cast("Mapping[object, object]", value)
+        return frozenset((key, _hashable(item)) for key, item in mapping.items())
+    if isinstance(value, (list, tuple)):
+        sequence = cast("Sequence[object]", value)
+        return tuple(_hashable(item) for item in sequence)
+    return value
+
+
 @dataclass(frozen=True, slots=True)
 class Ok(Generic[T]):
     """The success arm of a value-or-refusal ``Result``: the constructed value.
@@ -109,10 +143,26 @@ class TypedRefusal:
     after_condition_descriptor: str | None = None
 
     def __post_init__(self) -> None:
-        # Snapshot context into a read-only mapping: the refusal value is
-        # immutable, and a later mutation of a caller's dict can never reach
-        # back into a stored refusal.
-        object.__setattr__(self, "context", MappingProxyType(dict(self.context)))
+        # Deep-snapshot context into a read-only, shared-safe mapping: the refusal
+        # value is immutable at every depth, and a later mutation of a caller's dict
+        # — or of a nested dict/list inside it — can never reach back into a stored
+        # refusal.
+        object.__setattr__(self, "context", _deep_freeze(self.context))
+
+    def __hash__(self) -> int:
+        # A frozen dataclass hashes the tuple of its fields, but ``context`` is a
+        # MappingProxyType wrapping a dict (unhashable), so the generated hash raises
+        # TypeError. Hash a canonical, order-independent frozen form of context
+        # instead — consistent with the generated ``__eq__`` — so a TypedRefusal is a
+        # usable set element and dict key.
+        return hash(
+            (
+                self.category,
+                self.retryability,
+                _hashable(self.context),
+                self.after_condition_descriptor,
+            )
+        )
 
     @classmethod
     def try_create(

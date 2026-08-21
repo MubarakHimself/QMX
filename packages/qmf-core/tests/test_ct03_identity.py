@@ -267,6 +267,23 @@ def test_dated_record_content_is_snapshotted() -> None:
     assert result.value.content["name"] == "x"
 
 
+def test_dated_record_content_is_deep_frozen() -> None:
+    # Regression (L3): __post_init__ froze only the top level, leaving nested
+    # mappings and arrays shared and mutable — append-only history must never
+    # rewrite, not even through a nested reference the caller still holds.
+    source: dict[str, object] = {"meta": {"alias": "ICM"}, "aliases": ["ICM", "IC-Markets"]}
+    result = DatedRecord.try_create(_venue(), "2025-01-01", source)
+    assert is_ok(result)
+    record = result.value
+    # A later mutation of the caller's nested dict cannot leak into the record.
+    source["meta"]["alias"] = "TAMPERED"  # type: ignore[index]
+    assert record.content["meta"]["alias"] == "ICM"  # type: ignore[index]
+    # The stored nested mapping is itself immutable, and arrays freeze to tuples.
+    with pytest.raises(TypeError):
+        record.content["meta"]["alias"] = "y"  # type: ignore[index]
+    assert record.content["aliases"] == ("ICM", "IC-Markets")
+
+
 def test_correction_is_a_new_record_not_an_edit() -> None:
     venue = _venue()
     first = DatedRecord.try_create(venue, "2024-01-05", {"name": "IC Markets"})

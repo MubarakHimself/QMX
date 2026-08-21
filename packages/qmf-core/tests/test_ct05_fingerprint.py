@@ -182,6 +182,30 @@ def test_serializer_refuses_bool_key() -> None:
     assert is_refusal(canonical_bytes({True: "x"}))
 
 
+def test_serializer_refuses_empty_string_key() -> None:
+    # Regression (L6): canonical_bytes accepted empty-string keys while DatedRecord
+    # rejected them — an inconsistency. A blank identity key carries no meaning and
+    # is refused for consistency across identity content.
+    result = canonical_bytes({"": 1})
+    assert is_refusal(result)
+    assert result.context["field"] == "key"
+
+
+def test_serializer_refuses_whitespace_only_key() -> None:
+    result = canonical_bytes({"   ": 1})
+    assert is_refusal(result)
+    assert result.context["field"] == "key"
+
+
+def test_serializer_refuses_blank_key_nested() -> None:
+    # The blank-key rule applies at every depth, like the other key rules.
+    assert is_refusal(canonical_bytes({"meta": {"": "x"}}))
+
+
+def test_fingerprint_refuses_blank_key() -> None:
+    assert is_refusal(fingerprint({"": 1}))
+
+
 def test_serializer_refuses_unsupported_type() -> None:
     result = canonical_bytes({"blob": b"raw"})
     assert is_refusal(result)

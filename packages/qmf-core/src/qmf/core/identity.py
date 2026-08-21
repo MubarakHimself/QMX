@@ -75,6 +75,24 @@ class AccountRole(StrEnum):
 _EMPTY_CONTENT: Final[Mapping[str, object]] = MappingProxyType({})
 
 
+def _deep_freeze(value: object) -> object:
+    """Recursively snapshot ``value`` into a shared-safe, read-only form.
+
+    A ``Mapping`` becomes a :class:`~types.MappingProxyType` over deep-frozen
+    values and a list/tuple becomes a tuple — so a nested mapping or array reached
+    through the caller's dict can never be mutated through the reference the frozen
+    record keeps. One-level freezing left nested dicts and lists shared and mutable;
+    append-only history must never rewrite.
+    """
+    if isinstance(value, Mapping):
+        mapping = cast("Mapping[object, object]", value)
+        return MappingProxyType({key: _deep_freeze(item) for key, item in mapping.items()})
+    if isinstance(value, (list, tuple)):
+        sequence = cast("Sequence[object]", value)
+        return tuple(_deep_freeze(item) for item in sequence)
+    return value
+
+
 def _invalid_refusal(field: str, reason: str, **extra: object) -> TypedRefusal:
     """Build the ``invalid input`` refusal every identity factory returns.
 
@@ -363,9 +381,10 @@ class DatedRecord:
     content: Mapping[str, object] = _EMPTY_CONTENT
 
     def __post_init__(self) -> None:
-        # Snapshot content into a read-only mapping so a later mutation of the
-        # caller's dict can never reach back into this frozen record.
-        object.__setattr__(self, "content", MappingProxyType(dict(self.content)))
+        # Deep-snapshot content into a read-only, shared-safe mapping so a later
+        # mutation of the caller's dict — or of a nested mapping/array inside it —
+        # can never reach back into this frozen, append-only record.
+        object.__setattr__(self, "content", _deep_freeze(self.content))
 
     @classmethod
     def try_create(

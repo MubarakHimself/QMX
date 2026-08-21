@@ -37,6 +37,18 @@ def test_sink_ack_snapshots_detail() -> None:
     assert ack.detail["stored_count"] == 1
 
 
+def test_sink_ack_deep_freezes_nested_detail() -> None:
+    # Regression (L3): __post_init__ froze only the top level, leaving nested dicts
+    # and lists shared and mutable. Nested containers must be read-only too.
+    source: dict[str, object] = {"offset": {"partition": 0}, "positions": [1, 2]}
+    ack = SinkAck(detail=source)
+    source["offset"]["partition"] = 999  # type: ignore[index]
+    assert ack.detail["offset"]["partition"] == 0  # type: ignore[index]
+    with pytest.raises(TypeError):
+        ack.detail["offset"]["partition"] = 1  # type: ignore[index]
+    assert ack.detail["positions"] == (1, 2)
+
+
 # --- unpersistable() --------------------------------------------------------
 
 
@@ -94,6 +106,23 @@ def test_unpersistable_raises_on_after_condition_without_descriptor() -> None:
     # descriptor is equally a CT-04 mis-pairing.
     with pytest.raises(ValueError, match="after-condition"):
         unpersistable("disk full", retryability=Retryability.AFTER_CONDITION)
+
+
+def test_unpersistable_reserves_the_reason_context_key() -> None:
+    # Regression (L8): merging caller context OVER {"reason": ...} let a caller's
+    # own "reason" key silently override the register-facing reason. The key is
+    # reserved — a caller that also supplies it is a programmer error.
+    with pytest.raises(ValueError, match="reserved context key"):
+        unpersistable("journal store is full", context={"reason": "attacker-controlled"})
+
+
+def test_unpersistable_keeps_the_register_facing_reason_with_other_context() -> None:
+    # The positive counterpart: non-reserved context merges, and the reason stays
+    # exactly what the sink passed.
+    refusal = unpersistable("disk full", context={"path": "/var/journal", "capacity": 2})
+    assert refusal.context["reason"] == "disk full"
+    assert refusal.context["path"] == "/var/journal"
+    assert refusal.context["capacity"] == 2
 
 
 # --- is_unpersistable() -----------------------------------------------------

@@ -169,6 +169,38 @@ def test_secret_value_equality_with_foreign_type_is_false() -> None:
     assert (value == 7) is False
 
 
+def test_secret_value_equality_uses_constant_time_compare(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Regression (L4): comparing plaintext with ``==`` short-circuits on the first
+    # differing byte — a timing oracle a caller could use to guess the secret one
+    # character at a time. The comparison must route through hmac.compare_digest.
+    import qmf.core.secret as secret_mod
+
+    calls: list[tuple[object, object]] = []
+    real = secret_mod.hmac.compare_digest
+
+    def spy(a: object, b: object) -> bool:
+        calls.append((a, b))
+        return real(a, b)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(secret_mod.hmac, "compare_digest", spy)
+    a = _make_value("same-secret-material")
+    b = _make_value("same-secret-material")
+    assert a == b
+    assert calls, "equality must compare the plaintext via hmac.compare_digest"
+    # The plaintext crosses compare_digest as bytes, not a short-circuiting str ==.
+    assert all(isinstance(x, bytes) and isinstance(y, bytes) for x, y in calls)
+
+
+def test_secret_value_equality_handles_non_ascii_plaintext() -> None:
+    # compare_digest over UTF-8 bytes handles non-ASCII secrets (str compare_digest
+    # would raise on non-ASCII); both equal and unequal resolve correctly.
+    a = _make_value("péé-secret")
+    b = _make_value("péé-secret")
+    c = _make_value("péé-secretX")
+    assert a == b
+    assert a != c
+
+
 def test_secret_value_is_immutable() -> None:
     value = _make_value()
     with pytest.raises(AttributeError):

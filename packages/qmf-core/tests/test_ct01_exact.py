@@ -17,6 +17,7 @@ from fractions import Fraction
 import pytest
 from qmf.core.exact import (
     CONTRACT_FORMAT_VERSION,
+    MAX_SCALE,
     ExactRational,
     Money,
     Price,
@@ -643,3 +644,101 @@ def test_unchecked_constructor_is_available_for_trusted_use() -> None:
     money = Money(150, "USD", 2)
     assert money.value == 150
     assert money.as_fraction() == Fraction(3, 2)
+
+
+# --- L2: the maximum scale bound --------------------------------------------
+
+
+def test_scale_at_the_maximum_is_accepted() -> None:
+    assert is_ok(Money.try_create(1, "USD", MAX_SCALE))
+
+
+def test_scale_above_the_maximum_is_refused_as_invalid_input() -> None:
+    # Regression (L2): scale sits in the exponent of 10**scale, so an unbounded
+    # scale (e.g. 10**6) is a DoS foot-gun. A scale above MAX_SCALE is refused
+    # before as_fraction() ever computes a pathological power of ten.
+    result = Money.try_create(1, "USD", MAX_SCALE + 1)
+    assert is_refusal(result)
+    assert result.category is RefusalCategory.INVALID_INPUT
+    assert result.context["field"] == "scale"
+    assert result.context["max_scale"] == MAX_SCALE
+
+
+def test_absurd_scale_is_refused_across_all_value_types() -> None:
+    instrument = _instrument()
+    huge = 10**6
+    assert is_refusal(Money.try_create(1, "USD", huge))
+    assert is_refusal(Price.try_create(1, instrument, huge))
+    assert is_refusal(PriceDelta.try_create(1, instrument, huge))
+    assert is_refusal(Quantity.try_create(1, "lot", huge))
+    # The float conversion boundary and the delta->money boundary bound scale too.
+    assert is_refusal(Money.from_float(1.5, currency="USD", scale=huge, rounding="half-up"))
+
+
+# --- L7: Price + PriceDelta = Price (the affine/vector split) ----------------
+
+
+def test_price_plus_delta_yields_a_price() -> None:
+    # Regression (L7): Price - Price = PriceDelta (a vector); the missing companion
+    # is Price + PriceDelta = Price (a level again). It completes the affine split.
+    instrument = _instrument()
+    level = Price.try_create(11000, instrument, 4)
+    delta = PriceDelta.try_create(250, instrument, 4)
+    assert is_ok(level)
+    assert is_ok(delta)
+    result = level.value.add(delta.value)
+    assert is_ok(result)
+    moved = result.value
+    assert isinstance(moved, Price)
+    assert moved.value == 11250
+    assert moved.instrument is instrument
+
+
+def test_price_add_promotes_mixed_scales_like_subtraction() -> None:
+    instrument = _instrument()
+    level = Price.try_create(11000, instrument, 4)
+    delta = PriceDelta.try_create(5, instrument, 5)
+    assert is_ok(level)
+    assert is_ok(delta)
+    result = level.value.add(delta.value)
+    assert is_ok(result)
+    assert result.value.scale == 5
+    assert result.value.value == 110000 + 5
+
+
+def test_price_add_refuses_a_price_operand() -> None:
+    # Adding two affine levels is meaningless — a Price adds only a delta (a vector).
+    instrument = _instrument()
+    level = Price.try_create(11000, instrument, 4)
+    other_level = Price.try_create(9000, instrument, 4)
+    assert is_ok(level)
+    assert is_ok(other_level)
+    result = level.value.add(other_level.value)
+    assert is_refusal(result)
+    assert result.context["field"] == "other"
+
+
+def test_price_add_refuses_a_differently_instrumented_delta() -> None:
+    instrument = _instrument()
+    level = Price.try_create(11000, instrument, 4)
+    foreign = PriceDelta.try_create(1, _instrument("GBPUSD"), 4)
+    assert is_ok(level)
+    assert is_ok(foreign)
+    result = level.value.add(foreign.value)
+    assert is_refusal(result)
+    assert result.context["field"] == "instrument"
+
+
+def test_price_add_is_the_inverse_of_subtraction() -> None:
+    # (a - b) is a delta; b + (a - b) recovers a — the affine round-trip.
+    instrument = _instrument()
+    a = Price.try_create(108930, instrument, 5)
+    b = Price.try_create(108925, instrument, 5)
+    assert is_ok(a)
+    assert is_ok(b)
+    delta = b.value.subtract(a.value)  # note: b - a
+    assert is_ok(delta)
+    recovered = a.value.add(delta.value)
+    assert is_ok(recovered)
+    assert recovered.value.value == b.value.value
+    assert recovered.value.scale == b.value.scale

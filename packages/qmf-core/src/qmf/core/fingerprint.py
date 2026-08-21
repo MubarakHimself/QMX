@@ -238,6 +238,15 @@ def _canonicalize_mapping(node: Mapping[object, object]) -> dict[str, object] | 
                 "identity object keys must be strings",
                 given=repr(key),
             )
+        if key.strip() == "":
+            # An empty or whitespace-only key is refused for consistency with
+            # DatedRecord's identity-content rule (a blank key carries no meaning and
+            # would let two records fork identity on a key that renders identically).
+            return _invalid(
+                "key",
+                "identity object keys must be non-empty, not blank or whitespace-only",
+                given=repr(key),
+            )
         if value is None:
             return _invalid(
                 "value",

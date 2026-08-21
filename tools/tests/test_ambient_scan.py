@@ -290,17 +290,40 @@ def test_unrelated_random_name_is_not_flagged() -> None:
     assert _rules("def f(random):\n    return random.random()") == []
 
 
-# --- the composition-root allow directive -----------------------------------
+# --- the line-scoped allow directive ----------------------------------------
 
 
-def test_allow_directive_exempts_the_whole_file() -> None:
-    src = "# ambient-scan: allow\nimport time\nt = time.monotonic()"
+def test_allow_directive_on_the_read_line_exempts_it() -> None:
+    # The directive is line-scoped: a read on a directive-bearing line is exempt.
+    src = "import time\nt = time.monotonic()  # ambient-scan: allow - measurement harness"
     assert _rules(src) == []
 
 
-def test_allow_directive_with_reason_is_recognized() -> None:
-    src = "import time  # ambient-scan: allow - measurement harness\nt = time.time()"
+def test_allow_directive_with_reason_on_the_read_line_is_recognized() -> None:
+    src = "import time\nt = time.time()  # ambient-scan: allow - measurement harness"
     assert _rules(src) == []
+
+
+def test_allow_directive_is_line_scoped_not_file_scoped() -> None:
+    # Regression (L10): a marker on one line does NOT exempt a read on another line.
+    # Previously the marker matched anywhere and waved the whole file through.
+    src = "import time  # ambient-scan: allow\nt = time.monotonic()"
+    assert _rules(src) == [scanner.RULE_CLOCK]
+
+
+def test_allow_directive_in_a_docstring_does_not_exempt_the_file() -> None:
+    # Regression (L10): a marker buried in a docstring no longer exempts real reads
+    # elsewhere in the file — the whole-file exemption is gone.
+    src = '"""ambient-scan: allow — mentioned in prose."""\nimport time\nt = time.monotonic()'
+    assert _rules(src) == [scanner.RULE_CLOCK]
+
+
+def test_allow_directive_exempts_only_its_own_line_among_many_reads() -> None:
+    # One sanctioned read is marked; a second, unmarked read on the next line is
+    # still flagged. Line-scoped exemption is per-read, not per-file.
+    src = "import time\na = time.time()  # ambient-scan: allow - harness\nb = time.monotonic()\n"
+    findings = scanner.scan_source(src, "<case>")
+    assert [(f.line, f.rule) for f in findings] == [(3, scanner.RULE_CLOCK)]
 
 
 def test_missing_directive_still_flags() -> None:
@@ -350,8 +373,13 @@ def test_relative_import_is_ignored() -> None:
 # --- malformed input --------------------------------------------------------
 
 
-def test_syntax_error_yields_no_findings() -> None:
-    assert scanner.scan_source("def broken(:\n", "bad.py") == []
+def test_syntax_error_is_reported_as_a_finding() -> None:
+    # Regression (L9): a fail-closed gate must not silently pass an unparseable
+    # file. An unparseable source is itself a finding, not clean silence.
+    findings = scanner.scan_source("def broken(:\n", "bad.py")
+    assert len(findings) == 1
+    assert findings[0].rule == scanner.RULE_UNSCANNABLE
+    assert findings[0].path == "bad.py"
 
 
 def test_star_import_is_outside_precision_boundary() -> None:
@@ -359,9 +387,32 @@ def test_star_import_is_outside_precision_boundary() -> None:
     assert _rules("from time import *\nt = monotonic()") == []
 
 
-def test_scan_file_handles_unreadable_path(tmp_path: Path) -> None:
+def test_unreadable_path_is_reported_as_a_finding(tmp_path: Path) -> None:
+    # Regression (L9): an unreadable file must fail the gate closed, not vanish.
     missing = tmp_path / "does_not_exist.py"
-    assert scanner.scan_file(missing) == []
+    findings = scanner.scan_file(missing)
+    assert len(findings) == 1
+    assert findings[0].rule == scanner.RULE_UNSCANNABLE
+
+
+def test_undecodable_file_is_reported_as_a_finding(tmp_path: Path) -> None:
+    # Regression (L9): a file that is not valid UTF-8 is a finding, never silence.
+    bad = tmp_path / "latin1.py"
+    bad.write_bytes(b"x = '\xff\xfe not utf-8'\n")
+    findings = scanner.scan_file(bad)
+    assert len(findings) == 1
+    assert findings[0].rule == scanner.RULE_UNSCANNABLE
+
+
+def test_scan_workspace_fails_closed_on_an_unparseable_shipped_file(tmp_path: Path) -> None:
+    # Regression (L9): a broken shipped file surfaces through scan_workspace so the
+    # gate entry point returns nonzero rather than passing over it.
+    _make_workspace(tmp_path)
+    shipped = tmp_path / "packages" / "qmf-demo" / "src" / "qmf" / "demo" / "broken.py"
+    shipped.write_text("def broken(:\n", encoding="utf-8")
+    findings = scanner.scan_workspace(tmp_path)
+    assert any(f.rule == scanner.RULE_UNSCANNABLE for f in findings)
+    assert scanner.main(tmp_path) == 1
 
 
 def test_scan_file_outside_root_uses_absolute_path(tmp_path: Path) -> None:

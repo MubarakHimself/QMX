@@ -153,3 +153,67 @@ def test_refusals_with_equal_parts_are_equal() -> None:
 def test_ok_wraps_and_exposes_its_value() -> None:
     assert Ok(42).value == 42
     assert Ok(42) == Ok(42)
+
+
+# --- L1: TypedRefusal is hashable -------------------------------------------
+
+
+def test_typed_refusal_is_hashable() -> None:
+    # Regression (L1): a frozen dataclass hashes its fields, but ``context`` is a
+    # MappingProxyType wrapping a dict (unhashable), so the generated hash used to
+    # raise TypeError. Hashing must work.
+    refusal = TypedRefusal(
+        RefusalCategory.INVALID_INPUT,
+        Retryability.NO,
+        context={"field": "scale", "allowed": ["a", "b"]},
+    )
+    assert isinstance(hash(refusal), int)
+
+
+def test_typed_refusal_hash_is_consistent_with_equality() -> None:
+    # Equal refusals hash alike regardless of context key order (matches ``==``).
+    left = TypedRefusal(
+        RefusalCategory.STORAGE_FAILURE, Retryability.NO, context={"a": 1, "b": [2, 3]}
+    )
+    right = TypedRefusal(
+        RefusalCategory.STORAGE_FAILURE, Retryability.NO, context={"b": [2, 3], "a": 1}
+    )
+    assert left == right
+    assert hash(left) == hash(right)
+
+
+def test_typed_refusal_is_usable_in_sets_and_dicts() -> None:
+    a = TypedRefusal(RefusalCategory.POLICY_REJECTION, Retryability.NO, context={"rule": "R-1"})
+    b = TypedRefusal(RefusalCategory.POLICY_REJECTION, Retryability.NO, context={"rule": "R-1"})
+    c = TypedRefusal(RefusalCategory.POLICY_REJECTION, Retryability.NO, context={"rule": "R-2"})
+    # Equal refusals collapse; a distinct one stays separate.
+    assert len({a, b, c}) == 2
+    assert {a: "seen"}[b] == "seen"
+
+
+def test_typed_refusal_hash_handles_nested_mapping_context() -> None:
+    # A nested mapping in context (deep-frozen to a mappingproxy) is still hashable.
+    refusal = TypedRefusal(
+        RefusalCategory.INVALID_INPUT,
+        Retryability.NO,
+        context={"meta": {"k": [1, 2]}},
+    )
+    assert isinstance(hash(refusal), int)
+
+
+# --- L3: context is deep-frozen ---------------------------------------------
+
+
+def test_context_nested_mapping_is_deep_frozen() -> None:
+    # Regression (L3): __post_init__ froze only the top level, leaving nested dicts
+    # and lists shared and mutable. Nested containers must be read-only too.
+    source: dict[str, object] = {"meta": {"alias": "ICM"}, "tags": ["x", "y"]}
+    refusal = TypedRefusal(RefusalCategory.INVALID_INPUT, Retryability.NO, context=source)
+    # A later mutation of the caller's nested dict cannot leak into the value.
+    source["meta"]["alias"] = "TAMPERED"  # type: ignore[index]
+    assert refusal.context["meta"]["alias"] == "ICM"  # type: ignore[index]
+    # The stored nested mapping is itself immutable.
+    with pytest.raises(TypeError):
+        refusal.context["meta"]["k"] = 1  # type: ignore[index]
+    # Nested sequences are frozen to tuples.
+    assert refusal.context["tags"] == ("x", "y")

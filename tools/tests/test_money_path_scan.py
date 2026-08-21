@@ -330,13 +330,41 @@ def test_findings_are_source_ordered_and_deduplicated() -> None:
 # --- malformed input --------------------------------------------------------
 
 
-def test_syntax_error_yields_no_findings() -> None:
-    assert scanner.scan_source("def broken(:\n", "bad.py") == []
+def test_syntax_error_is_reported_as_a_finding() -> None:
+    # Regression (L9): a fail-closed gate must not silently pass an unparseable
+    # file. An unparseable source is itself a finding, not clean silence.
+    findings = scanner.scan_source("def broken(:\n", "bad.py")
+    assert len(findings) == 1
+    assert findings[0].rule == scanner.RULE_UNSCANNABLE
+    assert findings[0].path == "bad.py"
 
 
-def test_scan_file_handles_unreadable_path(tmp_path: Path) -> None:
+def test_unreadable_path_is_reported_as_a_finding(tmp_path: Path) -> None:
+    # Regression (L9): an unreadable file must fail the gate closed, not vanish.
     missing = tmp_path / "does_not_exist.py"
-    assert scanner.scan_file(missing) == []
+    findings = scanner.scan_file(missing)
+    assert len(findings) == 1
+    assert findings[0].rule == scanner.RULE_UNSCANNABLE
+
+
+def test_undecodable_file_is_reported_as_a_finding(tmp_path: Path) -> None:
+    # Regression (L9): a file that is not valid UTF-8 is a finding, never silence.
+    bad = tmp_path / "latin1.py"
+    bad.write_bytes(b"x = '\xff\xfe not utf-8'\n")
+    findings = scanner.scan_file(bad)
+    assert len(findings) == 1
+    assert findings[0].rule == scanner.RULE_UNSCANNABLE
+
+
+def test_scan_workspace_fails_closed_on_an_unparseable_shipped_file(tmp_path: Path) -> None:
+    # Regression (L9): a broken shipped file surfaces through scan_workspace so the
+    # gate entry point returns nonzero rather than passing over it.
+    _make_workspace(tmp_path)
+    shipped = tmp_path / "packages" / "qmf-demo" / "src" / "qmf" / "demo" / "broken.py"
+    shipped.write_text("def broken(:\n", encoding="utf-8")
+    findings = scanner.scan_workspace(tmp_path)
+    assert any(f.rule == scanner.RULE_UNSCANNABLE for f in findings)
+    assert scanner.main(tmp_path) == 1
 
 
 def test_scan_file_outside_root_uses_absolute_path(tmp_path: Path) -> None:

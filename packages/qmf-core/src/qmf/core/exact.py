@@ -65,6 +65,7 @@ from qmf.core.refusal import Ok, RefusalCategory, Result, Retryability, TypedRef
 
 __all__ = [
     "CONTRACT_FORMAT_VERSION",
+    "MAX_SCALE",
     "ExactRational",
     "Money",
     "Price",
@@ -79,6 +80,16 @@ __all__ = [
 # its meaning never mutates — an incompatible change mints the next version
 # (DEC-0103; versioning-from-birth L15).
 CONTRACT_FORMAT_VERSION: Final[int] = 1
+
+# The documented maximum scale (count of decimal places) any exact value accepts.
+# Scale sits in the exponent of ``10**scale`` — computed by ``as_fraction`` and the
+# float conversion boundary — so an unbounded, caller-supplied scale is a
+# denial-of-service foot-gun: ``Money.try_create(1, "USD", 10**6)`` would otherwise
+# force a million-digit power of ten. The cap is set generously above any real
+# instrument precision (crypto's deepest minor units are ~18 decimal places) while
+# keeping ``10**scale`` a cheap integer; a scale above it is refused as invalid
+# input, never accepted.
+MAX_SCALE: Final[int] = 72
 
 
 class UnitKind(StrEnum):
@@ -168,12 +179,32 @@ def _as_plain_int(value: object) -> int | None:
 
 
 def _as_scale(value: object) -> int | None:
-    """Return ``value`` as a non-negative integer count of decimal places, or
-    ``None``."""
+    """Return ``value`` as an integer count of decimal places in ``[0, MAX_SCALE]``,
+    or ``None``.
+
+    The upper bound (:data:`MAX_SCALE`) keeps ``10**scale`` a cheap integer; an
+    out-of-range scale — negative, non-integer, or above the documented maximum —
+    is refused by every factory rather than accepted (see :func:`_bad_scale`).
+    """
     parsed = _as_plain_int(value)
-    if parsed is None or parsed < 0:
+    if parsed is None or parsed < 0 or parsed > MAX_SCALE:
         return None
     return parsed
+
+
+def _bad_scale(scale: object) -> TypedRefusal:
+    """The ``invalid input`` refusal a factory returns for an out-of-range scale.
+
+    A scale must be an integer count of decimal places in ``[0, MAX_SCALE]``; a
+    non-integer, a negative, or a value above the documented maximum is refused,
+    naming the offending field and the bound (CT-04; DEC-0105, DEC-0109).
+    """
+    return _invalid(
+        "scale",
+        f"scale is an integer count of decimal places in [0, {MAX_SCALE}]",
+        given=repr(scale),
+        max_scale=MAX_SCALE,
+    )
 
 
 def _clean_tag(value: object) -> str | None:
@@ -300,11 +331,7 @@ def _coerce_float_to_scaled_int(
         )
     int_scale = _as_scale(scale)
     if int_scale is None:
-        return _invalid(
-            "scale",
-            "scale is a non-negative integer count of decimal places",
-            given=repr(scale),
-        )
+        return _bad_scale(scale)
     mode = _coerce_rounding(rounding)
     if mode is None:
         return _invalid(
@@ -369,11 +396,7 @@ class Money:
             )
         int_scale = _as_scale(scale)
         if int_scale is None:
-            return _invalid(
-                "scale",
-                "scale is a non-negative integer count of decimal places",
-                given=repr(scale),
-            )
+            return _bad_scale(scale)
         return Ok(cls(value=int_value, currency=token, scale=int_scale))
 
     @classmethod
@@ -476,11 +499,7 @@ class Price:
             )
         int_scale = _as_scale(scale)
         if int_scale is None:
-            return _invalid(
-                "scale",
-                "scale is a non-negative integer count of decimal places",
-                given=repr(scale),
-            )
+            return _bad_scale(scale)
         return Ok(cls(value=int_value, instrument=anchor, scale=int_scale))
 
     @classmethod
@@ -492,6 +511,33 @@ class Price:
         if isinstance(scaled, TypedRefusal):
             return scaled
         return cls.try_create(scaled, instrument, scale)
+
+    def add(self, other: object) -> Result[Price]:
+        """Translate this affine level by a :class:`PriceDelta`, promoting scales.
+
+        The vector companion to :meth:`subtract`: ``Price - Price`` yields a
+        :class:`PriceDelta` (a vector), and ``Price + PriceDelta`` yields a
+        :class:`Price` (a level again) — the affine/vector split (CT-01; DEC-0131).
+        A Price adds only a delta of the same instrument: another Price (adding two
+        affine levels is meaningless) or a differently-instrumented delta is a typed
+        refusal, and scales auto-promote losslessly, exactly as subtraction does.
+        """
+        if not isinstance(other, PriceDelta):
+            return _invalid(
+                "other",
+                "a price is an affine level; it adds only a PriceDelta (a vector), never "
+                "another Price",
+                given=repr(other),
+            )
+        if other.instrument != self.instrument:
+            return _invalid(
+                "instrument",
+                "a price delta of a different instrument does not translate this price",
+                left=repr(self.instrument),
+                right=repr(other.instrument),
+            )
+        left, right, scale = _promote(self.value, self.scale, other.value, other.scale)
+        return Ok(Price(value=left + right, instrument=self.instrument, scale=scale))
 
     def subtract(self, other: object) -> Result[PriceDelta]:
         """Subtract another :class:`Price` of the same instrument.
@@ -568,11 +614,7 @@ class PriceDelta:
             )
         int_scale = _as_scale(scale)
         if int_scale is None:
-            return _invalid(
-                "scale",
-                "scale is a non-negative integer count of decimal places",
-                given=repr(scale),
-            )
+            return _bad_scale(scale)
         return Ok(cls(value=int_value, instrument=anchor, scale=int_scale))
 
     def add(self, other: object) -> Result[PriceDelta]:
@@ -661,11 +703,7 @@ class PriceDelta:
             return _invalid("quantity", "quantity must be a Quantity value", given=repr(quantity))
         int_scale = _as_scale(scale)
         if int_scale is None:
-            return _invalid(
-                "scale",
-                "scale is a non-negative integer count of decimal places",
-                given=repr(scale),
-            )
+            return _bad_scale(scale)
         amount = self.as_fraction() * value_factor.as_fraction() * quantity.as_fraction()
         scaled = amount * (10**int_scale)
         if scaled.denominator != 1:
@@ -735,11 +773,7 @@ class Quantity:
             )
         int_scale = _as_scale(scale)
         if int_scale is None:
-            return _invalid(
-                "scale",
-                "scale is a non-negative integer count of decimal places",
-                given=repr(scale),
-            )
+            return _bad_scale(scale)
         return Ok(cls(value=int_value, unit=token, scale=int_scale))
 
     @classmethod

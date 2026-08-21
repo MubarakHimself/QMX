@@ -34,10 +34,10 @@ Stdlib only (DEC-0104). Frozen, immutable values throughout (DEC-0101, DEC-0113)
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Final, Protocol, TypeAlias, TypeVar, runtime_checkable
+from typing import Final, Protocol, TypeAlias, TypeVar, cast, runtime_checkable
 
 from qmf.core.refusal import RefusalCategory, Result, Retryability, TypedRefusal, is_ok
 
@@ -60,6 +60,24 @@ _PayloadT_contra = TypeVar("_PayloadT_contra", contravariant=True)
 _EMPTY_DETAIL: Final[Mapping[str, object]] = MappingProxyType({})
 
 
+def _deep_freeze(value: object) -> object:
+    """Recursively snapshot ``value`` into a shared-safe, read-only form.
+
+    A ``Mapping`` becomes a :class:`~types.MappingProxyType` over deep-frozen
+    values and a list/tuple becomes a tuple — so a nested container reached through
+    the caller's dict can never be mutated through the reference the frozen
+    acknowledgment keeps (one-level freezing left nested dicts and lists shared and
+    mutable).
+    """
+    if isinstance(value, Mapping):
+        mapping = cast("Mapping[object, object]", value)
+        return MappingProxyType({key: _deep_freeze(item) for key, item in mapping.items()})
+    if isinstance(value, (list, tuple)):
+        sequence = cast("Sequence[object]", value)
+        return tuple(_deep_freeze(item) for item in sequence)
+    return value
+
+
 @dataclass(frozen=True, slots=True)
 class SinkAck:
     """The acknowledgment of a successful, durable sink write (CT-13; AR-47).
@@ -73,9 +91,10 @@ class SinkAck:
     detail: Mapping[str, object] = field(default=_EMPTY_DETAIL)
 
     def __post_init__(self) -> None:
-        # Snapshot detail into a read-only mapping so a later mutation of the
-        # caller's dict can never reach back into this frozen acknowledgment.
-        object.__setattr__(self, "detail", MappingProxyType(dict(self.detail)))
+        # Deep-snapshot detail into a read-only, shared-safe mapping so a later
+        # mutation of the caller's dict — or of a nested dict/list inside it — can
+        # never reach back into this frozen acknowledgment.
+        object.__setattr__(self, "detail", _deep_freeze(self.detail))
 
 
 SinkResult: TypeAlias = Result[SinkAck]
@@ -151,7 +170,18 @@ def unpersistable(
     descriptor is valid only with ``after-condition`` retryability. A mis-paired call
     is a programmer error at the call site — it raises :class:`ValueError` rather than
     returning a refusal the typed envelope itself would reject.
+
+    ``reason`` is a **reserved** context key set from the ``reason`` argument: a
+    caller-supplied ``context`` that also carries ``reason`` would otherwise silently
+    override the register-facing reason, so it is refused as a programmer error
+    (:class:`ValueError`) rather than merged over.
     """
+    if context is not None and "reason" in context:
+        raise ValueError(
+            "unpersistable: 'reason' is a reserved context key set from the reason "
+            "argument; a caller must not also supply it in context "
+            f"(context reason={context['reason']!r}, reason={reason!r})"
+        )
     merged: dict[str, object] = {"reason": reason}
     if context is not None:
         merged.update(context)

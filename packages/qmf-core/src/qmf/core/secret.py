@@ -38,6 +38,7 @@ Stdlib only (DEC-0104). Immutable values throughout (DEC-0101, DEC-0113).
 
 from __future__ import annotations
 
+import hmac
 from dataclasses import dataclass
 from typing import NoReturn, Protocol, runtime_checkable
 
@@ -201,7 +202,14 @@ class SecretValue:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, SecretValue):
             return NotImplemented
-        return self._ref == other._ref and self._secret == other._secret
+        # Compare the plaintext in constant time: a naive ``==`` short-circuits on
+        # the first differing byte, which is a timing oracle a caller could use to
+        # guess the secret one character at a time. hmac.compare_digest takes time
+        # independent of where (or whether) the two secrets first differ (AR-37).
+        secrets_equal = hmac.compare_digest(
+            self._secret.encode("utf-8"), other._secret.encode("utf-8")
+        )
+        return self._ref == other._ref and secrets_equal
 
     def __hash__(self) -> int:
         # Keyed on the reference only — equal values share a reference and so a

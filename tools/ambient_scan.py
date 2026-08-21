@@ -23,11 +23,14 @@ system-clock read below the root **is** flagged.
 
 **The composition root itself.** The root — where the real clock is constructed and
 injected — and any sanctioned measurement harness (a benchmark that must read real
-wall-clock time, AR-22/NFR-04) may read ambient nondeterminism. Such a file declares
-itself with an explicit, auditable comment directive — ``# ambient-scan: allow`` — and
-is then exempt as a whole. Everything *below* the root carries no such directive and
-is enforced. The directive is the "named exemption stated at the point of use": it is
-deliberate, greppable, and states its reason inline.
+wall-clock time, AR-22/NFR-04) may read ambient nondeterminism. Each such read
+declares itself with an explicit, auditable comment directive — ``# ambient-scan:
+allow`` — on the **same line** as the read; only reads on a directive-bearing line are
+exempt, everything else is enforced. The directive is **line-scoped**, not
+file-scoped: a marker buried in a docstring or a module header no longer waves the
+whole file through, so a real ambient read added later on an unmarked line is still
+flagged. The directive is the "named exemption stated at the point of use": it is
+deliberate, greppable, and states its reason inline next to the read it sanctions.
 
 **Import-aware detection.** The scanner resolves each module's imports first, so it
 follows aliases: ``import datetime as dt`` then ``dt.datetime.now()``,
@@ -79,9 +82,10 @@ SKIP_DIRS: frozenset[str] = frozenset(
     }
 )
 
-# The composition-root / sanctioned-reader opt-out. A file bearing this comment
-# directive is the composition root (where the real clock is injected) or a
-# sanctioned measurement harness (AR-22/NFR-04); it is exempt as a whole.
+# The composition-root / sanctioned-reader opt-out. A source LINE bearing this
+# comment directive (the composition root where the real clock is injected, or a
+# sanctioned measurement harness, AR-22/NFR-04) exempts only the ambient reads on
+# that same line — the exemption is line-scoped, never whole-file.
 ALLOW_MARKER = re.compile(r"#\s*ambient-scan:\s*allow\b")
 
 # datetime.datetime classmethods that read the system wall clock.
@@ -163,6 +167,9 @@ _MODULE_ORIGINS: dict[str, str] = {
 RULE_CLOCK = "system-clock-read"
 RULE_RANDOM = "unseeded-random"
 RULE_ENTROPY = "os-entropy"
+# A file the gate could not parse or read. A fail-closed gate must not pass a file
+# it could not inspect, so an unparseable/unreadable file is a finding, not silence.
+RULE_UNSCANNABLE = "unscannable-source"
 
 # The origin token for a SystemRandom class reference (from ``random`` or ``secrets``);
 # constructing it yields an OS-entropy RNG, so a draw off it is flagged.
@@ -248,8 +255,9 @@ def _fn_finding(origin: str) -> tuple[str, str] | None:
 class _Analyzer:
     """Import-aware ambient-nondeterminism analysis over one module."""
 
-    def __init__(self, filename: str) -> None:
+    def __init__(self, filename: str, allow_lines: frozenset[int] = frozenset()) -> None:
         self.filename = filename
+        self._allow_lines = allow_lines
         self._aliases: dict[str, str] = {}
         self._findings: list[Finding] = []
 
@@ -410,6 +418,10 @@ class _Analyzer:
             self._flag(node, finding[0], finding[1])
 
     def _flag(self, node: ast.Call, rule: str, detail: str) -> None:
+        # Line-scoped exemption: a read on a line bearing ``# ambient-scan: allow`` is
+        # the sanctioned composition-root / harness read and is not reported.
+        if node.lineno in self._allow_lines:
+            return
         self._findings.append(
             Finding(self.filename, node.lineno, node.col_offset + 1, rule, detail)
         )
@@ -418,30 +430,60 @@ class _Analyzer:
 # --- public entry points ----------------------------------------------------
 
 
+def _allow_lines(source: str) -> frozenset[int]:
+    """The 1-based line numbers bearing a ``# ambient-scan: allow`` directive.
+
+    Line-scoped: a marker exempts only ambient reads on its own line, so a marker in
+    a docstring or module header no longer waves the whole file through."""
+    return frozenset(
+        lineno
+        for lineno, line in enumerate(source.splitlines(), start=1)
+        if ALLOW_MARKER.search(line)
+    )
+
+
 def scan_source(source: str, filename: str) -> list[Finding]:
-    """Scan one module's source. A file bearing the ``# ambient-scan: allow``
-    directive (the composition root or a sanctioned harness) yields no findings, and
-    unparseable source yields none too (the gate never crashes on a malformed file;
-    ruff owns syntax)."""
-    if ALLOW_MARKER.search(source):
-        return []
+    """Scan one module's source. Ambient reads on a line bearing the
+    ``# ambient-scan: allow`` directive (the composition root or a sanctioned
+    harness) are exempt; every other ambient read is a finding. Unparseable source
+    is itself a finding — a fail-closed gate must not silently pass a file it could
+    not inspect (ruff owns syntax, but the gate never fails open)."""
     try:
         tree = ast.parse(source, filename=filename)
-    except SyntaxError:
-        return []
-    return _Analyzer(filename).run(tree)
+    except SyntaxError as exc:
+        return [
+            Finding(
+                filename,
+                exc.lineno or 1,
+                (exc.offset or 0) + 1,
+                RULE_UNSCANNABLE,
+                f"source could not be parsed ({exc.msg}); the gate fails closed on it",
+            )
+        ]
+    return _Analyzer(filename, _allow_lines(source)).run(tree)
 
 
 def scan_file(path: Path, *, root: Path = ROOT) -> list[Finding]:
-    """Scan one file, reporting its path relative to ``root``."""
-    try:
-        source = path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
-        return []
+    """Scan one file, reporting its path relative to ``root``.
+
+    An unreadable file (a read or decode error) is itself a finding, not silence: a
+    fail-closed gate must not pass a file it could not inspect."""
     try:
         rel = path.resolve().relative_to(root).as_posix()
     except ValueError:
         rel = path.as_posix()
+    try:
+        source = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        return [
+            Finding(
+                rel,
+                1,
+                1,
+                RULE_UNSCANNABLE,
+                f"file could not be read ({exc}); the gate fails closed",
+            )
+        ]
     return scan_source(source, rel)
 
 
