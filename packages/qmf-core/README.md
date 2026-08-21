@@ -31,6 +31,16 @@ the type-separated wall/monotonic kinds behind the injected `Clock` protocol wit
 a pure `DataDrivenClock` for replay, `MonotonicReading` as a boot-scoped diagnostic
 that is never an `Instant`, `WriterId` with strictly-increasing `OrderingKey`s that
 carry no causal meaning, the `verify_tzdb_pin` calendar-extension seam, and
-display-only labelled rendering excluded from identity. The remaining CT-05 surface
-arrives in a later story. Build, lint, type-check, and test through the workspace
-`poe` tasks — never in isolation.
+display-only labelled rendering excluded from identity. Story 1.6 landed CT-05 **the
+single canonical serializer, fp1 fingerprint, result label, and worlds** — the one
+`canonical_bytes` serializer and `fingerprint` function (emitted form
+`fp1:sha256:<hex>`, living only in qmf-core) over the pinned recipe (sorted UTF-8
+JSON, NFC-normalized strings, integer-only identity numerics with floats and nulls
+refused, CT-01 canonical rationals, order-significant arrays, SHA-256), the
+`Fingerprint` value, the `ResultLabel` whose parts are its identity with a
+content-derived `computation_identity`, the `OccurrenceRecord` that sits outside
+identity, the `World` (`live | replay | simulated`, with `simulated` a policy-rejection
+refusal into governed evidence) and `EvidenceClass` enums, `governed_namespace`
+storage separation, and the FM-6 idempotent/collision guard (`reconcile_write` plus
+the in-memory `GovernedEvidenceLedger`). Build, lint, type-check, and test through the
+workspace `poe` tasks — never in isolation.

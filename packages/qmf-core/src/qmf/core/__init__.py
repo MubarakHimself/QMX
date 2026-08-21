@@ -3,13 +3,15 @@
 Roster package of the QMF V1 uv workspace. It declares the package identity and
 version and re-exports the public CT-* surface as it lands story by story: CT-04,
 the typed refusal envelope; CT-03, the instrument/venue/account identity nouns;
-CT-01, the exact money/price/quantity value vocabulary; and CT-02, exact time,
-calendars, and the injected Clock. Nothing here reaches across a sibling boundary
-— the default-deny dependency direction (L30) is preserved by construction, and
-qmf-core takes zero outside dependencies (DEC-0104).
+CT-01, the exact money/price/quantity value vocabulary; CT-02, exact time,
+calendars, and the injected Clock; and CT-05, the single canonical serializer, the
+fp1 fingerprint, the result label, and the worlds. Nothing here reaches across a
+sibling boundary — the default-deny dependency direction (L30) is preserved by
+construction, and qmf-core takes zero outside dependencies (DEC-0104).
 
 ``CONTRACT_FORMAT_VERSION`` re-exported here is CT-01's; each contract owns its own
-format version, so CT-02's is reached as ``qmf.core.chrono.CONTRACT_FORMAT_VERSION``.
+format version, so CT-02's is reached as ``qmf.core.chrono.CONTRACT_FORMAT_VERSION``
+and CT-05's as ``qmf.core.fingerprint.CONTRACT_FORMAT_VERSION``.
 """
 
 from __future__ import annotations
@@ -46,6 +48,21 @@ from qmf.core.exact import (
     UnitKind,
     ValueFactor,
 )
+from qmf.core.fingerprint import (
+    LIVE_EVIDENCE_NAMESPACE,
+    EvidenceClass,
+    Fingerprint,
+    GovernedEvidenceLedger,
+    OccurrenceRecord,
+    ResultLabel,
+    World,
+    WriteOutcome,
+    WriteReceipt,
+    canonical_bytes,
+    fingerprint,
+    governed_namespace,
+    reconcile_write,
+)
 from qmf.core.identity import (
     Account,
     AccountRole,
@@ -66,6 +83,7 @@ from qmf.core.refusal import (
 
 __all__ = [
     "CONTRACT_FORMAT_VERSION",
+    "LIVE_EVIDENCE_NAMESPACE",
     "Account",
     "AccountRole",
     "CalendarIdentity",
@@ -76,12 +94,16 @@ __all__ = [
     "DatedRecord",
     "DisplayTime",
     "Duration",
+    "EvidenceClass",
     "ExactRational",
+    "Fingerprint",
+    "GovernedEvidenceLedger",
     "Instant",
     "Instrument",
     "Interval",
     "Money",
     "MonotonicReading",
+    "OccurrenceRecord",
     "Ok",
     "OrderingKey",
     "Price",
@@ -89,6 +111,7 @@ __all__ = [
     "Quantity",
     "RefusalCategory",
     "Result",
+    "ResultLabel",
     "Retryability",
     "RoundingMode",
     "SessionWindow",
@@ -99,12 +122,19 @@ __all__ = [
     "ValueFactor",
     "Venue",
     "VenueId",
+    "World",
+    "WriteOutcome",
+    "WriteReceipt",
     "WriterId",
     "WriterSequencer",
     "__version__",
+    "canonical_bytes",
     "compare_causal",
+    "fingerprint",
+    "governed_namespace",
     "is_ok",
     "is_refusal",
+    "reconcile_write",
     "render_utc_iso8601",
     "verify_tzdb_pin",
 ]

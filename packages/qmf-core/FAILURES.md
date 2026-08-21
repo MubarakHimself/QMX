@@ -55,3 +55,53 @@ written for someone who was not in the design room.
   wrong; fix the call and retry, and a retry with corrected parts constructs the
   value. History is never rewritten to fix a past record — a correction is a new
   dated record.
+
+### FR-3: A true fp1 collision on a governed-evidence write (CT-05, FM-6)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category). The pure core
+  surface never returns `storage failure` — that category arises at the data
+  boundary, not here (FM-8).
+- **Detection:** `reconcile_write` (and the `GovernedEvidenceLedger.admit` /
+  `.write` / `.write_label` guards that compose it) key a write on the presented
+  `fp1` fingerprint's digest and compare bytes. A first write of a fingerprint is
+  `stored`; a re-write whose bytes are **byte-identical** to what the fingerprint
+  already addresses is `idempotent` and accepted silently; a re-write whose bytes
+  **differ** under the same fingerprint is a true collision — identity is asserted
+  while content differs.
+- **Auto-recovery / retry:** none, and the stored bytes are **never overwritten**.
+  The collision RETURNS a `policy rejection` `TypedRefusal` (retryability `no`)
+  whose `context` names the offending `fingerprint`, carries `alarm: true`, and sets
+  `notification_tier: alarm`. Nothing is raised across the boundary.
+- **Visible degraded state:** none in this pure guard — the prior bytes remain and
+  re-write idempotently. Downstream storage (qmf-registry / qmf-data) surfaces the
+  alarm operationally.
+- **Notification tier:** alarm. A true collision is an integrity event, not a
+  routine input mistake, so it is surfaced loudly rather than silent-logged.
+- **Product-user affordance:** nothing an end user did caused this; it is an
+  identity-integrity event a developer or operator must investigate. The refusal's
+  `context` names the fingerprint under which two different byte sequences collided;
+  the write is refused and the original evidence is preserved untouched.
+
+### FR-4: A `world = simulated` (or non-live) governed-evidence write (CT-05, FM-7)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** `governed_namespace` (and the `GovernedEvidenceLedger.write` /
+  `.write_label` guards that call it) route a governed-evidence write to a storage
+  namespace derived from its `world`. `world = simulated` is reserved but **unusable
+  in V1** — it has no governed namespace until the backtesting sitting defines
+  simulated-time typing (GAP-0048). A non-live world (`replay`) routes to its own
+  non-live namespace and can therefore never resolve to the live evidence namespace
+  (`LIVE_EVIDENCE_NAMESPACE`); world separation is delivered by storage separation,
+  not by identity distinctness alone.
+- **Auto-recovery / retry:** none automatic. A `simulated` write RETURNS a `policy
+  rejection` `TypedRefusal` (retryability `no`) whose `context` names `world` and
+  cites `gap: GAP-0048`. Nothing is raised across the boundary.
+- **Visible degraded state:** none. No bytes are written; the world policy is
+  enforced before any fingerprint is computed.
+- **Notification tier:** silent-log. Attempting a reserved-unusable world is a
+  wiring/policy mistake surfaced as a value, not an operational alarm.
+- **Product-user affordance:** nothing failed at runtime for an end user; a
+  developer routed a `simulated` result into governed evidence before V1 admits it,
+  or expected a non-live result to land in the live namespace. The refusal's
+  `context` says the world was rejected and points at the gap; produce evidence in a
+  supported world (`live` or `replay`), whose result lands in its own namespace.
