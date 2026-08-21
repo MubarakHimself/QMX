@@ -126,10 +126,15 @@ the underlying evidence, and the notification channel is never a permission
 path back into live trading. Delivery mechanics (channels, retries, dedupe,
 quiet hours, credentials) stay deferred to the node/terminal phases.
 
-Forward-compatibility hook [ASSUMPTION — operator to confirm]: one primary
-operator today, possibly a small team (~3) later — so action attribution
-stays named and no surface hard-bakes an anonymous single-user assumption.
-No collaboration features now.
+Forward-compatibility hook (operator-confirmed 2026-08-21): one primary
+operator today, but other people may use the platform later — possibly even
+as open source ("I might just open source it") — so action attribution stays
+named, no surface hard-bakes an anonymous single-user assumption, and the
+external-usability lens (§9) is load-bearing, not aspirational. No
+collaboration features now. Open-sourcing is direction, not a decision; if
+distribution ever exceeds personal use, the Dukascopy personal-use ruling
+(DEC-0170) reopens by its own terms and the ship-no-corpus gate (FR-042)
+becomes the hard boundary.
 
 ## 4. Operator journeys (captured from golden scenarios)
 
@@ -670,6 +675,8 @@ factory optimizes to the gate; the operator judges the thesis.
 | 14 | [MINED] **News-provider selection evidence for DEC-0119** — old-build evaluation recorded as input, not a choice: Forex Factory free weekly JSON as primary (rate-limited ~2 downloads/5 min), FMP / Trading Economics / FXStreet as impact-carrying fallbacks, EODHD disqualified (no impact field), scraping rejected. | Operator ruling at node/ops |
 | 15 | [MINED] **Deep-history acquisition evidence** — TrueFX (16 majors, tick since 2009) and HistData (M1 + tick) as evaluated Dukascopy companions; Databento carries no spot FX; venue-only backfill is rate-capped into unviability, so the recent window needs a platform-continuity bridge, not broker backfill. | Input to FR-042 epics |
 
-**Live `[ASSUMPTION]` index:** (1) the terminal's Phase-3 slot (§2); (2) the
-small-team (~3) forward-compatibility hook (§3). Everything else that was
-once tagged has been resolved by operator ruling and untagged.
+**Live `[ASSUMPTION]` index:** (1) the terminal's Phase-3 slot (§2) — the
+only assumption still standing. Everything else that was once tagged has been
+resolved by operator ruling and untagged (most recently the
+forward-compatibility hook, confirmed 2026-08-21 with the possible
+open-sourcing direction).

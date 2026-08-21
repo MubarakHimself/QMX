@@ -67,6 +67,16 @@ Three generations precede the current corpus:
 The operator's instruction: mine and correlate these without making him read
 them; the current docs/_docwork corpus stays the authority.
 
+## Possible future open-sourcing (operator dictation, 2026-08-21)
+
+"People might want to use it later... I might just open source it. Who
+knows?" Recorded as direction, not a decision. It costs nothing now — the
+external-usability success lens and the named-attribution hook already point
+the same way — but two things become hard boundaries if it ever happens: the
+ship-no-corpus data-licensing gate (FR-042), and DEC-0170's Dukascopy
+personal-use ruling, which reopens by its own terms once distribution exceeds
+personal use.
+
 ## Trading-node operational intensity (operator dictation, 2026-08-21)
 
 The node phase carries the platform's heaviest ops load: MIS includes
