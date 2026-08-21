@@ -2,7 +2,7 @@ ledger:
   - id: DEC-0001
     title: "Current operator rulings are authoritative"
     statement: "Current direct operator corrections and rulings govern QMF V1 when sources disagree."
-    status: provisional
+    status: ratified
     rationale: "The transcripts explicitly place current operator rulings above inherited plans, summaries, and historical material."
     sources: [EXT-0041, EXT-1143]
     component: COMP-QMF-CORE
@@ -11,7 +11,7 @@ ledger:
   - id: DEC-0002
     title: "Historical source hierarchy"
     statement: "The GitBook supplies Book and BMS governance baselines, while recovery and older QMX material supplies evidence only for semantics that have not been changed by later rulings."
-    status: provisional
+    status: ratified
     rationale: "The baseline is useful but incomplete; it does not override later corrections or recreate the old module graph."
     sources: [EXT-0042, EXT-0043, EXT-1144, EXT-1145, EXT-1147]
     component: COMP-QMF-CORE
@@ -20,7 +20,7 @@ ledger:
   - id: DEC-0003
     title: "Research never auto-adopts"
     statement: "Research and study deliverables are evidence for a later ruling; they do not become QMF contracts merely because a study was completed."
-    status: provisional
+    status: ratified
     rationale: "Both sessions distinguish study delivery from operator adoption."
     sources: [EXT-0040, EXT-0203, EXT-1046]
     component: COMP-QMF-CORE
@@ -29,7 +29,7 @@ ledger:
   - id: DEC-0004
     title: "Documentation precedes implementation"
     statement: "QMF is documented and reviewed before trading-node implementation or code generation, and deep design proceeds one focused topic at a time."
-    status: provisional
+    status: ratified
     rationale: "The operator requested a documentation handoff first and repeatedly rejected premature implementation."
     sources: [EXT-0078, EXT-0107, EXT-1112]
     component: COMP-QMF-CORE
@@ -38,7 +38,7 @@ ledger:
   - id: DEC-0005
     title: "Project initialization stays with operator tooling"
     statement: "Documentation agents must not initialize or scaffold QMX; the operator's project skills own that step."
-    status: provisional
+    status: ratified
     rationale: "The source explicitly reserves initialization and scaffolding for the user's tooling."
     sources: [EXT-0075, EXT-1142]
     component: COMP-QMF-CORE
@@ -47,7 +47,7 @@ ledger:
   - id: DEC-0006
     title: "Human and agent readability"
     statement: "QMF code and documentation must be legible to both human developers and coding agents."
-    status: provisional
+    status: ratified
     rationale: "The factory is intended to support both forms of maintainer."
     sources: [EXT-0076, EXT-1133]
     component: COMP-QMF-CORE
@@ -56,7 +56,7 @@ ledger:
   - id: DEC-0007
     title: "No shipped mock trading estate"
     statement: "QMF libraries ship without mock market data, fake bots, or default strategies; tests may use controlled fixtures but the product does not pretend those are live artifacts."
-    status: provisional
+    status: ratified
     rationale: "The operator repeatedly rejected shipping fake data and bots as platform content."
     sources: [EXT-0090, EXT-0111, EXT-1104]
     component: COMP-QMF-CORE
@@ -65,7 +65,7 @@ ledger:
   - id: DEC-0008
     title: "QMF is a toolbox"
     statement: "QMF is a set of reusable libraries and small modules from which QMX applications are built; QMF is not itself an application."
-    status: provisional
+    status: ratified
     rationale: "The operator corrected application-like framing and positioned QMF as foundation tooling."
     sources: [EXT-0013, EXT-0108]
     component: COMP-QMF-CORE
@@ -74,7 +74,7 @@ ledger:
   - id: DEC-0009
     title: "Application runtime stays outside the foundation"
     statement: "Application loops, orchestration flows, scheduled lifecycles, and product UI do not belong in the QMF foundation unless a later component contract explicitly admits them."
-    status: provisional
+    status: ratified
     rationale: "The source separates reusable contracts from the applications that consume them."
     sources: [EXT-0108, EXT-0080]
     component: COMP-QMF-CORE
@@ -93,7 +93,7 @@ ledger:
   - id: DEC-0011
     title: "Open Python toolbox"
     statement: "QMF must not box in developers or agents: ordinary Python and suitable external libraries remain usable, while uniformity is enforced at live-money and agent-harness boundaries."
-    status: provisional
+    status: ratified
     rationale: "The later correction preserves experimentation and extensibility while concentrating strictness where capital is exposed."
     sources: [EXT-0025, EXT-0026, EXT-0030, EXT-0045, EXT-0166]
     component: COMP-QMF-CORE
@@ -113,7 +113,7 @@ ledger:
   - id: DEC-0013
     title: "Build-own boundary"
     statement: "QMX-owned domain contracts and strategy semantics are implemented locally; suitable dependencies may be wrapped or used without transplanting a foreign platform contract, and separately installed compatible libraries remain permissible."
-    status: provisional
+    status: ratified
     rationale: "The operator distinguished dependency reuse from copying another framework's architecture or strategy model."
     sources: [EXT-0052, EXT-0062, EXT-0109, EXT-1059]
     component: COMP-QMF-CORE
@@ -153,7 +153,7 @@ ledger:
   - id: DEC-0017
     title: "QMF umbrella and QML Bot domain"
     statement: "QMF is the framework umbrella; QML names the future Bot-oriented library rather than the whole foundation."
-    status: provisional
+    status: ratified
     rationale: "This naming correction separates reusable framework primitives from Bot-specific machinery."
     sources: [EXT-0083, EXT-1026]
     component: COMP-QMF-CORE
@@ -173,7 +173,7 @@ ledger:
   - id: DEC-0019
     title: "QMF V1 Blueprint"
     statement: "The current documentation target is the QMF V1 Blueprint; qmf-core is only its first small foundational component."
-    status: provisional
+    status: ratified
     rationale: "The operator explicitly corrected the whole-agreement label and scope."
     sources: [EXT-0235, EXT-0237]
     component: COMP-QMF-CORE
@@ -203,7 +203,7 @@ ledger:
   - id: DEC-0022
     title: "Definitions-only qmf-core"
     statement: "qmf-core is a framework-neutral definitions library with exact primitives, domain nouns, typed refusals, and fingerprints; it contains no broker, event loop, backtest, download, or node runtime."
-    status: provisional
+    status: ratified
     rationale: "The accepted first brick is intentionally small and exposes stable language to every later consumer."
     sources: [EXT-0095, EXT-0112, EXT-0118, EXT-1131]
     component: COMP-QMF-CORE
@@ -223,7 +223,7 @@ ledger:
   - id: DEC-0024
     title: "Final QMF V1 component roster"
     statement: "QMF V1 consists of five libraries—qmf-core, qmf-registry, qmf-data, qmf-indicators, and qmf-structure—and two small modules—venue and risk."
-    status: provisional
+    status: ratified
     rationale: "This is the final simplified roster stated after the detailed studies and corrections."
     sources: [EXT-0244, EXT-0245, EXT-0246]
     component: COMP-QMF-CORE
@@ -232,7 +232,7 @@ ledger:
   - id: DEC-0025
     title: "qmf-core is the first brick"
     statement: "qmf-core is the first component to specify and build, but its six detailed freeze choices remain pending."
-    status: provisional
+    status: ratified
     rationale: "Lock 1 was accepted as the first brick without silently ratifying the proposed choices inside it."
     sources: [EXT-0177]
     component: COMP-QMF-CORE
@@ -241,7 +241,7 @@ ledger:
   - id: DEC-0026
     title: "Exact money primitives"
     statement: "qmf-core represents money and quantity exactly and does not use binary floating-point values for monetary contracts."
-    status: provisional
+    status: ratified
     rationale: "Exact money is part of the accepted definitions boundary; the precision and rounding policy remains a gap."
     sources: [EXT-0065, EXT-1131]
     component: COMP-QMF-CORE
@@ -250,7 +250,7 @@ ledger:
   - id: DEC-0027
     title: "Exact time and trading dates"
     statement: "qmf-core distinguishes exact instants, trading days, and the two date concepts required by trading semantics."
-    status: provisional
+    status: ratified
     rationale: "The sources require exact time vocabulary while leaving encoding and calendar details to ratification."
     sources: [EXT-0065, EXT-1131]
     component: COMP-QMF-CORE
@@ -259,7 +259,7 @@ ledger:
   - id: DEC-0028
     title: "Core market nouns"
     statement: "qmf-core defines Instrument, Bar, Tick, Order, Fill, Position, and Account as asset-neutral domain nouns that can later support order flow, DOM, tape, and market structure."
-    status: provisional
+    status: ratified
     rationale: "The vocabulary must support later Forex, equities, and crypto consumers without forcing a core rebuild."
     sources: [EXT-0126, EXT-1131, EXT-1132]
     component: COMP-QMF-CORE
@@ -268,7 +268,7 @@ ledger:
   - id: DEC-0029
     title: "Typed refusals and deterministic fingerprints"
     statement: "qmf-core exposes typed refusal outcomes and canonical deterministic fingerprint primitives rather than ad-hoc exceptions or unstable identifiers."
-    status: provisional
+    status: ratified
     rationale: "Downstream registration, evidence, and live gates require failures and identities that agents can reason about reproducibly."
     sources: [EXT-0065, EXT-0113, EXT-1131]
     component: COMP-QMF-CORE
@@ -277,7 +277,7 @@ ledger:
   - id: DEC-0030
     title: "Versioning from birth"
     statement: "Public QMF contracts are versioned from their first release, and incompatible semantic changes mint new versions instead of mutating old meaning."
-    status: provisional
+    status: ratified
     rationale: "The foundation is intended to remain stable while later Books, brokers, and asset classes evolve."
     sources: [EXT-0114, EXT-1134]
     component: COMP-QMF-CORE
@@ -286,7 +286,7 @@ ledger:
   - id: DEC-0031
     title: "Asset-neutral core"
     statement: "qmf-core must not assume Forex, cTrader, scalping, or a specific deployment environment; Forex is only the first seeded consumer."
-    status: provisional
+    status: ratified
     rationale: "The operator wants equities and crypto to fit later without rebuilding the foundational language."
     sources: [EXT-0118, EXT-0192, EXT-0204]
     component: COMP-QMF-CORE
@@ -305,7 +305,7 @@ ledger:
   - id: DEC-0033
     title: "qmf-registry V1 boundary"
     statement: "qmf-registry owns identity, lineage, and registration preconditions, including look-ahead causality checks and attempt-count gates."
-    status: provisional
+    status: ratified
     rationale: "The final roster folds these disciplines into registry, while their exact schemas remain for a dedicated contract pass."
     sources: [EXT-0247, EXT-0248]
     component: COMP-QMF-REGISTRY
@@ -324,7 +324,7 @@ ledger:
   - id: DEC-0035
     title: "Graph-shaped lineage without a graph database"
     statement: "Registry lineage is graph-shaped and append-only, but its V1 persistence does not require a graph database."
-    status: provisional
+    status: ratified
     rationale: "Identity and lineage were accepted in principle while database choice was deliberately kept simple."
     sources: [EXT-0158, EXT-0178, EXT-0200]
     component: COMP-QMF-REGISTRY
@@ -353,7 +353,7 @@ ledger:
   - id: DEC-0038
     title: "Content-addressed evidence with two timestamps"
     statement: "Stored result artifacts are content-addressed and preserve both event time and knowledge or ingestion time."
-    status: provisional
+    status: ratified
     rationale: "Reproducible lineage and look-ahead checks need immutable identity plus the time evidence became knowable."
     sources: [EXT-0016, EXT-0017]
     component: COMP-QMF-REGISTRY
@@ -362,7 +362,7 @@ ledger:
   - id: DEC-0039
     title: "Bot and Book lineage"
     statement: "Bots and Books accumulate lineage across first-class variants and revisions instead of being overwritten in place."
-    status: provisional
+    status: ratified
     rationale: "Career identity and variant lineage are necessary for promotion, audit, and later comparisons."
     sources: [EXT-0131, EXT-1135]
     component: COMP-QMF-REGISTRY
@@ -384,7 +384,7 @@ ledger:
   - id: DEC-0041
     title: "Human-controlled promotion"
     statement: "Only a human may promote a Bot or other registered artifact into the live zone; opaque ordinary-Python implementations may still be promoted after review."
-    status: provisional
+    status: ratified
     rationale: "This preserves an open research surface without allowing automated live-money promotion."
     sources: [EXT-0166, EXT-0167]
     component: COMP-QMF-REGISTRY
@@ -393,7 +393,7 @@ ledger:
   - id: DEC-0042
     title: "qmf-data V1 boundary"
     statement: "qmf-data separates ingestion evidence, processed data, processing mechanisms, research access, journaling, and backup as distinct concerns."
-    status: provisional
+    status: ratified
     rationale: "The component is in the final roster and the separation is directionally agreed, but the detailed six-layer schema is still study-derived."
     sources: [EXT-0152, EXT-0249]
     component: COMP-QMF-DATA
@@ -412,7 +412,7 @@ ledger:
   - id: DEC-0044
     title: "Historical data retention and sealed holdout"
     statement: "QMX retains the full obtainable history for each currency and source and seals the newest approximately twelve months as a final one-time evaluation holdout."
-    status: provisional
+    status: ratified
     rationale: "The later data ruling keeps historical evidence while protecting one untouched recent period from repeated research use."
     sources: [EXT-0219, EXT-0220, EXT-0233]
     component: COMP-QMF-DATA
@@ -421,7 +421,7 @@ ledger:
   - id: DEC-0045
     title: "Full raw evidence and off-machine backup"
     statement: "qmf-data retains complete raw evidence locally and maintains a bucket or equivalent off-machine backup with platform-level backup support."
-    status: provisional
+    status: ratified
     rationale: "The operator rejected relying only on reduced buckets and required durable recovery beyond one machine."
     sources: [EXT-0215, EXT-0233, EXT-1074]
     component: COMP-QMF-DATA
@@ -430,7 +430,7 @@ ledger:
   - id: DEC-0046
     title: "Research splits by default"
     statement: "qmf-data presents research datasets through explicit train, validation, and untouched-test splits by default."
-    status: provisional
+    status: ratified
     rationale: "The source treats split discipline as a guard against agent-driven overfitting."
     sources: [EXT-0122]
     component: COMP-QMF-DATA
@@ -449,7 +449,7 @@ ledger:
   - id: DEC-0048
     title: "Cross-domain journal and observability"
     statement: "The data foundation must support durable journal and observability records for Bot, Book, BMS, MIS, SQS, and kill-switch behavior."
-    status: provisional
+    status: ratified
     rationale: "The listed trading domains need audit evidence, although event shapes, cadence, and retention are still open."
     sources: [EXT-0154, EXT-0155]
     component: COMP-QMF-DATA
@@ -457,12 +457,12 @@ ledger:
 
   - id: DEC-0049
     title: "Automatic detector action"
-    statement: "Automated data or quality detectors may notify, but whether they can mutate trading state is not adopted from the data study."
-    status: open
-    rationale: "The study proposed notification without action, but it was never independently ratified as a live-control law."
-    sources: [EXT-0202, EXT-0203]
+    statement: "Automatic detectors may act, but only through the existing entry-blocking control vocabulary, scoped to the narrowest affected subject — instrument, currency cohort, Book, venue/broker, or system-wide — never wider (an event affecting USD never pauses JPY pairs; an event affecting gold never pauses EUR), and never through any act on positions or exits (the L39 exit-preservation invariant holds). The response posture is operator-configurable and UI-editable per L38: inform when the operator is reachable, pause when not. Detector-raised pauses clear under the existing control rank/authority rules; these are rare, black-swan-class events."
+    status: ratified
+    rationale: "Operator direct ruling 2026-08-21 (PRD session, DevOps-lens framing): inform if available, pause if not, configurable via the settings panel; zoom into who is affected and pause only that scope."
+    sources: [EXT-0202, EXT-0203, EXT-2093]
     component: COMP-QMF-DATA
-    tags: [study-delivered, safety]
+    tags: [operator-direct, safety, cross-cutting]
 
   - id: DEC-0050
     title: "Calendar and live-feed capture excluded from foundation work"
@@ -477,7 +477,7 @@ ledger:
   - id: DEC-0051
     title: "Acquisition plumbing and first-install bulk history"
     statement: "QMF V1 provides ingest plumbing and supports a bulk historical load during first installation, while scheduled acquisition lifecycle remains outside the reusable library."
-    status: provisional
+    status: ratified
     rationale: "The later source requires evidence capture now but preserves the toolbox-versus-application boundary."
     sources: [EXT-0079, EXT-0080, EXT-1155]
     component: COMP-QMF-DATA
@@ -487,7 +487,7 @@ ledger:
   - id: DEC-0052
     title: "Standalone economic-calendar recorder"
     statement: "Forward economic-calendar recording is performed by a standalone application that consumes QMF data contracts rather than by a QMF runtime module."
-    status: provisional
+    status: ratified
     rationale: "Calendar history is otherwise lost, but scheduling and operation are application responsibilities."
     sources: [EXT-0018, EXT-0031, EXT-0080]
     component: COMP-QMF-DATA
@@ -496,7 +496,7 @@ ledger:
   - id: DEC-0053
     title: "Tick acquisition sequence"
     statement: "Historical tick backfill uses Dukascopy-class evidence first, and forward broker tick capture waits for the broker API application and connection."
-    status: provisional
+    status: ratified
     rationale: "This sequence captures available history without pretending the unapproved broker feed already exists."
     sources: [EXT-0019, EXT-0081, EXT-0216]
     component: COMP-QMF-DATA
@@ -505,7 +505,7 @@ ledger:
   - id: DEC-0054
     title: "Synthetic data role"
     statement: "Synthetic market data may stress infrastructure and failure handling, but it may not validate trading edge or replace real evidence."
-    status: provisional
+    status: ratified
     rationale: "The operator allows synthetic conditions only as a robustness tool."
     sources: [EXT-0093, EXT-1075]
     component: COMP-QMF-DATA
@@ -514,7 +514,7 @@ ledger:
   - id: DEC-0055
     title: "qmf-indicators wrapper boundary"
     statement: "qmf-indicators wraps TA-Lib-class arithmetic through QMF-owned interfaces instead of reimplementing established indicator formulas."
-    status: provisional
+    status: ratified
     rationale: "The final roster explicitly chooses wrapping for light indicator arithmetic."
     sources: [EXT-0250]
     component: COMP-QMF-INDICATORS
@@ -523,7 +523,8 @@ ledger:
   - id: DEC-0056
     title: "Light and heavy indicator split"
     statement: "Light deterministic indicators may run with Bots, while heavy analytical indicators belong to MIS or research consumers outside qmf-indicators runtime responsibility."
-    status: provisional
+    status: superseded
+    superseded_by: DEC-0128
     rationale: "The sessions consistently separate trading-path arithmetic from heavier analytical work."
     sources: [EXT-0123, EXT-0124, EXT-0180, EXT-0181]
     component: COMP-QMF-INDICATORS
@@ -541,7 +542,7 @@ ledger:
   - id: DEC-0058
     title: "qmf-structure boundary"
     statement: "qmf-structure owns QMX-defined causal levels, zones, and market-structure components rather than generic indicator arithmetic."
-    status: provisional
+    status: ratified
     rationale: "The final roster assigns proprietary causal structure to its own library."
     sources: [EXT-0251]
     component: COMP-QMF-STRUCTURE
@@ -550,7 +551,7 @@ ledger:
   - id: DEC-0059
     title: "Venue module boundary"
     statement: "COMP-QMF-VENUE is a small broker and venue integration module whose first implementation targets the cTrader Open API in Python."
-    status: provisional
+    status: ratified
     rationale: "The final roster treats broker connection as a small module, not as a broad trader library."
     sources: [EXT-0141, EXT-0241, EXT-0252]
     component: COMP-QMF-VENUE
@@ -559,7 +560,7 @@ ledger:
   - id: DEC-0060
     title: "No MQL implementation"
     statement: "The first venue integration uses the cTrader Open API from Python and does not use MQL."
-    status: provisional
+    status: ratified
     rationale: "The operator chose the Python cTrader path explicitly."
     sources: [EXT-0141]
     component: COMP-QMF-VENUE
@@ -568,7 +569,7 @@ ledger:
   - id: DEC-0061
     title: "Multi-venue seam"
     statement: "COMP-QMF-VENUE exposes a venue-neutral seam so later crypto and stock adapters can be added without changing foundational contracts."
-    status: provisional
+    status: ratified
     rationale: "cTrader is the first adapter, not a permanent assumption baked into qmf-core."
     sources: [EXT-0142, EXT-0252]
     component: COMP-QMF-VENUE
@@ -606,7 +607,7 @@ ledger:
   - id: DEC-0065
     title: "Risk module boundary"
     statement: "COMP-QMF-RISK owns the current versioned Book and BMS machinery, exits, correlation ledger, and money rules, with its internals deferred to a dedicated risk and trading-node session."
-    status: provisional
+    status: ratified
     rationale: "The final V1 roster includes risk as a small module but explicitly avoids pretending the detailed Book grammar is finished."
     sources: [EXT-0242, EXT-0253]
     component: COMP-QMF-RISK
@@ -615,7 +616,7 @@ ledger:
   - id: DEC-0066
     title: "Book and BMS are risk semantics"
     statement: "Books and BMS express risk, money management, and position-sizing policy rather than trading-entry logic."
-    status: provisional
+    status: ratified
     rationale: "The operator consistently separates the Bot's confluence from the Book's capital and risk behavior."
     sources: [EXT-0130, EXT-0242]
     component: COMP-QMF-RISK
@@ -624,7 +625,8 @@ ledger:
   - id: DEC-0067
     title: "Exit ownership"
     statement: "The final ownership split between Bot exits and Book exits is unresolved and must be settled inside the risk and trading-node design session, not qmf-core."
-    status: conflict
+    status: superseded
+    superseded_by: DEC-0147
     rationale: "Direct operator corrections repeatedly place Exit in Book territory, while the inherited baseline described Bot exit organs and Book-forced exits."
     sources: [EXT-0020, EXT-0067, EXT-1125, EXT-0136, EXT-0253]
     component: COMP-QMF-RISK
@@ -637,7 +639,7 @@ ledger:
   - id: DEC-0068
     title: "Surgical risk controls and correlation"
     statement: "COMP-QMF-RISK must support independently specified risk variables, fast invalidation, dynamic stop-loss and take-profit behavior, and a correlation ledger."
-    status: provisional
+    status: ratified
     rationale: "The risk design is intentionally fine-grained rather than one global position-size rule."
     sources: [EXT-0135, EXT-0136, EXT-0137]
     component: COMP-QMF-RISK
@@ -656,7 +658,8 @@ ledger:
   - id: DEC-0070
     title: "Book-level paper mode"
     statement: "Paper mode is a Book-level state: when a Book cannot trade live, its attached Bots continue against the Book's paper account so performance evidence continues."
-    status: provisional
+    status: superseded
+    superseded_by: DEC-0149
     rationale: "The ruling moves paper behavior from Bot twins to the risk container and anticipates separate demo accounts; the direct operator wording is missing from the export, so the Book-level ruling survives through the assistant's immediate recap."
     sources: [EXT-0149, EXT-0150, EXT-0213, EXT-0232]
     component: COMP-QMF-RISK
@@ -675,7 +678,8 @@ ledger:
   - id: DEC-0072
     title: "Pair-scoped news controls"
     statement: "News blocking is scoped to the affected pair and does not automatically stop unrelated trading; SQS remains a separate control."
-    status: provisional
+    status: superseded
+    superseded_by: DEC-0152
     rationale: "The operator separated event relevance from spread quality and preserved unaffected trading."
     sources: [EXT-0138, EXT-0223]
     component: COMP-QMF-RISK
@@ -694,7 +698,7 @@ ledger:
   - id: DEC-0074
     title: "Spread Quality Sensor"
     statement: "SQS means Spread Quality Sensor and is a risk-quality input distinct from news controls."
-    status: provisional
+    status: ratified
     rationale: "Both the later correction and QMX2 consolidation use the spread-quality expansion."
     sources: [EXT-0069, EXT-1138, EXT-1146]
     component: COMP-QMF-RISK
@@ -703,7 +707,8 @@ ledger:
   - id: DEC-0075
     title: "SQS calculation"
     statement: "The Spread Quality Sensor formula, inputs, thresholds, conditioning, and sampling cadence remain unratified."
-    status: open
+    status: superseded
+    superseded_by: DEC-0153
     rationale: "The source names the sensor but expressly leaves its candidate formula open."
     sources: [EXT-0069, EXT-1152]
     component: COMP-QMF-RISK
@@ -712,7 +717,7 @@ ledger:
   - id: DEC-0076
     title: "R is pre-trade risk"
     statement: "R denotes one unit of pre-trade risk and is not realized profit, account equity, or post-trade return."
-    status: provisional
+    status: ratified
     rationale: "This vocabulary correction is required before formulas can be dimensionally checked."
     sources: [EXT-0070]
     component: COMP-QMF-RISK
@@ -731,7 +736,7 @@ ledger:
   - id: DEC-0078
     title: "Three distinct capital concepts"
     statement: "Current roster state, risk allocation, and any surviving legacy slot concept remain distinct and must not collapse into one field."
-    status: provisional
+    status: ratified
     rationale: "The source warns that merging the three produces semantic and accounting errors."
     sources: [EXT-0072, EXT-1150]
     component: COMP-QMF-RISK
@@ -750,7 +755,7 @@ ledger:
   - id: DEC-0080
     title: "Scalping Book is not universal"
     statement: "The recovered scalping cycle is one reusable Book pattern, not a global Book law for all strategies and holding periods."
-    status: provisional
+    status: ratified
     rationale: "The operator explicitly identified the recovered design as a Scalping Book and expects other Book forms."
     sources: [EXT-0073, EXT-1139, EXT-1140]
     component: COMP-QMF-RISK
@@ -862,7 +867,7 @@ ledger:
   - id: DEC-0092
     title: "Fresh alpha-decay mathematics"
     statement: "Any future alpha-decay and benchmark mathematics is designed afresh from current definitions rather than reconstructed from unrecoverable legacy formulas."
-    status: provisional
+    status: ratified
     rationale: "The operator stopped further excavation after the legacy math proved incomplete and ambiguous."
     sources: [EXT-0264, EXT-0270]
     component: COMP-QMF-RISK
@@ -881,7 +886,8 @@ ledger:
   - id: DEC-0094
     title: "Recovered benchmark baseline"
     statement: "The recovered two-stopouts-per-day baseline, stop-out definition, overloaded B symbol, and BENCHED namespace are not yet valid V1 contracts."
-    status: open
+    status: superseded
+    superseded_by: DEC-0155
     rationale: "The study exposed missing definitions and namespace collisions that require a fresh risk session."
     sources: [EXT-0259, EXT-0261, EXT-0262, EXT-0263]
     component: COMP-QMF-RISK
@@ -890,7 +896,8 @@ ledger:
   - id: DEC-0095
     title: "Multiple BMS per Book"
     statement: "Whether one Book may own multiple BMS instances or policies remains undecided."
-    status: open
+    status: superseded
+    superseded_by: DEC-0143
     rationale: "The transcript raises the possibility without supplying a final cardinality contract."
     sources: [EXT-0132]
     component: COMP-QMF-RISK
@@ -899,7 +906,7 @@ ledger:
   - id: DEC-0096
     title: "Factory module evidence"
     statement: "Every factory-built QMF component ships with executable tests and reference usage that demonstrates its public contract."
-    status: provisional
+    status: ratified
     rationale: "The factory must hand consumers verifiable contracts rather than prose-only claims."
     sources: [EXT-0089]
     component: COMP-QMF-CORE
@@ -908,7 +915,7 @@ ledger:
   - id: DEC-0097
     title: "Long-lived foundation"
     statement: "QMF is designed for durable evolution with infrequent foundational rebuilds and versioned extension rather than repeated replacement."
-    status: provisional
+    status: ratified
     rationale: "The operator's ambition is a Bloomberg-class personal platform rebuilt at most roughly twice per year."
     sources: [EXT-0110, EXT-1094, EXT-1130]
     component: COMP-QMF-CORE
@@ -917,7 +924,7 @@ ledger:
   - id: DEC-0098
     title: "Real workload design target"
     statement: "QMF contracts and implementations are designed for a real scenario of roughly forty concurrent Bots rather than toy-scale assumptions."
-    status: provisional
+    status: ratified
     rationale: "The operator gave roughly forty Bots as a real workload; this is a design case, not a measured percentile SLO."
     sources: [EXT-0212]
     component: COMP-QMF-CORE
@@ -1157,7 +1164,8 @@ ledger:
   - id: DEC-0124
     title: "Freeze-choice status after the foundation sitting"
     statement: "Of the six qmf-core freeze choices, three are now ratified contracts — the UTC time encoding (DEC-0106), instrument identity (DEC-0107), and the result-label tuple (DEC-0110) — while canonical indicator arithmetic (GAP-0032), the backtest fidelity taxonomy (GAP-0048), and the SR* threshold (GAP-0049) remain open for their own sittings."
-    status: ratified
+    status: superseded
+    superseded_by: DEC-0134
     rationale: "The foundation sitting resolved the encoding-level choices; the remaining three belong to the indicator and backtesting areas."
     sources: [EXT-2027, EXT-2028]
     component: COMP-QMF-CORE
@@ -1328,3 +1336,396 @@ ledger:
     sources: [EXT-2049, EXT-2051]
     component: null
     tags: [scope, boundary, node, standing-instruction]
+
+  - id: DEC-0143
+    title: "Book, BMS, and the binding chain (AD-29)"
+    statement: "The authority order is constitutional and verbatim across all three legacy layers, re-ratified 2026-08-20: 'Bots trade; books control bots; BMS accounts for and constrains books; nothing above a bot touches the market. Hierarchy: bot -> book -> BMS -> operator' — nothing in QMF may invert or shortcut it. The BMS is the account-facing supervising layer, not a rulebook beside the Book: one BMS instance per account, serving many Books; a Book binds exactly one BMS at a time (dated, append-only, swappable — re-binding mints a new binding record with a supersedes edge); a Bot binds exactly one Book (DEC-0115); a crypto or prop-firm BMS is a new BMS version, never a second BMS stacked beside an existing one. Every cardinality-one is a deliberate ruling under AD-17. The authority split stays default v1 verbatim — 'The book owns admission, sizing, doors, leash, and profile selection. BMS owns accounting, constraints, journals, KSA policy, and reporting' — with the migration caveat that journal, record, and session machinery is now QMF-side (AD-19/21/28) while the authority did not move. Three identities are minted apart: Book VERSION (template content, identified by its fp1), Book INSTANCE (a minted deployment record — version fingerprint + AccountId + VenueId + world + mint occurrence + creation sequence — carrying an opaque BookInstanceId; two copies of one version on one account are distinct by mint and never merged: an equal-fingerprint binding record is an invalid-input refusal, never an idempotent accept), and binding EPOCH (the half-open interval between a binding record and its superseder, identified by the binding record's fingerprint; CT-32 populations and AD-41 folds cite binding-record fingerprints, never intervals). BmsInstanceId is content-derived from (BMS definition fingerprint, AccountId, VenueId, world). The risk domain is the binding (BookInstanceId, BmsInstanceId, VenueId, AccountId, world) — aligned with the (VenueId, account) command stream and never coarser than it; role is deliberately not in the tuple (it rides the per-intent execution target); world is a constant 'live' for every V1 binding, so a replay of a binding is deliberately incomparable by binding. Any tuple change mints a new binding, and what carries is declared, never inferred: every binding record carries a mandatory per-counter state_carry declaration (ledger, cycle, budget, bench_counter, exposure — each carry|reset), with carry legal only under a human-signed carries-ledger edge. An instance never spans venues: a strategy at several brokers is several instances of one Book version, each with its own BMS instance and connection; cross-broker figures are after-the-fact reports at a stated as-of knowledge time and never gate an order. Several Books may bind one account and every coupling is named: they share one BMS instance and one command stream; on a netting account they also share positions, so binding a second Book onto a netted account whose live bindings may trade an overlapping instrument set is an unsupported-capability refusal unless the operator signs the shared-flatten limitation on the admission page (the signature an identity field of the binding); the recommended default — operator-confirmed post-close as the first-stable-version posture — is one Book per netted account; where the position model makes a narrow enforcement indistinguishable from a wider scope, the action refuses rather than executing wider. The paired demo target is an account and carries its own paired BMS instance, linked to the live BMS by a typed pairing record; the paper flip is an operator-ratified dated change of the Book-to-BMS binding, minting a new binding epoch, never a new Book. A binding is admissible only where the venue's CT-18 declaration AND its venue-observation profile satisfy the Book's declared required capabilities — including the account settlement currency matching the Book's accounting_currency, the shared-flatten signature where netted, a present SQS baseline for every sensor the Book's doors read, the live-path rung baseline on this deployment's tuple, and a control-rank table the Book does not contradict — a shortfall refusing at bind time, never at trade time."
+    status: ratified
+    rationale: "Operator rulings 2026-08-20 (memlog entries 85, 86, 87, 93, 94) with the corpus-verified refinement governing (the round-1 'BMS = rulebook' framing was agent phrasing the operator's own correction reversed: 'the BMS is what connects the account'); identity trinity and bind-time capability check minted by the risk reviewer gate (entry 111); one-Book-per-netted-account confirmed post-close (entry 115). Supersedes docs/glossary.md's pre-ruling BMS definition ('machinery owned within the Book domain') and qmf-risk FM-8's several-BMS-policies framing, both written before GAP-0039 was ruled."
+    sources: [EXT-2056, EXT-2057, EXT-2069, EXT-2070]
+    component: COMP-QMF-RISK
+    tags: [architecture-spine, risk, book, bms, binding, gap-0039]
+    supersedes: [DEC-0095]
+
+  - id: DEC-0144
+    title: "Templates as configuration artifacts; git-logic versioning (AD-30)"
+    statement: "A Book or BMS template is a structured configuration artifact (JSON-Schema-class): declared variables, each carrying its unit, an exact-rational or scaled-integer value (no binary float anywhere), and a declared ui-editable | uneditable flag — the standing operator rule that 'configurable' means editable in the platform UI applies to every configurable variable minted anywhere in QMX. Each variable also declares admission_impact in {resign | relint | none}: changes touching charter, money_rules, admission_bar, or required_venue_capabilities are resign (a fresh AD-32 Layer 2 + Layer 3); leash_grammar, control_policy, and protection_windows numbers are relint (Layer 1 only). Defaults + versions + copies: a template version is grammar plus defaults; a copy is that version instantiated onto an account as an instance; adding a broker account offers copies of the chosen defaults (Book instance, BMS instance, own connection); a version changes the variables, a copy binds them to money. Numbers live inline and are identity-bearing — the legacy registry-pointer rule is inverted, since outside the fingerprint two Books with different money rules would share one identity. Versioning is git logic without git: an append-only version graph built on branches-from edges (multiple heads legal; 'current' is a separate dated pointer record) — never on supersedes, which stays linear everywhere else; diffs are derivable between any two versions; every old version stays readable forever; UI edits mint a new version, never mutate one. A changed number changes fp1, hence a new Book identity, a new binding, and a fresh cycle's money — unless the new binding's state_carry declares carry under a human-signed carries-ledger edge; the track record travels separately on continues-performance, so a rule change never resets the performance line by accident and never moves money by accident. Declared sections: charter, footprint_requirements, money_rules, admission_bar (the legacy 'entrance exam' renamed — banned vocabulary), leash_grammar, capacity_and_sweep, exit_policy, control_policy, protection_windows, and paper; a further section is a contract-format-version mint. Order significance is declared per section, never inferred: admission_bar is a set canonically ordered by measure_identity with display ordinals separate, so two operators writing the same requirements in different order get the same Book fingerprint. Unknown sections under a known contract format version are ignored; an unknown format version refuses. Every Book definition additionally declares accounting_currency, required_venue_capabilities, required_producer_contracts (each producer cited as contract_id + version + on_version_change in {refuse | accept-and-mint-new-book-version | accept-with-continues-performance}), and worked_example (a keyed collection, one entry per declared formula id). Mandatory surfaces whose contract is deferred (footprint_requirements, the prediction linter — both awaiting the Bot schema) are declared pending(<gap id>): a pending slot passes registration and blocks live binding. A binding cites a Book definition by fingerprint, never a version string."
+    status: ratified
+    rationale: "Operator Books-package ruling as amended (memlog entries 100, 86: 'every variable declared UI-editable vs uneditable in the template itself — very important'; git logic: 'we won't use Git, but the logic behind it'); admission_impact, on_version_change, pending slots, and section order rules minted by the risk gate (entry 111)."
+    sources: [EXT-2057, EXT-2063, EXT-2069]
+    component: COMP-QMF-RISK
+    tags: [architecture-spine, risk, templates, versioning, gap-0039]
+
+  - id: DEC-0145
+    title: "Risk record kinds and per-entity journals as projections (AD-31)"
+    statement: "Journal streams stay writer-scoped (AD-21, one per producing component under a WriterId). The Book journal, BMS journal, and per-bot journal — the operator's logbook — are declared read-time projections over those streams, selected by entity identity: an entity is not a writer and no entity mints a stream of its own. This is a disclosed substitution of the operator's per-entity-streams ask, resolved and confirmed by the operator post-close ('if I need per-bot data I can extract it; if I need per-Book I can extract it'). Two event classes exist because the neutral venue port cannot carry Book identity and must not learn it: risk-authored events (decision, risk transition, control action, promotion), minted by the risk/node layer, carry the Book-definition fingerprint, the binding identity, and — where the act concerns one bot — the Bot identity plus seat binding, as identity fields; venue-authored events (order, fill, data quality), minted by the connection manager under its own WriterId, carry the command record's content fingerprint, and the projection joins through it — the command record carrying the binding identity as an identity field. That join is pinned versioned CT-25 surface, not implementer judgment. Paper and live are separated by construction: a projection resolves inside one role-scoped namespace; a projection spanning roles exists only as an explicitly-declared cross-role read — wider than the decay cohort: any entity projection over an entity that operated in more than one role (a benched seat inside a live Book is the ordinary case) is permitted as a declared cross-role read with role carried on every row, never aggregated across roles without an explicit declaration. The legacy five Records streams (veto_ledger, trade_journal, book_journal, ksa_audit_log, correlation_ledger) survive as projection names only, mapped onto AD-21's seven event types by one versioned mapping table in CT-25; no second event catalog is minted. Every risk record is a qmf-core value type, content-fingerprinted by qmf-core's single implementation and wrapped into a registry record by the composition root; no new package edge is created. The risk-domain writer unit is (machine, risk role, binding); the block-on-unpersistable obligation binds the risk dispatcher exactly as it binds the connection manager — a control action is journaled before dispatch, so a storage failure blocks the dispatch rather than losing the intent. Correlation vocabulary is renamed apart and never interchanged: cohort-correlation evidence (a CT-23 declared evidence slot), fill-attribution label (venue), and correlation_id (tracing)."
+    status: ratified
+    rationale: "AD-31, closing GAP-0039's journal half; the operator's 'dig deeper, it's not as simple as you think' journals deepening (memlog entry 100) resolved as projections, disclosed as the distiller's correction, and operator-confirmed post-close with the delegated node data-layer verdict (entry 114). The command-fingerprint join was pinned as CT-25 surface by the risk gate (entry 111)."
+    sources: [EXT-2063, EXT-2069, EXT-2070]
+    component: COMP-QMF-DATA
+    tags: [architecture-spine, risk, journals, projections, gap-0039]
+
+  - id: DEC-0146
+    title: "Book and BMS admission: linters, shakedown, one signature (AD-32)"
+    statement: "A new Book or BMS proves itself in three layers, and no trial period, probation window, or paper-performance gate exists — redemption loops stay dead. Layer 1 — linters, machine, at registration: completeness against the declared contract format version; a unit on every parameter; every number an exact rational or scaled integer; every referenced measure, producer, and venue capability resolvable; worked-example arithmetic recomputed by invoking the cited producer contracts themselves (never linter-local arithmetic, which would be a second implementation of a governed formula); control-rank uniqueness; unit-kind coverage on every declared variable; and the prediction linter — a static can-this-Book-register-this-bot compatibility check that depends on the deferred Bot schema and ships as a pending slot (passes registration, blocks live binding). Layer 2 — technical shakedown on a demo/paper binding: connect, register a bot, execute; proves the machinery works, proves nothing about edge; two named prerequisites so a bring-up deadlock surfaces here and never at the first tick — a recorded live-path rung baseline on this deployment's declared (OS, CPU-class) tuple, and a present baseline artifact for every sensor the Book's doors read. Layer 3 — one operator signature on one assembled page carrying both proofs, the binding identity, the capability-satisfaction result, and the resolved BMS fingerprint (AD-18 card; the plain-words summary an identity field). The admission_bar — 'the Book sets the bar' — is a set of named requirements, each carrying an opaque measure_identity, a mandatory unit, a comparison (at-least | at-most | within-band), a threshold expressed as a mandatory discriminated union with a pinned tag set (a ruled exact rational, or an explicit not-yet-ruled tag carrying its gap reference — the key always present, so blankness is a declared value, never a key-presence test), and evidence_requirements (world, account role, minimum evidence window, and required producer contract format versions). No paper role may gate live money: an evidence_requirements.account_role naming a paper role in a bar gating a live binding is a policy rejection at Layer 1. A float-valued measure compared to an exact-rational threshold crosses the named analytic-to-exact boundary under a comparison rule declared in the requirement itself. Blank blocks live money: a Book whose bar holds any not-yet-ruled threshold or pending slot registers and binds to non-live roles freely, and binding to a live account is a policy rejection — the container ships complete today with every number honestly blank. Parity is structural: a result whose producer contract format versions differ from the bar's declared requirements does not satisfy the bar. No composite score, rating, tier band, or weighted aggregate may express a bar. The same three layers apply verbatim to a BMS definition."
+    status: ratified
+    rationale: "Operator validation amendment (memlog entry 101: no performance probation, but linters + demo shakedown + one signature; the prediction linter is the operator's own idea); the corpus treats new-Book/BMS validation 'like a bot — similar but not so similar', which is exactly why the layers are technical, never performance-based. Threshold union, producer-invoked recompute, and the no-paper-gates-live rule minted by the risk gate (entry 111)."
+    sources: [EXT-2063, EXT-2069]
+    component: COMP-QMF-RISK
+    tags: [architecture-spine, risk, admission, gap-0039]
+
+  - id: DEC-0147
+    title: "Exit ownership: Book policy, Bot proposals, typed closes (AD-33)"
+    statement: "The Book owns exit policy for the life of a position; a Bot may propose an exit through the versioned risk-evaluation door (CT-23), and the Book executes or refuses with a recorded, journal-bearing reason — fast invalidation is preserved as a proposal path. CT-23 is the bot-to-Book inbound port, minted once and read one way everywhere: it carries two typed intent families plus declared evidence slots. Entry intent: instrument, direction, the declared full-loss price, an advisory proposed_r, a typed reason code, and the execution target resolved per AD-35. Exit intents are risk-monotonic by construction — V1 kinds are close_full and tighten_protective_stop, each carrying a typed reason_code (versioned per Book family); close_partial is NOT a V1 kind: the command vocabulary is exactly the five ratified kinds and none expresses a fractional close, so a partial exit could only be emulated by close-then-replace — the unprotected window AD-34 forbids — and is an unsupported-capability refusal in V1. An intent may never widen a stop, extend a target beyond the Book's declared envelope, re-open, or increase size. A tighten_protective_stop names a direction and a bound, never a price; the Book's policy resolves the level, which keeps R single-authored. requested_r is Book-resolved, never bot-supplied: a Bot proposes, the Book resolves and sizes, and only the Book-resolved value enters the command record's identity — the QML donor's TradeIntent omitted volume for exactly this reason. The protective stop attached at entry is Book-owned for the position's life, moved only by Book policy or a protection authority and only in the risk-non-increasing direction measured against the frozen original_risk_distance (stated that way so a ratchet passing entry into profit stays legal); where CT-18 declares protective-stop attachment, every live order attaches a venue-resident stop at placement — the only protection that survives a dead node — and where a Book requires attachment the venue does not declare, placement refuses rather than resting unprotected. Exit method is a declaration, not code in the Book: exit_policy declares ExitLogicRef = {module_id, config} per family — a QML donor atom adopted by dated sitting decision, open to revision by the QML sitting; a Book may declare zero permitted bot-intent kinds — a static-protective-stop-only Book is the honest V1 default; later Book versions may delegate specific exit organs to specific bot families as a version change, not a rule break. Every close carries a typed close reason (generalized from the QML CloseReason taxonomy), addable never redefined: protective_stop_fill | target_fill | protection_amendment_fill | bot_intent | hold_time_force_flat | boundary_flat | window_forced_flat | protection_forced_flat | kill_line_flat | venue_liquidation | venue_initiated_close | operator_close — kill_line_flat minted apart from protection_forced_flat because the kill line and the kill switch are two different things. Every (control-action kind x issuing authority) maps to exactly one close reason through a pinned versioned table. Whole-trade attribution: the full realized result of a virtual position, in R, credits the Bot that opened it, regardless of who closed it — no counterfactual, no apportionment; reports partition by close reason, so the bot's edge and what our own gates cost are one dataset read two ways."
+    status: ratified
+    rationale: "Operator ruling 2026-08-20 (memlog entry 88: 'for now option one' — Book owns, bots propose, delegation is a later version change), resolving the long-standing DEC-0067 conflict in favor of the repeatedly-corrected direction; close-reason taxonomy and whole-trade attribution ratified in the paper package (entry 97); kill_line_flat, reason_code, and the close_partial removal minted by the risk gate (entry 111)."
+    sources: [EXT-2058, EXT-2062, EXT-2064, EXT-2069]
+    component: COMP-QMF-RISK
+    tags: [architecture-spine, risk, exits, ct-23, gap-0040]
+    supersedes: [DEC-0067]
+
+  - id: DEC-0148
+    title: "amend_protection: the fifth venue command (AD-34)"
+    statement: "CT-19 gains a fifth command kind, amend_protection, minted through AD-27's own explicit-later-mint clause: typed on qmf-core nouns with exact prices, constrained at contract level to risk-non-increasing changes defined per protection side — a stop-side change may not increase the loss-direction distance measured against the frozen original_risk_distance, and the contract-level check binds the stop side only; target-side changes are governed by the Book's declared envelope, not the risk test. It carries the position or pending-order reference under AD-27's identity discipline — the subject reference the subject-terminal resolution reads, so a stop filling mid-amend is a named outcome rather than a stream-blocking UNKNOWN. It is never emulated by cancel-then-place (that opens an unprotected window) and never widened into a general order amendment. cTrader-platform facts, CONFIRMED-PRIMARY: an open position's protection amends in one message with absolute prices, no cancel-replace; a pending order amends through its own message; and absolute protection is documented as not supported for MARKET orders on the new-order message, so the entry-relative form is the declared placement path — the reference price a relative distance derives from is declared CT-19 contract surface, and because the resting stop may then differ from the declared full-loss price by slippage, the declaration stays the plan and is never read back as the observed fill; no dedicated response message exists, so the four-outcome law and declared acknowledgement modes apply unchanged. Amend atomicity is UNDOCUMENTED in every primary source and is therefore a measured-at-connection CT-18 field under verify-or-refuse: until the verification suite establishes it, a Book policy that depends on amending both protection sides in one act refuses, and single-sided amendment is the only legal V1 path. Venue-managed trailing is a CT-18 capability fact, never an assumed behavior: it is legal only where declared and explicitly opted into by a Book; its pushed changes enter as ordinary observations; it is a named delegated protection authority (authority_kind = venue-delegated), each pushed change minting a control-action record of kind protection_amendment under that authority; routing its closes to protection_amendment_fill is design inference, not a platform fact. V1 dynamic SL/TP is the move-to-breakeven ratchet only: one-directional, risk-reducing, never reset outward, per-Book configurable, its trigger point and offset configurable UI-editable variables with no spine value; richer policies (trailing, laddered targets) are later Book versions through the same declaration."
+    status: ratified
+    rationale: "Operator round-5 ruling (memlog entry 103) after the requested primary-doc study of cTrader SL/TP amendment mechanics (research-risk/ctrader-sltp-amend-research.md); the per-side amendment rule and venue-delegated trailing authority minted by the risk gate (entry 111). Amends the AD-27 command vocabulary (four kinds to five) and the CT-18 capability roster."
+    sources: [EXT-2064, EXT-2069]
+    component: COMP-QMF-VENUE
+    tags: [architecture-spine, risk, venue, amend-protection, ct-19, gap-0040]
+
+  - id: DEC-0149
+    title: "Paper mode: Book-level standing evidence state (AD-35)"
+    statement: "Paper is a Book-level mode (DEC-0070 confirmed), expressed as a dated change of the Book's execution binding — a record change, not a new object. Book modes are LIVE | PAPER; no Bot twins, ever; BENCHED is a bot-seat word only and never appears in the Book-mode vocabulary; per-seat routing is expressed on the seat record, never as a Book mode — which is what lets a Book stay LIVE while one seat routes to the paired account, the flip minting a new binding epoch, never a new Book. Paper is a standing evidence state, not a waiting room: any declared condition that blocks live execution routes the Book's activity to its paper target and evidence keeps flowing; trigger kinds are addable never redefined, and every kind declares its disposition — routes-to-paper | blocks-paper — as a mandatory field: a control that blocks live for market-risk reasons blocks paper too (a protection window, the kill switch); a control that blocks live for capital or authority reasons routes to paper (a kill-line stand-down, a benched seat). Routing to paper is never a way around a control — what continues under a control is the recording (the blocked decision on the veto path or the suppressed action on the control-action path, each carrying its would-have-been action); recording is not trading. Current mode is a read-time fold over the append-only transition stream, never a stored mutable field. One active paper-routing target per live binding at an instant (plural demo accounts exist system-wide; the binding resolves to exactly one target, re-pointable by a superseding dated record) — two possible destinations is how an order fires twice; the target is excluded from the live binding's drift check but reconciled as its own binding, and a blocked stream or unresolved UNKNOWN there raises the same alarm class as a live one, because a silent paper outage corrupts every decay verdict computed after it. Routing is separated from binding: a per-intent execution_target is resolved once, at intent mint, from (Book mode, seat state, active-control set) and enters the command record's identity; role rides the execution-target record rather than the binding tuple; live and demo are distinct (VenueId, account) streams, so an outstanding UNKNOWN on one never gates the other. Paper money is frozen evidence: the starting balance is a Book/family-scoped configurable UI-editable default, sized for data-collection realism, frozen at flip, never hand-adjusted; a reset is not an adjustment — it mints a new operator-signed paper epoch record with a fresh declared balance and a lineage edge, the running balance never mutated; paper P&L never becomes Treasury cash, never crosses the money boundary, never buys a seat. Return to live is automatic only where the clearing cause is itself clocked and mechanical; anything touching real money requires an operator signature; paper performance never authorizes a return; mode transitions (CT-24) and control actions (CT-30) are distinct streams — a clocked mechanical clear mints a transition and never a resume, and a control-action stand-down clears only by an operator resume. Decay is judged on decision quality denominated in R, never realized cash; execution quality is a binding-scoped fact never folded into a decay verdict; two streams enter one judgment only when a declared cohort_key matches (Bot identity, Book identity + template version, world, the pinned sensing feed, configured producer fingerprints read as refit-series identities, calendar identity + version, instrument identity or declared equivalence, the active-control set, and the active protection-window set); account role is recorded and deliberately allowed to differ — that is what makes paper-live comparison possible; a judgment spanning mismatched cohorts is a policy rejection, never a silent average. A decay cohort read is an explicitly permitted cross-role read within world = live."
+    status: ratified
+    rationale: "Operator paper-package ratification with riders (memlog entry 97: 'by default the paper is meant to be the Book'; multiple demo accounts — the single-target rule is per live binding; configurable starting balance); execution_target, the paper epoch reset, paper-stream reconciliation, and the cohort-key additions minted by the risk gate (entry 111). Confirms and subsumes DEC-0070."
+    sources: [EXT-2062, EXT-2069]
+    component: COMP-QMF-RISK
+    tags: [architecture-spine, risk, paper-mode, ct-24, gap-0041]
+    supersedes: [DEC-0070]
+
+  - id: DEC-0150
+    title: "Control actions: kill switch, kill line, flatten authority (AD-36)"
+    statement: "Two different things, named apart, never merged: the KILL SWITCH is the global black-swan authority — it stops all new trading everywhere, live and paper alike, is sensor-fed (MIS and SQS are inputs, never authorities), escalates automatically and de-escalates only by a human; its effect may additionally be drain or close_all, and which effect a severity carries is the node's severity policy to choose — QMF forbids itself from choosing it and equally forbids itself a contract that cannot express it. The KILL LINE is a per-Book capital floor: breaching it automatically flattens that binding's scope and stands the Book down — a 3am breach never waits for the operator. The exit-preservation invariant is spine-level law: no control action, of any authority, at any scope, may block a risk-reducing act — cancel_order, close_position, close_all, a risk-non-increasing amend_protection, a protection action, or the recording of evidence; the blocking half of any control is always entries only, and no control-action kind whose effect is a blanket command-pipe block may be minted. The control-action contract (CT-30) carries: a typed action kind, each defined once — suspend_new (no new entries; everything open or resting untouched), drain (no new entries and resting orders run to their own terminal state; nothing force-closed), flatten (close the scope), resume; the issuing authority and its kind, enumerated: operator | book_policy | protection_authority | venue-delegated | adapter_self; a subject scope (instrument | book | binding | account | venue | global) resolved at dispatch through a pinned versioned resolution table — unresolvable refuses, is never emulated at a wider scope, and where netting makes a narrower scope indistinguishable from a wider one the action refuses; a mandatory satisfaction predicate from a closed vocabulary (scope-flat-at-reconciled-verdict | no-pending-orders-at-reconciled-verdict | never-auto), with suspend_new and drain never-auto by rule; a reason class plus evidence references. A control action that fans out is a compound command. Flatten authority, assigned: (1) the operator — always, at any scope, unconditional, never removable, never gated on reconciliation; (2) Book policy, only through pre-declared trigger classes — a kill-line breach flattens automatically, an undeclared trigger flattens nothing, ever; (3) the protection authority (kill-switch class) where the node's severity policy declares close_all for that severity; (4) nobody else — the venue adapter never initiates a flatten (its adapter_self actions are limited to suspend_new, drain, throttle, and session state), a sensor emits a typed verdict and never acts, a Bot never flattens another Bot's position. Every other money boundary (rollover, sweep, re-seed, paper flip) leaves positions alone — a money-accounting boundary is never itself a flatten trigger. resume is operator-only: escalation automates, de-escalation does not. Standing intent, not a queue: a protection action is journaled before dispatch, so the intent exists even if nothing reaches the venue; 'is this account under a standing flatten intent' is a read-time fold, restart-proof by construction; on reconnect the node re-evaluates every standing intent against reconciled state and, if still unsatisfied, issues a new command with a new identity — re-deciding is not retrying; the intent never time-expires; flatten satisfies only on a reconciled verdict showing the scope flat — a command outcome never satisfies an intent; drift, unknown, and out-of-lookback verdicts alarm and hold the intent open without dispatching, so a protection mechanism can never open a position against state it cannot see; undeliverable protection alarms loudly carrying the manual fallback. The standing-intent machinery binds every risk-non-increasing act, not only control kinds. The fold contract is stated once for every read-time fold the spine names: each declares its stream, ordering key, knowledge-time bound, and equal-instant disposition; across writers, control and mode folds resolve by rank, never WriterId byte order; no fold on the trading path may refuse — it returns the most restrictive state, journals data quality, and alarms. Veto accounting is symmetric to suppression accounting: every door refusal mints a decision event on the veto path carrying the refusing-door identity, the would-have-been action fingerprint, and the controlling evidence fingerprint; a door refusal (refused before authorization) stays on the veto path; a suppression is an already-authorized action discarded because a higher authority won — carrying the suppressing and suppressed authorities, the would-have-been action referenced by its control-action record fingerprint (a command identity is minted only at submission — no phantom command record may exist), and the arbitration record; enactment links back to intent by enacts edges, never correlation_id. Binding-state vocabulary, enumerated: a Book binding is live | paper | stood-down; a bot seat is active | benched; a state word in neither list does not exist. Which effect fires at which severity is node authority — QMF carries the contract, the scopes, the refusals, and the evidence, never the trigger-to-level-to-effect matrix."
+    status: ratified
+    rationale: "Operator vocabulary split and flatten-authority ruling (memlog entry 91: kill switch 'flips the entire thing off' vs kill line 'the amount of capital a book touches so that it stops trading'; the operator may flatten anything at any time, authority inalienable); the exit-preservation invariant, satisfaction predicates, fold contract, and veto accounting minted by the risk gate (entry 111), with the kill-switch effect question resolved by operator ruling over the reviewer's suspend_new cap (filed tension)."
+    sources: [EXT-2059, EXT-2069]
+    component: COMP-QMF-RISK
+    tags: [architecture-spine, risk, control-actions, kill-switch, kill-line, ct-30]
+
+  - id: DEC-0151
+    title: "Same-tick priority: one arbitration point per command stream (AD-37)"
+    statement: "Priority is defined per (VenueId, account) command stream with exactly one arbitration point per stream — a deliberate cardinality-one under AD-17, scoped per stream so the system still holds many arbiters; cross-stream ordering is a declared non-guarantee, because two venues have two clocks and the replay tie-break carries no causal meaning. Tier 1: venue-resident actions sit outside the ordering by construction — a resting protective stop fires when it fires, its outcome arrives as an ordinary observation, and the superseded-by-fill read-back rule already resolves the node-close-versus-venue-stop race. Tier 2: node-originated actions take one deterministic order derived from the corpus authority hierarchy and the protection funnel (sensors sense, the protection authority decides, the adapter enforces; escalate-only, human de-escalates) — highest first: (0) operator action; (1) protection actions (kill-switch class); (2) BMS/Book forced flats (kill-line stand-down, window force-flat, hold-time or boundary force-flat); (3) fast invalidation (risk-reducing bot exit proposals); (4) ordinary bot exits and protection amendments. Each control-action kind's rank is a declared, mandatory, non-defaultable field — its existence is QMF's, its value is not — and the rank table is BMS-declared, one per command stream, matching the arbitration point's own cardinality (several Books share one stream, so a Book-owned table would put two rank orders at one arbiter); a Book whose control policy contradicts its BMS's table is refused at bind time; ranks are a total order with uniqueness enforced at admission Layer 1, and arbitration resolves strictly by rank with no arrival-order input. Collapse rule: where two pending actions would produce the same mechanical command on the same enforcement scope, exactly one command is emitted — the rank winner supplies the authority and reason, every loser journals as a suppressed control action; rank decides attribution, not whether the position closes. Conflict rule, scoped and compatibility-aware: where pending actions on the same enforcement scope would produce different commands whose effects are mutually exclusive, the higher rank wins outright and the lower is suppressed — never both, never queued — and a lower-ranked action may never undo a higher-ranked one; actions whose effects compose (suspend_new + flatten, drain + flatten) both execute; a higher-ranked action may never reduce the protection a lower-ranked action would have delivered. Provenance is marked so a later reader does not mistake construction for corpus: the rank ordering is corpus-derived (constitution L1 + the protection funnel); the collapse and conflict rules, and the unification of hold-time force-flat with no-overnight, are this sitting's own design — hold-time force-flat exists in the corpus as a name with no value, and no corpus layer defines same-tick arbitration at all. Scope resolution reads CT-18 netting | hedging before dispatch. Hold limits and no-overnight are one mechanism: a Book-declared force-flat rule = (trigger in {position age exceeding a declared Duration | an instant from a named calendar identity}, scope, rank), both producing the same mechanical close at rank 2; QMF supplies no durations, instants, or ranks; a Book that declares no force-flat rule has none."
+    status: ratified
+    rationale: "GAP-0046 closed from corpus under operator delegation (memlog entry 107: 'seems already answered in GitBook and the trading-node docs — look there'); the GitBook leash chain established as an escalation sequence over time, not an arbitration table, by three independent extractors; freshly-minted pieces (collapse, conflict, hold-time unification) explicitly marked as this sitting's design per the operator's mark-genuinely-new instruction; rank uniqueness and the BMS-declared table minted by the risk gate (entry 111)."
+    sources: [EXT-2065, EXT-2067, EXT-2069]
+    component: COMP-QMF-RISK
+    tags: [architecture-spine, risk, priority, arbitration, gap-0046]
+
+  - id: DEC-0152
+    title: "Protection windows: news, dead zone, handover buffers (AD-38)"
+    statement: "One control-window contract (CT-31) serves every no-trade band. A window record carries: the external-fact quadruple (source, source-native event id, revision, known-at) where it derives from a feed; the window as two instants, never an offset — offsets stored instead of bounds would make a record's meaning depend on a policy version and break replay; a resolved instrument scope; a window kind; a reason class; and a format version. Kinds are addable never redefined and a Book declares which kinds it enables. Three kinds are ratified: news; daily_dead_zone (the daily band in which no session is meaningfully in the market); and session_handover_buffer (the pause around a session handover) — both dead-zone kinds exist and are different things per operator ruling; every kind is calendar-derived (market-hours calendar identity + tzdata, never device or broker location) and therefore absent for 24/7 markets; session_handover_buffer declares its anchor side (pre-close | post-open | both) as a mandatory field. Widths, anchors, buffers, and which severity classes produce a window are configurable UI-editable variables with no spine value; recorded evidence, non-authoritative, each carrying its source layer and authority grade: the daily no-session band appears in the QMX-discussion layer twice with disagreeing widths — a one-hour table row ('OVERNIGHT | 19:00-20:00 | Dead zone — no new positions advised') and Flow 9's approximately-three-hours prose — recorded as a disagreement, never merged, and cited for the window definition only under the named corpus-precedence exemption; ~45-minute handover buffers are the operator's later recollection, not found in that corpus; the plus-or-minus-15-minute news buffer is on record as withdrawn. Effect: a window blocks new entries on the instruments in scope, and nothing else — never an exit, a protection amendment, a protection action, or observation; recording is not trading. An instrument under a news blackout stops live and paper entries alike (operator ruling: 'I can't risk it. For now'). Two records the distillation owes the reader: (a) narrowing — the operator's ruling was stated as 'stops all trading' and is implemented as entries-only, because blocking exits would trap risk behind the very window meant to reduce it — a window that closes positions is a declared Book rule at rank 2, never an implicit effect; (b) supersession — this ruling supersedes the dated 2026-08-18 pair-scoped ruling (tracker/map.md:78, 'while blocked, bots may continue in paper mode so alpha-decay data keeps flowing') and five-hats X-6's tag-and-run shape, so one ruling travels downstream, not two. The blocked decision is still journaled on the veto path carrying the refusing door, the would-have-been action, and the controlling window's fingerprint — decay sensing keeps its data points without a trade being placed. Instrument scope is declared, never parsed: scope resolves through dated per-instrument currency-exposure records (venue-populated where metadata exists, operator-declarable and correctable otherwise); reading a currency out of a symbol is prohibited; a missing record means treated-as-affected and blocked while a window of an enabled kind is in force, journaled as data quality and alarmed. A multi-instrument bot is blocked only on the instruments in scope. Provider impact labels are stored verbatim; QMX mints no severity scale in V1; severity-to-window is a declared node mapping. Widen-never-shrink, forward-only: a later revision may pull a start earlier for instants not yet passed or push an end later, never narrow, cancel, or retro-invalidate a window that has had effect; decisions taken under an older revision stand and are tagged; enforcement is at read time, never at intake — the effective window at decision instant T is a declared read-time fold, the union of every revision known at T with passed bounds frozen. Fail closed: a failed calendar refresh, unknown coverage, or an uncertain window blocks; there is no live skip button — the operator's control is upstream configuration between sessions, and a standing per-instrument exemption is a dated fingerprinted record consumed at compile time, never a click. Whether a window ever closes open positions is a Book declaration entering arbitration at rank 2 as window_forced_flat; declaring none is the V1 posture. A window is a door-class refusal, not a kill-switch level — but evidence produced while a window was in force links to the window record by a typed edge, and the active window set enters the decay cohort key, so a news-heavy period is never compared against a quiet one and read as decay."
+    status: ratified
+    rationale: "Operator news ruling (memlog entry 90) plus GAP-0042 closed from corpus under explicit delegation (entry 106; CT-BMS-04 supplies the record shape and the live-AND-paper rule; the two-instant carriage is three-layers-unanimous), with the desk correction recording both disagreeing dead-zone widths (entry 112) and the round-5 both-kinds ruling (entry 103). Supersedes DEC-0072's pair-scoped framing (the instrument scoping survives re-mechanised through exposure records; the keep-paper-flowing lead is overridden) and the 2026-08-18 paper-through-news ruling."
+    sources: [EXT-2059, EXT-2063, EXT-2064, EXT-2066, EXT-2069]
+    component: COMP-QMF-RISK
+    tags: [architecture-spine, risk, windows, news, dead-zone, ct-31, gap-0042]
+    supersedes: [DEC-0072]
+
+  - id: DEC-0153
+    title: "Spread Quality Sensor V1 (AD-39)"
+    statement: "SQS — the Spread Quality Sensor — is a CT-16 configured producer (by the routing test it is a value per evaluation instant): identity is its entire declared configuration, warm-up declared, a knowable-at instant on every sample, and typed availability markers replacing the legacy -1.0 sentinel. The V1 formula is adopted from the corpus by operator ruling: score = the instrument's historical average spread for that session window divided by its current live spread — 1 means baseline, above 1 tighter, below 1 wider; a ratio against the instrument's own normal, which is what lets one sensor serve a book of instruments (operator caveat recorded verbatim: 'it was some agent's idea, not mine — go with it' — adopted by ruling, not corpus authority). Conditioning is declared, never inferred: the session window is a named market-hours calendar identity + session id, identity-bearing and entering the baseline's fingerprint; the baseline statistic (mean, median, a stated quantile) is fingerprinted contract surface, never the bare word 'average'. The baseline is a fingerprinted INPUT artifact with its own lineage, not part of the producer's configuration identity: it carries its conditioning window, statistic, and refit cadence; a refit mints a new artifact with a supersedes edge; the configuration cites a refit-series identity plus the refit-policy fingerprint as its derived-input identity — a refit under an unchanged policy does not fork identity, a change to the refit policy does; without that split a daily refit would fork the decay cohort daily and destroy the series this sitting exists to start. Mechanism parts adopted: a hard-block threshold per instrument class; a hysteresis band that must be re-crossed before a block clears; an outlier guard against the spread's own measured dispersion; and a conservative sentinel — undefined, unreachable, stale, or refused means hard block, never a last-known-good value. Instrument class is a dated instrument-metadata record kind (instrument_class), operator-declarable and correctable, never derived by parsing a symbol; no class record means blocked, absence journaled as data quality. Composition order is contract surface: an outlier-guarded sample is excluded from the hysteresis re-crossing test. Every parameter is a configurable UI-editable variable carried as an exact rational or scaled integer with no spine value — thresholds, band, outlier multiple, cadence, baseline window and conditioning, refit schedule, staleness horizon, and the Book's decision_freshness_bound; recorded corpus evidence, non-authoritative and never a default: per-class thresholds 0.60 / 0.55 / 0.45 / 0.65 / 0.50, band 0.05, a 4-sigma guard, per-quote cadence, daily and weekly refits. The score is an exact rational over the two scaled-integer spreads, keeping the whole sensor inside exact arithmetic with no analytic crossing between a measurement and a live-money verdict; the comparison boundary is declared — at or above threshold passes, strictly below blocks. Availability markers are enumerated (ok | not_ready | unavailable | stale | refused), the configuration declaring which the door treats as a block (all but ok, by default). The live-spread input is a tick/quote-sampled channel with a declared maximum age not exceeding the Book's mandatory decision_freshness_bound; a bar-sampled SQS is refused at the door, never blocked through. Bring-up is stated: during the first-deploy warm-up week the sensor reports not_ready and there is no live binding to block; a live binding requires a present baseline artifact, checked at bind time and named among the admission Layer-2 prerequisites. Authority boundary, unanimous across four corpus layers: the sensor computes, the transport carries, the Book's door decides — SQS never sizes, never authorizes, never issues a block itself. V1 blocks only — it never shrinks size, keeping the score off the money path. Versioned: a v2 may add depth/L2 inputs as a new configured-producer version, never a redefinition."
+    status: ratified
+    rationale: "Operator round-3 ruling adopting the old ratio sensor as SQS V1 (memlog entry 95), resolving the formula DEC-0075 left open; declared conditioning, the baseline-as-input split, enumerated markers, the freshness bound, and bring-up sequencing minted by the risk gate (entry 111)."
+    sources: [EXT-2061, EXT-2069]
+    component: COMP-QMF-RISK
+    tags: [architecture-spine, risk, sqs, sensor, gap-0043]
+    supersedes: [DEC-0075]
+
+  - id: DEC-0154
+    title: "R, numeraire, capital, and the dimensional law (AD-40)"
+    statement: "R is one relationship with three typed faces, not a number: original_risk_distance — PriceDelta(instrument), entry to the position's declared original full-loss price; original_risk_amount — Money(numeraire), the cost of a full-loss fill at the admitted quantity; r_multiple — a dimensionless exact rational, realized result divided by original_risk_amount, where -1 is a full original loss and 0 is breakeven. Position and Order are anchored as qmf-core shared nouns, each carrying the split this domain needs: a venue position is observation-derived under the venue's declared netting | hedging model; a virtual (Book) position is a fold over fills joined by declared command identity — binding-scoped, Bot-attributed, minted at admission, carrying the frozen R faces — and is the unit of exit records, whole-trade attribution, and the bench fold; every risk record names which of the two it references; where the account is netted, the fill-to-virtual-position attribution rule is a mandatory Book declaration whose absence is a bind-time policy rejection. Both money-bearing faces are frozen at admission and never re-based — not by a stop move, a protection amendment, or an intraday budget re-derivation; the one ruled exception: where an entry fills partially, original_risk_amount is re-based exactly once, at the entry's first terminal state, onto the filled quantity, the admission-time value retained as the declared plan and the re-basing recorded as a lineage edge. V1 admits no scale-in: adding to an open position is a policy rejection; a second tranche needs its own admission and its own R. Every position declares its planned full-loss price before it opens: no declared price, no original_risk_distance, an invalid-input refusal at admission; how the price is derived is a per-family declaration through ExitLogicRef; the consequence in plain words — a strategy that deliberately runs with no planned loss point cannot trade in QMX. Money-to-R crossings name a rate (r_unit_price — Money per r_multiple); an implicit crossing refuses; only r_multiple averages across instruments and accounts. The numeraire is USD system-wide in V1 (operator: 'why would I use anything other than USD?', reconfirmed post-close); the Book charter still declares accounting_currency so a later currency is a version change, and binding a Book to an account in another currency is a policy rejection — no rate source is ratified, and a silent conversion is the one error no report shows; the conversion seam ships and switches on when a source is ruled. Three capital concepts, three types, never fused: roster state (a seat-state enum holding no money), risk allocation (an exact-rational r_multiple, a permission to lose), and capital (Money — virtual ledger equity, broker equity, frozen paper balance, each its own record). The dimensional law makes a second FORM-0006 undeclarable: a closed unit-kind vocabulary, addable never redefined — money(currency) | price-delta(instrument) | quantity(unit) | value-factor(instrument, currency) | r-multiple | rate(money-per-r) | count | dimensionless-ratio | duration | instant — with value-factor (money per price-delta per quantity, the tick/point value) sourced only from venue instrument-metadata snapshots as an exact rational, an absent value factor an unavailable-dependency refusal, never a silent conversion; the reference worked example ships with the vocabulary: original_risk_amount = original_risk_distance x quantity x value_factor. Unit-kind additions are spine amendments only, never per-Book. Every declared variable carries a unit-kind; every formula declares the unit-kind of each input and its output, with a symbolic checker refusing on mismatch; addition, subtraction, and comparison require identical unit-kinds and tags; every formula ships an executable worked example recomputed at tier 2; the dead FORM-0006 is kept as the suite's permanent negative case — a dead formula that can still be typed is a dead formula that comes back. Margin is decided-deferred, never silent: V1 does not size by margin; CT-18 declares the margin model, leverage, free-margin nativeness, and the venue's own margin-call/stop-out level so the dimension is visible; the stated accepted consequence — an R-sized position may exceed what the account can margin, and a second Book on one account can consume free margin the first assumed. The replacement shape, units only, no ratified values: book_capital reads the binding's virtual-ledger equity at the declared period-open instant, excluding unrealized P&L; loss_floor is the same number the kill line names — one value, one name, read by both, never two floors that drift; r_unit_price is fixed at period start unless the Book declares another cadence; loss_runway = book_capital - loss_floor; period_loss_budget = loss_runway / runway_periods; r_unit_price = period_loss_budget / seat_loss_run_allowance supersedes FORM-0004 (dimensionally coherent but mis-named — it computed a rate, not an amount; a derived reading verified against SCN-0001's own checksum); seat_r_ceiling <= seat_loss_run_allowance supersedes FORM-0006 with no money on either side; position_risk_amount = requested_r x r_unit_price, frozen at admission; position_quantity derives across the named boundary with a declared rounding mode. The B split: the one legacy symbol B did two unrelated jobs (bench depth in loss events; a divisor in the money ladder), recorded as the defect that motivated the mandate; two typed variables replace it — bench_consecutive_loss_threshold [count] in leash_grammar, keyed per bot or bot family, and seat_loss_run_allowance [r_multiple] in money_rules; a Book may declare the second derived from the first as declared fingerprinted data, never a hardcoded identity. Book-level limits are expressed only in R or in notional in the Book's numeraire; a limit in instrument-native quantity (lots) is a policy rejection at template validation; a notional limit requiring a QMX-side currency conversion is a policy rejection until a rate source is ratified; a venue-derived notional or margin figure is legal as settlement evidence under the converted_by = venue provenance flag."
+    status: ratified
+    rationale: "GAP-0044 closed under its standing dimensional mandate: the full-loss-price and B-split closures were corpus-grounded under operator delegation (memlog entries 108, 109); the USD numeraire is the operator's direct ruling (entry 104, reconfirmed entry 115); the unit-kind vocabulary, value-factor kind, virtual-position noun, partial-fill re-basing, and margin visibility were minted by the risk gate (entry 111). DEC-0076 (R is pre-trade risk) stands and is elaborated, not replaced; DEC-0077 (FORM-0006 dead) stands, with the dead formula retained as the dimensional suite's permanent negative test."
+    sources: [EXT-2065, EXT-2068, EXT-2069, EXT-2070]
+    component: COMP-QMF-RISK
+    tags: [architecture-spine, risk, r-unit, numeraire, dimensional-law, gap-0044]
+
+  - id: DEC-0155
+    title: "Stop-out vocabulary, bench counter, and performance evidence (AD-41)"
+    statement: "The exit record (CT-29) is minted one per VIRTUAL position close — the Book-side noun, not the venue position, or a netted account produces fewer records than admissions and every fold under-counts. It carries: the virtual-position reference; the frozen original_risk_distance and original_risk_amount (so r_multiple is recomputable forever); the fill references; realized_pnl; a cost_components breakdown (commission, financing/admin fee — a dated fee may exist even on swap-free accounts — and every other named component, each Money(numeraire) with a named source, the set an identity-bearing declaration); realized_r, net of exactly that declared set, with exactly one source — a declared derived display of the record's own frozen fields under a pinned formula, never a second governed implementation of the same division; the close reason; the closing_authority (the arbitration winner) plus the arbitration record reference — suppression counting reads the control-action stream through enacts edges, never the exit record; the result-label parts including account-binding role; and the contract format version of the Book-declared loss predicate. Mechanism and outcome are separate fields — a protective-stop fill may realize a full loss or a breakeven, a forced flat may realize either sign — so no rule is written over the mechanism alone, and the bare word 'stop-out' is not used anywhere. The bench counts qualifying loss exits — closes that realized a loss at or beyond the declared full-loss distance, honouring the operator's 'we only count losses at negative 1R' ruling: the predicate is realized_r <= -q, where q is a declared, UI-editable, per-family template variable defaulting to approximately one R — a configuration the operator sets, never a number the spine invents. Scratches and partial losses do not count by default (a -0.15R scratch is not the damage a leash exists to stop); breakevens never count under any q and are recorded as their own metric (clustering watch), keeping the ruling reversible from evidence; a forced flat or boundary flat is a mechanism, not a verdict — it counts only if it realized a qualifying loss, so the system's own protection never benches the bot it just protected. The bench counter is a read-time fold over the exit-record stream, never a mutable counter — crash-proof by construction and projection-computable; its stream boundary is the binding epoch (a new epoch starts the count at zero unless a signed carries-ledger edge spans it); its knowledge-time bound is the last exit record persisted and journaled at the intent-mint instant, and recording-precedes-interpretation extends: a fill closing a virtual position must have its exit record persisted before any later intent on the same seat is minted, else that intent refuses (stale evidence) — otherwise the (N+1)th entry races the Nth exit record and the leash misses the crossing it exists to catch. The bench threshold is per-bot and configurable (typed count, UI-editable, strategy-family-dependent), never a spine constant; the recorded value of two for a scalper is evidence, previously recorded as unusable until these semantics settled. Vocabulary split: the venue's own 'stop out' means margin liquidation — verified live against cTrader's own glossary at the reviewer gate — and venue_liquidation is reserved for that meaning; the breaker's input is named qualifying_loss_exit; QMX's protective-stop sense is one named close-reason member, never the bare word. Seat state is active | benched on the Bot-Book binding; Book modes are LIVE | PAPER; binding state is live | paper | stood-down — three vocabularies never interchanged, a seat-state write never writes a Book-mode row, and ADMITTED is not a state at all (it is the absence of a binding); a benched seat routes to the paired target through its seat record's execution target while the Book stays live, and the bench event remains on the record after an auto-reset. The performance-result container (CT-32) serves both admission-bar evidence and the analyst's report: the full result label; a declared population (Bot identity, binding-record fingerprints in or out, account roles, instruments, the cohort key — a fingerprinted declaration, not prose); a declared period (an Interval with calendar identity + version, plus the knowledge-time bound it was computed under); the ordered measure set with a unit-kind on every emitted quantity; suppression accounting (counts by authority and reason) AND veto accounting (counts of door refusals by door), so neither our arbitration nor our doors ever read as decay; float discipline — a Sharpe or a drawdown takes label-derived identity, never a hash of float bytes; a single result may never span account roles. A performance metric is a governed producer: its arithmetic is canonical and pinned by its own contract format version — identity moves when meaning moves. Alpha decay ships as evidence primitives only — the exit record, a fingerprinted baseline pointer from a live binding to the evidence it was admitted under, and the result container; no score, rating, tier, or weighted composite; measurement never acts — it publishes, and the authority to act on a published measure belongs to the Book door (bench) or the operator (promotion); the bench fold is one governed producer, published once and consumed by the door. The mathematics is deferred; the collection that makes it possible starts now, because it cannot be back-filled."
+    status: ratified
+    rationale: "Operator bench ruling (memlog entry 92: breakevens never count, the counter counts losses at ~negative 1R, per-bot configurable) restored precisely by the risk gate after a reconcile pass caught an over-broadening (entry 111); the venue_liquidation split verified live against cTrader's glossary at the gate; resolves what DEC-0094 left open — stop-out semantics, the B/BENCHED namespace, and the fresh alpha-decay evidence base."
+    sources: [EXT-2060, EXT-2069]
+    component: COMP-QMF-RISK
+    tags: [architecture-spine, risk, bench, exit-record, performance, gap-0045]
+    supersedes: [DEC-0094]
+
+  - id: DEC-0156
+    title: "Corpus precedence for risk, position sizing, and live trading"
+    statement: "For risk, position-sizing, and live-trading content, the authoritative sources are the GitBook and the trading-node documentation (archive/recovery and the Documents/QMX wiki); the QMX-discussion layer's risk and position-sizing system was replaced and is BARRED as a source there. Non-risk structural definitions may be cited from the barred layer only under a named exemption stated at the point of use — the dead-zone definition citation in AD-38 is the single such exemption in the spine; no risk, sizing, or money content is taken from it anywhere. This is a different ruling from the authority order (bot -> book -> BMS -> operator) and is named apart so neither can be mistaken for the other. The rule binds the PRD, the documentation factory, and every downstream sitting."
+    status: ratified
+    rationale: "Operator standing ruling 2026-08-20 (memlog entry 104: QMX-discussion's risk system 'was REPLACED... please don't'), added to the spine's inherited-invariants table by the risk gate as the corpus-precedence row."
+    sources: [EXT-2065, EXT-2069]
+    component: null
+    tags: [law, authority, corpus-precedence, standing-rule]
+
+  - id: DEC-0157
+    title: "Configurable means UI-editable at platform level"
+    statement: "Everywhere the operator says 'configurable', it means configurable in the platform UI: every configurable variable minted anywhere in QMX must surface as UI-editable at platform level, and every template variable declares ui-editable or uneditable in the template itself (AD-30). The rule applies to SQS thresholds, bench counters, window widths, paper balances, news buffers, breakeven-ratchet parameters — everything. Recorded corpus or recollection numbers attached to such variables are evidence with a stated source layer and authority grade, never ratified constants and never spine values."
+    status: ratified
+    rationale: "Operator standing global rule 2026-08-20 (memlog entry 96), added to the spine's inherited-invariants table as the configurable-means-UI row and enforced across AD-30/34/38/39/41."
+    sources: [EXT-2061, EXT-2069]
+    component: null
+    tags: [law, configuration, ui, standing-rule]
+
+  - id: DEC-0158
+    title: "Risk-gate cross-AD amendments (AD-7/10/12/16/17/18/21/24/27/28)"
+    statement: "The risk reviewer gate (four passes: adversarial 54, rubric 45, rulings-reconcile 10, currency 1 — all applied at desk, three operator-ruling-over-reviewer tensions filed in Deferred rather than silently resolved, lint clean twice) amended eight standing ADs with AD ids stable. AD-7/AD-10: a canonical numeric form is pinned for identity — an exact rational entering identity content is reduced to lowest terms, denominator strictly positive, sign on the numerator, serialized as a two-key object; every Money/Price/Quantity/PriceDelta value entering identity carries the declared canonical storage scale for its value class, pinned in the owning contract — equal value implies equal fingerprint by construction. AD-12: two declared cross-role READ exceptions within world = live, and no write exception ever — the decay-cohort read and the entity projection over an entity that operated in more than one role, each carrying role on every row. AD-16: the risk record kinds are minted (Book definition CT-22, BMS definition CT-27, Book binding CT-28, binding transition CT-24, exit record CT-29, control action CT-30, control window CT-31, performance result CT-32, instrument currency-exposure as a dated metadata record); the single continues-as edge is SPLIT into continues-performance (a human-signed track-record assertion consumed only by CT-32 population declarations, moving no money) and carries-ledger (a human-signed per-binding state carry — virtual ledger, cycle position, budget remainder, breaker and bench counters — asserting nothing about comparability), neither ever inferred from the other; enacts is minted (from a command record or outcome observation to the control-action or intent record it enacts — arbitration, suppression accounting, and standing-intent folds resolve through enacts, never correlation_id); supersedes is pinned linear (one head) while AD-30's branching version graph uses branches-from; a treasury boundary-event record kind is reserved (sweep | refund | re_seed | paper_epoch_reset) with no money moving without one, a boundary event never closing a position and never re-basing a frozen R. AD-17/AD-29: every risk-domain cardinality-one is a deliberate ruling. AD-18: a promotion card attesting an admission carries the Book-definition (or BMS-definition) fingerprint as an identity field, so a signature can never attest a superseded template; the risk slot of the evidence checklist landed (the three-layer admission packet and the performance evidence). AD-21: the decision event type carries a mandatory closed outcome field — authorized | refused-by-door | suppressed — with the refusing-door or suppressing-authority reference, so every projection selects on a declared field, never key presence; the control-action type carries the declared suppressed subtype; entity journals are declared read-time projections, never additional writers. AD-24: a light claim benchmark-proven on one (OS, CPU-class) tuple stands on a new tuple as a provisional light claim — alarming, journaling data quality, re-proved within a declared window or reverting to heavy, never reverting mid-session; recording the live-path rung baseline on the deployment's own tuple is a named admission Layer-2 prerequisite. AD-27: the command vocabulary is five kinds (amend_protection minted); the reconciliation verdict vocabulary gains out-of-lookback so 'I cannot see that far back' is never read as 'the position closed' — a standing protection intent re-evaluates only against reconciled, while drift, unknown, and out-of-lookback alarm and hold the intent open; the read-back resolution generalizes to every command whose subject can terminate independently — a command whose subject is observed terminal at or after the submit stamp resolves rejected-by-venue (superseded-by-terminal-subject), a named outcome, never UNKNOWN, never a stream block; a protection act refused by an UNKNOWN block never evaporates — it stands as a standing intent and is re-decided when the block clears; amend_protection joins the dispatch-ahead set; flatten authority is assigned in AD-36. AD-28: the CT-18 roster gains — all measured-at-connection, verify-or-refuse — the account settlement currency (a non-matching binding is a bind-time policy rejection), the margin model, leverage, free-margin nativeness, and the venue's own margin-call/stop-out level, the instrument value-factor metadata surface (absent = unavailable dependency, never a silent conversion), the reconciliation-lookback declaration, and the protection-capability fields (stop attachment form per order type, amendment support for positions and pending orders separately, amend atomicity, venue-managed trailing and its change-event stream, guaranteed-stop class); a money figure the venue itself derived by conversion is settlement evidence, legal as Money(numeraire) under a declared converted_by = venue provenance flag, explicitly outside the unratified-rate-source clause, which governs QMX-performed conversions only."
+    status: ratified
+    rationale: "The risk increment's cross-AD amendment set, applied by the 2026-08-20 reviewer gate with AD ids stable (memlog entries 110-112); each amendment traces to a named gate finding, and the three overridden reviewer proposals are filed in the spine's Deferred table as revisitable tensions rather than silently dropped."
+    sources: [EXT-2069, EXT-2070]
+    component: null
+    tags: [architecture-spine, cross-ad, gate, edges, identity]
+
+  - id: DEC-0159
+    title: "QMB is the backtesting product: name, scope, and the one-library-thin-doors shape (B-1)"
+    statement: "The QMX experimentation/backtesting product is named QMB — one library plus the qmb CLI, both halves sharing the name; the command is qmb, superseding the position paper's DC-5 qmx-command proposal (QMX names the entire platform and reuse would confuse operator and agents alike). QMB realizes the glossary's 'future backtesting library' entry: it is an application-layer product built ON QMF — never a QMF roster package — consuming the QMF workspace in lockstep; the Simulator remains a SEPARATE deferred UI product that will consume QMB. The experimentation/backtest vocabulary is SETTLED at this sitting: 'experimentation' is the umbrella activity, 'backtest' the verification stage within it. Vocabulary law: QMB is a library and a CLI — never an 'engine' or 'kernel'; QMF is the only framework; 'snapshot' is banned for registry state (say 'as-of set'). Shape (B-1): every capability exists once, in the library, as a pure function; doors — CLI first (the product face), Python API, MCP later — are thin hand-written wrappers carrying only adaptation logic (parsing, transport, refusal rendering, registry enumeration for autocomplete through the B-15 registry-read port, never a door-side cache); door parity is enforced by a tier-2 contract test asserting identical function surface and semantics across doors; the UI backend consumes the Python API in-process; MCP is a sibling door over the same library (never stacked over HTTP), localhost-bound by default, shipped after CLI v1 and not waiting for the agentic system. Extensibility law: capabilities are added as new adapters, config fragments, or library functions — never by re-architecting the tunnel or the doors. Every agent workspace provisions the SAME qmb CLI as a pinned dependency — one CLI for agents and operator alike."
+    status: ratified
+    rationale: "Operator naming ruling 2026-08-20 ~9:30pm (QMB, not qmx; MCP re-ruled in) and ratification by delegation of spine B-1; the thin-doors shape answers Jesse's three-heterogeneous-stacks failure and the adversarial finding that doors do carry adaptation logic; the rename settlement executes the glossary's recorded candidate exactly as the sitting the glossary deferred it to."
+    sources: [EXT-2073, EXT-2075, EXT-2076, EXT-2080]
+    component: COMP-QMB
+    tags: [architecture-spine, qmb, naming, doors, b-1]
+
+  - id: DEC-0160
+    title: "One resolved run-config per run: the config compiler and disjoint Book/BMS namespaces (B-3)"
+    statement: "Every QMB run consumes exactly one fully-resolved, read-only, schema-validated run-config artifact — the operator's wind-tunnel model made mechanism: changing test conditions means changing config variables; the tunnel is never swapped, and adapters are never bound from ambient discovery or code changes. The artifact is compiled from explicit layers with fixed precedence: invocation flags > run spec (the bot layer) > BMS config fragment > Book config fragment > workspace defaults. Book and BMS fragments occupy DISJOINT key namespaces (Book: admission, sizing, exit-door policy; BMS: accounting, constraints, kill-line, reporting); a key collision is a compile-time typed refusal — and in any future sanctioned overlap, BMS outranks Book ('BMS accounts for and constrains Books', DEC-0143). Fragments are generated, schema-validated, fingerprinted DERIVED artifacts carrying AD-16 lineage edges back to their source Book/BMS definitions (CT-22/CT-27) — never a newly minted registry kind, never free-hand-edited. Invocation may take a human alias; the resolved artifact must cite Book definition, BMS definition, and any binding by fp1, never name@version. Every QMB run mints exactly one AD-29 binding with world=replay — a different identity from any live binding of the same Book instance, incomparable to it. starting_capital is a mandatory run-spec field (the binding's virtual-ledger seed, Book-defaultable); a flag override stamps seed_overridden on the binding and forces the run's fold to unrated. The resolved artifact is itself a versioned contract: it stamps its own AD-5 integer format version and declares AD-10 identity-vs-display field classification, so every door computes the same fingerprint and old ledger entries stay readable forever; it is written into the run's output directory, and its fingerprint is the run-id root and the ledger key. Named condition presets (e.g. stress-spread) are config fragments like any other."
+    status: ratified
+    rationale: "Operator Q2 counter-model ('instead of a snapshot we get a config'; wind-tunnel analogy) verified by mechanism against Lean's CLI (a config compiler producing one resolved read-only config per run); the disjoint-namespace and BMS-outranks rules minted by the QMB gate round 2 to keep the fragment layering consistent with the ratified authority chain; fragment-as-derived-artifact minted at gate round 1."
+    sources: [EXT-2072, EXT-2074, EXT-2077, EXT-2078, EXT-2080]
+    component: COMP-QMB
+    tags: [architecture-spine, qmb, config, wind-tunnel, namespaces, b-3]
+
+  - id: DEC-0161
+    title: "Pure run, impure orchestrator: logs during, ONE ledger line at completion (B-4/B-5)"
+    statement: "The QMB library's run() is a PURE function: it consumes the resolved config and data reads and RETURNS the canonical result artifact plus a self-assessment — it writes no log and no ledger. Exactly one impure component — the ORCHESTRATOR (the composition root) — owns the injected log and ledger sinks: it streams the run's operational log, and on completion appends exactly ONE ledger line; on observing a dead or cancelled process it appends the aborted line with refusal context, never silently absent. The ledger line carries the full AD-12 result label (evidence class included; provenance=sandbox on factory-sandbox runs), the CT-32 fingerprint, the run's raw AD-40 unit-kinded measures, the fingerprint of the Book bar AS RESOLVED at run time, and a discriminated run role (confirmation | trial | replicate | aborted). Physically the ledger is WriterId-scoped JSONL fragment files — durable WriterId per (machine, role, worker-slot) per AD-8; concurrent processes never share a file (single-file append is not atomic on Windows and PIPE_BUF-limited on Linux) — and 'the ledger' as read is a merge view over fragments within one world-and-role-scoped namespace (AD-12/AD-19). Concurrency (B-5): concurrent runs are separate OS processes (stdlib process management) spawned by the orchestrator, each with an isolated output directory; the governor bounds parallelism by min(cpu budget, memory budget) with typed refusal or enqueue-on-full, never silent oversubscription; every run is cancellable and carries declared per-run time/memory limits whose breach is a typed aborted; 12-14 concurrent runs on sandbox hardware is a motivating reference under AD-13, never a validated budget until a fingerprinted baseline is measured; no Ray, no required Docker, no daemon — sandboxes and laptops run the same uv-installed package. The library never spawns threads or background work (AD-15); all impurity lives in the orchestrator; no module-global mutable state exists anywhere in the library. Runs enter the governed ledger only through the orchestrator; direct library calls in research return values and produce no governed evidence."
+    status: ratified
+    rationale: "The operator's logs-then-ledger ruling (backtests are logged; completion saves one ledger entry with the unbiased end result) made concurrency-safe and AD-15-clean by the QMB gate: the round-2 adversarial CRITICAL (a pure library cannot also own the ledger append) forced the pure-run/orchestrator split, and round 1 forced the WriterId-scoped fragment physicality; process-per-run is both donors' mechanism, here a free choice rather than a mutable-globals workaround."
+    sources: [EXT-2072, EXT-2074, EXT-2077, EXT-2078, EXT-2080]
+    component: COMP-QMB
+    tags: [architecture-spine, qmb, orchestrator, ledger, purity, governor, b-4, b-5]
+
+  - id: DEC-0162
+    title: "The bar verdict is reader-derived and per-requirement, never frozen (B-4)"
+    statement: "A QMB ledger line stores raw unit-kinded measures and the fingerprint of the Book bar as resolved at run time — never a stored pass/fail. The bar verdict is computed by one authoritative READ-TIME fold producing PER-REQUIREMENT outcomes against the cited AD-32 bar (structural parity on producer contract versions, unit-kind, and comparison rule); composite scores are banned (AD-32/CT-32). A bar ruled later re-verdicts accrued confirmation evidence with NO re-run; not-yet-ruled is the fold's answer while a requirement is blank, or on a world/role miss. The verdict is legal only on role=confirmation lines whose adapters are the Book-declared set; optimize trials, Monte Carlo and significance replicates, and walk-forward train windows ledger role=trial or replicate plus the objective measure — never a bar verdict — and the Book-bar read selects confirmation lines only. A replay-world verdict can never gate live money (AD-29/AD-32): replay evidence feeds a live bar only where that bar's evidence requirements declare it. QMB publishes; it does not bench, promote, or bind — the authority to act on a published measure stays with the Book door and the operator (DEC-0155). QMB's ledger plus CT-32 artifacts are the designated evidence source for the AD-32 admission bar and the AD-18 promotion-card causality slot, under the standing caveat that replay-world, pre-GAP-0048 evidence cannot gate live money."
+    status: ratified
+    rationale: "The operator's 'unbiased pass/fail in the ledger' intent implemented without freezing a verdict that a later-ruled bar would invalidate: the QMB gate round 2 made the verdict a read-time fold (re-verdict with no re-run), and the docs-reconcile lens forced per-requirement conjunction and the replay-cannot-gate-live-money caveat into the rule; run-role discrimination minted at gate round 3 so trials never masquerade as confirmations."
+    sources: [EXT-2072, EXT-2078, EXT-2079, EXT-2081]
+    component: COMP-QMB
+    tags: [architecture-spine, qmb, verdict, fold, roles, admission-bar, b-4]
+
+  - id: DEC-0163
+    title: "QMB adopts CT-32 and CT-13; per-run logs are operational only (B-10 adoption-not-reinvention)"
+    statement: "Every QMB run emits one canonical machine-readable result artifact, and that artifact IS a CT-32 performance-result — the ratified defined-unwired container QMB was always meant to fill — carrying CT-32's fields in full, including suppression and veto accounting (so a run's own control-window and admission doors never masquerade as alpha decay) and the closed AD-40 unit-kind vocabulary. Chart series and trade-event references are DECLARED QMB EXTENSIONS of CT-32: chart series cite exact Bar/Price values (AD-22) as inputs, and any downsample is a display-only derivative with a declared sampler identity, AD-10-excluded from identity, never the canonical payload; trade-event references cite CT-13 journal streams — the trade record IS the CT-29 stream of the run's replay binding. The run's trading events (decision, order, fill, risk-transition and kin) are emitted as CT-13 journal events on writer-scoped streams in the run's world — the ratified journal, not an invented format. Per-run logs are AD-14 operational logs only and are NEVER evidence: under CT-11 only the raw archive and the journal bear evidence, and artifacts cite them. Re-running a run id under its resolved config must reproduce the CT-32 fingerprint; a mismatch is a typed refusal. All human-facing rendering (HTML report, UI charts) is a pure downstream function of the artifact and adds no computation; agents and in-house skills read the artifact, never renderings."
+    status: ratified
+    rationale: "The docs-reconcile lens's core finding — adoption-not-reinvention: QMB's result artifact was re-specifying what CT-32 already ratified, and its run events were re-inventing CT-13 — applied in full, with the two genuinely new needs (chart series, trade-event references) recorded as declared extensions rather than a parallel format; inverts both donors' failure of computing chart data and discarding it into PNGs and strings."
+    sources: [EXT-2074, EXT-2079, EXT-2080]
+    component: COMP-QMB
+    tags: [architecture-spine, qmb, ct-32, ct-13, ct-11, result-artifact, b-10]
+
+  - id: DEC-0164
+    title: "Execution fidelity seams: fill/cost/financing ports, lowest-wins, optimistic taint, calibration-not-invention (B-6/B-7)"
+    statement: "The GAP-0048 seams are ruled; its content is not. Inbound execution is a CT-23 Book-resolved intent (or a typed refusal) — the fill ports execute an authorized intent, never a bot-sized order. Execution binds SEPARATE ports per run-config with pinned composition: (1) fill decides Fill | NoFill | PartialFill and a pre-slip price by declared-path crossing inside the slice, partial quantities first-class (capped by position size and instrument lot step); (2) slippage maps to a post-slip price and may veto the fill if the slipped price is not a legal print on the slice; (3) cost itemizes cash charges (commission; financing/admin fee at the AD-8 accounting rollover, not per-slice) on the post-slip fill in exact-integer money, each partial carrying its own pro-rated fee. Financing is a scheduled position-level cash event on open positions (run-loop sub-phase 2), NOT an order fill — per-instrument, per-direction, calendar-scheduled. Fidelity identity is adapter-id + composition-version + taint; 'optimistic' is the taint field, never the identity. A run's fidelity is the LOWEST fidelity of any adapter it bound; mixed-fidelity comparison of Book bars is a typed refusal without an explicit override. Until GAP-0048 ratifies the fidelity taxonomy and calibration content, all fills carry an optimistic taint: such runs cannot spend split budget and cannot claim edge. The forex spread/slippage/financing content is ORIGINAL to the QMX platform — no donor reference exists — and the solve is CALIBRATION, never invention (operator-ruled 2026-08-20): spread schedules measured from QMX's own recorded bid/ask ticks per venue/hour/session, slippage from live and paper fill journals (CT-25), gap behavior from recorded history, financing from the broker's published schedule; per-broker per DEC-0135; each calibration a versioned fingerprinted artifact declared in the result label. World is provenance-derived, never caller-declared (B-7): store-persisted fabricated data is store-tainted and any run reading it is world=simulated — a policy rejection for governed evidence until GAP-0048, legal for infrastructure stress and strategy-logic smoke tests only; procedure-ephemeral perturbation (trade-shuffle, real-seeded block bootstrap that persists no synthetic series) keeps world=replay with the procedure identity + seed in the label and a robustness-only claim class; L20 stands — nothing synthetic validates edge; a clock/adapter-versus-provenance mismatch is invalid input."
+    status: ratified
+    rationale: "The operator's fill-model ruling (calibration from QMX's own recorded evidence, never invented parameters) plus the spec campaign's finding that neither donor has a usable retail-forex model (LEAN slippage no-ops without volume and has no FX financing; Jesse fills at exact prices with zero slippage) — so the seams ship now with an honest optimistic taint, and the taxonomy values and calibration content remain GAP-0048's sitting; the provenance-derived world closes the synthetic backdoor the adversarial round proved LEAN ships."
+    sources: [EXT-2074, EXT-2076, EXT-2078, EXT-2080, EXT-2081]
+    component: COMP-QMB
+    tags: [architecture-spine, qmb, fidelity, fill, calibration, world, taint, b-6, b-7, gap-0048]
+
+  - id: DEC-0165
+    title: "Registry delivery: immutable as-of sets over a passive hub; DEC-0084 stays dead (B-15)"
+    statement: "ONE library-owned registry-read port serves every QMB consumer — the config compiler resolves through it and doors enumerate through it for autocomplete; no door-side or second cache exists, so autocomplete and resolution can never answer differently. Registry state reaches a machine as an immutable, fingerprinted AS-OF SET of records and fragments (a registry_as_of instant + set fingerprint) — 'snapshot' is banned vocabulary for registry state — delivered by a PASSIVE file-sync hub: dumb storage, not an always-on service; the central-service option stays dead (DEC-0084), and hub deployment detail belongs to the node/ops sitting. A sweep resolves ONE as-of at batch admission, frozen for every trial and stamped into the sweep label; after admission, fragments resolve by explicit fingerprint, never name@latest. Running against a ref that a fresher as-of shows superseded raises an AD-11 stale-evidence refusal (severity configurable). Write-back: each machine's records travel as its own WriterId-scoped append streams; at hub merge, identical-fingerprint arrivals are idempotent accepts, label-identified float-differing artifacts are lineage siblings (never AD-10 collisions), and true collisions refuse and alarm per AD-10. This is the precise mechanism behind the operator's 'CLI updates when I create a Book': a new Book reaches the CLI as a fresher as-of set, never as a door cache or a live service query."
+    status: ratified
+    rationale: "Minted as B-15 by the QMB gate round 2, resolving the adversarial break that stateless-fingerprinted state, live auto-update, offline portability, and no-central-service cannot co-hold: the as-of set is the either/or answer, and the passive hub revives the operator's own middle-sync-server idea without reviving the dead central service; batch-frozen as-of sets keep a sweep's trials from resolving different Book versions mid-flight."
+    sources: [EXT-2078, EXT-2080]
+    component: COMP-QMB
+    tags: [architecture-spine, qmb, registry, as-of-set, hub, autocomplete, b-15]
+
+  - id: DEC-0166
+    title: "Download-once data acquisition with per-window license tags (B-11)"
+    statement: "QMB's data commands (download, verify, catalog, generate) are thin fronts over the ratified QMF data contracts (CT-10/CT-15 intake, rooms, bitemporal law, bid+ask preserved) — no second data layer. Acquisition posture (operator-ruled 2026-08-20): download ONCE under the user's own provider relationship (Dukascopy primary; a dukascopy-node-class downloader as the acquisition-tool reference — github.com/Leo4815162342/dukascopy-node, Node 18+, CLI + library, 1000+ instruments, tick history to the 1990s, web-verified 2026-08-20) into the QMF immutable raw archive: QMX owns its stored source, and runs NEVER fetch from providers — they read only qmf-data rooms. Every ingested window records provenance plus a LICENSE TAG; a source window without a recorded usage right is a typed refusal for governed-evidence use. QMB ships and redistributes no market data. The Dukascopy licensing-gate question — the old corpus failed it — remains an OPEN ops item flagged to the operator; it gates governed evidence only, not experimentation."
+    status: ratified
+    rationale: "Operator acquisition ruling at the walkthrough (download once and store; QMX owns its source — the QMF-ratified archive posture) with the per-window license tag minted at gate round 2 so an unlicensed window can never silently become governed evidence; supplements DEC-0059 (Dukascopy as V1 historical source) on the QMB side without touching it."
+    sources: [EXT-2076, EXT-2078, EXT-2080]
+    component: COMP-QMB
+    tags: [architecture-spine, qmb, data, dukascopy, license, acquisition, b-11]
+
+  - id: DEC-0167
+    title: "QMB distribution: pinned lockfile dependency (uv add qmb), never uv tool; SemVer display-only (B-13)"
+    statement: "QMB is a versioned uv/pip-installable package — library + CLI in one wheel. The primary channel is a normal pinned, lockfile-tracked project dependency (uv add qmb), required because the Python API door must be importable; uvx qmb / uv tool install qmb is an optional CLI-only convenience that does NOT provide the importable library and is never the sandbox provisioning channel. Run identity is AD-12's field set plus the resolved-config fingerprint as an input fingerprint; QMB SemVer and QMF roster SemVer ride as display-only provenance on the occurrence record, never identity. The result label also carries registry_as_of (B-15), data and split fingerprints, world, evidence class, fidelity identity (B-6), RNG provenance where stochastic, and provenance=sandbox on factory-sandbox artifacts. Doors may accept a human alias; the resolved artifact cites Book/BMS/bot definition fingerprints (fp1); a dated pointer record ('current') is legal UX; name@version is not a legal identity cite."
+    status: ratified
+    rationale: "Gate round 1 currency finding: uv tool environments are isolated and expose CLI entry points only, so a tool install cannot serve the Python API door or participate in the lockfile — the npm-analogy 'CLI half' is really pip/uv distribution, and the genuinely npm-like half (strategies and Books as versioned packages resolved from the registry) lands in B-15/B-3, not in the install channel; SemVer-never-identity is AD-10/AD-12 inherited law restated at the packaging boundary."
+    sources: [EXT-2073, EXT-2077, EXT-2081]
+    component: COMP-QMB
+    tags: [architecture-spine, qmb, distribution, uv, semver, identity, b-13]
+
+  - id: DEC-0168
+    title: "QMB stack pins: click==8.4.2, optuna==4.9.0"
+    statement: "The qmb CLI door is built on click==8.4.2 (BSD-3; pure-Python; verified CPython 3.14-compatible — click publishes no per-version classifiers, so pyreadiness's cross is a metadata artifact; web-verified 2026-08-20). The default optimize sampler adapter is optuna==4.9.0 (MIT; carries the 3.14 classifier; 5.0.0rc1 is a pre-release and is not pinned). Pins are exact-equality. A future optuna major bump changes the default sampler's behavior and is therefore a CONTRACT-VERSIONING event — a new sampler identity on every affected trial label — never a transparent update. Optuna adapters are pinned n_jobs=1: process fan-out belongs to the QMB orchestrator's governor, never to the sampler. CPython 3.14 and the uv/ruff/pyright/pytest/poethepoet toolchain are inherited QMF AD-1/AD-3 pins; qmf-* workspace packages ride the lockstep QMF release (AD-2/AD-5)."
+    status: ratified
+    rationale: "Web-verified at QMB gate round 1 per the house rule that no version is pinned unverified; the optuna-major-bump-is-a-contract-event rule follows from AD-5 (meanings never change post-hoc) applied to sampler identity, since the spec campaign showed sampler identity is exactly what Jesse's marketed-Optuna failure hid."
+    sources: [EXT-2074, EXT-2077]
+    component: COMP-QMB
+    tags: [architecture-spine, qmb, stack, click, optuna, pins]
+
+  - id: DEC-0169
+    title: "QMB spine B-1..B-15 adopted in full (ratified by delegation); the remaining rules"
+    statement: "The QMB architecture spine (B-1..B-15 plus the inherited-invariants table, architecture-QMB-2026-08-20/, status FINAL) is adopted in full as the QMB v1 architecture, ratified by operator delegation on 2026-08-20 with a standing right to reopen any B-id at a later sitting; nothing in it touches money-path law. Rules not individually minted above bind through this adoption: B-2 — the event-slice run loop with an injected frontier clock that IS qmf-core's AD-8 Clock protocol (monotonically non-decreasing, emitting wall/replay Instants, never choosing world), a pinned identity-bearing per-slice sub-phase order (frontier/streams -> scheduled position events -> resting-order execution -> indicators/structure on closed data -> strategy callbacks -> new intents rest), higher-BarSpec bars derived from the finest declared base stream and emitted only on completed boundaries (a forming bar is never visible or actionable), in-loop warm-up with trading locked (length = the AD-21 split-manifest embargo, never a second window; the evidence range is the trading interval), new intents never filling against the current slice's path, in non-live runs the Book's SQS door (AD-39) reading the run's modeled-spread series as its spread input (its reconciliation with DEC-0153's tick/quote-sampling and freshness rules an open GAP-0048 item), and simulated-Instant typing refused until GAP-0048 — backtest/replay/live differ only by which clock and adapters the run-config binds, the loop is never forked, and a tier-2 golden-slice determinism test enforces identical fingerprints on identical inputs; B-8 — bots declare typed parameter spaces (exact integer | exact rational | categorical | boolean, bounds, step, default) with optional hard constraint filters, sampled values entering the resolved config only through named AD-7/AD-22 conversions, a PURE sampler function (space, prior ledger results, seed, generation index) stepping in deterministic propose/barrier/condition generations, trial history read from the ledger view (never an in-process study or Optuna's own store), sampler identity + seed + generator provenance + study_fp on every trial label, every trial a first-class B-3/B-4 run, and the anti-overfit parameter-sensitivity analysis emitted with every sweep; B-9 — the research surface is the library's own pure functions importable from a bare uv-installed package, the operator's workstation is a controlled-room host (AD-19/AD-21 in full), other portable contexts receive only unsealed split-governed exports, and sealed or governed evidence never leaves controlled rooms; B-12 — a run declares its full stream set up front (instrument + BarSpec, trading vs data-only roles, declaration order identity-bearing), cross-stream reads only through the declared set, at most one open position per (venue, instrument) (DuplicatePositionStream), one settlement asset per run's trading streams (MixedSettlementAsset), and permutation sweeps are Cartesian batches of isolated fully-labeled runs aggregated only by read-time views; B-14 — the validation ladder (backtest, optimize, Monte Carlo trade-shuffle and real-seeded candle perturbation, rule-significance testing against a detrended zero-edge null, walk-forward) ships as library functions with each statistical procedure versioned as a contract, return-space statistics a declared bounded AD-7 float carve-out re-entering the money path only via named conversions, walk-forward confirmed in by operator ruling while threshold values and pass batteries stay deferred (GAP-0048/0049, 'keep it simple'). LOOK-AHEAD PREVENTION IS DELIVERED by B-2 (forming-bar/completed-boundary rules), B-8 (split-manifest enforcement at every read), and B-12 (declared stream sets); only the registration GATE — the CT-08 evidence checklist — stays deferred per DEC-0121, and B-4/B-8 ledger completeness accrues its raw material regardless. The spine's Deferred table (GAP-0048 content, GAP-0049 + 0016/0017 gate, pass batteries, MCP details, live wiring, cross-stream peer callbacks, UI rendering, QML bot schema GAP-0047, cloud-burst, hub deployment, staged funnel triage, debug/ML-RL/Rust-hybrid, locked validation window, prop-firm Books socketed per DEC-0082) is adopted as the fence: deferred means deferred, with named seams."
+    status: ratified
+    rationale: "Ratification by delegation (operator 2026-08-20 ~11pm) over the walkthrough acceptance and the session's explicit rulings, after three reviewer-gate rounds (round 1 currency/reconcile-qmf, round 2 all six lenses with the full B-1..B-15 rewrite, round 3 inherited-law reconciliation) plus the docs-reconcile lens, each round's findings applied at desk and lint clean; the prevention-vs-gate split on GAP-0016/0017 is recorded here so the standing DEC-0121 deferral is honored, not eroded."
+    sources: [EXT-2071, EXT-2072, EXT-2075, EXT-2076, EXT-2078, EXT-2079, EXT-2080, EXT-2081, EXT-2082]
+    component: COMP-QMB
+    tags: [architecture-spine, qmb, adoption, run-loop, sampler, research, stream-sets, validation-ladder, look-ahead]
+
+  - id: DEC-0170
+    title: "Dukascopy licensing posture: personal use only; the ops flag is closed"
+    statement: "The Dukascopy data-licensing ops question that DEC-0166 left open is CLOSED by direct operator ruling (2026-08-21): QMX's downloaded market data is used at a personal level only — backtesting the operator's own strategies — and 'experimentation' in the QMB scope means exactly that personal backtesting, nothing more. Under that posture no licensing blocker stands: acquisition is download-once under the user's own provider relationship (DEC-0166), QMB ships and redistributes no market data, and no data is exposed to third parties or offered as a service. The per-window license-tag mechanism remains in force unchanged as architecture — every ingested window still records provenance plus a usage-right tag, and a window without one remains a typed refusal for governed-evidence use — because the tag is what keeps the personal-use posture auditable rather than assumed. If a future posture ever exceeds personal use (redistribution, a hosted product exposing the data, third-party access), the question reopens as its own sitting before that use begins."
+    status: ratified
+    rationale: "Operator direct ruling 2026-08-21 ('we are using this data at a personal level... For experimentation, I meant backtesting my strategies. That's it.'), answering the flag the QMB increment surfaced to him; recorded the same day the flag was raised, so no downstream doc carries a stale open-question banner."
+    sources: [EXT-2083]
+    component: COMP-QMB
+    tags: [qmb, data, dukascopy, licensing, personal-use, operator-ruling]
+
+  - id: DEC-0171
+    title: "QML identity: the bot-authoring library, thin by law (QL-1)"
+    statement: "QML is the bot-authoring LIBRARY of the QMX platform — one uv-installable distribution (import `qml`), an application-layer product built ON QMF contracts exactly as QMB is (AD-2 / L11), never a QMF roster package (ADR-0011), never a framework, never an engine, and never again a cross-component contract layer (the old load-bearing-stratum role is retired; QMF's contracts are the shared layer now). Its whole surface is three thin things: (1) author-side types and helpers producing the Bot-domain registry artifacts (CT-33 Bot definition, CT-34 confluence) on qmf-core nouns; (2) the bot runtime protocol hosts invoke (DEC-0177); (3) the conformance gate (DEC-0178). QML mints NO new QMF-ladder (CT-*) shared contract of its own — CT-33/CT-34 are qmf-registry kinds this sitting fills, and the runtime protocol and conformance contract are QML-local contracts on QML's own AD-5 format-version ladder, exactly as QMB owns its run-config and ledger contracts. The old uniformity rationale ('compare bots honestly — same deterministic risk authority, same formula') is ALREADY delivered by ratified QMF law (CT-23 Book-resolved sizing, AD-40 frozen R, CT-29/CT-32 containers); QML adds only the two uniformities still missing — declared footprint and declared parameter space — so comparability never again requires a private contract layer. Plain Python stays first-class forever: an unregistered bot needs zero QML imports to run in QMB or research lanes (don't-box-in); QML conformance is the ticket into governed evidence and Book seats, nothing else. No acronym expansion is minted (the corpus never expands QML; the L reads as Library). DEPENDENCY STANCE: QML imports qmf-core (nouns, fingerprints, refusals, series vocabulary), qmf-registry (the kinds it authors), and qmf-risk (CT-23/CT-29 types); it NEVER imports qmf-venue. The QMF default-deny Dependency-direction rule is read ROSTER-SCOPED — it governs the seven roster packages internally, never applications built on the workspace (the reading the ratified QMB precedent already exercises, DEC-0169) — and this increment records that as a DECLARED RECONCILIATION NOTE annotated at source against the parent rule, never settled silently by a child. REGISTRATION WRITE PATH is AD-25's root-mints pattern (not AD-28's venue path): the composition root holds the WriterId and the gapless per-(writer, kind) sequence for the Bot-domain record streams, mints the registry records, and sees every RecordSink refusal (block-on-unpersistable); `qml` returns fingerprintable content, never stamped records; the writer unit is (machine, authoring role, kind); AD-28's injected-sink reference is scoped to the conformance runner's I/O only (DEC-0178). The library is PURE per AD-15: no threads, no I/O, no process spawning — every impure step (registration writes, sandbox execution) is host-owned."
+    status: ratified
+    rationale: "Ruled at the autonomous QML sitting 2026-08-21 (operator delegation) as QL-1; the roster-scoped dependency reading follows the ratified QMB precedent (DEC-0169) and is recorded as a declared reconciliation note by the reviewer gate rather than settled silently by a child, and the AD-25 root-mints write path with the AD-28-scoped-to-sandbox correction was a gate finding (memlog gate point 11). Ratified by delegation under DEC-0184."
+    sources: [EXT-2084]
+    component: COMP-QML
+    tags: [architecture-spine, qml, ql-1, identity, dependency-stance, registration-write-path]
+
+  - id: DEC-0172
+    title: "Two halves of a bot; the .qml DSL is not revived in V1 (QL-2)"
+    statement: "A governed bot is exactly TWO artifacts. (1) The DECLARATION — a structured configuration artifact under AD-30's template discipline (JSON-Schema-class; every number an exact rational carrying a unit-kind; every configurable variable flagged `ui-editable | uneditable`), registered as the CT-33 Bot definition (DEC-0173). (2) The LOGIC — plain Python conforming to the bot runtime protocol (DEC-0177), shipped as a versioned distribution under AD-2/AD-22 extension mechanics (explicit registration at a composition root, never ambient scanning). The logic's identity basis is its DISTRIBUTION IDENTITY + VERSION + a CANONICAL SOURCE-MANIFEST FINGERPRINT — a normalized, reproducible hash over the source tree, defined as fingerprinted contract surface, NEVER non-reproducible built-artifact/wheel bytes (identical source built in two sandboxes must yield one Bot fp1 per AD-16 dedup); these are IDENTITY FIELDS of the Bot definition, so a code change mints a new Bot exactly as a changed number mints a new Book (AD-30). RULING (the mandatory plain-Python-vs-.qml-DSL question the qml-dig-verification.md input raised): the `.qml` bot-source file format and its Monaco surface are NOT revived in V1 — no second language; what the old `.qml` file carried (entry, filters, gates, subscriptions as editable source) is delivered by the declaration (structure) plus the Python logic (conditions), and the declaration IS the durable, diffable, UI-editable authoring surface. A future declarative condition grammar, editor surface, or agent-codegen lane is platform/agentic territory and COMPILES TO these same two artifacts — nothing forecloses it, nothing waits on it. A model-bearing bot is legal TODAY by baking its weights into the logic artifact (source-manifest identity covers them); a separately-tunable weights-artifact parameter kind is an explicit later mint (Deferred)."
+    status: ratified
+    rationale: "Ruled at the QML sitting as QL-2; the plain-Python-vs-.qml question was the mandatory question the second QML-named input (the .qml bot-source file format) raised, answered from the operator's standing 'bots stay authorable in plain Python' direction plus don't-box-in and the build-our-own economy — a tagged, individually-overturnable assumption (DEC-0184); the source-manifest (never wheel-bytes) identity basis was a reviewer-gate correction (memlog gate point 8). Ratified by delegation under DEC-0184."
+    sources: [EXT-2084]
+    component: COMP-QML
+    tags: [architecture-spine, qml, ql-2, two-halves, no-dsl, logic-identity]
+
+  - id: DEC-0173
+    title: "The Bot definition kind (CT-33) fills AD-16's reserved Bot kind (QL-3)"
+    statement: "CT-33 fills AD-16's reserved Bot kind — a qmf-registry per-kind contract on the QMF ladder, authored via QML, owned by qmf-registry like every kind. IDENTITY CARVE-OUT (stated so AD-16's law cannot be misread): the AD-16 common header's writer, sequence, stable id, and created-at are ordering/occurrence fields EXCLUDED from fp1 (the stable id is derived FROM the fingerprint, never hashed INTO it); Bot identity is the SEMANTIC CONTENT ONLY plus the contract format version and at-birth refs. That content is six groups: (1) the STRATEGY-FAMILY id — exactly one (DEC-0176); (2) the CONFLUENCE SET — one-or-more CT-34 fingerprints (AD-17), canonically ordered by child fingerprint ascending with a separate display-only ordinal (AD-30 set discipline), the bot declaring no execution order since sequencing lives in logic; (3) the DECLARED PARAMETER SPACE — THE one authoritative bot parameter-space contract that B-8's optimizer consumes: B-8's schema (name, type in exact integer | exact rational | categorical | boolean, bounds, step, MANDATORY default, optional hard constraint filters) COMPLETED with the AD-40 unit-kind every declared variable already requires — one schema, never two — whose defaults together form the definition's CANONICAL ASSIGNMENT; (4) the FOOTPRINT (DEC-0174), which CONTAINS the stream-set declaration (instrument-role + BarSpec list in B-12's shape, trading vs data-only roles) as one locus, one nesting, one linter target, never a second top-level field; (5) the PERMITTED-INTENT declaration — `entry` is ALWAYS permitted and is never gated by exit_policy; the declaration names the bot's permitted EXIT-intent kinds, a subset of the ratified CT-23 exit vocabulary, WHICH MAY BE EMPTY, with intent-kind identifiers stored as OPAQUE qmf-core-typed values validated by QML-side linters so qmf-registry gains no qmf-risk edge (mirroring AD-22's declaring-an-input-creates-no-package-edge); (6) the LOGIC REFERENCE (DEC-0172's identity basis). VERSIONING is AD-30's git logic verbatim: an append-only branches-from version graph (multiple heads legal; 'current' is a separate dated pointer record), every version readable forever, continues-performance carrying a track record across versions only when human-signed (AD-16/AD-18). Bot identity is content (AD-17): re-binding, seats, and paper flips never mint a new Bot; a changed default, leg, footprint entry, or logic artifact always does. The AD-41 seat record — the Bot side of the CT-28 binding context — cites the registered Bot definition by fp1, and the prediction linter (DEC-0178) runs against that binding context. PARAMETERIZATION LAW: governed live/paper seats execute the CANONICAL ASSIGNMENT ONLY; non-default assignments exist solely as B-3 run-spec overrides in experimentation runs (each fully labeled and resolvable from the resolved run-config fingerprint); promoting a tuned assignment mints a NEW Bot version (branches-from, optionally continues-performance) whose defaults are the tuned values — one identity locus, no tuned bot silently wearing the original's track record. The admission-side check this enables is DEC-0178's canonical-assignment evidence, composing with QMB as a declared sibling extension (DEC-0183)."
+    status: ratified
+    rationale: "Ruled at the QML sitting as QL-3, filling AD-16's reserved Bot kind; the AD-16 header identity carve-out, the one-schema-completed-with-unit-kinds framing, and the one-family cardinality-one ruling were reviewer-gate refinements (memlog gate points 6, 5, 10); the canonical-assignment parameterization law is a tagged, individually-overturnable assumption (DEC-0184). Ratified by delegation under DEC-0184."
+    sources: [EXT-2085]
+    component: COMP-QML
+    tags: [architecture-spine, qml, ql-3, ct-33, bot-definition, parameter-space, parameterization-law]
+
+  - id: DEC-0174
+    title: "Footprint = the single canonical consumption manifest; producer bindings and templates (QL-4)"
+    statement: "The footprint is THE single canonical consumption manifest: the stream set (DEC-0173); required calendars (identities + versions per AD-8); and PRODUCER BINDINGS, each either (a) a pinned configured-producer fingerprint (CT-16/CT-17 identity) or (b) a producer TEMPLATE. A template is a COMPLETE CT-16/CT-17 configuration minus ONLY the space-bound parameter values: it carries every AD-22 identity field (formula id, contract format version, ordered named input set, calendar requirements, alignment policy, missing-value policy, warm-up, output schema, supported modes, arithmetic-reference configuration) except the specific parameters bound to named bot-space parameters; an omitted identity field is a Layer-1 registration refusal (AD-22 'a missing element is a contract defect'). Resolution — substituting the space-bound values — is therefore a TOTAL, SINGLE-VALUED function producing one deterministic CT-16/CT-17 fingerprint, so dedup lands on ordinary configured-producer fingerprints and identical canonical runs fingerprint identically on every machine. COMPLETENESS LAW: the footprint's producer-binding set MUST EQUAL the transitive union of every cited confluence's leg producer bindings plus any bot-direct producers; a confluence-leg producer absent from the footprint is a Layer-1 registration refusal. Hosts provide ONLY the declared footprint to the logic (B-12's declared-stream-set law reaching the bot boundary). The bot's warm-up/embargo horizon is DERIVED at resolution from the resolved producer chain (AD-21/AD-22 law), never hand-declared — no second window. Heavy producers are consumed through AD-24's fan-out staleness stamps; nothing new. Book-side footprint_requirements (AD-30's pending(GAP-0047) slot, reserved for this sitting) now gains its contract shape: a SET of typed requirements over CT-33 footprint fields under the same grammar discipline as admission_bar (requirement kind + comparison + a ruled value or an explicit not-yet-ruled tag), with values living in Book templates only, never in contracts; its landing in CT-22 follows the reserved-pending path (DEC-0181). Template resolution is a DECLARED B-3 config-compiler extension AND a node seat-admission responsibility, composing with B-8's value resolution (DEC-0183)."
+    status: ratified
+    rationale: "Ruled at the QML sitting as QL-4 (draft QL-3b), giving AD-30's two pending(GAP-0047) slots their shape; the single-canonical-manifest framing, the transitive-union completeness law, and the total-single-valued template resolution were reviewer-gate refinements (memlog gate point 5). Ratified by delegation under DEC-0184."
+    sources: [EXT-2085]
+    component: COMP-QML
+    tags: [architecture-spine, qml, ql-4, footprint, producer-template, footprint-requirements]
+
+  - id: DEC-0175
+    title: "The confluence kind (CT-34) and the closed-and-addable leg-role vocabulary (QL-5)"
+    statement: "A confluence is its OWN registry artifact (AD-17: composites are own artifacts with lineage to children), reusable across bots, cited by fingerprint (CT-34). Content: ONE-OR-MORE legs, of ANY role mix — AD-17's 'one-or-more levels, triggers, and confirmations' is read multiplicity-faithfully as at least one leg of any role, never one of each (mandating one of each would itself be a foreclosing cardinality). Each LEG = (role, producer binding per DEC-0174, optional declared exact parameters); a leg may cite another confluence (composition; the child is its own artifact). The LEG-ROLE VOCABULARY is CT-34's own contract surface, closed-and-addable (addable never redefined): `level | trigger | confirmation | filter` — AD-17's three are the seed (QL-5 formalizes the enum AD-17 left implicit, exactly as AD-40/AD-33 own the unit-kind and close-reason vocabularies, not amending AD-17), and `filter` is the FIRST addition (provenance-marked as freshly-minted design): a suppressing condition consuming the same governed producers, not a new species, giving the old formula's Filters a governed home. The old formula's FEATURES are producer bindings consumed by level/trigger legs — that is their stated disposition. ORDERING: CT-34 legs follow AD-17's fingerprint-ascending default (order-insignificant) with display-only ordinals; a confluence is a declaration artifact, NOT a CT-17 causal-structure composite, so AD-25's order-significant-by-default does NOT reach it; order-significance is opt-in per confluence and enters the fingerprint ONLY when declared. CONDITION SEMANTICS LIVE IN LOGIC IN V1: the declaration carries WHAT is consumed (producer identities) and WHICH role each plays; WHEN a leg is satisfied is the Python logic's job. A fully declarative predicate grammar is Deferred — this is the thin-consumer line: declared consumption + roles buy footprint comparability and lineage without inventing a language."
+    status: ratified
+    rationale: "Ruled at the QML sitting as QL-5 (draft QL-4); the AD-17 fingerprint-ascending default (a confluence is not a CT-17 causal composite), the closed-and-addable enum with AD-17's three as the seed, the one-or-more-legs-any-role reading, and the Features disposition to level/trigger legs were reviewer-gate refinements (memlog gate point 9); `filter` as the fourth role is a tagged, individually-overturnable freshly-minted addition (DEC-0184). Ratified by delegation under DEC-0184."
+    sources: [EXT-2086]
+    component: COMP-QML
+    tags: [architecture-spine, qml, ql-5, ct-34, confluence, leg-roles, filter]
+
+  - id: DEC-0176
+    title: "Strategy family: a key, never an authority (QL-6)"
+    statement: "A STRATEGY FAMILY is an opaque operator-minted id under AD-9's discipline plus a dated registry metadata record — the SAME MACHINERY as instrument_class: a kind under CT-06's addable-kinds law, with NO new CT number. A family is a KEYING TOKEN WITH NO AUTHORITY (honoring the newer corpus's own disposition that 'archetype survives as a no-authority naming token') — it is the key the ratified law already reaches for: AD-33's exit_policy declares ExitLogicRef per family; AD-41's q and AD-40's bench_consecutive_loss_threshold are per-family/per-bot variables; AD-35's paper starting balance is family-scoped. Every CT-33 Bot definition declares EXACTLY ONE family id — a deliberate cardinality-one ruling under AD-17 (AD-29's pattern), not an assumption: a family is an attribution key, and one bot keyed to two families would partition every per-family variable and exit-policy resolution two ways. A Book's exit_policy entries key by family id and MAY declare ONE catch-all default entry — ratified into the CT-22 exit_policy shape as an explicit, optional, single default entry through the CT-22 format mint (DEC-0181), with the CT-29 exit record keying the RESOLVED entry (explicit-or-catch-all) so loss-predicate attribution stays unambiguous; a bot whose family resolves no entry fails the prediction linter (DEC-0178). The old ArchetypeSpec's constraint powers (permitted feature families, permitted timeframes, mutation allowances) are NOT revived — constraining is the Book's job (admission bar + footprint_requirements + prediction linter), and agent-mutation governance is agentic-sitting territory. 'Archetype' is the retired alias, recorded in the glossary by this documentation-factory increment."
+    status: ratified
+    rationale: "Ruled at the QML sitting as QL-6 (draft QL-5) from the newer corpus's own archetype disposition; the one-family cardinality-one and the catch-all's ratification into the CT-22 mint with the exit record keying the resolved entry were reviewer-gate refinements (memlog gate point 10); family = key-not-authority is a tagged, individually-overturnable assumption (DEC-0184). Ratified by delegation under DEC-0184."
+    sources: [EXT-2086]
+    component: COMP-QML
+    tags: [architecture-spine, qml, ql-6, strategy-family, exit-policy-keying, catch-all]
+
+  - id: DEC-0177
+    title: "The bot runtime protocol; advisory stop proposal, Book-side full-loss derivation (QL-7)"
+    statement: "The bot runtime protocol is a QML-OWNED format-versioned contract on QML's own AD-5 ladder (not CT-numbered, mirroring QMB's own contracts). A conformant bot is a FACTORY the host constructs with (declaration, resolved assignment, injected read surfaces), returning a callback object the host drives PER EVALUATION INSTANT; callbacks receive ONLY the declared footprint's evidence (presence-mapped series per AD-22, structure lifecycle folds per AD-25, each sample carrying its knowable-at instant) and return ZERO-OR-MORE CT-23 intents through the door. The bot NEVER sizes (requested_r is Book-resolved, AD-33), never touches venue commands, never reads a clock (the evaluation instant rides the callback; no Clock access below the host), never performs I/O, network access, or undeclared randomness (a stochastic bot declares a seed parameter in its space). CONFORMANT LOGIC IS DETERMINISTIC: identical (declaration, assignment, evidence sequence, state) yields identical intents — the property B-2's golden-slice test already demands of everything in the tunnel. Bot STATE follows AD-22's streaming-instance discipline generalized: bounded declared state; snapshot/restore as a versioned contract SCOPED TO the tuple (OS, logic distribution identity + source-manifest fingerprint, protocol format version, and the arithmetic-reference build where the logic declares one) — restoring across any component is an unavailable-dependency refusal, and a restored-state fingerprint enters downstream labels. ENTRY-INTENT DERIVATION — BOOK-SIDE, SINGLE-SITED (the reviewer gate's reversal of the draft intent-mint-side design): the bot's entry proposal carries an ADVISORY STOP PROPOSAL — a proposed protective-stop price or PriceDelta bound, advisory EXACTLY as proposed_r is, landing on CT-23's entry intent as a new OPTIONAL field through the CT-23 format mint (DEC-0182). The DECLARED FULL-LOSS PRICE is derived AT THE BOOK DOOR by the Book side executing its own per-family ExitLogicRef (AD-40's 'how' is a per-family declaration), consuming the advisory proposal and the intent's cited evidence; the Book stamps the derived price onto the admitted intent EXACTLY as it resolves requested_r — Book-authored, single execution site, no recompute protocol needed. The bot never computes, carries, or is handed the Book's exit logic — NO Book module is ever injected into bot logic, which is what keeps the bot deterministic on its own tuple, sandbox-testable with no Book present (DEC-0178), and zero-import for plain Python. Ungoverned plain-Python bots follow the same Book-side path: the run spec supplies what the declaration would have (a family id where the Book's exit_policy needs one, or the catch-all applies). OLD execution_profile, DISPOSITIONED: it does not survive as a bot field — order-type preference, slippage tolerance, and partial-fill behaviour are venue/node and tunnel runtime law (CT-18/CT-19, B-6); minimum-RR-before-entry is a BOT-INTERNAL condition in the bot's own logic in V1 (a Book-door version is a later Book template mint); stop-policy/Lbar exam-live PARITY is Book + backtesting territory (GAP-0048). HOSTS: QMB binds conformant bots through a runtime-protocol adapter at its composition root (the plain-Python bridge remains); the trading node hosts seats through the same protocol later."
+    status: ratified
+    rationale: "Ruled at the QML sitting as QL-7 (draft QL-6); the entry-intent derivation was REVERSED at the reviewer gate (adversarial F1 critical + parent-consistency F1 + rubric RW-4 convergent) from the draft's intent-mint-side ExitLogicRef execution with door recompute to the advisory-stop / Book-side single-sited derivation that keeps the bot zero-import and sandbox-testable with no Book present — a tagged, individually-overturnable assumption (DEC-0184). Ratified by delegation under DEC-0184."
+    sources: [EXT-2087, EXT-2090]
+    component: COMP-QML
+    tags: [architecture-spine, qml, ql-7, runtime-protocol, advisory-stop, book-side-derivation]
+
+  - id: DEC-0178
+    title: "Conformance gate, the ticket, and the admission interfaces (QL-8)"
+    statement: "Conformance is TECHNICAL, NEVER PERFORMANCE (AD-32's no-probation law mirrored). Two layers and a ticket. LAYER 1 — declaration linter (machine, at registration): schema completeness against the declared format version; every parameter unit-kinded with a valid canonical assignment; every reference resolvable (family record, confluence fingerprints, producer formulas at their declared format versions, logic distribution); footprint completeness per DEC-0174's transitive-union law; template completeness; permitted EXIT-intent kinds within the ratified CT-23 vocabulary; failures are AD-11 typed refusals, journaled. LAYER 2 — sandboxed execution conformance, SPLIT into a QML-owned contract and a host-owned runner: QML owns, as format-versioned pure surface, the denial set (clock/I-O/network/randomness), the static AST/import-scan rules, the determinism harness, a DETERMINISTIC GOLDEN-SLICE GENERATOR keyed off the bot's declared footprint (an identity-bearing conformance fixture), and the verdict function; the host (platform or QMB composition root) owns ONLY process spawning and isolation, feeding results back to QML's pure verdict function — so a bot's conformance verdict is HOST-INDEPENDENT by construction, and no Book is present or needed. The suite asserts: the logic artifact loads in isolation; a golden slice run TWICE yields identical intents; only permitted intent kinds are emitted; the declared state bound holds and a snapshot/restore round-trip is equivalent. V1 ENFORCEMENT SCOPE, STATED HONESTLY: the no-clock/no-I-O/no-network constraints are enforced by the static AST/import scan, capability starvation (hosts inject read surfaces only), and host process isolation; HARDENED OS-LEVEL runtime confinement (restricted tokens/job objects on Windows, seccomp-class on Linux) is NOT promised in V1 — a named deferred dependency of the node/platform sitting — and a dynamically-evasive malicious bot is OUT of V1's threat model (bots are operator- or operator's-agent-authored). THE TICKET: the Bot registry kind mints ONLY for artifacts passing both layers (registration otherwise refuses, policy rejection), and that registration is what governed evidence and seats CITE. Ungoverned bots keep full tunnel access (B-4 ledger lines, the research door): conformance gates evidence CITATION and SEATS, never tunnel entry (QMB's Deferred row honored verbatim). The old max_acceptable_complexity_score anti-sprawl gate is NOT revived — conformance is technical-never-performance; any complexity/quality signal is a later measure, never a registration gate — a decision, not an omission. ADMISSION-BAR INTERFACE (interfaces only — thresholds stay GAP-0048/0049): two bot-side declarable evidence_requirements fields — a REGISTERED-CONFORMANT-BOT CITE (presented CT-32 evidence must cite a registered Bot definition fp1) and CANONICAL-ASSIGNMENT EVIDENCE (the cited runs' resolved values equal the definition's canonical assignment, read from the B-3 assignment_is_canonical stamp / resolved-config fingerprint through a B-4 fold qualifier — the declared sibling extension of DEC-0173/DEC-0183). These are NET-NEW admission-bar surface, not the AD-30 pending slots: they land ONLY through the CT-22 format mint (DEC-0181), never as a silent field addition — under AD-30's unknown-section rule an old parser would silently ignore them and admit exactly the evidence they exist to refuse. PREDICTION LINTER, pinned check list (addable never redefined), running statically on demand and at seat time against the CT-28 binding context, filling AD-32's Layer-1 pending slot: (a) the CT-33 footprint satisfies the Book's footprint_requirements; (b) the bot's declared permitted EXIT-intent kinds are a subset of the Book's exit_policy permitted EXIT kinds (`entry` is never gated — a zero-exit-kind Book, the honest V1 default, admits entry-only bots); (c) the bot's family resolves an exit_policy entry (explicit or the declared catch-all); (d) the bot's stream set lies within the binding's declared venue capabilities (CT-18, through AD-29's bind-time check). GRADUATION PATH: a working ungoverned experiment graduates by minting the two artifacts with a lineage edge back to its originating research artifact (AD-22's graduation mechanics generalized to bots)."
+    status: ratified
+    rationale: "Ruled at the QML sitting as QL-8 (draft QL-7); the sandbox SPLIT (QML owns the pure versioned contract + golden-slice generator + verdict function, hosts own process spawning so the verdict is host-independent) and the V1-enforcement honesty were reviewer-gate refinements (adversarial F8, rubric RW-3, currency F1); the two admission-bar fields land only through the CT-22 format mint (DEC-0181), never as a silent AD-30 field addition; the complexity-gate drop is a stated decision. Ratified by delegation under DEC-0184."
+    sources: [EXT-2088, EXT-2091]
+    component: COMP-QML
+    tags: [architecture-spine, qml, ql-8, conformance, ticket, prediction-linter, admission-bar]
+
+  - id: DEC-0179
+    title: "Exit reconciliation: the donor atoms ratified, the taxonomy stays one (QL-9)"
+    statement: "The AD-33 provenance flag ('QML donor atoms... open to revision by the QML sitting') is CLOSED: ratified AS-IS. ExitLogicRef = {module_id, config} stays exactly where AD-33 put it — in the Book's exit_policy, per family — and the Bot definition carries NO exit_logic field (the old BotSpec slot is deliberately dead; the bot declares only its family and its permitted exit-intent subset). CT-29's typed close-reason taxonomy stays the ONE taxonomy; the old CloseReason members map onto it as RECORDED EVIDENCE, never a second contract: SL_HIT -> protective_stop_fill; TP_HIT -> target_fill; TRAILING_SL_HIT -> protection_amendment_fill; MANUAL_CLOSE/MANUAL -> operator_close; KS_FORCED_CLOSE/KILL_SWITCH_FLATTEN -> protection_forced_flat; SESSION_CLOSE -> window_forced_flat | boundary_flat | hold_time_force_flat per trigger; TIMEOUT -> hold_time_force_flat; BROKER_CLOSE -> venue_initiated_close | venue_liquidation; HEDGE_CLOSE -> no successor (no hedge machinery in V1; a future mint under the addable law). CLOSE-AUTHORITY PRIORITY — the dig's ranked donor #5 — is already ruled upstream as AD-37 (per-stream ranks, collapse and conflict rules); the node enforces it; a QML bot emits intents and relinquishes, owning no closure priority. The remaining donor survivor mechanics (WAL/reconciliation restart, amendment idempotency, the conservative never-widen fail-safe) are venue/node-runtime law (AD-27/AD-34), out of QML scope. The old system-owned asymmetric SL/TP authority stays retired (DEC-0024 lineage honored); its surviving mechanics are already law — one-shot breakeven ratchet = AD-34, full-stop losers = AD-40's frozen R + AD-41's qualifying_loss_exit, TP-trail = a later Book version through the same declaration."
+    status: ratified
+    rationale: "Ruled at the QML sitting as QL-9 (draft QL-8), closing AD-33's provenance flag by ratifying the donor atoms as-is; the CloseReason members are recorded as an evidence mapping onto CT-29's single taxonomy, never a second contract; close-authority priority is already AD-37 and survivor mechanics AD-27/AD-34 (out of QML scope). Ratified by delegation under DEC-0184."
+    sources: [EXT-2089]
+    component: COMP-QML
+    tags: [architecture-spine, qml, ql-9, exit-reconciliation, close-reason, ct-29]
+
+  - id: DEC-0180
+    title: "Build order and distribution: QML builds before the node, own SemVer display-only (QL-10)"
+    statement: "QML builds BEFORE the trading node, and MAY build alongside QMB — it consumes QMF contracts only (qmf-core nouns/fingerprints/refusals/series vocabulary, qmf-registry kinds, qmf-risk CT-23/CT-29 types), and nothing in it waits on node runtime. NATURAL ORDER: QMF core packages -> QML + QMB -> trading node. QMB exercises plain-Python bots from day one, conformant bots the day QML lands; the trading node hosts the bot-runtime-protocol seats later. The MQL5 analogy survives NARROWED exactly as the prior generation ruled: the authoring layer at the bot-to-Book boundary, nothing wider. VERSION LADDER (B-13 mirrored): the `qml` distribution carries its own SemVer as DISPLAY-ONLY provenance — never identity (CT-33 fp1 and the logic-artifact identity carry identity); it consumes the QMF workspace in LOCKSTEP, and installs as a normal pinned project dependency (`uv add qml`)."
+    status: ratified
+    rationale: "Ruled at the QML sitting as QL-10 (draft QL-9), answering the operator's before-or-after-the-node question: QML consumes QMF contracts only, so it builds before the node and may build alongside QMB; the own-SemVer-display-only version ladder (uv add qml, QMF lockstep) was ruled at the reviewer gate (memlog gate point 16). Ratified by delegation under DEC-0184."
+    sources: [EXT-2089, EXT-2084]
+    component: COMP-QML
+    tags: [architecture-spine, qml, ql-10, build-order, distribution, semver]
+
+  - id: DEC-0181
+    title: "CT-22 format version 2: admission-bar +2 fields, exit_policy catch-all, footprint_requirements shape"
+    statement: "CT-22 gains FORMAT VERSION 2 — an AD-5 format-version mint OWNED BY COMP-QMF-RISK (the qmf-risk contract shape) with QML-authored semantics, carried by this documentation-factory increment, migration notes mandatory, pre-mint Book definitions readable forever at format 1 (a v1 reader confronting v2 refuses unsupported capability per CT-22's unknown-version invariant). THREE changes, and nothing more: (1) admission_bar's evidence_requirements gains TWO declarable fields — a registered-conformant-Bot cite and canonical-assignment evidence (DEC-0178) — net-new surface that MUST NOT be a silent field addition under AD-30's unknown-section rule, since an old parser would ignore them and admit exactly the evidence they exist to refuse; (2) exit_policy gains ONE explicit optional catch-all default entry, with the CT-29 exit record keying the RESOLVED entry (explicit-or-catch-all) so loss-predicate attribution stays unambiguous (DEC-0176); (3) footprint_requirements' reserved pending(GAP-0047) slot FILLS with DEC-0174's requirement-set shape (the reserved-pending path, NOT a net-new addition): a set of typed requirements over CT-33 footprint fields under admission_bar's grammar discipline, with values in Book templates and never in contracts. Thresholds themselves stay GAP-0048/0049; the blank-blocks-live-money semantics stand for not-yet-ruled values."
+    status: ratified
+    rationale: "A parent-contract mint the QML sitting could not make by assertion: minted as an AD-5 format-version bump of CT-22, owned by COMP-QMF-RISK with QML-authored semantics, carried by this increment with mandatory migration notes; the three changes are exactly QL-8's two admission-bar fields, QL-6's catch-all, and QL-4's footprint_requirements shape, no more. Ratified by delegation under DEC-0184."
+    sources: [EXT-2091, EXT-2088, EXT-2086, EXT-2085]
+    component: COMP-QMF-RISK
+    tags: [architecture-spine, qml, ct-22, format-mint, admission-bar, exit-policy, footprint-requirements]
+
+  - id: DEC-0182
+    title: "CT-23 format version 2: the advisory stop proposal; full-loss price documented Book-resolved"
+    statement: "CT-23 gains FORMAT VERSION 2 — an AD-5 format-version mint OWNED BY COMP-QMF-RISK with QML-authored semantics, carried by this documentation-factory increment, migration notes mandatory, pre-mint intents readable forever (the new field is OPTIONAL, so v2 readers accept v1 content and a v1 intent stays valid). ONE new OPTIONAL entry-intent field: the bot's ADVISORY STOP PROPOSAL — a proposed protective-stop price or PriceDelta bound, advisory EXACTLY as proposed_r is; it never sizes and never binds the Book. The DECLARED FULL-LOSS PRICE stays mandatory at admission, but its derivation site is now documented BOOK-SIDE, single-sited: derived at the door by the Book executing its own per-family ExitLogicRef, consuming the advisory proposal and the intent's cited evidence, and stamped mirroring requested_r (DEC-0177). The GAP-0047 revision flag on CT-23 CLOSES: ExitLogicRef and the CT-29 close-reason taxonomy are RATIFIED AS-IS (DEC-0179), and the old CloseReason members are recorded as an evidence mapping (kept in CT-29, not duplicated here), never a second taxonomy."
+    status: ratified
+    rationale: "A parent-contract mint the QML sitting could not make by assertion: minted as an AD-5 format-version bump of CT-23, owned by COMP-QMF-RISK with QML-authored semantics, carried by this increment with mandatory migration notes; the one new field is QL-7's advisory stop proposal, and the CT-23 GAP-0047 revision flag closes with the donor atoms ratified as-is (QL-9). Ratified by delegation under DEC-0184."
+    sources: [EXT-2091, EXT-2087, EXT-2089]
+    component: COMP-QMF-RISK
+    tags: [architecture-spine, qml, ct-23, format-mint, advisory-stop, exit-reconciliation]
+
+  - id: DEC-0183
+    title: "QMB sibling coordination: assignment_is_canonical stamp, template resolution, completed parameter schema"
+    statement: "Three sibling-coordination items are declared here and recorded in the QMB component doc so QMB budgets for them rather than discovering them — declared sibling EXTENSIONS, not a QMB re-architecture. (1) A B-3 resolved-config stamp `assignment_is_canonical` (mirroring B-3's `seed_overridden` precedent) PLUS a B-4 fold qualifier that reads it — the admission-side check behind DEC-0178's canonical-assignment evidence, letting a run whose resolved values differ from the CT-33 canonical assignment satisfy no admission-bar requirement that declares canonical-assignment evidence (checkable from the resolved run-config, no B-4 amendment needed). (2) PRODUCER-TEMPLATE resolution as a declared B-3 config-compiler extension AND a node seat-admission responsibility (DEC-0174), composing with B-8's value resolution — the step that resolves a CT-16/CT-17 template's space-bound values to one deterministic configured-producer fingerprint. (3) B-8's parameter-space schema is COMPLETED with the AD-40 unit-kind every declared variable already requires — ONE schema, CT-33-authoritative, never two (DEC-0173). None of these re-architects QMB; each is a named extension QMB implements at its composition root and config compiler."
+    status: ratified
+    rationale: "Declared by the QML sitting as sibling coordination (memlog gate point 13) so QMB budgets for the three items rather than discovering them; each composes with existing QMB machinery (B-3 stamps, B-4 folds, B-8 value resolution) and none is a QMB re-architecture. Recorded in the QMB component doc by this increment; ratified by delegation under DEC-0184."
+    sources: [EXT-2091, EXT-2085, EXT-2088]
+    component: COMP-QMB
+    tags: [architecture-spine, qml, qmb, sibling-coordination, b-3, b-4, b-8]
+
+  - id: DEC-0184
+    title: "QML spine QL-1..QL-10 adopted in full; GAP-0047 answered (ratified by delegation)"
+    statement: "The QML architecture spine — the child spine QL-1 through QL-10 at architecture-QML-2026-08-21/, status FINAL, plus its inherited-invariants table (QMF AD-1..AD-41 and QMB B-1..B-15 binding read-only) — is ADOPTED IN FULL as the QML v1 architecture, and GAP-0047 is ANSWERED/closed. Ratified by OPERATOR DELEGATION 2026-08-21 (the sitting run autonomously, verbatim intent 'try to run this without me... close this out as smoothly and as simply as possible, but be thorough'), with a standing right to OVERTURN ANY TAGGED ASSUMPTION INDIVIDUALLY without unwinding another ruling: (1) no-DSL-in-V1, the `.qml` format not revived (DEC-0172); (2) the canonical-assignment parameterization law (DEC-0173); (3) `filter` as the fourth confluence leg role, freshly minted (DEC-0175); (4) family = key-not-authority (DEC-0176); (5) the advisory-stop proposal + Book-side single-sited full-loss derivation — the reviewer gate's reversal of the draft intent-mint-side design (DEC-0177); (6) CT-33/CT-34 numbering continuing the QMF contract ladder (DEC-0173, DEC-0175). Non-blocking OPEN OPERATOR QUESTIONS recorded (none gates the build): a UI display name for the declaration artifact ('BotSpec' is the old word; the spine says 'Bot definition'); a `qml` CLI convenience (V1 is library-only; QMB and the platform UI are the surfaces); and an NN/ML weights-artifact parameter kind (baked-in weights are governed today via logic-artifact identity — nothing refuses an NN bot; a separately-tunable weights kind is a later mint). REVIEWER GATE applied at desk: 5 lenses (rubric, adversarial, currency/reality, inputs-reconcile, parent-consistency), 34 findings, all applied (reviews/). This increment also records the MIS-CITATION FIX in the QMB spine's inherited-invariants row: 'AD-2 / L21' -> 'AD-2 / L11' (docs L21 is the cTrader law; L11 is the umbrella/library law) — flagged by the QML sitting, applied here. Design is ratified by delegation; implementation authorization still arrives only through the factory pipeline, and all absorbing docs stay status: provisional. Remaining open after this pass: GAP-0016/0017 (registration gate, DEC-0121), GAP-0048 content, and GAP-0049."
+    status: ratified
+    rationale: "Ratification by delegation (operator 2026-08-21) over the autonomously-run QML sitting, after the five-lens reviewer gate (34 findings, all applied at desk, lint clean twice) and spine finalization at architecture-QML-2026-08-21/; each tagged assumption is individually overturnable without unwinding another ruling, and the three open operator questions are non-blocking; nothing here authorizes implementation, which still ships only through the factory pipeline."
+    sources: [EXT-2084, EXT-2085, EXT-2086, EXT-2087, EXT-2088, EXT-2089, EXT-2090, EXT-2091]
+    component: COMP-QML
+    tags: [architecture-spine, qml, adoption, delegation, gap-0047]
+
+  - id: DEC-0185
+    title: "QML veto round: six delegation calls confirmed; leg-may-carry-both; Book-adopts-bot's-stop mode; no second CLI"
+    statement: "The operator's post-absorption VETO ROUND over the QML increment (2026-08-21, first-person dictation recorded at desk) — held at the checkpoint DEC-0184 created by ratifying the autonomous sitting with a standing right to overturn any tagged assumption individually. OUTCOME: all SIX delegation-made calls of the DEC-0184 assumption list are CONFIRMED KEPT, none overturned — (1) no-DSL-in-V1, the .qml file format not revived ('we can remove the file format, no problem'; DEC-0172); (2) the canonical-assignment / promotion-mints-a-version parameterization law, confirmed through the operator's own snapshot/copy framing (experimentation overrides mint nothing; a copy becomes a bot version only at promotion — 'until a snapshot turns into an actual live bot'; DEC-0173); (3) filter as the fourth confluence leg role ('add it, seems like I have misunderstood you'; DEC-0175); (4) family = key-not-authority ('good for the UI... add it, no problem'; DEC-0176); (5) the advisory-stop proposal + Book-side single-sited full-loss derivation, kept together with rider B below as its expansion (DEC-0177); (6) CT-33/CT-34 numbering on the QMF ladder, unchallenged (DEC-0173, DEC-0175). TWO EXPANSION RIDERS are recorded, each an expansion INSIDE an already-ratified shape and NEVER a contract format change. RIDER A resolves the recorded CT-34 leg-cardinality coordination question: a confluence leg MAY carry BOTH a producer binding and a child-confluence cite; at least one of the two is required; the role stays mandatory; leg and component counts are never bounded anywhere (twenty level legs plus one trigger is legal; several mini-levels composing one level is legal) — the don't-box-in reading ('if the code makes sense and it went through QMB... it will obviously be able to work'; expands DEC-0175). RIDER B resolves the CT-23 inbound-full-loss-price coordination question, neither refused nor silently invented: bot-owned exit methodologies are FIRST-CLASS — a bot's logic may implement its own exit/TP/stop methodology (VWAP exit, mini-scalper exit, anything) and act through the CT-23 door; AND a Book's per-family ExitLogicRef must support an ADOPT-THE-BOT'S-ADVISORY-STOP-PROPOSAL-AS-IS module mode (validated against the Book's risk rules) so a bot with its own stop methodology is honored rather than overridden. NO inbound-refusal posture is added to CT-23: the advisory stop proposal stays the bot's channel, requested_r stays Book-resolved, and the risk-monotonic law and frozen-R machinery are unchanged — the adoption mode is a DECLARED MODULE MODE inside the existing ExitLogicRef = {module_id, config} shape (DEC-0177, DEC-0179), not a format change ('most bots will have their own exit methodology... it can still work with the same rules for the book, but its exit still remains the same'; 'keep as is with room for expansion'). RULING C closes the sitting's open question 2: QML ships NO CLI, ever in this shape — QMB's CLI is the single command-line surface ('just put it under QMB... I don't know why we would have two command lines'). The CT-29 resolved-entry-keying field-shape question stays DEFERRED-WITH-NOTE, operator-aligned ('same response', consistent with rider B) — no CT-29 change now. Open question 1 (the UI display name for the declaration artifact) stays OPEN, platform territory, now carrying the operator's lean: the bot declaration surfaces READ-ONLY for live bots (editing a live bot makes no sense — editing mints a version), an editable/config view belongs to research mode, and UI naming stays the open platform question (recorded as a note only). Nothing here authorizes implementation; the corpus stays provisional."
+    status: ratified
+    rationale: "Operator direct ruling at the veto checkpoint DEC-0184 created (2026-08-21, first-person dictation recorded at desk): each of the six delegation-made calls was individually overturnable and none was overturned, and the two riders are expansions inside ratified shapes (the CT-34 leg contents; the ExitLogicRef adoption module mode) rather than contract format changes. Resolves the recorded CT-34 leg-cardinality and CT-23 inbound-full-loss-price coordination questions, closes open question 2 (no second CLI), leaves the CT-29 keying question operator-aligned deferred, and records the read-only-when-live lean on open question 1 (UI naming, platform territory)."
+    sources: [EXT-2092]
+    component: COMP-QML
+    tags: [qml, veto-round, operator-ruling, exits, confluence, cli]

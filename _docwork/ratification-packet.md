@@ -1,5 +1,7 @@
 # QMF V1 ratification packet
 
+> **2026-08-21 — point-in-time record.** This Stage-4 packet predates the architecture sittings; every conflict and gap it lists was subsequently ruled through the 2026-08-19..21 sittings. The corpus was signed off by the operator on 2026-08-21 (conditional go-ahead in the PRD session; the independent contradiction sweep passed). The authoritative sign-off record is `_docwork/stage_state.yaml` (ratification block) and `docs/changelog.md`. The body below is unchanged history.
+
 **Status:** provisional Stage 4 review packet — **not a signature and not a ratification record**.
 
 This packet makes the unresolved decision surface reviewable. A recommendation is a proposed path for the operator to accept, reject, or amend; its presence here never converts a conflict, gap, study, or provisional ledger entry into an answer.

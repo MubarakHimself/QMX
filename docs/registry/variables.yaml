@@ -433,64 +433,422 @@ variables:
     component: COMP-QMF-RISK
     decision: DEC-0076
     configurable: false
-    notes: "R is exactly one unit of original pre-trade risk; it is not profit, equity, or post-trade return."
+    notes: "R is exactly one unit of original pre-trade risk; it is not profit, equity, or post-trade return (DEC-0076). DEC-0154 (AD-40) elaborates R as one relationship with three typed faces, all frozen at admission: original_risk_distance [price-delta(instrument), entry to the declared original full-loss price], original_risk_amount [money(numeraire), the cost of a full-loss fill at the admitted quantity], and r_multiple [dimensionless exact rational, realized result / original_risk_amount, where -1 is a full original loss and 0 is breakeven]. Both money-bearing faces are frozen at admission and never re-based by a stop move, a protection amendment, or an intraday budget re-derivation; the sole ruled exception is a one-time re-base of original_risk_amount at an entry's first terminal state where the entry filled partially, the admission-time value retained as the declared plan under a lineage edge (DEC-0076 elaborated by DEC-0154, AD-40)."
 
   - name: news_blackout_before
     symbol: null
-    value: null
+    value: declared-per-window-kind
     formula: null
     units: minutes
     type: duration
     component: COMP-QMF-RISK
-    decision: DEC-0072
+    decision: DEC-0152
     configurable: true
-    gap: GAP-0042
-    notes: "Fifteen minutes was tentative and is not a live value."
+    notes: "The lead width of a news protection window is a configurable UI-editable CT-31 window variable with no spine value (DEC-0152, DEC-0157, AD-38). A window record is carried as two instants, never as this offset; the offset exists only as configuration the operator sets between sessions. The plus-or-minus-15-minute news buffer is on record as withdrawn — recorded evidence, non-authoritative, never a ratified constant. Supersedes the pair-scoped DEC-0072 framing: the instrument scoping survives, re-mechanised through per-instrument currency-exposure records, while the keep-paper-flowing lead is overridden — a news window blocks live and paper entries alike."
 
   - name: news_blackout_after
     symbol: null
-    value: null
+    value: declared-per-window-kind
     formula: null
     units: minutes
     type: duration
     component: COMP-QMF-RISK
-    decision: DEC-0072
+    decision: DEC-0152
     configurable: true
-    gap: GAP-0042
-    notes: "Fifteen minutes was tentative and is not a live value."
+    notes: "The trailing width of a news protection window is a configurable UI-editable CT-31 window variable with no spine value (DEC-0152, DEC-0157, AD-38). A window record is carried as two instants, never as this offset; the offset exists only as configuration the operator sets between sessions. The plus-or-minus-15-minute news buffer is on record as withdrawn — recorded evidence, non-authoritative, never a ratified constant. Supersedes the pair-scoped DEC-0072 framing: the instrument scoping survives, re-mechanised through per-instrument currency-exposure records, while the keep-paper-flowing lead is overridden — a news window blocks live and paper entries alike."
 
   - name: spread_quality_sensor_formula
     symbol: SQS
-    value: null
+    value: 'historical-avg-spread(session-window) / current-live-spread'
     formula: null
     units: null
     type: formula
     component: COMP-QMF-RISK
-    decision: DEC-0075
+    decision: DEC-0153
     configurable: false
-    gap: GAP-0043
-    notes: "SQS means Spread Quality Sensor; its formula is explicitly unratified."
+    notes: "SQS means Spread Quality Sensor. The V1 formula is ratified (DEC-0153, AD-39, supersedes DEC-0075): score = the instrument's historical average spread for a named session window divided by its current live spread — 1 means baseline, above 1 tighter, below 1 wider; a ratio against the instrument's own normal, which lets one sensor serve a book of instruments. The score is an exact rational over the two scaled-integer spreads, so no analytic crossing sits between a measurement and a live-money verdict; the comparison boundary is declared — at or above threshold passes, strictly below blocks. configurable:false marks the formula itself as fixed contract surface; its parameters (thresholds, band, cadence, baseline conditioning, refit schedule, staleness horizon) are separate configurable UI-editable rows. Conditioning is declared, never inferred: the session window is a named market-hours calendar identity plus session id, identity-bearing and entering the baseline's fingerprint; the baseline statistic (mean, median, or a stated quantile) is fingerprinted contract surface, never the bare word 'average'; the baseline is a fingerprinted INPUT artifact carrying a refit-series identity. Operator caveat recorded verbatim and non-authoritative: 'it was some agent's idea, not mine — go with it' — adopted by ruling, not corpus authority (DEC-0153, AD-39)."
 
   - name: bench_stopout_threshold
     symbol: null
-    value: null
+    value: superseded
     formula: null
     units: consecutive-stop-outs
     type: count
     component: COMP-QMF-RISK
-    decision: DEC-0094
+    decision: DEC-0155
     configurable: true
-    gap: GAP-0045
-    notes: "A reported value of two is unusable until stop-out and BENCHED semantics are reconciled."
+    notes: "SUPERSEDED by bench_consecutive_loss_threshold (DEC-0155, AD-41). The overloaded 'stop-out' vocabulary is retired: the bare word 'stop-out' is banned, venue_liquidation names venue margin liquidation, and qualifying_loss_exit names the breaker's input. Row retained as history only; do not read as a live variable. The reported value of two was previously recorded as unusable until stop-out and BENCHED semantics were reconciled; those semantics are now settled in bench_consecutive_loss_threshold plus qualifying_loss_threshold (DEC-0155)."
 
   - name: bench_reset_boundary
     symbol: null
-    value: null
+    value: superseded
     formula: null
     units: null
     type: enum
     component: COMP-QMF-RISK
-    decision: DEC-0094
+    decision: DEC-0155
     configurable: true
-    gap: GAP-0045
-    notes: "The reported next-open reset is not a ratified V1 contract."
+    notes: "SUPERSEDED (DEC-0155, AD-41). The bench counter is a read-time fold over the exit-record stream, never a mutable counter with a reset boundary; its stream boundary is the binding epoch — a new epoch starts the count at zero unless a signed carries-ledger edge spans it. The reported next-open reset is not a ratified V1 contract; next-open clearing semantics live in the seat-record clearing rules, where clocked mechanical clears are CT-24 binding transitions. Row retained as history only."
+
+  - name: bench_consecutive_loss_threshold
+    symbol: null
+    value: declared-per-bot
+    formula: null
+    units: consecutive-qualifying-loss-exits
+    type: count
+    component: COMP-QMF-RISK
+    decision: DEC-0154
+    configurable: true
+    notes: "Leash_grammar variable, keyed per bot or bot family, minted by the B split (DEC-0154, AD-40) and given its bench semantics by DEC-0155 (AD-41): the count of consecutive qualifying_loss_exit closes at which a seat is benched. A qualifying_loss_exit is a virtual-position close whose realized_r <= -q (see qualifying_loss_threshold). Read as a read-time fold over the exit-record stream bounded by the binding epoch, never a mutable counter. Configurable UI-editable and strategy-family-dependent (DEC-0157). The recorded value of two for a scalper is evidence — non-authoritative, never a ratified spine constant."
+
+  - name: qualifying_loss_threshold
+    symbol: q
+    value: declared-per-family
+    formula: null
+    units: r-multiple
+    type: ratio
+    component: COMP-QMF-RISK
+    decision: DEC-0155
+    configurable: true
+    notes: "The bench predicate threshold (DEC-0155, AD-41): a virtual-position close counts toward the bench only where realized_r <= -q. Per-family template variable, configurable UI-editable (DEC-0157). Breakevens never count under any q and are recorded as their own clustering-watch metric; scratches and partial losses do not count by default (a -0.15R scratch is not the damage the leash exists to stop); a forced flat or boundary flat counts only if it realized a qualifying loss. The default of approximately one R is recorded evidence honouring the operator's 'we only count losses at negative 1R' ruling — non-authoritative, a configuration the operator sets, never a number the spine invents."
+
+  - name: seat_loss_run_allowance
+    symbol: null
+    value: declared-per-book
+    formula: null
+    units: r-multiple
+    type: ratio
+    component: COMP-QMF-RISK
+    decision: DEC-0154
+    configurable: true
+    notes: "Money_rules variable [r-multiple] minted by the B split (DEC-0154, AD-40); the divisor in the money ladder (r_unit_price = period_loss_budget / seat_loss_run_allowance). A Book may declare it derived from bench_consecutive_loss_threshold as declared fingerprinted data (threshold x safety multiple x measured mean loss), never a hardcoded identity — the unit-kind checker enforces the split, since a count cannot stand where an r_multiple is declared. Configurable UI-editable (DEC-0157); no ratified spine value."
+
+  - name: seat_r_ceiling
+    symbol: null
+    value: declared-per-book
+    formula: null
+    units: r-multiple
+    type: ratio
+    component: COMP-QMF-RISK
+    decision: DEC-0154
+    configurable: true
+    notes: "A seat's R ceiling; the constraint seat_r_ceiling <= seat_loss_run_allowance supersedes FORM-0006 in pure R-space, with no money on either side (DEC-0154, AD-40). FORM-0006 stays dead (DEC-0077) and is retained as the dimensional suite's permanent negative test — a dead formula that can still be typed is a dead formula that comes back. Configurable UI-editable (DEC-0157); no ratified spine value."
+
+  - name: runway_periods
+    symbol: null
+    value: declared-per-book
+    formula: null
+    units: periods
+    type: count
+    component: COMP-QMF-RISK
+    decision: DEC-0154
+    configurable: true
+    notes: "The divisor in period_loss_budget = loss_runway / runway_periods (DEC-0154, AD-40); the number of periods the loss runway is spread across. A period is named by an AD-8 market-hours calendar identity, never a bare clock duration. Configurable UI-editable (DEC-0157); no ratified spine value."
+
+  - name: kill_line_capital_floor
+    symbol: null
+    value: declared-per-book
+    formula: null
+    units: "money(numeraire)"
+    type: money
+    component: COMP-QMF-RISK
+    decision: DEC-0150
+    configurable: true
+    notes: "The kill line: a per-Book capital floor whose breach automatically flattens that binding's scope and stands the Book down — a 3am breach never waits for the operator (DEC-0150, AD-36). It is THE SAME NUMBER as loss_floor in the sizing shape (loss_runway = book_capital - loss_floor): one value, one name, read by both the kill-line control and the R sizing ladder, never two floors that can drift apart (DEC-0154, AD-40). Money(numeraire) = USD in V1. Configurable UI-editable (DEC-0157); no ratified spine value. Distinct from the kill switch (the global black-swan authority) — the two are named apart and never interchanged."
+
+  - name: r_unit_price
+    symbol: null
+    value: derived-per-period
+    formula: null
+    units: money-per-r
+    type: rate
+    component: COMP-QMF-RISK
+    decision: DEC-0154
+    configurable: true
+    notes: "The Money-per-r_multiple rate that prices one R (DEC-0154, AD-40): position_risk_amount = requested_r x r_unit_price, frozen at admission. r_unit_price = period_loss_budget / seat_loss_run_allowance supersedes FORM-0004, which was dimensionally coherent but mis-named — it computed a rate, not an amount (a derived reading, not corpus text, verified this sitting against SCN-0001's own checksum). Fixed at period start and not recomputed as the budget drains intraday, unless the Book declares another cadence (it must declare one). A money-to-R crossing must name this rate; an implicit crossing refuses. Configurable UI-editable cadence (DEC-0157); no ratified spine value."
+
+  - name: numeraire
+    symbol: null
+    value: USD
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-RISK
+    decision: DEC-0154
+    configurable: false
+    notes: "The numeraire is USD system-wide in V1 (DEC-0154, AD-40; operator ruling reconfirmed post-close). The Book charter still declares accounting_currency so a later currency is a version change; binding a Book to an account in another currency is a policy rejection. No rate source is ratified and a silent conversion is the one error no report shows; the conversion seam ships and switches on only when a source is ruled. A venue-derived figure the venue itself converted is legal settlement evidence under a declared converted_by = venue provenance flag (DEC-0158, AD-28), outside the unratified-rate clause. configurable:false — the numeraire is not a UI knob; it is a per-Book accounting declaration."
+
+  - name: sqs_hard_block_threshold_per_class
+    symbol: null
+    value: declared-per-instrument-class
+    formula: null
+    units: score-ratio
+    type: ratio
+    component: COMP-QMF-RISK
+    decision: DEC-0153
+    configurable: true
+    notes: "Per-instrument-class hard-block threshold on the SQS score: at or above threshold passes, strictly below blocks (DEC-0153, AD-39). Instrument class is a dated instrument-metadata record (instrument_class), operator-declarable and correctable, never parsed from a symbol; no class record means blocked. Carried as an exact rational or scaled integer, configurable UI-editable (DEC-0157). Recorded corpus evidence, non-authoritative and never a default: per-class 0.60 / 0.55 / 0.45 / 0.65 / 0.50 — no ratified spine value."
+
+  - name: sqs_hysteresis_band
+    symbol: null
+    value: declared-per-configuration
+    formula: null
+    units: score-ratio
+    type: ratio
+    component: COMP-QMF-RISK
+    decision: DEC-0153
+    configurable: true
+    notes: "The hysteresis band that must be re-crossed before an SQS hard block clears (DEC-0153, AD-39); composition order is contract surface, so an outlier-guarded sample is excluded from the re-crossing test. Carried as an exact rational or scaled integer, configurable UI-editable (DEC-0157). Recorded corpus evidence, non-authoritative: 0.05 — no ratified spine value."
+
+  - name: sqs_outlier_guard_multiple
+    symbol: null
+    value: declared-per-configuration
+    formula: null
+    units: dispersion-multiple
+    type: ratio
+    component: COMP-QMF-RISK
+    decision: DEC-0153
+    configurable: true
+    notes: "The outlier guard against the spread's own measured dispersion (DEC-0153, AD-39); a guarded sample is excluded from the hysteresis re-crossing test. Dimensionless, configurable UI-editable (DEC-0157). Recorded corpus evidence, non-authoritative: a 4-sigma guard — no ratified spine value."
+
+  - name: sqs_sample_cadence
+    symbol: null
+    value: declared-per-configuration
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-RISK
+    decision: DEC-0153
+    configurable: true
+    notes: "The sampling cadence of the SQS live-spread channel (DEC-0153, AD-39): a tick/quote-sampled channel with a declared maximum age not exceeding the Book's decision_freshness_bound; a bar-sampled SQS is refused at the door, never blocked through. Configurable UI-editable (DEC-0157). Recorded corpus evidence, non-authoritative: per-quote — no ratified spine value."
+
+  - name: sqs_baseline_conditioning
+    symbol: null
+    value: declared-per-configuration
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-RISK
+    decision: DEC-0153
+    configurable: true
+    notes: "The declared conditioning of the SQS baseline (DEC-0153, AD-39): a named market-hours calendar identity plus session id (identity-bearing, entering the baseline's fingerprint) plus the baseline statistic (mean, median, or a stated quantile) as fingerprinted contract surface, never the bare word 'average'. The baseline is a fingerprinted INPUT artifact with its own lineage. Configurable UI-editable (DEC-0157); no ratified spine value."
+
+  - name: sqs_baseline_refit_schedule
+    symbol: null
+    value: declared-per-configuration
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-RISK
+    decision: DEC-0153
+    configurable: true
+    notes: "The SQS baseline refit cadence (DEC-0153, AD-39): a refit mints a new baseline artifact with a supersedes edge; the configuration cites a refit-series identity plus the refit-policy fingerprint, so a refit under an unchanged policy does not fork identity while a change to the refit policy does — without that split a daily refit would fork the decay cohort daily. Configurable UI-editable (DEC-0157). Recorded corpus evidence, non-authoritative: daily and weekly refits — no ratified spine value."
+
+  - name: sqs_staleness_horizon
+    symbol: null
+    value: declared-per-configuration
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMF-RISK
+    decision: DEC-0153
+    configurable: true
+    notes: "The staleness horizon past which an SQS sample is treated as stale — a conservative sentinel: undefined, unreachable, stale, or refused means hard block, never a last-known-good value (DEC-0153, AD-39). Availability markers are enumerated ok | not_ready | unavailable | stale | refused, the configuration declaring which the door treats as a block (all but ok, by default). Configurable UI-editable (DEC-0157); no ratified spine value."
+
+  - name: decision_freshness_bound
+    symbol: null
+    value: declared-per-book
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMF-RISK
+    decision: DEC-0153
+    configurable: true
+    notes: "A per-Book mandatory, non-defaultable maximum age on the evidence a live-money decision may read (DEC-0153, AD-39); the SQS live-spread channel's declared maximum sample age may not exceed it. Mandatory means no QMF default value exists — the Book must declare one. Configurable UI-editable (DEC-0157); no ratified spine value."
+
+  - name: daily_dead_zone_width
+    symbol: null
+    value: declared-per-calendar
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMF-RISK
+    decision: DEC-0152
+    configurable: true
+    notes: "The width of the daily_dead_zone protection window — the daily band in which no session is meaningfully in the market (DEC-0152, AD-38). Calendar-derived (market-hours calendar identity plus tzdata, never device or broker location) and therefore absent for 24/7 markets. Configurable UI-editable (DEC-0157). DISAGREEING recorded evidence, never merged: a one-hour table row ('OVERNIGHT | 19:00-20:00 | Dead zone') and Flow 9's approximately-three-hours prose — both QMX-discussion-layer, cited for the window definition only under the named corpus-precedence exemption (DEC-0156), non-authoritative and never a spine value."
+
+  - name: session_handover_buffer_width
+    symbol: null
+    value: declared-per-calendar
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMF-RISK
+    decision: DEC-0152
+    configurable: true
+    notes: "The width of the session_handover_buffer protection window — the pause around a session handover (DEC-0152, AD-38); a distinct kind from daily_dead_zone. Calendar-derived, absent for 24/7 markets. Configurable UI-editable (DEC-0157). Recorded evidence, non-authoritative: approximately 45 minutes is the operator's later recollection, explicitly not found in the corpus — never a spine value."
+
+  - name: session_handover_buffer_anchor
+    symbol: null
+    value: declared-per-window-kind
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-RISK
+    decision: DEC-0152
+    configurable: true
+    notes: "The mandatory anchor side of a session_handover_buffer window, one of pre-close | post-open | both (DEC-0152, AD-38). Mandatory field on every session_handover_buffer record; no QMF default. Configurable UI-editable (DEC-0157); no ratified spine value."
+
+  - name: window_forced_flat
+    symbol: null
+    value: declared-per-book
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-RISK
+    decision: DEC-0152
+    configurable: true
+    notes: "Whether a protection window ever closes open positions is a Book declaration entering arbitration at rank 2 as window_forced_flat (DEC-0152, AD-38; DEC-0151, AD-37). Declaring none is the V1 posture — a window blocks new entries only and never closes a position by implicit effect. Configurable UI-editable (DEC-0157); no ratified spine value."
+
+  - name: breakeven_ratchet_trigger
+    symbol: null
+    value: declared-per-book
+    formula: null
+    units: null
+    type: ratio
+    component: COMP-QMF-RISK
+    decision: DEC-0148
+    configurable: true
+    notes: "The trigger point of the V1 move-to-breakeven ratchet — the only V1 dynamic SL/TP policy: one-directional, risk-reducing, never reset outward, per-Book (DEC-0148, AD-34). Carried as an exact rational; its unit-kind is a per-Book declaration. Configurable UI-editable (DEC-0157); no spine value. Richer policies (trailing, laddered targets) are later Book versions through the same declaration."
+
+  - name: breakeven_ratchet_offset
+    symbol: null
+    value: declared-per-book
+    formula: null
+    units: null
+    type: ratio
+    component: COMP-QMF-RISK
+    decision: DEC-0148
+    configurable: true
+    notes: "The offset of the V1 move-to-breakeven ratchet — where the protective stop lands once the ratchet triggers (DEC-0148, AD-34); risk-non-increasing measured against the frozen original_risk_distance. Carried as an exact rational; its unit-kind is a per-Book declaration. Configurable UI-editable (DEC-0157); no spine value."
+
+  - name: paper_starting_balance
+    symbol: null
+    value: declared-per-book-family
+    formula: null
+    units: "money(numeraire)"
+    type: money
+    component: COMP-QMF-RISK
+    decision: DEC-0149
+    configurable: true
+    notes: "The frozen paper-mode starting balance, a Book/family-scoped configurable UI-editable default sized for data-collection realism (DEC-0149, AD-35; DEC-0157). Frozen at flip, never hand-adjusted; a reset is not an adjustment — it mints a new operator-signed paper epoch record with a fresh declared balance and a lineage edge, the running balance never mutated. Paper P&L never becomes Treasury cash, never crosses the money boundary, never buys a seat. Money(numeraire) = USD in V1. Any recorded figure is evidence only; no ratified spine value."
+
+  - name: hold_time_force_flat_trigger
+    symbol: null
+    value: declared-per-book
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMF-RISK
+    decision: DEC-0151
+    configurable: true
+    notes: "A Book-declared force-flat trigger, one of position-age-exceeding-a-declared-Duration | an-instant-from-a-named-calendar-identity (DEC-0151, AD-37); hold limits and no-overnight are one mechanism, both producing the same mechanical close at rank 2. QMF supplies no durations, instants, or ranks; a Book that declares no force-flat rule has none. The corpus carries the hold-time-force-flat name only, with no value anywhere — the unification with no-overnight is this sitting's own design. Configurable UI-editable (DEC-0157); no spine value."
+
+  - name: control_rank_table
+    symbol: null
+    value: declared-per-bms-per-stream
+    formula: null
+    units: null
+    type: declaration
+    component: COMP-QMF-RISK
+    decision: DEC-0151
+    configurable: true
+    notes: "The same-tick arbitration rank table, BMS-declared one per (VenueId, account) command stream, matching the single arbitration point's cardinality — several Books share one stream, so a Book-owned table would put two rank orders at one arbiter (DEC-0151, AD-37). Each control-action kind's rank is a declared, mandatory, non-defaultable field: its existence is QMF's, its value is not. Ranks are a total order with uniqueness enforced at admission Layer 1; a Book whose control policy contradicts its BMS's table is refused at bind time. No QMF default. Configurable UI-editable (DEC-0157)."
+
+  - name: state_carry_declaration
+    symbol: null
+    value: declared-per-binding
+    formula: null
+    units: null
+    type: declaration
+    component: COMP-QMF-RISK
+    decision: DEC-0143
+    configurable: true
+    notes: "A mandatory per-counter carry|reset declaration on every Book binding record — ledger, cycle, budget, bench_counter, exposure — each declared carry or reset (DEC-0143, AD-29). Carry is legal only under a human-signed carries-ledger edge (DEC-0158, AD-16); what carries across a new binding is declared, never inferred. A changed Book number mints a new fingerprint, a new binding, and a fresh cycle's money unless the new binding's state_carry declares carry under that signed edge. Configurable UI-editable (DEC-0157); no spine value — it is a per-binding declaration."
+
+  - name: qmb_cli_pin
+    symbol: null
+    value: click==8.4.2
+    formula: null
+    units: null
+    type: version-pin
+    component: COMP-QMB
+    decision: DEC-0168
+    configurable: false
+    notes: "The qmb CLI door's framework pin, exact-equality (BSD-3; pure-Python; verified CPython 3.14-compatible — click publishes no per-version classifiers, so pyreadiness's cross is a metadata artifact; web-verified 2026-08-20 at QMB gate round 1)."
+
+  - name: qmb_sampler_pin
+    symbol: null
+    value: optuna==4.9.0
+    formula: null
+    units: null
+    type: version-pin
+    component: COMP-QMB
+    decision: DEC-0168
+    configurable: false
+    notes: "The default optimize sampler adapter's pin, exact-equality (MIT; carries the 3.14 classifier; 5.0.0rc1 is a pre-release, not pinned; web-verified 2026-08-20). A future major bump changes the default sampler's behavior and is a CONTRACT-VERSIONING event — a new sampler identity on every affected trial label — never a transparent update. Optuna adapters run n_jobs=1: process fan-out belongs to the B-5 governor, never the sampler (DEC-0168, DEC-0161)."
+
+  - name: qmb_governor_cpu_budget
+    symbol: null
+    value: declared-per-machine
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMB
+    decision: DEC-0161
+    configurable: true
+    notes: "The orchestrator governor's CPU budget: parallelism is bounded by min(cpu budget, memory budget), with a typed refusal or enqueue-on-full — never silent oversubscription (DEC-0161, B-5). Configurable UI-editable (DEC-0157); no spine value. The recorded 12-14-concurrent-runs figure is a motivating reference under AD-13, never a validated budget until a fingerprinted baseline is measured."
+
+  - name: qmb_governor_memory_budget
+    symbol: null
+    value: declared-per-machine
+    formula: null
+    units: bytes
+    type: quantity
+    component: COMP-QMB
+    decision: DEC-0161
+    configurable: true
+    notes: "The orchestrator governor's memory budget — a run whose projected peak memory exceeds the remaining budget gets a typed refusal or enqueues (DEC-0161, B-5). Configurable UI-editable (DEC-0157); no spine value."
+
+  - name: qmb_run_time_limit
+    symbol: null
+    value: declared-per-run
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMB
+    decision: DEC-0161
+    configurable: true
+    notes: "The declared per-run wall-time limit; breach is a typed aborted ledger line, never a silent kill (DEC-0161, B-5). Configurable UI-editable (DEC-0157); no spine value."
+
+  - name: qmb_run_memory_limit
+    symbol: null
+    value: declared-per-run
+    formula: null
+    units: bytes
+    type: quantity
+    component: COMP-QMB
+    decision: DEC-0161
+    configurable: true
+    notes: "The declared per-run peak-memory limit; breach is a typed aborted ledger line (DEC-0161, B-5). Configurable UI-editable (DEC-0157); no spine value."
+
+  - name: qmb_stale_evidence_severity
+    symbol: null
+    value: declared-per-workspace
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMB
+    decision: DEC-0165
+    configurable: true
+    notes: "The severity of the AD-11 stale-evidence refusal raised when a run resolves a ref that a fresher registry as-of set shows superseded (DEC-0165, B-15). Configurable UI-editable (DEC-0157); no spine value. The as-of set itself is never configurable — a sweep freezes ONE as-of at batch admission for every trial."

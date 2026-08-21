@@ -2,7 +2,7 @@
 id: SCN-0003
 title: Default Research Access Excludes the Sealed Holdout
 type: scenario
-status: provisional
+status: ratified
 component: COMP-QMF-DATA
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY]
 decisions: [DEC-0044, DEC-0046, DEC-0119]

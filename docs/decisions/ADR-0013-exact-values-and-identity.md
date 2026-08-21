@@ -2,7 +2,7 @@
 id: ADR-0013
 title: Exact values, exact time, and artifact identity
 type: adr
-status: provisional
+status: ratified
 component: COMP-QMF-CORE
 depends_on: [COMP-QMF-CORE, COMP-QMF-CALENDAR-FOREX, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-VENUE, COMP-QMF-RISK]
 decisions: [DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110]
@@ -14,7 +14,7 @@ stale_after: 1y
 
 # ADR-0013: Exact values, exact time, and artifact identity
 
-Date: 2026-08-20. Status: provisional — AD-7..AD-12 are operator-ratified in the foundation architecture sitting (2026-08-19/20), two-lens audited and amended by the sitting's contradiction sweep and reviewer gate; this document stays provisional until the knowledge base is re-ratified.
+Date: 2026-08-20. status: ratified — AD-7..AD-12 are operator-ratified in the foundation architecture sitting (2026-08-19/20), two-lens audited and amended by the sitting's contradiction sweep and reviewer gate; this document stays provisional until the knowledge base is re-ratified.
 
 ## Context
 

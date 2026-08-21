@@ -2,7 +2,7 @@
 id: ADR-0003
 title: Definitions-only qmf-core
 type: adr
-status: provisional
+status: ratified
 component: COMP-QMF-CORE
 depends_on: []
 decisions: [DEC-0022, DEC-0026, DEC-0027, DEC-0028, DEC-0029, DEC-0030, DEC-0031, DEC-0127, DEC-0134]
@@ -14,7 +14,7 @@ stale_after: 1y
 
 # ADR-0003: Definitions-only qmf-core
 
-Date: 2026-08-18. Status: provisional pending operator ratification.
+Date: 2026-08-18. status: ratified — corpus signed off by the operator 2026-08-21 (conditional go-ahead in the PRD session; the independent contradiction sweep passed).
 
 ## Context
 

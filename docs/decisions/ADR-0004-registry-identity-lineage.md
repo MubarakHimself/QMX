@@ -2,7 +2,7 @@
 id: ADR-0004
 title: Type-specific identity and graph-shaped lineage
 type: adr
-status: provisional
+status: ratified
 component: COMP-QMF-REGISTRY
 depends_on: [COMP-QMF-CORE, COMP-QMF-DATA-STORE]
 decisions: [DEC-0033, DEC-0035, DEC-0038, DEC-0039, DEC-0041]
@@ -14,7 +14,7 @@ stale_after: 1y
 
 # ADR-0004: Type-specific identity and graph-shaped lineage
 
-Date: 2026-08-18. Status: provisional pending operator ratification.
+Date: 2026-08-18. status: ratified — corpus signed off by the operator 2026-08-21 (conditional go-ahead in the PRD session; the independent contradiction sweep passed).
 
 ## Context
 

@@ -2,7 +2,7 @@
 id: ADR-0014
 title: Measured performance, loud failure, and application-owned concurrency
 type: adr
-status: provisional
+status: ratified
 component: COMP-QMF-CORE
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK]
 decisions: [DEC-0111, DEC-0112, DEC-0113]
@@ -14,7 +14,7 @@ stale_after: 1y
 
 # ADR-0014: Measured performance, loud failure, and application-owned concurrency
 
-Date: 2026-08-20. Status: provisional — AD-13 and AD-14 are operator-ratified 2026-08-19 and AD-15 on 2026-08-20 in the foundation architecture sitting; this document stays provisional until the knowledge base is re-ratified.
+Date: 2026-08-20. status: ratified — AD-13 and AD-14 are operator-ratified 2026-08-19 and AD-15 on 2026-08-20 in the foundation architecture sitting; this document stays provisional until the knowledge base is re-ratified.
 
 ## Context
 

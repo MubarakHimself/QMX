@@ -1,0 +1,79 @@
+id: CT-29
+name: Exit-record contract (one record per virtual-position close)
+status: ratified
+version: 1  # first minted format version; the shape is spine-ratified (AD-41, DEC-0155), corpus signed off by the operator 2026-08-21
+owner: COMP-QMF-RISK
+consumers: []  # consumer-blind by design: the exit record is a qmf-core value type wrapped into a registry record by the composition root; nothing imports qmf-risk under default-deny, so no package import edge exists (DEC-0155, DEC-0158)
+active_consumers: []
+intended_consumers: [COMP-QMF-REGISTRY, COMP-QMF-DATA]  # Registry persists the wrapped record (AD-16); Data journals and projects the exit-record stream, over which the bench fold, whole-trade attribution and the CT-32 performance container read — all composition-root wired when the factory ships (DEC-0155, DEC-0145)
+wiring_status: defined-unwired  # AD-41 ratified the record shape; no code exists and no wiring is authorized from this doc — composition-root mediated until the software factory ships it (DEC-0155, DEC-0158)
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0143, DEC-0145, DEC-0147, DEC-0150, DEC-0151, DEC-0154, DEC-0155, DEC-0157, DEC-0158, DEC-0176, DEC-0179, DEC-0181]
+gaps: []  # GAP-0047 answered by the 2026-08-21 QML sitting — the close-reason taxonomy is ratified AS-IS and stays the ONE taxonomy (DEC-0179). GAP-0045 is ANSWERED (DEC-0155) and removed; alpha-decay mathematics is deferred by design (AD-41), the primitive ships now because it cannot be back-filled — not an open gap in this contract
+purpose: "Record one immutable exit record per virtual (Book) position close: frozen R faces, AD-27 fill references, realized P&L and an identity-bearing cost-component set, a single-sourced realized_r, the typed AD-33 close reason, the closing authority and arbitration reference, and the Book-declared loss-predicate format version — the evidence primitive the bench fold, whole-trade attribution and alpha-decay measurement all read, recorded before any later interpretation (DEC-0155)."
+invariants:
+  - "One exit record per VIRTUAL (Book) position close — the AD-40 noun, not the venue position — or a netted account produces fewer records than admissions and every fold over them under-counts (DEC-0155, DEC-0154)."
+  - "The record is defined-unwired ratified surface: a qmf-core value type, content-fingerprinted by qmf-core's single implementation and wrapped into a registry record by the composition root (AD-16); no new package edge and no wiring is authorized from this doc (DEC-0155, DEC-0158)."
+  - "The R faces are frozen and carried, not recomputed: original_risk_distance (PriceDelta(instrument)) and original_risk_amount (Money(numeraire)) are the admission-frozen values, so r_multiple is recomputable forever without re-reading the admission (DEC-0154, DEC-0155)."
+  - "realized_r has exactly one source: a declared derived DISPLAY of the record's own frozen fields under a pinned formula in AD-7 canonical rational form — never a second governed-producer implementation of the same division (AD-23) (DEC-0155, DEC-0158)."
+  - "cost_components is an identity-bearing declared set — commission, financing/admin fee (a dated fee may exist even on swap-free accounts), and every other named component, each Money(numeraire) with a named source; realized_r is net of exactly that set, and a change to the set is a contract-format-version mint (DEC-0155, DEC-0154)."
+  - "Mechanism and outcome are separate fields — a protective-stop fill may realize a full loss or a breakeven, a forced flat may realize either sign — so no rule is ever written over the mechanism alone, and the bare word 'stop-out' appears nowhere in this contract (DEC-0155)."
+  - "Every close carries exactly one typed close reason from the closed-and-addable AD-33 taxonomy: protective_stop_fill | target_fill | protection_amendment_fill | bot_intent | hold_time_force_flat | boundary_flat | window_forced_flat | protection_forced_flat | kill_line_flat | venue_liquidation | venue_initiated_close | operator_close — addable never redefined; kill_line_flat is minted apart from protection_forced_flat because the kill line (a per-Book capital floor) and the kill switch (the global authority) are two different things (DEC-0147, DEC-0150)."
+  - "Every (CT-30 control-action kind x issuing authority) maps to exactly one close reason through a pinned versioned table shared with CT-30, never per implementer (DEC-0147, DEC-0150, DEC-0151)."
+  - "closing_authority is the arbitration winner, carried with a reference to the arbitration record (AD-37); suppression counting reads the control-action stream through enacts edges and never the exit record, which would double-count (DEC-0151, DEC-0150)."
+  - "venue_liquidation is reserved for the venue's own margin-liquidation 'stop out' (verified against cTrader's glossary); the bench's input is named qualifying_loss_exit; QMX's protective-stop sense is protective_stop_fill — the three are never collapsed and the bare word 'stop-out' is banned (DEC-0155)."
+  - "The bench predicate is realized_r <= -q, where q is a declared, UI-editable, per-family template variable defaulting to approximately one R (recorded evidence, non-authoritative, configurable UI-editable, no spine value): scratches and partial losses do not count by default, breakevens never count under any q and are recorded as their own metric (clustering watch), and a forced flat or boundary flat counts only if it realized a qualifying loss (DEC-0155, DEC-0157)."
+  - "The bench counter is a read-time fold over the exit-record stream, never a mutable counter; its stream boundary is the binding epoch (a new epoch starts the count at zero unless a signed carries-ledger edge spans it) and its knowledge-time bound is the last exit record persisted and journaled at the intent-mint instant (DEC-0155, DEC-0143)."
+  - "Recording precedes interpretation: a fill closing a virtual position must have its exit record persisted before any later intent on the same (Book, Bot) seat is minted, else that intent refuses (stale evidence) — otherwise the (N+1)th entry races the Nth exit record and the leash misses the crossing it exists to catch (DEC-0155, DEC-0158)."
+  - "The record carries the account-binding role in its result-label parts, and a single result may never span account roles; it carries the contract format version of the Book-declared loss predicate (declared in exit_policy, AD-30), so a result whose predicate version differs from a bar's requirement does not silently satisfy it (DEC-0155, DEC-0143)."
+  - "The exit record is an evidence primitive only — measurement never acts: it publishes, and the authority to act belongs to the Book door (bench) or the operator (promotion); the bench fold is one governed producer under AD-23, published once and consumed by the door; the alpha-decay mathematics is deferred, but the collection starts now because it cannot be back-filled (DEC-0155)."
+  - "AD-33's provenance flag is CLOSED — the close-reason taxonomy is ratified AS-IS as the ONE taxonomy, and ExitLogicRef stays in the Book's CT-22 exit_policy per strategy family while the CT-33 Bot definition carries no exit_logic field (the old BotSpec slot is deliberately dead) (DEC-0179)."
+  - "Where the Book's CT-22-v2 exit_policy declares the one optional catch-all default entry, this exit record keys the RESOLVED entry — the explicit strategy-family entry or the catch-all — so loss-predicate attribution is never inferred; the exact field shape of that keying is NOT minted here (the 2026-08-21 sitting proposed no CT-29 format mint) and rides an open coordination item recorded in the changelog (DEC-0176, DEC-0181)."
+schema:
+  type: "ExitRecord — an immutable qmf-core value type, one per virtual-position close, content-fingerprinted by qmf-core and wrapped into a registry record by the composition root (AD-16); every field frozen at write, corrections expressed as annotations, never mutation (DEC-0155, DEC-0158)."
+  fields:
+    - "virtual_position_ref: the virtual (Book) position this record closes — the AD-40 noun (binding-scoped, Bot-attributed, minted at admission), never the venue position; every fold reads this reference (DEC-0154, DEC-0155)"
+    - "original_risk_distance: PriceDelta(instrument), FROZEN at admission — entry to the declared original full-loss price; carried so r_multiple is recomputable forever (DEC-0154, DEC-0155)"
+    - "original_risk_amount: Money(numeraire), FROZEN at admission — the cost of a full-loss fill at the admitted quantity; the denominator of r_multiple (DEC-0154, DEC-0155)"
+    - "fill_references: the AD-27 fill references composing the close (DEC-0155)"
+    - "realized_pnl: Money(numeraire), the gross realized result of the virtual position before cost_components (DEC-0155)"
+    - "cost_components: an identity-bearing declared set — commission, financing/admin fee, and every other named component, each Money(numeraire) with a named source; a change to the set is a contract-format-version mint (DEC-0155)"
+    - "realized_r: r-multiple, net of exactly the declared cost_components set — a declared derived DISPLAY of this record's frozen fields under a pinned formula in AD-7 canonical rational form, never a second governed implementation (DEC-0155, DEC-0158)"
+    - "close_reason: exactly one member of the AD-33 close-reason taxonomy (see enums.close_reason) (DEC-0147, DEC-0155)"
+    - "mechanism: the mechanical event that closed the position — a field SEPARATE from outcome, so a protective_stop_fill realizing a breakeven and one realizing a full loss are one mechanism with two outcomes (DEC-0155)"
+    - "outcome: the realized sign/magnitude face, separate from mechanism; no rule is written over mechanism alone (DEC-0155)"
+    - "closing_authority: the authority that produced the close — the arbitration winner for node-originated closes (operator | book_policy | protection_authority | venue-delegated) and the venue for venue-authored closes; carried with arbitration_record_ref (DEC-0151, DEC-0150, DEC-0155)"
+    - "arbitration_record_ref: reference to the same-tick arbitration record (AD-37) that named closing_authority; suppression counting reads the control-action stream through enacts edges, never this record (DEC-0151, DEC-0155)"
+    - "close_reason_mapping_version: the pinned versioned (CT-30 action kind x issuing authority) -> close_reason mapping this record resolved under, shared with CT-30 (DEC-0147, DEC-0150)"
+    - "result_label: the AD-12 result-label parts including the account-binding role; a single result may never span account roles (DEC-0155, DEC-0143)"
+    - "loss_predicate_format_version: the contract format version of the Book-declared loss predicate (exit_policy, AD-30) this close was judged under (DEC-0155)"
+  enums:
+    - "close_reason (closed-and-addable, never redefined): protective_stop_fill | target_fill | protection_amendment_fill | bot_intent | hold_time_force_flat | boundary_flat | window_forced_flat | protection_forced_flat | kill_line_flat | venue_liquidation | venue_initiated_close | operator_close — kill_line_flat minted apart from protection_forced_flat (DEC-0147, DEC-0150)"
+    - "closing_authority kind: operator | book_policy | protection_authority | venue-delegated | venue — the node authorities are the AD-36 issuing-authority set (adapter_self never closes a position); venue names a venue-authored close (DEC-0150, DEC-0151)"
+    - "bench-predicate disposition of a close: qualifying_loss_exit (realized_r <= -q, counts) | scratch-or-partial-loss (does not count by default) | breakeven (never counts under any q, recorded as its own metric) (DEC-0155, DEC-0157)"
+    - "refusal categories on this record's paths, per registry:typed_refusal_codes: stale evidence (a later same-seat intent before this record is persisted), invalid input (a record naming more than one close_reason, spanning account roles, or carrying a stored realized_r that disagrees with the pinned derivation) (DEC-0155, DEC-0158)"
+  units:
+    - "original_risk_distance: PriceDelta(instrument), scaled integer at the instrument's declared digits (DEC-0154)"
+    - "original_risk_amount, realized_pnl, and each cost_components member: Money(numeraire) — USD system-wide in V1 — as a scaled integer at the account's declared money exponent (DEC-0154, DEC-0155)"
+    - "realized_r: r-multiple (dimensionless exact rational); r_multiple = realized result divided by original_risk_amount, -1 a full original loss, 0 breakeven (DEC-0154, DEC-0155)"
+    - "q (bench threshold): r-multiple, a configurable UI-editable per-family template variable defaulting to approximately one R — recorded evidence, non-authoritative, no spine value (DEC-0157, DEC-0155)"
+  nullability:
+    - "original_risk_distance and original_risk_amount are non-null frozen values; a close of a position with no frozen R is impossible because admission refuses without a declared full-loss price (DEC-0154)"
+    - "cost_components is present as a declared set (empty only where the Book declares no components); its identity is fixed at declaration, and an undeclared-but-charged component is a contract-format-version violation, never a silent addition (DEC-0155)"
+    - "arbitration_record_ref is present for every node-originated close; a venue-authored close (venue_liquidation, venue_initiated_close) carries the venue observation reference in its place and no node arbitration record (DEC-0151, DEC-0155)"
+    - "realized_r is always derivable from the frozen fields and never stored as an independent governed value; a stored realized_r that disagrees with the pinned derivation is an invalid-input refusal (DEC-0155, DEC-0158)"
+    - "close_reason is exactly one member and never null; a null or multi-valued close_reason is an invalid-input refusal (DEC-0147, DEC-0155)"
+    - "loss_predicate_format_version and result_label (with account-binding role) are required and non-null; a result spanning more than one account role is an invalid-input refusal (DEC-0155, DEC-0143)"
+close_reason_evidence_mapping:
+  purpose: "RECORDED EVIDENCE for reading pre-QMX artifacts — the pre-QMX QML CloseReason members mapped onto the ONE ratified AD-33 close-reason taxonomy so old records read correctly; never a second taxonomy, never a registerable enum, never a contract surface a producer emits (DEC-0179)."
+  members:
+    - "SL_HIT -> protective_stop_fill (DEC-0179)"
+    - "TP_HIT -> target_fill (DEC-0179)"
+    - "TRAILING_SL_HIT -> protection_amendment_fill (DEC-0179)"
+    - "MANUAL_CLOSE / MANUAL -> operator_close (DEC-0179)"
+    - "KS_FORCED_CLOSE / KILL_SWITCH_FLATTEN -> protection_forced_flat (DEC-0179)"
+    - "SESSION_CLOSE -> window_forced_flat | boundary_flat | hold_time_force_flat, resolved per the triggering session boundary (DEC-0179)"
+    - "TIMEOUT -> hold_time_force_flat (DEC-0179)"
+    - "BROKER_CLOSE -> venue_initiated_close | venue_liquidation, resolved per whether the venue closed on its own initiative or on margin liquidation (DEC-0179)"
+    - "HEDGE_CLOSE -> no successor: no hedge machinery exists in V1; a future mint under the addable-never-redefined law forecloses nothing (DEC-0179)"

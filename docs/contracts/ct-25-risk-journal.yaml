@@ -1,31 +1,60 @@
 id: CT-25
-name: Risk and Book journal-evidence contract
-status: provisional
-version: null
-version_gap: GAP-0005
+name: Risk and entity journal-projection contract
+status: ratified
+version: 1  # first minted format version; the projection and record surface is spine-ratified (AD-31), corpus signed off by the operator 2026-08-21 (DEC-0145)
 owner: COMP-QMF-RISK
-consumers: []
+consumers: []  # projection-blind: entity journals are read-time projections the composition root resolves over AD-21 writer-scoped streams; nothing imports qmf-risk under default-deny, so no package import edge exists (DEC-0145, DEC-0158)
 active_consumers: []
-intended_consumers: [COMP-QMF-DATA]
-wiring_status: reserved-unwired
+intended_consumers: [COMP-QMF-DATA, COMP-QMF-REGISTRY]  # qmf-data resolves the projections over its stored journal streams (CT-13); qmf-registry wraps each risk record into a registry record; both mediated by the composition root when the factory ships, documentary until then (DEC-0145)
+wiring_status: defined-unwired  # AD-31 ratified the projection and record surface; no code exists and no wiring is authorized from this doc — CT-25 is a composition-root-mediated contract that stays defined and unwired until the software factory ships it (DEC-0145, DEC-0158)
 layer_from: backend
-layer_to: backend
-decisions: [DEC-0048, DEC-0065, DEC-0072, DEC-0074, DEC-0094]
-gaps: [GAP-0005, GAP-0025, GAP-0042, GAP-0043, GAP-0045, GAP-0046]
-purpose: "Reserve an unwired placeholder for future Book, BMS, SQS, news-control, kill-switch, and risk-transition evidence."
+layer_to: data
+decisions: [DEC-0145, DEC-0143, DEC-0150, DEC-0147, DEC-0158]
+gaps: []  # GAP-0005 answered by minting version 1; GAP-0039's journal half answered 2026-08-20 (DEC-0145); the placeholder's open-schema gaps (GAP-0025/0042/0043/0045/0046) are all closed by the risk sitting
+purpose: "Declare the read-time projection and record surface for entity journals — the Book journal, the BMS journal, and the per-bot journal (the operator's logbook) — as selections over AD-21 writer-scoped streams keyed by entity identity, never as streams an entity writes; pin the command-fingerprint join between risk-authored and venue-authored events as versioned surface; and carry the legacy five Records stream names forward as projection names through one mapping table onto AD-21's seven event types."
 invariants:
-  - "News blocking is pair-scoped and distinct from SQS."
-  - "No active Data consumer or persistence handoff is wired."
-  - "The placeholder does not authorize direct store writes or imply that qmf-data already consumes the evidence."
-  - "Event fields, cadence, correlation, retention, news windows, SQS measures, stop-out events, priority outcomes, and redaction remain unresolved."
+  - "Entity journals are read-time projections, never writers: the Book journal, the BMS journal, and the per-bot journal (the operator's logbook) are declared read-time projections over AD-21 writer-scoped streams, selected by entity identity; an entity holds no WriterId and mints no stream of its own (DEC-0145, DEC-0158)."
+  - "Disclosed substitution, flagged for operator review: the operator asked for per-entity journal streams; the one-writer-per-stream law (AD-15/AD-21) would require a non-component entity to hold a WriterId, so the same guarantee is delivered as a projection — recorded here as the distiller's correction and operator-confirmed post-close ('if I need per-bot data I can extract it; if I need per-Book I can extract it') (DEC-0145)."
+  - "Two event classes, split because the neutral venue port cannot carry Book identity and must not learn it: risk-authored events (decision, risk transition, control action, promotion), minted by the risk/node layer, carry the Book-definition fingerprint, the binding identity (AD-29) and — where the act concerns one bot — the Bot identity plus its seat binding, as identity fields; venue-authored events (order, fill, data quality), minted by the connection manager under its own WriterId, carry the command record's content fingerprint (DEC-0145, DEC-0143)."
+  - "The command-fingerprint join is pinned versioned CT-25 surface, not implementer judgment: the projection joins a venue-authored event to its risk-authored decision through the command record's content fingerprint, and the command record carries the binding identity as an identity field; without it the operator's logbook holds decisions and control actions but no orders or fills, or an implementer threads Book identity into the venue payload and creates the qmf-venue to qmf-risk coupling the dependency rule forbids (DEC-0145, DEC-0143)."
+  - "The legacy five Records streams (veto_ledger, trade_journal, book_journal, ksa_audit_log, correlation_ledger) survive as projection names only, mapped onto AD-21's seven event types by one versioned mapping table carried in CT-25; no second event catalog is minted (DEC-0145)."
+  - "Paper and live are separated by construction: a projection resolves inside one role-scoped namespace (AD-12); a projection over an entity that operated in more than one role — a benched seat inside a live Book is the ordinary case — is a declared cross-role read within world = live, permitted, with role carried on every row and never aggregated across roles without an explicit declaration; there is no write exception ever (DEC-0145, DEC-0158)."
+  - "The decision event carries a mandatory closed outcome field — authorized | refused-by-door | suppressed — with the refusing-door or suppressing-authority reference, so every projection (the legacy veto_ledger included) selects on a declared field and never on key presence (DEC-0158)."
+  - "The control-action event carries a declared suppressed subtype for an already-authorized action discarded because a higher authority won arbitration; suppression counting reads the control-action stream through enacts edges, never correlation_id and never the exit record (which would double-count) (DEC-0158, DEC-0150)."
+  - "Veto path and suppression path are never merged: a door refusal (refused before authorization) stays on the veto path carrying the refusing-door identity, the would-have-been action fingerprint, and the controlling evidence fingerprint; a suppression is an already-authorized action discarded because a higher authority won, carrying the suppressing and suppressed authorities and the arbitration record (DEC-0150)."
+  - "The risk-domain writer unit is (machine, risk role, binding), declared so AD-21's gapless per-(writer, boot-epoch) sequence has an owner for decision, risk transition, control action, and promotion events; gap detection cannot work without one (DEC-0145)."
+  - "Block-on-unpersistable binds the risk dispatcher exactly as it binds the connection manager: a control action is journaled before dispatch (AD-36), so the dispatcher must see a sink refusal — a storage failure blocks the dispatch rather than losing the intent (DEC-0145, DEC-0150)."
+  - "Every risk record is a qmf-core value type, content-fingerprinted by qmf-core's single implementation and wrapped into a registry record by the composition root (the AD-28 pattern); no new package edge is created (DEC-0145)."
+  - "Correlation vocabulary is renamed apart and never interchanged: cohort-correlation evidence (a CT-23 declared evidence slot, computed outside qmf-risk, enforced node-side, threshold unratified), fill-attribution label (venue, CT-18/AD-27), and correlation_id (tracing, AD-14) (DEC-0145, DEC-0147)."
 schema:
-  type: null
-  type_gap: GAP-0025
-  fields: null
-  fields_gap: GAP-0025
-  enums: null
-  enums_gap: GAP-0045
-  units: null
-  units_gap: GAP-0043
-  nullability: null
-  nullability_gap: GAP-0025
+  type: entity-journal-projection + risk-record  # a read-time projection is a selection over CT-13 journal streams keyed by entity identity; each risk-authored record is a qmf-core value type wrapped into a registry record by the composition root (DEC-0145)
+  fields:
+    - "entity_selector: the entity identity a projection resolves by — a Book identity, a BMS identity, or a Bot identity + seat; the selector is not a WriterId and names no stream (DEC-0145, DEC-0158)"
+    - "event_class: which authoring layer minted the underlying AD-21 event, risk-authored | venue-authored (DEC-0145)"
+    - "risk_authored_identity_fields: on a risk-authored event (decision, risk transition, control action, promotion) — the Book-definition fingerprint, the binding identity (AD-29), and, where the act concerns one bot, the Bot identity plus its seat binding (DEC-0145, DEC-0143)"
+    - "venue_authored_join_key: on a venue-authored event (order, fill, data quality) — the command record's content fingerprint, through which the projection joins to the risk-authored decision (DEC-0145, DEC-0143)"
+    - "command_fingerprint_join: the pinned versioned join — a venue-authored event's content fingerprint equals the command record's content fingerprint, the command record supplying the binding identity as an identity field; the join is CT-25 surface, not implementer judgment (DEC-0145, DEC-0143)"
+    - "records_stream_mapping: the one versioned table mapping each legacy Records projection name (veto_ledger, trade_journal, book_journal, ksa_audit_log, correlation_ledger) onto AD-21's seven event types; no second event catalog (DEC-0145)"
+    - "decision_outcome: on a decision event — the mandatory closed outcome (authorized | refused-by-door | suppressed) plus the refusing-door or suppressing-authority reference (DEC-0158)"
+    - "control_action_suppressed_subtype: on a control-action event — the declared suppressed subtype carrying the suppressing and suppressed authorities and the arbitration-record reference; read through enacts edges, never correlation_id (DEC-0158, DEC-0150)"
+    - "role: the account-binding role carried on every projected row, so a cross-role read is never silently aggregated (DEC-0145, DEC-0158)"
+    - "writer_unit: the risk-domain WriterId identity (machine, risk role, binding) under which risk-authored events are sequenced gaplessly per (writer, boot-epoch) (DEC-0145)"
+  enums:
+    - "event_class: risk-authored | venue-authored (DEC-0145)"
+    - "risk-authored event types: decision | risk transition | control action | promotion — a subset of AD-21's seven, minted by the risk/node layer (DEC-0145)"
+    - "venue-authored event types: order | fill | data quality — the remaining AD-21 types, minted by the connection manager under its own WriterId (DEC-0145)"
+    - "AD-21 seven event types the mapping table targets: decision | order | fill | risk transition | promotion | data quality | control action (DEC-0145)"
+    - "legacy Records projection names: veto_ledger | trade_journal | book_journal | ksa_audit_log | correlation_ledger — projection names only, never streams (DEC-0145)"
+    - "decision outcome: authorized | refused-by-door | suppressed (DEC-0158)"
+    - "control-action subtype in this contract's paths: suppressed — an authorized action discarded because a higher authority won arbitration (DEC-0158, DEC-0150)"
+    - "refusal categories in CT-25 paths: storage failure (an unpersistable risk-authored event blocks the risk dispatcher), invalid input (a projection selector treated as a writer, or a cross-role aggregation without an explicit declaration) per registry:typed_refusal_codes (DEC-0145, DEC-0158)"
+  units:
+    - "fingerprints (Book-definition, binding identity, command-record content, promotion card): fp1:sha256:<hex> via qmf-core's single implementation (DEC-0145)"
+    - "sequence: int64, gapless per (writer unit, boot-epoch); a gap signals loss (DEC-0145)"
+    - "instant: int64 UTC nanoseconds, inherited from the underlying CT-13 journal event (DEC-0145)"
+    - "the records-stream mapping table and the command-fingerprint join each carry a contract format version; a change to either is a format-version mint (DEC-0145)"
+  nullability:
+    - "a risk-authored event always carries its Book-definition fingerprint and binding identity; the Bot-identity-plus-seat fields are present only where the act concerns one bot and are an omitted key otherwise (DEC-0145)"
+    - "a venue-authored event always carries the command record's content fingerprint; it never carries Book identity, and threading Book identity into a venue payload is forbidden (DEC-0145, DEC-0143)"
+    - "the decision outcome field is always present as a closed value, never key-absent, so a projection selects on the declared value and never on key presence (DEC-0158)"
+    - "role is present on every projected row; a cross-role projection without an explicit declaration is an invalid-input refusal, never a silent union (DEC-0145, DEC-0158)"

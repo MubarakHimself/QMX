@@ -1,12 +1,12 @@
 id: CT-07
 name: Registry lineage-edge contract
-status: provisional
+status: ratified
 version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-REGISTRY
 consumers: [COMP-QMF-DATA, COMP-QMF-STRUCTURE, COMP-QMF-RISK]
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0103, DEC-0106, DEC-0108, DEC-0109, DEC-0113, DEC-0114, DEC-0116, DEC-0119, DEC-0120, DEC-0131, DEC-0137, DEC-0138]
+decisions: [DEC-0103, DEC-0106, DEC-0108, DEC-0109, DEC-0113, DEC-0114, DEC-0116, DEC-0119, DEC-0120, DEC-0131, DEC-0137, DEC-0138, DEC-0144, DEC-0158]
 gaps: []
 purpose: >-
   Represent lineage that accrues after a record's birth as append-only typed edge
@@ -14,7 +14,10 @@ purpose: >-
   graph database.
 invariants:
   - "Lineage that accrues after a record's birth lives exclusively in append-only typed edge records; at-birth parent references stay in the CT-06 record header, and readers never union header references with edges (DEC-0114)."
-  - "The V1 edge types are supersedes, promoted-from, occurrence-of, corroborates, disagrees-with, the AD-25 lifecycle edge kinds confirmed-as, confirmation, invalidation, and interaction, and the AD-27 out-of-sequence edge; edge types are addable in later versions and never redefined (DEC-0114, DEC-0131, DEC-0137)."
+  - "The V1 edge types are supersedes, promoted-from, occurrence-of, corroborates, disagrees-with, the AD-25 lifecycle edge kinds confirmed-as, confirmation, invalidation, and interaction, the AD-27 out-of-sequence edge, and the risk-gate edges continues-performance, carries-ledger, enacts, and branches-from; edge types are addable in later versions and never redefined (DEC-0114, DEC-0131, DEC-0137, DEC-0158)."
+  - "The single continues-as edge is split into two typed edges that never imply each other: continues-performance — a human-signed (AD-18) assertion that one binding continues another's performance record across a template version change or a broker migration, carrying the declared discontinuity and consumed only by CT-32 population declarations, moving no money; and carries-ledger — a human-signed assertion that per-binding state (virtual ledger, cycle position, budget remainder, breaker and bench counters) carries across a new binding, moving money and asserting nothing about comparability; neither is ever inferred from the other's presence (DEC-0158)."
+  - "enacts is an identity-bearing, append-only edge from a command record or an outcome observation to the CT-30 control-action or CT-23 intent record it enacts; AD-36's standing-intent fold, AD-37's arbitration records, and AD-41's suppression accounting resolve through enacts and never through correlation_id, which is a tracing annotation excluded from fp1 identity (DEC-0158)."
+  - "supersedes is pinned linear — at most one outgoing edge per subject and one resolvable head — so 'current' is never ambiguous; AD-30's branching Book/BMS version graph instead uses branches-from, where several heads are legal and 'current' is a separate dated pointer record, never inferred from the graph (DEC-0158, DEC-0144)."
   - "The confirmed-as, confirmation, invalidation, and interaction edge kinds carry AD-25 structure-object lifecycle that accrues after observation, each referencing the object's fp1 fingerprint; an unconfirmed output links to its confirmed successor via a confirmed-as edge (DEC-0131)."
   - "The out-of-sequence edge is an AD-27 venue edge kind: an inbound venue observation with no legal state transition is recorded, annotated with this typed edge, and forces its owning command to UNKNOWN pending resolution — adapters never synthesize venue observations (DEC-0137)."
   - "A durable command-id-binding record — (venue client id, command fp1, account, session epoch) — persists through the sink before submission wherever the venue's client-id field cannot injectively and totally carry a command's fp1; it is named reconciliation evidence that edges reference by fingerprint (DEC-0137)."
@@ -37,7 +40,7 @@ schema:
     contract_format_version: "int; the edge contract's format version stamped on every line (DEC-0103)"
     writer: "WriterId of the single edge-stream writer (DEC-0106, DEC-0113)"
   enums:
-    edge_type: [supersedes, promoted-from, occurrence-of, corroborates, disagrees-with, confirmed-as, confirmation, invalidation, interaction, out-of-sequence]
+    edge_type: [supersedes, promoted-from, occurrence-of, corroborates, disagrees-with, confirmed-as, confirmation, invalidation, interaction, out-of-sequence, continues-performance, carries-ledger, enacts, branches-from]
   units:
     contract_format_version: "dimensionless integer count"
   nullability:

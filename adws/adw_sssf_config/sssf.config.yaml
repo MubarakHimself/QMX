@@ -117,7 +117,7 @@ quality:
 
 agents:
   - name: planner
-    thinking: high                 # model: inherits defaults.model (one lane, one key)
+    thinking: medium                 # model: inherits defaults.model (one lane, one key)
     color: "#a78bfa"                 # optional hex — the agent's lane color in the visualizer
     purpose: Turn a request into a plan the builder can implement without asking questions.
     prompt_engineering:
@@ -157,6 +157,7 @@ agents:
       - write
 
   - name: scout
+    model: opencode-go/minimax-m2.7
     color: "#fbbf24"
     purpose: Find and report where things live; change nothing.
     prompt_engineering:

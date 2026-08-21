@@ -2,7 +2,7 @@
 id: COMP-QMF-DATA-BACKUP
 title: qmf-data Off-Machine Backup Boundary
 type: component-spec
-status: provisional
+status: ratified
 component: COMP-QMF-DATA-BACKUP
 depends_on: [COMP-QMF-DATA-STORE, COMP-OBJECT-STORAGE]
 decisions: [DEC-0103, DEC-0106, DEC-0109, DEC-0110, DEC-0113, DEC-0117, DEC-0118, DEC-0119, DEC-0045]

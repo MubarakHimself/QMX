@@ -1,0 +1,69 @@
+id: CT-27
+name: BMS definition (template) contract
+status: ratified
+version: 1  # first minted format version; the BMS definition template is spine-ratified (AD-29/AD-30/AD-32), corpus signed off by the operator 2026-08-21
+owner: COMP-QMF-RISK
+consumers: []  # consumer-blind by design: qmf-risk defines CT-27 on qmf-core nouns; the composition root wires persistence and nothing imports qmf-risk under default-deny, so no package import edge exists (DEC-0158)
+active_consumers: []
+intended_consumers: [COMP-QMF-REGISTRY]  # Registry stores the BMS definition as an AD-16 record kind (DEC-0158); the platform settings UI is ALSO an intended consumer but is platform territory, not a QMF component — it reads/writes the template as UI-editable configuration (DEC-0157)
+wiring_status: defined-unwired  # the BMS definition template is ratified surface; no code exists; records reach qmf-registry through the composition root under the AD-28 injected-sink pattern (DEC-0158); no wiring is authorized from this doc
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0150, DEC-0151, DEC-0157, DEC-0158]
+gaps: []  # GAP-0039 answered (AD-29/30/32); the KSA trigger→level→effect matrix and severity-policy values are node authority (DEC-0142) — a pointer, not a gap
+purpose: "One BMS definition template — the BMS VERSION (template content, identified by its fp1) — carried under the same configuration-artifact grammar as the Book definition (CT-22), holding the BMS's account-facing authority (accounting, constraints, KSA policy posture, reporting) and the BMS-declared control-rank table (one per command stream), so the account-facing supervising layer's meaning lives inside its identity and a bound account (CT-28) inherits exactly the declared supervision; a `BmsInstanceId` is content-derived, not operator-minted."
+invariants:
+  - "The BMS is the account-facing supervising layer, not a rulebook beside the Book: one BMS instance per account serving many Books; a crypto or prop-firm BMS is a new BMS version, never a second BMS stacked beside an existing one; the pre-ruling readings — BMS as 'machinery owned within the Book domain' and 'one Book holds several BMS policies' — are dead (DEC-0143)."
+  - "Authority split, verbatim default v1 and unchanged: the BMS owns accounting, constraints, journals, KSA policy, and reporting; the migration caveat is that journal, record, and session MACHINERY is now QMF-side (AD-19/AD-21/AD-28) while the authority did not move (DEC-0143, DEC-0145)."
+  - "The template grammar is identical to CT-22: every declared variable carries a unit-kind (AD-40 closed vocabulary), an exact-rational or scaled-integer value (AD-7 — no binary float), a `ui-editable | uneditable` flag, and an `admission_impact ∈ resign | relint | none`; configurable means UI-editable at platform level, and a UI edit mints a new version, never mutates one (DEC-0144, DEC-0157)."
+  - "The BMS declares the control-rank table — one per `(VenueId, account)` command stream, matching the arbitration point's own cardinality; several Books share one stream, so a Book-owned table would put two rank orders at one arbiter, and a Book whose `control_policy` contradicts the BMS table is an `unsupported capability` refusal at bind time (CT-28); ranks are a total order with uniqueness enforced at admission Layer 1 — two control-action kinds may not share a rank (`invalid input`) (DEC-0151)."
+  - "The rank ORDERING is corpus-derived (constitution L1 `bot → book → BMS → operator` plus the protection funnel) — highest first: (0) operator action; (1) protection actions (kill-switch class); (2) BMS/Book forced flats; (3) fast invalidation; (4) ordinary bot exits and protection amendments — but each rank VALUE is a declared, mandatory, non-defaultable field: its existence is QMF's, its value is not (DEC-0151, DEC-0150)."
+  - "The three-layer admission (AD-32) applies to a BMS definition verbatim — Layer 1 linters at registration, Layer 2 technical shakedown on a demo/paper binding, Layer 3 one operator signature — with no trial period, probation window, or paper-performance gate; the resolved BMS fingerprint is an identity field of the Book's admission packet (DEC-0146)."
+  - "`admission_bar` on a BMS definition is a set canonically ordered by `measure_identity`, each requirement carrying an opaque `measure_identity`, a mandatory unit, a comparison `at-least | at-most | within-band`, a threshold discriminated union `ruled(exact-rational) | not-yet-ruled(gap-ref)` (key always present), and `evidence_requirements`; no composite score expresses a bar, and blank blocks live money (DEC-0146)."
+  - "Versioning is git logic without git: an append-only version graph on `branches-from` edges with `current` a separate dated pointer, `supersedes` staying linear elsewhere; a diff derivable between any two versions; every old version readable forever; a changed number changes `fp1` ⇒ a new BMS identity ⇒ a new binding for every Book bound to it (DEC-0144, DEC-0143, DEC-0158)."
+  - "`BmsInstanceId` is CONTENT-derived — `fp1(BMS definition fingerprint, AccountId, VenueId, world)` — not operator-minted like a `BookInstanceId`; so a BMS re-version mints a new binding for every Book bound to it, exactly as a Book re-version does, and the operator can see it coming (DEC-0143)."
+  - "The journal, BMS journal included, is a declared read-time projection over writer-scoped streams selected by entity identity — the BMS is not a writer and mints no stream of its own; the risk-domain writer unit is `(machine, risk role, binding)`, and a control action is journaled before dispatch so a storage failure blocks the dispatch rather than losing the intent (DEC-0145)."
+  - "KSA policy posture is declared contract surface, but the KSA trigger→level→effect matrix and the node's severity-policy values are node authority and stay OUT of this template — QMF carries the control-action contract (CT-30), the scopes and the refusals, never the matrix; the pointer is tracker/trading-node-notes.md (DEC-0150, DEC-0158)."
+  - "The BMS definition is a `qmf-registry` record kind minted under AD-16 (DEC-0158). This is a ratified `defined-unwired` contract awaiting the factory pipeline: no code exists, and nothing here reads as permission to implement outside it (DEC-0143, DEC-0144)."
+template_sections:  # the BMS's declared sections under the shared template grammar; a further section is a contract-format-version mint, never a refusal
+  - "charter: the BMS's identity, purpose, and the account role it supervises; admission_impact resign (DEC-0144)"
+  - "accounting_rules: the accounting authority the BMS owns — numeraire (USD), reconciliation posture, per-account balance accounting; admission_impact resign (DEC-0143)"
+  - "constraints: the typed unit-carrying constraints the BMS imposes on its Books (exposure and budget ceilings expressed in R or in notional in the numeraire, never in lots); admission_impact resign (DEC-0143, DEC-0151)"
+  - "control_rank_table: the control-action ranks, one table per command stream — a total order, uniqueness enforced at admission Layer 1; admission_impact relint (DEC-0151)"
+  - "ksa_policy: the KSA policy posture the BMS declares; the trigger→level→effect matrix and severity-policy values are node authority and are NOT template variables (pointer: tracker/trading-node-notes.md); admission_impact relint (DEC-0150)"
+  - "reporting: the reporting configuration the BMS owns — which performance-result populations (CT-32) and cadences it publishes; admission_impact relint (DEC-0145)"
+  - "admission_bar: the BMS's own set of named unit-carrying requirements with the threshold discriminated union; admission_impact resign (DEC-0146)"
+versioning:
+  graph: "append-only version graph on `branches-from` edges; multiple heads legal (DEC-0144)"
+  current_pointer: "a separate dated pointer record names the current version; `supersedes` stays linear (one head) and is never used for the version graph (DEC-0144, DEC-0158)"
+  edit_rule: "UI edits mint a new version, never mutate; a changed number changes `fp1` and yields a new BMS identity and a new binding for every Book bound to it (DEC-0144, DEC-0143)"
+  diff: "a diff is derivable between any two versions; every old version is readable forever (AD-5)"
+schema:
+  type: bms-definition-template  # a BMS VERSION: template grammar plus declared defaults, identified by its fp1; the BmsInstanceId is content-derived at bind time (CT-28)
+  fields:
+    - "contract_format_version: the template's own format version; an uninterpretable value is an `unsupported capability` refusal (DEC-0144)"
+    - "bms_definition_fingerprint: the `fp1` over the canonical template content — the BMS VERSION identity that `BmsInstanceId` derives from (DEC-0143, DEC-0144)"
+    - "sections: the declared sections, each a mapping of declared variables; see template_sections (DEC-0144)"
+    - "variable: per declared variable — `unit_kind` (AD-40 closed vocabulary), an exact-rational or scaled-integer `value` (AD-7), a `ui_editable` flag, and an `admission_impact` (DEC-0144, DEC-0157)"
+    - "control_rank_table: an ordered set of `{ control_action_kind, rank }` rows — one table per command stream, a total order, ranks unique (DEC-0151)"
+    - "constraints: typed unit-carrying constraint records the BMS imposes on its Books, in R or notional in the numeraire (DEC-0143, DEC-0151)"
+    - "admission_bar: a set of requirement records `{ measure_identity (opaque, AD-9), unit, comparison, threshold (discriminated union), display_ordinal, evidence_requirements }`, canonically ordered by `measure_identity` (DEC-0146)"
+    - "reporting: the declared performance-result populations (CT-32) and cadences the BMS publishes (DEC-0145)"
+  enums:
+    - "ui flag: ui-editable | uneditable — every declared variable carries exactly one (DEC-0144, DEC-0157)"
+    - "admission_impact: resign | relint | none (DEC-0144)"
+    - "on_version_change (where the BMS cites a producer): refuse | accept-and-mint-new-book-version | accept-with-continues-performance (DEC-0144)"
+    - "admission_bar comparison: at-least | at-most | within-band (DEC-0146)"
+    - "threshold tag: ruled | not-yet-ruled (DEC-0146)"
+    - "control-action kinds ranked in the table: suspend_new | drain | flatten | resume (CT-30); the issuing authorities the ranks arbitrate: operator | book_policy | protection_authority | venue-delegated | adapter_self (DEC-0150, DEC-0151)"
+    - "refusal categories in this contract's paths: unsupported capability (unknown contract format version; a Book control_policy contradicting the BMS rank table at bind time), invalid input (a variable missing unit/value/ui-flag/admission_impact; two control-action kinds sharing a rank), policy rejection (a constraint stated in lots or needing an unratified conversion), unavailable dependency (an unresolvable producer or measure) per registry:typed_refusal_codes (DEC-0144, DEC-0146, DEC-0151)"
+  units:
+    - "every declared variable carries a unit-kind from the closed AD-40 vocabulary: money(currency) | price-delta(instrument) | quantity(unit) | value-factor(instrument, currency) | r-multiple | rate(money-per-r) | count | dimensionless-ratio | duration | instant (DEC-0154)"
+    - "numeraire (accounting_rules): USD system-wide in V1 (DEC-0154)"
+    - "control-action ranks: count (a total order); the ordering is corpus-derived, each rank value declared and configurable UI-editable within the total-order and uniqueness constraints, with no spine value (DEC-0151, DEC-0157)"
+    - "constraint ceilings: r_multiple or notional money(numeraire) — never instrument-native quantity (DEC-0143, DEC-0154)"
+  nullability:
+    - "no field is null (AD-10): blankness is a declared value — a `not-yet-ruled` threshold — never key absence (DEC-0146)"
+    - "unit-kind, value, ui-editable flag and admission_impact are each mandatory on every declared variable; any absent one is `invalid input` (DEC-0144)"
+    - "the control-rank table is mandatory and total (every ranked control-action kind present, ranks unique); an absent or non-total table refuses at admission Layer 1 (DEC-0151)"
+provenance_note: "CT-27 is newly minted from the AD-29/AD-30/AD-32 risk-sitting distillation (DEC-0143, DEC-0144, DEC-0146). It carries the BMS side of the Book/BMS split — the Book side is CT-22. DEC-0095's several-BMS-policies-per-Book framing is superseded by DEC-0143 and is not cited as live."

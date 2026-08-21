@@ -48,3 +48,27 @@ Standing operator instruction (2026-08-20, venue sitting): anything discussed in
 - Protection commands (cancel/close/close_all) dispatch ahead of place_order on shared throttles; suspend-new takes local effect instantly. close_position/close_all carry a required typed scope (account | account-binding | instrument-within-binding) — the node's kill path must state its scope.
 - Exactly one live refresher per credential (a workstation tool must never refresh a credential the VPS session owns — the refresh token dies on use).
 - Demo/paper evidence is role-scoped within world=live; sandbox-produced evidence carries provenance=sandbox and cannot merge into the operator store.
+
+## 2026-08-20 — risk sitting (architecture-QMX-2026-08-19 workspace; GAP-0039..0046 closed)
+
+**Operator vocabulary rulings the node inherits (definitive):**
+- **KILL SWITCH = GLOBAL black-swan emergency**: stops ALL trading including paper ("flips the entire thing off"); sensor-fed (MIS/SQS are its inputs); human de-escalates. Operator phrased its effect as "cuts off actual connection" — recorded as intent, not bound (closing positions requires the connection); the contract carries effects suspend-new | drain | close-all, and which effect fires per severity is node authority.
+- **KILL LINE = per-Book capital floor** ("the amount of capital a book touches so that it stops trading") — a different thing from the kill switch. Kill-line breach auto-flattens that Book's scope (a 3am breach never waits for the operator). Every other money boundary (rollover, sweep, re-seed, paper flip) leaves positions alone. The operator may flatten anything at any time; that authority is inalienable. **Flatten authority is now ASSIGNED** (was the AD-27 leftover).
+- **BMS is the account-facing layer**: one BMS instance per account (copied from a versioned default template), serving many Books; chain is bot → Book → BMS → account, verbatim from constitution L1. Risk domain = the account; same-tick questions are always account-scoped.
+
+**Node behaviors ruled this sitting (QMF carries only the contracts):**
+- News blackout is INSTRUMENT-scoped and stops live AND paper entries on that instrument ("I can't risk it. For now"). Multi-pair bots keep trading their unblocked instruments. Would-have-been decisions are journaled as suppressed-decision events (recording is not trading) so decay sensing keeps data.
+- Dead zones: BOTH window kinds exist — the daily no-session band (~3h per QMX-discussion Flow 9, the maintenance window) AND per-handover buffers (~45min, operator's newer idea). New entries pause; exits/safety/data never blocked. Calendar-dependent; absent for 24/7 crypto. All widths configurable.
+- Fifth adapter command MINTED: amend_protection (cTrader ProtoOAAmendPositionSLTPReq, CONFIRMED-PRIMARY, no cancel-replace; amend atomicity UNDOCUMENTED → verify-or-refuse; server-managed trailing exists as a capability fact). V1 dynamic SL/TP = move-to-breakeven ratchet only, risk-reducing, per-Book configurable — pairs with fast invalidation. K-44's four-command REOPEN is resolved by explicit mint, not smuggling.
+- Exit ownership (DEC-0067 resolved): Book owns exit policy; bots PROPOSE risk-reducing exits through a versioned Book door. Later Book versions may delegate specific exit organs to specific bot families (version change, not rule break).
+- Bench counter: counts stop-outs (exit at ~full planned loss, "negative 1R"); breakeven exits NEVER count (recorded as their own metric); threshold per-bot (2 = "perfect" for a scalper) and configurable per family.
+- SQS V1 = the old ratio sensor ADOPTED (historical_avg_spread(symbol, session_window)/current_live_spread; hard-block lines per instrument class; hysteresis band; 4-sigma outlier guard; undefined ⇒ block). All parameters configurable. Authority boundary intact: SQS computes, MIS transports, Book door decides. v2 may use Open-API depth/L2 inputs (research lead).
+- Paper: Book-level (DEC-0070 confirmed); multiple demo accounts exist; exactly one active paper-routing target per live binding (duplicate-order prevention); paper starting balance = Book/family-scoped configurable, resettable, sized for data realism.
+
+**Standing operator rules recorded this sitting:**
+- "Configurable" ALWAYS means configurable in the UI — every configurable variable minted anywhere must surface as UI-editable at platform level. Templates declare each variable UI-editable vs uneditable ("very important — carry forward to the UI build").
+- Authority order for risk/position-sizing/live-trading: GitBook + trading-node docs (archive/recovery + Documents/QMX wiki). QMX-discussion's risk/sizing system was REPLACED — barred as a source there.
+- Numeraire = USD, system-wide. "Why would I use anything other than USD?"
+- Do not re-discuss trading-node internals with the operator; the corpus answers first, gaps second, new design only if all layers are silent.
+- QML ("QML Shared Contract Library") was the original uniform-bot layer — dig: research-risk/qml-original-dig.md. Reusable atoms: ExitLogicRef {module_id, config}, CloseReason taxonomy (the typed why-it-closed label), template-grammar vs per-instance-values split. QML reconciliation = its own sitting (GAP-0047); it will change with the QMF re-basing.
+- Operator idea minted this sitting: the "prediction linter" — a static check showing whether a Book can actually register/execute a given bot, testable against demo in the UI.

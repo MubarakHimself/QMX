@@ -2,7 +2,7 @@
 id: ADR-0007
 title: Venue-neutral integration — secret lifecycle, command uncertainty, and the adapter contract
 type: adr
-status: provisional
+status: ratified
 component: COMP-QMF-VENUE
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-CTRADER]
 decisions: [DEC-0059, DEC-0060, DEC-0061, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0140, DEC-0141, DEC-0142]
@@ -14,7 +14,7 @@ stale_after: 1y
 
 # ADR-0007: Venue-neutral integration — secret lifecycle, command uncertainty, and the adapter contract
 
-Date: 2026-08-20 (supersedes the 2026-08-18 placeholder text of this ADR, which recorded only the venue-neutral module split and its cTrader-first intent and left capability discovery, command fields, order state, idempotency, reconciliation, and secrets GAP-defined). Status: provisional pending corpus re-ratification; the underlying rulings are operator-ratified (venue architecture sitting, 2026-08-20).
+Date: 2026-08-20 (supersedes the 2026-08-18 placeholder text of this ADR, which recorded only the venue-neutral module split and its cTrader-first intent and left capability discovery, command fields, order state, idempotency, reconciliation, and secrets GAP-defined). status: ratified — corpus signed off by the operator 2026-08-21 (conditional go-ahead in the PRD session; the independent contradiction sweep passed); the underlying rulings are operator-ratified (venue architecture sitting, 2026-08-20).
 
 ## Context
 

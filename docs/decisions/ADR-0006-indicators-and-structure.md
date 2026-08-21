@@ -2,7 +2,7 @@
 id: ADR-0006
 title: Indicator protocol, canonical arithmetic, and causal structure lifecycle
 type: adr
-status: provisional
+status: ratified
 depends_on: [COMP-QMF-CORE, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-REGISTRY]
 decisions: [DEC-0055, DEC-0056, DEC-0058, DEC-0126, DEC-0127, DEC-0128, DEC-0129, DEC-0130, DEC-0131, DEC-0132, DEC-0133, DEC-0134]
 sources: [DEC-0126, DEC-0127, DEC-0128, DEC-0129, DEC-0130, DEC-0131, DEC-0132, DEC-0133, DEC-0134, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/.memlog.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/reviews/review-ict-edge-cases.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/reviews/review-general-ta-edge-cases.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/reviews/review-adversarial-3.md]
@@ -13,7 +13,7 @@ stale_after: 1y
 
 # ADR-0006: Indicator protocol, canonical arithmetic, and causal structure lifecycle
 
-Date: 2026-08-20 (supersedes the 2026-08-18 placeholder text of this ADR, which recorded only the library split and left every protocol question GAP-defined). Status: provisional pending corpus re-ratification; the underlying rulings are operator-ratified (indicators/structure sitting, 2026-08-20).
+Date: 2026-08-20 (supersedes the 2026-08-18 placeholder text of this ADR, which recorded only the library split and left every protocol question GAP-defined). status: ratified — corpus signed off by the operator 2026-08-21 (conditional go-ahead in the PRD session; the independent contradiction sweep passed); the underlying rulings are operator-ratified (indicators/structure sitting, 2026-08-20).
 
 ## Context
 

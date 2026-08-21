@@ -1,0 +1,65 @@
+id: CT-32
+name: Performance-result container contract
+status: ratified
+version: 1  # first minted format version; the container shape is spine-ratified (AD-41), corpus signed off by the operator 2026-08-21 (DEC-0155)
+owner: COMP-QMF-RISK
+consumers: []  # container-blind: nothing imports qmf-risk under default-deny; the composition root wires production and consumption, so no package import edge exists (DEC-0155, DEC-0158)
+active_consumers: []
+intended_consumers: [COMP-QMF-REGISTRY, COMP-QMF-DATA]  # qmf-registry consumes the container as AD-32 admission-bar evidence and wraps each result into a registry record; qmf-data persists it; both mediated by the composition root when the factory ships, documentary until then (DEC-0155, DEC-0146)
+intended_producers: [COMP-QMB]  # ADOPTED BY QMB (2026-08-20, spine B-10): every QMB run's canonical result artifact IS a CT-32 performance-result — the defined-unwired container this contract minted, now with its designated filler; QMB is an application composition root, so producing here is the sanctioned wiring pattern, still documentary until the factory ships (DEC-0163, DEC-0169)
+wiring_status: defined-unwired  # AD-41 ratified the container shape; no code exists and no wiring is authorized from this doc — CT-32 is a composition-root-mediated contract that stays defined and unwired until the software factory ships it (DEC-0155, DEC-0158)
+layer_from: backend
+layer_to: data
+decisions: [DEC-0155, DEC-0154, DEC-0143, DEC-0149, DEC-0150, DEC-0146, DEC-0158, DEC-0162, DEC-0163, DEC-0169]
+gaps: []  # the container ships complete; alpha-decay mathematics is decided-deferred (spine Deferred table), not a gap — the evidence primitives are minted now because they cannot be back-filled
+purpose: "One performance-result container kind serving both the AD-32 admission-bar evidence and the analyst's report: the full AD-12 result label, a fingerprinted declared population, a declared period with a knowledge-time bound, an ordered unit-kinded measure set, suppression and veto accounting, and a fingerprinted baseline pointer — the evidence primitives alpha-decay mathematics will later be designed from, collected now because they cannot be back-filled."
+invariants:
+  - "One container kind, two audiences: CT-32 serves both the AD-32 admission-bar evidence and the analyst's report from one result kind (DEC-0155, DEC-0146)."
+  - "Every result carries the AD-12 label in full — producer contract identity, producer contract format version, input fingerprints, evidence time range, computation/occurrence identity, evidence class, and world — plus the account-binding role (DEC-0155, DEC-0158)."
+  - "The population is a fingerprinted declaration, never prose: Bot identity; which binding-record fingerprints are in or out — the AD-29 binding epoch cited by fingerprint, never by interval; which account roles; which instruments; and the AD-35 decay cohort key as a fingerprinted declaration (DEC-0155, DEC-0143, DEC-0149)."
+  - "Population declarations consume continues-performance edges only: a population's track-record assertions ride the human-signed continues-performance edge, never carries-ledger; the two edges are never inferred from each other, and continues-performance moves no money (DEC-0158)."
+  - "The period is a declared AD-8 Interval with calendar identity + version, plus the knowledge-time bound the result was computed under (DEC-0155)."
+  - "The measure set is ordered, and every emitted quantity carries a unit-kind from the closed AD-40 vocabulary; a null unit-kind is a refusal, never a default (DEC-0155, DEC-0154)."
+  - "Suppression accounting and veto accounting are both carried: counts of actions suppressed in the period by authority and reason, and counts of door refusals by door, so neither our arbitration nor our doors ever read as decay (DEC-0155, DEC-0150)."
+  - "Float discipline: a Sharpe or a drawdown takes label-derived identity (AD-10), never a hash of float bytes (DEC-0155, DEC-0158)."
+  - "A single result may never span account roles (DEC-0155)."
+  - "A performance metric is a governed producer under AD-23: its arithmetic is canonical and pinned by its own contract format version; an arithmetic change is a format-version mint with recorded before/after evidence, never a package release — identity moves when meaning moves (DEC-0155)."
+  - "A fingerprinted baseline pointer travels from a live binding to the evidence it was admitted under, so decay is judged against the admission evidence and not an implied baseline (DEC-0155)."
+  - "Measurement publishes, never acts: a measurement producer may not size, allocate, promote, demote, bench, or change a mode; the authority to act on a published measure belongs to the Book door (bench) or the operator (promotion), and the bench fold is itself one governed producer published once and consumed by the door (DEC-0155)."
+  - "Alpha decay ships as evidence primitives only: no score, rating, tier band, or weighted composite may express a result; the mathematics is deferred and the collection that makes it possible starts now, because it cannot be back-filled (DEC-0155)."
+  - "Parity with the admission bar is structural: a result whose producer contract format versions differ from an AD-32 bar's declared requirements does not satisfy that bar, and no paper account role may gate live money (DEC-0146)."
+  - "QMB adoption (declared extensions, not a fork): chart series and trade-event references are DECLARED QMB EXTENSIONS of this container — chart series cite exact Bar/Price values (AD-22) as inputs, any downsample is a display-only derivative with a declared sampler identity and is AD-10-excluded from identity, never the canonical payload; trade-event references cite CT-13 journal streams, the trade record being the CT-29 stream of the run's replay binding; the extensions extend the schema, they never alter an existing field's meaning (DEC-0163)."
+  - "Reproducibility: re-running a QMB run id under its resolved run-config must reproduce the CT-32 fingerprint; a mismatch is a typed refusal (DEC-0163)."
+  - "Replay evidence discipline: QMB's ledger plus CT-32 artifacts are the designated evidence source for the AD-32 admission bar and the AD-18 promotion-card causality slot, under the standing caveat that a replay-world, pre-GAP-0048 result can never gate live money; the bar verdict over these results is a reader-derived per-requirement read-time fold, never a value stored in the artifact (DEC-0162, DEC-0169)."
+schema:
+  type: performance-result  # a qmf-core value type, content-fingerprinted by qmf-core's single implementation and wrapped into a registry record by the composition root; one kind serving admission-bar evidence and the analyst's report (DEC-0155)
+  fields:
+    - "result_label: the full AD-12 label — producer contract identity, producer contract format version, input fingerprints, evidence time range, computation/occurrence identity, evidence class, world — plus the account-binding role (DEC-0155, DEC-0158)"
+    - "population: the fingerprinted declaration — Bot identity; binding-record fingerprints in/out (AD-29 epochs cited by fingerprint, never interval); account roles; instruments; the AD-35 decay cohort key as a fingerprinted declaration (DEC-0155, DEC-0143, DEC-0149)"
+    - "population_edge: the human-signed continues-performance edge(s) a population's track-record assertions consume — never carries-ledger (DEC-0158)"
+    - "period: an AD-8 Interval with calendar identity + version, plus the knowledge-time bound the result was computed under (DEC-0155)"
+    - "measure_set: the ordered set of emitted measures, each quantity carrying a unit-kind from the closed AD-40 vocabulary (DEC-0155, DEC-0154)"
+    - "suppression_accounting: counts of actions suppressed in the period, keyed by issuing authority and reason class (DEC-0155, DEC-0150)"
+    - "veto_accounting: counts of door refusals in the period, keyed by refusing-door identity (DEC-0155, DEC-0150)"
+    - "baseline_pointer: a fingerprinted pointer from a live binding to the evidence it was admitted under, for decay judgment (DEC-0155)"
+    - "metric_contract_format_version: per emitted metric, the governed-producer contract format version pinning its canonical arithmetic; an arithmetic change mints a new version (DEC-0155)"
+  enums:
+    - "evidence class (in the AD-12 label): confirmed | unconfirmed | provisional (DEC-0158)"
+    - "world (in the AD-12 label): live | replay | simulated — simulated reserved-unusable in V1 (DEC-0158)"
+    - "population edge kind consumed by a population declaration: continues-performance only; carries-ledger is never a population edge (DEC-0158)"
+    - "suppression-accounting key: (issuing authority, reason class), where issuing authority is operator | book_policy | protection_authority | venue-delegated | adapter_self (DEC-0150)"
+    - "veto-accounting key: refusing-door identity (DEC-0150)"
+    - "unit-kind vocabulary on every emitted quantity: money(currency) | price-delta(instrument) | quantity(unit) | value-factor(instrument, currency) | r-multiple | rate(money-per-r) | count | dimensionless-ratio | duration | instant — closed, addable never redefined (DEC-0154)"
+    - "refusal categories in CT-32 paths: policy rejection (a result spanning account roles; a paper-role result gating a live bar; a score/rating/tier/weighted composite expressing a result), invalid input (an emitted quantity carrying no unit-kind), unavailable dependency (an absent baseline artifact a decay judgment requires) per registry:typed_refusal_codes (DEC-0155, DEC-0154, DEC-0146)"
+  units:
+    - "fingerprints (binding-record, cohort key, baseline pointer, producer identity): fp1:sha256:<hex> via qmf-core's single implementation (DEC-0155)"
+    - "period: an AD-8 Interval over int64 UTC nanoseconds with a pinned calendar identity + version and a knowledge-time bound (DEC-0155)"
+    - "every emitted quantity: a unit-kind from the closed AD-40 vocabulary, money as scaled integers at the declared scale and ratios as exact rationals — no binary float enters identity (DEC-0154, DEC-0158)"
+    - "suppression and veto accounting: typed count, never money (DEC-0150)"
+    - "each metric's arithmetic: canonical under AD-23 and pinned by its own contract format version (DEC-0155)"
+  nullability:
+    - "the full result label, the declared population, and the declared period are always present; a result missing any is not a CT-32 result (DEC-0155)"
+    - "the account-binding role is always present on the label and a single result never spans roles; a multi-role result is a policy rejection (DEC-0155)"
+    - "every emitted quantity carries a non-null unit-kind; a null unit-kind is an invalid-input refusal, never a default (DEC-0154)"
+    - "suppression_accounting and veto_accounting are present for every period, defaulting to zero counts rather than an omitted key, so a quiet period reads as zero suppressions and zero vetoes, never as missing evidence (DEC-0155, DEC-0150)"
+    - "the baseline_pointer is present for any result used in a decay judgment; its absence where a decay judgment requires it is an unavailable-dependency refusal (DEC-0155)"

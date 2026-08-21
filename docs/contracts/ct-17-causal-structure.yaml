@@ -1,7 +1,7 @@
 id: CT-17
 name: Causal structure lifecycle contract
-status: provisional
-version: 1  # first minted format version; the shape is spine-ratified (AD-25), the doc stays provisional pending corpus re-ratification (DEC-0103, DEC-0129)
+status: ratified
+version: 1  # first minted format version; the shape is spine-ratified (AD-25), corpus signed off by the operator 2026-08-21 (DEC-0103, DEC-0129)
 owner: COMP-QMF-STRUCTURE
 consumers: []  # consumer-blind like CT-16: consumers reach structure evidence through the application composition root; the composition law lets any CT-16/CT-17 configuration consume CT-17 outputs (DEC-0126, DEC-0120)
 layer_from: backend

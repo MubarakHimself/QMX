@@ -2,7 +2,7 @@
 id: SCN-0002
 title: Late Source Correction Preserves Earlier Evidence
 type: scenario
-status: provisional
+status: ratified
 component: COMP-QMF-DATA
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE]
 decisions: [DEC-0035, DEC-0038, DEC-0042, DEC-0044, DEC-0045, DEC-0051, DEC-0053, DEC-0108, DEC-0114, DEC-0117, DEC-0119]

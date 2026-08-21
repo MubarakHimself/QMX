@@ -1,34 +1,54 @@
 id: CT-24
-name: Book mode and account-transition contract
-status: provisional
-version: null
-version_gap: GAP-0005
+name: Book mode and binding-transition contract
+status: ratified
+version: 1  # first minted format version; the shape is spine-ratified (AD-35/AD-29), corpus signed off by the operator 2026-08-21 (DEC-0149, DEC-0143)
 owner: COMP-QMF-RISK
-consumers: []
+consumers: []  # consumer-blind by design: transition records and mode folds are qmf-core value types wrapped into registry records by the composition root; no package imports qmf-risk under default-deny (DEC-0143, DEC-0149)
 active_consumers: []
-intended_consumers: [COMP-QMF-REGISTRY, COMP-QMF-DATA]
-wiring_status: reserved-evidence-only
+intended_consumers: [COMP-QMF-REGISTRY, COMP-QMF-DATA]  # the composition root persists transition records and their journal events through qmf-registry / qmf-data when the factory ships; documentary until then (DEC-0149, DEC-0145)
+wiring_status: defined-unwired  # AD-35/AD-29 ratify the transition-record surface; no code exists and no build is authorized outside the factory pipeline — composition-root mediated (DEC-0149, DEC-0143)
+caller_status: unassigned  # the mode flip is an operator-ratified act and a clocked mechanical clear; the issuer is the node/operator, QMF carries the record (DEC-0149)
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0041, DEC-0070]
-prohibitions: [DEC-0069]
-gaps: [GAP-0005, GAP-0018, GAP-0019, GAP-0041]
-purpose: "Reserve an unwired Book-mode evidence placeholder pending operator confirmation and GAP-0041."
-authority_note: "A study-delivered recap records a Book-level, one-Bot-to-one-Book direction, but the direct operator wording is missing from the export; this is evidence only until operator confirmation."
+decisions: [DEC-0149, DEC-0143, DEC-0150, DEC-0157, DEC-0158, DEC-0041]
+prohibitions: [DEC-0069]  # dead: paper Bot twins stay dead — no Bot twins ever, BENCHED is a bot-seat word only (DEC-0069 cited as dead; DEC-0149)
+gaps: []  # GAP-0041 answered by AD-35 (DEC-0149); GAP-0005 answered by minting format version 1; GAP-0018 answered by DEC-0115, GAP-0019 answered by DEC-0116 — none live here
+purpose: "The append-only binding-transition record that carries a Book between its two modes LIVE and PAPER: every transition is a dated change of the Book's execution binding minting a new binding epoch (never a new Book), current mode is a read-time fold over the transition stream under AD-36's fold contract, and the paper-routing target, paper epochs, and return-to-live rules are governed here — while control actions ride a separate CT-30 stream so 'is this Book live now' folds one stream in every build (DEC-0149, DEC-0143, DEC-0150)."
 invariants:
-  - "Only a human may promote an artifact into the live zone."
-  - "The recorded paper-mode recap is not an executable state or transition contract."
-  - "CT-24 is evidence-only until the operator confirms the recap and GAP-0041 defines the full transition."
-  - "No active Registry, Data, application, account, or execution consumer is wired."
-  - "State values, transition triggers, account roles, rollback, duplicate prevention, continuity, and audit fields remain unresolved."
+  - "Book modes are exactly LIVE | PAPER; there are no Bot twins, ever (DEC-0069 stays dead); BENCHED is a bot-seat word only and never appears in the Book-mode vocabulary — seat active|benched, Book mode LIVE|PAPER, and binding live|paper|stood-down are three vocabularies never interchanged, and a mode-field write that names a seat or binding state is an invalid-input refusal (DEC-0149, DEC-0150)."
+  - "Paper is a Book-level mode expressed as a dated change of the Book's execution binding — a record change, not a new object; the flip mints a new binding epoch, never a new Book, and per-seat routing is expressed on the seat record, which is what lets a Book stay LIVE while one seat routes to the paired account (DEC-0149, DEC-0143)."
+  - "The transition stream is append-only and dated; current mode is a read-time fold over it under AD-36's fold contract (declared stream, ordering key, knowledge-time bound, equal-instant disposition; resolved by AD-37 rank across writers, never by WriterId byte order; never refuses on the trading path — it returns the most restrictive state, journals data quality, and alarms), never a stored mutable field (DEC-0149, DEC-0150)."
+  - "Trigger kinds are addable never redefined; every kind declares a mandatory disposition, routes-to-paper | blocks-paper, because the two produce non-interchangeable evidence (a paper fill versus a would-have-been decision record): a control blocking live for market-risk reasons blocks paper too (a protection window, the kill switch); a control blocking live for capital or authority reasons routes to paper (a kill-line stand-down, a benched seat) (DEC-0149)."
+  - "Routing to paper is never a way around a control: what continues under a control is the recording — the blocked decision on the veto path or the suppressed action on the control-action path, each carrying its would-have-been action — and recording is not trading; a protection window blocks its instruments in paper exactly as in live and the kill switch stops paper too (DEC-0149, DEC-0150)."
+  - "Mode transitions (CT-24) and control actions (CT-30) are distinct streams: a clocked mechanical clear (a seat's next-open bench reset, a day-boundary budget reset) mints a CT-24 transition and never a CT-30 resume, and any control-action-issued stand-down clears only by an operator resume (AD-36) — so AD-36's operator-only de-escalation is not quietly contradicted by an automatic return (DEC-0149, DEC-0150)."
+  - "One active paper-routing target per live binding at an instant: plural demo accounts exist system-wide, but the binding resolves to exactly one target — re-pointable at any time by minting a superseding dated record — because two possible destinations is how an order fires twice; no resolvable target makes the paper transition an unavailable-dependency refusal, and live trading is unaffected (DEC-0149)."
+  - "The paper target is a real account carrying its own paired BMS instance, linked to the live BMS by a typed pairing record; it is reconciled as its own binding and excluded only from the live binding's drift check (a demo account is expected to diverge), and a blocked stream or unresolved UNKNOWN there raises the same AD-14 alarm class as a live one — a silent paper outage corrupts every decay verdict computed after it (DEC-0149, DEC-0143)."
+  - "Routing is separated from binding: role rides the per-intent execution_target that enters the CT-19 command record's identity, not the AD-29 binding tuple; Book-mode PAPER and a benched seat both select the paired target without changing the binding identity; live and demo are distinct (VenueId, account) streams, so an outstanding UNKNOWN on one never gates the other, and the transition record is written immediately either way — evidence never waits on a venue (DEC-0149, DEC-0143)."
+  - "Paper money is frozen evidence: the paper starting balance is a Book/family-scoped configurable UI-editable default (recorded evidence, non-authoritative, no spine value), sized for data-collection realism, frozen at flip, and never hand-adjusted; paper P&L never becomes Treasury cash, never crosses the money boundary, and never buys a seat (DEC-0149, DEC-0157)."
+  - "A reset is not an adjustment: it mints a new paper epoch record — operator-signed, dated, carrying a fresh declared balance and a lineage edge to the epoch it follows — as an AD-16 treasury boundary-event record kind (paper_epoch_reset); the running balance is never mutated, append-only holds, and 'reset' can never become a back door to hand-adjustment (DEC-0149, DEC-0158)."
+  - "Return to live is automatic only where the clearing cause is itself clocked and mechanical; anything touching real money — a kill-line stand-down returning, a first entry into live — requires an operator signature (AD-18), and paper performance never authorizes a return (DEC-0149, DEC-0041)."
 schema:
-  type: null
-  type_gap: GAP-0041
-  fields: null
-  fields_gap: GAP-0041
-  enums: null
-  enums_gap: GAP-0041
-  units: null
-  units_gap: GAP-0041
-  nullability: null
-  nullability_gap: GAP-0041
+  type: binding-transition-record  # a dated, append-only mode-change record over the Book's execution binding; current mode is the read-time fold over the stream, never a stored field (DEC-0149, DEC-0150)
+  fields:
+    - "book_binding_ref: the AD-29 binding this transition applies to — (BookInstanceId, BmsInstanceId, VenueId, AccountId, world); the transition mints a new binding epoch, never a new Book (DEC-0143, DEC-0149)"
+    - "mode: the resulting Book mode after this transition, LIVE | PAPER (DEC-0149)"
+    - "transition_instant: the dated instant of the mode change, int64 UTC nanoseconds; the stream is append-only (DEC-0149)"
+    - "trigger_kind: the addable-never-redefined kind that occasioned the transition; not a closed enumeration (DEC-0149)"
+    - "disposition: routes-to-paper | blocks-paper — mandatory on every trigger kind, since an open kind set with no classification rule leaves the next minted trigger undetermined (DEC-0149)"
+    - "paper_target_ref: for a PAPER-resulting transition, the single resolved paper-routing target — a paired demo account with its own paired BMS instance, linked by a typed pairing record; re-pointable by a superseding dated record (DEC-0149, DEC-0143)"
+    - "paper_epoch_ref: the paper epoch in force — an operator-signed record carrying the frozen declared balance and a lineage edge to its predecessor epoch (the AD-16 paper_epoch_reset treasury boundary kind) (DEC-0149, DEC-0158)"
+    - "operator_signature: present where the transition touches real money — a return to live or a first live entry (AD-18); a clocked mechanical clear carries none (DEC-0149, DEC-0041)"
+    - "format_version: the contract format version stamped on the record (DEC-0149)"
+  enums:
+    - "Book mode: LIVE | PAPER — the whole mode space; BENCHED never appears here (DEC-0149)"
+    - "trigger disposition: routes-to-paper | blocks-paper (DEC-0149)"
+    - "trigger kind: an open, addable-never-redefined set, never a closed enumeration — each new kind declares its disposition (DEC-0149)"
+    - "treasury boundary-event kind carrying a paper reset: paper_epoch_reset, one of sweep | refund | re_seed | paper_epoch_reset; no money moves without one, and a boundary event never closes a position (DEC-0158)"
+    - "refusal categories in this contract's paths: unavailable-dependency (no resolvable paper target), invalid-input (a seat-state or binding-state word written into the Book-mode field) per registry:typed_refusal_codes (DEC-0149)"
+  units:
+    - "instants: int64 UTC nanoseconds; the transition stream is append-only and dated (DEC-0149)"
+    - "paper starting balance: Money(numeraire) as a scaled integer with declared scale (USD in V1, AD-40) — a configurable UI-editable default with no spine value, recorded evidence and never a ratified constant (DEC-0149, DEC-0157)"
+  nullability:
+    - "paper_target_ref is present only for a PAPER-resulting transition; a LIVE-resulting transition omits the key, never null (DEC-0149)"
+    - "operator_signature is present only where the transition touches real money; a clocked mechanical clear mints a transition with no signature, and it is never a CT-30 resume (DEC-0149, DEC-0150)"
+    - "current mode is never stored — it is the read-time fold over the transition stream and has no field (DEC-0149, DEC-0150)"

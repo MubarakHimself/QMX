@@ -2,7 +2,7 @@
 id: ADR-0002
 title: QMF toolbox boundary and V1 roster
 type: adr
-status: provisional
+status: ratified
 depends_on: []
 decisions: [DEC-0008, DEC-0009, DEC-0011, DEC-0013, DEC-0017, DEC-0019, DEC-0024]
 sources: [DEC-0008, DEC-0009, DEC-0011, DEC-0013, DEC-0017, DEC-0019, DEC-0024]
@@ -13,7 +13,7 @@ stale_after: 1y
 
 # ADR-0002: QMF toolbox boundary and V1 roster
 
-Date: 2026-08-18. Status: provisional pending operator ratification.
+Date: 2026-08-18. status: ratified — corpus signed off by the operator 2026-08-21 (conditional go-ahead in the PRD session; the independent contradiction sweep passed).
 
 ## Context
 

@@ -2,13 +2,13 @@
 id: COMP-DUKASCOPY
 title: Dukascopy Historical Data Source
 type: component-spec
-status: provisional
+status: ratified
 component: COMP-DUKASCOPY
 depends_on: []
-decisions: [DEC-0009, DEC-0038, DEC-0051, DEC-0053, DEC-0107, DEC-0109, DEC-0117, DEC-0118, DEC-0119]
-sources: [DEC-0009, DEC-0038, DEC-0051, DEC-0053, DEC-0107, DEC-0109, DEC-0117, DEC-0118, DEC-0119, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, docs/architecture/dependencies.yaml, docs/contracts/ct-15-external-source-adapter.yaml]
+decisions: [DEC-0009, DEC-0013, DEC-0038, DEC-0051, DEC-0053, DEC-0107, DEC-0109, DEC-0117, DEC-0118, DEC-0119, DEC-0166]
+sources: [DEC-0009, DEC-0013, DEC-0038, DEC-0051, DEC-0053, DEC-0107, DEC-0109, DEC-0117, DEC-0118, DEC-0119, DEC-0166, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMB-2026-08-20/ARCHITECTURE-SPINE.md, docs/architecture/dependencies.yaml, docs/contracts/ct-15-external-source-adapter.yaml]
 generated: 2026-08-18
-verified: 2026-08-20
+verified: 2026-08-21
 stale_after: 30d
 ---
 
@@ -40,6 +40,10 @@ Raw originals and lineage are kept forever, and time-series is partitioned by so
 
 The source-identity, bid/ask-preservation, and disagreement-edge discipline is ratified (DEC-0119); the concrete Dukascopy provider schema — symbol list, depth, and per-symbol bid/ask specifics — is documentation-time detail for the ingest mapping, and the legal retention/licence posture remains an open operator item recorded, not resolved here.
 
+### Acquisition posture (QMB consumer)
+
+The acquisition posture is **download-once**: the historical corpus is pulled a single time under the user's own provider relationship into the QMF immutable raw archive — QMX owns its stored source, and runs never fetch from providers, reading only qmf-data rooms (DEC-0166). `dukascopy-node` ([github.com/Leo4815162342/dukascopy-node](https://github.com/Leo4815162342/dukascopy-node) — Node 18+, CLI and library, 1000+ instruments, tick history to the 1990s; web-verified 2026-08-20) is the acquisition-tool **reference**: a shape reference for the downloader, never adopted code — the D1 build-our-own law applies and no donor code enters the tree (DEC-0166, DEC-0013). The Dukascopy licensing-gate question — the old corpus failed it for redistribution-shaped use — was RULED CLOSED by the operator (2026-08-21): the data is used at a personal level only — backtesting his own strategies — so no licensing blocker stands; the per-window license-tag mechanism stays in force unchanged, and the question reopens only if a future posture exceeds personal use (DEC-0170).
+
 <!-- no-diagram: the external source exposes one CT-15 seam and has no QMF-owned internal structure -->
 
 ## Configuration
@@ -62,4 +66,4 @@ The source-identity, bid/ask-preservation, and disagreement-edge discipline is r
 
 ## Related
 
-Decisions: DEC-0009, DEC-0038, DEC-0051, DEC-0053, DEC-0107, DEC-0117, DEC-0118, DEC-0119. Scenarios: [SCN-0002 source correction](../scenarios/SCN-0002-source-correction.md). Knowledge: none drafted.
+Decisions: DEC-0009, DEC-0013, DEC-0038, DEC-0051, DEC-0053, DEC-0107, DEC-0117, DEC-0118, DEC-0119, DEC-0166. Scenarios: [SCN-0002 source correction](../scenarios/SCN-0002-source-correction.md). Knowledge: none drafted.

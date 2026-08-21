@@ -1,5 +1,5 @@
 current_stage: 8
-provisional: true
+provisional: false
 completed:
 - stage: 1
   date: '2026-08-18'
@@ -26,10 +26,10 @@ harvest_progress:
   SRC-01: SRC-01-C0031
   SRC-02: SRC-02-C0039
 ratification:
-  status: provisional
-  by: operator-pending
-  date: '2026-08-18'
-  notes: Provisional corpus and feature slicing are complete; the packet awaits operator signature.
+  status: ratified
+  by: operator
+  date: '2026-08-21'
+  notes: "Operator sign-off 2026-08-21 (EXT-2093) — conditional go-ahead given in the PRD session, contingent on the independent contradiction sweep passing; sweep wf_93306df4-1f5 (14 agents) passed after two desk fixes (CT-28 world/replay amendment citing DEC-0160; DEC-0056/DEC-0124 supersession corrections). Scope: 100 docs status flips + 52 ledger ratifications; DEC-0049 ruled at sign-off (scoped entry-blocking detector pause, L39 preserved, UI-editable posture per L38); ENH batch of 71 deferred post-V1. lint_docs --strict fully clean for the first time."
 pause:
   status: resumed
   at: '2026-08-18T15:05:11+03:00'
@@ -37,14 +37,11 @@ pause:
   resume_from: _docwork/RESUME.md
   resumed_at: '2026-08-18T15:26:00+03:00'
 final_gate:
-  status: operator-ratification-required
-  checked_at: '2026-08-18T17:57:49+03:00'
+  status: ratified
+  checked_at: '2026-08-21'
   non_strict_validation: pass
   independent_reviews: pass
-  strict_lint: expected-blocked
-  strict_reasons:
-  - 54 provisional Markdown documents
-  - 45 unique blocking gaps
+  strict_lint: pass
 change_mode:
 - date: '2026-08-20'
   change: "Absorb the ratified foundation architecture sitting (spine AD-1..AD-21, 2026-08-19/20) into docs/"
@@ -101,3 +98,97 @@ change_mode:
     lint_docs_strict: expected-blocked (provisional corpus awaiting operator ratification; blocking gaps now GAP-0039..0046 only)
   review: "fresh-agent ledger-grounded consistency review: 3 critical + 6 major + 12 minor findings; 18 fixed at desk (zombie GAP-0035..0038/DEC-0123 residue in qmf-data.md, qmf-data-ingest.md, glossary, qmf-core.md, qmf-calendar-forex.md, dukascopy.md, gap-report, traceability; frontmatter DEC-list gaps; contract citation fixes; missing changelog entry written), 3 no-change-needed (ADR-0013 kept immutable per point-in-time convention; span-cap/rollover/depth specifics are venue-facts-sheet-backed, the sheet being ratified by incorporation under DEC-0135)."
   node_boundary: "DEC-0142 recorded — tracker/trading-node-notes.md is the standing cross-session node ledger, referenced as a pointer, never absorbed; node order-path/flatten material kept out of QMF docs"
+- date: '2026-08-20'
+  change: "Fold the 2026-08-20 RISK increment (spine AD-29..AD-41 + cross-AD amendments to AD-7/10/12/16/17/18/21/24/27/28, corpus-precedence and configurable-means-UI invariant rows) into docs/"
+  sources: [SRC-03, SRC-06]
+  provenance: "Memlog entries 84..116 (risk sitting; venue-sitting entries 77..83 were the prior increment's intake); re-finalized ARCHITECTURE-SPINE.md AD-29..41; research-risk/ dossiers + briefs + ctrader-sltp-amend-research.md + qml-original-dig.md as companion evidence; a transcript delta scan of archive/qmf-6.txt confirmed memlog fidelity with one recorded trap (round-1 'BMS = rulebook' framing reversed by the operator's own correction — BMS position always built from the refinement)"
+  ledger: "DEC-0143..DEC-0158 minted (ratified); DEC-0067 (conflict) resolved and superseded by DEC-0147; DEC-0070 confirmed and subsumed by DEC-0149; DEC-0072 superseded by DEC-0152; DEC-0075 superseded by DEC-0153; DEC-0094 superseded by DEC-0155; DEC-0095 superseded by DEC-0143; EXT-2056..EXT-2070 extractions added; SRC-06 (archive/qmf-6.txt) registered"
+  gaps: "GAP-0039..0046 answered (blocking flipped false per house convention); open catalog now empty of blocking gaps — remaining: GAP-0016/0017 (backtesting-deferred, DEC-0121), GAP-0047 (QML sitting), GAP-0048 (backtesting sitting), GAP-0049 (deferred with backtesting)"
+  adr: "ADR-0008, ADR-0009, ADR-0010 rewritten in place (supersede their GAP-defined placeholders); preflight verdict: reuse COMP-QMF-RISK / COMP-QMF-DATA / COMP-QMF-VENUE / COMP-QMF-REGISTRY / COMP-QMF-CORE — no new component, no new dependency edge (risk sitting requests none); dead list honored (FORM-0006 retained only as the dimensional suite's permanent negative test; paper twins, blackout simulator, DPR/PRS stay dead)"
+  contracts: "CT-22..CT-25 re-purposed and filled at version 1 (Book definition, risk-evaluation door, binding transition, journal projections); CT-27..CT-32 minted (BMS definition, Book binding, exit record, control action, control window, performance result); CT-01/CT-05/CT-06/CT-07/CT-13/CT-18/CT-19/CT-20 amended per the cross-AD rulings (canonical numeric form, unit-kind vocabulary incl. value-factor, nine risk record kinds + treasury boundary-event, continues-performance/carries-ledger/enacts/branches-from edges, decision outcome field + suppressed subtype, protection/margin/settlement capability roster, amend_protection fifth command, out-of-lookback + subject-terminal resolutions)"
+  laws: "L36 authority order verbatim (DEC-0143); L37 corpus precedence for risk sources (DEC-0156); L38 configurable means UI-editable (DEC-0157); L39 exit-preservation invariant (DEC-0150)"
+  registry: "29 risk variables minted or re-pointed as configurable UI-editable rows with recorded evidence and no ratified values (bench/qualifying-loss/seat-allowance families, SQS family, window widths with the disagreeing dead-zone evidence recorded unmerged, breakeven ratchet, paper balance, kill-line floor, rank table, state_carry); bench_stopout_threshold and bench_reset_boundary retained as superseded history rows; null-value rows carry declared-per-X descriptor values per the house declared-per-value idiom"
+  features: "FEAT-0027 re-traced to DEC-0143..0158 and rewritten from fenced discovery to implementation of the ratified contracts; still blocked_by FEAT-0023; status planned (implementation authorization remains factory-pipeline-only)"
+  orchestration: "14 parallel bulk-worker drafting agents over disjoint file sets (workflow wf_dae3ea14-e98, ~50 docs) + a transcript-fidelity delta scan + a fresh-agent ledger-grounded consistency review"
+  status: complete
+  gates:
+    validate_ledger: pass
+    validate_registry: pass (after descriptor-value normalization of 29 null-valued configurable rows)
+    validate_inventory: pass (pre-existing warnings only)
+    check_citations: pass (dead-DEC frontmatter-sources warnings only, house-accepted class)
+    lint_docs: clean
+    lint_docs_strict: expected-blocked (provisional corpus awaiting operator ratification + pre-existing pending ENH batch; zero blocking gaps remain)
+  review: "fresh-agent consistency review: 0 critical, 2 major (stale four-command claim in overview.md; kill_line_floor registry key mismatch), 2 minor (nonexistent protection_window_* wildcard; frontmatter decisions omissions in qmf-data/qmf-registry/qmf-core/ADR-0009) — all four fixed at desk; desk also fixed the glossary account-binding tuple (role stays in the venue account-binding identity per DEC-0136; only the risk Book-binding tuple excludes it per DEC-0143/0149), added the SCN-0011 index row and changelog mention, and corrected the corpus file count"
+  concurrent_session_note: "Backtesting sitting opened mid-increment (memlog entries 117-118 appended: grounding workflow + operator dictation on a Lean-CLI-shaped QMX CLI with Jesse-inspired features). Spine, tracker, and prompts untouched; memlog append-only so this increment's citation surface (entries 84..116) is unaffected. Flag for the operator: entry 118 repeats 'SQS formula stays open pending re-understanding pass', which conflicts with the risk sitting's GAP-0043 resolution (DEC-0153) — surfaced, not resolved here."
+- date: '2026-08-21'
+  change: "Absorb the QMB increment (backtesting product; spine B-1..B-15, ratified by operator delegation 2026-08-20) into docs/"
+  sources: [SRC-07, SRC-08, SRC-03]
+  provenance: "SRC-07 = architecture-QMB-2026-08-20/ (FINAL spine B-1..B-15 + inherited-invariants table; .memlog.md 13 bullets: drafting, three gate rounds, ruling rounds, ratified-by-delegation; reviews/ six lenses + review-reconcile-docs.md, findings pre-applied); SRC-08 = archive/qmf-7.txt (backtesting-direction session; citation surface = the memlogs); SRC-03 memlog entries 117..131 (parent record of the child sitting); research-backtesting/ intake dossiers as companions"
+  ledger: "DEC-0159..DEC-0169 minted (ratified): QMB naming + one-library-thin-doors (qmx command superseded), config-compiler wind tunnel + disjoint Book/BMS namespaces (BMS outranks), pure-run/orchestrator split + governor, reader-derived per-requirement verdicts + run roles, CT-32/CT-13 adoption + CT-11 honored (per-run logs operational only), fidelity seams + calibration-not-invention (GAP-0048 partial), B-15 as-of sets + passive hub (DEC-0084 stays dead), download-once data + per-window license tags (dukascopy-node acquisition reference), uv-add-not-uv-tool distribution, stack pins click==8.4.2/optuna==4.9.0, umbrella spine adoption with look-ahead-prevention-delivered split; EXT-2071..EXT-2082 added; no supersessions of live DECs (DC-5 qmx was position-paper-only)"
+  gaps: "GAP-0048 PARTIALLY closed (seams ruled, answer recorded; status stays deferred for taxonomy values + calibration content); GAP-0016/0017 stay deferred per DEC-0121 with prevention-DELIVERED (B-2/B-8/B-12) recorded; GAP-0047 gains the .qml-file-format mandatory input + the operator's QML-sitting-may-run-first ordering lead; GAP-0049 gains the raw-material-accrues-by-construction note"
+  adr: "ADR-0017 written (new); preflight verdict: NEW COMP-QMB — the reserved future-backtesting-library slot realized; alternatives named and refused (qmf-risk = definitions boundary, qmf-data = rooms not runs, qmf-registry = records not execution); dead list honored (DEC-0084/0085/0086 stay dead); no existing component's authority shrinks; ADR-0011 kept immutable per point-in-time convention"
+  contracts: "CT-32 gains intended_producers: COMP-QMB + the declared chart-series/trade-event-reference extensions + reproducibility and replay-discipline invariants; CT-13 gains COMP-QMB producer + the replay-world run-loop emission invariant; CT-11 gains the per-run-logs-never-evidence invariant and re-points simulated-typing to GAP-0048; COMP-QMB minted in dependencies.yaml (layer middleware, six backend QMF edges, NO venue edge, 17 interfaces); FEAT-0029 minted (blocked_by FEAT-0027/0015/0016/0020/0022, multi-pass)"
+  registry: "qmb_cli_pin + qmb_sampler_pin (non-configurable exact pins, optuna major bump = contract-versioning event) and five configurable UI-editable rows per L38 (qmb_governor_cpu_budget, qmb_governor_memory_budget, qmb_run_time_limit, qmb_run_memory_limit, qmb_stale_evidence_severity); 12-14 concurrent recorded as motivating reference, never a budget"
+  orchestration: "8 parallel bulk-worker drafting agents over disjoint file sets + 1 fresh opus consistency reviewer (workflow wf_de89d62d-7d5; qmb.md + SCN-0012 new, 12 docs updated)"
+  status: complete
+  gates:
+    validate_ledger: pass
+    validate_registry: pass
+    validate_inventory: pass (pre-existing warnings only; FEAT-0029 edge warnings resolved by blockers)
+    check_citations: pass (dead-DEC frontmatter-sources warnings only, house-accepted class)
+    lint_docs: clean
+    lint_docs_strict: expected-blocked (provisional corpus awaiting operator ratification + pre-existing pending ENH batch; zero blocking gaps)
+  review: "fresh-agent ledger-grounded consistency review (opus, structured findings): 8 major + 14 minor, all 22 fixed at desk — pin-configurability contradictions (qmb.md/stack/traceability/SCN-0012), world-constant-live narrowed for replay bindings (qmf-risk + glossary), intended-consumer-vs-producer direction on CT-32 (ADR-0017/changelog/traceability), CT-11 demoted from qmb.md's interface table to prose per the dependency manifest, SQS modeled-spread claim traced into DEC-0169 with its DEC-0153 reconciliation marked a GAP-0048 pending slot, retired-name and frontmatter-decisions residue; 7 files verified clean"
+  operator_flags: "Dukascopy data-licensing flag RESOLVED same day by direct operator ruling — personal-use backtesting only, no redistribution; license-tag mechanism unchanged (DEC-0170, EXT-2083). Prior increment's SQS-formula memlog conflict remains surfaced, unresolved. Operator stated intent (2026-08-21): sign off the corpus after the QML-sitting absorption, then PRD, then epics and stories, then factory implementation."
+  concurrent_session_note: "Operator warning mid-increment (2026-08-21): a QML sitting is running concurrently in another session — its outputs are QUARANTINED and nothing it produces was absorbed here; GAP-0047 notes record only the ordering lead already inside this increment's frozen intake (SRC-03 entries 122/129). A future QML increment enters only through its own operator-directed change-mode pass."
+  remaining: "GAP-0016/0017 registration gate, GAP-0048 content sitting, GAP-0049, GAP-0047 (QML sitting — may run BEFORE the backtesting-content sitting; QMB tests plain-Python bots meanwhile); then PRD, then BMad exit."
+- date: '2026-08-21'
+  change: "Absorb the QML increment (bot-authoring library; child spine QL-1..QL-10, ratified by operator delegation 2026-08-21, autonomous sitting) into docs/ — closes GAP-0047"
+  sources: [SRC-09, SRC-10, SRC-03]
+  provenance: "SRC-09 = architecture-QML-2026-08-21/ (FINAL spine QL-1..QL-10 + inherited-invariants table + the Parent-contract-mints section; .memlog.md 18 entries incl. the tagged-assumptions veto list; reviews/ 5 gate lenses, 34 findings pre-applied); SRC-10 = archive/qml.txt (the QML sitting session transcript; full transcript-scan verified the delegation quotes verbatim, found zero contradictions with the spine, and confirmed the framing prompt was agent-authored + operator-ratified by delegation); evidence dossiers qml-original-dig.md + qml-dig-verification.md under SRC-03 ride the named structural-definition exemption"
+  ledger: "DEC-0171..DEC-0184 minted (ratified): QML identity thin-by-law + roster-scoped dependency reading (QL-1), two-artifact bot + no-DSL-in-V1 (QL-2), CT-33 Bot definition kind + canonical-assignment parameterization law (QL-3), footprint + producer templates + footprint_requirements shape (QL-4), CT-34 confluence kind + leg-role vocabulary incl. filter (QL-5), strategy family key-not-authority + catch-all (QL-6), bot runtime protocol + advisory stop proposal + Book-side single-sited full-loss derivation (QL-7), conformance-as-ticket + prediction-linter four checks + admission-bar interfaces (QL-8), exit reconciliation ratified-as-is + CloseReason evidence mapping (QL-9), build order before-the-node + uv add qml SemVer-display-only (QL-10), CT-22 v2 format mint (DEC-0181), CT-23 v2 format mint (DEC-0182), QMB sibling coordination (DEC-0183), spine adoption umbrella + GAP-0047 answered + L21-to-L11 miscite fix (DEC-0184); EXT-2084..EXT-2091 added; SRC-09/SRC-10 registered; no live DEC superseded"
+  gaps: "GAP-0047 ANSWERED (status answered, blocking false, date 2026-08-21); remaining deferred: GAP-0016/0017 (registration gate, DEC-0121), GAP-0048 content, GAP-0049"
+  adr: "ADR-0018 written (new); preflight verdict: NEW COMP-QML — candidates refused by id (qmf-registry = record kinds never authoring/protocol; qmf-risk = Book-side definitions; QMB = host never author/gate; qmf-core = definitions-only L13); dead list honored (DEC-0090 realization-not-revival — its deferral condition met; .qml DSL and complexity gate stated drops, not revived)"
+  contracts: "CT-33 + CT-34 minted (qmf-registry kinds, QML-authored, defined-unwired, v1); CT-06 updated (Bot kind body ruled via CT-33, strategy-family + confluence addable kinds, roster-scoped scope annotation); CT-22 v2 + CT-23 v2 AD-5 format mints with migration notes (exactly the sitting's proposed changes; ExitLogicRef GAP-0047 flag closed per DEC-0179); CT-29 gains gaps:[] + the DEC-0179 CloseReason evidence mapping + the resolved-entry-keying invariant (no new field — landing shape an open coordination question); CT-13 pending-slot Bot-identity ruled via CT-33 fp1; COMP-QML minted in dependencies.yaml (layer middleware, depends_on core/registry/risk, NEVER venue, 16 interfaces); FEAT-0030 minted (blocked_by FEAT-0005/0007/0027, multi-pass, wave 11)"
+  registry: "No variables.yaml rows — QML mints no values or pins; stack.md gains the qml distribution row (uv add qml, own SemVer display-only, no new runtime dependency)"
+  orchestration: "Two dynamic workflows: wf_2320578c-bb2 (12 agents — wave-1 ledger + transcript-scan, wave-2 8 bulk-worker drafters over disjoint file sets, wave-3 2 fresh opus reviewers) and wf_949470b0-359 (4 bulk-worker fix agents applying the 24 dual-review findings)"
+  status: complete
+  gates:
+    validate_ledger: pass
+    validate_registry: pass
+    validate_inventory: pass (pre-existing house-accepted warnings only)
+    check_citations: pass (dead-DEC frontmatter-sources warnings only, house-accepted class; ADR-0018 joins ADR-0017 in that class)
+    lint_docs: clean
+    lint_docs_strict: expected-blocked (provisional corpus awaiting operator ratification; zero blocking gaps)
+  review: "Two fresh opus reviewers (ledger-grounded consistency 13 findings; spine-fidelity 11 findings): assigned files verified faithful — all damage at the pass perimeter (traceability untouched; owner docs qmf-registry/qmf-risk an increment behind; CT-29 stale flag + dangling CloseReason-mapping pointer; CT-34 composition-leg over-constraint; smaller reconciliations incl. the pre-existing qmb.md Dukascopy open/closed contradiction) — all 24 fixed by the 4-agent fix wave; final sweep clean (pending(bot-schema sitting) survives only in negation/historical contexts; no vocabulary violations; counts consistent at 45 answered)"
+  operator_flags: "Six operator-overridable calls surfaced in the changelog row for cheap veto (no-DSL-in-V1; canonical-assignment law; filter leg role; family=key-not-authority; advisory-stop/Book-side derivation; CT-33/34 numbering) plus three non-blocking open questions (UI name for the declaration artifact; qml CLI; NN weights kind). Three NEW coordination questions recorded by the reviewers, in the changelog: (1) CT-29 resolved-entry keying — semantics ratified, field landing shape unminted (existing surface vs future CT-29 format mint); (2) CT-23 v2 inbound bot-supplied declared_full_loss_price — refused (mirroring requested_r) or ignored-and-overwritten, unruled; (3) CT-34 — may a leg carry BOTH a producer binding and a child-confluence cite, cardinality unruled. Transcript scan: build-order ruling (QL-10) additionally reflects the operator's own stated lean; the sitting's framing prompt was agent-authored, operator-ratified by delegation."
+  remaining: "GAP-0016/0017 registration gate, GAP-0048 content sitting, GAP-0049; then corpus sign-off, PRD, epics/stories, factory lanes"
+- date: '2026-08-21'
+  change: "QML increment operator VETO ROUND held and closed (DEC-0185) — the increment's human checkpoint is complete"
+  sources: [EXT-2092]
+  ledger: "DEC-0185 minted (ratified, operator-direct): all six DEC-0184 delegation calls CONFIRMED (no-DSL-in-V1; canonical-assignment/promotion versioning; filter leg role; family=key-not-authority; advisory-stop/Book-side derivation with the adoption rider; CT-33/34 numbering); Rider A — a CT-34 leg may carry BOTH a producer binding and a child-confluence cite (at least one; counts never bounded); Rider B — bot-owned exit methodologies first-class + Book per-family ExitLogicRef adopt-the-advisory-stop-as-is module mode (inside the existing {module_id, config} shape, no format change; no inbound-refusal posture on CT-23); Ruling C — no second CLI, QMB's qmb CLI is the single command-line surface; CT-29 resolved-entry-keying field shape operator-aligned deferred; UI naming stays open (read-only-when-live lean)"
+  contracts: "ct-34 (both-allowed + counts-unbounded), ct-22 (adoption-mode invariant, stays v2), ct-23 (no-inbound-refusal note); docs qml.md, qmf-risk.md, glossary, changelog (asked-vs-ruled history), traceability (range to DEC-0185), ADR-0018 dated follow-up, AGENTS.md range"
+  status: complete
+  gates:
+    validate_ledger: pass
+    validate_registry: pass
+    validate_inventory: pass (pre-existing house-accepted warnings only)
+    check_citations: pass (house-accepted dead-DEC frontmatter class only)
+    lint_docs: clean
+    lint_docs_strict: expected-blocked (provisional corpus awaiting operator ratification)
+  remaining: "Operator has STARTED the PRD session (2026-08-21). After PRD: epics/stories, factory lanes. Deferred gaps unchanged: GAP-0016/0017 gate, GAP-0048 content, GAP-0049"
+- date: '2026-08-21'
+  change: "Corpus sign-off — flip provisional -> ratified (operator go-ahead in the PRD session; independent contradiction sweep wf_93306df4-1f5 passed)"
+  sources: [EXT-2093]
+  ledger: "52 decisions flipped provisional->ratified; DEC-0049 ruled ratified (scoped entry-blocking detector pause, L39 preserved, inform-vs-pause posture UI-editable per L38); DEC-0056/DEC-0124 corrected to superseded with back-pointers (desk fixes ridden by the sweep)"
+  contracts: "CT-28 world lines amended to admit the QMB world=replay binding, DEC-0160 added to its decisions list (sweep desk fix)"
+  docs: "100 artifacts flipped to status: ratified; AGENTS.md, index.md, gap-report.md, glossary.md, overview.md, traceability rows, 18 contract version comments, and 13 ADR status lines reworded to record the sign-off; changelog sign-off entry added; ratification-packet header note prepended; enhancements.yaml batch (71) deferred post-V1 by operator ruling"
+  status: complete
+  gates:
+    validate_ledger: pass
+    validate_registry: pass
+    validate_inventory: pass (house-accepted warnings; DEC-0049 joins the uncovered-ratified class)
+    check_citations: pass (house-accepted dead-DEC class)
+    lint_docs: clean
+    lint_docs_strict: clean — first fully green strict run
+  remaining: "PRD finalized this session; next: bmad-create-epics-and-stories, then the factory lanes. Deferred gaps unchanged: GAP-0016/0017 gate, GAP-0048 content, GAP-0049"

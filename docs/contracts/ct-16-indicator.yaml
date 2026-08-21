@@ -1,7 +1,7 @@
 id: CT-16
 name: Two-mode indicator contract
-status: provisional
-version: 1  # first minted format version; the shape is spine-ratified (AD-22), the doc stays provisional pending corpus re-ratification (DEC-0103, DEC-0126)
+status: ratified
+version: 1  # first minted format version; the shape is spine-ratified (AD-22), corpus signed off by the operator 2026-08-21 (DEC-0103, DEC-0126)
 owner: COMP-QMF-INDICATORS
 consumers: []  # consumer-blind by design: bots, structure families, MIS, and backtesting all consume the same contract through the application composition root; no package import edge exists under default-deny (DEC-0126, DEC-0120)
 active_consumers: []

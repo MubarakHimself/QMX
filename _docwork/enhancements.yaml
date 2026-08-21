@@ -1,356 +1,360 @@
+# Disposition 2026-08-21 (operator ruling, PRD session, EXT-2093): the full batch of 71
+# pending entries is DEFERRED post-V1. They are documentation-precision audit rows
+# recording agent additions beyond verbatim spine content, not unbuilt features;
+# revisit after V1 ships or when a change-mode pass touches the documents they annotate.
 enhancements:
   - id: ENH-0001
     doc: docs/contracts/ct-04-typed-refusal.yaml
     description: "CT-04 schema declares an after_condition_descriptor field and flags that AD-11 pins the retryability enum (yes/no/after-condition) but not the descriptor's shape, and no open gap governs it."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0002
     doc: docs/contracts/ct-04-typed-refusal.yaml
     description: "CT-04 invariants cite DEC-0112 (AD-14: refusals always carry context and are never swallowed) alongside the task-named DEC-0109."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0003
     doc: docs/contracts/ct-04-typed-refusal.yaml
     description: "CT-05 schema flags that AD-12 does not pin whether the input_fingerprints collection is order-significant (only that fp1 makes any chosen array order significant)."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0004
     doc: docs/contracts/ct-04-typed-refusal.yaml
     description: "CT-05 schema decomposes the fp1 fingerprint string into fingerprint_recipe_prefix [fp1] and hash_algorithm [sha256] enums for machine-readability, restating pinned fp1 facts."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0005
     doc: docs/contracts/ct-04-typed-refusal.yaml
     description: "CT-05 schema represents the occurrence record as an explicit display-only-provenance field, articulating the spine's separate-provenance-outside-identity rule as a schema entry."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0006
     doc: docs/contracts/ct-02-time-calendar.yaml
     description: "Added a `boundary:` field (authority boundary, style rule 7): line 1 records the operational-clock-rules exclusion (chrony/slew-only/drift-bands/no-trade-before-sync -> time-audit-devops.md) as directed; line 2 is my own synthesis framing the deferred look-ahead gate + attempt counter as registry/backtesting consumers of CT-02's ordering, not CT-02 obligations."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0007
     doc: docs/contracts/ct-02-time-calendar.yaml
     description: "Laid out `stored_instant` (value_ns, source_resolution, writer, sequence) and `foreign_timestamp` (raw_value, declared_zone_offset, declared_resolution, local_receive_wall, receive_monotonic) as explicit named record shapes; the spine states these components in prose but does not present them as field lists."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0008
     doc: docs/contracts/ct-02-time-calendar.yaml
     description: "Structured schema.type as a per-type mapping (12 value types/protocols/calendar kinds) and schema.fields as per-type field lists — a presentation choice for agent-legibility, no new claims."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0009
     doc: docs/contracts/ct-02-time-calendar.yaml
     description: "units.source_resolution and units.rollover_reference synthesized the cTrader-milliseconds wire example (from AD-7's foreign-money example + AD-8 foreign-time rule) with an explicit 'recorded, not trusted as UTC until GAP-0037' caveat."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0010
     doc: docs/contracts/ct-02-time-calendar.yaml
     description: "enums.cross_calendar_comparison explicitly states the specific CT-04 refusal category is not pinned by the spine, rather than inventing one."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0011
     doc: docs/contracts/ct-02-time-calendar.yaml
     description: "Added an inline forex_holiday_set_gap marker `GAP(GAP-0037): ...` in schema.fields to anchor the still-open venue-verification at the field level per style rule 9."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0012
     doc: docs/contracts/ct-01-money-quantity.yaml
     description: "CT-01 schema: introduced a placeholder field name 'value' for the scaled-int count on Money/Price/Quantity, explicitly flagged in-line as not pinned by the spine (AD-7 names only the tag parameters currency/instrument/unit and scale, not the count field)."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0013
     doc: docs/contracts/ct-01-money-quantity.yaml
     description: "CT-03 schema: named a 'dated_record' sub-shape (target / date / append-only) to structure AD-9's dated-alias/metadata-record rule; descriptive framing of AD-9 wording, not a new claim."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0014
     doc: docs/contracts/ct-01-money-quantity.yaml
     description: "CT-01 enums: surfaced 'mixed_scale_refusal' and 'rounding_mode' as named schema-level entries pointing to CT-04's seven-category vocabulary and to the named-conversion-boundary rule respectively, to make AD-7's refusal/rounding behavior greppable at the schema layer."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0015
     doc: docs/architecture/dependencies.yaml
     description: "dependencies.yaml: extended the distribution_gap removal beyond the seven roster packages the task named — the three internal seams (COMP-QMF-DATA-INGEST/STORE/BACKUP) had their stale distribution_gap: GAP-0002 dropped and distribution set to uv-workspace-lockstep (they ship inside the lockstep qmf-data package), since GAP-0002 is now answered and leaving an answered-gap pointer would be incorrect."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0016
     doc: docs/architecture/dependencies.yaml
     description: "dependencies.yaml: the four external components (cTrader, Dukascopy, News-calendar feed, Object storage) had distribution_gap: GAP-0002 dropped and distribution left null with no gap (their distribution is third-party, not ours to declare), clearing the stale answered-gap reference per the task's 'externals keep nulls pointing at no gap' guidance."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0017
     doc: docs/architecture/dependencies.yaml
     description: "variables.yaml: for resolved variables where the task specified only the value/decision (not new notes) — e.g. monetary_representation, money_rounding_mode, timestamp_precision, instrument_identity_shape, canonical_hash_algorithm, contract_version_syntax, typed_refusal_codes, result_identity_key — the previous 'unresolved/proposal-only' notes were rewritten into accurate ratified one-line summaries with DEC/AD citations, so no note contradicts a now-set value."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0018
     doc: docs/contracts/ct-14-backup-restore.yaml
     description: "CT-14/CT-26/CT-15: added explicit boundary_refusal_categories enums (subsets of the seven AD-11 categories) mapped to each boundary's actual failure surface — the spine names the seven but does not enumerate which apply per-contract; inferred from each boundary's role."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0019
     doc: docs/contracts/ct-14-backup-restore.yaml
     description: "CT-26: promoted the now-answered concurrency/consistency question to an explicit invariant citing AD-15/DEC-0113 (backup as unlimited reader under one-writer-per-stream) — AD-15 governs it but does not name the backup-input seam."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0020
     doc: docs/contracts/ct-14-backup-restore.yaml
     description: "All three: added a schema-level node_ops_pointer / still_open note field to hold the residual (object-key layout, RPO/RTO, key custody, cTrader wire schema) rather than dropping it silently — a structural choice not dictated by the spine."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0021
     doc: docs/contracts/ct-14-backup-restore.yaml
     description: "CT-15 schema: enumerated concrete field-level types (source/source_native_id string-opaque, revision int, event_time/known_at int64-utc-ns, bid/ask scaled-int) by composing the AD-21 intake key with the AD-19 bitemporal shape and AD-7 money types; the spine states these principles but does not lay them out as a per-field CT-15 schema."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0022
     doc: docs/contracts/ct-06-registration.yaml
     description: "CT-07 schema names the edge endpoint fields from_ref/to_ref with per-edge-type directionality notes; AD-16/DEC-0114 says edges 'reference fingerprints' but does not name the fields."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0023
     doc: docs/contracts/ct-06-registration.yaml
     description: "CT-06 enum token 'promotion-occurrence-card' and reserved_kind_names list tokenize the spine's prose 'promotion-occurrence card kind'."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0024
     doc: docs/contracts/ct-06-registration.yaml
     description: "CT-09 enums evidence_bearing_stores [record-store, jsonl-edge-store] and rebuildable_stores [sqlite-index, duckdb-view] tokenize AD-19's evidence-bearing-vs-rebuildable-view distinction and store list; the specific token names are mine, not spine literals."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0025
     doc: docs/contracts/ct-06-registration.yaml
     description: "Added GAP-0039 and GAP-0047 to CT-06 (gaps list + schema fields_gap) as the reserved Bot/Book kind bodies that genuinely bind the registration schema; not explicitly directed, but consistent with keeping gaps that bind."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0026
     doc: docs/contracts/ct-06-registration.yaml
     description: "CT-06 invariant clarifying default-deny: no library imports qmf-registry and registration is invoked at the composition root (grounded in DEC-0120; the composition-root framing is inferred to reconcile the retained consumers field)."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0027
     doc: docs/contracts/ct-06-registration.yaml
     description: "CT-09 schema exposes a world enum (live/replay/simulated) as the per-world room-instance selector, grounded in DEC-0110/DEC-0117."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0028
     doc: docs/contracts/ct-12-dataset-split.yaml
     description: "CT-13: kept a `producers` field (house-consistent with ct-10) listing wired QMF producers [COMP-QMF-DATA, COMP-QMF-REGISTRY], with an inline comment and invariant marking COMP-QMF-VENUE/COMP-QMF-RISK reserved under default-deny (DEC-0120) — this applies the general default-deny law to name which journal producers are wired vs reserved, which the spine implies but does not enumerate per-contract."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0029
     doc: docs/contracts/ct-12-dataset-split.yaml
     description: "CT-12: added an invariant naming reserved downstream research consumers under default-deny (DEC-0120) — applies the general default-deny rule to the split-manifest consumer set."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0030
     doc: docs/contracts/ct-12-dataset-split.yaml
     description: "Both files: dropped the provisional-era wiring-scaffolding fields (version_gap, active_consumers/intended_consumers/wiring_status on CT-12; producer/intended_producers/wiring_status on CT-13) since their pre-ratification uncertainty is now resolved into the default-deny law (DEC-0120), folding the reserved-edge nuance into invariants instead."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0031
     doc: docs/contracts/ct-12-dataset-split.yaml
     description: "CT-12: referenced the existing registry key registry:historical_holdout_months for the seal-window length (values-by-reference per style rule 3) rather than hardcoding twelve months; the key already carries value:null and its own gap note in docs/registry/variables.yaml (not edited)."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0032
     doc: docs/contracts/ct-10-source-observation.yaml
     description: "CT-10 exact field NAMES are my synthesis from the ADs (concepts+types are pinned by AD-19/AD-8/AD-7; names are chosen): event_time, known_at, source, source_native_id, revision, foreign_timestamp{verbatim,zone,offset,resolution}, receive_wall_time, receive_monotonic_diagnostic, foreign_money{verbatim,scale}, writer, boot_epoch_id, sequence, correction_of, world, fingerprint."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0033
     doc: docs/contracts/ct-10-source-observation.yaml
     description: "CT-11 exact field/enum NAMES are my synthesis: fingerprint, format_version, room_role, world, is_evidence_bearing, retained_forever, rebuild_calendar_identity, rebuild_tzdata_version, engine_major, writer, sequence; enums room_role/world/evidence_class/refusal_categories. The evidence_class enum {evidence-bearing, rebuildable-view} is my naming of the AD-19 distinction (spine states it; does not name an enum)."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0034
     doc: docs/contracts/ct-10-source-observation.yaml
     description: "CT-10 invariant framing governed_readers (indicators/structure/venue/risk) as default-deny-gated design intent, and framing producers as app-wired value originators with no package dependency on qmf-data — a spine-faithful reconciliation I added to prevent the pre-existing forbidden-edge implication in the file."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0035
     doc: docs/contracts/ct-10-source-observation.yaml
     description: "CT-10 cross-references CT-15 for the idempotent intake key (source, source-native id, revision) rather than restating its mechanics, to keep source_native_id scoped without over-reaching into CT-15's contract."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0036
     doc: docs/contracts/ct-10-source-observation.yaml
     description: "Added COMP-QMF-REGISTRY to CT-11 consumers as the ratified reader edge (DEC-0120) — a mapping inference from the spine, not previously in the file's consumer list."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0037
     doc: docs/components/qmf-core.md
     description: "qmf-core FM-8: added the clarifying inference that the `transient venue failure` and `storage failure` refusal categories arise at the venue and data boundaries, not in qmf-core's pure surface (derived from AD-11 + AD-15, not stated verbatim in the spine)."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0038
     doc: docs/components/qmf-core.md
     description: "qmf-core: composed a refreshed CT-01..CT-05 mermaid flowchart with ratified node labels (scaled integers, int64 UTC ns, seven categories, fp1) — labels are my wording of ratified content."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0039
     doc: docs/components/qmf-core.md
     description: "qmf-registry: composed a persistence mermaid showing the ratified registry→data CT-11 edge, per-world registry room, and CT-13 promotion event carrying only card fp1 + correlation_id — diagram structure is my composition of ratified content."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0040
     doc: docs/components/qmf-core.md
     description: "qmf-registry interfaces table: added a note that CT-06/CT-07/CT-08 consumers consume the contract shape only and do not import qmf-registry under default-deny (restates the CT-06/DEC-0120 invariant for reader clarity)."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0041
     doc: docs/decisions/ADR-0012-runtime-packaging-quality.md
     description: "Cross-references added between the five new ADRs for navigation (ADR-0012 points to ADR-0013 for why the tzdata pin lives outside core, and to ADR-0016 for the dependency-edge amendment rule; ADR-0015 points to ADR-0016 for the registry room) — the linkage is implied by the spine, the pointers are mine."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0042
     doc: docs/decisions/ADR-0012-runtime-packaging-quality.md
     description: "Blast-radius contract-to-component mapping (which CT-* belongs to which COMP-*) derived by reading docs/contracts/ filenames and docs/components/ frontmatter; the spine states the CT bindings per AD but not the full per-ADR roster fan-out."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0043
     doc: docs/decisions/ADR-0012-runtime-packaging-quality.md
     description: "ADR-0012 consequence: lockstep versioning 'trades release granularity for the guarantee that any seven installed together are a tested set' — inference from DEC-0100 + DEC-0102, not stated in the spine."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0044
     doc: docs/decisions/ADR-0012-runtime-packaging-quality.md
     description: "ADR-0014 consequence: 'until the first baselines are recorded there are no numeric budgets at all — early components pass on correctness and record their numbers rather than being judged by them' — inference from DEC-0111 plus the spine's Deferred row for numeric performance budgets."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0045
     doc: docs/decisions/ADR-0012-runtime-packaging-quality.md
     description: "ADR-0015 consequence: 'every new kind is a new versioned contract with its own conformance suite, so adding a kind is deliberate work' — inference joining DEC-0114's per-kind contracts to DEC-0102's contract-test definition."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0046
     doc: docs/decisions/ADR-0012-runtime-packaging-quality.md
     description: "ADR-0016 consequence: 'the registry cannot be used without the data package' — direct inference from the ratified DEC-0120 edge, not stated as a consequence in the spine."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0047
     doc: docs/decisions/ADR-0012-runtime-packaging-quality.md
     description: "ADR-0013's GAP-0037 inline marker merges the spine's venue-verification note with the exact question text from _docwork/gaps.yaml so the marker is self-contained."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0048
     doc: docs/decisions/ADR-0012-runtime-packaging-quality.md
     description: "Registry value references (`registry:...`) substituted for naked literals per style rule 3 — e.g. `registry:coverage_floor_percent`, `registry:historical_holdout_months`, `registry:design_bot_concurrency` — mapping chosen by me against docs/registry/variables.yaml."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0049
     doc: docs/components/qmf-data.md
     description: "qmf-data.md: added a seven-rooms-per-world mermaid diagram (spine describes the rooms textually; the visualization and per-world/cross-world-refusal layout are my synthesis)."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0050
     doc: docs/components/qmf-data.md
     description: "qmf-data-store.md: added a room-roles→store-engines mermaid diagram, replacing the prior no-diagram comment; the specific room→engine assignment (raw/processed→Parquet+DuckDB, journal+lineage-edges→JSONL, registry metadata→SQLite) is my synthesis of AD-19's engine list with AD-16's pinned-JSONL edge-file rule, not a verbatim mapping in the spine."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0051
     doc: docs/components/qmf-data.md
     description: "qmf-data.md: reframed CT-06/CT-07 as 'value-only, application-routed' interface rows and CT-08 as 'deferred', an explicit interface-table framing derived from DEC-0120 + CT-10's value-routing language to honor default-deny; the underlying rule is ratified but the table presentation is mine."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0052
     doc: docs/components/qmf-data.md
     description: "All five files: expanded failure-mode tables to name the specific CT-04 refusal category (invalid input / policy rejection / storage failure) per condition, extrapolated from DEC-0109's taxonomy applied to each ratified boundary condition."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0053
     doc: docs/architecture/overview.md
     description: "Renamed the COMP-CALENDAR-FEED display label from 'Economic-calendar feed' to 'news-calendar feed' in overview.md and stack.md, aligning the doc with the ratified three-calendar vocabulary and the news-calendar recorder (DEC-0119); also changed a carried-over bare 'calendar' in the overview system-context prose to 'news-calendar'."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0054
     doc: docs/architecture/overview.md
     description: "Reconciled overview.md C4 Level-2 and Layer-view mermaid diagrams to the ratified default-deny direction (DEC-0120): registry->data updated to the ratified CT-11 edge, registry persistence routed through qmf-data (dropped the direct registry->store CT-09 edge and the data->registry / structure->registry / risk->registry edges that contradict default-deny), and added an authority note that CT-labeled arrows are contract interactions mediated by injected core protocols, not package import edges."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0055
     doc: docs/architecture/overview.md
     description: "Sharpened three glossary entries outside the literal add/sharpen list to avoid citing now-answered gaps as open and to support the listed 'computation identity vs occurrence' entry: Instrument (ratified identity, DEC-0107), Occurrence (occurrence-vs-identity split, DEC-0110/DEC-0114), Journal (ratified N-stream evidence journal, DEC-0119/DEC-0112/DEC-0118)."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0056
     doc: docs/components/qmf-calendar-forex.md
     description: "Reframed cross-library interface-table peers (CT-06/07/08/10/13) in indicators, structure, venue, risk as 'application-mediated, not an import edge [DEC-0120]' — a documentation interpretation applying default-deny to tables that previously asserted direct dependencies, not a verbatim spine statement."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0057
     doc: docs/components/qmf-calendar-forex.md
     description: "Retitled calendar-feed.md human title from 'Economic-Calendar Feed' to 'News-Calendar Feed' (id COMP-CALENDAR-FEED unchanged); the spine mandates the naming distinction (DEC-0106/EXT-2030) but not the exact title string."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0058
     doc: docs/components/qmf-calendar-forex.md
     description: "Coined three registry-key names in qmf-calendar-forex.md (registry:forex_calendar_rule_set, registry:forex_calendar_rollover, registry:forex_calendar_tzdata_pin) to populate its Configuration table; these are not in the spine/ledger and need registry reconciliation."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0059
     doc: docs/components/qmf-calendar-forex.md
     description: "Added an import-time tzdata-verification mermaid flowchart to qmf-calendar-forex.md rendering the documented DEC-0106 verify-or-refuse mechanism."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0060
     doc: docs/components/qmf-calendar-forex.md
     description: "Mapped individual failure-mode conditions onto specific DEC-0109 refusal categories (unsupported capability, policy rejection, invalid input, unavailable dependency) where the spine states the taxonomy but not the per-case assignment."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0061
     doc: docs/components/qmf-calendar-forex.md
     description: "Added a GAP-0037 residual-pointer marker in dukascopy.md for provider-schema/depth detail, reusing GAP-0037 per the gaps.yaml GAP-0030 answer's routing."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0062
     doc: docs/scenarios/SCN-0001-core-freeze-gate.md
     description: "SCN-0003: added a GAP-0016 deferred marker to surface that seal enforcement stands independent of the deferred causality gate — the relation is stated in DEC-0119/AD-21, but the marker itself was not in the original scenario (which carried only GAP-0024)."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0063
     doc: docs/lenses/data/data-layer.md
     description: "data-layer.md: per-record -> store-engine assignments (source observations -> Parquet raw archive, registry records -> SQLite+JSONL, journal/lineage -> JSONL) are my inference from the spine's store-role descriptions; the spine names each engine's job but does not enumerate per-record placement."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0064
     doc: docs/lenses/data/data-layer.md
     description: "data-layer.md + logging-spec.md: synthesized presentation tables (seven-room-roles-with-store-and-evidence-flag table, store-stack table, logs-vs-journals comparison table) compose spine content into new tabular form; every cell cites a DEC."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0065
     doc: docs/lenses/data/data-layer.md
     description: "runbook.md: condensed the 57-rule DevOps time-audit into an 8-row NODE/OPS obligations table; faithful to time-audit-devops.md but the row grouping/labels are my synthesis."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0066
     doc: docs/lenses/data/data-layer.md
     description: "test-strategy.md: added law-family rows not previously present - concurrency stance (DEC-0113) and default-deny dependency edges (DEC-0120) - derived from ratified DECs."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0067
     doc: docs/lenses/data/data-layer.md
     description: "security-model.md: added a dependency-and-supply-chain-trust control table synthesized from DEC-0104 and DEC-0100 (per-package isolation)."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0068
     doc: docs/gap-report.md
     description: "gap-report.md: added a 'Superseded baseline chains' table that appends the five architecture-sitting supersessions (DEC-0032→0124, DEC-0036→0114, DEC-0040→0115, DEC-0043→0117, DEC-0047→0117) to the six pre-existing chains — beyond the spine/ledger, this is a navigational rollup of supersession facts already in the ledger."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0069
     doc: docs/gap-report.md
     description: "gap-report.md: replaced the old 'QMF1 baseline preservation' subsections whose 'preserved as gaps' claims for GAP-0001..0030 were made stale by the answers (removed to avoid restating now-false gap-preservation claims)."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0070
     doc: docs/gap-report.md
     description: "AGENTS.md: added an explicit banned-vocabulary hard rule (extensions/library/kernel/exam) not requested by the task but inherited from the pass's HARD RULES so downstream agents carry it."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred
   - id: ENH-0071
     doc: docs/gap-report.md
     description: "AGENTS.md: added the downstream-built-with-QMF law (L31/DEC-0122) to hard rules alongside the two required rules, since it is a governing law downstream agents inherit."
     rationale: "Agent addition during the 2026-08-20 architecture-sitting absorption (change mode); beyond verbatim spine/ledger content."
-    status: pending
+    status: deferred

@@ -1,12 +1,12 @@
 id: CT-05
 name: Version, fingerprint, and result-label contract
-status: provisional
+status: ratified
 version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-CORE
 consumers: [COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK]
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0108, DEC-0103, DEC-0110, DEC-0131, DEC-0136, DEC-0137, DEC-0138]
+decisions: [DEC-0108, DEC-0103, DEC-0110, DEC-0131, DEC-0136, DEC-0137, DEC-0138, DEC-0158]
 gaps: [GAP-0048]
 purpose: >-
   Give every semantic definition and every computed result a deterministic, versioned identity — the
@@ -17,7 +17,7 @@ invariants:
   - "Two version ladders never conflated: code packages use SemVer in lockstep (display-only provenance that never enters identity), and every serialized artifact stamps its own integer contract format version whose meaning never mutates — an incompatible change mints the next version plus a migration note, and QMF never loses the ability to read old stored evidence (DEC-0103)."
   - "Re-derivation of a value under a newer calendar identity or tzdata version produces a new artifact with its own fingerprint and a lineage edge to the old one — never a rewrite, never a silent equality (DEC-0103)."
   - "One implementation: the canonical serializer and fingerprint function live only in qmf-core; no other package computes a fingerprint except by calling it (DEC-0108)."
-  - "The fp1 recipe is pinned: UTF-8 JSON; object keys sorted lexicographically at every depth; no insignificant whitespace; strings NFC-normalized; all identity numerics are integers (floats are refused in identity content); null is prohibited (an absent value is an omitted key); arrays are order-significant; hash SHA-256; emitted as fp1:sha256:<hex>. The prefix versions the recipe: an upgrade mints fp2 and old fingerprints stay valid forever (DEC-0108)."
+  - "The fp1 recipe is pinned: UTF-8 JSON; object keys sorted lexicographically at every depth; no insignificant whitespace; strings NFC-normalized; all identity numerics are integers (floats are refused in identity content); exact rationals and money-class values additionally take CT-01's pinned canonical form — reduced to lowest terms, denominator strictly positive, sign on the numerator, two-key serialization, and the declared canonical storage scale per value class — so equal value implies equal fingerprint by construction; null is prohibited (an absent value is an omitted key); arrays are order-significant; hash SHA-256; emitted as fp1:sha256:<hex>. The prefix versions the recipe: an upgrade mints fp2 and old fingerprints stay valid forever (DEC-0108, DEC-0158)."
   - "Every contract field is identity by default; a display-only exclusion requires an explicit, versioned declaration in the contract — never an implementer's judgment call (DEC-0108)."
   - "Float-bearing artifacts (analytic series) take identity from the result label, never from hashing float bytes; the float payload carries an integrity checksum plus (OS, library-version) provenance, and cross-OS bit-identity of float content is not promised (DEC-0108, DEC-0110)."
   - "An idempotent re-write (same hash, byte-identical content) is accepted silently; a true collision (same hash, differing bytes) is refused and alarmed, never overwritten (DEC-0108)."

@@ -1,13 +1,13 @@
 id: CT-06
 name: Registry registration contract
-status: provisional
+status: ratified
 version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-REGISTRY
 consumers: [COMP-QMF-DATA, COMP-QMF-STRUCTURE, COMP-QMF-RISK]
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0103, DEC-0106, DEC-0108, DEC-0109, DEC-0110, DEC-0114, DEC-0115, DEC-0116, DEC-0120, DEC-0121, DEC-0137, DEC-0138]
-gaps: [GAP-0016, GAP-0017, GAP-0039, GAP-0047]
+decisions: [DEC-0103, DEC-0106, DEC-0108, DEC-0109, DEC-0110, DEC-0114, DEC-0115, DEC-0116, DEC-0120, DEC-0121, DEC-0137, DEC-0138, DEC-0143, DEC-0153, DEC-0158, DEC-0169, DEC-0171, DEC-0173, DEC-0175, DEC-0176, DEC-0178, DEC-0184]
+gaps: [GAP-0016, GAP-0017]  # Book/BMS kind bodies ruled 2026-08-20 (DEC-0143, DEC-0158); GAP-0016/0017 deferred to backtesting (DEC-0121); GAP-0047 answered — the full Bot kind body is now ruled via CT-33 (DEC-0173)
 purpose: >-
   Register an artifact as a per-kind versioned record whose stable id is derived
   from its fp1 fingerprint, so identical work from two sandboxes deduplicates and
@@ -18,7 +18,12 @@ invariants:
   - "A record's stable id is derived from its fp1 fingerprint and is never minted (DEC-0114, DEC-0108)."
   - "created-at and every other occurrence fact are display-only, excluded from fp1 identity, so identical work from two sandboxes deduplicates by computation identity (DEC-0114, DEC-0110)."
   - "At-birth parent references live in the header; lineage that accrues after birth is written only as CT-07 typed edges, never back into the record (DEC-0114)."
-  - "Kinds are addable and never redefined; Bot and Book are reserved kind names whose bodies come from their own sittings (DEC-0114)."
+  - "Kinds are addable and never redefined; the Book kind body is ruled by the risk sitting through CT-22/CT-27/CT-28 and the sibling risk kinds below, and the Bot kind body is now ruled by the QML sitting through CT-33 — Bot is no longer a body-pending reserved name (DEC-0114, DEC-0143, DEC-0173)."
+  - "The Bot kind registers only for a Bot definition (CT-33) that passes both QL-8 conformance layers — the declaration linter and sandboxed-execution conformance; a Bot definition failing either layer is a policy-rejection refusal and never registers, so a registered Bot fp1 is exactly what governed evidence and Book seats may cite (DEC-0178)."
+  - "A strategy-family kind is a dated AD-9 metadata record — the same machinery as instrument_class, a kind under this contract's addable-kinds law with no new CT number; a strategy-family id is an opaque operator-minted keying token with no authority, and every Bot definition (CT-33) declares exactly one (DEC-0176)."
+  - "COMP-QML authors the Bot-domain kinds — the Bot definition (CT-33), the confluence (CT-34), and the strategy-family metadata record — via its author-side types and conformance gate; QML returns fingerprintable content and the composition root mints the records under the AD-25 root-mints pattern (writer unit (machine, authoring role, kind)), so kind authorship creates no package import edge and qmf-registry gains no dependency on QML (DEC-0171, DEC-0173)."
+  - "The risk sitting mints nine per-kind record contracts (AD-16): Book definition (CT-22), BMS definition (CT-27), Book binding (CT-28), binding transition (CT-24), exit record (CT-29), control action (CT-30), control window (CT-31), performance result (CT-32), and instrument currency-exposure as a dated AD-9 metadata record; instrument_class is a further dated AD-9 metadata record kind; each is a qmf-core value type content-fingerprinted by CT-05's single implementation and wrapped into a registry record by the composition root, creating no new package edge (DEC-0158, DEC-0153)."
+  - "A treasury boundary-event kind is reserved for money movements between accounts and cycles — sweep | refund | re_seed | paper_epoch_reset, addable never redefined, mapped onto AD-21's risk transition event type; no money moves without one, a boundary event never closes a position and never re-bases a frozen R, and its fields and evaluation are node territory (DEC-0158)."
   - "No layer of the bot vocabulary hardcodes exactly-one: a composite is its own registered artifact with lineage to its children, and multiplicity collections order canonically by child fingerprint ascending unless the owning contract declares order significance (DEC-0115)."
   - "Bot identity is its content; the Bot-Book-account binding is a separate dated binding record outside Bot identity, and re-binding (paper to live) never mints a new Bot (DEC-0115)."
   - "The promotion-occurrence card is a reserved kind: human-only signer, signed immutable record, and a mandatory plain-words summary declared an identity field so the signature attests the exact words read; a typo fix mints a new record with a CT-07 supersedes edge (DEC-0116)."
@@ -27,7 +32,7 @@ invariants:
   - "Registration currently records occurrence evidence but enforces no look-ahead causality gate and no attempt counter; both are deferred to the backtesting sitting, so artifacts registered before then carry no causality evidence (DEC-0121; GAP-0016, GAP-0017 deferred)."
   - "Every registration operation succeeds or returns a typed refusal; a byte-identical idempotent re-write is accepted silently while a true fp1 collision on differing bytes is refused and alarmed, never overwritten (DEC-0109, DEC-0108)."
   - "Registration never selects or requires a database server (DEC-0114)."
-  - "Per default-deny dependency direction no library imports qmf-registry (the only ratified inter-library edge is qmf-registry to qmf-data); registration is invoked by the application at the composition root, not by a consuming library's import (DEC-0120)."
+  - "Per default-deny dependency direction no library imports qmf-registry (the only ratified inter-library edge is qmf-registry to qmf-data); registration is invoked by the application at the composition root, not by a consuming library's import (DEC-0120). [Scope annotation, 2026-08-21: the default-deny reading is roster-scoped — it governs the seven roster packages internally, never applications built on the workspace; an application-layer product built ON QMF (COMP-QMB, COMP-QML) may import and consume qmf-registry and qmf-risk contracts directly, with impure steps (registration writes, sandbox execution) riding its composition root; applications still never import qmf-venue (DEC-0171, DEC-0184; QMB precedent DEC-0169).]"
   - "On the venue path a record's WriterId granularity is (machine, adapter role, VenueId, account) — the same unit as the command stream — and the adapter's connection manager is the sole holder of that WriterId, stamping writer and sequence and calling the injected sinks; no other component constructs a venue client (DEC-0138, DEC-0137)."
   - "A session-epoch id, distinct from the boot epoch, rides every venue observation; venue-path sequences reset only on boot, never on reconnect, and the sequence cursor is durable through the observation sink (DEC-0137)."
 schema:
@@ -46,10 +51,13 @@ schema:
       signed_at: "int64 UTC ns instant of the recorded approval occurrence (DEC-0106)"
       plain_words_summary: "string; mandatory; declared an identity field (DEC-0116)"
       attested_fp1: "fp1 fingerprint string of the record the approval attests (DEC-0116)"
-    reserved_kind_bodies: "Bot and Book kind bodies are reserved and filled by their own sittings"
-  fields_gap: [GAP-0039, GAP-0047]  # Book/BMS kind body (GAP-0039) and full Bot kind body (GAP-0047)
+    risk_kind_bodies: "the nine risk record kinds — Book definition (CT-22), BMS definition (CT-27), Book binding (CT-28), binding transition (CT-24), exit record (CT-29), control action (CT-30), control window (CT-31), performance result (CT-32), instrument currency-exposure and instrument_class (dated AD-9 metadata records) — have their bodies in their own contracts (DEC-0158, DEC-0153)"
+    reserved_kind_bodies: "the Bot kind body is now ruled via CT-33 (DEC-0173); the Book kind body is ruled via CT-22 (DEC-0143)"
+  fields_gap: []  # the full Bot kind body is now ruled via CT-33 (DEC-0173); the Book/BMS kind body was ruled 2026-08-20 (DEC-0143, DEC-0158)
   enums:
-    reserved_kind_names: [Bot, Book, promotion-occurrence-card]
+    reserved_kind_names: [promotion-occurrence-card, treasury-boundary-event]  # Bot is no longer reserved — its body is now ruled via CT-33 (DEC-0173); Book is no longer reserved — its body is ruled via CT-22 (DEC-0143)
+    bot_domain_kinds: [bot-definition, confluence, strategy-family]  # minted by the QML sitting 2026-08-21: bot-definition fills AD-16's reserved Bot kind, its body ruled by CT-33 (DEC-0173); confluence is its own registry artifact (AD-17 composite) ruled by CT-34, cited by fingerprint from bot-definitions (DEC-0175); strategy-family is a dated AD-9 metadata record kind, the same machinery as instrument_class, addable never redefined, no new CT number (DEC-0176)
+    risk_record_kinds: [book-definition, bms-definition, book-binding, binding-transition, exit-record, control-action, control-window, performance-result, instrument-currency-exposure, instrument-class]  # minted 2026-08-20 (DEC-0158, DEC-0153)
   units:
     contract_format_version: "dimensionless integer count"
     sequence: "dimensionless int64 count"
@@ -58,4 +66,4 @@ schema:
     header_fields: "kind, contract_format_version, writer, sequence, and stable_id are mandatory (never null)"
     at_birth_parent_refs: "empty array when the record has no at-birth parents; an absent value is an omitted key, never null (DEC-0108)"
     plain_words_summary: "mandatory on the promotion-occurrence card (identity field) (DEC-0116)"
-    reserved_kind_body_fields: "per-kind body nullability for Bot and Book awaits their sittings (GAP-0039, GAP-0047)"
+    reserved_kind_body_fields: "the Book kind body is ruled via CT-22 (DEC-0143); the full Bot kind body's per-kind nullability is now ruled via CT-33 (DEC-0173)"
