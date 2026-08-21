@@ -6,7 +6,7 @@ owner: COMP-QMF-CORE
 consumers: [COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-VENUE, COMP-QMF-RISK]
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0105, DEC-0103, DEC-0108, DEC-0109, DEC-0131, DEC-0135, DEC-0138, DEC-0141]  # DEC-0123 (recorded-not-adopted cTrader research) superseded by DEC-0135 (venue facts ratified)
+decisions: [DEC-0105, DEC-0103, DEC-0108, DEC-0109, DEC-0131, DEC-0135, DEC-0138, DEC-0141, DEC-0154, DEC-0158]  # DEC-0123 (recorded-not-adopted cTrader research) superseded by DEC-0135 (venue facts ratified)
 gaps: []
 purpose: "Provide one exact value vocabulary — Money, Price, and Quantity as scaled integers — and define the money-path taint that bans binary float from any value transitively contributing to an order quantity, price, P&L, or balance."
 invariants:
@@ -17,6 +17,10 @@ invariants:
   - "Foreign money is stored verbatim as evidence with its declared scales; conversions to framework values are derived with lineage, and corrections are annotations, never rewrites (DEC-0105)."
   - "A venue value delivered as a binary float is evidence, never identity: it converts at the named venue-adapter boundary at receipt to a scaled integer at a per-value-class pinned target scale — execution price to the instrument's declared digits; money to the account's declared money exponent, an absent exponent being a typed refusal; market data to the declared wire scale — with a declared, identity-bearing rounding mode, and the raw float is retained only as integrity-checked provenance, never the value a consumer reads (DEC-0141, DEC-0138)."
   - "Price subtraction is closed and delta-typed: PriceDelta(instrument, scale) is a first-class value distinct from Price, and the instrument-scoped pip or point is defined by CT-03 instrument-metadata records, never hardcoded; the exact-rational parameter type — a scaled integer or a numerator/denominator pair — extends the same idiom to every non-integer parameter (ratios, multiples, tolerances), and binary floats never appear in parameters or identity (DEC-0131)."
+  - "Canonical numeric form for identity is pinned: an exact rational entering identity content is reduced to lowest terms, denominator strictly positive, sign carried on the numerator, and serialized as a two-key object with both keys always present; every Money, Price, Quantity, or PriceDelta value entering identity content carries the declared canonical storage scale for its value class, pinned in this contract exactly as CT-18 pins venue-decode target scales — so equal value implies equal fingerprint by construction, and 6/4 versus 3/2, or one amount stored at two scales, can never fork identity in a way CT-05's collision detector cannot see (DEC-0158, DEC-0154)."
+  - "Every value carries a unit-kind drawn from the closed, addable-never-redefined vocabulary money(currency) | price-delta(instrument) | quantity(unit) | value-factor(instrument, currency) | r-multiple | rate(money-per-r) | count | dimensionless-ratio | duration | instant; a null unit-kind is a typed refusal, never a default, and unit-kind additions are spine amendments only, never per-Book or per-template (DEC-0154)."
+  - "value-factor(instrument, currency) is money per price-delta per quantity — the tick, point, or contract value — carried as an exact rational and sourced only from venue instrument-metadata snapshots (CT-03 dated AD-9 records over the CT-18 declared surface); an absent value factor is an unavailable-dependency typed refusal, never a silent conversion (DEC-0154, DEC-0138)."
+  - "r-multiple is a dimensionless exact rational (a realized result divided by original_risk_amount) and rate(money-per-r) is the sole money-to-R bridge; every money-to-R crossing names a rate and an implicit crossing is a typed refusal, and only r-multiple averages across instruments and accounts (DEC-0154)."
   - "Identity numerics are integers: scaled-integer money enters fp1 fingerprints directly and floats are refused in identity content; analytic float series stay off the money path with label-derived identity, never a hash of float bytes (DEC-0108, DEC-0105)."
   - "Every serialized Money, Price, or Quantity artifact stamps this contract's integer format version, whose meaning never mutates — an incompatible change mints the next version (DEC-0103)."
 schema:
@@ -44,6 +48,7 @@ schema:
     - "Price.value: instrument-quoted ratio at the declared scale (e.g. the cTrader market-data wire price scale of 1/100000, a ratified venue fact per DEC-0135, stored verbatim as evidence; a venue execution price arrives as a raw double and crosses the named boundary to the instrument's declared digits per DEC-0141)"
     - "Quantity.value: opaque-unit count at the declared scale"
     - "scale is a per-value declared integer (number of decimal places), not a global constant"
+    - "value-factor(instrument, currency): money per price-delta per quantity, an exact rational from venue instrument metadata; r-multiple: dimensionless exact rational; rate(money-per-r): Money per r-multiple (DEC-0154)"
   nullability:
     - "value, tag (currency/instrument/unit), and scale are all required and non-nullable; an invalid or missing part returns a typed refusal via try_create, never a default (DEC-0109)"
     - "null is prohibited in identity content (fp1): an absent value is an omitted key, never a null (DEC-0108)"

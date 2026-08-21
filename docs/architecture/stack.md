@@ -3,11 +3,11 @@ id: ARCH-STACK
 title: QMF V1 Stack and Pipeline
 type: architecture
 status: provisional
-depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP, COMP-CTRADER, COMP-DUKASCOPY, COMP-CALENDAR-FEED, COMP-OBJECT-STORAGE]
-decisions: [DEC-0008, DEC-0009, DEC-0011, DEC-0013, DEC-0022, DEC-0024, DEC-0030, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0055, DEC-0058, DEC-0059, DEC-0060, DEC-0065, DEC-0089, DEC-0091, DEC-0096, DEC-0099, DEC-0100, DEC-0101, DEC-0102, DEC-0103, DEC-0104, DEC-0106, DEC-0111, DEC-0117, DEC-0118, DEC-0126, DEC-0127, DEC-0128, DEC-0129, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141]
-sources: [DEC-0008, DEC-0009, DEC-0011, DEC-0013, DEC-0022, DEC-0024, DEC-0030, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0055, DEC-0058, DEC-0059, DEC-0060, DEC-0065, DEC-0089, DEC-0091, DEC-0096, DEC-0099, DEC-0100, DEC-0101, DEC-0102, DEC-0103, DEC-0104, DEC-0106, DEC-0111, DEC-0117, DEC-0126, DEC-0127, DEC-0128, DEC-0129, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-venue-facts.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/spotware-org-inventory.md, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/contracts/]
+depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP, COMP-QMB, COMP-CTRADER, COMP-DUKASCOPY, COMP-CALENDAR-FEED, COMP-OBJECT-STORAGE]
+decisions: [DEC-0008, DEC-0009, DEC-0011, DEC-0013, DEC-0022, DEC-0024, DEC-0030, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0055, DEC-0058, DEC-0059, DEC-0060, DEC-0065, DEC-0089, DEC-0091, DEC-0096, DEC-0099, DEC-0100, DEC-0101, DEC-0102, DEC-0103, DEC-0104, DEC-0106, DEC-0111, DEC-0117, DEC-0118, DEC-0126, DEC-0127, DEC-0128, DEC-0129, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0143, DEC-0159, DEC-0167, DEC-0168]
+sources: [DEC-0008, DEC-0009, DEC-0011, DEC-0013, DEC-0022, DEC-0024, DEC-0030, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0055, DEC-0058, DEC-0059, DEC-0060, DEC-0065, DEC-0089, DEC-0091, DEC-0096, DEC-0099, DEC-0100, DEC-0101, DEC-0102, DEC-0103, DEC-0104, DEC-0106, DEC-0111, DEC-0117, DEC-0126, DEC-0127, DEC-0128, DEC-0129, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0143, DEC-0159, DEC-0167, DEC-0168, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMB-2026-08-20/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-venue-facts.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/spotware-org-inventory.md, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/contracts/]
 generated: 2026-08-18
-verified: 2026-08-20
+verified: 2026-08-21
 stale_after: 90d
 ---
 
@@ -50,7 +50,7 @@ CPython 3.14 is pinned across all packages, CI, and factory sandboxes. Tier-1 te
 | data | Store engines behind QMF-owned contracts | Parquet, DuckDB, SQLite, JSONL; no database server | `COMP-QMF-DATA-STORE`, `COMP-QMF-DATA-BACKUP` | DEC-0117 |
 | external | Vendor-owned | cTrader Open API; Dukascopy historical source; news-calendar feed; off-machine object-storage bucket for the nightly, encrypted, versioned backups, its specific provider named at the node/ops sitting | `COMP-CTRADER`, `COMP-DUKASCOPY`, `COMP-CALENDAR-FEED`, `COMP-OBJECT-STORAGE` | DEC-0059, DEC-0117, DEC-0118 |
 
-QMF V1 has no UI layer. Product UI and the future backtesting library remain outside the reusable foundation. (DEC-0009)
+QMF V1 has no UI layer. Product UI remains outside the reusable foundation, and the future backtesting library is now specified — it is QMB, a separate application-layer product (one pure library plus the `qmb` CLI) that composes the QMF backend libraries as a consumer, living outside the seven-package roster and outside QMF V1. Its application stack is captured below under [QMB application stack](#qmb-application-stack). (DEC-0009, DEC-0159)
 
 ## Runtime and version capture points
 
@@ -91,7 +91,7 @@ The dependency registry records four independent axes: `kind` (architectural for
 | qmf-indicators | public-library | backend | `qmf-indicators` / `qmf.indicators` | Two-mode CT-16 indicator protocol and wrappers around the pinned canonical reference; light and heavy are placements, not species | `COMP-QMF-INDICATORS` | DEC-0055, DEC-0126, DEC-0128 |
 | qmf-structure | public-library | backend | `qmf-structure` / `qmf.structure` | QMX-owned causal chart-object families under the CT-17 lifecycle law | `COMP-QMF-STRUCTURE` | DEC-0058, DEC-0129 |
 | qmf-venue | public-module | middleware | `qmf-venue` / `qmf.venue` | Venue seam and cTrader translation; an edge module nothing imports | `COMP-QMF-VENUE` | DEC-0059, DEC-0060 |
-| qmf-risk | public-module | backend | `qmf-risk` / `qmf.risk` | Fenced Book, BMS, and risk boundary; an edge module nothing imports | `COMP-QMF-RISK` | DEC-0065 |
+| qmf-risk | public-module | backend | `qmf-risk` / `qmf.risk` | Ratified Book, BMS, exit, paper-mode, control, and risk-arithmetic boundary (AD-29..41); an edge module nothing imports | `COMP-QMF-RISK` | DEC-0065, DEC-0143 |
 
 The public roster is exactly the five libraries and two modules of DEC-0024. Shared nouns (Venue, Account, Instrument, WriterId) are defined in `qmf-core` and their records owned by `qmf-registry`; edge modules never define shared nouns. Calendar extensions (for example `qmf-calendar-forex`) live in `extensions/` outside the roster on their own SemVer ladder. (DEC-0100)
 
@@ -140,6 +140,17 @@ No performance number is invented. Every component ships a benchmark harness (sa
 - GAP-0036 and GAP-0038 answered: the four-command vocabulary and uncertainty law (AD-27) and the one-port four-contract adapter with capability discovery (AD-28). (DEC-0137, DEC-0138)
 - GAP-0037 answered: the cTrader venue facts are ratified with corrected evidence grades (DEC-0135); broker identity is deployment configuration (DEC-0139); trend-bar price basis and the venue daily-bar boundary are measured per broker, never hardcoded.
 - Off-machine backup design is ratified — nightly, encrypted, versioned, object-storage bucket, with automated sample restores plus a periodic full rehearsal (DEC-0118); only the specific provider, encryption key custody, and numeric recovery objectives remain node/ops-sitting items.
+
+## QMB application stack
+
+QMB is the experimentation/backtesting application product — one pure library plus the `qmb` CLI in one wheel — outside the seven-package roster and outside QMF V1, consuming the QMF backend libraries in lockstep. It inherits QMF's runtime and quality toolchain unchanged: CPython 3.14 on the tier-1 OSes, uv, `uv_build`, ruff, pyright, pytest, and poethepoet exactly as fixed above. Its distribution is `uv add qmb` — a lockfile-tracked pinned dependency; `uv tool` is a CLI-only convenience for reaching the command, never a sandbox-provisioning path. SemVer is display-only provenance, never identity, and the `qmf-*` packages are consumed in lockstep. (DEC-0167)
+
+| Name | Version | Role | Cites |
+|---|---|---|---|
+| click | 8.4.2 (exact) | The `qmb` CLI door | DEC-0168 |
+| optuna | 4.9.0 (exact) | Default sampler adapter behind the typed parameter-space port; runs `n_jobs=1` | DEC-0168 |
+
+Both pins were verified on the web 2026-08-20. `click` and `optuna` are pinned exactly; an optuna **major** bump is a contract-versioning event — the sampler sits behind a versioned adapter port — not a silent upgrade, and optuna always runs single-process (`n_jobs=1`), leaving process management to the QMB orchestrator. The pins are held authoritatively by the `qmb_cli_pin` and `qmb_sampler_pin` registry rows — non-configurable version pins, never UI-editable — and are referenced here, not restated as authority. (DEC-0168)
 
 ## Model training
 

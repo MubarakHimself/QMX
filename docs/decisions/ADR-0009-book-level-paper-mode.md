@@ -1,35 +1,36 @@
 ---
 id: ADR-0009
-title: Book-level paper mode without Bot twins
+title: Book-level paper mode as a standing evidence state
 type: adr
 status: provisional
 component: COMP-QMF-RISK
-depends_on: [COMP-QMF-REGISTRY, COMP-QMF-DATA]
-decisions: [DEC-0070]
-sources: [DEC-0070, SRC-01-C0022, SRC-01-C0023]
+depends_on: [COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-VENUE]
+decisions: [DEC-0149, DEC-0143]
+sources: [DEC-0149, DEC-0070, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md]
 generated: 2026-08-18
-verified: 2026-08-18
-stale_after: 90d
+verified: 2026-08-20
+stale_after: 1y
 ---
 
-# ADR-0009: Book-level paper mode without Bot twins
+# ADR-0009: Book-level paper mode as a standing evidence state
 
-Date: 2026-08-18. Status: provisional and requires operator confirmation of the transcript recap.
+Date: 2026-08-20 (rewritten in place; supersedes the 2026-08-18 recap-only placeholder). Status: provisional pending corpus-wide operator ratification; the underlying ruling AD-35 is operator-ratified ("You ratify" delegation with riders, 2026-08-20).
 
 ## Context
 
-A proposal ran live Bots beside paper twins or attached one Bot to several Books. The recorded correction moves paper operation to the Book and rejects the parallel-twin model.
+DEC-0070 recorded a Book-level paper direction whose direct operator wording was missing from the original export. The 2026-08-20 risk sitting confirmed it explicitly — "by default the paper is meant to be the Book" — and ratified the full mechanism as AD-35 (DEC-0149), closing GAP-0041.
 
 ## Options considered
 
-1. **Parallel Bot paper twins** — dead because it duplicates Bot identity and Book attachment (DEC-0069).
-2. **Special blackout simulator** — dead because ordinary recorders continue through blackout periods (DEC-0071).
-3. **Book-level paper mode** — preserves one Bot-to-Book relationship and continuous evidence.
+1. **Parallel Bot paper twins** — dead (DEC-0069): duplicates Bot identity and Book attachment.
+2. **Special blackout simulator** — dead (DEC-0071): ordinary recorders continue through blackouts.
+3. **A paper target carrying no BMS** — a reviewer proposal, overruled by the operator's binding-chain ruling: an account without a BMS would be an account nothing constrains (filed tension, spine Deferred table).
+4. **Paper as a Book-level standing evidence state with a paired BMS instance** — selected. (DEC-0149)
 
 ## Decision
 
-Paper operation is a Book-level state: a Book that cannot trade live directs its attached Bot activity to the Book's paper account so evidence continues. (DEC-0070)
+Paper is a Book-level mode (DEC-0070 confirmed and subsumed by DEC-0149), expressed as a dated change of the Book's execution binding that mints a new binding epoch, never a new Book. Book modes are `LIVE | PAPER`; `BENCHED` is a bot-seat word only; per-seat routing lives on the seat record, so a Book may run live while one benched seat routes to the paired account. Paper is a standing evidence state: every trigger kind declares `routes-to-paper | blocks-paper` (market-risk controls block paper too; capital and authority controls route to paper); routing is never a way around a control — the blocked decision or suppressed action is journaled, because recording is not trading. One active paper-routing target per live binding; the per-intent `execution_target` is resolved once at intent mint and enters command identity, so one intent can never fire twice. Paper money is frozen evidence: a configurable UI-editable starting balance, never hand-adjusted; a reset mints an operator-signed paper epoch record; paper P&L never becomes Treasury cash and never buys a seat. Return to live is automatic only for clocked mechanical causes; anything touching real money takes an operator signature; paper performance never authorizes a return. Decay is judged in R under a declared cohort key with refusal on mismatch, and the decay-cohort read is an explicitly permitted cross-role read within `world = live`.
 
 ## Consequences
 
-The direct operator wording is absent from the SRC-01-C0022 transcript export; DEC-0070 survives through the immediate SRC-01-C0023 recap. Account mapping, transitions, and duplicate prevention remain GAP-defined until the operator confirms the recap.
+CT-24 is filled as the binding-transition contract and CT-28 carries the binding records; the paired demo account holds its own paired BMS instance linked by a typed pairing record (DEC-0143). The paper target is reconciled as its own binding and a silent paper outage alarms like a live one — a corrupted decay series is the failure paper mode exists to avoid. SCN-0006 (Book paper transition) is regenerated from the ratified mechanism.

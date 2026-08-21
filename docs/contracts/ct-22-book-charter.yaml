@@ -1,33 +1,91 @@
 id: CT-22
-name: Book and BMS charter contract
+name: Book definition (template) contract
 status: provisional
-version: null
-version_gap: GAP-0005
+version: 1  # first minted format version; the Book definition template is spine-ratified (AD-29/AD-30/AD-32), the doc stays provisional pending corpus re-ratification
 owner: COMP-QMF-RISK
-consumers: []
+consumers: []  # consumer-blind by design: qmf-risk defines CT-22 on qmf-core nouns; the composition root wires persistence and nothing imports qmf-risk under default-deny, so no package import edge exists (DEC-0158)
 active_consumers: []
-intended_consumers: [COMP-QMF-REGISTRY]
-wiring_status: reserved-unwired
+intended_consumers: [COMP-QMF-REGISTRY]  # Registry stores the Book definition as an AD-16 record kind (DEC-0158); the platform settings UI is ALSO an intended consumer but is platform territory, not a QMF component — it reads/writes the template as UI-editable configuration (DEC-0157)
+wiring_status: defined-unwired  # the Book definition template is ratified surface; no code exists; records reach qmf-registry through the composition root under the AD-28 injected-sink pattern (DEC-0158); no wiring is authorized from this doc
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0039, DEC-0065, DEC-0066, DEC-0080, DEC-0095]
-conflicts: [DEC-0067]
-gaps: [GAP-0005, GAP-0018, GAP-0039, GAP-0040]
-purpose: "Reserve an unwired Book and BMS charter placeholder pending the dedicated risk-boundary reconciliation."
+decisions: [DEC-0143, DEC-0144, DEC-0146, DEC-0147, DEC-0149, DEC-0150, DEC-0151, DEC-0152, DEC-0153, DEC-0154, DEC-0155, DEC-0157, DEC-0158]
+gaps: []  # GAP-0039 answered (AD-29/30/32); footprint_requirements and the prediction linter are pending(bot-schema sitting) slots that pass registration and block live binding, never open gaps (DEC-0144, DEC-0146)
+purpose: "One Book definition template — the Book VERSION (template content, identified by its fp1) — carried as a structured configuration artifact (JSON-Schema-class) whose ten declared sections hold every variable a Book needs with its unit-kind, exact-rational value, ui-editable flag and admission_impact, so that a Book's meaning lives inside its identity, a UI can tell what it may change, a bound account inherits exactly the declared risk and money semantics, and a binding (CT-28) cites the definition by fingerprint rather than by a version string."
 invariants:
-  - "Book and BMS express risk and money-management semantics, not trading-entry logic."
-  - "The recovered Scalping Book is not a universal Book schema."
-  - "No active Registry consumer or persistence handoff is assigned."
-  - "The placeholder is not buildable until its caller, consumer, fields, and wiring are ratified."
-  - "Bot cardinality, Book binding, BMS multiplicity, exit ownership, fields, mutability, inheritance, and signatures remain unresolved."
+  - "A Book definition is a structured configuration artifact (JSON-Schema-class), not trading-entry logic: every declared variable carries a unit-kind (AD-40 closed vocabulary), an exact-rational or scaled-integer value (AD-7 — no binary float anywhere), a declared `ui-editable | uneditable` flag, and a declared `admission_impact ∈ resign | relint | none`; a variable missing any of the four is `invalid input` (DEC-0144, DEC-0157)."
+  - "Configurable means UI-editable at platform level: every variable declaring `ui-editable` surfaces as editable in the platform settings UI, and a UI edit mints a new version, never mutates one — recorded corpus or recollection numbers attached to a variable are evidence with a stated source layer and authority grade, never ratified constants and never spine values (DEC-0157)."
+  - "Numbers live inline and are identity-bearing: the legacy rule that a Book's authoritative values sit behind registry pointers is inverted — outside the fingerprint two Books with different money rules would share one identity (AD-10, AD-16), so a value referenced by discipline in prose is still stored inline in the template and enters `fp1` (DEC-0144)."
+  - "Ten sections are declared, named: `charter`, `footprint_requirements`, `money_rules`, `admission_bar`, `leash_grammar`, `capacity_and_sweep`, `exit_policy`, `control_policy`, `protection_windows`, `paper`; unknown sections under a known contract format version are ignored, and an unknown contract format version is an `unsupported capability` refusal — never both readings of one artifact (DEC-0144)."
+  - "`admission_bar` is a set canonically ordered by `measure_identity` for fingerprint purposes (display ordinals separate), each requirement carrying an opaque `measure_identity`, a mandatory unit, a comparison `at-least | at-most | within-band`, a threshold as a mandatory discriminated union with a pinned tag set — a ruled exact rational or an explicit `not-yet-ruled` tag carrying its gap reference, the key always present so blankness is a declared value never a key-presence test (AD-10 forbids nulls, AD-22 forbids sentinels) — and `evidence_requirements`; no composite score, rating, tier band, or weighted aggregate may express a bar (DEC-0146)."
+  - "Blank blocks live money: a Book whose bar holds any `not-yet-ruled` threshold — or any `pending(<ref>)` slot — registers and binds to non-live roles freely, and binding to a `role = live` account is a `policy rejection`; `footprint_requirements` and the prediction linter depend on the deferred Bot schema and ship as `pending(bot-schema sitting)` slots that pass registration and block live binding, the same semantics as a blank bar, so the container ships complete today with every number honestly blank and every deferred surface honestly named (DEC-0144, DEC-0146)."
+  - "A float-valued measure compared to an exact-rational threshold crosses AD-22's named analytic→exact boundary under a comparison rule declared in the requirement itself (target scale, rounding mode, tie disposition), identity-bearing; an undeclared comparison is `invalid input` — a Sharpe sitting exactly on a threshold decides live money, so the crossing is contract surface, not implementer choice (DEC-0146)."
+  - "No paper role may gate live money: an `evidence_requirements.account_role` naming a paper role in a bar that gates a `role = live` binding is a `policy rejection` at admission Layer 1, so this field can never rebuild the paper-performance gate AD-32 exists to forbid (DEC-0146, DEC-0149)."
+  - "Versioning is git logic without git: an append-only version graph built on `branches-from` edges (multiple heads legal; `current` is a separate dated pointer record) — never on `supersedes`, which stays linear so `current` resolves everywhere else; a diff derivable between any two versions; every old version readable forever; UI edits mint a new version, never mutate one (DEC-0144, DEC-0158)."
+  - "A changed number changes `fp1` ⇒ a new Book identity ⇒ a new binding (CT-28) ⇒ a fresh cycle's money, unless the new binding's `state_carry` declares carry under a human-signed `carries-ledger` edge (AD-16/AD-29); track record travels separately on a `continues-performance` edge, so a rule change never resets the performance line by accident and never moves money by accident (DEC-0144, DEC-0143, DEC-0158)."
+  - "Every Book definition declares `accounting_currency` (USD system-wide in V1; a later currency is a version change and binding to an account in another settlement currency is a `policy rejection` — AD-40), `required_venue_capabilities` (AD-29), `required_producer_contracts` (each cited as `contract_id` + `version` + `on_version_change`), and `worked_example` (a keyed collection, one entry per declared formula id, canonically ordered by formula id) (DEC-0143, DEC-0144, DEC-0154)."
+  - "`money_rules` carries the replacement sizing shape in units only, no ratified values: `loss_floor` is the same number the kill line names (AD-36's per-Book capital floor) — one value, one name, declared once and read by both — and the B-split holds, `bench_consecutive_loss_threshold [count]` in `leash_grammar` and `seat_loss_run_allowance [r_multiple]` in `money_rules`, a `count` never standing where an `r_multiple` is declared (DEC-0154, DEC-0155, DEC-0150)."
+  - "`exit_policy` declares `ExitLogicRef = {module_id, config}` per family, the permitted bot-intent kinds (`close_full`, `tighten_protective_stop`; a subset, possibly zero — a static-protective-stop-only Book is the honest V1 default), whether protective-stop attachment is `required | optional`, and the declared loss predicate; the Book owns exit policy, and a bot proposes never sizes (`requested_r` is Book-resolved) (DEC-0147)."
+  - "`control_policy` declares the kill-line value, the control-action ranks (which may not contradict the BMS-declared rank table — AD-37 — else a bind-time `unsupported capability` refusal), the force-flat rule and flatten trigger classes; `protection_windows` declares the enabled window kinds, anchors, widths and `window_forced_flat`; `paper` declares the routing-target policy, starting balance and epoch rules (DEC-0150, DEC-0151, DEC-0152, DEC-0149)."
+  - "Book-level limits are expressed only in R or in notional in the Book's numeraire; a limit stated in an instrument-native quantity (lots) is a `policy rejection` at template validation, and a notional limit requiring a QMX-side currency conversion is a `policy rejection` until a rate source is ratified (DEC-0154)."
+  - "Authority is verbatim and unchanged: the Book owns admission, sizing, doors, leash, and profile selection; it may never invert the authority order (`bot → book → BMS → operator`), never express trading-entry logic, never move money without a signed `carries-ledger` edge, and never restate a value as a ratified constant where the value is a configurable UI-editable variable (DEC-0143, DEC-0157)."
+  - "A binding (CT-28) cites a Book definition by fingerprint, never a version string; the Book definition is a `qmf-registry` record kind minted under AD-16 (DEC-0158). This is a ratified `defined-unwired` contract awaiting the factory pipeline: no code exists, and nothing here reads as permission to implement outside it (DEC-0143, DEC-0144)."
+template_sections:  # the ten declared sections, each an addable-never-refusing surface; a further section is a contract-format-version mint, never a refusal
+  - "charter: game, money shape, customer + headline metric, death condition; admission_impact resign (AD-30, DEC-0144)"
+  - "footprint_requirements: the Bot-facing footprint the Book requires; a pending(bot-schema sitting) slot until the deferred Bot schema lands — passes registration, blocks live binding (DEC-0144)"
+  - "money_rules: the units-only sizing shape (book_capital, loss_floor = kill line, loss_runway, period_loss_budget, r_unit_price, seat_loss_run_allowance, seat_r_ceiling, position_risk_amount, position_quantity) and accounting_currency; admission_impact resign (DEC-0154, DEC-0155)"
+  - "admission_bar: 'the Book sets the bar' — a canonically-ordered set of named unit-carrying requirements with the threshold discriminated union; admission_impact resign (DEC-0146)"
+  - "leash_grammar: bench_consecutive_loss_threshold [count] keyed per bot or bot family, and the leash's protection-transition posture; admission_impact relint (DEC-0155, DEC-0154)"
+  - "capacity_and_sweep: seat-capacity and sweep-boundary declarations; a sweep is a money-accounting boundary and never itself a flatten trigger (AD-36, DEC-0150)"
+  - "exit_policy: ExitLogicRef per family, permitted bot-intent kinds, protective-stop attachment required|optional, the declared loss predicate; admission_impact resign (DEC-0147)"
+  - "control_policy: kill-line value, control-action ranks (non-contradicting the BMS rank table), force-flat rule, flatten trigger classes; admission_impact relint on the numbers (DEC-0150, DEC-0151)"
+  - "protection_windows: enabled window kinds (news | daily_dead_zone | session_handover_buffer), anchors, widths, window_forced_flat; admission_impact relint on the numbers (DEC-0152)"
+  - "paper: routing-target policy, starting balance (Book/family-scoped configurable UI-editable default), paper epoch rules; admission_impact relint (DEC-0149)"
+versioning:
+  graph: "append-only version graph on `branches-from` edges; multiple heads legal (DEC-0144)"
+  current_pointer: "a separate dated pointer record names the current version; `supersedes` stays linear (one head) and is never used for the version graph (DEC-0144, DEC-0158)"
+  edit_rule: "UI edits mint a new version, never mutate; a changed number changes `fp1` and yields a new Book identity, a new binding, and a fresh cycle's money unless a signed `carries-ledger` edge is present (DEC-0144)"
+  diff: "a diff is derivable between any two versions; every old version is readable forever (AD-5)"
 schema:
-  type: null
-  type_gap: GAP-0039
-  fields: null
-  fields_gap: GAP-0039
-  enums: null
-  enums_gap: GAP-0039
-  units: null
-  units_gap: GAP-0039
-  nullability: null
-  nullability_gap: GAP-0039
+  type: book-definition-template  # a Book VERSION: template grammar plus declared defaults, identified by its fp1; a COPY is this version instantiated onto an account as a Book instance (CT-28)
+  fields:
+    - "contract_format_version: the template's own format version; an uninterpretable value is an `unsupported capability` refusal, never a best-effort read (DEC-0144)"
+    - "book_definition_fingerprint: the `fp1` over the canonical template content — the Book VERSION identity a binding (CT-28) cites, never a version string (DEC-0143, DEC-0144)"
+    - "accounting_currency: the declared settlement currency (USD system-wide in V1); a later currency is a version change, and binding to an account whose settlement currency differs is a `policy rejection` at bind time (DEC-0154)"
+    - "sections: the ten declared sections, each a mapping of declared variables; see template_sections (DEC-0144)"
+    - "variable: per declared variable — `unit_kind` (AD-40 closed vocabulary), an exact-rational or scaled-integer `value` (AD-7), a `ui_editable` flag, and an `admission_impact` (DEC-0144, DEC-0157)"
+    - "admission_bar: a set of requirement records, each `{ measure_identity (opaque, AD-9), unit, comparison, threshold (discriminated union), display_ordinal, evidence_requirements }`, canonically ordered by `measure_identity` (DEC-0146)"
+    - "threshold: a discriminated union `ruled(exact-rational) | not-yet-ruled(gap-ref)`, the key always present so blankness is a declared value (DEC-0146)"
+    - "evidence_requirements: `{ world, account_role, minimum_evidence_window, required_producer_contract_format_versions }`; a paper `account_role` in a bar gating a live binding is a `policy rejection` (DEC-0146, DEC-0149)"
+    - "required_venue_capabilities: the position model, protection primitives, command scopes and protection-amendment support the Book requires; checked at bind time against CT-18's declaration and venue-observation profile (DEC-0143)"
+    - "required_producer_contracts: each producer cited as `{ contract_id, version, on_version_change }`; a present SQS baseline (CT-16/AD-39) for every sensor the Book's doors read is a bind-time prerequisite (DEC-0144, DEC-0153)"
+    - "worked_example: a keyed collection — one entry per declared formula id, canonically ordered by formula id — recomputed at admission Layer 1 by invoking the cited producer contracts themselves (DEC-0144, DEC-0146)"
+    - "exit_policy.ExitLogicRef: `{ module_id, config }` per family — a QML donor atom adopted by dated sitting decision, open to revision by the QML sitting (GAP-0047) (DEC-0147)"
+    - "pending_slot: a `pending(<ref>)` marker on a mandatory surface whose contract is deferred (footprint_requirements, the prediction linter — Bot schema); passes registration and blocks live binding (DEC-0144)"
+  enums:
+    - "ui flag: ui-editable | uneditable — every declared variable carries exactly one (DEC-0144, DEC-0157)"
+    - "admission_impact: resign | relint | none — resign = a fresh AD-32 Layer 2 + Layer 3 (charter, money_rules, admission_bar, required_venue_capabilities); relint = Layer 1 only (leash_grammar, control_policy, protection_windows numbers) (DEC-0144)"
+    - "on_version_change: refuse | accept-and-mint-new-book-version | accept-with-continues-performance (DEC-0144)"
+    - "admission_bar comparison: at-least | at-most | within-band (DEC-0146)"
+    - "threshold tag: ruled | not-yet-ruled — a ruled exact rational, or an explicit not-yet-ruled tag carrying its gap reference (DEC-0146)"
+    - "exit intent kinds permitted (a subset, possibly empty): close_full | tighten_protective_stop; close_partial is not a V1 kind — a partial exit is an `unsupported capability` refusal (DEC-0147)"
+    - "protective-stop attachment: required | optional (DEC-0147)"
+    - "protection window kinds a Book may enable: news | daily_dead_zone | session_handover_buffer; session_handover_buffer declares its anchor side pre-close | post-open | both (DEC-0152)"
+    - "paper trigger disposition (per declared trigger kind): routes-to-paper | blocks-paper (DEC-0149)"
+    - "referenced but not template-owned: Book mode LIVE | PAPER (CT-24), seat state active | benched (CT-29/AD-41), binding state live | paper | stood-down (CT-28/AD-36) — three vocabularies never interchanged (DEC-0149, DEC-0155, DEC-0150)"
+    - "refusal categories in this contract's paths: unsupported capability (unknown contract format version, a required venue capability the venue does not declare, a partial-exit kind), policy rejection (non-USD binding, a paper role gating live money, a lots-denominated limit, an unratified-rate notional limit), invalid input (a variable missing unit/value/ui-flag/admission_impact, an undeclared float→exact comparison, non-unique control ranks), unavailable dependency (an unresolvable producer or missing SQS baseline) per registry:typed_refusal_codes (DEC-0144, DEC-0146, DEC-0154)"
+  units:
+    - "every declared variable carries a unit-kind from the closed AD-40 vocabulary: money(currency) | price-delta(instrument) | quantity(unit) | value-factor(instrument, currency) | r-multiple | rate(money-per-r) | count | dimensionless-ratio | duration | instant (DEC-0154)"
+    - "accounting_currency: the numeraire, USD system-wide in V1; declared so a later currency is a version change (DEC-0154)"
+    - "loss_floor / kill-line value: money(numeraire) — one value read by both money_rules and control_policy (DEC-0154, DEC-0150)"
+    - "seat_loss_run_allowance: r_multiple (money_rules); seat_r_ceiling ≤ seat_loss_run_allowance, no money on either side (DEC-0154)"
+    - "bench_consecutive_loss_threshold: count (leash_grammar), keyed per bot or bot family; recorded evidence (a value of two for a scalper) is non-authoritative, configurable UI-editable, with no spine value (DEC-0155, DEC-0157)"
+    - "loss predicate `q` (exit_policy): r_multiple, UI-editable per-family, defaulting to approximately one R as recorded evidence, non-authoritative, configurable UI-editable, no spine value (DEC-0155, DEC-0157)"
+    - "paper starting balance (paper): money(numeraire), a Book/family-scoped configurable UI-editable default sized for data-collection realism; recorded evidence only, non-authoritative, no spine value (DEC-0149, DEC-0157)"
+    - "protection-window widths, anchors and buffers (protection_windows): duration / instant, all configurable UI-editable variables with no spine value — recorded corpus evidence is non-authoritative (DEC-0152, DEC-0157)"
+  nullability:
+    - "no field is null (AD-10): blankness is expressed as a declared value — a `not-yet-ruled` threshold or a `pending(<ref>)` slot — never as key absence (DEC-0146, DEC-0144)"
+    - "unit-kind, value, ui-editable flag and admission_impact are each mandatory on every declared variable; any absent one is `invalid input` (DEC-0144)"
+    - "accounting_currency is mandatory; an absent one refuses the definition, and a value factor absent at sizing time is an `unavailable dependency` refusal, never a silent conversion (DEC-0154)"
+    - "a threshold's discriminant key is always present (ruled or not-yet-ruled), so no requirement is satisfied or blocked by key-presence inference (DEC-0146)"
+provenance_note: "CT-22 is rewritten from the AD-29/AD-30/AD-32 risk-sitting distillation (DEC-0143, DEC-0144, DEC-0146). It supersedes the pre-ruling Book/BMS charter placeholder: the reading that a Book holds several BMS policies is dead (DEC-0143), the Book/BMS split is now two contracts (this CT-22 = the Book definition; CT-27 = the BMS definition), and DEC-0095 (Book/BMS cardinality) and DEC-0067 (exit ownership) are superseded by DEC-0143 and DEC-0147 respectively and are not cited as live."

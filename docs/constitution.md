@@ -4,8 +4,8 @@ title: QMF V1 Constitution
 type: constitution
 status: provisional
 depends_on: []
-decisions: [DEC-0001, DEC-0002, DEC-0003, DEC-0004, DEC-0006, DEC-0007, DEC-0008, DEC-0009, DEC-0011, DEC-0013, DEC-0017, DEC-0019, DEC-0022, DEC-0024, DEC-0030, DEC-0031, DEC-0041, DEC-0045, DEC-0046, DEC-0054, DEC-0060, DEC-0061, DEC-0074, DEC-0076, DEC-0080, DEC-0092, DEC-0096, DEC-0097, DEC-0120, DEC-0122, DEC-0132, DEC-0133, DEC-0136, DEC-0137]
-sources: [DEC-0001, DEC-0002, DEC-0003, DEC-0004, DEC-0006, DEC-0007, DEC-0008, DEC-0009, DEC-0011, DEC-0013, DEC-0017, DEC-0019, DEC-0022, DEC-0024, DEC-0030, DEC-0031, DEC-0041, DEC-0045, DEC-0046, DEC-0054, DEC-0060, DEC-0061, DEC-0074, DEC-0076, DEC-0080, DEC-0092, DEC-0096, DEC-0097, DEC-0120, DEC-0122, DEC-0132, DEC-0133, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md]
+decisions: [DEC-0001, DEC-0002, DEC-0003, DEC-0004, DEC-0006, DEC-0007, DEC-0008, DEC-0009, DEC-0011, DEC-0013, DEC-0017, DEC-0019, DEC-0022, DEC-0024, DEC-0030, DEC-0031, DEC-0041, DEC-0045, DEC-0046, DEC-0054, DEC-0060, DEC-0061, DEC-0074, DEC-0076, DEC-0080, DEC-0092, DEC-0096, DEC-0097, DEC-0120, DEC-0122, DEC-0132, DEC-0133, DEC-0136, DEC-0137, DEC-0143, DEC-0150, DEC-0156, DEC-0157]
+sources: [DEC-0001, DEC-0002, DEC-0003, DEC-0004, DEC-0006, DEC-0007, DEC-0008, DEC-0009, DEC-0011, DEC-0013, DEC-0017, DEC-0019, DEC-0022, DEC-0024, DEC-0030, DEC-0031, DEC-0041, DEC-0045, DEC-0046, DEC-0054, DEC-0060, DEC-0061, DEC-0074, DEC-0076, DEC-0080, DEC-0092, DEC-0096, DEC-0097, DEC-0120, DEC-0122, DEC-0132, DEC-0133, DEC-0143, DEC-0150, DEC-0156, DEC-0157, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md]
 generated: 2026-08-18
 verified: 2026-08-20
 stale_after: 1y
@@ -84,3 +84,11 @@ stale_after: 1y
 **L34.** QMF components handle secret references, never values; secret values live only in the adapter's connection manager for a session's lifetime, and secrets never appear in repositories, configuration artifacts, journals, evidence, fingerprints, or logs. (DEC-0136)
 
 **L35.** Every venue submission resolves to accepted-by-venue, rejected-by-venue, denied-locally, or UNKNOWN; a timeout is never a rejection, an UNKNOWN blocks its command stream until an explicit recorded resolution, and no QMF component retries, assumes an outcome, or invents terminal state. (DEC-0137)
+
+**L36.** Bots trade; books control bots; BMS accounts for and constrains books; nothing above a bot touches the market. Hierarchy: bot -> book -> BMS -> operator. This authority order is re-ratified 2026-08-20, and nothing in QMF may invert or shortcut it. (DEC-0143)
+
+**L37.** For risk, position-sizing, and live-trading content the GitBook and trading-node documentation are authoritative; the QMX-discussion layer is barred as a source there, citable only for non-risk structural definitions under a named exemption stated at the point of use. (DEC-0156)
+
+**L38.** Configurable means UI-editable at platform level: every configurable variable declares `ui-editable` or `uneditable` in its template, and recorded numbers attached to configurable variables are evidence, never ratified constants. (DEC-0157)
+
+**L39.** The exit-preservation invariant: no control action, of any authority, at any scope, may block a risk-reducing act or the recording of evidence; the blocking half of any control is entries only, and no control kind whose effect is a blanket command-pipe block may be minted. (DEC-0150)

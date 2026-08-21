@@ -156,7 +156,7 @@ gaps:
     recommendation: "Require every consumed fact's knowledge time to be no later than the decision time and persist the tested input fingerprint, test version, and counterexample details."
     status: deferred
     answer: null
-    note: "Operator-deferred to the backtesting sitting (DEC-0121), consequence knowingly accepted: artifacts registered before then carry no causality evidence, not retroactively reconstructible. The bitemporal ingredients stay ratified via AD-8/CT-10. Do NOT close this gap here."
+    note: "Operator-deferred per DEC-0121, consequence knowingly accepted: artifacts registered before then carry no causality evidence, not retroactively reconstructible. The bitemporal ingredients stay ratified via AD-8/CT-10. QMB increment 2026-08-20 (DEC-0169): look-ahead PREVENTION is now DELIVERED — B-2's forming-bar/completed-boundary rules, B-8's split-manifest enforcement at every read, and B-12's declared stream sets make look-ahead structurally unexpressible inside a QMB run; only the registration GATE (the CT-08 evidence checklist that PROVES a pass) stays deferred, and B-4/B-8 ledger completeness accrues its raw material regardless. Do NOT close this gap here."
     date: 2026-08-20
 
   - id: GAP-0017
@@ -166,7 +166,7 @@ gaps:
     recommendation: "Count immutable research attempts against a declared charter and dataset split, never reset silently, and require explicit human authorization for a new budget."
     status: deferred
     answer: null
-    note: "Operator-deferred to the backtesting sitting (DEC-0121); registry occurrence records still log every run, so the tally's raw material accrues without policy. Do NOT close this gap here."
+    note: "Operator-deferred per DEC-0121; registry occurrence records still log every run, so the tally's raw material accrues without policy. QMB increment 2026-08-20 (DEC-0169): every optimize trial, replicate, and walk-forward window is now a first-class ledgered run with a discriminated role and study_fp, so attempt counting's raw material is complete by construction; the counting POLICY (scope, reset, budget effect) stays deferred — a search-campaign candidate alongside GAP-0049. Do NOT close this gap here."
     date: 2026-08-20
 
   - id: GAP-0018
@@ -382,87 +382,109 @@ gaps:
   - id: GAP-0039
     question: "What are the exact Book and BMS schemas, cardinalities, lifecycle states, version-compatibility rules, and ownership boundaries?"
     needed_by: [COMP-QMF-RISK, COMP-QMF-REGISTRY]
-    blocking: true
+    blocking: false
     recommendation: "Make Book the versioned risk container, make BMS a separately versioned policy owned by one Book, and leave multiple-BMS cardinality unimplemented until the operator rules."
-    status: open
-    answer: null
+    status: answered
+    answer: "AD-29..AD-32 (DEC-0143, DEC-0144, DEC-0145, DEC-0146; CT-22, CT-24, CT-25, CT-27, CT-28): the BMS is the account-facing supervising layer — one BMS instance per account serving many Books; a Book binds exactly one BMS at a time (dated, swappable, append-only); a Bot binds exactly one Book; a crypto/prop-firm BMS is a new BMS version, never a second stacked BMS (DEC-0095 resolved). Templates are structured configuration artifacts with per-variable units, exact-rational values, ui-editable|uneditable flags, and admission_impact; versioning is git logic on branches-from edges, UI edits mint versions; numbers live inline and are identity-bearing. Three identities minted apart — Book version (fp1), Book instance (BookInstanceId), binding epoch (binding-record fingerprint); the risk domain is the binding tuple aligned with the (VenueId, account) command stream; per-counter state_carry is mandatory and carry needs a signed carries-ledger edge. Entity journals are declared read-time projections over writer-scoped streams with the venue join pinned in CT-25. Admission is three technical layers (linters, demo shakedown, one operator signature) with no probation; the admission_bar allows not-yet-ruled thresholds that block live binding only."
+    answered_by: operator (risk sitting 2026-08-20) + risk reviewer gate
+    date: 2026-08-20
 
   - id: GAP-0040
     question: "Do Bots own ordinary exit organs while Books own forced exits, or does the Book own every exit policy and expose only an exit-signal contract to Bots?"
     needed_by: [COMP-QMF-RISK, COMP-QMF-REGISTRY]
-    blocking: true
+    blocking: false
     recommendation: "Choose Book ownership for exit policy with Bot exit signals mediated by the Book contract, because repeated direct corrections place Exit in Book territory."
-    status: open
-    answer: null
+    status: answered
+    answer: "AD-33 + AD-34 (DEC-0147, DEC-0148; CT-23, CT-29, and the CT-19 fifth command): the Book owns exit policy for the life of a position; Bots propose risk-monotonic exits (close_full, tighten_protective_stop — direction and bound, never a price) through the versioned CT-23 door and the Book executes or refuses with a recorded reason (DEC-0067 resolved). requested_r is Book-resolved, never bot-supplied. The protective stop attached at entry is Book-owned and venue-resident wherever CT-18 declares attachment; moves are risk-non-increasing against the frozen original_risk_distance. Exit method is a declaration (ExitLogicRef per family — QML donor atom); a zero-bot-intent, static-stop-only Book is the honest V1 default; delegation to bot families is a later version change. Every close carries a typed close reason; whole-trade attribution credits the opening Bot. Dynamic SL/TP: amend_protection is the minted fifth venue command (never cancel-then-place, atomicity verify-or-refuse, single-sided the only legal V1 path); V1 policy is the move-to-breakeven ratchet only, with configurable UI-editable parameters. close_partial is not a V1 kind — partial exits refuse until a partial-close command is explicitly minted."
+    answered_by: operator (risk sitting 2026-08-20, round 1 + round 5)
+    date: 2026-08-20
 
   - id: GAP-0041
     question: "How does Book-level paper mode map Bots to demo accounts, transition between live and paper, avoid duplicate orders, and preserve comparable evidence?"
     needed_by: [COMP-QMF-RISK, COMP-QMF-VENUE, COMP-QMF-DATA]
-    blocking: true
+    blocking: false
     recommendation: "Model paper as an explicit Book state transition with one active execution destination, persist transition cause and account identity, and prohibit simultaneous live and paper twins."
-    status: open
-    answer: null
+    status: answered
+    answer: "AD-35 (DEC-0149, confirming DEC-0070; CT-24, CT-28): paper is a Book-level mode expressed as a dated execution-binding change — a standing evidence state, not a waiting room; no Bot twins ever; BENCHED is a seat word only. Every trigger kind declares routes-to-paper | blocks-paper (market-risk controls block paper too; capital/authority controls route to paper). One active paper-routing target per live binding at an instant; the per-intent execution_target is resolved once at intent mint and enters command identity, so one intent can never fire twice and a mode flip never replays a command; live and demo are distinct command streams. Paper money is frozen evidence — configurable UI-editable starting balance, never hand-adjusted; a reset mints an operator-signed paper epoch record; paper P&L never becomes Treasury cash and never buys a seat. Return to live is automatic only for clocked mechanical causes; anything touching real money needs an operator signature. Decay comparison is R-denominated under a declared cohort_key with refusal on mismatch; a decay cohort read is an explicitly permitted cross-role read within world = live."
+    answered_by: operator (risk sitting 2026-08-20, paper package with riders)
+    date: 2026-08-20
 
   - id: GAP-0042
     question: "What exact before-and-after windows, event severity, currency-to-instrument mapping, open-position behavior, and override rules define the pair-scoped news control?"
     needed_by: [COMP-QMF-RISK, COMP-QMF-DATA]
-    blocking: true
+    blocking: false
     recommendation: "Keep the control pair-scoped and data-driven, but do not ratify the tentative plus-or-minus-fifteen-minute window until representative event and spread evidence is reviewed."
-    status: open
-    answer: null
+    status: answered
+    answer: "AD-38 (DEC-0152; CT-31): one control-window contract serves news, daily_dead_zone, and session_handover_buffer — kinds a Book enables, addable never redefined, calendar-derived, absent for 24/7 markets. A window is two instants, never an offset. Effect: blocks new entries on the instruments in scope — live AND paper alike — and nothing else; never an exit, protection act, or recording; the blocked decision journals on the veto path so decay sensing keeps its data points. Instrument scope resolves through dated per-instrument currency-exposure records (symbol parsing prohibited); a missing record blocks and alarms. Widen-never-shrink, forward-only revisions; fail closed; no live skip button. Open positions are untouched by default; window_forced_flat is a Book declaration at arbitration rank 2. No widths are ratified: every width/anchor/buffer is a configurable UI-editable variable — recorded evidence only (disagreeing 1h vs ~3h dead-zone readings recorded unmerged; ~45min handover buffers are operator recollection; the ±15min news buffer stays withdrawn). Severity: provider labels stored verbatim, no QMX severity scale in V1. Supersedes the 2026-08-18 keep-paper-flowing ruling and DEC-0072's pair-scoped framing."
+    answered_by: operator ruling + corpus closure under delegation (2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0043
     question: "What inputs, normalization, conditioning, thresholds, sample cadence, hysteresis, and stale-data behavior define the Spread Quality Sensor?"
     needed_by: [COMP-QMF-RISK, COMP-QMF-DATA, COMP-QMF-VENUE]
-    blocking: true
+    blocking: false
     recommendation: "Specify SQS as a versioned pure function over observed bid-ask evidence and session context, with explicit stale and unavailable outcomes; design the formula fresh rather than adopting the candidate."
-    status: open
-    answer: null
+    status: answered
+    answer: "AD-39 (DEC-0153, resolving DEC-0075; a CT-16 configured producer, CT-23 evidence slot): the operator adopted the old ratio sensor by ruling — score = historical average spread for the declared session window ÷ current live spread, an exact rational over two scaled-integer spreads (at-or-above threshold passes, strictly below blocks). Conditioning is declared: named calendar session window and baseline statistic are fingerprinted surface; the baseline is a fingerprinted input artifact with refit-series identity so a scheduled refit never forks the decay cohort. Mechanism: per-instrument-class hard-block threshold, hysteresis band re-crossed before a block clears, outlier guard (guarded samples excluded from re-crossing), conservative sentinel — undefined/unreachable/stale/refused means hard block. Typed availability markers ok | not_ready | unavailable | stale | refused replace the -1.0 sentinel. Every parameter is a configurable UI-editable exact-rational variable with no spine value (recorded evidence: thresholds 0.60/0.55/0.45/0.65/0.50, band 0.05, 4-sigma, per-quote cadence, daily/weekly refits). Live-spread input freshness is bounded by the Book's decision_freshness_bound. Authority: the sensor computes, the transport carries, the Book door decides; V1 blocks only, never sizes. Bring-up: warm-up week reports not_ready; a live binding requires a present baseline."
+    answered_by: operator (risk sitting 2026-08-20, round 3)
+    date: 2026-08-20
 
   - id: GAP-0044
     question: "What dimensionally valid formulas replace FORM-0006, and how are R, roster seat, risk allocation, and any surviving legacy capital concept represented?"
     needed_by: [COMP-QMF-RISK, COMP-QMF-CORE]
-    blocking: true
+    blocking: false
     recommendation: "Start from R as pre-trade risk, define every variable with units, keep the three capital concepts distinct, and accept no replacement formula until dimensional tests pass."
-    status: open
-    answer: null
+    status: answered
+    answer: "AD-40 (DEC-0154; CT-01, CT-22, CT-23): R is one relationship with three typed faces — original_risk_distance [price-delta], original_risk_amount [money(numeraire)], r_multiple [dimensionless exact rational] — frozen at admission (sole ruled exception: a one-time re-base onto the filled quantity at a partial entry's first terminal state); every position declares its planned full-loss price before it opens or admission refuses; V1 admits no scale-in. Numeraire is USD system-wide; accounting_currency is declared so a later currency is a version change; non-USD bindings refuse. Three capital concepts typed apart: roster state (seat enum, no money), risk allocation (r_multiple), capital (Money records). The dimensional law: a closed unit-kind vocabulary including the minted value-factor(instrument, currency) kind sourced only from venue metadata; every variable and formula unit-typed with a symbolic checker; every formula ships an executable worked example; FORM-0006 stays dead and is the suite's permanent negative test. The replacement shape (units only, no ratified values): loss_runway = book_capital − loss_floor (the kill line's own number); period_loss_budget = loss_runway ÷ runway_periods; r_unit_price = period_loss_budget ÷ seat_loss_run_allowance (supersedes FORM-0004, which computed a rate mis-named as an amount); seat_r_ceiling ≤ seat_loss_run_allowance re-expresses FORM-0006 in pure R-space. The overloaded B is split into bench_consecutive_loss_threshold [count] and seat_loss_run_allowance [r_multiple]. Book limits are R or numeraire-notional only; lots-denominated limits refuse; margin sizing is decided-deferred with the consequence stated."
+    answered_by: operator (USD ruling) + corpus closure under delegation (2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0045
     question: "What exactly counts as a stop-out, what benchmark state replaces the overloaded B and BENCHED terms, and what fresh alpha-decay evidence is required?"
     needed_by: [COMP-QMF-RISK, COMP-QMF-REGISTRY, COMP-QMF-DATA]
-    blocking: true
+    blocking: false
     recommendation: "Define stop-out as a typed risk event first, choose unambiguous names for benchmark and roster state, and design alpha-decay mathematics only after those primitives and units are stable."
-    status: open
-    answer: null
+    status: answered
+    answer: "AD-41 (DEC-0155, resolving DEC-0094; CT-29, CT-32): the bare word 'stop-out' is banned — the venue's margin liquidation is venue_liquidation (verified against cTrader's own glossary); the breaker's input is qualifying_loss_exit: a close realizing realized_r ≤ −q, with q a UI-editable per-family variable defaulting to ~1R, honouring the operator's 'losses at negative 1R' ruling; scratches don't count by default, breakevens never count and keep their own clustering metric; a forced flat counts only if it realized a qualifying loss. The exit record (CT-29) is one per virtual-position close, carrying frozen R faces, fills, realized_pnl, a declared cost_components set, realized_r (single-sourced), typed close reason, and closing_authority. The bench counter is a read-time fold over exit records, bounded by the binding epoch unless a signed carries-ledger edge spans it, with a pinned knowledge-time bound (an intent racing its predecessor's unpersisted exit record refuses). Seat state active | benched replaces the overloaded BENCHED (seat-only, never a Book mode); the per-bot threshold is bench_consecutive_loss_threshold [count], configurable, never a spine constant (the recorded 2 is evidence). Alpha decay ships as evidence primitives only — exit record, baseline pointer, CT-32 performance-result container with declared population/period, unit-kinds on every measure, and suppression + veto accounting; measurement publishes and never acts; the math is deferred, the collection starts now."
+    answered_by: operator (risk sitting 2026-08-20, round 2) + risk reviewer gate
+    date: 2026-08-20
 
   - id: GAP-0046
     question: "What deterministic same-tick priority applies among protective stops, Book force-flat, kill-switch actions, fast invalidation, and discretionary exits, and how does no-overnight policy interact with hold limits?"
     needed_by: [COMP-QMF-RISK, COMP-QMF-VENUE]
-    blocking: true
+    blocking: false
     recommendation: "Prioritize venue-confirmed protective execution and emergency risk controls over discretionary actions, record every suppressed action, and define overnight policy per Book rather than globally."
-    status: open
-    answer: null
+    status: answered
+    answer: "AD-36 + AD-37 (DEC-0150, DEC-0151; CT-30): priority is defined per (VenueId, account) command stream with exactly one arbitration point per stream; cross-stream ordering is a declared non-guarantee. Venue-resident stops sit outside the ordering by construction (the superseded-by-fill rule resolves the race). Node-originated actions rank: operator (0) > protection actions (1) > BMS/Book forced flats (2) > fast invalidation (3) > ordinary bot exits and amendments (4) — the ordering corpus-derived, the collapse/conflict rules this sitting's marked design. Ranks are BMS-declared per stream, mandatory, unique, no QMF default; a contradicting Book refuses at bind time. Collapse: one command per identical mechanical act, rank winner supplies attribution, losers journal as suppressed. Conflict: mutually exclusive acts — higher rank wins, lower suppressed, never queued; composing acts both execute; a higher rank may never reduce the protection a lower rank would have delivered; the exit-preservation invariant means no control may ever block a risk-reducing act or recording. Kill switch (global, sensor-fed, human de-escalates, effect chosen by node severity policy) and kill line (per-Book capital floor that auto-flattens and stands the Book down) are named apart. Hold limits and no-overnight are one Book-declared force-flat mechanism (position-age Duration | calendar instant), both at rank 2, no QMF values; a Book declaring none has none."
+    answered_by: corpus closure under operator delegation (2026-08-20)
+    date: 2026-08-20
 
   - id: GAP-0047
     question: "When QML is revisited, what Bot authoring, confluence composition, Book binding, lineage, and promotion contracts must it consume from QMF V1?"
-    needed_by: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-RISK]
+    needed_by: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-RISK, COMP-QMB]
     blocking: false
     recommendation: "Defer QML implementation until the Bot schema and one-Bot-to-one-Book binding are ratified; then make it a consumer of QMF contracts rather than a new foundation layer."
     status: deferred
     answer: null
+    note: "QMB increment 2026-08-20: two mandatory sitting inputs are on record — qml-original-dig.md AND the second QML-named artifact the dig missed (the .qml bot-source FILE FORMAT, Monaco-edited, WF1/WF2-produced; the plain-Python-vs-.qml-DSL authoring question must be ruled at the sitting). Operator lead recorded: the QML sitting may run BEFORE the backtesting-content sitting, since QML consumes admission-bar interfaces only; QMB tests plain-Python bots as the bridge meanwhile (don't-box-in), and QML conformance gates governed evidence, not tunnel entry (DEC-0169)."
+    date: 2026-08-20
 
   - id: GAP-0048
     question: "What fidelity levels, fill models, statistics, Bot-by-Book matrix, isolated sandbox, and parity contracts define the future backtesting library?"
-    needed_by: [COMP-QMF-CORE, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-RISK]
+    needed_by: [COMP-QMF-CORE, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-RISK, COMP-QMB]
     blocking: false
-    recommendation: "Keep bar-close, intrabar, and tick fidelity as candidate labels only, recover the missing brainstorm, and ratify backtesting in its own session before any engine or central service is built. The backtesting sitting also owns simulated-time typing (unlocks world = simulated per DEC-0110) and the deferred GAP-0016/0017 (DEC-0121)."
+    recommendation: "The seams are ruled; ratify the CONTENT in a dedicated sitting: the fidelity taxonomy values (including the cross-fidelity comparison/refusal rule and aggregation detail beyond lowest-wins), the forex fill/slippage/financing calibration content, parity contracts, and the simulated-time typing that unlocks world = simulated (DEC-0110). Old battery values (WF windows, OOS counts, PBO bands, CSCV) remain candidates only — 'keep it simple' per the operator."
     status: deferred
-    answer: null
+    answer: "PARTIALLY closed by the QMB increment 2026-08-20 (DEC-0164, DEC-0169): the SEAMS are ruled — separate fill/slippage/cost ports plus financing as a scheduled position-level event, pinned composition order, partial fills first-class, fidelity identity = adapter-id + composition-version + taint, lowest-fidelity-wins per run, mixed-fidelity bar comparison a typed refusal, an optimistic taint on every fill until the taxonomy lands (such runs spend no split budget and claim no edge), provenance-derived world with store-level synthetic taint, and the solve method fixed as CALIBRATION-not-invention from QMX's own recorded evidence per broker (DEC-0135). Still OPEN and owned by this gap's sitting: the fidelity taxonomy VALUES, the calibration content itself, parity contracts, and simulated-time typing."
+    note: "The isolated-sandbox and Bot-by-Book-matrix halves of the original question are answered by the QMB architecture (B-5 process isolation, B-12 permutation batches; DEC-0161, DEC-0169); the gap stays deferred for the fidelity/calibration content only. The backtesting-CONTENT sitting may run after the QML sitting per the operator's ordering lead (see GAP-0047)."
+    date: 2026-08-20
 
   - id: GAP-0049
     question: "What preregistered search-quality threshold, including any SR* definition, units, evaluation population, and attempt-budget effect, belongs to future research and backtesting?"
-    needed_by: [COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-RISK]
+    needed_by: [COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-RISK, COMP-QMB]
     blocking: false
     recommendation: "Defer the threshold until the attempt counter, split policy, result-label tuple, and evaluation statistics are defined; do not treat the proposed SR* label as a contract."
     status: deferred
     answer: null
+    note: "QMB increment 2026-08-20: the raw material now accrues by construction — every trial and replicate is a fully-labeled ledgered run (DEC-0161, DEC-0169) — and B-8's anti-overfit sensitivity analysis ships with every sweep; the thresholds, SR* definition, and pass batteries stay this gap's sitting, alongside the GAP-0016/0017 registration gate and the staged-funnel triage shape (ticket 008)."
+    date: 2026-08-20

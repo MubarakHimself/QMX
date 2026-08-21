@@ -6,7 +6,7 @@ owner: COMP-QMF-DATA
 consumers: [COMP-QMF-DATA-STORE, COMP-QMF-REGISTRY]
 layer_from: backend
 layer_to: data
-decisions: [DEC-0103, DEC-0108, DEC-0109, DEC-0110, DEC-0117, DEC-0118, DEC-0119, DEC-0120]
+decisions: [DEC-0103, DEC-0108, DEC-0109, DEC-0110, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0163, DEC-0164]
 gaps: []  # all prior binding gaps (GAP-0005/0020/0021/0022/0023/0026) are answered; no still-open gap binds the persistence append-store
 purpose: >-
   Persist evidence through a QMF-owned append-store seam that keeps storage engines swappable: raw
@@ -25,7 +25,8 @@ invariants:
   - "The 12-month seal is a no-peek lock — not retention, data is kept regardless — enforced as a policy-rejection refusal at every read boundary of this contract: raw, processed, research door, and restored backups alike, independent of the deferred GAP-0016/0017 gates; the sealed period gets one logged final look journaled as a named control-action subtype and is never silently recycled (DEC-0119)."
   - "Every stored artifact carries its contract's integer format version whose meaning never mutates; migrations run preflight checks → backup first → dry-run → migrate → verify, with a documented restore path and never in-place mutation of the only copy (DEC-0103, DEC-0118)."
   - "The identity of every stored artifact is its fp1 fingerprint; an idempotent byte-identical re-write (the sandbox-merge normal case) is accepted silently, while a true collision (same hash, differing bytes) is refused and alarmed, never overwritten (DEC-0108)."
-  - "Simulated-world artifacts are unwritable in V1 — writing world=simulated into governed evidence is a policy-rejection refusal until the backtesting sitting defines simulated-time typing; storage separation, not identity distinctness alone, delivers world isolation (DEC-0110)."
+  - "Simulated-world artifacts are unwritable in V1 — writing world=simulated into governed evidence is a policy-rejection refusal until GAP-0048 rules simulated-time typing (the QMB architecture sitting ruled the seams and reaffirmed the refusal; the content sitting is still owed); storage separation, not identity distinctness alone, delivers world isolation (DEC-0110, DEC-0164)."
+  - "Per-run logs are never evidence: only the raw archive and the journal bear evidence, and artifacts cite them; a QMB run's per-run log files are AD-14 operational logs streamed by the orchestrator into the run's output directory, outside this contract's evidence-bearing formats — the run's evidence rides its CT-13 journal streams and its ledgered CT-32 artifact (DEC-0163)."
 schema:
   type: >-
     A QMF-owned append-store boundary over swappable engines (Parquet raw archive, JSONL journal and

@@ -3,17 +3,17 @@ id: ARCH-OVERVIEW
 title: QMF V1 Architecture Overview
 type: architecture
 status: provisional
-depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP, COMP-QMF-CALENDAR-FOREX, COMP-CTRADER, COMP-DUKASCOPY, COMP-CALENDAR-FEED, COMP-OBJECT-STORAGE]
-decisions: [DEC-0008, DEC-0009, DEC-0019, DEC-0022, DEC-0024, DEC-0031, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0055, DEC-0058, DEC-0059, DEC-0061, DEC-0065, DEC-0099, DEC-0100, DEC-0104, DEC-0106, DEC-0110, DEC-0113, DEC-0114, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0126, DEC-0127, DEC-0128, DEC-0131, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141]
-sources: [DEC-0008, DEC-0009, DEC-0019, DEC-0022, DEC-0024, DEC-0031, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0055, DEC-0058, DEC-0059, DEC-0061, DEC-0065, DEC-0099, DEC-0100, DEC-0104, DEC-0106, DEC-0110, DEC-0113, DEC-0114, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0126, DEC-0127, DEC-0128, DEC-0131, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-venue-facts.md, docs/architecture/dependencies.yaml, docs/contracts/]
+depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP, COMP-QMF-CALENDAR-FOREX, COMP-QMB, COMP-CTRADER, COMP-DUKASCOPY, COMP-CALENDAR-FEED, COMP-OBJECT-STORAGE]
+decisions: [DEC-0008, DEC-0009, DEC-0019, DEC-0022, DEC-0024, DEC-0031, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0055, DEC-0058, DEC-0059, DEC-0061, DEC-0065, DEC-0099, DEC-0100, DEC-0104, DEC-0106, DEC-0110, DEC-0113, DEC-0114, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0126, DEC-0127, DEC-0128, DEC-0131, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0143, DEC-0144, DEC-0145, DEC-0147, DEC-0149, DEC-0150, DEC-0151, DEC-0158, DEC-0159, DEC-0161, DEC-0163, DEC-0164, DEC-0165, DEC-0169]
+sources: [DEC-0008, DEC-0009, DEC-0019, DEC-0022, DEC-0024, DEC-0031, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0055, DEC-0058, DEC-0059, DEC-0061, DEC-0065, DEC-0099, DEC-0100, DEC-0104, DEC-0106, DEC-0110, DEC-0113, DEC-0114, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0126, DEC-0127, DEC-0128, DEC-0131, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0143, DEC-0144, DEC-0145, DEC-0147, DEC-0149, DEC-0150, DEC-0151, DEC-0158, DEC-0159, DEC-0161, DEC-0163, DEC-0164, DEC-0165, DEC-0169, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMB-2026-08-20/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-venue-facts.md, docs/architecture/dependencies.yaml, docs/contracts/]
 generated: 2026-08-18
-verified: 2026-08-20
+verified: 2026-08-21
 stale_after: 90d
 ---
 
 # QMF V1 Architecture Overview
 
-QMF V1 is a contracts-first Python toolbox consumed by QMX applications. QMF provides five reusable libraries and two modules; it does not provide an application loop, scheduler, product UI, backtesting library, or trading-node runtime. Everything downstream of QMF — the trading node, backtesting, the agentic system, and the product UI — is built with QMF libraries rather than re-implementing or bypassing its contracts. (DEC-0008, DEC-0009, DEC-0022, DEC-0024, DEC-0122)
+QMF V1 is a contracts-first Python toolbox consumed by QMX applications. QMF provides five reusable libraries and two modules; it does not provide an application loop, scheduler, product UI, backtesting library, or trading-node runtime. Everything downstream of QMF — the trading node, backtesting, the agentic system, and the product UI — is built with QMF libraries rather than re-implementing or bypassing its contracts. The backtesting library named there is now specified: it is QMB, the QMX experimentation/backtesting product (one pure library plus the `qmb` CLI) that composes the QMF backend libraries as an application-layer consumer outside QMF V1 — detailed under [Application-layer consumer — QMB](#application-layer-consumer--qmb) below and in `docs/decisions/ADR-0017`. (DEC-0008, DEC-0009, DEC-0022, DEC-0024, DEC-0122, DEC-0159)
 
 ## Design paradigm
 
@@ -63,12 +63,13 @@ graph LR
 
 ## C4 Level 1 — system context
 
-The QMF system sits between QMX application code and external venue, market-data, news-calendar, and backup systems. Every external data exchange crosses a declared `CT-*` contract; operator interaction belongs to QMX rather than a QMF UI.
+The QMF system sits between QMX application code and external venue, market-data, news-calendar, and backup systems. Every external data exchange crosses a declared `CT-*` contract; operator interaction belongs to QMX rather than a QMF UI. QMB is the first named application-layer consumer: it composes the QMF backend libraries in `world = replay`, produces CT-32 results and CT-13 journal streams, and takes no venue edge — live wiring is trading-node territory. (DEC-0159, DEC-0163)
 
 ```mermaid
 flowchart LR
     operator([Operator])
     qmx["QMX application<br/>consumer outside QMF V1"]
+    qmb["COMP-QMB<br/>experimentation library + qmb CLI<br/>application-layer consumer outside QMF V1"]
     subgraph qmf_system["QMF V1 Blueprint"]
         qmf["QMF toolbox<br/>five libraries and two modules"]
     end
@@ -78,7 +79,9 @@ flowchart LR
     object_storage["COMP-OBJECT-STORAGE<br/>Off-machine object storage"]
 
     operator -->|"operates"| qmx
+    operator -->|"runs experiments via the qmb CLI"| qmb
     qmx -->|"composes provisional QMF libraries; no runtime or live authority"| qmf
+    qmb -->|"composes QMF backend libraries; world=replay, no live authority"| qmf
     qmf -.->|"CT-19 command, CT-21 session (ratified design; no adapter)"| ctrader
     ctrader -.->|"CT-18 capability, CT-20 event; market data via CT-15"| qmf
     dukascopy -->|"CT-15"| qmf
@@ -203,19 +206,53 @@ QMF values are immutable and safe to share by construction; purity binds the pur
 
 ## Runtime and data shape
 
-QMF has no autonomous startup or orchestration path; a later QMX application composes the libraries and injects the clock at the composition root. CT-18 through CT-21 carry the **ratified venue design** (AD-26 through AD-28) — one neutral port and four contracts that per-venue adapters implement and the composition root wires, with no adapter yet implemented; CT-22 through CT-25 are reserved and unwired Risk boundaries, and CT-26 is the internal Store-to-Backup input boundary. (DEC-0008, DEC-0009, DEC-0022, DEC-0136, DEC-0137, DEC-0138)
+QMF has no autonomous startup or orchestration path; a later QMX application composes the libraries and injects the clock at the composition root. CT-18 through CT-21 carry the **ratified venue design** (AD-26 through AD-28) — one neutral port and four contracts that per-venue adapters implement and the composition root wires, with no adapter yet implemented; CT-22 through CT-25 and CT-27 through CT-32 are the **ratified Risk boundaries** (AD-29 through AD-41), filled and minted at format version 1 as `defined-unwired` surface that the composition root wires with no new package edge; and CT-26 is the internal Store-to-Backup input boundary. (DEC-0008, DEC-0009, DEC-0022, DEC-0136, DEC-0137, DEC-0138, DEC-0143, DEC-0158)
 
 External observations enter through `COMP-QMF-DATA-INGEST` or `COMP-QMF-VENUE`, which produce CT-10 into `COMP-QMF-DATA`. Governed readers reach data through `COMP-QMF-DATA` rather than bypassing it. CT-15 is only the external-source adapter boundary into `COMP-QMF-DATA-INGEST`; it is not a `COMP-QMF-DATA` interface. Every external fact carries event-time, known-at, source, and revision, where source is a core provenance noun orthogonal to VenueId, and corrections are appended, never overwritten. `qmf-data` defines source contracts, normalization, validation, and idempotent intake keyed on (source, source-native id, revision); applications own scheduling, retries, supervision, and UI. (DEC-0117, DEC-0119)
 
-`COMP-QMF-VENUE`'s design is ratified (AD-26 through AD-28). One neutral port carries four contracts on `qmf-core` nouns: capability (CT-18), command (CT-19), event and reconciliation (CT-20), and secret/session (CT-21, shaped by the AD-26 secret lifecycle). The command stream — the unit of `UNKNOWN` blocking, `WriterId` ownership, and the gapless per-writer sequence — is the (VenueId, account) pair; the four command kinds are `place_order`, `cancel_order`, `close_position`, and `close_all`, and every well-formed submission resolves to one of four outcomes with `UNKNOWN` a recorded state, never an error. The adapter's connection manager owns venue sessions and emits through the `qmf-core`-defined sink protocols injected at the composition root, so the venue write path adds no dependency edge and the writer sees every sink refusal. Market data has a named home: ticks, bars, depth, gap-replay backfill, and historical paging enter as CT-10 source observations through `qmf-data`'s CT-15 intake — application-mediated, no fifth contract, no new edge. cTrader is the first adapter target; its ratified venue facts and the platform-versus-broker split live in `docs/components/ctrader.md`. (DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141)
+`COMP-QMF-VENUE`'s design is ratified (AD-26 through AD-28). One neutral port carries four contracts on `qmf-core` nouns: capability (CT-18), command (CT-19), event and reconciliation (CT-20), and secret/session (CT-21, shaped by the AD-26 secret lifecycle). The command stream — the unit of `UNKNOWN` blocking, `WriterId` ownership, and the gapless per-writer sequence — is the (VenueId, account) pair; the five command kinds are `place_order`, `cancel_order`, `close_position`, `close_all`, and `amend_protection` — the fifth minted by the risk sitting (DEC-0148) — and every well-formed submission resolves to one of four outcomes with `UNKNOWN` a recorded state, never an error. The adapter's connection manager owns venue sessions and emits through the `qmf-core`-defined sink protocols injected at the composition root, so the venue write path adds no dependency edge and the writer sees every sink refusal. Market data has a named home: ticks, bars, depth, gap-replay backfill, and historical paging enter as CT-10 source observations through `qmf-data`'s CT-15 intake — application-mediated, no fifth contract, no new edge. cTrader is the first adapter target; its ratified venue facts and the platform-versus-broker split live in `docs/components/ctrader.md`. (DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141)
 
 `COMP-QMF-REGISTRY` uses per-kind record schemas — each its own versioned contract — sharing a tiny common header of kind, contract format version, at-birth parent references, writer, and sequence; a record's stable id is derived from its `fp1` fingerprint, never minted, so identical work from two sandboxes deduplicates. Lineage accruing after birth lives exclusively in append-only typed edge records (supersedes, promoted-from, occurrence-of, corroborates, disagrees-with) stored as pinned JSONL; indexes are local and rebuildable; no database server exists. The registry reserves a promotion-occurrence card kind whose mandatory plain-words summary is an identity field, and V1 signing is the operator's recorded approval attesting the record's `fp1`. (DEC-0114, DEC-0116)
 
 `COMP-QMF-DATA` owns split, holdout seal, evidence, and journal policy; the data layer owns physical persistence and backup mechanics. Dataset splits are fingerprinted, time-ordered, non-overlapping manifests, each pinning exactly one calendar identity and version in-band; the 12-month seal is a no-peek lock enforced now as a `policy rejection` refusal at every `qmf-data` read boundary, independent of the deferred causality gates. The journal is N append-only streams — one per producing component under its WriterId — recording seven event types (decision, order, fill, risk transition, promotion, data quality, control action). Migrations run preflight checks, backup first, dry-run, migrate, verify; the ratified backup design is nightly, encrypted, versioned, off-machine, with QMF providing the backup/restore/verify primitives (CT-14, CT-26) and applications owning the schedule; numeric recovery objectives await the node/ops sitting. (DEC-0117, DEC-0118, DEC-0119)
 
-The look-ahead causality registration gate (`GAP-0016`) and the attempt counter (`GAP-0017`) are operator-deferred to the backtesting sitting, with the consequence knowingly accepted that artifacts registered before then carry no causality evidence; the bitemporal ingredients (event-time versus knowledge-time) remain ratified. (DEC-0121)
+The look-ahead causality registration gate (`GAP-0016`) and the attempt counter (`GAP-0017`) stay operator-deferred, with the consequence knowingly accepted that artifacts registered before then carry no causality evidence; the bitemporal ingredients (event-time versus knowledge-time) remain ratified. Look-ahead *prevention* is now delivered structurally inside a QMB run (forming-bar rules, split-manifest enforcement, declared stream sets); only the CT-08 registration gate and the counting policy remain deferred. (DEC-0121, DEC-0169)
 
-`COMP-QMF-RISK` is present in the public roster but remains a fenced specification boundary. Book, BMS, exit, paper-mode, SQS, and execution-priority semantics remain `GAP(GAP-0039)` through `GAP(GAP-0046)`. (DEC-0065)
+`COMP-QMF-RISK` is present in the public roster and its design is **ratified** (AD-29 through AD-41). It owns the Book/BMS binding chain — the BMS is the account-facing supervising layer, one BMS instance per account serving many Books, a Book binds exactly one BMS, and a Bot binds exactly one Book (DEC-0143) — plus template-and-versioning discipline (DEC-0144), journals-as-projections (DEC-0145), three-layer admission (DEC-0146), Book-owned exit policy with Bot proposals through the CT-23 door (DEC-0147, resolving DEC-0067), paper as a Book-level standing evidence state (DEC-0149), control actions with the kill switch versus kill line split (DEC-0150), same-tick priority per command stream (DEC-0151), protection windows (DEC-0152), SQS V1 (DEC-0153), the R/dimensional law (DEC-0154), and the exit-record and bench evidence base (DEC-0155). The risk sitting adds **no** package import edge: `qmf-risk` depends only on `qmf-core`, its record kinds are `qmf-core` value types wrapped into registry records by the composition root, and control-action dispatch reaches the venue through the same `qmf-core`-defined sink protocols the venue write path uses (DEC-0158). CT-22 through CT-25 are filled and CT-27 through CT-32 are minted at format version 1 as `defined-unwired` surface; every recovered number is a configurable UI-editable variable with no ratified spine value (DEC-0157), and implementation authorization arrives only through the factory pipeline. Trading-node runtime matter stays out of these docs, referenced through `tracker/trading-node-notes.md` as a pointer only (DEC-0142). (DEC-0143, DEC-0147, DEC-0150, DEC-0158)
+
+## Application-layer consumer — QMB
+
+QMB is the QMX experimentation/backtesting product and the first named application-layer consumer built on the QMF foundation: one pure library plus the `qmb` CLI shipped in one wheel, an application-layer product built ON QMF, never a QMF roster package (DEC-0159). It composes the six backend QMF libraries — `qmf-core`, `qmf-registry`, `qmf-data`, `qmf-indicators`, `qmf-structure`, and `qmf-risk` — as a composition root, and is the first sanctioned place the defined-unwired risk contracts are legally wired, in `world = replay` only (DEC-0169). It realizes the reserved "future backtesting library" slot; the Simulator stays a separate deferred UI product that will consume QMB, not QMF directly (DEC-0159).
+
+QMB takes **no** edge to `COMP-QMF-VENUE`: live venue wiring is trading-node territory, and replay execution binds QMB's own fill, cost, and financing ports instead (DEC-0164). The library's `run()` is pure and returns a CT-32 performance-result; one impure orchestrator owns all writes — per-run operational logs during the run and exactly one WriterId-scoped ledger line at completion (DEC-0161). Run outputs adopt existing contracts: the result artifact is a CT-32 with declared chart-series and trade-event-reference extensions, and run trading events ride CT-13 journal events on writer-scoped streams in the run's world (DEC-0163). Registry state reaches QMB as immutable fingerprinted **as-of sets** over a passive file-sync hub — dumb storage, never a central service (DEC-0165).
+
+```mermaid
+flowchart TB
+    operator([Operator / agent])
+    subgraph consumers["Application-layer consumers — outside QMF V1"]
+        qmb["COMP-QMB<br/>experimentation library + qmb CLI"]
+        simulator["Simulator<br/>deferred UI product"]
+    end
+    subgraph qmf_backend["QMF V1 backend libraries — composed as a root"]
+        core["COMP-QMF-CORE"]
+        registry["COMP-QMF-REGISTRY"]
+        data_api["COMP-QMF-DATA"]
+        indicators["COMP-QMF-INDICATORS"]
+        structure["COMP-QMF-STRUCTURE"]
+        risk["COMP-QMF-RISK"]
+    end
+    hub[("passive file-sync hub<br/>immutable as-of sets — dumb storage")]
+    results["CT-32 result artifact<br/>+ CT-13 replay-world journal streams"]
+    venue["COMP-QMF-VENUE venue module<br/>no QMB edge — live wiring is trading-node territory"]
+
+    operator -->|"runs experiments via qmb CLI / Python API"| qmb
+    qmb -->|"composes six backend libraries; world=replay only"| qmf_backend
+    qmb -->|"pure run() emits"| results
+    registry -.->|"records published as as-of sets"| hub
+    hub -.->|"library-owned registry-read port"| qmb
+    simulator -.->|"deferred; will consume QMB"| qmb
+    qmb x--x venue
+```
 
 ## Component index
 
@@ -227,11 +264,12 @@ The look-ahead causality registration gate (`GAP-0016`) and the attempt counter 
 | `COMP-QMF-INDICATORS` — qmf-indicators | backend | Package-neutral two-mode indicator protocol and TA-Lib wrappers | `docs/components/qmf-indicators.md` |
 | `COMP-QMF-STRUCTURE` — qmf-structure | backend | Causal QMX-owned market structure | `docs/components/qmf-structure.md` |
 | `COMP-QMF-VENUE` — qmf-venue module | middleware | Venue translation and session seam (edge module) | `docs/components/qmf-venue.md` |
-| `COMP-QMF-RISK` — qmf-risk module | backend | Fenced Book, BMS, and risk boundary (edge module) | `docs/components/qmf-risk.md` |
+| `COMP-QMF-RISK` — qmf-risk module | backend | Ratified Book, BMS, exit, paper-mode, control, and risk-arithmetic boundary (edge module) | `docs/components/qmf-risk.md` |
 | `COMP-QMF-DATA-INGEST` — qmf-data source-ingest seam | middleware | External-source translation | `docs/components/qmf-data-ingest.md` |
 | `COMP-QMF-DATA-STORE` — qmf-data persistence seam | data | Physical evidence persistence | `docs/components/qmf-data-store.md` |
 | `COMP-QMF-DATA-BACKUP` — qmf-data backup and restore process | data | Backup/restore boundary | `docs/components/qmf-data-backup.md` |
 | `COMP-QMF-CALENDAR-FOREX` — qmf-calendar-forex | backend | First market-hours calendar extension — outside the roster, own SemVer ladder | `docs/components/qmf-calendar-forex.md` |
+| `COMP-QMB` — experimentation library + qmb CLI | middleware | Application-layer experimentation/backtesting consumer built ON QMF; composes the six backend libraries in `world = replay`, produces CT-32 results and CT-13 journal streams, no venue edge — outside the roster and outside QMF V1 | `docs/components/qmb.md` |
 | `COMP-CTRADER` — cTrader Open API | external | First intended external venue peer; no active dependency or live connection is authorized | `docs/components/ctrader.md` |
 | `COMP-DUKASCOPY` — Dukascopy historical data source | external | Historical tick source | `docs/components/dukascopy.md` |
 | `COMP-CALENDAR-FEED` — news-calendar feed | external | Forward news-calendar observations | `docs/components/calendar-feed.md` |
@@ -239,4 +277,4 @@ The look-ahead causality registration gate (`GAP-0016`) and the attempt counter 
 
 ## Contract authority
 
-`docs/architecture/dependencies.yaml` is the component and dependency registry. `docs/contracts/ct-01-*.yaml` through `docs/contracts/ct-26-*.yaml` are provisional schema boundaries; every unresolved field, enum, unit, and nullability choice remains null and cites an existing GAP. The ratified spine at `_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md` is the authoritative source for the paradigm, dependency direction, and invariants absorbed here.
+`docs/architecture/dependencies.yaml` is the component and dependency registry. `docs/contracts/ct-01-*.yaml` through `docs/contracts/ct-32-*.yaml` are provisional schema boundaries; the venue (CT-18 through CT-21), indicator/structure (CT-16, CT-17), and risk (CT-22 through CT-25, CT-27 through CT-32) contracts are filled at format version 1 as ratified `defined-unwired` surface, while any still-unresolved field, enum, unit, or nullability choice remains null and cites an existing GAP or a declared pending slot. The ratified spine at `_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md` is the authoritative source for the paradigm, dependency direction, and invariants absorbed here.

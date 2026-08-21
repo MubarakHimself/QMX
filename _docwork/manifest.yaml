@@ -63,3 +63,21 @@ sources:
   role: primary
   status: harvested
   note: "2026-08-20 indicators/structure sitting (GAP-0031..0034) and its increment reviewer gate; distilled into SRC-03's .memlog.md entries 50..62 and the re-finalized ARCHITECTURE-SPINE.md AD-22..AD-25 plus cross-AD amendments, which are the citation surface. Later portions of the transcript (venue sitting, GAP-0035..0038) are outside this pass's intake and deliberately unharvested."
+- id: SRC-06
+  path: archive/qmf-6.txt
+  kind: transcript
+  role: primary
+  status: harvested
+  note: "2026-08-20 RISK sitting (GAP-0039..0046) and its four-pass reviewer gate; distilled into SRC-03's .memlog.md entries 84..116 and the re-finalized ARCHITECTURE-SPINE.md AD-29..AD-41 plus cross-AD amendments, which are the citation surface (EXT-2056..EXT-2070). A delta scan of this transcript against the memlog confirmed fidelity, with one recorded trap: the round-1 'BMS = rulebook' framing was agent phrasing reversed by the operator's own correction — the BMS position is always built from the corpus-verified refinement (the BMS connects to the account), never from the round-1 reading. The venue-sitting portion of the same day (memlog entries 77..83) was harvested by the prior increment. Companion evidence: research-risk/ (nine extractor dossiers, six synthesis briefs, ctrader-sltp-amend-research.md, qml-original-dig.md) under SRC-03."
+- id: SRC-07
+  path: _bmad-output/planning-artifacts/architecture/architecture-QMB-2026-08-20/
+  kind: rider
+  role: primary
+  status: harvested
+  note: "The QMB child architecture sitting (2026-08-20): ARCHITECTURE-SPINE.md (FINAL, B-1..B-15 plus the inherited-invariants table; ratified by operator delegation, memlog entry 10), .memlog.md (12 entries: drafting, three reviewer-gate rounds, operator ruling rounds, ratification-by-delegation), and reviews/ (six gate lenses plus review-reconcile-docs.md, whose citation-hygiene findings are already applied to the spine). This folder is the citation surface for the QMB increment (EXT-2071..EXT-2082). QMF spine AD-1..41 binds read-only as the parent."
+- id: SRC-08
+  path: archive/qmf-7.txt
+  kind: transcript
+  role: primary
+  status: harvested
+  note: "2026-08-20 backtesting-direction session transcript (the QMF-run tail: sitting reopen, operator dictation, grounding workflow, adversarial challenge, the four-ask ruling round with the REDIRECT to reverse-engineering specs, the QMB naming ruling, and the 13-agent spec campaign). Distilled into SRC-03's .memlog.md entries 117..131 and SRC-07's own memlog, which are the citation surface. Companion evidence: research-backtesting/ under SRC-03 (intake dossiers — operator-corrected terminology: NOT specs — specs/INDEX.md, backtesting-direction-position.md with its DC-5 qmx command superseded by the QMB naming ruling, challenge dossiers, screens/)."

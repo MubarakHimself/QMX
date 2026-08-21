@@ -1,0 +1,57 @@
+id: CT-31
+name: Control-window contract
+status: provisional
+version: 1  # first minted format version; the window law is spine-ratified (AD-38), the doc stays provisional pending corpus re-ratification (DEC-0152)
+owner: COMP-QMF-RISK
+consumers: []  # consumer-blind by design: window records derive from CT-10/CT-15 intake and are qmf-core value types wrapped into registry records by the composition root; no package imports qmf-risk under default-deny (DEC-0152, DEC-0143)
+active_consumers: []
+intended_consumers: [COMP-QMF-DATA, COMP-QMF-REGISTRY]  # feed-derived windows arrive through qmf-data's CT-15 intake; window records and their journal events reach qmf-registry/qmf-data via the composition root when the factory ships; documentary until then (DEC-0152)
+wiring_status: defined-unwired  # AD-38 ratifies the window-record surface and the read-time effective-window fold; no code exists and no build is authorized outside the factory pipeline — composition-root mediated (DEC-0152)
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0152, DEC-0157, DEC-0158, DEC-0156, DEC-0150, DEC-0151]
+gaps: []  # AD-38 closes GAP-0042; window widths, anchors and severity mapping are configurable UI-editable variables awaiting evidence, a deferred measurement not a gap (DEC-0152, DEC-0157)
+purpose: "One control-window contract for every no-trade band: a window record carries two instants (never an offset), a resolved instrument scope, a kind, a reason class, and the external-fact quadruple where feed-derived; three ratified calendar-derived kinds (news, daily_dead_zone, session_handover_buffer) each block new entries only — live and paper alike — resolved at a decision instant by a widen-never-shrink read-time effective-window fold, and a window never blocks an exit, a protection amendment, a protection action, or the recording of evidence (DEC-0152)."
+invariants:
+  - "One control-window contract serves every no-trade band. A window record carries: the external-fact quadruple (source, source-native event id, revision, known-at) where it derives from a feed (AD-19/AD-21 recorder identity); the window as two instants (AD-8), never an offset — offsets stored instead of bounds would make a record's meaning depend on a policy version and break replay; a resolved instrument scope; a window kind; a reason class; and a format version (DEC-0152, DEC-0158)."
+  - "Kinds are addable never redefined and a Book declares which kinds it enables; three kinds are ratified: news; daily_dead_zone (the daily band in which no session is meaningfully in the market); and session_handover_buffer (the pause around a session handover) — both dead-zone kinds exist and are different things (the daily no-session band and the per-handover pause are not one idea wearing two memories) (DEC-0152)."
+  - "Every kind is calendar-derived — a market-hours calendar identity + tzdata per AD-8, never device or broker location and never hardcoded nominal opens — and is therefore absent for 24/7 markets: a calendar with no handover produces no window (DEC-0152)."
+  - "session_handover_buffer declares its anchor side as a mandatory field — pre-close | post-open | both — because that is structure, not width, and 'around a handover' otherwise yields two different windows from one calendar (DEC-0152)."
+  - "Effect: a window blocks new entries on the instruments in scope, and nothing else — it never blocks an exit, a protection amendment, a protection action, or observation (recording is not trading); an instrument under a news blackout stops live and paper entries alike (DEC-0152, DEC-0150)."
+  - "Instrument scope is declared, never parsed: scope resolves through dated per-instrument currency-exposure records (AD-9 metadata records populated from venue-declared metadata where it exists, operator-declarable and correctable otherwise) — a set of exposures, so a non-pair instrument is expressible; reading a currency out of a symbol is prohibited; a missing record means the instrument is treated as affected and blocked while a window of an enabled kind is in force, the absence journaled as data quality and raising an AD-14 alarm; a multi-instrument bot is blocked only on the instruments in scope (DEC-0152, DEC-0158)."
+  - "Widen-never-shrink, forward-only: a later revision may pull a start earlier for instants not yet passed or push an end later, but may never narrow, cancel, or retro-invalidate a window that has had effect; decisions already taken under an older revision stand and are tagged with it; enforcement is at read time, never at intake — intake never refuses a revision (AD-21 keeps provider evidence verbatim and appends corrections), and the effective window at decision instant T is a declared read-time fold — the union of the bounds of every revision known at T, with any bound already passed frozen — pinned as CT-31 surface so a third revision narrowing below the first while the second was wider resolves identically in every build (DEC-0152, DEC-0158)."
+  - "Provider impact labels are stored verbatim as recorded evidence; QMX mints no severity scale of its own in V1, and severity->window is a declared node mapping, not QMF contract surface (tracker/trading-node-notes.md pointer) (DEC-0152, DEC-0156)."
+  - "Fail closed: a failed calendar refresh, unknown coverage, or an uncertain window blocks; there is no live skip button — the operator's control is upstream configuration exercised between sessions, and a standing per-instrument exemption is a dated fingerprinted record consumed at compile time, never a click (DEC-0152)."
+  - "Whether a window ever closes open positions is a Book declaration entering AD-37 arbitration at rank 2 as window_forced_flat — a ranked rung, never a bypass and never a separate code path; declaring none is the V1 posture (DEC-0152, DEC-0151)."
+  - "A window is a door-class refusal, not a kill-switch level: it refuses intents before authorization, stays on the veto path rather than the suppression path, and never routes through the protection funnel; the blocked decision is still journaled — a decision event on the veto path carrying the refusing door, the would-have-been action, and the controlling window's fingerprint — so decay sensing keeps its data points without a trade being placed (DEC-0152, DEC-0150)."
+  - "Evidence produced while a window was in force links to the window record by the same typed AD-16 edge AD-36 uses for controls, and the active window set enters AD-35's cohort_key (derived by reading AD-16 edges; no AD-12 label field is added), so a news-heavy period is never compared against a quiet one and read as decay (DEC-0152, DEC-0149)."
+  - "Widths, anchors, buffers, and which severity classes produce a window are configurable UI-editable variables with no spine value — recorded evidence, non-authoritative and never a default, each carrying its source layer and authority grade; the QMX-discussion layer is barred as a risk/position-sizing source and its dead-zone widths are cited for the window definition only under the named corpus-precedence exemption (DEC-0157, DEC-0152, DEC-0156)."
+  - "Recorded, never merged (AD-19 discipline): this ruling implements the operator's 'stops all trading' as entries-only, because blocking exits would trap risk behind the very window meant to reduce it, and it supersedes the dated 2026-08-18 pair-scoped ruling ('while blocked, bots may continue in paper mode so alpha-decay data keeps flowing') and five-hats X-6's tag-and-run shape, so one ruling travels downstream, not two (DEC-0152)."
+schema:
+  type: control-window-record  # a two-instant no-trade band with a resolved instrument scope; the effective window at a decision instant is the read-time widen-never-shrink fold, never a stored field (DEC-0152)
+  fields:
+    - "window_bounds: the window as two instants (AD-8) — a start instant and an end instant, never an offset (DEC-0152)"
+    - "feed_quadruple: (source, source-native event id, revision, known-at) where the window derives from a feed; the AD-21 recorder-identity intake, absent for a purely calendar-derived window (DEC-0152, DEC-0158)"
+    - "window_kind: news | daily_dead_zone | session_handover_buffer; addable never redefined; a Book declares which kinds it enables (DEC-0152)"
+    - "anchor_side: for session_handover_buffer only — pre-close | post-open | both; mandatory for that kind (DEC-0152)"
+    - "instrument_scope: the resolved set of affected instruments, from dated per-instrument currency-exposure records; never parsed from a symbol (DEC-0152)"
+    - "reason_class: the typed reason for the window (DEC-0152)"
+    - "provider_impact_label: stored verbatim where feed-derived; QMX mints no severity scale in V1, and severity->window is a declared node mapping (DEC-0152, DEC-0156)"
+    - "calendar_identity: the market-hours calendar identity + version + tzdata pin the kind is derived from (AD-8) (DEC-0152)"
+    - "format_version: the contract format version stamped on the record (DEC-0152)"
+  enums:
+    - "window kind: news | daily_dead_zone | session_handover_buffer; addable never redefined (DEC-0152)"
+    - "anchor side (session_handover_buffer only): pre-close | post-open | both (DEC-0152)"
+    - "effect: entries-only, live and paper alike; never blocks an exit, a protection amendment, a protection action, or the recording of evidence (DEC-0152, DEC-0150)"
+    - "missing currency-exposure record disposition: treated-as-affected (blocked) + data-quality journal + AD-14 alarm (DEC-0152)"
+    - "fail-closed dispositions: a failed calendar refresh, unknown coverage, or an uncertain window blocks; there is no live skip button (DEC-0152)"
+    - "window_forced_flat: a Book declaration entering AD-37 arbitration at rank 2; declaring none is the V1 posture (DEC-0152, DEC-0151)"
+    - "refusal / data-quality categories in this contract's paths: data-quality (a missing currency-exposure record, an absent calendar coverage) with the fail-closed block, per registry:typed_refusal_codes (DEC-0152)"
+  units:
+    - "instants: int64 UTC nanoseconds; the window is two instants, never an offset (DEC-0152)"
+    - "widths, anchors, buffers, severity thresholds: configurable UI-editable variables with no spine value; recorded corpus evidence, non-authoritative and never a default — the daily no-session band appears in the QMX-discussion layer twice with disagreeing widths (a one-hour table row and Flow 9's approximately-three-hour prose), recorded as a disagreement and never merged; ~45-minute handover buffers are the operator's later recollection, not found in that corpus; the plus-or-minus-15-minute news buffer is on record as withdrawn (DEC-0157, DEC-0152)"
+  nullability:
+    - "feed_quadruple is present only where the window derives from a feed; a purely calendar-derived window omits the key, never null (DEC-0152)"
+    - "anchor_side is present only for session_handover_buffer; a kind-inappropriate field is an omitted key, never null (DEC-0152)"
+    - "a missing per-instrument currency-exposure record is not null-handled — the instrument is treated as affected and blocked, the absence journaled as data quality and alarmed (DEC-0152)"
+    - "the effective window at a decision instant is never stored — it is the read-time widen-never-shrink fold over the revisions known at that instant, and has no field (DEC-0152)"

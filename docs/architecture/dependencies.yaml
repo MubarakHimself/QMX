@@ -72,8 +72,49 @@ components:
     roster_role: public-module
     distribution: uv-workspace-lockstep
     depends_on: [COMP-QMF-CORE]
-    interfaces: [CT-01, CT-02, CT-03, CT-04, CT-05, CT-06, CT-07, CT-10, CT-13, CT-22, CT-23, CT-24, CT-25]
+    interfaces: [CT-01, CT-02, CT-03, CT-04, CT-05, CT-06, CT-07, CT-10, CT-13, CT-22, CT-23, CT-24, CT-25, CT-27, CT-28, CT-29, CT-30, CT-31, CT-32]
     spec: docs/components/qmf-risk.md
+    notes: >-
+      The ratified risk sitting (AD-29..41) adds NO package import edge:
+      depends_on stays [COMP-QMF-CORE] only. Risk record kinds (CT-22, CT-24,
+      CT-27, CT-28, CT-29, CT-30, CT-31, CT-32 and the instrument
+      currency-exposure metadata record) are qmf-core value types wrapped into
+      qmf-registry records by the composition root; entity journals (CT-25) are
+      read-time projections over qmf-data's writer-scoped streams; and
+      control-action dispatch (CT-30) reaches the venue through qmf-core-defined
+      sink protocols injected at the composition root. CT-23 is the bot-to-Book
+      inbound door whose caller is node-boundary and unassigned in QMF. All
+      risk contracts are defined-unwired; the venue command CT-19 gains the
+      fifth kind amend_protection, owned by COMP-QMF-VENUE. (DEC-0143, DEC-0145,
+      DEC-0158)
+
+  - id: COMP-QMB
+    name: QMB (experimentation/backtesting library + qmb CLI)
+    kind: library
+    layer: middleware
+    roster_role: consumer-product
+    distribution: separate-versioned-package-own-semver
+    depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-RISK]
+    interfaces: [CT-01, CT-02, CT-04, CT-05, CT-07, CT-10, CT-12, CT-13, CT-16, CT-17, CT-22, CT-23, CT-25, CT-27, CT-28, CT-29, CT-32]
+    spec: docs/components/qmb.md
+    notes: >-
+      Application-layer product built ON QMF, never a roster package: one pure
+      library + the qmb CLI in one wheel (uv add qmb; own SemVer,
+      display-only provenance never identity), consuming the QMF workspace in
+      lockstep (DEC-0159, DEC-0167). QMB is an application composition root —
+      the first sanctioned place the defined-unwired risk contracts
+      (CT-22/23/27/28/29/32) are legally wired, in world=replay only; the
+      default-deny no-import posture governs roster packages, and wiring at a
+      composition root is the ratified pattern (DEC-0146, DEC-0158, DEC-0169).
+      No edge to COMP-QMF-VENUE: live adapters and brokerage ports are
+      trading-node territory (spine Deferred); B-2's clock/adapter seam is
+      where they will bind, and replay execution binds the B-6 fill/cost/
+      financing ports instead (DEC-0164). Results are CT-32 artifacts with
+      declared chart-series and trade-event-reference extensions; run trading
+      events ride CT-13 journal streams in the run's world (DEC-0163).
+      Registry state arrives as immutable fingerprinted as-of sets over a
+      passive file-sync hub — dumb storage, never the dead DEC-0084 central
+      service (DEC-0165).
 
   - id: COMP-QMF-CALENDAR-FOREX
     name: qmf-calendar-forex (forex market-hours calendar extension)

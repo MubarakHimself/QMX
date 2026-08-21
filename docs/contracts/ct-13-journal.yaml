@@ -3,28 +3,31 @@ name: Durable journal-evidence contract
 status: provisional
 version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-DATA
-producers: [COMP-QMF-DATA, COMP-QMF-REGISTRY, COMP-QMF-VENUE]  # qmf-data and qmf-registry wired; qmf-venue produces via the core-defined JournalSink injected at the root — ratified shape, no import edge (DEC-0138), documentary until the factory ships; COMP-QMF-RISK reserved pending its edge (DEC-0120)
+producers: [COMP-QMF-DATA, COMP-QMF-REGISTRY, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMB]  # qmf-data and qmf-registry wired; qmf-venue and qmf-risk both produce via the core-defined JournalSink injected at the composition root — ratified shape, no import edge (DEC-0138 venue, DEC-0145 risk), documentary until the factory ships; the risk-domain writer unit is (machine, risk role, binding) (DEC-0145); QMB's run loop emits each run's trading events on writer-scoped streams in the run's world=replay (DEC-0163)
 consumers: [COMP-QMF-DATA-STORE]
 layer_from: backend
 layer_to: data
-decisions: [DEC-0119, DEC-0112, DEC-0106, DEC-0108, DEC-0114, DEC-0116, DEC-0113, DEC-0118, DEC-0117, DEC-0109, DEC-0103, DEC-0120, DEC-0137, DEC-0138]
-gaps: [GAP-0039]  # GAP-0036 answered 2026-08-20 (DEC-0137 venue commands/uncertainty law); GAP-0039 (Book/BMS risk-transition payload) stays open
+decisions: [DEC-0119, DEC-0112, DEC-0106, DEC-0108, DEC-0114, DEC-0116, DEC-0113, DEC-0118, DEC-0117, DEC-0109, DEC-0103, DEC-0120, DEC-0137, DEC-0138, DEC-0143, DEC-0145, DEC-0150, DEC-0158, DEC-0163]
+gaps: []  # GAP-0036 answered 2026-08-20 (DEC-0137 venue commands/uncertainty law); GAP-0039 answered 2026-08-20 (DEC-0143/DEC-0145 Book, BMS, binding identity and journals-as-projections); the per-bot projection's Bot-identity field is a pending(bot-schema sitting) slot, not a gap
 purpose: "Persist durable operational and research journal evidence as N append-only per-writer streams, distinct from arbitrary application logging and without a runtime event bus."
 invariants:
   - "Journal evidence is durable and distinct from operator or diagnostic logging: journals store int64 UTC nanoseconds plus writer plus sequence, while logs render UTC ISO-8601 with an explicit Z (DEC-0112, DEC-0106)."
   - "The journal is N append-only streams, one per producing component, each written under a single AD-8 WriterId following one-writer-per-stream with unlimited readers (DEC-0119, DEC-0113, DEC-0106)."
   - "Each stream's sequence is strictly increasing and gapless per (writer, boot-epoch); a detected gap signals loss (DEC-0119, DEC-0106)."
-  - "The journal records exactly seven event types, decision, order, fill, risk transition, promotion, data quality, and control action, an enum addable in later versions but never redefined (DEC-0119, DEC-0109)."
+  - "The journal records exactly seven event types, decision, order, fill, risk transition, promotion, data quality, and control action, an enum addable in later versions but never redefined; the decision event carries a mandatory closed outcome field (authorized | refused-by-door | suppressed) with the refusing-door or suppressing-authority reference, and the control action event carries a declared suppressed subtype for an authorized action a higher authority discarded at arbitration (DEC-0119, DEC-0109, DEC-0150, DEC-0158)."
+  - "Entity journals — the Book journal, the BMS journal, and the per-bot journal — are declared read-time projections over these writer-scoped streams keyed by entity identity, never additional writers; risk-authored events carry the Book-definition fingerprint and binding identity (and, where one bot is concerned, the Bot identity plus seat binding) as identity fields, while venue-authored events join through the command record's content fingerprint, a pinned versioned CT-25 surface (DEC-0145, DEC-0143, DEC-0158)."
+  - "Treasury boundary events (sweep, refund, re_seed, paper_epoch_reset) map onto the risk transition event type; no money moves without one, and a boundary event never closes a position and never re-bases a frozen R (DEC-0158)."
   - "correlation_id is a linking annotation excluded from fp1 identity by an explicit versioned declaration, and it propagates across every package boundary (DEC-0112, DEC-0108)."
   - "Causal linkage across streams uses AD-16 typed edge records, never timestamps and never the (instant, writer, sequence) ordering key (DEC-0119, DEC-0114, DEC-0106)."
   - "The promotion event carries only the promotion-card fp1 fingerprint plus correlation_id; the registry card is canonical and the journal never holds a second promotion schema (DEC-0116)."
   - "The sealed-period final look is journaled as a named control-action subtype and is never a silent recycle (DEC-0119)."
   - "qmf-data owns the CT-13 schema and persists journal streams through the store; retention and trimming rules are set only after measured volume (DEC-0117, DEC-0118)."
-  - "qmf-data (data quality, control action) and qmf-registry (promotion, via the ratified qmf-registry to qmf-data edge) are wired producers; qmf-venue produces order, fill, data-quality, and control-action events through the core-defined JournalSink injected at the composition root — no import edge, since the venue write path creates none — a ratified shape that stays documentary until the factory ships; qmf-risk (risk transition) remains a reserved producer until its dependency edge is ratified under default-deny (DEC-0138, DEC-0120, DEC-0119)."
+  - "qmf-data (data quality, control action) and qmf-registry (promotion, via the ratified qmf-registry to qmf-data edge) are wired producers; qmf-venue produces order, fill, data-quality, and control-action events, and qmf-risk produces its risk-authored events (decision, risk transition, control action), both through the core-defined JournalSink injected at the composition root — no import edge, since neither write path creates one — a ratified shape that stays documentary until the factory ships; the risk-domain writer unit is (machine, risk role, binding), and the block-on-unpersistable obligation binds the risk dispatcher exactly as it binds the connection manager, so a control action is journaled before dispatch (DEC-0138, DEC-0145, DEC-0120, DEC-0119)."
   - "CT-20 ships an exhaustive versioned mapping — (command kind × outcome) → journal event type and (observation kind) → event type — under a cardinality law: exactly one journal event per recorded observation, per submission, and per outcome (DEC-0137, DEC-0138)."
   - "Adapter measurements and verification verdicts journal as data-quality events; adapter-initiated state changes — suspend-new, drain, session restart, throttle engaged, reconnect — journal as control-action events (DEC-0138)."
   - "An unpersistable journal event, or a partial multi-room write, is a storage-failure refusal that blocks the command stream in the component holding the WriterId and is journaled on recovery (DEC-0137, DEC-0138)."
   - "The journal is instantiated per world; a read or write that crosses worlds is a policy-rejection refusal (DEC-0117, DEC-0110, DEC-0109)."
+  - "QMB replay-world emission: a QMB run's trading events — decision, order, fill, risk transition and kin — are CT-13 journal events on writer-scoped streams in the run's world (replay), emitted from the run loop under this contract's existing shape, not an invented per-run format; the run's trade record IS the CT-29 exit-record stream of the run's replay binding; per-run log files are AD-14 operational logs only and never journal evidence (DEC-0163, DEC-0169)."
   - "The journal owns no notification, workflow, recovery, or trading-node orchestration (DEC-0119)."
 schema:
   type: journal-event  # append-only fp1-canonical JSONL record; the journal is N streams, one per producing component (DEC-0119, DEC-0114)
@@ -39,10 +42,13 @@ schema:
     - "display_time: optional ISO-8601-with-Z rendering, display-only and excluded from identity (DEC-0112)"
     - "promotion payload: only the promotion-card fp1 fingerprint plus correlation_id (DEC-0116)"
     - "order and fill event payloads follow the ratified CT-19/CT-20 venue mapping; a fill event carries the fill's identity fields — fill price, fill quantity, venue instant, receive instant (DEC-0137)"
-    - "GAP(GAP-0039): risk-transition event payload fields await the Book and BMS schema"
+    - "risk-authored event payloads (decision, risk transition, control action) carry the Book-definition fingerprint and the binding identity (BookInstanceId, BmsInstanceId, VenueId, AccountId, world) as identity fields, and where the act concerns one bot the Bot identity plus seat binding — the Bot-identity portion a pending(bot-schema sitting) slot (DEC-0145, DEC-0143)"
+    - "decision event outcome: a mandatory closed field, authorized | refused-by-door | suppressed, with the refusing-door or suppressing-authority reference, so a projection selects on a declared field never on key presence (DEC-0158, DEC-0150)"
+    - "entity journals (Book, BMS, per-bot) are read-time projections over the writer-scoped streams, not fields of any one event; the command-fingerprint join and the legacy-five-stream mapping table are pinned versioned CT-25 surface (DEC-0145)"
   enums:
     - "event_type: decision | order | fill | risk transition | promotion | data quality | control action (DEC-0119)"
-    - "control-action subtype includes the sealed-period final look (CT-12 seal; DEC-0119) and the adapter-initiated venue state changes suspend-new, drain, session restart, throttle engaged, and reconnect (DEC-0138)"
+    - "decision outcome: authorized | refused-by-door | suppressed (DEC-0158, DEC-0150)"
+    - "control-action subtype includes the AD-36 suppressed subtype (an authorized action discarded because a higher authority won arbitration), the sealed-period final look (CT-12 seal; DEC-0119), and the adapter-initiated venue state changes suspend-new, drain, session restart, throttle engaged, and reconnect (DEC-0150, DEC-0138, DEC-0119)"
     - "world: live | replay | simulated  (simulated reserved-unusable in V1; DEC-0110)"
     - "append or store failure refusal category: storage failure (DEC-0109)"
   units:
