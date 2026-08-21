@@ -7,7 +7,10 @@ Exact money/time/instrument primitives, asset-neutral nouns, typed refusals, the
 
 ## Status
 
-Scaffold (Story 1.1). The package declares its identity, its dependency
-direction, a benchmark-harness slot, and its Tier-1 test surface. Public
-contracts arrive in later stories. Build, lint, type-check, and test it through
-the workspace `poe` tasks — never in isolation.
+Scaffold plus the first public contract. Story 1.1 established identity, the
+dependency direction, a benchmark-harness slot, and the Tier-1 test surface;
+Story 1.2 landed the CT-04 **typed refusal envelope** — `TypedRefusal`, the seven
+refusal categories, the `Result[T] = Ok[T] | TypedRefusal` value-or-refusal
+pattern, and the validating `try_create` factory. The remaining
+CT-01/CT-02/CT-03/CT-05 surface arrives in later stories. Build, lint,
+type-check, and test through the workspace `poe` tasks — never in isolation.
