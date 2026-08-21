@@ -1,0 +1,1521 @@
+ ▐▛███▛█   Claude Code v2.1.238
+▝▜██████▀  Fable 5 · Claude Max
+  ▝▝ ▝▝    ~\Desktop\QMX
+
+
+❯ /rename qml 
+  ⎿  Session renamed to: qml
+
+❯ /effort                                                                       
+  ⎿  Set effort level to ultracode (this session only): xhigh + dynamic workflow
+     orchestration
+
+❯ /bmad-architecture. Update intent: resume from the memlog at                  
+  _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/.    
+  Scope: GAP-0047 — the QML sitting (the bot-authoring layer). Primary input:   
+  research-risk/qml-original-dig.md (old QML = "QML Shared Contract Library";   
+  BotSpec = Archetype + Features + Filters + Risk + Execution + ExitLogic;      
+  ExitLogicRef; CloseReason taxonomy) PLUS research-backtesting/                
+  qml-dig-verification.md (the .qml bot-source FILE FORMAT the dig missed —     
+  plain-Python-vs-.qml-DSL authoring must be ruled here). Job: rebuild QML as   
+  a THIN CONSUMER of QMF V1 contracts — never a foundation layer: the Bot       
+  schema (registry kind reserved by AD-16), confluence composition per AD-17    
+  recursive multiplicity, Book binding via CT-28/CT-23, exit declarations via   
+  AD-33's ExitLogicRef atom, admission-bar measure interfaces (thresholds come  
+  from the backtesting sitting — INTERFACES only, so this sitting may run       
+  before backtesting per operator lead 2026-08-20; QML-first BUILD order is     
+  natural). Old QML is evidence and shape ONLY, never code; its old             
+  risk/sizing content is superseded by AD-29..41. Bots stay authorable in       
+  plain Python (don't-box-in); QML conformance is the ticket into governed      
+  evidence and Book seats, nothing else. Operator brain-dumps;                  
+  recommendation-first questions; every configurable = UI-editable.             
+  [[c:\Users\Mubarak\Documents\Claude\QMX-discussion ]] I would prefer if you   
+  run this autonomously without me because I am certain you can. Because the    
+  thing is, we've already kind of done this already, I would say, but it's an   
+  older version of QMX. The version we did it in is in the folder I touched     
+  above. However, that version did not have QMF, so we need to first see        
+  adaptations and then we see if it actually needs to be working before the     
+  trading node or after the trading node. But I feel like it is before the      
+  trading node. So try as hard as possible to get QML, should I say, out of the 
+  way in terms of architecture? Yeah, because I know you really won't need me.  
+  You look at what the old version has, then, of course, the prompt I gave you  
+  above is paramount, though it's an agent that wrote it, not me. Yeah, so try  
+  to do it without me, then I believe, yeah, look at what so far has been       
+  should I say documented and architected before we actually begin okay rather  
+  before you actually begin looking into stuff because there is a high chance   
+  that you have to adopt what has been already architected and documented. So,  
+  since we haven't started coding yet, but we are todaySo it seems like the QMB 
+  session already did some heavy lifting for you. It's the one that actually    
+  gave me the prompt I pasted at the very top. So try to run this without me. I 
+  will say this again: try so hard. You have dynamic workflows, you have        
+  sub-agents. So close this out as smoothly and as simply as possible, but be   
+  thorough in that sense. Then after we have a simple prompt in the next        
+  session prompts file to use for documentation factory, and I think that's     
+  that,Alright, begin. Good                                                     
+
+● Skill(bmad-architecture)
+  ⎿  Successfully loaded skill
+
+● Resuming the architecture run for GAP-0047 (QML sitting). First I'll resolve
+  the skill config and load the run's memlog, spine, and the two primary
+  research inputs.
+
+  Read 1 file, listed 1 directory, ran 2 shell commands (ctrl+o to expand)
+
+● Config script hit a Windows encoding error — non-fatal; I'll use defaults
+  (project QMX, date 2026-08-21). Now loading the memlog (resume authority),
+  current spine, and the two primary QML inputs.
+
+  Read 2 files, ran 1 shell command (ctrl+o to expand)
+
+● Memlog and spine are large; loading the remainder of the memlog (resume
+  authority) and then the QML-relevant spine sections.
+
+  Read 2 files (ctrl+o to expand)
+
+● Spine fully loaded. Now the two primary QML inputs, the next-session-prompts
+  file, and a look at the QMB child spine.
+
+  Read 2 files (ctrl+o to expand)
+
+● Both inputs loaded. The .qml DSL question and the BotSpec/ExitLogicRef donor
+  set are clear. Now the session-prompts file and the QMB child spine (QML must
+  not contradict B-1..B-15).
+
+  Searched for 1 pattern, read 2 files, listed 2 directories, ran 1 shell command (ctrl+o to expand)
+
+● Workspace initialized. Checking the memlog script interface before appending
+  the dense ruling entries.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now drafting the sitting's rulings as memlog entries via a driver script
+  (avoids shell-quoting hazards on the dense text).
+  Made 1 scratchpad edit +30, ran 1 shell command (ctrl+o to expand)
+
+● All rulings logged. Distilling the spine.
+
+● Write(_bmad-output\planning-artifacts\architecture\architecture-QML-2026-08-21
+       \ARCHITECTURE-SPINE.md)
+  ⎿  Wrote 190 lines to _bmad-output\planning-artifacts\architecture\archit
+     ecture-QML-2026-08-21\ARCHITECTURE-SPINE.md
+      1 ---
+      3 type: architecture-spine
+      5 altitude: feature
+      6 paradigm: 'Declaration-plus-logic authoring library: bots are two
+        logic package) consumed by hosts through one runtime protocol; QM
+      7 scope: 'QML — the QMX bot-authoring layer: the Bot definition kin
+        d (CT-34), strategy-family keying, the bot runtime protocol, the 
+        conformance gate, and the admission-bar interfaces. Closes GAP-00
+        '
+      9 created: '2026-08-21'
+     … +547 lines (ctrl+o to expand)
+
+● Spine drafted (QL-1..QL-10 — ids shifted from the memlog draft numbering; I'll
+  log the mapping). Running the deterministic lint, then the reviewer-gate
+  fan-out.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Workflow(Reviewer gate for the QML architecture spine: five parallel review
+          lenses)
+  ⎿  /workflows to view dynamic workflow runs
+
+● Gate is running. Logging the id-mapping note (memlog draft numbering vs final
+  spine ids) while it works.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Reviewer gate is running in the background (five lenses over the drafted
+  spine). I'll apply its findings, re-lint, and close out when it returns.
+
+✻ Sautéed for 14m 20s
+
+● Dynamic workflow "Reviewer gate for the QML architecture spine: five parallel
+review lenses" completed · 15m 45s
+
+● Gate returned: 4/5 lenses delivered (rubric agent failed its structured-output
+  step — checking whether its report file still landed). Reading the full
+  findings now.
+
+  Listed 1 directory (ctrl+o to expand)
+
+● All five reports landed on disk (the rubric agent wrote its file before its
+  structured-output failure). Reading all findings for the desk pass.
+
+  Read 1 file (ctrl+o to expand)
+
+● Adversarial pass: 13 real findings (1 critical). Reading the remaining four
+  reports.
+
+  Read 4 files (ctrl+o to expand)
+
+● Write(_bmad-output\planning-artifacts\architecture\architecture-QML-2026-08-21
+       \ARCHITECTURE-SPINE.md)
+  ⎿  Added 77 lines, removed 56 lines
+       9  created: '2026-08-21'
+      10  updated: '2026-08-21'
+      11  binds: [GAP-0047, CT-33, CT-34, CT-06-kind-register, AD-30-pend
+          ing-slots]
+      12 +proposes-parent-mints: [CT-22-format-version, CT-23-format-vers
+         +ion]                                                           
+      13  sources: [../architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md 
+          (AD-1..41), ../architecture-QMX-2026-08-19/research-risk/qml-or
+          iginal-dig.md, ../architecture-QMX-2026-08-19/research-backtest
+          ing/qml-dig-verification.md, ../architecture-QMB-2026-08-20/ARC
+          HITECTURE-SPINE.md (B-1..15), .memlog.md]
+      13 -companions: [../architecture-QMX-2026-08-19/research-risk/qml-o
+         -riginal-dig.md, ../architecture-QMX-2026-08-19/research-backtes
+         -ting/qml-dig-verification.md]                                  
+      14 -provenance: 'Autonomous sitting 2026-08-21 by operator delegati
+         -on; every without-operator call is tagged in the memlog assumpt
+         -ions entry and individually overturnable'                      
+      14 +companions: [../architecture-QMX-2026-08-19/research-risk/qml-o
+         +riginal-dig.md, ../architecture-QMX-2026-08-19/research-backtes
+         +ting/qml-dig-verification.md, reviews/]                        
+      15 +provenance: 'Autonomous sitting 2026-08-21 by operator delegati
+         +on; every without-operator call is tagged in the memlog assumpt
+         +ions entry and individually overturnable. Reviewer gate applied
+         + at desk (5 lenses, 34 findings — all applied; see reviews/ and
+         + the memlog gate entry)'                                       
+      16  ---
+      17  
+      18  # Architecture Spine — QML
+     ...
+      27  
+      28  | Inherited | From | Binds here |
+      29  | --- | --- | --- |
+      29 -| Bot kind reserved; kinds addable never redefined; stable id f
+         -rom `fp1` | AD-16 | CT-33 fills the reserved kind; family recor
+         -d rides the same addable-kinds law |                           
+      30 +| Bot kind reserved; kinds addable never redefined; stable id f
+         +rom `fp1`; writer/sequence/created-at are ordering/occurrence, 
+         +never hashed content | AD-16, AD-8 | CT-33 fills the reserved k
+         +ind; family record rides the same addable-kinds law; the identi
+         +ty carve-out in QL-3 |                                         
+      31  | Recursive multiplicity; Bot identity is content; composites a
+          re own artifacts; binding is a separate dated record | AD-17 | 
+          CT-33/CT-34 shapes; re-binding never mints a Bot; a content cha
+          nge always does |
+      31 -| Authority order bot → book → BMS → operator; Book owns admiss
+         -ion, sizing, doors, exit policy | AD-29, AD-33 | The bot never 
+         -sizes; `requested_r` is Book-resolved; QML carries no exit_logi
+         -c field on the bot |                                           
+      32 +| Authority order bot → book → BMS → operator; Book owns admiss
+         +ion, sizing, doors, exit policy | AD-29, AD-33 | The bot never 
+         +sizes; `requested_r` and the declared full-loss price are Book-
+         +resolved; QML carries no exit_logic field on the bot |         
+      33  | Template discipline: JSON-Schema-class, exact rationals, unit
+          -kinds, `ui-editable` flags, git-logic versioning, `pending(gap
+          )` slots | AD-30 | The declaration artifact's grammar; Bot vers
+          ioning; the two `pending(GAP-0047)` slots resolved here |
+      33 -| Admission is technical, never performance; bar = set of named
+         - requirements; blank blocks live money | AD-32 | The conformanc
+         -e gate mirrors it; bar `evidence_requirements` gains the two bo
+         -t-side fields (QL-7) |                                         
+      34 -| `ExitLogicRef` per family in the Book's `exit_policy`; typed 
+         -close reasons; whole-trade attribution | AD-33 | QL-8 ratifies 
+         -the donor atoms as-is and closes the QML-revision flag |       
+      35 -| Frozen R; declared full-loss price before open; dimensional l
+         -aw; unit-kinds | AD-40 | Every CT-33 parameter carries a unit-k
+         -ind; entry-intent derivation (QL-6) |                          
+      36 -| Seats `active \| benched`; CT-32 the one performance containe
+         -r | AD-41 | Seat records stay AD-41's; QML mints no seat vocabu
+         -lary |                                                         
+      37 -| Extension mechanics: separate versioned packages, explicit re
+         -gistration, distribution identity in artifact identity, graduat
+         -ion path | AD-2, AD-22 | The logic package's mechanics; the bot
+         - graduation path |                                             
+      38 -| Run spec is the bot layer; declared parameter spaces; declare
+         -d stream sets; ledger roles + reader-derived bar verdicts; `fp1
+         -` cites | B-3, B-8, B-12, B-4, B-15 | CT-33 declares exactly wh
+         -at B-3/B-8/B-12 consume; canonical-assignment evidence is check
+         -able from the resolved run-config |                            
+      39 -| QMB tests plain-Python bots until QML lands; conformance gate
+         -s governed evidence, not tunnel entry | QMB Deferred | QL-7's t
+         -icket honors it verbatim |                                     
+      34 +| Admission is technical, never performance; bar = set of named
+         + requirements; blank blocks live money | AD-32 | The conformanc
+         +e gate mirrors it; the two bot-side `evidence_requirements` fie
+         +lds land as a **proposed CT-22 format mint** (QL-8) |          
+      35 +| `ExitLogicRef` per family in the Book's `exit_policy`; typed 
+         +close reasons; whole-trade attribution | AD-33 | QL-9 ratifies 
+         +the donor atoms as-is and closes the QML-revision flag |       
+      36 +| Frozen R; declared full-loss price before open; dimensional l
+         +aw; unit-kinds | AD-40 | Every CT-33 parameter carries a unit-k
+         +ind; Book-side entry-intent derivation (QL-7) |                
+      37 +| Seats `active \| benched`; CT-32 the one performance containe
+         +r; same-tick close-authority priority | AD-41, AD-37 | Seat rec
+         +ords stay AD-41's; close-authority priority is AD-37's, already
+         + ruled — QML bots emit intents and relinquish |                
+      38 +| Extension mechanics: separate versioned packages, explicit re
+         +gistration, distribution identity in artifact identity, graduat
+         +ion path; registry emissions minted by the composition root hol
+         +ding the WriterId | AD-2, AD-22, AD-25 | The logic package's me
+         +chanics; the bot graduation path; the registration write path (
+         +QL-1) |                                                        
+      39 +| Run spec is the bot layer; declared parameter spaces; declare
+         +d stream sets; ledger roles + reader-derived bar verdicts; `fp1
+         +` cites | B-3, B-8, B-12, B-4, B-15 | CT-33 declares exactly wh
+         +at B-3/B-8/B-12 consume; canonical-assignment evidence composes
+         + via a declared B-3 stamp + B-4 fold qualifier (QL-8) |        
+      40 +| QMB tests plain-Python bots until QML lands; conformance gate
+         +s governed evidence, not tunnel entry | QMB Deferred | QL-8's t
+         +icket honors it verbatim |                                     
+      41  | Corpus precedence: QMX-discussion barred for risk/sizing; str
+          uctural definitions citable under named exemption | Operator ru
+          ling 2026-08-20 | The dig + verification dossiers are the named
+           vehicles; no risk/sizing content is taken from that layer |
+      42  | Don't-box-in; configurable = UI-editable; L11 (QMF is the umb
+          rella, QML the Bot library); banned vocabulary | Standing rules
+           | QL-1 identity; every configurable declaration flag; naming |
+      43  
+     ...
+       46  ### QL-1 — QML identity: the authoring library, thin by law
+       47  
+       48  - **Binds:** the `qml` distribution; every consumer of Bot-dom
+           ain artifacts
+       48 -- **Prevents:** QML re-expanding into a uniform cross-componen
+          -t layer (the old failure the prior generation already retired)
+          -; a second shared-contract stratum beside QMF; strictness leak
+          -ing into ungoverned research                                  
+       49 -- **Rule:** QML is the bot-authoring **library** of the QMX pl
+          -atform — one uv-installable distribution (import `qml`), appli
+          -cation layer built on QMF contracts exactly as QMB is (L21), n
+          -ever a QMF roster package (ADR-0011/L11). Its whole surface is
+          - three thin things: (1) author-side types and helpers producin
+          -g the Bot-domain registry artifacts (CT-33/CT-34) on `qmf-core
+          -` nouns; (2) the bot runtime protocol hosts invoke (QL-6); (3)
+          - the conformance gate (QL-7). QMF's contracts are the shared l
+          -ayer; QML **consumes** them and defines no cross-component con
+          -tract of its own. Plain Python stays first-class forever: an u
+          -nregistered bot needs zero QML imports to run in QMB or resear
+          -ch lanes (don't-box-in); conformance is the ticket into govern
+          -ed evidence and Book seats, nothing else. No acronym expansion
+          - is minted (the corpus never expands QML; the L reads as *Libr
+          -ary*). Dependency stance: QML imports `qmf-core` (nouns, finge
+          -rprints, refusals, series vocabulary), `qmf-registry` (the kin
+          -ds it authors), and `qmf-risk` (CT-23 intent types) — applicat
+          -ion-layer composition, legal because the default-deny edge rul
+          -e governs QMF roster packages internally, never applications b
+          -uilt on the workspace; QML never imports `qmf-venue`. The libr
+          -ary is pure per AD-15 (no threads, no I/O); registration write
+          -s and sandbox processes ride the platform/QMB composition root
+          -s through AD-28's injected-sink pattern.                      
+       49 +- **Prevents:** QML re-expanding into a uniform cross-componen
+          +t layer (the old failure the prior generation already retired)
+          +; a second shared-contract stratum beside QMF; strictness leak
+          +ing into ungoverned research; two owners of the Bot-kind recor
+          +d stream                                                      
+       50 +- **Rule:** QML is the bot-authoring **library** of the QMX pl
+          +atform — one uv-installable distribution (import `qml`), appli
+          +cation layer built on QMF contracts exactly as QMB is (AD-2 / 
+          +L11), never a QMF roster package (ADR-0011). Its whole surface
+          + is three thin things: (1) author-side types and helpers produ
+          +cing the Bot-domain registry artifacts (CT-33/CT-34) on `qmf-c
+          +ore` nouns; (2) the bot runtime protocol hosts invoke (QL-7); 
+          +(3) the conformance gate (QL-8). **QML mints no new QMF-ladder
+          + (CT-\*) shared contract of its own** — CT-33/CT-34 are qmf-re
+          +gistry kinds this sitting fills; the runtime protocol (QL-7) a
+          +nd conformance contract (QL-8) are QML-local contracts on QML'
+          +s own format-version ladder, exactly as QMB owns its run-confi
+          +g and ledger contracts. Plain Python stays first-class forever
+          +: an unregistered bot needs zero QML imports to run in QMB or 
+          +research lanes (don't-box-in); conformance is the ticket into 
+          +governed evidence and Book seats, nothing else. No acronym exp
+          +ansion is minted (the corpus never expands QML; the L reads as
+          + *Library*).                                                  
+       51 +  - **Dependency stance:** QML imports `qmf-core` (nouns, fing
+          +erprints, refusals, series vocabulary), `qmf-registry` (the ki
+          +nds it authors), and `qmf-risk` (CT-23/CT-29 types); it never 
+          +imports `qmf-venue`. This reads the QMF default-deny edge rule
+          + as governing the seven roster packages internally, never appl
+          +ications built on the workspace — the reading the ratified QMB
+          + precedent already exercises (its library consumes qmf-risk co
+          +ntracts per B-3/B-6). **Declared reconciliation note:** the pa
+          +rent rule's wording is absolute ("nothing imports qmf-venue or
+          + qmf-risk"); the documentation-factory increment records the r
+          +oster-scoped reading against the parent Dependency-direction r
+          +ule so the carve-out is annotated at source, not settled silen
+          +tly by a child.                                               
+       52 +  - **Registration write path (AD-25's root-mints pattern, not
+          + AD-28's venue path):** the composition root holds the `Writer
+          +Id` and the gapless per-(writer, kind) sequence for the Bot-do
+          +main record streams, mints the registry records, and sees ever
+          +y `RecordSink` refusal (block-on-unpersistable); `qml` returns
+          + fingerprintable content, never stamped records. The writer un
+          +it for Bot-domain kinds is **(machine, authoring role, kind)**
+          +. AD-28's injected-sink reference applies only to the conforma
+          +nce runner's I/O (QL-8).                                      
+       53 +  - **Versioning and channel (B-13 mirrored):** the `qml` dist
+          +ribution carries its own SemVer as **display-only provenance**
+          + — never identity; CT-33 `fp1` and the logic-artifact identity
+          + carry identity — consumes the QMF workspace lockstep, and ins
+          +talls as a normal pinned project dependency (`uv add qml`).   
+       54 +  - The library is pure per AD-15 (no threads, no I/O, no proc
+          +ess spawning); every impure step (registration writes, sandbox
+          + execution) is host-owned.                                    
+       55  
+       56  ### QL-2 — Two halves of a bot; the `.qml` DSL is not revived
+       57  
+       58  - **Binds:** every governed bot; the authoring surface; the fu
+           ture UI/agent authoring lanes
+       54 -- **Prevents:** a second language to maintain and govern; bot 
+          -meaning living outside identity; the Monaco-era file format re
+          -turning as an unversioned side channel                        
+       55 -- **Rule:** a governed bot is exactly two artifacts. **(1) The
+          - declaration** — a structured configuration artifact under AD-
+          -30's template discipline (JSON-Schema-class; every number an e
+          -xact rational with a unit-kind; every configurable variable fl
+          -agged `ui-editable | uneditable`), registered as the CT-33 Bot
+          - definition. **(2) The logic** — plain Python conforming to th
+          -e QL-6 runtime protocol, shipped as a versioned distribution u
+          -nder AD-2/AD-22 extension mechanics (explicit registration at 
+          -a composition root, never ambient scanning); its distribution 
+          -identity + version + the content fingerprint of the built arti
+          -fact are **identity fields of the Bot definition**, so a code 
+          -change mints a new Bot exactly as a changed number mints a new
+          - Book (AD-30). **The `.qml` bot-source file format and its Mon
+          -aco surface are not revived in V1** — no second language: what
+          - the old `.qml` file carried (entry, filters, gates, subscript
+          -ions as an editable source) is delivered by the declaration (s
+          -tructure) plus the Python logic (conditions), and the declarat
+          -ion is the durable, diffable, UI-editable authoring surface. A
+          - future declarative condition grammar, editor surface, or agen
+          -t codegen lane is platform/agentic territory and **compiles to
+          - these same two artifacts** — nothing forecloses it, nothing w
+          -aits on it. A model-bearing bot is legal today by baking its w
+          -eights into the logic artifact (content identity covers them);
+          - a separately-tunable weights-artifact parameter kind is an ex
+          -plicit later mint (Deferred).                                 
+       59 +- **Prevents:** a second language to maintain and govern; bot 
+          +meaning living outside identity; the Monaco-era file format re
+          +turning as an unversioned side channel; non-reproducible build
+          +s forking Bot identity                                        
+       60 +- **Rule:** a governed bot is exactly two artifacts. **(1) The
+          + declaration** — a structured configuration artifact under AD-
+          +30's template discipline (JSON-Schema-class; every number an e
+          +xact rational with a unit-kind; every configurable variable fl
+          +agged `ui-editable | uneditable`), registered as the CT-33 Bot
+          + definition. **(2) The logic** — plain Python conforming to th
+          +e QL-7 runtime protocol, shipped as a versioned distribution u
+          +nder AD-2/AD-22 extension mechanics (explicit registration at 
+          +a composition root, never ambient scanning). The logic's ident
+          +ity basis is its **distribution identity + version + a canonic
+          +al source-manifest fingerprint** — a normalized, reproducible 
+          +hash over the source tree, defined as fingerprinted contract s
+          +urface — and these are **identity fields of the Bot definition
+          +**, so a code change mints a new Bot exactly as a changed numb
+          +er mints a new Book (AD-30). **Non-reproducible built-artifact
+          + bytes (wheel timestamps, build metadata) may never be the ide
+          +ntity basis** — identical source built in two sandboxes must y
+          +ield one Bot `fp1` (AD-16 dedup). **The `.qml` bot-source file
+          + format and its Monaco surface are not revived in V1** — no se
+          +cond language: what the old `.qml` file carried (entry, filter
+          +s, gates, subscriptions as an editable source) is delivered by
+          + the declaration (structure) plus the Python logic (conditions
+          +), and the declaration is the durable, diffable, UI-editable a
+          +uthoring surface. A future declarative condition grammar, edit
+          +or surface, or agent codegen lane is platform/agentic territor
+          +y and **compiles to these same two artifacts** — nothing forec
+          +loses it, nothing waits on it. A model-bearing bot is legal to
+          +day by baking its weights into the logic artifact (source-mani
+          +fest identity covers them); a separately-tunable weights-artif
+          +act parameter kind is an explicit later mint (Deferred).      
+       61  
+       62  ### QL-3 — The Bot definition kind (CT-33)
+       63  
+       64  - **Binds:** CT-33; qmf-registry (kind owner); QMB's config co
+           mpiler and sweep admission; the future node seat machinery
+       60 -- **Prevents:** two bots that cannot be compared or deduplicat
+          -ed; parameter values with no identity locus; a tuned bot silen
+          -tly wearing the original's track record; the reserved Bot kind
+          - staying a stub                                               
+       61 -- **Rule:** CT-33 fills AD-16's reserved Bot kind — a qmf-regi
+          -stry per-kind contract on the QMF ladder, authored via QML, ow
+          -ned by qmf-registry like every kind. Content, all identity unl
+          -ess declared display-only:                                    
+       62 -  - the AD-16 common header (stable id from `fp1`, contract fo
+          -rmat version, at-birth refs, writer + sequence);              
+       63 -  - the **strategy-family id** (QL-5);                        
+       65 +- **Prevents:** two bots that cannot be compared or deduplicat
+          +ed; parameter values with no identity locus; a tuned bot silen
+          +tly wearing the original's track record; Bot identity forking 
+          +on writer or nesting; the reserved Bot kind staying a stub    
+       66 +- **Rule:** CT-33 fills AD-16's reserved Bot kind — a qmf-regi
+          +stry per-kind contract on the QMF ladder, authored via QML, ow
+          +ned by qmf-registry like every kind. **Identity carve-out, sta
+          +ted so AD-16's law cannot be misread:** the AD-16 common heade
+          +r's `writer`, `sequence`, `stable id`, and `created-at` are or
+          +dering/occurrence fields **excluded from `fp1`** (AD-8/AD-16 —
+          + the stable id is *derived from* the fingerprint, never hashed
+          + into it); Bot identity is the **semantic content only**, plus
+          + the contract format version and at-birth refs. That content: 
+       67 +  - the **strategy-family id** (QL-6);                        
+       68    - the **confluence set** — one-or-more CT-34 fingerprints (A
+           D-17), canonically ordered by child fingerprint ascending with
+            a separate display-only ordinal (AD-30's set discipline); the
+            bot does not declare execution order — sequencing semantics l
+           ive in logic;
+       65 -  - the **declared parameter space**, verbatim B-8's schema — 
+          -name, type ∈ exact integer | exact rational | categorical | bo
+          -olean, bounds, step, **mandatory default**, optional hard cons
+          -traint filters — with a **unit-kind on every parameter** (AD-4
+          -0). The defaults together form the definition's **canonical as
+          -signment**;                                                   
+       66 -  - the **footprint** (below);                                
+       67 -  - the **permitted-intent declaration** — which CT-23 intent 
+          -kinds the logic may mint (a subset of the ratified vocabulary:
+          - entry plus zero-or-more exit kinds);                         
+       68 -  - the **stream-set requirement** — instrument-role + `BarSpe
+          -c` list in B-12's shape, trading vs data-only roles;          
+       69 -  - the **logic reference** (QL-2's distribution identity + ve
+          -rsion + content fingerprint).                                 
+       70 -  - **Versioning is AD-30's git logic verbatim:** an append-on
+          -ly `branches-from` version graph (multiple heads legal; "curre
+          -nt" is a separate dated pointer record); every version readabl
+          -e forever; `continues-performance` carries a track record acro
+          -ss versions only when human-signed (AD-16/AD-18). Bot identity
+          - is content (AD-17): re-binding, seats, and paper flips never 
+          -mint a new Bot; a changed default, leg, footprint entry, or lo
+          -gic artifact always does.                                     
+       71 -  - **Parameterization law:** governed live/paper seats execut
+          -e the **canonical assignment only**. Non-default assignments e
+          -xist solely as B-3 run-spec overrides in experimentation runs 
+          -— each fully labeled and resolvable from the resolved run-conf
+          -ig fingerprint. Promoting a tuned assignment mints a **new Bot
+          - version** (`branches-from`, optionally `continues-performance
+          -`) whose defaults are the tuned values. One identity locus; an
+          -d B-4 confirmation evidence stays honest — a run whose resolve
+          -d values differ from the canonical assignment can satisfy no a
+          -dmission-bar requirement that declares canonical-assignment ev
+          -idence (QL-7), checkable from the resolved run-config with no 
+          -amendment to B-4.                                             
+       69 +  - the **declared parameter space** — **the one authoritative
+          + bot parameter-space contract**, which B-8's optimizer consume
+          +s: B-8's schema (name, type ∈ exact integer | exact rational |
+          + categorical | boolean, bounds, step, **mandatory default**, o
+          +ptional hard constraint filters) **completed with the AD-40 un
+          +it-kind every declared variable already requires** — one schem
+          +a, never two. The defaults together form the definition's **ca
+          +nonical assignment**;                                         
+       70 +  - the **footprint** (QL-4) — which **contains the stream-set
+          + declaration** (instrument-role + `BarSpec` list in B-12's sha
+          +pe, trading vs data-only roles): one locus, one nesting, one l
+          +inter target — never a second top-level field;                
+       71 +  - the **permitted-intent declaration** — **`entry` is always
+          + permitted and is never gated by `exit_policy`**; the declarat
+          +ion names the bot's permitted **exit**-intent kinds, a subset 
+          +of the ratified CT-23 exit vocabulary, **which may be empty**.
+          + Intent-kind identifiers are stored as **opaque `qmf-core`-typ
+          +ed values** validated by QML-side linters — qmf-registry gains
+          + no `qmf-risk` edge (mirroring AD-22's "declaring an input cre
+          +ates no package dependency edge");                            
+       72 +  - the **logic reference** (QL-2's identity basis).          
+       73 +  - **Versioning is AD-30's git logic verbatim:** an append-on
+          +ly `branches-from` version graph (multiple heads legal; "curre
+          +nt" is a separate dated pointer record); every version readabl
+          +e forever; `continues-performance` carries a track record acro
+          +ss versions only when human-signed (AD-16/AD-18). Bot identity
+          + is content (AD-17): re-binding, seats, and paper flips never 
+          +mint a new Bot; a changed default, leg, footprint entry, or lo
+          +gic artifact always does. **The AD-41 seat record — the Bot si
+          +de of the CT-28 binding context — cites the registered Bot def
+          +inition by `fp1`**, and the prediction linter (QL-8) runs agai
+          +nst that CT-28 binding context; re-binding semantics stay CT-2
+          +8/AD-29's.                                                    
+       74 +  - **Parameterization law:** governed live/paper seats execut
+          +e the **canonical assignment only**. Non-default assignments e
+          +xist solely as B-3 run-spec overrides in experimentation runs 
+          +— each fully labeled and resolvable from the resolved run-conf
+          +ig fingerprint. Promoting a tuned assignment mints a **new Bot
+          + version** (`branches-from`, optionally `continues-performance
+          +`) whose defaults are the tuned values. One identity locus. Th
+          +e admission-side check this enables is QL-8's canonical-assign
+          +ment evidence, which **composes with QMB as a declared sibling
+          + extension** — a B-3 resolved-config stamp (`assignment_is_can
+          +onical`, mirroring B-3's `seed_overridden` precedent) plus a B
+          +-4 fold qualifier that reads it — declared here so QMB budgets
+          + for it rather than discovering it.                           
+       75  
+       76  ### QL-4 — Footprint and producer bindings
+       77  
+       75 -- **Binds:** CT-33's footprint section; AD-30's `footprint_req
+          -uirements` pending slot; QMB run-config resolution; seat admis
+          -sion                                                          
+       76 -- **Prevents:** a bot consuming evidence it never declared; tu
+          -nable producer parameters being inexpressible; a second warm-u
+          -p window; the pending slot staying unfillable                 
+       77 -- **Rule:** the footprint declares everything the bot consumes
+          -: the stream set; required calendars (identities + versions pe
+          -r AD-8); and **producer bindings**, each either **(a)** a pinn
+          -ed configured-producer fingerprint (CT-16/CT-17 identity) or *
+          -*(b)** a producer **template** — (formula id, contract format 
+          -version, fixed exact parameters, and space-bound parameters ma
+          -pping named bot-space parameters into the producer configurati
+          -on) — resolved to a concrete configured-producer fingerprint a
+          -t run-config compile or seat admission, so a tunable indicator
+          - period is expressible while resolved-producer identity still 
+          -enters run identity per AD-22 and dedup still lands on ordinar
+          -y CT-16 fingerprints. The bot's warm-up/embargo horizon is **d
+          -erived at resolution** from the resolved producer chain (AD-21
+          -/AD-22 law), never hand-declared — no second window. Heavy pro
+          -ducers are consumed through AD-24's fan-out staleness stamps; 
+          -nothing new. Hosts provide **only** the declared footprint to 
+          -the logic (B-12's declared-stream-set law reaching the bot bou
+          -ndary). Book-side **`footprint_requirements`** (AD-30's pendin
+          -g slot) now has its contract shape: a **set** of typed require
+          -ments over CT-33 footprint fields, under the same grammar disc
+          -ipline as `admission_bar` — requirement kind + comparison + a 
+          -ruled value or an explicit not-yet-ruled tag — with values liv
+          -ing in Book templates, never in this spine.                   
+       78 +- **Binds:** CT-33's footprint section; AD-30's `footprint_req
+          +uirements` pending slot; QMB run-config resolution (a declared
+          + B-3 compiler extension); node seat admission                 
+       79 +- **Prevents:** a bot consuming evidence it never declared; a 
+          +confluence leg starving at runtime because its producer never 
+          +reached the footprint; two compilers resolving one template to
+          + two fingerprints; a second warm-up window                    
+       80 +- **Rule:** the footprint is **the single canonical consumptio
+          +n manifest**: the stream set (QL-3); required calendars (ident
+          +ities + versions per AD-8); and **producer bindings**, each ei
+          +ther **(a)** a pinned configured-producer fingerprint (CT-16/C
+          +T-17 identity) or **(b)** a producer **template**. **A templat
+          +e is a complete CT-16/CT-17 configuration minus only the space
+          +-bound parameter values:** it carries every AD-22 identity fie
+          +ld (formula id, contract format version, ordered named input s
+          +et, calendar requirements, alignment policy, missing-value pol
+          +icy, warm-up, output schema, supported modes, arithmetic-refer
+          +ence configuration) except the specific parameters bound to na
+          +med bot-space parameters; an omitted identity field is a Layer
+          +-1 registration refusal (AD-22's "missing element is a contrac
+          +t defect"). Resolution — substituting the space-bound values —
+          + is therefore a **total, single-valued function** producing on
+          +e deterministic CT-16/CT-17 fingerprint, so dedup lands on ord
+          +inary configured-producer fingerprints and identical canonical
+          + runs fingerprint identically on every machine. **Template res
+          +olution is a declared B-3 config-compiler extension and a node
+          + seat-admission responsibility** (composing with B-8's value r
+          +esolution) — named here so QMB budgets for the step. **Complet
+          +eness law:** the footprint's producer-binding set MUST equal t
+          +he transitive union of every cited confluence's leg producer b
+          +indings plus any bot-direct producers; a confluence-leg produc
+          +er absent from the footprint is a Layer-1 registration refusal
+          +. Hosts provide **only** the declared footprint to the logic (
+          +B-12's declared-stream-set law reaching the bot boundary). The
+          + bot's warm-up/embargo horizon is **derived at resolution** fr
+          +om the resolved producer chain (AD-21/AD-22 law), never hand-d
+          +eclared — no second window. Heavy producers are consumed throu
+          +gh AD-24's fan-out staleness stamps; nothing new. Book-side **
+          +`footprint_requirements`** (AD-30's pending slot, reserved for
+          + this sitting) now has its contract shape: a **set** of typed 
+          +requirements over CT-33 footprint fields, under the same gramm
+          +ar discipline as `admission_bar` — requirement kind + comparis
+          +on + a ruled value or an explicit not-yet-ruled tag — with val
+          +ues living in Book templates, never in this spine. Its landing
+          + in CT-22 follows the reserved-pending path (Parent-contract m
+          +ints, below).                                                 
+       81  
+       82  ### QL-5 — The confluence kind (CT-34) and the leg-role vocabu
+           lary
+       83  
+       84  - **Binds:** CT-34; qmf-registry; every Bot definition
+       82 -- **Prevents:** confluence anatomy hardcoding cardinality one;
+          - the old formula's Filters left homeless; condition semantics 
+          -smuggled into declarations as an accidental language          
+       83 -- **Rule:** a confluence is its **own registry artifact** (AD-
+          -17: composites are own artifacts with lineage to children), re
+          -usable across bots, cited by fingerprint. Content: one-or-more
+          - **legs**; each leg = (role, producer binding per QL-4, option
+          -al declared exact parameters). The **leg-role vocabulary**, ad
+          -dable never redefined: `level | trigger | confirmation | filte
+          -r` — the first three verbatim from AD-17; **`filter` is freshl
+          -y minted here** (provenance marked: design construction giving
+          - the old BotSpec formula's Filters a governed home) — a suppre
+          -ssing condition consuming the same governed producers, not a n
+          -ew species. A leg may cite another confluence (composition; th
+          -e child is its own artifact). Legs are canonically ordered by 
+          -leg-content fingerprint ascending with display-only ordinals; 
+          -a confluence may declare its legs order-significant explicitly
+          - (AD-25's causal-composite inversion available, never silently
+          - assumed). **Condition semantics live in logic in V1:** the de
+          -claration carries *what* is consumed (producer identities) and
+          - *which role* each plays; *when* a leg is satisfied is the Pyt
+          -hon logic's job. A fully declarative predicate grammar is Defe
+          -rred — this is the thin-consumer line: declared consumption + 
+          -roles buy footprint comparability and lineage without inventin
+          -g a language.                                                 
+       85 +- **Prevents:** confluence anatomy hardcoding cardinality one;
+          + the old formula's Filters and Features left homeless; two ord
+          +ering defaults forking CT-34 fingerprints; condition semantics
+          + smuggled into declarations as an accidental language         
+       86 +- **Rule:** a confluence is its **own registry artifact** (AD-
+          +17: composites are own artifacts with lineage to children), re
+          +usable across bots, cited by fingerprint. Content: **one-or-mo
+          +re legs, of any role mix** — AD-17's "one-or-more levels, trig
+          +gers, and confirmations" is read multiplicity-faithfully as *a
+          +t least one leg of any role*, never *one of each* (mandating o
+          +ne of each would itself be a foreclosing cardinality). Each le
+          +g = (role, producer binding per QL-4, optional declared exact 
+          +parameters). The **leg-role vocabulary is CT-34's own contract
+          + surface, closed-and-addable (addable never redefined): `level
+          + | trigger | confirmation | filter`** — AD-17's three are the 
+          +seed; QL-5 is not amending AD-17 but formalizing the enum AD-1
+          +7 left implicit, exactly as AD-40/AD-33 own the unit-kind and 
+          +close-reason vocabularies; **`filter` is the first addition** 
+          +(provenance marked: freshly minted design) — a suppressing con
+          +dition consuming the same governed producers, not a new specie
+          +s. **The old formula's Features are producer bindings consumed
+          + by `level`/`trigger` legs** — that is their stated dispositio
+          +n. A leg may cite another confluence (composition; the child i
+          +s its own artifact). **Ordering:** CT-34 legs follow **AD-17's
+          + fingerprint-ascending default (order-insignificant)** with di
+          +splay-only ordinals; a confluence is a declaration artifact, *
+          +*not a CT-17 causal-structure composite, so AD-25's order-sign
+          +ificant-by-default does not reach it**; order-significance is 
+          +opt-in per confluence and enters the fingerprint only when dec
+          +lared. **Condition semantics live in logic in V1:** the declar
+          +ation carries *what* is consumed (producer identities) and *wh
+          +ich role* each plays; *when* a leg is satisfied is the Python 
+          +logic's job. A fully declarative predicate grammar is Deferred
+          + — this is the thin-consumer line: declared consumption + role
+          +s buy footprint comparability and lineage without inventing a 
+          +language.                                                     
+       87  
+       88  ### QL-6 — Strategy family: a key, never an authority
+       89  
+       90  - **Binds:** CT-33; Book `exit_policy` keying (AD-33); per-fam
+           ily variables (AD-40/AD-41/AD-35); the prediction linter
+       91  - **Prevents:** the old ArchetypeSpec's constraint powers retu
+           rning through a naming token; per-family variables with nothin
+           g to key on; two families meaning two governance regimes
+       89 -- **Rule:** a **strategy family** is an opaque operator-minted
+          - id under AD-9's discipline plus a dated registry metadata rec
+          -ord (the same machinery as `instrument_class`; a kind under CT
+          --06's addable-kinds law, no new CT number). A family is a **ke
+          -ying token with no authority** — honoring the newer corpus's o
+          -wn disposition ("archetype survives as a no-authority naming t
+          -oken"). It is the key the ratified law already reaches for: AD
+          --33's `exit_policy` declares `ExitLogicRef` per family; AD-41'
+          -s `q` and AD-40's `bench_consecutive_loss_threshold` are per-f
+          -amily/per-bot variables; AD-35's paper starting balance is fam
+          -ily-scoped. Every CT-33 Bot definition declares exactly one fa
+          -mily id. A Book's `exit_policy` entries key by family id and m
+          -ay declare one catch-all default entry; a bot whose family res
+          -olves no entry fails the prediction linter (QL-8). The old Arc
+          -hetypeSpec's constraint powers (permitted feature families, pe
+          -rmitted timeframes, mutation allowances) are **not revived** —
+          - constraining is the Book's job (admission bar + `footprint_re
+          -quirements` + prediction linter); agent-mutation governance is
+          - agentic-sitting territory. "Archetype" is recorded in the glo
+          -ssary as the retired alias.                                   
+       92 +- **Rule:** a **strategy family** is an opaque operator-minted
+          + id under AD-9's discipline plus a dated registry metadata rec
+          +ord (the same machinery as `instrument_class`; a kind under CT
+          +-06's addable-kinds law, no new CT number). A family is a **ke
+          +ying token with no authority** — honoring the newer corpus's o
+          +wn disposition ("archetype survives as a no-authority naming t
+          +oken"). It is the key the ratified law already reaches for: AD
+          +-33's `exit_policy` declares `ExitLogicRef` per family; AD-41'
+          +s `q` and AD-40's `bench_consecutive_loss_threshold` are per-f
+          +amily/per-bot variables; AD-35's paper starting balance is fam
+          +ily-scoped. **Every CT-33 Bot definition declares exactly one 
+          +family id — a deliberate cardinality-one ruling under AD-17 (A
+          +D-29's pattern), not an assumption:** a family is an attributi
+          +on key, and one bot keyed to two families would partition ever
+          +y per-family variable and exit-policy resolution two ways. A B
+          +ook's `exit_policy` entries key by family id and may declare *
+          +*one catch-all default entry** — ratified into the CT-22 `exit
+          +_policy` shape as an explicit, optional, single default entry 
+          +through the proposed CT-22 format mint (Parent-contract mints,
+          + below), with the CT-29 exit record keying the **resolved** en
+          +try (explicit-or-catch-all) so loss-predicate attribution stay
+          +s unambiguous; a bot whose family resolves no entry fails the 
+          +prediction linter (QL-8). The old ArchetypeSpec's constraint p
+          +owers (permitted feature families, permitted timeframes, mutat
+          +ion allowances) are **not revived** — constraining is the Book
+          +'s job (admission bar + `footprint_requirements` + prediction 
+          +linter); agent-mutation governance is agentic-sitting territor
+          +y. "Archetype" is the retired alias — **to be recorded in the 
+          +glossary by the documentation-factory increment.**            
+       93  
+       94  ### QL-7 — The bot runtime protocol
+       95  
+       96  - **Binds:** QML's own format-versioned protocol contract (AD-
+           5's second ladder; not CT-numbered, mirroring QMB's own contra
+           cts); every host (QMB tunnel, trading node); every conformant 
+           bot
+       94 -- **Prevents:** live/backtest bot surfaces diverging; a bot si
+          -zing itself, reading a clock, or acting on undeclared evidence
+          -; nondeterministic bots poisoning B-2's golden-slice determini
+          -sm; R multi-authored at intent mint                           
+       95 -- **Rule:** a conformant bot is a **factory** the host constru
+          -cts with (declaration, resolved assignment, injected read surf
+          -aces), returning a callback object the host drives per evaluat
+          -ion instant. Callbacks receive **only the declared footprint's
+          - evidence** (presence-mapped series per AD-22, structure lifec
+          -ycle folds per AD-25, each sample carrying its knowable-at ins
+          -tant) and return zero-or-more CT-23 intents through the door. 
+          -The bot **never sizes** (`requested_r` is Book-resolved, AD-33
+          -), never touches venue commands, never reads a clock (the eval
+          -uation instant rides the callback; no Clock access below the h
+          -ost), never performs I/O, network access, or undeclared random
+          -ness (a stochastic bot declares a seed parameter in its space)
+          -. **Conformant logic is deterministic:** identical (declaratio
+          -n, assignment, evidence sequence, state) yields identical inte
+          -nts — the property B-2's golden-slice test already demands of 
+          -everything in the tunnel. Bot state follows AD-22's streaming-
+          -instance discipline generalized: bounded declared state; snaps
+          -hot/restore as a versioned contract scoped per AD-22's tuple r
+          -ule; a restored-state fingerprint entering downstream labels. 
+          -**Entry-intent derivation** (design construction, provenance m
+          -arked): the declared full-loss price on a CT-23 entry intent i
+          -s derived **at intent mint** by executing the Book-declared fa
+          -mily `ExitLogicRef` (module_id + config resolved read-only fro
+          -m the bound Book's `exit_policy` for the bot's family, consumi
+          -ng the bot's advisory stop proposal and cited evidence); the B
+          -ook door deterministically **recomputes and verifies** at admi
+          -ssion — a mismatch is an `invalid input` refusal — so the inte
+          -nt carries the field CT-23 names while R stays single-authored
+          - by the Book's declaration. Hosts: QMB binds conformant bots t
+          -hrough a QL-7 adapter at its composition root (B-1's extensibi
+          -lity law; the plain-Python bridge remains); the trading node h
+          -osts seats through the same protocol later.                   
+       97 +- **Prevents:** live/backtest bot surfaces diverging; a bot si
+          +zing itself, pricing its own R, reading a clock, or acting on 
+          +undeclared evidence; nondeterministic bots poisoning B-2's gol
+          +den-slice determinism; Book exit logic injected into bot logic
+       98 +- **Rule:** a conformant bot is a **factory** the host constru
+          +cts with (declaration, resolved assignment, injected read surf
+          +aces), returning a callback object the host drives per evaluat
+          +ion instant. Callbacks receive **only the declared footprint's
+          + evidence** (presence-mapped series per AD-22, structure lifec
+          +ycle folds per AD-25, each sample carrying its knowable-at ins
+          +tant) and return zero-or-more CT-23 intents through the door. 
+          +The bot **never sizes** (`requested_r` is Book-resolved, AD-33
+          +), never touches venue commands, never reads a clock (the eval
+          +uation instant rides the callback; no Clock access below the h
+          +ost), never performs I/O, network access, or undeclared random
+          +ness (a stochastic bot declares a seed parameter in its space)
+          +. **Conformant logic is deterministic:** identical (declaratio
+          +n, assignment, evidence sequence, state) yields identical inte
+          +nts — the property B-2's golden-slice test already demands of 
+          +everything in the tunnel. Bot state follows AD-22's streaming-
+          +instance discipline generalized: bounded declared state; snaps
+          +hot/restore as a versioned contract **scoped to the tuple (OS,
+          + logic distribution identity + source-manifest fingerprint, QL
+          +-7 protocol format version, and the arithmetic-reference build
+          + where the logic declares one)** — restoring across any compon
+          +ent is an `unavailable dependency` refusal; a restored-state f
+          +ingerprint enters downstream labels.                          
+       99 +  - **Entry-intent derivation — Book-side, single-sited.** The
+          + bot's entry proposal carries an **advisory stop proposal** — 
+          +a proposed protective-stop price or `PriceDelta` bound, adviso
+          +ry exactly as `proposed_r` is, landing on CT-23's entry intent
+          + as a new **optional** field through the proposed CT-23 format
+          + mint (Parent-contract mints, below). **The declared full-loss
+          + price is derived at the Book door, by the Book side executing
+          + its own per-family `ExitLogicRef`** (AD-40's "how is a per-fa
+          +mily declaration"), consuming the advisory proposal and the in
+          +tent's cited evidence; the Book stamps the derived price onto 
+          +the admitted intent exactly as it resolves `requested_r` — Boo
+          +k-authored, single execution site, no recompute protocol neede
+          +d. **The bot never computes, carries, or is handed the Book's 
+          +exit logic** — no Book module is ever injected into bot logic,
+          + which is what keeps the bot deterministic on its own tuple, s
+          +andbox-testable with no Book present (QL-8), and zero-import f
+          +or plain Python. Ungoverned plain-Python bots follow the same 
+          +path: the run spec supplies what the declaration would have (a
+          + family id where the Book's `exit_policy` needs one, or the ca
+          +tch-all applies), and the Book layer in the tunnel derives the
+          + price the same way — ungoverned evidence only (QL-8).        
+      100 +  - **Old `execution_profile`, dispositioned:** it does not su
+          +rvive as a bot field. Order-type preference, slippage toleranc
+          +e, and partial-fill behaviour are venue/node and tunnel runtim
+          +e law (CT-18/CT-19, B-6); **minimum-RR-before-entry is ruled a
+          + bot-internal condition in the bot's own logic in V1** (a Book
+          +-door version of the same gate is a later Book template mint, 
+          +nothing foreclosed). Stop-policy/`Lbar` exam-live **parity** i
+          +s Book + backtesting territory (GAP-0048 parity contracts); QM
+          +L delivers only the bot-surface half — one protocol, both host
+          +s.                                                            
+      101 +  - Hosts: QMB binds conformant bots through a QL-7 adapter at
+          + its composition root (B-1's extensibility law; the plain-Pyth
+          +on bridge remains); the trading node hosts seats through the s
+          +ame protocol later.                                           
+      102  
+      103  ### QL-8 — Conformance gate, the ticket, and the admission int
+           erfaces
+      104  
+       99 -- **Binds:** registration of the Bot kind; AD-32's `evidence_r
+          -equirements` vocabulary; the prediction linter (AD-32's Layer-
+          -1 pending slot); the graduation path                          
+      100 -- **Prevents:** a performance gate returning as "conformance";
+          - governed evidence citing unreproducible bots; the prediction 
+          -linter staying undefined; conformance creeping into tunnel ent
+          -ry                                                            
+      105 +- **Binds:** registration of the Bot kind; QML's conformance c
+          +ontract (own ladder); the prediction linter (AD-32's Layer-1 p
+          +ending slot); the proposed CT-22 mint; the graduation path    
+      106 +- **Prevents:** a performance gate returning as "conformance";
+          + governed evidence citing unreproducible bots; host-dependent 
+          +registration verdicts; a silent field addition to a parent con
+          +tract; conformance creeping into tunnel entry                 
+      107  - **Rule:** conformance is **technical, never performance** (A
+           D-32's no-probation law mirrored). Two layers and a ticket:
+      102 -  - **Layer 1 — declaration linter** (machine, at registration
+          -): schema completeness against the declared format version; ev
+          -ery parameter unit-kinded with a valid canonical assignment; e
+          -very reference resolvable (family record, confluence fingerpri
+          -nts, producer formulas at their declared format versions, logi
+          -c distribution); permitted-intent kinds within the ratified CT
+          --23 vocabulary. Failures are AD-11 typed refusals, journaled. 
+      103 -  - **Layer 2 — sandboxed execution conformance:** the logic a
+          -rtifact loads in an isolated environment; runs a golden eviden
+          -ce slice **twice with identical intents** (determinism); emits
+          - only permitted intent kinds; respects the no-clock/no-I/O/no-
+          -network constraints (static import scan + sandbox denial); hon
+          -ors its declared state bound and a snapshot/restore round-trip
+          -.                                                             
+      104 -  - **The ticket:** the Bot registry kind mints only for artif
+          -acts passing both layers (registration otherwise refuses, `pol
+          -icy rejection`) — and that registration is what governed evide
+          -nce and seats cite. Ungoverned bots keep full tunnel access (B
+          --4 ledger lines, the research door): conformance gates evidenc
+          -e **citation** and **seats**, never tunnel entry (QMB's Deferr
+          -ed row honored verbatim).                                     
+      105 -  - **Admission-bar interface** (interfaces only — thresholds 
+          -stay GAP-0048/0049): AD-32's `evidence_requirements` vocabular
+          -y gains two bot-side declarable fields — a **registered-confor
+          -mant-Bot cite** (presented CT-32 evidence must cite a register
+          -ed Bot definition `fp1`) and **canonical-assignment evidence**
+          - (the cited runs' resolved values equal the definition's canon
+          -ical assignment, checkable from the resolved run-config finger
+          -print).                                                       
+      106 -  - **Prediction linter, pinned check list** (addable never re
+          -defined), running statically on demand and at seat time, filli
+          -ng AD-32's Layer-1 pending slot: **(a)** the CT-33 footprint s
+          -atisfies the Book's `footprint_requirements`; **(b)** the bot'
+          -s permitted-intent kinds are a subset of the Book's `exit_poli
+          -cy` permitted kinds; **(c)** the bot's family resolves an `exi
+          -t_policy` entry (or the Book's declared catch-all); **(d)** th
+          -e bot's stream set lies within the binding's declared venue ca
+          -pabilities (CT-18, through AD-29's bind-time check).          
+      108 +  - **Layer 1 — declaration linter** (machine, at registration
+          +): schema completeness against the declared format version; ev
+          +ery parameter unit-kinded with a valid canonical assignment; e
+          +very reference resolvable (family record, confluence fingerpri
+          +nts, producer formulas at their declared format versions, logi
+          +c distribution); footprint completeness per QL-4's transitive-
+          +union law; template completeness per QL-4; permitted **exit**-
+          +intent kinds within the ratified CT-23 vocabulary. Failures ar
+          +e AD-11 typed refusals, journaled.                            
+      109 +  - **Layer 2 — sandboxed execution conformance, split into a 
+          +QML-owned contract and a host-owned runner.** QML owns, as for
+          +mat-versioned pure surface: the denial set (clock/I-O/network/
+          +randomness), the static AST/import-scan rules, the determinism
+          + harness, a **deterministic golden-slice generator keyed off t
+          +he bot's declared footprint** (an identity-bearing conformance
+          + fixture), and the verdict function. The host (platform or QMB
+          + composition root) owns only process spawning and isolation, a
+          +nd feeds results back to QML's pure verdict function — so **a 
+          +bot's conformance verdict is host-independent by construction*
+          +*, and no Book is present or needed (the bot's output under te
+          +st is intents with advisory proposals, QL-7). The suite assert
+          +s: the logic artifact loads in isolation; a golden slice run *
+          +*twice yields identical intents**; only permitted intent kinds
+          + are emitted; the declared state bound holds and a snapshot/re
+          +store round-trip is equivalent (AD-22's restore-equivalence pa
+          +ttern). **V1 enforcement scope, stated honestly:** the no-cloc
+          +k/no-I-O/no-network constraints are enforced by the static AST
+          +/import scan, capability starvation (hosts inject read surface
+          +s only), and host process isolation; **hardened OS-level runti
+          +me confinement (restricted tokens/job objects on Windows, secc
+          +omp-class on Linux) is not promised in V1** — it is a named de
+          +ferred dependency of the node/platform sitting, and a dynamica
+          +lly-evasive malicious bot is out of V1's threat model (bots ar
+          +e operator- or operator's-agent-authored).                    
+      110 +  - **The ticket:** the Bot registry kind mints only for artif
+          +acts passing both layers (registration otherwise refuses, `pol
+          +icy rejection`) — and that registration is what governed evide
+          +nce and seats cite. Ungoverned bots keep full tunnel access (B
+          +-4 ledger lines, the research door): conformance gates evidenc
+          +e **citation** and **seats**, never tunnel entry (QMB's Deferr
+          +ed row honored verbatim). **The old `max_acceptable_complexity
+          +_score` anti-sprawl gate is not revived** — conformance is tec
+          +hnical-never-performance; any complexity/quality signal is a l
+          +ater measure, never a registration gate. That drop is a decisi
+          +on, not an omission.                                          
+      111 +  - **Admission-bar interface** (interfaces only — thresholds 
+          +stay GAP-0048/0049): two bot-side declarable `evidence_require
+          +ments` fields — a **registered-conformant-Bot cite** (presente
+          +d CT-32 evidence must cite a registered Bot definition `fp1`) 
+          +and **canonical-assignment evidence** (the cited runs' resolve
+          +d values equal the definition's canonical assignment, read fro
+          +m the B-3 `assignment_is_canonical` stamp / resolved-config fi
+          +ngerprint through a B-4 fold qualifier — the declared sibling 
+          +extension of QL-3). **These are net-new admission-bar surface,
+          + not the AD-30 pending slots: they land only through the propo
+          +sed CT-22 format-version mint below, never as a silent field a
+          +ddition** — under AD-30's unknown-section rule, an old parser 
+          +would silently ignore them and admit exactly the evidence they
+          + exist to refuse.                                             
+      112 +  - **Prediction linter, pinned check list** (addable never re
+          +defined), running statically on demand and at seat time agains
+          +t the CT-28 binding context, filling AD-32's Layer-1 pending s
+          +lot: **(a)** the CT-33 footprint satisfies the Book's `footpri
+          +nt_requirements`; **(b)** the bot's declared permitted **exit*
+          +*-intent kinds are a subset of the Book's `exit_policy` permit
+          +ted **exit** kinds (`entry` is never gated here — a zero-exit-
+          +kind Book, the honest V1 default, admits entry-only bots); **(
+          +c)** the bot's family resolves an `exit_policy` entry (explici
+          +t or the declared catch-all); **(d)** the bot's stream set lie
+          +s within the binding's declared venue capabilities (CT-18, thr
+          +ough AD-29's bind-time check).                                
+      113    - **Graduation path:** a working ungoverned experiment gradu
+           ates by minting the two artifacts with a lineage edge back to 
+           its originating research artifact (AD-22's graduation mechanic
+           s generalized to bots).
+      114  
+      115  ### QL-9 — Exit reconciliation: the donor atoms ratified, the 
+           taxonomy stays one
+      116  
+      117  - **Binds:** AD-33's provenance flag (closed); CT-23, CT-29; t
+           he glossary
+      118  - **Prevents:** a second close-reason taxonomy; `exit_logic` r
+           eturning to the bot; the QML-revision flag dangling forever
+      113 -- **Rule:** the AD-33 provenance flag ("QML donor atoms… open 
+          -to revision by the QML sitting") is **closed: ratified as-is.*
+          -* `ExitLogicRef = {module_id, config}` stays exactly where AD-
+          -33 put it — in the Book's `exit_policy`, per family — and the 
+          -Bot definition carries **no exit_logic field** (the old BotSpe
+          -c slot is deliberately dead; the bot declares only its family 
+          -and its permitted-intent subset). CT-29's typed close-reason t
+          -axonomy stays the **one** taxonomy; the old `CloseReason` memb
+          -ers map onto it as recorded evidence, never a second contract:
+          - `SL_HIT → protective_stop_fill`, `TP_HIT → target_fill`, `TRA
+          -ILING_SL_HIT → protection_amendment_fill`, `MANUAL_CLOSE/MANUA
+          -L → operator_close`, `KS_FORCED_CLOSE/KILL_SWITCH_FLATTEN → pr
+          -otection_forced_flat`, `SESSION_CLOSE → window_forced_flat | b
+          -oundary_flat | hold_time_force_flat` per trigger, `TIMEOUT → h
+          -old_time_force_flat`, `BROKER_CLOSE → venue_initiated_close | 
+          -venue_liquidation`, `HEDGE_CLOSE →` no successor (no hedge mac
+          -hinery in V1; a future mint under the addable law, nothing for
+          -eclosed). The old system-owned asymmetric SL/TP authority stay
+          -s retired (DEC-0024 lineage honored); its surviving mechanics 
+          -are already law — one-shot breakeven ratchet = AD-34, full-sto
+          -p losers = AD-40's frozen R + AD-41's `qualifying_loss_exit`, 
+          -TP-trail = a later Book version through the same declaration. 
+      119 +- **Rule:** the AD-33 provenance flag ("QML donor atoms… open 
+          +to revision by the QML sitting") is **closed: ratified as-is.*
+          +* `ExitLogicRef = {module_id, config}` stays exactly where AD-
+          +33 put it — in the Book's `exit_policy`, per family — and the 
+          +Bot definition carries **no exit_logic field** (the old BotSpe
+          +c slot is deliberately dead; the bot declares only its family 
+          +and its permitted exit-intent subset). CT-29's typed close-rea
+          +son taxonomy stays the **one** taxonomy; the old `CloseReason`
+          + members map onto it as recorded evidence, never a second cont
+          +ract: `SL_HIT → protective_stop_fill`, `TP_HIT → target_fill`,
+          + `TRAILING_SL_HIT → protection_amendment_fill`, `MANUAL_CLOSE/
+          +MANUAL → operator_close`, `KS_FORCED_CLOSE/KILL_SWITCH_FLATTEN
+          + → protection_forced_flat`, `SESSION_CLOSE → window_forced_fla
+          +t | boundary_flat | hold_time_force_flat` per trigger, `TIMEOU
+          +T → hold_time_force_flat`, `BROKER_CLOSE → venue_initiated_clo
+          +se | venue_liquidation`, `HEDGE_CLOSE →` no successor (no hedg
+          +e machinery in V1; a future mint under the addable law, nothin
+          +g foreclosed). **Close-authority priority — the dig's ranked d
+          +onor #5 — is already ruled upstream as AD-37** (per-stream ran
+          +ks, collapse and conflict rules); the node enforces it; a QML 
+          +bot emits intents and relinquishes, owning no closure priority
+          +. The remaining donor survivor mechanics (WAL/reconciliation r
+          +estart, amendment idempotency, the conservative never-widen fa
+          +il-safe) are venue/node-runtime law (AD-27/AD-34), out of QML 
+          +scope. The old system-owned asymmetric SL/TP authority stays r
+          +etired (DEC-0024 lineage honored); its surviving mechanics are
+          + already law — one-shot breakeven ratchet = AD-34, full-stop l
+          +osers = AD-40's frozen R + AD-41's `qualifying_loss_exit`, TP-
+          +trail = a later Book version through the same declaration.    
+      120  
+      121  ### QL-10 — Build order and hosts
+      122  
+     ...
+      127  ```mermaid
+      128  graph TD
+      129    subgraph artifacts [Bot-domain registry artifacts]
+      124 -    BOT[CT-33 Bot definition<br/>family id · confluences · par
+          -ameter space<br/>footprint · permitted intents · logic ref]   
+      130 +    BOT[CT-33 Bot definition<br/>family id · confluences · par
+          +ameter space<br/>footprint incl. stream set · permitted exit i
+          +ntents · logic ref]                                           
+      131      CONF[CT-34 confluence<br/>legs: level / trigger / confirma
+           tion / filter]
+      132      FAM[(strategy-family record<br/>key, no authority)]
+      127 -    LOGIC[logic distribution<br/>plain Python · versioned · fi
+          -ngerprinted]                                                  
+      133 +    LOGIC[logic distribution<br/>plain Python · versioned<br/>
+          +source-manifest fingerprint]                                  
+      134    end
+      135    BOT -- fingerprint cites --> CONF
+      136    BOT -- declares --> FAM
+      137    BOT -- identity includes --> LOGIC
+      132 -  CONF -- producer bindings --> PROD[CT-16 indicators · CT-17 
+          -structure<br/>pinned fp or template + space-bound params]     
+      133 -  BOT -- seat, AD-41 --> BOOK[Book instance<br/>exit_policy ke
+          -yed by family<br/>footprint_requirements · admission bar]     
+      138 +  CONF -- producer bindings --> PROD[CT-16 indicators · CT-17 
+          +structure<br/>pinned fp or complete template<br/>minus space-b
+          +ound values]                                                  
+      139 +  BOT -- seat cites Bot fp1, AD-41/CT-28 --> BOOK[Book instanc
+          +e<br/>exit_policy keyed by family<br/>footprint_requirements ·
+          + admission bar]                                               
+      140    BOOK -- ExitLogicRef per family --> FAM
+      141  ```
+      142  
+     ...
+      145    subgraph qml [qml distribution - pure library]
+      146      TYPES[author types + helpers<br/>CT-33 / CT-34]
+      147      PROTO[runtime protocol]
+      142 -    GATE[conformance gate<br/>linter + sandbox suite]         
+      148 +    GATE[conformance contract<br/>linter + suite + verdict fn]
+      149    end
+      144 -  QMB[QMB tunnel<br/>QL-7 adapter at composition root] --> PRO
+          -TO                                                            
+      150 +  QMB[QMB tunnel<br/>QL-7 adapter + sandbox runner<br/>at comp
+          +osition root] --> PROTO                                       
+      151    NODE[trading node - later<br/>hosts seats] --> PROTO
+      152    PLAIN[plain-Python bots<br/>ungoverned, zero qml imports] --
+           > QMB
+      147 -  GATE -- ticket --> REG[(qmf-registry<br/>Bot kind mints only
+          - on pass)]                                                    
+      153 +  GATE -- ticket --> REG[(qmf-registry<br/>Bot kind mints only
+          + on pass<br/>root holds WriterId, AD-25)]                     
+      154    TYPES --> CORE[qmf-core · qmf-registry · qmf-risk CT-23]
+      155  ```
+      156  
+      157 +## Parent-contract mints proposed by this sitting             
+      158 +                                                              
+      159 +QML cannot amend a parent contract by assertion; the following
+          + land as **AD-5 format-version mints of parent contracts, owne
+          +d by their owners (qmf-risk shape, QML-authored semantics), ca
+          +rried by the documentation-factory increment** with migration 
+          +notes; pre-mint artifacts stay readable forever:              
+      160 +                                                              
+      161 +| Parent contract | Proposed change | Source rule |           
+      162 +| --- | --- | --- |                                           
+      163 +| CT-22 (`admission_bar`) | two new `evidence_requirements` fi
+          +elds: registered-conformant-Bot cite; canonical-assignment evi
+          +dence | QL-8 |                                                
+      164 +| CT-22 (`exit_policy`) | one explicit optional catch-all defa
+          +ult entry; exit record keys the resolved entry | QL-6 |       
+      165 +| CT-22 (`footprint_requirements`) | the reserved `pending(GAP
+          +-0047)` slot fills with QL-4's requirement-set shape (the rese
+          +rved path, not a net-new addition) | QL-4 |                   
+      166 +| CT-23 (entry intent) | one new **optional** field: the bot's
+          + advisory stop proposal (price or `PriceDelta` bound); the dec
+          +lared full-loss price documented as Book-resolved at the door,
+          + mirroring `requested_r` | QL-7 |                             
+      167 +                                                              
+      168 +Sibling (QMB) coordination declared, not silent: the B-3 `assi
+          +gnment_is_canonical` stamp + B-4 fold qualifier (QL-3/QL-8), t
+          +he B-3 producer-template resolution step (QL-4), and the B-8 p
+          +arameter-space schema completed with unit-kinds (QL-3).       
+      169 +                                                              
+      170  ## Consistency Conventions
+      171  
+      172  | Concern | Convention |
+      173  | --- | --- |
+      155 -| Naming | **Bot definition** (CT-33), never "BotSpec" (old wo
+          -rd, glossary-recorded alias); **strategy family**, never "arch
+          -etype" (retired alias); **confluence leg** with roles `level \
+          -| trigger \| confirmation \| filter`; **canonical assignment**
+          - (the defaults) vs **run-spec override** (B-3 experimentation 
+          -only); a bot **version** rides `branches-from`, never "variant
+          -"; QML is a **library** — never a framework, engine, or kernel
+          -; "conformant" means passed both QL-8 layers, never "certified
+          -" or "exam" vocabulary |                                      
+      156 -| Identity | Bot identity = declaration content including the 
+          -logic artifact's identity; one identity locus — seats, modes, 
+          -and overrides never fork it; all collections canonically order
+          -ed by fingerprint with display-only ordinals unless declared o
+          -rder-significant |                                            
+      174 +| Naming | **Bot definition** (CT-33), never "BotSpec" (old wo
+          +rd; glossary alias to be recorded by the doc-factory); **strat
+          +egy family**, never "archetype" (retired alias, same); **confl
+          +uence leg** with roles `level \| trigger \| confirmation \| fi
+          +lter`; **canonical assignment** (the defaults) vs **run-spec o
+          +verride** (B-3 experimentation only); **advisory stop proposal
+          +** (bot-side, advisory like `proposed_r`) vs **declared full-l
+          +oss price** (Book-resolved, AD-40); a bot **version** rides `b
+          +ranches-from`, never "variant"; `entry` is always permitted — 
+          +"permitted-intent kinds" always means the **exit**-kind subset
+          +; QML is a **library** — never a framework, engine, or kernel;
+          + "conformant" means passed both QL-8 layers, never "certified"
+          + or "exam" vocabulary |                                       
+      175 +| Identity | Bot identity = semantic declaration content inclu
+          +ding the logic artifact's source-manifest identity; header wri
+          +ter/sequence/stable-id/created-at are ordering/occurrence, nev
+          +er hashed; one identity locus — seats, modes, and overrides ne
+          +ver fork it; all collections canonically ordered by fingerprin
+          +t with display-only ordinals unless declared order-significant
+          + |                                                            
+      176  | Authoring | Declarations follow AD-30's template discipline 
+           verbatim (exact rationals, unit-kinds, `ui-editable` flags, fo
+           rmat versions); logic follows AD-2/AD-22 extension mechanics (
+           explicit registration, own SemVer as display-only provenance) 
+           |
+      158 -| Boundaries | Bots consume only declared footprint evidence a
+          -nd emit only CT-23 intents; refusals are AD-11 typed returns; 
+          -no clock, I/O, network, or undeclared randomness below the hos
+          -t |                                                           
+      177 +| Boundaries | Bots consume only declared footprint evidence a
+          +nd emit only CT-23 intents; refusals are AD-11 typed returns; 
+          +no clock, I/O, network, or undeclared randomness below the hos
+          +t; no Book module is ever injected into bot logic |           
+      178  
+      179  ## Stack
+      180  
+      162 -No new technology is pinned by this spine. QML rides the QMF w
+          -orkspace pins (AD-1/AD-3: CPython 3.14, uv, ruff, pyright stri
+          -ct, pytest, poethepoet) and adds zero runtime dependencies bey
+          -ond the `qmf-*` packages it consumes. Any future authoring-sur
+          -face dependency (an editor, a grammar) arrives with its own si
+          -tting.                                                        
+      181 +No new runtime dependency is pinned: QML rides the QMF workspa
+          +ce pins (AD-1/AD-3: CPython 3.14, uv, ruff, pyright strict, py
+          +test, poethepoet) and adds nothing beyond the `qmf-*` packages
+          + it consumes. **One mechanism is deliberately scoped rather th
+          +an pinned:** the QL-8 Layer-2 runner's isolation in V1 is stat
+          +ic scanning + capability starvation + host process isolation (
+          +stdlib process management, B-5's posture); hardened OS-level c
+          +onfinement is a named deferred dependency (node/platform sitti
+          +ng), not a hidden pin. Any future authoring-surface dependency
+          + (an editor, a grammar) arrives with its own sitting.         
+      182  
+      183  ## Structural Seed
+      184  
+     ...
+      188    families/                 # strategy-family record helpers (
+           QL-6)
+      189    footprint/                # producer bindings, template reso
+           lution, horizon derivation (QL-4)
+      190    protocol/                 # the bot runtime protocol + state
+            snapshot contract (QL-7)
+      172 -  conformance/              # Layer-1 linter + Layer-2 sandbox
+          - suite + prediction-linter checks (QL-8)                      
+      191 +  conformance/              # Layer-1 linter + Layer-2 suite/v
+          +erdict functions + golden-slice generator + prediction-linter 
+          +checks (QL-8; pure — hosts run the processes)                 
+      192    examples/                 # L27 reference usage: one complet
+           e conformant bot (declaration + logic)
+      193    tests/
+      194  ```
+      195  
+      177 -Hosting seed: QMB gains a `QL-7` adapter at its composition ro
+          -ot (a B-1 extensibility change inside QMB, no QMB re-architect
+          -ure); the trading node's seat machinery binds the same protoco
+          -l at the node sitting.                                        
+      196 +Hosting seed: QMB gains a QL-7 adapter and the conformance san
+          +dbox runner at its composition root (B-1 extensibility changes
+          + inside QMB, no QMB re-architecture); the trading node's seat 
+          +machinery binds the same protocol at the node sitting.        
+      197  
+      198  ## Deferred
+      199  
+     ...
+      202  | Declarative condition/predicate grammar (the `.qml` successo
+           r surface) | V1 conditions live in logic (QL-5); a future gram
+           mar compiles to CT-33/CT-34 artifacts — platform/agentic terri
+           tory, nothing foreclosed |
+      203  | Monaco-class editor / UI authoring surface and agent codegen
+            lanes | Platform + agentic sittings; they write the same two 
+           artifacts (QL-2) |
+      204  | Agent mutation allowances (the old WF2 machinery, `mutation_
+           allowance`, locked zones) | Agentic sitting; lineage via `bran
+           ches-from` + the conformance gate hold the seam meanwhile |
+      205 +| Hardened OS-level sandbox confinement for Layer 2 (restricte
+          +d tokens/jobs, seccomp-class) | Node/platform sitting, named d
+          +ependency; V1 scope is stated honestly in QL-8 |              
+      206  | Admission-bar threshold values and the measures behind them 
+           | GAP-0048/0049 (unchanged); QL-8 ships the interfaces only |
+      187 -| Weights-artifact parameter kind (separately-tunable ML model
+          -s) | Later mint on the B-8 space schema (kinds addable); baked
+          --in weights are governed today via logic-artifact identity (QL
+          --2) — nothing refuses an NN bot |                             
+      207 +| Weights-artifact parameter kind (separately-tunable ML model
+          +s) | Later mint on the parameter-space schema (kinds addable);
+          + baked-in weights are governed today via source-manifest ident
+          +ity (QL-2) — nothing refuses an NN bot |                      
+      208 +| Complexity/quality measures (successor to the old `max_accep
+          +table_complexity_score`) | Explicitly not a registration gate 
+          +(QL-8); if ever wanted, a measure under AD-23/AD-41, consumed 
+          +by doors or the operator |                                    
+      209  | Multi-bot ensemble/portfolio vocabulary | No consumer yet; A
+           D-17's multiplicity law is the holding seam |
+      210  | Bot-side `qml` CLI convenience | V1 is library-only; QMB and
+            the platform UI are the surfaces; cheap to add later (memlog 
+           open question 2) |
+      211  | Seat-time runtime enforcement details (how the node polices 
+           footprint reads live) | Node sitting; QL-7 states the guarante
+           e, hosts implement it |
+
+● Amended spine written. Verifying cross-references and re-linting.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Cross-references all resolve to the final numbering; lint clean again.
+  Finalizing: status → final, gate entry into the memlog, parent memlog events.
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QML-2026-08-2
+        1\ARCHITECTURE-SPINE.md)
+  ⎿  Added 1 line, removed 1 line
+       5  altitude: feature
+       6  paradigm: 'Declaration-plus-logic authoring library: bots are t
+          wo registered artifacts (a structured declaration + a plain-Pyt
+          hon logic package) consumed by hosts through one runtime protoc
+          ol; QML authors and gates, QMF governs, hosts execute'
+       7  scope: 'QML — the QMX bot-authoring layer: the Bot definition k
+          ind (CT-33, filling AD-16''s reserved Bot kind), the confluence
+           kind (CT-34), strategy-family keying, the bot runtime protocol
+          , the conformance gate, and the admission-bar interfaces. Close
+          s GAP-0047. Thresholds, node runtime, and agentic mutation stay
+           excluded.'
+       8 -status: draft                                                  
+       8 +status: final                                                  
+       9  created: '2026-08-21'
+      10  updated: '2026-08-21'
+      11  binds: [GAP-0047, CT-33, CT-34, CT-06-kind-register, AD-30-pend
+          ing-slots]
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now closing the parent record: sitting event into the QMF memlog, prompt #8
+  marked superseded, and the new documentation-factory prompt #11.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\next-session-prompts.md)
+  ⎿  Added 1 line, removed 1 line
+      146  after this: GAP-0016/0017 + 0047..0049 (backtesting + QML sitt
+           ings).
+      147  ```
+      148  
+      149 -## 8. QML sitting (GAP-0047 — run AFTER the backtesting sittin
+          -g)                                                            
+      149 +## 8. QML sitting — SUPERSEDED (ran autonomously 2026-08-21; t
+          +he QML spine is FINAL at architecture-QML-2026-08-21/ — use pr
+          +ompt 11 instead)                                              
+      150  
+      151  ```
+      152  Run /bmad-architecture. Update intent: resume from the memlog 
+           at
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-QMX-2026-08-1
+        9\next-session-prompts.md)
+  ⎿  Added 52 lines
+      239  may run BEFORE the backtesting-content sitting; QMB tests plai
+           n-Python
+      240  bots meanwhile). Then PRD, then BMad exit.
+      241  ```
+      242 +                                                              
+      243 +## 11. Documentation factory — QML increment (written 2026-08-
+          +21, after the QML sitting closed; run this next)              
+      244 +                                                              
+      245 +```                                                           
+      246 +Run /documentation-factory in change mode, QML increment. Inta
+          +ke:                                                           
+      247 +_bmad-output/planning-artifacts/architecture/architecture-QML-
+          +2026-08-21/ —                                                 
+      248 +ARCHITECTURE-SPINE.md (FINAL, QL-1..QL-10 + inherited-invarian
+          +ts table +                                                    
+      249 +the "Parent-contract mints proposed by this sitting" section),
+          + .memlog.md                                                   
+      250 +(18 entries: rulings, assumptions tagged for operator override
+          +, gate                                                        
+      251 +amendments), reviews/ (five gate lenses, all findings applied)
+          +; plus the                                                    
+      252 +two evidence dossiers research-risk/qml-original-dig.md and   
+      253 +research-backtesting/qml-dig-verification.md (QMX-discussion c
+          +itations in                                                   
+      254 +them ride the named structural-definition exemption; no risk/s
+          +izing                                                         
+      255 +content). Job: absorb QML into docs/ — close GAP-0047. Mint co
+          +ntracts:                                                      
+      256 +ct-33-bot-definition.yaml and ct-34-confluence.yaml (qmf-regis
+          +try kinds,                                                    
+      257 +QML-authored); update ct-06-registration.yaml (Bot kind body n
+          +ow ruled via                                                  
+      258 +CT-33; add the strategy-family dated metadata record kind). Ap
+          +ply the two                                                   
+      259 +PROPOSED PARENT-CONTRACT FORMAT MINTS with AD-5 migration note
+          +s: CT-22                                                      
+      260 +(admission_bar evidence_requirements gains registered-conforma
+          +nt-Bot cite                                                   
+      261 ++ canonical-assignment evidence; exit_policy gains one explici
+          +t optional                                                    
+      262 +catch-all default entry with the exit record keying the RESOLV
+          +ED entry;                                                     
+      263 +footprint_requirements pending(GAP-0047) slot fills with QL-4'
+          +s                                                             
+      264 +requirement-set shape) and CT-23 (new OPTIONAL entry field: ad
+          +visory stop                                                   
+      265 +proposal; document the declared full-loss price as Book-resolv
+          +ed at the                                                     
+      266 +door, mirroring requested_r; close the GAP-0047 revision flag 
+          +— ExitLogicRef                                                
+      267 +and the close-reason taxonomy are RATIFIED as-is, old CloseRea
+          +son members                                                   
+      268 +recorded as an evidence mapping, never a second taxonomy). New
+          + component                                                    
+      269 +doc docs/components/qml.md (library identity, two-artifact bot
+          +, runtime                                                     
+      270 +protocol, conformance gate, dependency stance incl. the declar
+          +ed                                                            
+      271 +reconciliation note: annotate the QMF Dependency-direction rul
+          +e as                                                          
+      272 +roster-scoped so application-layer qmf-risk imports are legal 
+          +at source;                                                    
+      273 +also fix the QMB docs' "AD-2 / L21" mis-citation to "AD-2 / L1
+          +1").                                                          
+      274 +Glossary: rewrite QML (no longer a deferred stub) and Bot (ful
+          +l CT-33                                                       
+      275 +shape); add strategy family, canonical assignment, advisory st
+          +op proposal,                                                  
+      276 +conformance/ticket, confluence leg + roles incl. filter; recor
+          +d BotSpec                                                     
+      277 +and archetype as retired aliases. Mint ledger decisions: no-DS
+          +L-in-V1                                                       
+      278 +(.qml not revived), Bot kind body, confluence kind + leg-role 
+          +vocabulary,                                                   
+      279 +family = key-not-authority, canonical-assignment parameterizat
+          +ion law,                                                      
+      280 +conformance-as-ticket (technical, never performance; complexit
+          +y gate NOT                                                    
+      281 +revived — stated drop), prediction-linter four checks (AD-30/A
+          +D-32 pending                                                  
+      282 +slots resolved), Book-side single-sited full-loss derivation, 
+          +QML-before-                                                   
+      283 +the-trading-node build order, QML version ladder (own SemVer d
+          +isplay-only,                                                  
+      284 +uv add qml). Record the three QMB coordination items in the qm
+          +b component                                                   
+      285 +doc: B-3 assignment_is_canonical stamp, B-3/seat-admission pro
+          +ducer-                                                        
+      286 +template resolution step, B-8 parameter-space schema completed
+          + with                                                         
+      287 +unit-kinds (one schema, CT-33-authoritative). Update gap-repor
+          +t                                                             
+      288 +(GAP-0047 answered), traceability, changelog, AGENTS.md if it 
+          +enumerates                                                    
+      289 +open gaps. All memlog "assumption" entries are operator-overri
+          +dable calls                                                   
+      290 +— surface them in the changelog row so the operator can veto c
+          +heaply.                                                       
+      291 +Remaining open after this: GAP-0016/0017 (registration gate, D
+          +EC-0121),                                                     
+      292 +GAP-0048 content, GAP-0049. Then the PRD, then BMad exit.     
+      293 +```                                                           
+
+● Updating persistent memory to reflect the new project state.
+
+  Recalled 3 memories, wrote 5 memories (ctrl+o to expand)
+
+● The docs session updated the index concurrently; merging my state on top of
+  theirs.
+
+  Wrote 1 memory (ctrl+o to expand)
+
+● GAP-0047 is closed. The QML sitting ran end-to-end without you: the spine is
+  final at _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08
+  -21/ARCHITECTURE-SPINE.md (QL-1..QL-10), the reviewer gate ran in full (five
+  parallel lenses, 34 findings, every one applied, lint clean twice), and the
+  documentation-factory paste-prompt you asked for is written as prompt 11 in
+  next-session-prompts.md (prompt 8 is marked superseded).
+
+  What was ruled, in plain words:
+
+  - QML is a library, not a foundation. One installable package (qml) that sits
+    on top of QMF exactly like QMB does. It never again becomes the layer
+    everything imports — QMF's contracts already do that job. Its whole surface
+    is three things: the types that write bot artifacts, the runtime protocol
+    hosts call bots through, and the conformance gate.
+  - A bot is two artifacts. A declaration (the Bot definition, new contract
+    CT-33 — family, confluences, parameter space, footprint, permitted exit
+    intents) and logic (plain Python). Change either and it's a new bot, same as
+    a changed number mints a new Book.
+  - The old .qml file language is not revived. Plain Python plus the declaration
+    artifact covers everything the Monaco-era format did; a future editor or
+    grammar can compile down to these same artifacts, so nothing is foreclosed.
+  - Confluences got their own contract (CT-34) with leg roles level / trigger /
+    confirmation / filter, per AD-17's recursive multiplicity. "Archetype"
+    became a strategy family — a naming key with zero authority; the Book still
+    does all the constraining.
+  - Conformance is the ticket, nothing more. Plain-Python bots keep running in
+    QMB with zero QML imports; passing the technical gate (never a performance
+    gate) is what lets a bot's results count as governed evidence and lets it
+    take a Book seat. This also fills the two slots AD-30/AD-32 left pending:
+    the footprint-requirements shape and the prediction linter.
+  - Your before/after question: before. QML consumes contracts only, so it
+    builds before the trading node, alongside QMB — QMB runs plain-Python bots
+    from day one and conformant bots the day QML lands; the node hosts seats
+    later.
+
+  The gate's one big catch, fixed: my first draft had the bot executing the
+  Book's exit logic to price its own full loss — three reviewers independently
+  showed that breaks bot isolation and the sandbox. Final ruling: the bot only
+  proposes a stop; the Book derives the declared full-loss price at its own 
+  door, exactly the way it already resolves requested_r. Related contract
+  touches (two small CT-22/CT-23 format-version bumps, three QMB coordination
+  items) are declared in a "Parent-contract mints" section of the spine and
+  carried by prompt 11 — nothing was silently edited in the parent spines.
+
+  Every call I made without you is tagged as an assumption entry in the QML
+  memlog — that's your cheap veto list; overturning any one doesn't unwind the
+  others. Memory and the parent memlog are updated; per your quarantine ruling,
+  none of this touches docs/ until you run prompt 11 in a fresh session. Path
+  from here: prompt 11 → your corpus sign-off → PRD → epics and stories → the
+  factory.
+
+  {
+    "status": "complete",
+    "intent": "update",
+    "altitude": "feature",
+    "purpose": "build-substrate",
+    "doc_workspace":
+  "_bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21",
+    "spine": "_bmad-output/planning-artifacts/architecture/architecture-QML-2026
+  -08-21/ARCHITECTURE-SPINE.md",
+    "memlog": "_bmad-output/planning-artifacts/architecture/architecture-QML-202
+  6-08-21/.memlog.md",
+    "companions": ["reviews/review-rubric.md", "reviews/review-adversarial.md",
+  "reviews/review-currency.md", "reviews/review-reconcile-inputs.md",
+  "reviews/review-parent-consistency.md", "next-session-prompts.md prompt 11"],
+    "assumptions": ["no-DSL-in-V1 from standing don't-box-in direction",
+  "canonical-assignment parameterization law", "filter as fourth leg role 
+  (CT-34-owned vocabulary)", "family = key-not-authority", "Book-side full-loss 
+  derivation (gate-corrected)", "CT-33/CT-34 numbering continues the QMF 
+  ladder"],
+    "open_questions": ["UI name for the Bot-definition artifact (platform 
+  territory)", "whether QML ships a small authoring CLI later",
+  "weights-artifact parameter kind for separately-tunable ML models (deferred, 
+  nothing refuses NN bots today)"],
+    "conflicts_with_prior_decisions": []
+  }
+
+✻ Cogitated for 37m 20s
+
+❯ I'm just asking, can I go to Documentation factory                            
+
+● Yes. The QML sitting is closed and the spine is final, so nothing is blocking
+  the documentation factory.
+
+  Do it in a fresh session (per your own quarantine ruling — QML enters docs
+  only via its own change-mode pass), and paste prompt 11 from
+  _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/next-
+  session-prompts.md as the first message. It carries everything the factory
+  needs: the QML spine, the two parent-contract mints, the QMB coordination
+  items, and your veto list.
+
+  After that pass lands: your corpus sign-off → PRD → epics and stories →
+  factory.
+
+✻ Crunched for 14s

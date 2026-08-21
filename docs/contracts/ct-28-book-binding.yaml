@@ -9,7 +9,7 @@ intended_consumers: [COMP-QMF-REGISTRY]  # Registry stores the Book binding as a
 wiring_status: defined-unwired  # the binding record is ratified surface; no code exists; records reach qmf-registry through the composition root under the AD-28 injected-sink pattern (DEC-0158); no wiring is authorized from this doc
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0143, DEC-0144, DEC-0146, DEC-0149, DEC-0150, DEC-0151, DEC-0153, DEC-0154, DEC-0155, DEC-0158]
+decisions: [DEC-0143, DEC-0144, DEC-0146, DEC-0149, DEC-0150, DEC-0151, DEC-0153, DEC-0154, DEC-0155, DEC-0158, DEC-0160]
 gaps: []  # GAP-0039 answered (AD-29); the bind-time margin/free-margin check is decided-deferred to the node sitting with the consequence stated (AD-40), a pointer, not an open gap
 purpose: "One append-only Book binding record — the deployment that couples a Book instance to a BMS instance on one account at one venue — carrying the binding tuple `(BookInstanceId, BmsInstanceId, VenueId, AccountId, world)` aligned with the AD-27 `(VenueId, account)` command stream, the mandatory per-counter `state_carry` declaration, the paired-BMS pairing record, and the bind-time capability-check result; the binding EPOCH is the record's own fingerprint, cited by CT-32 populations and AD-41 folds."
 invariants:
@@ -20,7 +20,7 @@ invariants:
   - "A binding record that fingerprints equal to an existing one is an `invalid input` refusal, never AD-10's silent idempotent accept — that path exists for byte-identical re-writes of the same work, not for a second pot of money; two copies of one Book version on one account are distinct by mint and are never merged (DEC-0143)."
   - "Every binding record carries a mandatory, non-defaultable `state_carry` declaration — per counter (`ledger`, `cycle`, `budget`, `bench_counter`, `exposure`), each `carry | reset`; an absent declaration is `invalid input`, and `carry` is legal only where a human-signed `carries-ledger` edge (AD-16/AD-18) accompanies it — nothing is ever read off the mere presence of an edge (DEC-0143, DEC-0158, DEC-0155)."
   - "A `continues-performance` edge asserts a track record and moves no money; a `carries-ledger` edge moves money and asserts nothing about comparability — never one edge, and the two are never inferred from each other (DEC-0143, DEC-0158)."
-  - "`world` is a constant `live` for every V1 binding, and the consequence is stated rather than discovered: a replay of a binding mints a different binding identity, and AD-19 refuses cross-world reads, so replay-derived and live evidence are deliberately incomparable by binding — `world` is carried in AD-35's cohort key so the comparison rule is explicit there too (DEC-0143, DEC-0149)."
+  - "`world` is a constant `live` for every live-path V1 binding — a QMB replay run mints its own `world = replay` binding per run (DEC-0160) — and the consequence is stated rather than discovered: a replay of a binding mints a different binding identity, and AD-19 refuses cross-world reads, so replay-derived and live evidence are deliberately incomparable by binding — `world` is carried in AD-35's cohort key so the comparison rule is explicit there too (DEC-0143, DEC-0149, DEC-0160)."
   - "An instance never spans venues: a strategy run at several brokers is several instances of one Book version, each with its own BMS instance and its own connection; cross-binding and cross-broker figures are after-the-fact reports at a stated as-of knowledge time and never gate an order (DEC-0143)."
   - "Several Books may bind one account and every coupling is named: they share one BMS instance and one command stream, so one Book's `UNKNOWN` blocks the other's commands there; on a `netting` account they also share positions, so binding a second Book onto a netted account whose live bindings may trade an overlapping instrument set is an `unsupported capability` refusal UNLESS the operator signs the shared-flatten limitation on the AD-32 admission page — that signature being an identity field of the binding — with one Book per netted account the confirmed first-stable-version default (DEC-0143, DEC-0146)."
   - "The bind-time capability check is a fixed list resolved against CT-18's declaration AND the venue-observation profile; a shortfall is a refusal at BIND time, never at trade time (DEC-0143, DEC-0154, DEC-0153, DEC-0151)."
@@ -43,7 +43,7 @@ schema:
     - "BmsInstanceId: content-derived `fp1(BMS definition fingerprint, AccountId, VenueId, world)` (DEC-0143)"
     - "VenueId: the venue identity; the tuple aligns with the `(VenueId, account)` command stream (DEC-0143, DEC-0151)"
     - "AccountId: the account identity (DEC-0143)"
-    - "world: a constant `live` in V1; a replay mints a different binding identity and is incomparable by binding (DEC-0143, DEC-0149)"
+    - "world: `live` for every live-path V1 binding; a QMB replay run mints its own `world = replay` binding (DEC-0160) — a replay binding is a different binding identity, incomparable with live by binding (DEC-0143, DEC-0149)"
     - "book_definition_fingerprint: the CT-22 Book VERSION this binding cites, by fingerprint (DEC-0143, DEC-0144)"
     - "bms_definition_fingerprint: the CT-27 BMS VERSION this binding cites, by fingerprint (DEC-0143, DEC-0144)"
     - "state_carry: the mandatory per-counter declaration — `{ ledger, cycle, budget, bench_counter, exposure }`, each `carry | reset`; `carry` requires an accompanying signed `carries-ledger` edge (DEC-0143, DEC-0158)"
@@ -55,13 +55,13 @@ schema:
     - "supersedes: the prior binding record this one replaces (append-only, dated); re-binding is a new record, never a mutation (DEC-0143)"
   enums:
     - "state_carry per counter: carry | reset — for each of ledger, cycle, budget, bench_counter, exposure (DEC-0143)"
-    - "world: live (the only V1 value; `simulated` is unlocked by the deferred backtesting sitting) (DEC-0143, DEC-0149)"
+    - "world: live | replay (`replay` minted only by QMB's run loop, one binding per run, DEC-0160; `simulated` is unlocked by the deferred backtesting sitting) (DEC-0143, DEC-0149, DEC-0160)"
     - "binding state: live | paper | stood-down (DEC-0150)"
     - "position model read at bind time from CT-18: netting | hedging (DEC-0143)"
     - "referenced but not binding-owned vocabularies: Book mode LIVE | PAPER (CT-24), seat state active | benched (CT-29/AD-41) — three vocabularies never interchanged (DEC-0149, DEC-0155)"
     - "refusal categories in this contract's paths: invalid input (an equal-fingerprint re-binding; an absent state_carry declaration), unsupported capability (a required venue capability the venue does not declare; a second Book on a netted account without the shared-flatten signature; a Book control_policy contradicting the BMS rank table), policy rejection (a settlement currency not matching the Book's accounting_currency), unavailable dependency (a missing SQS baseline or absent live-path rung baseline at bind time) per registry:typed_refusal_codes (DEC-0143, DEC-0154, DEC-0153, DEC-0151)"
   units:
-    - "world: an enumerated constant, `live` in V1 (DEC-0143)"
+    - "world: an enumerated value — `live` on the live path, `replay` on QMB-minted run bindings (DEC-0143, DEC-0160)"
     - "record timestamps: int64 UTC ns + per-writer sequence (dated append-only) (AD-8)"
     - "fingerprints: `fp1:sha256:…` via the single qmf-core implementation (AD-16)"
     - "no numeric threshold is carried here: the binding records state and identity, not sizing figures (those live in CT-22 money_rules) (DEC-0154)"
@@ -70,5 +70,5 @@ schema:
     - "`carry` on any counter is null-invalid without an accompanying signed `carries-ledger` edge (DEC-0143, DEC-0158)"
     - "`role` is absent from the tuple by construction — it rides the execution-target record, never a null tuple field (DEC-0143, DEC-0149)"
     - "the shared_flatten_signature is absent only where the account is not netted or no live binding trades an overlapping instrument set; where required and absent, the binding refuses rather than storing a null (DEC-0143, DEC-0146)"
-    - "world is never null; it is the constant `live` in V1, carried explicitly so the incomparability consequence is stated, not discovered (DEC-0143, DEC-0149)"
+    - "world is never null; it is `live` for every live-path V1 binding (`replay` only on QMB-minted run bindings, DEC-0160), carried explicitly so the incomparability consequence is stated, not discovered (DEC-0143, DEC-0149)"
 provenance_note: "CT-28 is newly minted from AD-29's binding-chain distillation (DEC-0143), with the identity trinity (Book version / Book instance / binding epoch), the mandatory state_carry, and the split continues-performance vs carries-ledger edges minted at the risk reviewer gate (DEC-0158). DEC-0095 (the pre-ruling cardinality) is superseded by DEC-0143 and is not cited as live."

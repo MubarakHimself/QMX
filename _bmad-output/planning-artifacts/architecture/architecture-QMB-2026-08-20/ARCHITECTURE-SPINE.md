@@ -40,7 +40,7 @@ QMF spine AD-1..41 binds in full; load-bearing rows here (original ids, read-onl
 | Inherited | From parent | Binds here |
 | --- | --- | --- |
 | AD-1/AD-3 | QMF spine | CPython 3.14 pinned; ruff/pyright-strict/pytest/poe gates apply to QMB's own source |
-| AD-2 / L21 | QMF spine | QMB is its own installable package (L21), not a QMF roster member; it consumes the QMF workspace lockstep; discovery = explicit registration, never ambient scanning |
+| AD-2 / L11 | QMF spine | QMB is its own installable package (L11), not a QMF roster member; it consumes the QMF workspace lockstep; discovery = explicit registration, never ambient scanning |
 | AD-5 | QMF spine | Every serialized QMB contract (resolved run-config, ledger line, result artifact) carries its own integer format version; meanings never change post-hoc; package SemVer is display-only provenance, never identity |
 | AD-7 / AD-22 | QMF spine | Exact integer money on the money path; binary floats banned on it and never appear in parameters or identity; analytic floats legal off-path; re-entry only via named AD-22 conversions. `Bar`/`Price` are exact; `BarSpec` is the bar noun (never a bare "timeframe") |
 | AD-8 | QMF spine | UTC-ns Instants; QMB's frontier clock **is** an implementation of qmf-core's Clock protocol, injected at the door; nothing below the composition root reads the system clock; the clock does not choose `world` |

@@ -7,8 +7,8 @@ producers: [COMP-QMF-DATA, COMP-QMF-REGISTRY, COMP-QMF-VENUE, COMP-QMF-RISK, COM
 consumers: [COMP-QMF-DATA-STORE]
 layer_from: backend
 layer_to: data
-decisions: [DEC-0119, DEC-0112, DEC-0106, DEC-0108, DEC-0114, DEC-0116, DEC-0113, DEC-0118, DEC-0117, DEC-0109, DEC-0103, DEC-0120, DEC-0137, DEC-0138, DEC-0143, DEC-0145, DEC-0150, DEC-0158, DEC-0163]
-gaps: []  # GAP-0036 answered 2026-08-20 (DEC-0137 venue commands/uncertainty law); GAP-0039 answered 2026-08-20 (DEC-0143/DEC-0145 Book, BMS, binding identity and journals-as-projections); the per-bot projection's Bot-identity field is a pending(bot-schema sitting) slot, not a gap
+decisions: [DEC-0119, DEC-0112, DEC-0106, DEC-0108, DEC-0114, DEC-0116, DEC-0113, DEC-0118, DEC-0117, DEC-0109, DEC-0103, DEC-0120, DEC-0137, DEC-0138, DEC-0143, DEC-0145, DEC-0150, DEC-0158, DEC-0163, DEC-0173]
+gaps: []  # GAP-0036 answered 2026-08-20 (DEC-0137 venue commands/uncertainty law); GAP-0039 answered 2026-08-20 (DEC-0143/DEC-0145 Book, BMS, binding identity and journals-as-projections); the per-bot projection's Bot-identity field is now ruled — it is the CT-33 Bot definition fp1 plus the AD-41 seat binding, no longer a pending slot (DEC-0173)
 purpose: "Persist durable operational and research journal evidence as N append-only per-writer streams, distinct from arbitrary application logging and without a runtime event bus."
 invariants:
   - "Journal evidence is durable and distinct from operator or diagnostic logging: journals store int64 UTC nanoseconds plus writer plus sequence, while logs render UTC ISO-8601 with an explicit Z (DEC-0112, DEC-0106)."
@@ -42,7 +42,7 @@ schema:
     - "display_time: optional ISO-8601-with-Z rendering, display-only and excluded from identity (DEC-0112)"
     - "promotion payload: only the promotion-card fp1 fingerprint plus correlation_id (DEC-0116)"
     - "order and fill event payloads follow the ratified CT-19/CT-20 venue mapping; a fill event carries the fill's identity fields — fill price, fill quantity, venue instant, receive instant (DEC-0137)"
-    - "risk-authored event payloads (decision, risk transition, control action) carry the Book-definition fingerprint and the binding identity (BookInstanceId, BmsInstanceId, VenueId, AccountId, world) as identity fields, and where the act concerns one bot the Bot identity plus seat binding — the Bot-identity portion a pending(bot-schema sitting) slot (DEC-0145, DEC-0143)"
+    - "risk-authored event payloads (decision, risk transition, control action) carry the Book-definition fingerprint and the binding identity (BookInstanceId, BmsInstanceId, VenueId, AccountId, world) as identity fields, and where the act concerns one bot the Bot identity plus seat binding — the Bot-identity portion now the CT-33 Bot definition fp1 plus the AD-41 seat binding, no longer a pending slot (DEC-0145, DEC-0143, DEC-0173)"
     - "decision event outcome: a mandatory closed field, authorized | refused-by-door | suppressed, with the refusing-door or suppressing-authority reference, so a projection selects on a declared field never on key presence (DEC-0158, DEC-0150)"
     - "entity journals (Book, BMS, per-bot) are read-time projections over the writer-scoped streams, not fields of any one event; the command-fingerprint join and the legacy-five-stream mapping table are pinned versioned CT-25 surface (DEC-0145)"
   enums:

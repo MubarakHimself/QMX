@@ -4,8 +4,8 @@ title: QMF V1 Glossary
 type: glossary
 status: provisional
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK]
-decisions: [DEC-0001, DEC-0017, DEC-0019, DEC-0024, DEC-0028, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0048, DEC-0055, DEC-0058, DEC-0059, DEC-0065, DEC-0066, DEC-0074, DEC-0076, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0114, DEC-0115, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0126, DEC-0128, DEC-0129, DEC-0130, DEC-0131, DEC-0132, DEC-0133, DEC-0134, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0147, DEC-0148, DEC-0149, DEC-0150, DEC-0151, DEC-0152, DEC-0153, DEC-0154, DEC-0155, DEC-0157, DEC-0158, DEC-0159, DEC-0160, DEC-0161, DEC-0164, DEC-0165, DEC-0169]
-sources: [_docwork/ledger.yaml, _docwork/gaps.yaml, docs/registry/variables.yaml, docs/architecture/dependencies.yaml, docs/contracts/, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md]
+decisions: [DEC-0001, DEC-0017, DEC-0019, DEC-0024, DEC-0028, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0048, DEC-0055, DEC-0058, DEC-0059, DEC-0065, DEC-0066, DEC-0074, DEC-0076, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0114, DEC-0115, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0126, DEC-0128, DEC-0129, DEC-0130, DEC-0131, DEC-0132, DEC-0133, DEC-0134, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0147, DEC-0148, DEC-0149, DEC-0150, DEC-0151, DEC-0152, DEC-0153, DEC-0154, DEC-0155, DEC-0157, DEC-0158, DEC-0159, DEC-0160, DEC-0161, DEC-0164, DEC-0165, DEC-0169, DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184, DEC-0185]
+sources: [_docwork/ledger.yaml, _docwork/gaps.yaml, docs/registry/variables.yaml, docs/architecture/dependencies.yaml, docs/contracts/, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ARCHITECTURE-SPINE.md]
 generated: 2026-08-18
 verified: 2026-08-21
 stale_after: 30d
@@ -28,6 +28,10 @@ The CT-18-declared way a venue confirms each command kind's outcome, one of thre
 ### admission_bar
 
 The Book's declared set of named requirements a candidate must meet — 'the Book sets the bar' — never an 'entrance exam' (that phrase is banned). Each requirement carries an opaque `measure_identity`, a mandatory unit, a comparison (`at-least | at-most | within-band`), a threshold as a discriminated union with a pinned tag set (a ruled exact rational, or an explicit not-yet-ruled tag carrying its gap reference — the key always present, so blankness is a declared value), and `evidence_requirements` (world, account role, minimum evidence window, required producer contract format versions). The set is canonically ordered by `measure_identity` with display ordinals separate, so two operators writing the same requirements in different order get the same Book fingerprint. Blank blocks live money: a bar holding any not-yet-ruled threshold registers and binds to non-live roles but is a policy rejection against a live account. No paper role may gate live money, and no composite score, rating, or weighted aggregate may express a bar (DEC-0146, DEC-0144).
+
+### advisory stop proposal
+
+The bot's OPTIONAL protective-stop proposal carried on a CT-23 `entry` intent — a proposed protective-stop price or PriceDelta bound, ADVISORY exactly as proposed_r is: it never sizes and never binds the Book. It lands on CT-23's entry intent as a new optional field through the CT-23 format version 2 mint (DEC-0182). The declared full-loss price stays mandatory at admission but is Book-resolved: derived AT THE BOOK DOOR by the Book executing its own per-family ExitLogicRef, consuming the advisory proposal and the intent's cited evidence, and stamped exactly as the Book resolves requested_r — a single execution site, with no Book module ever injected into bot logic (DEC-0177). By the 2026-08-21 operator veto round a Book MAY declare a per-family adopt-the-bot's-advisory-stop mode on its CT-22 ExitLogicRef — "adopt the bot's advisory stop proposal as-is, validated against the Book's risk rules" — so a bot that carries its own exit/stop methodology is honored rather than overridden; and no inbound-refusal posture exists for a bot-supplied full-loss price, since the advisory stop proposal is the bot's channel (DEC-0185). (DEC-0177, DEC-0182, DEC-0185)
 
 ### Anchor span
 
@@ -71,7 +75,15 @@ The identity trinity of a Book, three things minted apart and never fused. A **B
 
 ### Bot
 
-A future QML-domain trading artifact that contains confluence logic and binds to a Book. A Bot contains one-or-more confluences, and the Bot-Book-account binding is a separate dated record — one Bot bound to exactly one Book at a time (DEC-0115). The full Bot schema remains its own sitting.
+A governed bot is exactly TWO artifacts: the **Bot definition** (the declaration — a structured configuration artifact under AD-30 template discipline, registered as CT-33) and the LOGIC (plain Python conforming to the bot runtime protocol, shipped as a versioned distribution under AD-2/AD-22 mechanics). The logic's identity basis is distribution identity + version + a canonical source-manifest fingerprint (a reproducible hash over the source tree, never built-artifact or wheel bytes), so a code change mints a new Bot exactly as a changed number mints a new Book (DEC-0172). The Bot definition's content is six groups: exactly one **strategy family** id; a **Confluence** set (one-or-more CT-34 fingerprints, canonically ordered with display ordinals); the declared parameter space (B-8's schema completed with an AD-40 unit-kind on every variable, one schema never two, whose defaults form the **canonical assignment**); the **footprint** (which contains the stream-set declaration as one locus); the permitted-intent declaration (`entry` always permitted, plus a possibly-empty subset of the ratified CT-23 exit-intent kinds, ids stored as opaque qmf-core-typed values); and the logic reference. IDENTITY CARVE-OUT: the AD-16 header's writer, sequence, stable id, and created-at are ordering/occurrence fields excluded from fp1 — Bot identity is semantic content plus contract format version and at-birth refs (DEC-0173). VERSIONING is AD-30's git logic: an append-only branches-from version graph (multiple heads legal, `current` a separate dated pointer), every version readable forever, continues-performance carrying a track record across versions only when human-signed. PARAMETERIZATION LAW: governed live and paper seats execute the canonical assignment ONLY; non-default assignments exist solely as B-3 run-spec overrides in experimentation, and promoting a tuned assignment mints a NEW Bot version. A Bot binds exactly one Book at a time, the Bot-Book-account binding a separate dated record (DEC-0115); the AD-41 seat record cites the registered Bot definition by fp1. (DEC-0172, DEC-0173, DEC-0115)
+
+### Bot definition
+
+The CT-33 registry artifact — the declaration half of a **Bot** (the other half is the plain-Python logic). It is a qmf-registry per-kind contract filling AD-16's reserved Bot kind, authored via **QML** and owned by qmf-registry like every kind. It carries the six content groups (one **strategy family** id, the **Confluence** set, the declared parameter space with its **canonical assignment**, the **footprint**, the permitted-intent declaration, and the logic reference) and is identity-bearing on semantic content plus contract format version and at-birth refs, with the AD-16 header's writer, sequence, stable id, and created-at excluded from fp1. It carries NO exit_logic field — exit policy is the Book's, per **strategy family** (DEC-0179). The Bot definition mints ONLY when both **conformance** layers pass (registration otherwise refuses, policy rejection), and it is what governed evidence and seats cite by fp1 (DEC-0178). The old name **BotSpec** is retired. (DEC-0173, DEC-0172, DEC-0178, DEC-0179)
+
+### canonical assignment
+
+The set of MANDATORY default values the declared parameter space of a **Bot definition** carries — one default per declared variable, together the definition's canonical assignment. Governed live and paper seats execute the canonical assignment ONLY; non-default assignments exist solely as B-3 run-spec overrides in experimentation runs, each fully labeled and resolvable from the resolved run-config fingerprint. Promoting a tuned assignment mints a NEW **Bot** version (branches-from) whose defaults are the tuned values — one identity locus, so no tuned bot silently wears the original's track record. The admission-side check this enables is the **conformance** admission bar's canonical-assignment evidence, read from the B-3 `assignment_is_canonical` stamp through a B-4 fold qualifier (DEC-0178, DEC-0183). (DEC-0173)
 
 ### Canonical sensing feed
 
@@ -123,7 +135,7 @@ The content-derived identity of a computed result, assembled from its result lab
 
 ### Confirmation
 
-A confluence element that confirms a candidate trading condition. A confluence contains one-or-more confirmations under the ratified multiplicity rule (DEC-0115); its exact schema awaits the Bot sitting, and any structure evidence it consumes is governed by CT-17's lifecycle law (DEC-0129). Distinct from a structure object's **confirmation record**, the append-only lifecycle record carrying confirmed-at.
+The **confluence leg** role (`confirmation`) that confirms a candidate trading condition: a producer binding plus optional declared parameters, its condition living in the Python logic in V1 (DEC-0175). A **Confluence** carries one-or-more legs of any role mix, so it need not contain a confirmation leg at all (DEC-0175); any structure evidence a confirmation leg consumes is governed by CT-17's lifecycle law (DEC-0129). Distinct from a structure object's **confirmation record**, the append-only lifecycle record carrying confirmed-at.
 
 ### Confirmation delay
 
@@ -131,7 +143,15 @@ The declared maximum bound, in observations at the family's **BarSpec**, between
 
 ### Confluence
 
-Bot-side trading logic composed from Levels, Triggers, and Confirmations. A Bot contains one-or-more confluences, and a confluence contains one-or-more levels, triggers, and confirmations, with no layer hardcoding exactly-one (DEC-0115). Exit ownership is separate and ratified: the Book owns exit policy and a Bot may only propose exits through the CT-23 door (DEC-0147).
+A registry artifact (CT-34) of reusable bot-side trading logic, cited by fingerprint. A confluence carries ONE-OR-MORE **confluence leg**s of ANY role mix — at least one leg of any role, never one of each — each leg a `(role, producer binding, optional declared exact parameters)` triple whose role is one of `level | trigger | confirmation | filter`; a leg may cite another confluence (composition). A confluence is its own artifact with lineage to its children (AD-17), NOT a CT-17 causal-structure composite, so AD-25's order-significant-by-default does not reach it: legs follow a fingerprint-ascending default with display-only ordinals, and order-significance is opt-in per confluence, entering the fingerprint ONLY when declared. Condition semantics live in the Python logic in V1. A **Bot** contains one-or-more confluences (DEC-0115); exit ownership is separate — the Book owns exit policy and a Bot may only propose exits through the CT-23 door (DEC-0147). (DEC-0175, DEC-0115, DEC-0147)
+
+### confluence leg
+
+A single element of a **Confluence** (CT-34): a `(role, producer binding, optional declared exact parameters)` triple, where a leg may itself cite another confluence (composition). A confluence carries ONE-OR-MORE legs of ANY role mix — at least one leg of any role, never one of each. The LEG-ROLE VOCABULARY is CT-34's own closed-and-addable contract surface (addable never redefined): `level | trigger | confirmation | filter`. AD-17's three — level, trigger, confirmation — are the seed; `filter` is the FIRST addition, freshly minted: a suppressing condition consuming the same governed producers, not a new species. The old formula's Features are producer bindings consumed by level and trigger legs; the old formula's Filters get their governed home as filter legs. Condition semantics — WHEN a leg is satisfied — live in the Python logic in V1; the declaration carries only WHAT is consumed and WHICH role each leg plays, and a fully declarative predicate grammar is Deferred. (DEC-0175)
+
+### conformance / conformance ticket
+
+Conformance is TECHNICAL, NEVER performance (AD-32's no-probation law mirrored): "conformant" means a bot passed both conformance layers, never "certified" and never "passed an exam". Two layers gate the ticket. Layer 1 is the declaration linter at registration — schema completeness against the declared format version, every parameter unit-kinded with a valid **canonical assignment**, every reference resolvable, **footprint** completeness under the transitive-union law, template completeness, and permitted exit-intent kinds within the ratified CT-23 vocabulary; failures are AD-11 typed refusals, journaled. Layer 2 is sandboxed execution conformance, SPLIT into a QML-owned pure format-versioned contract (the denial set, static AST/import-scan rules, the determinism harness, a deterministic golden-slice generator keyed off the declared footprint, and the verdict function) and a host-owned runner (process spawning and isolation only), so the verdict is host-independent by construction and no Book is present. THE TICKET: the Bot registry kind mints ONLY for artifacts passing both layers (registration otherwise refuses, policy rejection), and that registration is what governed evidence and seats CITE — conformance gates evidence CITATION and SEATS, never tunnel entry, so ungoverned bots keep full tunnel access. V1 enforcement is stated honestly: static scan + capability starvation + host process isolation; hardened OS-level confinement is a named deferred dependency of the node/platform sitting, and a dynamically-evasive malicious bot is out of V1's threat model. (DEC-0178)
 
 ### Connection manager
 
@@ -225,6 +245,10 @@ The named CT-18 contract part that runs post-connect and is **verify-or-refuse**
 
 The declaration every read-time fold the spine names must ship: its stream, its ordering key, its knowledge-time bound, and its equal-instant disposition. Across writers, control and mode folds resolve by rank, never by WriterId byte order. No fold on the trading path may refuse — it returns the most restrictive state, journals data quality, and alarms. Runtime state (Book mode, seat state, order state, bench counts, standing protection intent, structure lifecycle) is a read-time fold, never a stored mutable field, and each such fold declares its fold contract (DEC-0150).
 
+### footprint
+
+The single canonical consumption manifest of a **Bot definition**: the stream set (instrument-role + BarSpec list in B-12's shape, trading vs data-only roles, held as one contained locus), the required calendars (identities + versions per AD-8), and the producer bindings — each either a pinned configured-producer fingerprint (CT-16/CT-17 identity) or a **producer template**. COMPLETENESS LAW: the footprint's producer-binding set MUST EQUAL the transitive union of every cited **Confluence**'s leg producer bindings plus any bot-direct producers — a confluence-leg producer absent from the footprint is a Layer-1 registration refusal. Hosts provide ONLY the declared footprint to the logic. The bot's warm-up/embargo horizon is DERIVED at resolution from the resolved producer chain (AD-21/AD-22), never hand-declared. The Book side declares `footprint_requirements` — a set of typed requirements over CT-33 footprint fields under admission_bar's grammar discipline, values in Book templates — checked by the **prediction linter** (DEC-0181). (DEC-0174)
+
 ### Foreign-float law
 
 The AD-7 rule extending foreign-money-verbatim to binary floats a venue delivers (cTrader execution prices and conversion rates are raw doubles): a foreign float is evidence, **never identity**. It crosses the named venue-adapter boundary at receipt to a scaled integer at a **per-value-class target scale** with a declared, identity-bearing rounding mode; the raw float is retained only as integrity-checked provenance and is never the value a consumer reads. (DEC-0141, DEC-0138)
@@ -283,7 +307,7 @@ The time at which an observation became knowable or entered the governed evidenc
 
 ### Level
 
-A confluence or market-structure element representing a causally derived price or market area. As structure evidence it is one of the open family-declared geometries under CT-17's lifecycle law — minted at observation, confirmed by its precise rule, evolved only through interaction records (DEC-0129); as a confluence element its Bot-side schema awaits the Bot sitting (DEC-0115).
+A confluence or market-structure element representing a causally derived price or market area. As structure evidence it is one of the open family-declared geometries under CT-17's lifecycle law — minted at observation, confirmed by its precise rule, evolved only through interaction records (DEC-0129); as a **confluence leg** role (`level`) it is a producer binding plus optional declared parameters, its satisfaction condition living in the Python logic in V1 (DEC-0175).
 
 ### Light and heavy
 
@@ -363,7 +387,7 @@ An asset-neutral qmf-core market noun representing market exposure, referencing 
 
 ### prediction linter
 
-A static can-this-Book-register-this-bot compatibility check, run at admission Layer 1. It depends on the deferred Bot schema and therefore ships as a `pending(bot-schema sitting)` slot: it passes registration and blocks live binding. It is the operator's own idea, not a performance gate — no trial period, probation window, or paper-performance gate exists (DEC-0146, DEC-0144).
+A static Book-vs-bot compatibility check, run on demand and at seat time against the CT-28 binding context, filling AD-32's Layer-1 pending slot now that the QML sitting has landed CT-33 (it was formerly a `pending(bot-schema sitting)` slot). Its check list is pinned, addable never redefined: (a) the CT-33 **footprint** satisfies the Book's `footprint_requirements`; (b) the bot's declared permitted EXIT-intent kinds are a subset of the Book's exit_policy permitted exit kinds (`entry` is never gated — a zero-exit-kind Book, the honest V1 default, admits entry-only bots); (c) the bot's **strategy family** resolves an exit_policy entry (explicit or the declared catch-all); (d) the bot's stream set lies within the binding's declared venue capabilities (CT-18, through AD-29's bind-time check). It passes registration and blocks live binding, and is not a performance gate — no trial period, probation window, or paper-performance gate exists (DEC-0178, DEC-0146, DEC-0144).
 
 ### Presence map
 
@@ -376,6 +400,10 @@ The first-class qmf-core value for a price difference: price subtraction is clos
 ### Processed data
 
 Data derived from raw evidence through an identified transformation. Processed data does not replace or overwrite raw evidence.
+
+### producer template
+
+One of the two forms a **footprint** producer binding may take (the other is a pinned configured-producer fingerprint): a COMPLETE CT-16/CT-17 configuration minus ONLY the space-bound parameter values. It carries every AD-22 identity field (formula id, contract format version, ordered named input set, calendar requirements, alignment policy, missing-value policy, warm-up, output schema, supported modes, arithmetic-reference configuration) except the parameters bound to named bot-space parameters; an omitted identity field is a Layer-1 registration refusal. Resolution — substituting the space-bound values — is a TOTAL, SINGLE-VALUED function producing one deterministic CT-16/CT-17 fingerprint, so dedup lands on ordinary configured-producer fingerprints and identical canonical runs fingerprint identically on every machine. Template resolution is a declared B-3 config-compiler extension AND a node seat-admission responsibility, composing with B-8's value resolution (DEC-0183). (DEC-0174)
 
 ### Promotion
 
@@ -415,7 +443,7 @@ The current documentation scope: qmf-core, qmf-registry, qmf-data, qmf-indicator
 
 ### QML
 
-The deferred Bot-oriented library under the QMF umbrella. QML is not part of the immediate QMF V1 roster.
+The QMX bot-authoring library: one uv-installable application-layer distribution (`import qml`) built ON QMF contracts exactly as **QMB** is, never a QMF roster package, never a framework, never an engine, and never again a cross-component contract layer (the old load-bearing-stratum role is retired — QMF's contracts are the shared layer now). Its whole surface is three thin things: author-side types and helpers producing the Bot-domain registry artifacts (**Bot definition** CT-33 and **Confluence** CT-34) on qmf-core nouns; the bot runtime protocol hosts invoke (DEC-0177); and the **conformance** gate (DEC-0178). QML mints NO new QMF-ladder (CT-*) shared contract of its own — CT-33 and CT-34 are qmf-registry kinds it authors, and the runtime protocol and conformance contract are QML-local contracts on QML's own AD-5 format-version ladder. No acronym expansion is minted: the corpus never expands QML and the L reads as Library. Plain Python stays first-class forever — an unregistered bot needs zero QML imports to run in QMB or research lanes, and QML conformance is the ticket into governed evidence and Book seats, nothing else. QML imports qmf-core, qmf-registry, and qmf-risk (CT-23/CT-29 types) and NEVER imports qmf-venue; it is pure per AD-15 (no threads, no I/O, no process spawning), every impure step host-owned. QML builds before the trading node and may build alongside QMB, carrying its own SemVer as display-only provenance and consuming the QMF workspace in lockstep (`uv add qml`) (DEC-0180). (DEC-0171, DEC-0184)
 
 ### QMX
 
@@ -455,11 +483,11 @@ The explicit typed call by which an application clears an outstanding **UNKNOWN*
 
 ### Risk module
 
-The reusable, account-facing Book and BMS boundary `COMP-QMF-RISK`. Its risk contracts are ratified as `defined-unwired` surface — Book definition (CT-22), risk evaluation (CT-23), binding transition (CT-24), risk-record projections (CT-25), BMS definition (CT-27), Book binding (CT-28), exit record (CT-29), control action (CT-30), control window (CT-31), and performance result (CT-32) — carrying no implementation code and mediated by the composition root; the former risk-reconciliation fence is resolved. The module owns the risk domain; `footprint_requirements` and the prediction linter remain pending slots awaiting the Bot schema (DEC-0143, DEC-0146, DEC-0147, DEC-0150, DEC-0155).
+The reusable, account-facing Book and BMS boundary `COMP-QMF-RISK`. Its risk contracts are ratified as `defined-unwired` surface — Book definition (CT-22), risk evaluation (CT-23), binding transition (CT-24), risk-record projections (CT-25), BMS definition (CT-27), Book binding (CT-28), exit record (CT-29), control action (CT-30), control window (CT-31), and performance result (CT-32) — carrying no implementation code and mediated by the composition root; the former risk-reconciliation fence is resolved. The module owns the risk domain; the former Bot-schema pending slots have filled now that the QML sitting landed CT-33 — `footprint_requirements` takes the QL-4 requirement-set shape through the CT-22 format version 2 mint (DEC-0181) and the **prediction linter** is now defined (DEC-0178), both still passing registration and blocking live binding (DEC-0143, DEC-0146, DEC-0147, DEC-0150, DEC-0155).
 
 ### Risk contracts (CT-22..25, CT-27..32)
 
-The ratified risk-domain contract surface owned by `COMP-QMF-RISK`, `defined-unwired`: Book definition (CT-22), risk evaluation / bot-to-Book port (CT-23), binding transition (CT-24), risk-record projection join (CT-25), BMS definition (CT-27), Book binding (CT-28), exit record (CT-29), control action (CT-30), control window (CT-31), and performance result (CT-32). These are ratified schema with no code — no implementation authority flows from them, and they ship through the factory pipeline like every other contract; composition-root-mediated, they create no new package dependency edge. Two surfaces are declared `pending(bot-schema sitting)` — `footprint_requirements` and the prediction linter — which pass registration and block live binding (DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0147, DEC-0150, DEC-0155).
+The ratified risk-domain contract surface owned by `COMP-QMF-RISK`, `defined-unwired`: Book definition (CT-22), risk evaluation / bot-to-Book port (CT-23), binding transition (CT-24), risk-record projection join (CT-25), BMS definition (CT-27), Book binding (CT-28), exit record (CT-29), control action (CT-30), control window (CT-31), and performance result (CT-32). These are ratified schema with no code — no implementation authority flows from them, and they ship through the factory pipeline like every other contract; composition-root-mediated, they create no new package dependency edge. Two former `pending(bot-schema sitting)` surfaces — `footprint_requirements` and the **prediction linter** — have filled now that the QML sitting landed CT-33: `footprint_requirements` takes the QL-4 requirement-set shape through the CT-22 format version 2 mint (DEC-0181) and the prediction linter's pinned four-check list is defined (DEC-0178), both still passing registration and blocking live binding (DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0147, DEC-0150, DEC-0155).
 
 ### Run loop
 
@@ -549,6 +577,10 @@ The qualifier on a `rejected-by-venue` outcome when a `cancel_order` resolved by
 
 An asset-neutral qmf-core market noun for a market observation. Tick sources are separately identified, with bid and ask preserved alongside source timestamps and disagreements kept visible via `corroborates` and `disagrees-with` edges, never merged (DEC-0119). The venue depth surface is a Level-2 resting-liquidity book with no Level-3 tape, recorded as the verbatim wire payload; symbol metadata is declared CT-18 instrument-metadata surface (DEC-0135, DEC-0138).
 
+### strategy family
+
+An opaque operator-minted id under AD-9's discipline plus a dated registry metadata record — the SAME machinery as an **instrument_class record** (a kind under CT-06's addable-kinds law, no new CT number). A strategy family is a KEYING TOKEN WITH NO AUTHORITY: it is the key the ratified law already reaches for — a Book's exit_policy declares an ExitLogicRef per family, `q` and `bench_consecutive_loss_threshold` are per-family variables, and the paper starting balance is family-scoped. Every **Bot definition** declares EXACTLY ONE family id, a deliberate cardinality-one ruling: a family is an attribution key, and one bot keyed to two families would partition every per-family variable and exit-policy resolution two ways. A Book's exit_policy entries key by family id and MAY declare ONE catch-all default entry (ratified into the CT-22 format mint, DEC-0181), with the CT-29 exit record keying the RESOLVED entry (explicit-or-catch-all); a bot whose family resolves no entry fails the **prediction linter** (DEC-0178). The old ArchetypeSpec's constraint powers (permitted feature families, permitted timeframes, mutation allowances) are NOT revived — constraining is the Book's job. **archetype** is the retired alias. (DEC-0176)
+
 ### Structure family
 
 A **type of chart object** — the word "family" in QMF means exactly this and nothing else: never a strategy, bot, or Book category, and never a trading-school name (L32). Geometry is family-declared and open (point, level, zone, span, distribution, graph). A family ships into the governed library only when its confirmation rule states "confirmed the moment X happens" with X knowable at that instant; the seed candidates (`registry:structure_seed_family_candidates`) hold no privilege over operator-authored families, which are first-class peers via the extension shape. (DEC-0129, DEC-0132)
@@ -567,7 +599,7 @@ A reserved record kind — `sweep | refund | re_seed | paper_epoch_reset` — th
 
 ### Trigger
 
-The confluence element that represents the trade-entry event. Its exact schema awaits the Bot sitting (DEC-0115); any structure evidence it consumes is governed by CT-17's lifecycle law (DEC-0129).
+The **confluence leg** role (`trigger`) that represents the trade-entry event: a producer binding plus optional declared parameters, its satisfaction condition living in the Python logic in V1 (DEC-0175). Any structure evidence it consumes is governed by CT-17's lifecycle law (DEC-0129).
 
 ### Two-phase wiring
 
@@ -647,9 +679,17 @@ A first-class qmf-core noun: a stable, durable writer identity minted per `(mach
 
 ## Retired or prohibited names
 
+### archetype
+
+Retired name. Use **strategy family** — a keying token with no authority, exactly one per **Bot definition**, that a Book's exit_policy keys by. The old ArchetypeSpec's constraint powers (permitted feature families, permitted timeframes, mutation allowances) are NOT revived — constraining is the Book's job, and agent-mutation governance is agentic-sitting territory (DEC-0176, DEC-0184).
+
 ### Backtesting engine
 
 Retired name. Use **QMB** — the realization of the former **Future backtesting library** entry. "engine" is banned vocabulary for it — QMB is a library and a CLI, never an engine or kernel — and a permanent central engine is rejected (DEC-0159).
+
+### BotSpec
+
+Retired name. Use **Bot definition** — the CT-33 declaration artifact. The old BotSpec's `exit_logic` slot is deliberately dead: the Bot definition carries no exit_logic field, and exit policy lives in the Book's exit_policy per **strategy family** (DEC-0179, DEC-0173).
 
 ### Broker Exam
 

@@ -1,0 +1,59 @@
+id: CT-34
+name: Confluence (leg-set) kind contract
+status: provisional
+version: 1  # first minted format version; CT-34 is a new qmf-registry kind ruled by the 2026-08-21 QML sitting (DEC-0175); the doc stays provisional pending corpus re-ratification
+owner: COMP-QMF-REGISTRY  # kinds are owned by qmf-registry like every kind; the CT-34 artifact is AUTHORED VIA the QML library (author-side types/helpers on qmf-core nouns), but the record kind is qmf-registry-owned (DEC-0175)
+consumers: []  # consumer-blind by design: the confluence kind is a qmf-registry record kind authored via the QML library; QML returns fingerprintable content and the composition root mints and persists the record under the AD-25 root-mints pattern, so no package import edge exists (DEC-0175)
+active_consumers: []
+intended_consumers: [COMP-QML, COMP-QMB]  # QML authors and validates confluences; every CT-33 Bot definition cites one-or-more of them by fingerprint, and QMB's config compiler resolves their leg producers into the footprint — all through the composition root (DEC-0175, DEC-0173, DEC-0174)
+wiring_status: defined-unwired  # the confluence kind is ratified surface; no code exists; records reach qmf-registry through the composition root under the AD-25 root-mints pattern; no wiring is authorized from this doc (DEC-0175)
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0115, DEC-0173, DEC-0174, DEC-0175, DEC-0185]
+gaps: []  # a fully declarative predicate/condition grammar for legs is Deferred (condition semantics live in the Python logic in V1), a stated later mint, not an open gap (DEC-0175)
+purpose: >-
+  One confluence — the CT-34 kind — a reusable Bot-domain registry artifact (AD-17: a
+  composite is its own artifact with lineage to its children) composed of one-or-more legs
+  of any role mix, cited by fingerprint from one-or-more Bot definitions (CT-33), so a set
+  of governed producers and the role each plays is declared once, deduplicated by identity,
+  and reused across bots without re-declaration; each leg names a role and carries a producer
+  binding (a pinned CT-16/CT-17 fingerprint or a producer template per the QL-4 footprint law)
+  and/or a cite of another confluence (composition), plus optional declared exact parameters;
+  the declaration carries WHAT is consumed and WHICH role each plays, while WHEN a leg is
+  satisfied lives in the Python logic in V1.
+invariants:
+  - "A confluence is its OWN registry artifact (AD-17: composites are own artifacts with lineage to children), reusable across bots and cited by fingerprint; it is authored via the QML library and owned by qmf-registry like every kind (DEC-0175, DEC-0115)."
+  - "Content is ONE-OR-MORE legs, of ANY role mix — AD-17's 'one-or-more levels, triggers, and confirmations' is read multiplicity-faithfully as at least one leg of any role, never one of each (mandating one of each would itself be a foreclosing cardinality) (DEC-0175, DEC-0115)."
+  - "Leg and component counts are NEVER bounded by this contract: any number of legs of any role is legal (twenty `level` legs plus one `trigger`, or several mini-`level` legs composing one level, are all valid), and confluence composition may nest to any depth — a count ceiling would itself be the foreclosing cardinality AD-17's open multiplicity refuses, so this contract imposes none (operator veto round, DEC-0175, DEC-0185)."
+  - "Each leg is `(role, a producer binding per QL-4 and/or a cite of another confluence, optional declared exact parameters)` — the operator veto round ruled a leg MAY carry BOTH a producer binding and a child-confluence cite, at least one of the two required, the role always mandatory; a cited child confluence is its own artifact (composition) (DEC-0175, DEC-0174, DEC-0185)."
+  - "The leg-role vocabulary is CT-34's OWN contract surface, closed-and-addable (addable never redefined): `level | trigger | confirmation | filter`; AD-17's `level`/`trigger`/`confirmation` are the seed (CT-34 formalizes the enum AD-17 left implicit, exactly as AD-40/AD-33 own the unit-kind and close-reason vocabularies — not amending AD-17), and `filter` is the FIRST addition, freshly-minted design: a suppressing condition consuming the same governed producers, not a new species — a further role is a contract-format-version mint, never a redefinition (DEC-0175)."
+  - "The old formula's Features are producer bindings consumed by `level`/`trigger` legs — that is their stated disposition, never a leg role of their own (DEC-0175)."
+  - "Ordering: CT-34 legs follow AD-17's fingerprint-ascending default (order-insignificant) with display-only ordinals; a confluence is a declaration artifact, NOT a CT-17 causal-structure composite, so AD-25's order-significant-by-default does NOT reach it; order-significance is opt-in per confluence and enters the fingerprint ONLY when declared (DEC-0175, DEC-0115)."
+  - "Condition semantics live in logic in V1: the declaration carries WHAT is consumed (producer identities) and WHICH role each plays; WHEN a leg is satisfied is the Python logic's job; a fully declarative predicate grammar is Deferred — declared consumption + roles buy footprint comparability and lineage without inventing a language (DEC-0175)."
+  - "A leg's producer binding follows the footprint law: each is a pinned CT-16/CT-17 configured-producer fingerprint or a complete producer template minus only the space-bound parameter values; every leg producer of every cited confluence must reach the citing bot's footprint (the transitive-union completeness law), else a Layer-1 registration refusal on the bot (DEC-0174, DEC-0175)."
+  - "Identity is content (AD-17): reuse across bots never mints a new confluence; a changed leg, role, producer binding, leg parameter, cited child confluence, or a newly-declared order-significance always mints a new confluence fingerprint (DEC-0175, DEC-0115)."
+schema:
+  type: confluence  # a Bot-domain registry artifact (AD-17 composite): a set of legs, identified by its fp1, cited by CT-33 Bot definitions (DEC-0175, DEC-0115)
+  fields:
+    - "contract_format_version: the confluence kind's own format version; an uninterpretable value is an `unsupported capability` refusal, never a best-effort read (DEC-0175)"
+    - "confluence_fingerprint: the `fp1` over the canonical leg set (plus the order-significance declaration where present) — the identity a Bot definition (CT-33) cites, never a version string (DEC-0175, DEC-0115)"
+    - "legs: one-or-more leg records; at least one leg of any role mix, never one of each (DEC-0175, DEC-0115)"
+    - "leg.role: level | trigger | confirmation | filter — CT-34's own closed-and-addable role vocabulary (DEC-0175)"
+    - "leg.producer_binding: a pinned CT-16/CT-17 configured-producer fingerprint OR a producer template (a complete CT-16/CT-17 configuration minus only the space-bound parameter values), per the QL-4 footprint law; every leg producer must reach the citing bot's footprint; present unless the leg carries only a child-confluence cite — a leg may carry a producer binding, a `leg.confluence_ref`, or BOTH, with at least one of the two required (DEC-0174, DEC-0175, DEC-0185)"
+    - "leg.declared_parameters: optional declared exact parameters on the leg (exact rationals or scaled integers) (DEC-0175)"
+    - "leg.confluence_ref: optional — a leg may cite another confluence by fingerprint (composition; the child is its own artifact) (DEC-0175, DEC-0115)"
+    - "display_ordinal: a display-only ordinal per leg, separate from identity under the fingerprint-ascending default (DEC-0175, DEC-0115)"
+    - "order_significance: opt-in per confluence; when declared it enters the fingerprint (order-significant), otherwise the default is order-insignificant (AD-17 fingerprint-ascending), never AD-25's order-significant-by-default (DEC-0175)"
+  enums:
+    - "leg role: level | trigger | confirmation | filter — closed-and-addable (addable never redefined); AD-17's level/trigger/confirmation are the seed, `filter` is the first addition (freshly minted); a further role is a contract-format-version mint (DEC-0175)"
+    - "producer binding form: pinned-fingerprint | template — a template resolves to a pinned fingerprint by a total, single-valued function (DEC-0174, DEC-0175)"
+    - "ordering: fingerprint-ascending (default, order-insignificant) | declared-order-significant (opt-in, enters the fingerprint) (DEC-0175, DEC-0115)"
+    - "refusal categories on this contract's paths, per registry:typed_refusal_codes: invalid input (a leg missing its role, or carrying neither a producer binding nor a child-confluence cite — at least one of the two is required, though a leg may carry both; a producer template missing an identity field; a zero-leg confluence; a leg role outside the level|trigger|confirmation|filter vocabulary), unsupported capability (an unknown contract format version), unavailable dependency (an unresolvable producer fingerprint or cited child confluence) (DEC-0175, DEC-0174, DEC-0185)"
+  units:
+    - "a leg's declared parameters are exact rationals or scaled integers (AD-7 — no binary float); a confluence declares no money or R values of its own — its producers carry units, the confluence carries producer identities and roles (DEC-0175)"
+    - "fingerprints (confluence_fingerprint, leg producer fingerprints, cited child confluence fingerprints) are fp1 strings (fp1:sha256:<hex>) (DEC-0175, DEC-0115)"
+  nullability:
+    - "no field is null (AD-10): a confluence carries at least one leg; a zero-leg confluence is `invalid input` (DEC-0175, DEC-0115)"
+    - "leg.role is mandatory on every leg; a leg carries a producer binding, a child-confluence cite, or BOTH (composition, AD-17), with at least one of the two required; leg.declared_parameters optional — an omitted key, never null (DEC-0175, DEC-0185)"
+    - "order_significance defaults to order-insignificant when not declared; the display ordinal is always present and never enters identity unless order-significance is declared (DEC-0175, DEC-0115)"
+provenance_note: "CT-34 is newly minted by the 2026-08-21 QML architecture sitting (spine QL-5), authored via the QML library and owned by qmf-registry like every kind (DEC-0175). It formalizes AD-17's implicit leg-role enum as CT-34's own closed-and-addable contract surface (level | trigger | confirmation | filter) with AD-17's three as the seed and `filter` as the first, freshly-minted addition — a suppressing condition consuming the same governed producers, giving the old formula's Filters a governed home; the old formula's Features are dispositioned as producer bindings consumed by level/trigger legs, not a leg role. A confluence is a declaration artifact, not a CT-17 causal-structure composite, so AD-25's order-significant-by-default does not reach it (DEC-0175). Design is ratified by operator delegation 2026-08-21 (reviewer gate: 5 lenses, 34 findings, all applied); implementation authorization arrives only through the factory pipeline, and this doc stays provisional."

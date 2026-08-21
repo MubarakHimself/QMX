@@ -9,8 +9,8 @@ intended_consumers: [COMP-QMF-REGISTRY, COMP-QMF-DATA]  # Registry persists the 
 wiring_status: defined-unwired  # AD-41 ratified the record shape; no code exists and no wiring is authorized from this doc — composition-root mediated until the software factory ships it (DEC-0155, DEC-0158)
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0143, DEC-0145, DEC-0147, DEC-0150, DEC-0151, DEC-0154, DEC-0155, DEC-0157, DEC-0158]
-gaps: [GAP-0047]  # the close-reason taxonomy is a QML donor atom adopted by dated sitting decision, open to revision by the QML sitting (GAP-0047). GAP-0045 is ANSWERED (DEC-0155) and removed; alpha-decay mathematics is deferred by design (AD-41), the primitive ships now because it cannot be back-filled — not an open gap in this contract
+decisions: [DEC-0143, DEC-0145, DEC-0147, DEC-0150, DEC-0151, DEC-0154, DEC-0155, DEC-0157, DEC-0158, DEC-0176, DEC-0179, DEC-0181]
+gaps: []  # GAP-0047 answered by the 2026-08-21 QML sitting — the close-reason taxonomy is ratified AS-IS and stays the ONE taxonomy (DEC-0179). GAP-0045 is ANSWERED (DEC-0155) and removed; alpha-decay mathematics is deferred by design (AD-41), the primitive ships now because it cannot be back-filled — not an open gap in this contract
 purpose: "Record one immutable exit record per virtual (Book) position close: frozen R faces, AD-27 fill references, realized P&L and an identity-bearing cost-component set, a single-sourced realized_r, the typed AD-33 close reason, the closing authority and arbitration reference, and the Book-declared loss-predicate format version — the evidence primitive the bench fold, whole-trade attribution and alpha-decay measurement all read, recorded before any later interpretation (DEC-0155)."
 invariants:
   - "One exit record per VIRTUAL (Book) position close — the AD-40 noun, not the venue position — or a netted account produces fewer records than admissions and every fold over them under-counts (DEC-0155, DEC-0154)."
@@ -28,6 +28,8 @@ invariants:
   - "Recording precedes interpretation: a fill closing a virtual position must have its exit record persisted before any later intent on the same (Book, Bot) seat is minted, else that intent refuses (stale evidence) — otherwise the (N+1)th entry races the Nth exit record and the leash misses the crossing it exists to catch (DEC-0155, DEC-0158)."
   - "The record carries the account-binding role in its result-label parts, and a single result may never span account roles; it carries the contract format version of the Book-declared loss predicate (declared in exit_policy, AD-30), so a result whose predicate version differs from a bar's requirement does not silently satisfy it (DEC-0155, DEC-0143)."
   - "The exit record is an evidence primitive only — measurement never acts: it publishes, and the authority to act belongs to the Book door (bench) or the operator (promotion); the bench fold is one governed producer under AD-23, published once and consumed by the door; the alpha-decay mathematics is deferred, but the collection starts now because it cannot be back-filled (DEC-0155)."
+  - "AD-33's provenance flag is CLOSED — the close-reason taxonomy is ratified AS-IS as the ONE taxonomy, and ExitLogicRef stays in the Book's CT-22 exit_policy per strategy family while the CT-33 Bot definition carries no exit_logic field (the old BotSpec slot is deliberately dead) (DEC-0179)."
+  - "Where the Book's CT-22-v2 exit_policy declares the one optional catch-all default entry, this exit record keys the RESOLVED entry — the explicit strategy-family entry or the catch-all — so loss-predicate attribution is never inferred; the exact field shape of that keying is NOT minted here (the 2026-08-21 sitting proposed no CT-29 format mint) and rides an open coordination item recorded in the changelog (DEC-0176, DEC-0181)."
 schema:
   type: "ExitRecord — an immutable qmf-core value type, one per virtual-position close, content-fingerprinted by qmf-core and wrapped into a registry record by the composition root (AD-16); every field frozen at write, corrections expressed as annotations, never mutation (DEC-0155, DEC-0158)."
   fields:
@@ -63,3 +65,15 @@ schema:
     - "realized_r is always derivable from the frozen fields and never stored as an independent governed value; a stored realized_r that disagrees with the pinned derivation is an invalid-input refusal (DEC-0155, DEC-0158)"
     - "close_reason is exactly one member and never null; a null or multi-valued close_reason is an invalid-input refusal (DEC-0147, DEC-0155)"
     - "loss_predicate_format_version and result_label (with account-binding role) are required and non-null; a result spanning more than one account role is an invalid-input refusal (DEC-0155, DEC-0143)"
+close_reason_evidence_mapping:
+  purpose: "RECORDED EVIDENCE for reading pre-QMX artifacts — the pre-QMX QML CloseReason members mapped onto the ONE ratified AD-33 close-reason taxonomy so old records read correctly; never a second taxonomy, never a registerable enum, never a contract surface a producer emits (DEC-0179)."
+  members:
+    - "SL_HIT -> protective_stop_fill (DEC-0179)"
+    - "TP_HIT -> target_fill (DEC-0179)"
+    - "TRAILING_SL_HIT -> protection_amendment_fill (DEC-0179)"
+    - "MANUAL_CLOSE / MANUAL -> operator_close (DEC-0179)"
+    - "KS_FORCED_CLOSE / KILL_SWITCH_FLATTEN -> protection_forced_flat (DEC-0179)"
+    - "SESSION_CLOSE -> window_forced_flat | boundary_flat | hold_time_force_flat, resolved per the triggering session boundary (DEC-0179)"
+    - "TIMEOUT -> hold_time_force_flat (DEC-0179)"
+    - "BROKER_CLOSE -> venue_initiated_close | venue_liquidation, resolved per whether the venue closed on its own initiative or on margin liquidation (DEC-0179)"
+    - "HEDGE_CLOSE -> no successor: no hedge machinery exists in V1; a future mint under the addable-never-redefined law forecloses nothing (DEC-0179)"

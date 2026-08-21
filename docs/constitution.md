@@ -4,10 +4,10 @@ title: QMF V1 Constitution
 type: constitution
 status: provisional
 depends_on: []
-decisions: [DEC-0001, DEC-0002, DEC-0003, DEC-0004, DEC-0006, DEC-0007, DEC-0008, DEC-0009, DEC-0011, DEC-0013, DEC-0017, DEC-0019, DEC-0022, DEC-0024, DEC-0030, DEC-0031, DEC-0041, DEC-0045, DEC-0046, DEC-0054, DEC-0060, DEC-0061, DEC-0074, DEC-0076, DEC-0080, DEC-0092, DEC-0096, DEC-0097, DEC-0120, DEC-0122, DEC-0132, DEC-0133, DEC-0136, DEC-0137, DEC-0143, DEC-0150, DEC-0156, DEC-0157]
-sources: [DEC-0001, DEC-0002, DEC-0003, DEC-0004, DEC-0006, DEC-0007, DEC-0008, DEC-0009, DEC-0011, DEC-0013, DEC-0017, DEC-0019, DEC-0022, DEC-0024, DEC-0030, DEC-0031, DEC-0041, DEC-0045, DEC-0046, DEC-0054, DEC-0060, DEC-0061, DEC-0074, DEC-0076, DEC-0080, DEC-0092, DEC-0096, DEC-0097, DEC-0120, DEC-0122, DEC-0132, DEC-0133, DEC-0143, DEC-0150, DEC-0156, DEC-0157, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md]
+decisions: [DEC-0001, DEC-0002, DEC-0003, DEC-0004, DEC-0006, DEC-0007, DEC-0008, DEC-0009, DEC-0011, DEC-0013, DEC-0017, DEC-0019, DEC-0022, DEC-0024, DEC-0030, DEC-0031, DEC-0041, DEC-0045, DEC-0046, DEC-0054, DEC-0060, DEC-0061, DEC-0074, DEC-0076, DEC-0080, DEC-0092, DEC-0096, DEC-0097, DEC-0120, DEC-0122, DEC-0132, DEC-0133, DEC-0136, DEC-0137, DEC-0143, DEC-0150, DEC-0156, DEC-0157, DEC-0169, DEC-0171, DEC-0184]
+sources: [DEC-0001, DEC-0002, DEC-0003, DEC-0004, DEC-0006, DEC-0007, DEC-0008, DEC-0009, DEC-0011, DEC-0013, DEC-0017, DEC-0019, DEC-0022, DEC-0024, DEC-0030, DEC-0031, DEC-0041, DEC-0045, DEC-0046, DEC-0054, DEC-0060, DEC-0061, DEC-0074, DEC-0076, DEC-0080, DEC-0092, DEC-0096, DEC-0097, DEC-0120, DEC-0122, DEC-0132, DEC-0133, DEC-0136, DEC-0137, DEC-0143, DEC-0150, DEC-0156, DEC-0157, DEC-0169, DEC-0171, DEC-0184, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ARCHITECTURE-SPINE.md]
 generated: 2026-08-18
-verified: 2026-08-20
+verified: 2026-08-21
 stale_after: 1y
 ---
 
@@ -35,7 +35,7 @@ stale_after: 1y
 
 **L10.** QMX-owned domain contracts and strategy semantics must be implemented locally; permitted dependencies may be wrapped without transplanting a foreign platform contract. (DEC-0013)
 
-**L11.** QMF is the framework umbrella; QML names the deferred Bot-oriented library rather than the whole foundation. (DEC-0017)
+**L11.** QMF is the framework umbrella; QML names the Bot-oriented library — now architected as the bot-authoring application-layer library built ON QMF (spine QL-1..QL-10, COMP-QML) — rather than the whole foundation. (DEC-0017, DEC-0184)
 
 **L12.** The documentation target is the QMF V1 Blueprint, and qmf-core is only its first small foundational component. (DEC-0019)
 
@@ -73,7 +73,7 @@ stale_after: 1y
 
 **L29.** Provisional recommendations, provisional contracts, and unresolved GAPs grant neither implementation authority nor live-money authority; destructive or live action still requires a ratified contract and explicit human authority. (DEC-0003, DEC-0004, DEC-0041)
 
-**L30.** QMF inter-library dependencies are default-deny: qmf-core depends on nothing, every package may depend on qmf-core, and no package may depend on any package other than qmf-core until an inter-library edge is ratified as a spine amendment; the one ratified edge is qmf-registry to qmf-data, and nothing imports qmf-venue or qmf-risk. (DEC-0120)
+**L30.** QMF inter-library dependencies are default-deny: qmf-core depends on nothing, every package may depend on qmf-core, and no package may depend on any package other than qmf-core until an inter-library edge is ratified as a spine amendment; the one ratified edge is qmf-registry to qmf-data, and nothing imports qmf-venue or qmf-risk. (DEC-0120) [Scope annotation, 2026-08-21: this default-deny law is roster-scoped — it governs the seven roster packages internally, never applications built on the workspace. An application-layer product built ON QMF (COMP-QMB, COMP-QML) may import and consume qmf-risk (and any qmf-venue-free) contracts directly, with impure steps (registration writes, sandbox execution) riding its own composition root; applications still never import qmf-venue. This declared reconciliation note is recorded here at source, not settled silently by a child. (DEC-0171, DEC-0184; QMB precedent DEC-0169)]
 
 **L31.** Everything downstream of QMF — the trading node, backtesting, the agentic system, and the product UI — must be built with QMF libraries and must not re-implement or bypass the framework's contracts. (DEC-0122)
 

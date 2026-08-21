@@ -3,9 +3,9 @@ id: ARCH-OVERVIEW
 title: QMF V1 Architecture Overview
 type: architecture
 status: provisional
-depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP, COMP-QMF-CALENDAR-FOREX, COMP-QMB, COMP-CTRADER, COMP-DUKASCOPY, COMP-CALENDAR-FEED, COMP-OBJECT-STORAGE]
-decisions: [DEC-0008, DEC-0009, DEC-0019, DEC-0022, DEC-0024, DEC-0031, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0055, DEC-0058, DEC-0059, DEC-0061, DEC-0065, DEC-0099, DEC-0100, DEC-0104, DEC-0106, DEC-0110, DEC-0113, DEC-0114, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0126, DEC-0127, DEC-0128, DEC-0131, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0143, DEC-0144, DEC-0145, DEC-0147, DEC-0149, DEC-0150, DEC-0151, DEC-0158, DEC-0159, DEC-0161, DEC-0163, DEC-0164, DEC-0165, DEC-0169]
-sources: [DEC-0008, DEC-0009, DEC-0019, DEC-0022, DEC-0024, DEC-0031, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0055, DEC-0058, DEC-0059, DEC-0061, DEC-0065, DEC-0099, DEC-0100, DEC-0104, DEC-0106, DEC-0110, DEC-0113, DEC-0114, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0126, DEC-0127, DEC-0128, DEC-0131, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0143, DEC-0144, DEC-0145, DEC-0147, DEC-0149, DEC-0150, DEC-0151, DEC-0158, DEC-0159, DEC-0161, DEC-0163, DEC-0164, DEC-0165, DEC-0169, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMB-2026-08-20/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-venue-facts.md, docs/architecture/dependencies.yaml, docs/contracts/]
+depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP, COMP-QMF-CALENDAR-FOREX, COMP-QMB, COMP-QML, COMP-CTRADER, COMP-DUKASCOPY, COMP-CALENDAR-FEED, COMP-OBJECT-STORAGE]
+decisions: [DEC-0008, DEC-0009, DEC-0019, DEC-0022, DEC-0024, DEC-0031, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0055, DEC-0058, DEC-0059, DEC-0061, DEC-0065, DEC-0099, DEC-0100, DEC-0104, DEC-0106, DEC-0110, DEC-0113, DEC-0114, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0126, DEC-0127, DEC-0128, DEC-0131, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0143, DEC-0144, DEC-0145, DEC-0147, DEC-0149, DEC-0150, DEC-0151, DEC-0158, DEC-0159, DEC-0161, DEC-0163, DEC-0164, DEC-0165, DEC-0169, DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0180, DEC-0181, DEC-0182, DEC-0184]
+sources: [DEC-0008, DEC-0009, DEC-0019, DEC-0022, DEC-0024, DEC-0031, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0055, DEC-0058, DEC-0059, DEC-0061, DEC-0065, DEC-0099, DEC-0100, DEC-0104, DEC-0106, DEC-0110, DEC-0113, DEC-0114, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0126, DEC-0127, DEC-0128, DEC-0131, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0143, DEC-0144, DEC-0145, DEC-0147, DEC-0149, DEC-0150, DEC-0151, DEC-0158, DEC-0159, DEC-0161, DEC-0163, DEC-0164, DEC-0165, DEC-0169, DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0180, DEC-0181, DEC-0182, DEC-0184, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMB-2026-08-20/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-venue-facts.md, docs/architecture/dependencies.yaml, docs/contracts/]
 generated: 2026-08-18
 verified: 2026-08-21
 stale_after: 90d
@@ -13,7 +13,7 @@ stale_after: 90d
 
 # QMF V1 Architecture Overview
 
-QMF V1 is a contracts-first Python toolbox consumed by QMX applications. QMF provides five reusable libraries and two modules; it does not provide an application loop, scheduler, product UI, backtesting library, or trading-node runtime. Everything downstream of QMF — the trading node, backtesting, the agentic system, and the product UI — is built with QMF libraries rather than re-implementing or bypassing its contracts. The backtesting library named there is now specified: it is QMB, the QMX experimentation/backtesting product (one pure library plus the `qmb` CLI) that composes the QMF backend libraries as an application-layer consumer outside QMF V1 — detailed under [Application-layer consumer — QMB](#application-layer-consumer--qmb) below and in `docs/decisions/ADR-0017`. (DEC-0008, DEC-0009, DEC-0022, DEC-0024, DEC-0122, DEC-0159)
+QMF V1 is a contracts-first Python toolbox consumed by QMX applications. QMF provides five reusable libraries and two modules; it does not provide an application loop, scheduler, product UI, backtesting library, or trading-node runtime. Everything downstream of QMF — the trading node, backtesting, the agentic system, and the product UI — is built with QMF libraries rather than re-implementing or bypassing its contracts. The backtesting library named there is now specified: it is QMB, the QMX experimentation/backtesting product (one pure library plus the `qmb` CLI) that composes the QMF backend libraries as an application-layer consumer outside QMF V1 — detailed under [Application-layer consumer — QMB](#application-layer-consumer--qmb) below and in `docs/decisions/ADR-0017`. A second application-layer consumer, QML — the QMX bot-authoring library — is likewise specified: it authors the Bot-domain registry artifacts (CT-33 Bot definition, CT-34 confluence) and the bot runtime protocol on the QMF backend, detailed under [Application-layer consumer — QML](#application-layer-consumer--qml) below and in `docs/decisions/ADR-0018`. (DEC-0008, DEC-0009, DEC-0022, DEC-0024, DEC-0122, DEC-0159, DEC-0171, DEC-0184)
 
 ## Design paradigm
 
@@ -254,6 +254,29 @@ flowchart TB
     qmb x--x venue
 ```
 
+## Application-layer consumer — QML
+
+QML is the QMX bot-authoring library and the second named application-layer consumer built on the QMF foundation: one uv-installable pure library (`import qml`), an application-layer product built ON QMF, never a QMF roster package (DEC-0171). Its whole surface is three thin things — author-side types and helpers producing the Bot-domain registry artifacts (the CT-33 Bot definition and the CT-34 confluence, qmf-registry kinds it fills), the bot runtime protocol hosts invoke, and the conformance gate. A governed bot is exactly two artifacts, the CT-33 declaration plus plain-Python logic conforming to the runtime protocol, and the `.qml` DSL is not revived in V1 (DEC-0172, DEC-0173, DEC-0175). QML depends inward on exactly three backend libraries — `qmf-core`, `qmf-registry`, and `qmf-risk` (CT-23/CT-29 types) — and never imports `qmf-venue`; the default-deny direction is read **roster-scoped**, so an application-layer product built on the workspace may consume qmf-risk contracts at its own composition root, the reading the QMB precedent already exercises (DEC-0171, DEC-0184; QMB precedent DEC-0169). Registration rides AD-25's root-mints write path: the composition root holds the `WriterId` and mints the Bot-domain records while `qml` stays pure (AD-15) and returns fingerprintable content, never stamped records. QML builds before the trading node and may build alongside QMB — QMB binds conformant bots through a runtime-protocol adapter at its composition root the day QML lands (DEC-0177, DEC-0180). CT-33/CT-34 mint as qmf-registry kinds and CT-06 updates for the Bot kind body and the strategy-family record kind; the CT-22 admission and CT-23 intent contracts take AD-5 format-version-2 mints (DEC-0181, DEC-0182). Conformance is technical never performance — two layers plus a ticket that gates evidence citation and Book seats, never tunnel entry — and admission-bar thresholds stay GAP-0048/0049 (interfaces only). (DEC-0171, DEC-0177, DEC-0178, DEC-0180, DEC-0184)
+
+```mermaid
+flowchart TB
+    operator([Operator / agent])
+    subgraph consumers["Application-layer consumers — outside QMF V1"]
+        qml["COMP-QML<br/>bot-authoring library — import qml"]
+    end
+    subgraph qmf_backend["QMF V1 backend libraries — composed at QML's root"]
+        core["COMP-QMF-CORE"]
+        registry["COMP-QMF-REGISTRY<br/>owns CT-33/CT-34 kinds"]
+        risk["COMP-QMF-RISK<br/>CT-23/CT-29 types"]
+    end
+    venue["COMP-QMF-VENUE venue module<br/>no QML edge — never imported"]
+
+    operator -->|"authors bots via qml types/helpers"| qml
+    qml -->|"imports qmf-core, qmf-registry, qmf-risk; authors CT-33/CT-34; world-agnostic pure library"| qmf_backend
+    qml -->|"conformance ticket mints the Bot kind (registration root holds WriterId, AD-25)"| registry
+    qml x--x venue
+```
+
 ## Component index
 
 | Component | Layer | Role | Specification |
@@ -270,6 +293,7 @@ flowchart TB
 | `COMP-QMF-DATA-BACKUP` — qmf-data backup and restore process | data | Backup/restore boundary | `docs/components/qmf-data-backup.md` |
 | `COMP-QMF-CALENDAR-FOREX` — qmf-calendar-forex | backend | First market-hours calendar extension — outside the roster, own SemVer ladder | `docs/components/qmf-calendar-forex.md` |
 | `COMP-QMB` — experimentation library + qmb CLI | middleware | Application-layer experimentation/backtesting consumer built ON QMF; composes the six backend libraries in `world = replay`, produces CT-32 results and CT-13 journal streams, no venue edge — outside the roster and outside QMF V1 | `docs/components/qmb.md` |
+| `COMP-QML` — bot-authoring library | middleware | Application-layer bot-authoring library built ON QMF; authors CT-33/CT-34, defines the bot runtime protocol, owns the conformance gate; composes `qmf-core`, `qmf-registry`, `qmf-risk`, no venue edge — outside the roster and outside QMF V1 | `docs/components/qml.md` |
 | `COMP-CTRADER` — cTrader Open API | external | First intended external venue peer; no active dependency or live connection is authorized | `docs/components/ctrader.md` |
 | `COMP-DUKASCOPY` — Dukascopy historical data source | external | Historical tick source | `docs/components/dukascopy.md` |
 | `COMP-CALENDAR-FEED` — news-calendar feed | external | Forward news-calendar observations | `docs/components/calendar-feed.md` |
@@ -277,4 +301,4 @@ flowchart TB
 
 ## Contract authority
 
-`docs/architecture/dependencies.yaml` is the component and dependency registry. `docs/contracts/ct-01-*.yaml` through `docs/contracts/ct-32-*.yaml` are provisional schema boundaries; the venue (CT-18 through CT-21), indicator/structure (CT-16, CT-17), and risk (CT-22 through CT-25, CT-27 through CT-32) contracts are filled at format version 1 as ratified `defined-unwired` surface, while any still-unresolved field, enum, unit, or nullability choice remains null and cites an existing GAP or a declared pending slot. The ratified spine at `_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md` is the authoritative source for the paradigm, dependency direction, and invariants absorbed here.
+`docs/architecture/dependencies.yaml` is the component and dependency registry. `docs/contracts/ct-01-*.yaml` through `docs/contracts/ct-34-*.yaml` are provisional schema boundaries; the venue (CT-18 through CT-21), indicator/structure (CT-16, CT-17), and risk (CT-22 through CT-25, CT-27 through CT-32) contracts are filled at format version 1 as ratified `defined-unwired` surface, while any still-unresolved field, enum, unit, or nullability choice remains null and cites an existing GAP or a declared pending slot. The Bot-domain kinds (CT-33 Bot definition, CT-34 confluence — `qmf-registry`-owned, authored via the QML library) are filled at format version 1 (DEC-0173, DEC-0175). CT-22 and CT-23 now sit at **format version 2** after the 2026-08-21 AD-5 format mints — superseding their format-1 fill — with pre-mint format-1 artifacts readable forever (DEC-0181, DEC-0182). The ratified spine at `_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md` is the authoritative source for the paradigm, dependency direction, and invariants absorbed here.

@@ -146,7 +146,7 @@ CT-25) — operator flagged qmf-data needs this enhancement. Remaining open
 after this: GAP-0016/0017 + 0047..0049 (backtesting + QML sittings).
 ```
 
-## 8. QML sitting (GAP-0047 — run AFTER the backtesting sitting)
+## 8. QML sitting — SUPERSEDED (ran autonomously 2026-08-21; the QML spine is FINAL at architecture-QML-2026-08-21/ — use prompt 11 instead)
 
 ```
 Run /bmad-architecture. Update intent: resume from the memlog at
@@ -238,4 +238,56 @@ data-licensing ops question stays open. Remaining after this: GAP-0016/0017
 gate, GAP-0048 content, GAP-0049, GAP-0047 (QML sitting — operator lead:
 may run BEFORE the backtesting-content sitting; QMB tests plain-Python
 bots meanwhile). Then PRD, then BMad exit.
+```
+
+## 11. Documentation factory — QML increment (written 2026-08-21, after the QML sitting closed; run this next)
+
+```
+Run /documentation-factory in change mode, QML increment. Intake:
+_bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ —
+ARCHITECTURE-SPINE.md (FINAL, QL-1..QL-10 + inherited-invariants table +
+the "Parent-contract mints proposed by this sitting" section), .memlog.md
+(18 entries: rulings, assumptions tagged for operator override, gate
+amendments), reviews/ (five gate lenses, all findings applied); plus the
+two evidence dossiers research-risk/qml-original-dig.md and
+research-backtesting/qml-dig-verification.md (QMX-discussion citations in
+them ride the named structural-definition exemption; no risk/sizing
+content). Job: absorb QML into docs/ — close GAP-0047. Mint contracts:
+ct-33-bot-definition.yaml and ct-34-confluence.yaml (qmf-registry kinds,
+QML-authored); update ct-06-registration.yaml (Bot kind body now ruled via
+CT-33; add the strategy-family dated metadata record kind). Apply the two
+PROPOSED PARENT-CONTRACT FORMAT MINTS with AD-5 migration notes: CT-22
+(admission_bar evidence_requirements gains registered-conformant-Bot cite
++ canonical-assignment evidence; exit_policy gains one explicit optional
+catch-all default entry with the exit record keying the RESOLVED entry;
+footprint_requirements pending(GAP-0047) slot fills with QL-4's
+requirement-set shape) and CT-23 (new OPTIONAL entry field: advisory stop
+proposal; document the declared full-loss price as Book-resolved at the
+door, mirroring requested_r; close the GAP-0047 revision flag — ExitLogicRef
+and the close-reason taxonomy are RATIFIED as-is, old CloseReason members
+recorded as an evidence mapping, never a second taxonomy). New component
+doc docs/components/qml.md (library identity, two-artifact bot, runtime
+protocol, conformance gate, dependency stance incl. the declared
+reconciliation note: annotate the QMF Dependency-direction rule as
+roster-scoped so application-layer qmf-risk imports are legal at source;
+also fix the QMB docs' "AD-2 / L21" mis-citation to "AD-2 / L11").
+Glossary: rewrite QML (no longer a deferred stub) and Bot (full CT-33
+shape); add strategy family, canonical assignment, advisory stop proposal,
+conformance/ticket, confluence leg + roles incl. filter; record BotSpec
+and archetype as retired aliases. Mint ledger decisions: no-DSL-in-V1
+(.qml not revived), Bot kind body, confluence kind + leg-role vocabulary,
+family = key-not-authority, canonical-assignment parameterization law,
+conformance-as-ticket (technical, never performance; complexity gate NOT
+revived — stated drop), prediction-linter four checks (AD-30/AD-32 pending
+slots resolved), Book-side single-sited full-loss derivation, QML-before-
+the-trading-node build order, QML version ladder (own SemVer display-only,
+uv add qml). Record the three QMB coordination items in the qmb component
+doc: B-3 assignment_is_canonical stamp, B-3/seat-admission producer-
+template resolution step, B-8 parameter-space schema completed with
+unit-kinds (one schema, CT-33-authoritative). Update gap-report
+(GAP-0047 answered), traceability, changelog, AGENTS.md if it enumerates
+open gaps. All memlog "assumption" entries are operator-overridable calls
+— surface them in the changelog row so the operator can veto cheaply.
+Remaining open after this: GAP-0016/0017 (registration gate, DEC-0121),
+GAP-0048 content, GAP-0049. Then the PRD, then BMad exit.
 ```
