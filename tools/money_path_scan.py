@@ -17,10 +17,15 @@ factory), is assigned to a money-path-typed target, or is returned as one.
 
 **The sanctioned crossing.** A float re-enters an exact value only through a
 *named conversion boundary that states its rounding mode* — the ``from_float``
-factories (``Money.from_float(x, ..., rounding=...)``). A ``from_float`` call that
-declares a rounding mode is NOT flagged. A ``from_float`` call that carries a
-float but declares no rounding mode IS flagged (an undeclared crossing). ``Decimal``
-and ``Fraction`` construction is exact and likewise clears the taint.
+factories on the CT-01 value types (``Money.from_float(x, ..., rounding=...)``).
+A ``from_float`` on one of those types that declares a rounding mode is NOT
+flagged; one that carries a float but declares no rounding mode IS flagged (an
+undeclared crossing). ``from_float`` on any *other* receiver is an ordinary call —
+it launders nothing, so the taint flows straight through it. ``Decimal(...)`` and
+``Fraction(...)`` construction clears the taint only when the argument is not
+itself a binary float: ``Decimal(str(x))`` reparses decimal text and is exact, but
+``Decimal(px)`` / ``Fraction(px)`` capture the float's binary representation error
+verbatim and stay tainted.
 
 **Taint tracking.** Within each function/module/class scope the scanner tracks
 which local names carry float taint: float literals, ``float(...)`` calls, and
@@ -91,8 +96,14 @@ _VALUE_ARGS: dict[str, tuple[tuple[int, str], ...]] = {
 BOUNDARY_METHOD = "from_float"
 ROUNDING_KEYWORD = "rounding"
 
-# Exact constructors that clear float taint (a float becomes an exact value).
+# Exact constructors that clear float taint — but only when their argument is not
+# itself a binary float. ``Decimal(str(x))`` reparses decimal text (exact);
+# ``Decimal(px)`` captures the float's binary error verbatim (stays tainted).
 EXACT_CLEANSERS: frozenset[str] = frozenset({"Decimal", "Fraction"})
+
+# Stringify calls break the binary-float chain: their result is decimal text, so
+# an exact constructor wrapping ``str(x)`` reparses a decimal string, not a float.
+STRINGIFIERS: frozenset[str] = frozenset({"str", "repr", "format", "ascii"})
 
 _SCOPE_NODES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)
 
@@ -320,9 +331,17 @@ class _Analyzer:
     def _call_is_tainted(self, node: ast.Call, tainted: set[str]) -> bool:
         tail = _callee_tail(node.func)
         owner = _owner_tail(node.func)
-        if tail in EXACT_CLEANSERS or tail == BOUNDARY_METHOD:
-            # Decimal(...)/Fraction(...) are exact; from_float(...) yields an
-            # exact value. The taint stops at the boundary.
+        if tail in EXACT_CLEANSERS:
+            # Decimal(...)/Fraction(...) yield an exact value, clearing the taint —
+            # but only when no argument is itself a binary float. Decimal(px) and
+            # Fraction(px) capture the float's binary error verbatim, so the taint
+            # survives; Decimal(str(x)) and Decimal(an_int) are exact.
+            return any(self._preserves_binary_float(arg, tainted) for arg in node.args) or any(
+                self._preserves_binary_float(kw.value, tainted) for kw in node.keywords
+            )
+        if tail == BOUNDARY_METHOD and owner in MONEY_PATH_TYPES:
+            # A sanctioned qmf.core from_float yields a Result value, not a float.
+            # from_float on any other receiver launders nothing (falls through).
             return False
         if tail == "float":
             return True
@@ -333,6 +352,19 @@ class _Analyzer:
         return any(self._is_tainted(arg, tainted) for arg in node.args) or any(
             self._is_tainted(kw.value, tainted) for kw in node.keywords
         )
+
+    def _preserves_binary_float(self, node: ast.expr, tainted: set[str]) -> bool:
+        """Does ``node`` hand a binary float — its representation error intact — to
+        a wrapping ``Decimal``/``Fraction``?
+
+        A stringify call (``str``/``repr``/``format``/``ascii``) breaks the chain:
+        ``Decimal(str(x))`` reparses decimal text, so its argument is not a binary
+        float. Every other float-tainted argument preserves the binary error and
+        keeps the taint alive.
+        """
+        if isinstance(node, ast.Call) and _callee_tail(node.func) in STRINGIFIERS:
+            return False
+        return self._is_tainted(node, tainted)
 
     # -- sinks ---------------------------------------------------------------
 
@@ -360,7 +392,10 @@ class _Analyzer:
     def _check_call(self, node: ast.Call, tainted: set[str]) -> None:
         tail = _callee_tail(node.func)
         owner = _owner_tail(node.func)
-        if tail == BOUNDARY_METHOD:
+        if tail == BOUNDARY_METHOD and owner in MONEY_PATH_TYPES:
+            # The undeclared-rounding rule guards the sanctioned qmf.core boundary
+            # only. from_float on any other receiver is an ordinary call whose
+            # float taint is caught downstream at the real money-path sink.
             value_arg = self._arg(node, 0, "value")
             if (
                 value_arg is not None

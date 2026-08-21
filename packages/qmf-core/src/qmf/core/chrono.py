@@ -477,7 +477,7 @@ class CivilDate:
             return _invalid("day", "a civil date day must be an integer", given=repr(day))
         try:
             date(year, month, day)
-        except ValueError:
+        except (ValueError, OverflowError):
             return _invalid(
                 "date",
                 "the parts must form a real calendar date",

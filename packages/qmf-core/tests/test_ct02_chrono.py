@@ -278,6 +278,14 @@ def test_civil_date_validates_real_dates() -> None:
     assert is_refusal(not_a_date) and not_a_date.context["field"] == "date"
 
 
+def test_civil_date_returns_a_refusal_for_an_overflowing_year() -> None:
+    # Regression (H3/CT-04): an astronomically large year makes date() raise
+    # OverflowError, not ValueError. The refusal must be RETURNED, never raised.
+    refusal = CivilDate.try_create(10**30, 1, 1)
+    assert is_refusal(refusal)
+    assert refusal.context["field"] == "date"
+
+
 def test_civil_date_isoformat_is_display() -> None:
     assert _civil(2026, 8, 5).isoformat() == "2026-08-05"
 

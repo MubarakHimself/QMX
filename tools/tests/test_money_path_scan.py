@@ -241,8 +241,30 @@ def test_exact_integer_construction_is_clean() -> None:
 
 
 def test_decimal_and_fraction_cleanse_the_taint() -> None:
+    # ``str(...)`` reparses the float as decimal text — the sanctioned cleanse.
     assert _rules('raw = 1.5\nMoney.try_create(int(Decimal(str(raw)) * 100), "USD", 2)') == []
-    assert _rules('raw = 1.5\nMoney.try_create(Fraction(raw).numerator, "USD", 2)') == []
+    assert _rules('raw = 1.5\nMoney.try_create(Fraction(str(raw)).numerator, "USD", 2)') == []
+
+
+def test_decimal_of_a_tainted_float_keeps_the_taint() -> None:
+    # Decimal(px) on a binary float captures its representation error verbatim —
+    # the cleanse only applies when the argument is not itself a float.
+    assert _rules('raw = 1.5\nMoney.try_create(int(Decimal(raw) * 100), "USD", 2)') == [
+        scanner.RULE_CONSTRUCTION
+    ]
+
+
+def test_fraction_of_a_tainted_float_keeps_the_taint() -> None:
+    assert _rules('raw = 1.5\nMoney.try_create(Fraction(raw).numerator, "USD", 2)') == [
+        scanner.RULE_CONSTRUCTION
+    ]
+
+
+def test_from_float_on_unrelated_receiver_does_not_cleanse() -> None:
+    # ``from_float`` launders taint only on the CT-01 value types; on any other
+    # receiver a declared rounding keyword does not sanctify it.
+    src = 'v = helper.from_float(raw, rounding="half-up")\nMoney.try_create(v, "USD", 2)'
+    assert _rules("raw = 1.5\n" + src) == [scanner.RULE_CONSTRUCTION]
 
 
 def test_float_off_the_money_path_is_clean() -> None:

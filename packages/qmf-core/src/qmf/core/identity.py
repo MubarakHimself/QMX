@@ -139,7 +139,7 @@ def _canonical_date(value: date | str) -> str | None:
         return value.isoformat()
     try:
         return date.fromisoformat(value).isoformat()
-    except ValueError:
+    except (ValueError, TypeError):
         return None
 
 

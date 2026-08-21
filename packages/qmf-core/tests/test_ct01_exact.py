@@ -181,6 +181,62 @@ def test_all_rounding_modes_map_to_a_decimal_mode() -> None:
         assert is_ok(result)
 
 
+def test_from_float_takes_the_exact_binary_value_at_large_scale() -> None:
+    # Regression (H1): the boundary must take the float's EXACT binary expansion,
+    # never a context-precision-capped Decimal.scaleb that silently rounds first.
+    # 0.1 as a binary float is exactly 3602879701896397 / 2**55; at scale 30 its
+    # true value rounds HALF_UP to ...5551115123126 (the old scaleb path stored
+    # ...5551115123100, off by 26).
+    result = Money.from_float(0.1, currency="USD", scale=30, rounding=RoundingMode.HALF_UP)
+    assert is_ok(result)
+    assert result.value.value == 100000000000000005551115123126
+    # And it equals the exact Fraction expansion rounded by hand.
+    exact = Fraction(0.1) * 10**30
+    floor_value, remainder = divmod(exact.numerator, exact.denominator)
+    expected = floor_value if 2 * remainder < exact.denominator else floor_value + 1
+    assert result.value.value == expected
+
+
+def test_from_float_is_exact_at_large_magnitude() -> None:
+    # Regression (H1): 1e30 as a binary float is exactly 10**30's nearest double;
+    # at scale 2 the exact scaled integer is ...483865600 (the old scaleb path was
+    # off by 34,400 minor units).
+    result = Money.from_float(1e30, currency="USD", scale=2, rounding=RoundingMode.HALF_UP)
+    assert is_ok(result)
+    assert result.value.value == 100000000000000001988462483865600
+    assert result.value.value == Fraction(1e30).numerator * 100
+
+
+def test_from_float_half_modes_break_ties_exactly() -> None:
+    # 2.5 is exactly representable; HALF_UP goes away from zero, HALF_EVEN to even.
+    up = Money.from_float(2.5, currency="USD", scale=0, rounding=RoundingMode.HALF_UP)
+    even = Money.from_float(2.5, currency="USD", scale=0, rounding=RoundingMode.HALF_EVEN)
+    assert is_ok(up)
+    assert is_ok(even)
+    assert up.value.value == 3
+    assert even.value.value == 2
+    # Negative ties: HALF_UP is away from zero, DOWN toward zero, FLOOR to -inf.
+    neg_up = Money.from_float(-2.5, currency="USD", scale=0, rounding=RoundingMode.HALF_UP)
+    neg_down = Money.from_float(-2.7, currency="USD", scale=0, rounding=RoundingMode.DOWN)
+    neg_floor = Money.from_float(-2.3, currency="USD", scale=0, rounding=RoundingMode.FLOOR)
+    assert is_ok(neg_up)
+    assert is_ok(neg_down)
+    assert is_ok(neg_floor)
+    assert neg_up.value.value == -3
+    assert neg_down.value.value == -2
+    assert neg_floor.value.value == -3
+
+
+def test_from_float_boundary_is_shared_and_exact_for_price_and_quantity() -> None:
+    # H1 applies to every from_float boundary sharing _coerce_float_to_scaled_int.
+    price = Price.from_float(0.1, instrument=_instrument(), scale=30, rounding=RoundingMode.HALF_UP)
+    quantity = Quantity.from_float(0.1, unit="lot", scale=30, rounding=RoundingMode.HALF_UP)
+    assert is_ok(price)
+    assert is_ok(quantity)
+    assert price.value.value == 100000000000000005551115123126
+    assert quantity.value.value == 100000000000000005551115123126
+
+
 # --- mixed-scale arithmetic (FM-4) ------------------------------------------
 
 

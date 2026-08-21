@@ -240,6 +240,15 @@ def test_dated_record_refuses_bad_date() -> None:
     assert result.context["field"] == "effective_date"
 
 
+def test_dated_record_returns_a_refusal_for_a_non_date_type() -> None:
+    # Regression (H3/CT-04): a non-string, non-date effective_date makes
+    # date.fromisoformat raise TypeError, not ValueError. The refusal must be
+    # RETURNED, never raised.
+    result = DatedRecord.try_create(_venue(), 12345, {"name": "x"})  # type: ignore[arg-type]
+    assert is_refusal(result)
+    assert result.context["field"] == "effective_date"
+
+
 def test_dated_record_is_frozen_and_content_immutable() -> None:
     result = DatedRecord.try_create(_venue(), "2025-01-01", {"name": "x"})
     assert is_ok(result)

@@ -55,15 +55,6 @@ Stdlib only (DEC-0104). Frozen, immutable values throughout (DEC-0101, DEC-0113)
 from __future__ import annotations
 
 from dataclasses import dataclass
-from decimal import (
-    ROUND_CEILING,
-    ROUND_DOWN,
-    ROUND_FLOOR,
-    ROUND_HALF_EVEN,
-    ROUND_HALF_UP,
-    ROUND_UP,
-    Decimal,
-)
 from enum import StrEnum
 from fractions import Fraction
 from math import isfinite
@@ -126,16 +117,6 @@ class RoundingMode(StrEnum):
     UP = "up"
     FLOOR = "floor"
     CEILING = "ceiling"
-
-
-_DECIMAL_ROUNDING: Final[dict[RoundingMode, str]] = {
-    RoundingMode.HALF_UP: ROUND_HALF_UP,
-    RoundingMode.HALF_EVEN: ROUND_HALF_EVEN,
-    RoundingMode.DOWN: ROUND_DOWN,
-    RoundingMode.UP: ROUND_UP,
-    RoundingMode.FLOOR: ROUND_FLOOR,
-    RoundingMode.CEILING: ROUND_CEILING,
-}
 
 
 # --- refusal builders -------------------------------------------------------
@@ -259,16 +240,50 @@ def _promote(value_a: int, scale_a: int, value_b: int, scale_b: int) -> tuple[in
     return promoted_a, promoted_b, scale
 
 
+def _round_fraction_to_int(value: Fraction, mode: RoundingMode) -> int:
+    """Round an exact :class:`~fractions.Fraction` to an integer under ``mode``.
+
+    Every step is exact integer arithmetic — no decimal context, no binary float
+    — so no digit is ever silently rounded before the declared rounding mode runs
+    (CT-01; DEC-0105). A :class:`~fractions.Fraction` keeps its denominator
+    strictly positive, so ``divmod`` yields the floor and a non-negative remainder.
+    """
+    floor_value, remainder = divmod(value.numerator, value.denominator)
+    if remainder == 0:
+        return floor_value
+    ceil_value = floor_value + 1
+    if mode is RoundingMode.FLOOR:
+        return floor_value
+    if mode is RoundingMode.CEILING:
+        return ceil_value
+    if mode is RoundingMode.DOWN:  # toward zero
+        return ceil_value if value < 0 else floor_value
+    if mode is RoundingMode.UP:  # away from zero
+        return floor_value if value < 0 else ceil_value
+    # Half modes: compare the doubled remainder against the denominator exactly.
+    twice_remainder = 2 * remainder
+    if twice_remainder < value.denominator:
+        return floor_value
+    if twice_remainder > value.denominator:
+        return ceil_value
+    # Exactly halfway.
+    if mode is RoundingMode.HALF_UP:  # ties away from zero
+        return floor_value if value < 0 else ceil_value
+    # HALF_EVEN: ties to the even neighbour.
+    return floor_value if floor_value % 2 == 0 else ceil_value
+
+
 def _coerce_float_to_scaled_int(
     value: object, scale: object, rounding: object
 ) -> int | TypedRefusal:
     """The shared float→scaled-integer conversion at the named boundary.
 
     A binary ``float`` re-enters an exact value only here, and only with an
-    explicit rounding mode (CT-01; DEC-0105). The exact binary value of the float
-    is taken (``Decimal(value)`` reads its true expansion, never a decimal
-    approximation), shifted to the target scale, and rounded under the stated
-    mode. NaN and infinity cannot cross.
+    explicit rounding mode (CT-01; DEC-0105). The **exact binary value** of the
+    float is taken — ``Fraction(value)`` is the float's true dyadic expansion,
+    with no decimal approximation and no context-precision cap — then shifted to
+    the target scale by an exact power of ten and rounded to an integer under the
+    stated mode with exact integer arithmetic. NaN and infinity cannot cross.
     """
     if not isinstance(value, float):
         return _invalid(
@@ -298,9 +313,8 @@ def _coerce_float_to_scaled_int(
             given=repr(rounding),
             allowed=[member.value for member in RoundingMode],
         )
-    shifted = Decimal(value).scaleb(int_scale)
-    integral = shifted.to_integral_value(rounding=_DECIMAL_ROUNDING[mode])
-    return int(integral)
+    shifted = Fraction(value) * (10**int_scale)
+    return _round_fraction_to_int(shifted, mode)
 
 
 def _instrument_content(instrument: Instrument) -> dict[str, object]:
