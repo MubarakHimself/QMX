@@ -42,6 +42,7 @@ from qmf.core.fingerprint import (
     canonical_bytes,
     fingerprint,
     governed_namespace,
+    reconcile_write,
 )
 from qmf.core.refusal import Result, TypedRefusal, is_ok
 
@@ -148,8 +149,18 @@ def idempotent_accept_but_collision_refused() -> TypedRefusal:
     again = _unwrap(ledger.write(content, world=World.LIVE), "idempotent re-write")
     assert again.outcome.value == "idempotent"
 
-    # Force a true collision: the same fp1 hash presented with differing bytes.
-    collision = ledger.admit(first.fingerprint, b"tampered-bytes", namespace=first.namespace)
+    # admit re-derives the fingerprint from the bytes it is handed: presenting an
+    # existing fp1 hash with the wrong bytes is a caller bug, refused as invalid
+    # input before it could ever masquerade as a collision (FM-6, M8).
+    caller_bug = ledger.admit(first.fingerprint, b"tampered-bytes", namespace=first.namespace)
+    assert isinstance(caller_bug, TypedRefusal)
+    assert caller_bug.category.value == "invalid input"
+
+    # The true-collision decision itself (the pure FM-6 rule): the same fp1 hash
+    # already mapping to different stored bytes is refused and alarmed, never
+    # overwritten — the one signal that must stay noise-free.
+    stored_bytes = _unwrap(canonical_bytes(content), "stored bytes")
+    collision = reconcile_write(first.fingerprint, stored_bytes, b"different-stored-bytes")
     assert isinstance(collision, TypedRefusal)
     assert collision.context["alarm"] is True
     return collision

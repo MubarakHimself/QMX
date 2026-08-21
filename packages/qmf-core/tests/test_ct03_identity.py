@@ -9,7 +9,7 @@ the fp1 null prohibition (CT-03; DEC-0107, DEC-0108, DEC-0109, DEC-0100).
 from __future__ import annotations
 
 import dataclasses
-from datetime import date
+from datetime import date, datetime, timezone
 
 import pytest
 from qmf.core.identity import (
@@ -312,6 +312,98 @@ def test_absent_metadata_is_an_omitted_key_not_a_null() -> None:
     result = DatedRecord.try_create(_venue(), "2025-01-01", {"name": "ICM"})
     assert is_ok(result)
     assert "asset_class" not in result.value.content
+
+
+# --- M2/M3: dated-record validation depth -----------------------------------
+
+
+def test_dated_record_refuses_target_that_is_not_an_identity() -> None:
+    # Regression (M2): the target must be a valid VenueId or Instrument; a raw
+    # string, None, or an arbitrary object is refused rather than stored.
+    for bad in ("not-a-venue", None, 42, object()):
+        result = DatedRecord.try_create(bad, "2025-01-01", {"name": "x"})  # type: ignore[arg-type]
+        assert is_refusal(result)
+        assert result.category is RefusalCategory.INVALID_INPUT
+        assert result.context["field"] == "target"
+
+
+def test_dated_record_refuses_venue_id_target_with_blank_value() -> None:
+    # Defense in depth (M2): an unchecked-constructed VenueId with a blank token
+    # is not a valid target.
+    result = DatedRecord.try_create(VenueId("   "), "2025-01-01", {"name": "x"})
+    assert is_refusal(result)
+    assert result.context["field"] == "target"
+
+
+def test_dated_record_refuses_instrument_target_with_blank_symbol() -> None:
+    # Defense in depth (M2): an unchecked-constructed Instrument with a blank
+    # symbol is not a valid target.
+    result = DatedRecord.try_create(Instrument(_venue(), "  "), "2025-01-01", {"name": "x"})
+    assert is_refusal(result)
+    assert result.context["field"] == "target"
+
+
+def test_dated_record_refuses_datetime_effective_date() -> None:
+    # Regression (M3): datetime is a date subclass, but its isoformat carries a
+    # time component ('2026-08-21T13:45:00') that is not a canonical ISO date, so
+    # a datetime is refused rather than silently truncated or stored as a stamp.
+    stamp = datetime(2026, 8, 21, 13, 45, tzinfo=timezone.utc)
+    result = DatedRecord.try_create(_venue(), stamp, {"name": "x"})
+    assert is_refusal(result)
+    assert result.category is RefusalCategory.INVALID_INPUT
+    assert result.context["field"] == "effective_date"
+
+
+def test_dated_record_refuses_null_nested_in_a_mapping() -> None:
+    # Regression (M2): null is prohibited ANYWHERE, not just at the top level.
+    result = DatedRecord.try_create(_venue(), "2025-01-01", {"meta": {"alias": None}})
+    assert is_refusal(result)
+    assert result.context["field"] == "content"
+    assert result.context["key"] == "alias"
+
+
+def test_dated_record_refuses_null_nested_in_an_array() -> None:
+    # Regression (M2): a null element inside an order-significant array is refused.
+    result = DatedRecord.try_create(_venue(), "2025-01-01", {"aliases": ["ICM", None]})
+    assert is_refusal(result)
+    assert result.context["field"] == "content"
+
+
+def test_dated_record_refuses_non_string_key() -> None:
+    # Regression (M2): non-string keys were accepted ({7: 'x'} returned Ok).
+    result = DatedRecord.try_create(_venue(), "2025-01-01", {7: "x"})  # type: ignore[dict-item]
+    assert is_refusal(result)
+    assert result.context["field"] == "content"
+
+
+def test_dated_record_refuses_non_string_key_nested() -> None:
+    # Regression (M2): the non-string-key check applies at every depth.
+    result = DatedRecord.try_create(_venue(), "2025-01-01", {"meta": {7: "x"}})
+    assert is_refusal(result)
+    assert result.context["field"] == "content"
+
+
+def test_dated_record_refuses_whitespace_only_key() -> None:
+    # Regression (M2): a blank-but-not-empty key ('   ') was accepted.
+    result = DatedRecord.try_create(_venue(), "2025-01-01", {"   ": "x"})
+    assert is_refusal(result)
+    assert result.context["field"] == "content"
+
+
+def test_dated_record_refuses_non_mapping_content() -> None:
+    # Defense in depth (M2): content is a key->value mapping, never a bare value.
+    result = DatedRecord.try_create(_venue(), "2025-01-01", "not-a-mapping")  # type: ignore[arg-type]
+    assert is_refusal(result)
+    assert result.context["field"] == "content"
+
+
+def test_dated_record_accepts_clean_nested_content() -> None:
+    # The positive counterpart: nested mappings and arrays with no null and only
+    # non-blank string keys construct cleanly.
+    content = {"meta": {"alias": "ICM"}, "aliases": ["ICM", "IC-Markets"]}
+    result = DatedRecord.try_create(_venue(), "2025-01-01", content)
+    assert is_ok(result)
+    assert result.value.content["meta"] == {"alias": "ICM"}
 
 
 # --- construction pattern ---------------------------------------------------

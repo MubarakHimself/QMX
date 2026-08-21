@@ -39,7 +39,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Final, Protocol, TypeAlias, TypeVar, runtime_checkable
 
-from qmf.core.refusal import RefusalCategory, Result, Retryability, TypedRefusal
+from qmf.core.refusal import RefusalCategory, Result, Retryability, TypedRefusal, is_ok
 
 __all__ = [
     "JournalSink",
@@ -144,15 +144,31 @@ def unpersistable(
     an ``after_condition_descriptor`` for a rotation-store failure whose retry gate is
     "successful store or operator re-provision" (AR-38). The caller recognizes it
     with :func:`is_unpersistable` and blocks its command stream.
+
+    The retryability/descriptor pairing is validated through
+    :meth:`TypedRefusal.try_create`, so this helper can never mint a CT-04-invalid
+    refusal: an ``after-condition`` retryability requires a descriptor, and a
+    descriptor is valid only with ``after-condition`` retryability. A mis-paired call
+    is a programmer error at the call site — it raises :class:`ValueError` rather than
+    returning a refusal the typed envelope itself would reject.
     """
     merged: dict[str, object] = {"reason": reason}
     if context is not None:
         merged.update(context)
-    return TypedRefusal(
-        category=RefusalCategory.STORAGE_FAILURE,
-        retryability=retryability,
+    built = TypedRefusal.try_create(
+        RefusalCategory.STORAGE_FAILURE,
+        retryability,
         context=merged,
         after_condition_descriptor=after_condition_descriptor,
+    )
+    if is_ok(built):
+        return built.value
+    raise ValueError(
+        "unpersistable: retryability and after_condition_descriptor must pair per "
+        "CT-04 — an after-condition retryability requires a descriptor, and a "
+        "descriptor is valid only with after-condition retryability "
+        f"(retryability={retryability!r}, "
+        f"after_condition_descriptor={after_condition_descriptor!r})"
     )
 
 

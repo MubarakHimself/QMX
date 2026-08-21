@@ -767,6 +767,13 @@ class GovernedEvidenceLedger:
         and compares bytes, so it detects a true collision (same hash, differing
         bytes) — the one path where identity is asserted but content differs. First
         write stores; a byte-identical re-write is idempotent; a collision is refused.
+
+        The presented fingerprint is re-derived from the presented bytes and a
+        mismatch is refused (``invalid input``) **before** anything is stored. Without
+        this guard a caller bug — admitting real bytes under the wrong fingerprint —
+        would be stored and then turn the next *correct* write under that fingerprint
+        into a spurious "true collision" alarm, the one signal that must never be
+        noise (FM-6; DEC-0108).
         """
         if not isinstance(fp, Fingerprint):
             return _invalid("fp", "a write presents a Fingerprint", given=repr(fp))
@@ -777,6 +784,16 @@ class GovernedEvidenceLedger:
         room = _clean_str(namespace)
         if room is None:
             return _invalid("namespace", "a namespace is a non-empty string", given=repr(namespace))
+        computed = _fingerprint_of_bytes(canonical)
+        if computed.value != fp.value:
+            return _invalid(
+                "fp",
+                "the presented fingerprint does not match the presented bytes; a "
+                "write is content-addressed, so admitting bytes under the wrong "
+                "fingerprint is refused rather than manufacturing a false collision",
+                given=fp.value,
+                computed=computed.value,
+            )
         existing = self._namespaces.get(room, {}).get(fp.digest)
         decision = reconcile_write(fp, canonical, existing)
         if is_refusal(decision):

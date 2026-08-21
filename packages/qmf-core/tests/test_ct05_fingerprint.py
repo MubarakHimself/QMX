@@ -476,6 +476,43 @@ def test_ledger_admit_rejects_bad_arguments() -> None:
     assert is_refusal(ledger.admit(fp, body, namespace="  "))
 
 
+def test_ledger_admit_refuses_fingerprint_bytes_mismatch() -> None:
+    # Regression (M8): admit fingerprints the presented bytes and refuses a
+    # mismatch (invalid input) before storing — the fingerprint of A presented
+    # with the bytes of B is a caller bug, not a content-addressed write.
+    ledger = GovernedEvidenceLedger()
+    fp_a = _fp({"n": 1})
+    bytes_b = _bytes({"n": 2})
+    result = ledger.admit(fp_a, bytes_b, namespace=LIVE_EVIDENCE_NAMESPACE)
+    assert is_refusal(result)
+    assert result.category is RefusalCategory.INVALID_INPUT
+    assert result.context["field"] == "fp"
+    # It is refused as invalid input, never as a collision alarm.
+    assert result.context.get("alarm") is not True
+
+
+def test_ledger_admit_mismatch_never_manufactures_a_false_collision() -> None:
+    # Regression (M8): the refused mismatch stores nothing, so the NEXT correct
+    # write under that fingerprint is a clean first store — not a spurious 'true
+    # collision' alarm, the one signal that must never be noise (FM-6).
+    ledger = GovernedEvidenceLedger()
+    fp_a = _fp({"n": 1})
+    bytes_b = _bytes({"n": 2})
+    assert is_refusal(ledger.admit(fp_a, bytes_b, namespace=LIVE_EVIDENCE_NAMESPACE))
+    receipt = _ok(ledger.write({"n": 1}, world=World.LIVE))
+    assert receipt.outcome is WriteOutcome.STORED
+    assert receipt.fingerprint == fp_a
+
+
+def test_ledger_admit_accepts_matching_fingerprint_and_bytes() -> None:
+    # The positive counterpart: a write whose fingerprint matches its bytes is
+    # admitted and stored.
+    ledger = GovernedEvidenceLedger()
+    content = {"n": 1}
+    receipt = _ok(ledger.admit(_fp(content), _bytes(content), namespace=LIVE_EVIDENCE_NAMESPACE))
+    assert receipt.outcome is WriteOutcome.STORED
+
+
 def test_ledger_write_label_uses_label_world_and_identity() -> None:
     ledger = GovernedEvidenceLedger()
     label = _label(world=World.LIVE)

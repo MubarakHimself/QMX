@@ -140,6 +140,118 @@ def test_system_random_construction_is_not_a_draw() -> None:
     assert _rules("import random\ns = random.SystemRandom()") == []
 
 
+# --- OS-entropy and CSPRNG sources ------------------------------------------
+
+
+def test_os_urandom_and_getrandom_are_flagged() -> None:
+    assert _rules("import os\nn = os.urandom(16)") == [scanner.RULE_ENTROPY]
+    assert _rules("import os\nn = os.getrandom(8)") == [scanner.RULE_ENTROPY]
+
+
+def test_from_imported_os_urandom_is_flagged() -> None:
+    assert _rules("from os import urandom\nn = urandom(16)") == [scanner.RULE_ENTROPY]
+
+
+def test_ordinary_os_call_is_not_flagged() -> None:
+    # Only the entropy readers are in scope; os.getcwd() is deterministic here.
+    assert _rules("import os\np = os.getcwd()") == []
+
+
+def test_secrets_helpers_are_flagged() -> None:
+    assert _rules("import secrets\nk = secrets.token_hex()") == [scanner.RULE_ENTROPY]
+    assert _rules("import secrets\nk = secrets.token_bytes(16)") == [scanner.RULE_ENTROPY]
+    assert _rules("import secrets\nk = secrets.randbelow(10)") == [scanner.RULE_ENTROPY]
+
+
+def test_from_imported_secrets_helper_is_flagged() -> None:
+    assert _rules("from secrets import token_urlsafe\nk = token_urlsafe()") == [
+        scanner.RULE_ENTROPY
+    ]
+
+
+def test_uuid1_and_uuid4_are_flagged() -> None:
+    assert _rules("import uuid\nu = uuid.uuid4()") == [scanner.RULE_ENTROPY]
+    assert _rules("import uuid\nu = uuid.uuid1()") == [scanner.RULE_ENTROPY]
+
+
+def test_from_imported_uuid4_is_flagged() -> None:
+    assert _rules("from uuid import uuid4\nu = uuid4()") == [scanner.RULE_ENTROPY]
+
+
+def test_deterministic_namespace_uuids_are_not_flagged() -> None:
+    assert _rules("import uuid\nu = uuid.uuid5(uuid.NAMESPACE_DNS, 'x')") == []
+    assert _rules("import uuid\nu = uuid.uuid3(uuid.NAMESPACE_DNS, 'x')") == []
+
+
+# --- SystemRandom: OS entropy, not a seeded instance ------------------------
+
+
+def test_system_random_draw_is_flagged() -> None:
+    assert _rules("import random\nx = random.SystemRandom().random()") == [scanner.RULE_ENTROPY]
+
+
+def test_from_imported_system_random_draw_is_flagged() -> None:
+    assert _rules("from random import SystemRandom\nx = SystemRandom().randint(1, 6)") == [
+        scanner.RULE_ENTROPY
+    ]
+
+
+def test_secrets_system_random_draw_is_flagged() -> None:
+    assert _rules("import secrets\nx = secrets.SystemRandom().random()") == [scanner.RULE_ENTROPY]
+
+
+def test_from_imported_secrets_system_random_draw_is_flagged() -> None:
+    assert _rules("from secrets import SystemRandom\nx = SystemRandom().random()") == [
+        scanner.RULE_ENTROPY
+    ]
+
+
+def test_seeded_random_stays_sanctioned_after_system_random_change() -> None:
+    # The seeded instance is still the sanctioned deterministic path.
+    assert _rules("import random\nx = random.Random(0).random()") == []
+
+
+# --- bound-reference laundering ---------------------------------------------
+
+
+def test_bound_time_reference_is_flagged() -> None:
+    assert _rules("import time\nf = time.time\nx = f()") == [scanner.RULE_CLOCK]
+
+
+def test_bound_datetime_now_reference_is_flagged() -> None:
+    assert _rules("from datetime import datetime\nn = datetime.now\nx = n()") == [
+        scanner.RULE_CLOCK
+    ]
+
+
+def test_bound_date_today_reference_is_flagged() -> None:
+    assert _rules("from datetime import date\nd = date.today\nx = d()") == [scanner.RULE_CLOCK]
+
+
+def test_bound_random_draw_reference_is_flagged() -> None:
+    assert _rules("import random\ng = random.random\nx = g()") == [scanner.RULE_RANDOM]
+
+
+def test_bound_entropy_reference_is_flagged() -> None:
+    assert _rules("import uuid\ng = uuid.uuid4\nx = g()") == [scanner.RULE_ENTROPY]
+    assert _rules("import os\ng = os.urandom\nx = g(8)") == [scanner.RULE_ENTROPY]
+    assert _rules("import secrets\ng = secrets.token_hex\nx = g()") == [scanner.RULE_ENTROPY]
+
+
+def test_annotated_bound_reference_is_flagged() -> None:
+    assert _rules("import time\nf: object = time.monotonic\nx = f()") == [scanner.RULE_CLOCK]
+
+
+def test_bare_annotation_binds_nothing() -> None:
+    # A bare annotation carries no value to resolve; it binds nothing.
+    assert _rules("import time\nf: object\ndef use(f):\n    return f()") == []
+
+
+def test_bound_non_ambient_reference_is_not_flagged() -> None:
+    # Binding an ordinary callable reference is not an ambient read.
+    assert _rules("def build():\n    g = sorted\n    return g([3, 1])") == []
+
+
 # --- the injected Clock seam ------------------------------------------------
 
 

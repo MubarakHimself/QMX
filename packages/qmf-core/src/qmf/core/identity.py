@@ -35,12 +35,12 @@ Stdlib only (DEC-0104). Frozen dataclasses and immutable values throughout
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Final
+from typing import Final, cast
 
 from qmf.core.refusal import Ok, RefusalCategory, Result, Retryability, TypedRefusal
 
@@ -128,19 +128,83 @@ def _coerce_role(value: object) -> AccountRole | None:
     return None
 
 
-def _canonical_date(value: date | str) -> str | None:
+def _canonical_date(value: object) -> str | None:
     """Return the ISO-8601 date string for ``value``, or ``None`` if invalid.
 
     A dated record stores its date as a canonical ISO-8601 string — JSON-native
     and ``fp1``-clean — validated here as a real calendar date whether it arrives
     as a :class:`datetime.date` or an ISO string.
+
+    ``datetime`` is a subclass of :class:`datetime.date`, but its ``isoformat``
+    carries a time component (``2026-08-21T13:45:00``), which is **not** a canonical
+    ISO date. A ``datetime`` instance is rejected here so the field can never hold a
+    timestamp masquerading as a date.
     """
+    if isinstance(value, datetime):
+        return None
     if isinstance(value, date):
         return value.isoformat()
-    try:
-        return date.fromisoformat(value).isoformat()
-    except (ValueError, TypeError):
+    if isinstance(value, str):
+        try:
+            return date.fromisoformat(value).isoformat()
+        except ValueError:
+            return None
+    return None
+
+
+def _require_target(value: object) -> VenueId | Instrument | None:
+    """Return ``value`` if it is a valid dated-record target, else ``None``.
+
+    A dated record points at a :class:`VenueId` or an :class:`Instrument`. Defense
+    in depth against either built through the unchecked constructor with a blank
+    part: the venue token must be non-blank, and an instrument's venue and symbol
+    must both be well-formed. Anything that is neither noun (a raw string, ``None``,
+    an arbitrary object) is rejected rather than stored as an identity target.
+    """
+    if isinstance(value, VenueId):
+        return value if _require_venue_id(value) is not None else None
+    if isinstance(value, Instrument):
+        venue_ok = _require_venue_id(value.venue) is not None
+        symbol_ok = _clean_token(value.symbol) is not None
+        return value if venue_ok and symbol_ok else None
+    return None
+
+
+def _validate_content_node(node: object) -> TypedRefusal | None:
+    """Recursively validate one identity-content node, returning a refusal or ``None``.
+
+    DEC-0108 prohibits null **anywhere** in identity content — not only at the top
+    level — so nested mappings and order-significant arrays are walked to their
+    leaves. Every metadata key, at every depth, must be a non-blank string. Returns
+    the ``invalid input`` refusal for the first violation found, or ``None`` when the
+    subtree is clean.
+    """
+    if isinstance(node, Mapping):
+        for key, value in cast("Mapping[object, object]", node).items():
+            if not isinstance(key, str) or key.strip() == "":
+                return _invalid_refusal(
+                    "content", "metadata keys must be non-empty strings", key=repr(key)
+                )
+            if value is None:
+                return _invalid_refusal(
+                    "content",
+                    "null is prohibited in identity content; omit the key instead",
+                    key=key,
+                )
+            nested = _validate_content_node(value)
+            if nested is not None:
+                return nested
         return None
+    if isinstance(node, (list, tuple)):
+        for item in cast("Sequence[object]", node):
+            if item is None:
+                return _invalid_refusal(
+                    "content", "null is prohibited in identity content, arrays included"
+                )
+            nested = _validate_content_node(item)
+            if nested is not None:
+                return nested
+    return None
 
 
 @dataclass(frozen=True, slots=True)
@@ -306,39 +370,46 @@ class DatedRecord:
     @classmethod
     def try_create(
         cls,
-        target: VenueId | Instrument,
-        effective_date: date | str,
-        content: Mapping[str, object],
+        target: object,
+        effective_date: object,
+        content: object,
     ) -> Result[DatedRecord]:
         """Validate and build a :class:`DatedRecord`, returning value-or-refusal.
 
-        The ``effective_date`` must be a real calendar date; ``content`` must
-        carry at least one field, with non-empty string keys and **no null
-        value** — null is prohibited in identity content (CT-03; DEC-0108).
+        The ``target`` must be a valid :class:`VenueId` or :class:`Instrument`; the
+        ``effective_date`` a real calendar **date** (a ``datetime`` is refused — it
+        carries a time component); and ``content`` a mapping carrying at least one
+        field, with non-empty string keys and **no null value at any depth** — null
+        is prohibited anywhere in identity content (CT-03; DEC-0108).
         """
+        target_ref = _require_target(target)
+        if target_ref is None:
+            return _invalid_refusal(
+                "target",
+                "a dated record must point at a valid VenueId or Instrument identity",
+                given=repr(target),
+            )
         iso = _canonical_date(effective_date)
         if iso is None:
             return _invalid_refusal(
                 "effective_date",
                 "a dated record needs an effective date (a datetime.date or an "
-                "ISO-8601 date string)",
+                "ISO-8601 date string; a datetime is not a date)",
                 given=repr(effective_date),
             )
-        if len(content) == 0:
+        if not isinstance(content, Mapping):
+            return _invalid_refusal(
+                "content",
+                "a dated record's content is a key→value mapping",
+                given=repr(type(content).__name__),
+            )
+        content_map = cast("Mapping[str, object]", content)
+        if len(content_map) == 0:
             return _invalid_refusal(
                 "content",
                 "a dated record must carry at least one metadata field",
             )
-        for key, value in content.items():
-            if key == "":
-                return _invalid_refusal(
-                    "content",
-                    "metadata keys must be non-empty strings",
-                )
-            if value is None:
-                return _invalid_refusal(
-                    "content",
-                    "null is prohibited in identity content; omit the key instead",
-                    key=key,
-                )
-        return Ok(cls(target=target, effective_date=iso, content=content))
+        refusal = _validate_content_node(content_map)
+        if refusal is not None:
+            return refusal
+        return Ok(cls(target=target_ref, effective_date=iso, content=content_map))

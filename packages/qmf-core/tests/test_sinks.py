@@ -9,6 +9,7 @@ branches on to block its command stream.
 
 from __future__ import annotations
 
+import pytest
 from qmf.core.refusal import Ok, RefusalCategory, Result, Retryability, TypedRefusal, is_ok
 from qmf.core.sinks import (
     JournalSink,
@@ -58,6 +59,41 @@ def test_unpersistable_merges_context_and_after_condition() -> None:
     assert refusal.context["capacity"] == 2
     assert refusal.context["reason"] == "journal store is full"
     assert refusal.after_condition_descriptor == "free space in the journal store"
+
+
+def test_unpersistable_only_ever_mints_a_ct04_valid_refusal() -> None:
+    # Regression (M5): both valid pairings round-trip through the validating
+    # TypedRefusal.try_create without being rejected — the helper never mints a
+    # value the typed envelope itself would refuse.
+    for refusal in (
+        unpersistable("disk full"),
+        unpersistable(
+            "rotation store failed",
+            retryability=Retryability.AFTER_CONDITION,
+            after_condition_descriptor="successful store or operator re-provision",
+        ),
+    ):
+        revalidated = TypedRefusal.try_create(
+            refusal.category,
+            refusal.retryability,
+            context=refusal.context,
+            after_condition_descriptor=refusal.after_condition_descriptor,
+        )
+        assert is_ok(revalidated)
+
+
+def test_unpersistable_raises_on_descriptor_without_after_condition() -> None:
+    # Regression (M5): a descriptor with the default NO retryability is a CT-04
+    # mis-pairing (TypedRefusal.try_create rejects it); the helper must not mint it.
+    with pytest.raises(ValueError, match="after-condition"):
+        unpersistable("disk full", after_condition_descriptor="free space")
+
+
+def test_unpersistable_raises_on_after_condition_without_descriptor() -> None:
+    # Regression (M5): the other direction — after-condition retryability with no
+    # descriptor is equally a CT-04 mis-pairing.
+    with pytest.raises(ValueError, match="after-condition"):
+        unpersistable("disk full", retryability=Retryability.AFTER_CONDITION)
 
 
 # --- is_unpersistable() -----------------------------------------------------

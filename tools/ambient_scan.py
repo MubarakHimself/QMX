@@ -3,12 +3,15 @@
 Statically flags any read of the **system clock** or other ambient nondeterminism
 below the composition root — ``datetime.now`` / ``datetime.utcnow`` / ``datetime.today``,
 ``date.today``, the ``time`` clock readers (``time.time``/``time.monotonic``/
-``time.perf_counter`` and their ``_ns`` and process/thread variants), and draws from
-the **unseeded global** ``random`` RNG. FR-002 requires that time is *injected* and
-that nothing below the composition root reads the system clock; this scanner makes
-that mechanically enforceable at the gate instead of leaving it to code review.
-Wired into ``poe check`` at Tier 1, a single finding fails the gate with a nonzero
-exit (fail-closed; AR-11, AR-18).
+``time.perf_counter`` and their ``_ns`` and process/thread variants), draws from
+the **unseeded global** ``random`` RNG, and the **OS-entropy** sources that are the
+opposite of a seeded instance: ``os.urandom`` / ``os.getrandom``, the ``secrets``
+CSPRNG helpers, the nondeterministic ``uuid`` constructors (``uuid1`` clock+node,
+``uuid4`` entropy), and a draw off ``random.SystemRandom()``. FR-002 requires that
+time is *injected* and that nothing below the composition root reads the system clock
+or other ambient nondeterminism; this scanner makes that mechanically enforceable at
+the gate instead of leaving it to code review. Wired into ``poe check`` at Tier 1, a
+single finding fails the gate with a nonzero exit (fail-closed; AR-11, AR-18).
 
 **The injected-Clock seam is the sanctioned path.** Clock access is the core-defined
 :class:`qmf.core.chrono.Clock` :class:`typing.Protocol`, injected at the composition
@@ -29,12 +32,17 @@ deliberate, greppable, and states its reason inline.
 **Import-aware detection.** The scanner resolves each module's imports first, so it
 follows aliases: ``import datetime as dt`` then ``dt.datetime.now()``,
 ``from datetime import datetime`` then ``datetime.now()``, ``from time import monotonic``
-then ``monotonic()``, ``import random as rng`` then ``rng.random()`` are all caught,
-while a *seeded* instance (``random.Random(0).random()``) and plain construction
-(``datetime(2020, 1, 1)``, ``date.fromisoformat(s)``, ``timedelta(...)``) are not. It is
-a gate, not a prover: a green result means "no banned ambient read was seen below the
-root", not "provably deterministic". ``from time import *`` and dynamic ``getattr``
-access are outside its precision boundary (documented, deliberately conservative).
+then ``monotonic()``, ``import random as rng`` then ``rng.random()`` are all caught. It
+also catches a **bound-reference laundering** — a banned callable stashed in a local
+and called later (``f = time.time`` then ``f()``; ``n = datetime.now`` then ``n()``) —
+by binding the local to the callable it aliases. A *seeded* instance
+(``random.Random(0).random()``) and plain construction (``datetime(2020, 1, 1)``,
+``date.fromisoformat(s)``, ``timedelta(...)``, a bare ``random.SystemRandom()`` that is
+never drawn from) are not flagged. It is a gate, not a prover: a green result means
+"no banned ambient read was seen below the root", not "provably deterministic".
+``from time import *``, dynamic ``getattr`` access, and an entropy instance stashed in
+a local before it is drawn from are outside its precision boundary (documented,
+deliberately conservative).
 
 **Scope.** The gate scans shipped source only — ``packages/*/src``, ``extensions/*/src``,
 and the top-level ``tools`` scripts — and skips ``tests`` trees, whose fixtures
@@ -47,7 +55,7 @@ from __future__ import annotations
 import ast
 import re
 import sys
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -100,8 +108,10 @@ _TIME_CLOCK: frozenset[str] = frozenset(
 )
 
 # random-module functions that draw from the unseeded global RNG. Seeding and
-# explicit-instance construction (``seed``, ``Random``, ``SystemRandom``,
-# ``getstate``/``setstate``) are not draws and are not flagged.
+# *seeded* explicit-instance construction (``seed``, ``Random``, ``getstate``/
+# ``setstate``) are not draws and are not flagged. ``SystemRandom`` is deliberately
+# NOT sanctioned here: it reads OS entropy — the opposite of a seeded instance — so a
+# draw off it is flagged as an OS-entropy source (see ``_check_attribute_call``).
 _RANDOM_DRAW: frozenset[str] = frozenset(
     {
         "random",
@@ -127,15 +137,36 @@ _RANDOM_DRAW: frozenset[str] = frozenset(
     }
 )
 
+# os functions that read OS entropy (nondeterministic); the opposite of a seed.
+_OS_ENTROPY: frozenset[str] = frozenset({"urandom", "getrandom"})
+
+# secrets-module helpers, all of which draw from the OS-entropy CSPRNG.
+_SECRETS_ENTROPY: frozenset[str] = frozenset(
+    {"token_bytes", "token_hex", "token_urlsafe", "randbelow", "randbits", "choice"}
+)
+
+# uuid constructors that read ambient nondeterminism: ``uuid1`` (host node + wall
+# clock) and ``uuid4`` (OS entropy). ``uuid3``/``uuid5`` are deterministic namespace
+# hashes (name -> md5/sha1) and are NOT flagged.
+_UUID_ENTROPY: frozenset[str] = frozenset({"uuid1", "uuid4"})
+
 # Whole-module imports whose bound name resolves to a module origin.
 _MODULE_ORIGINS: dict[str, str] = {
     "datetime": "mod:datetime",
     "time": "mod:time",
     "random": "mod:random",
+    "os": "mod:os",
+    "secrets": "mod:secrets",
+    "uuid": "mod:uuid",
 }
 
 RULE_CLOCK = "system-clock-read"
 RULE_RANDOM = "unseeded-random"
+RULE_ENTROPY = "os-entropy"
+
+# The origin token for a SystemRandom class reference (from ``random`` or ``secrets``);
+# constructing it yields an OS-entropy RNG, so a draw off it is flagged.
+_SYSTEM_RANDOM = "cls:random.SystemRandom"
 
 
 @dataclass(frozen=True)
@@ -167,7 +198,47 @@ def _from_origin(module: str, name: str) -> str | None:
     if module == "time":
         return f"fn:time.{name}" if name in _TIME_CLOCK else None
     if module == "random":
-        return f"fn:random.{name}" if name in _RANDOM_DRAW else None
+        if name in _RANDOM_DRAW:
+            return f"fn:random.{name}"
+        if name == "SystemRandom":
+            return _SYSTEM_RANDOM
+        return None
+    if module == "os":
+        return f"fn:os.{name}" if name in _OS_ENTROPY else None
+    if module == "secrets":
+        if name in _SECRETS_ENTROPY:
+            return f"fn:secrets.{name}"
+        if name == "SystemRandom":
+            return _SYSTEM_RANDOM
+        return None
+    if module == "uuid":
+        return f"fn:uuid.{name}" if name in _UUID_ENTROPY else None
+    return None
+
+
+def _fn_finding(origin: str) -> tuple[str, str] | None:
+    """Map an ``fn:<module>.<name>`` callable origin to its ``(rule, detail)``.
+
+    Shared by a bare-name call to an imported ambient function and by a laundered
+    bound reference resolved to the same origin; ``None`` for any non-``fn:`` token.
+    """
+    if not origin.startswith("fn:"):
+        return None
+    module, _, name = origin[len("fn:") :].partition(".")
+    if module == "time":
+        return RULE_CLOCK, f"time.{name}() reads the system clock"
+    if module == "datetime":
+        return RULE_CLOCK, f"datetime.{name}() reads the system wall clock"
+    if module == "date":
+        return RULE_CLOCK, f"date.{name}() reads the system wall clock"
+    if module == "random":
+        return RULE_RANDOM, f"random.{name}() draws from the unseeded global RNG"
+    if module == "os":
+        return RULE_ENTROPY, f"os.{name}() reads OS entropy (nondeterministic)"
+    if module == "secrets":
+        return RULE_ENTROPY, f"secrets.{name}() draws from OS entropy"
+    if module == "uuid":
+        return RULE_ENTROPY, f"uuid.{name}() draws from ambient nondeterminism"
     return None
 
 
@@ -184,6 +255,7 @@ class _Analyzer:
 
     def run(self, tree: ast.Module) -> list[Finding]:
         self._collect_imports(tree)
+        self._collect_bindings(tree)
         for node in ast.walk(tree):
             if isinstance(node, ast.Call):
                 self._check_call(node)
@@ -209,22 +281,88 @@ class _Analyzer:
                     if origin is not None:
                         self._aliases[alias.asname or alias.name] = origin
 
+    def _collect_bindings(self, tree: ast.Module) -> None:
+        """Bind a local assigned a laundered ambient *callable reference*.
+
+        ``f = time.time`` (later ``f()``) or ``n = datetime.now`` (later ``n()``)
+        stashes a banned callable in a local; binding the local to that callable's
+        ``fn:`` origin makes the later call flag. Only a reference to a callable is
+        bound — an *instance* construction (``rng = random.Random(0)``) is a call, not
+        a reference, and is not bound, so seeded-instance draws stay clean.
+        """
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign):
+                self._bind_targets(node.targets, node.value)
+            elif isinstance(node, ast.AnnAssign) and node.value is not None:
+                self._bind_targets([node.target], node.value)
+
+    def _bind_targets(self, targets: Sequence[ast.expr], value: ast.expr) -> None:
+        """Bind each ``Name`` in ``targets`` to the callable ``value`` references."""
+        origin = self._resolve_callable_ref(value)
+        if origin is None:
+            return
+        for target in targets:
+            if isinstance(target, ast.Name):
+                self._aliases[target.id] = origin
+
     def _resolve(self, node: ast.expr) -> str | None:
         """Resolve a call receiver to an ambient origin token, or ``None``.
 
-        Handles a bare imported name and the ``datetime.datetime`` / ``datetime.date``
-        attribute chain reached through ``import datetime``; anything else (an
-        injected clock, an arbitrary object) resolves to ``None`` and is never flagged.
+        Handles a bare imported name, the ``datetime.datetime`` / ``datetime.date``
+        attribute chain reached through ``import datetime``, and the
+        ``random.SystemRandom`` / ``secrets.SystemRandom`` class reference; anything
+        else (an injected clock, an arbitrary object) resolves to ``None`` and is
+        never flagged.
         """
         if isinstance(node, ast.Name):
             return self._aliases.get(node.id)
         if isinstance(node, ast.Attribute):
-            if self._resolve(node.value) == "mod:datetime":
+            base = self._resolve(node.value)
+            if base == "mod:datetime":
                 if node.attr == "datetime":
                     return "cls:datetime.datetime"
                 if node.attr == "date":
                     return "cls:datetime.date"
+            elif base in {"mod:random", "mod:secrets"} and node.attr == "SystemRandom":
+                return _SYSTEM_RANDOM
             return None
+        return None
+
+    def _construction_origin(self, node: ast.expr) -> str | None:
+        """The origin of the instance a call constructs (``random.SystemRandom()``),
+        or ``None`` when ``node`` is not such a construction."""
+        if isinstance(node, ast.Call):
+            return self._resolve(node.func)
+        return None
+
+    def _resolve_callable_ref(self, node: ast.expr) -> str | None:
+        """Resolve an expression used as a *value* (not called) to the ambient
+        callable it references, so a laundered bound reference is caught later.
+
+        Returns an ``fn:`` origin token or ``None``. A bare name already bound to an
+        ``fn:`` origin (``m = monotonic``) forwards that origin; an attribute chain
+        (``time.time``, ``datetime.now``) resolves through the import aliases.
+        """
+        if isinstance(node, ast.Name):
+            origin = self._aliases.get(node.id)
+            return origin if origin is not None and origin.startswith("fn:") else None
+        if isinstance(node, ast.Attribute):
+            base = self._resolve(node.value)
+            attr = node.attr
+            if base == "cls:datetime.datetime" and attr in _DATETIME_NOW:
+                return f"fn:datetime.{attr}"
+            if base == "cls:datetime.date" and attr in _DATE_TODAY:
+                return f"fn:date.{attr}"
+            if base == "mod:time" and attr in _TIME_CLOCK:
+                return f"fn:time.{attr}"
+            if base == "mod:random" and attr in _RANDOM_DRAW:
+                return f"fn:random.{attr}"
+            if base == "mod:os" and attr in _OS_ENTROPY:
+                return f"fn:os.{attr}"
+            if base == "mod:secrets" and attr in _SECRETS_ENTROPY:
+                return f"fn:secrets.{attr}"
+            if base == "mod:uuid" and attr in _UUID_ENTROPY:
+                return f"fn:uuid.{attr}"
         return None
 
     def _check_call(self, node: ast.Call) -> None:
@@ -237,6 +375,17 @@ class _Analyzer:
     def _check_attribute_call(self, node: ast.Call, func: ast.Attribute) -> None:
         origin = self._resolve(func.value)
         attr = func.attr
+        if origin is None:
+            # A draw off a freshly constructed ``random.SystemRandom()`` reads OS
+            # entropy — the opposite of a seeded instance — so it is flagged even
+            # though the receiver is a call, not a resolvable name.
+            if attr in _RANDOM_DRAW and self._construction_origin(func.value) == _SYSTEM_RANDOM:
+                self._flag(
+                    node,
+                    RULE_ENTROPY,
+                    f"random.SystemRandom().{attr}() draws from OS entropy, not a seeded instance",
+                )
+            return
         if origin == "cls:datetime.datetime" and attr in _DATETIME_NOW:
             self._flag(node, RULE_CLOCK, f"datetime.{attr}() reads the system wall clock")
         elif origin == "cls:datetime.date" and attr in _DATE_TODAY:
@@ -245,17 +394,20 @@ class _Analyzer:
             self._flag(node, RULE_CLOCK, f"time.{attr}() reads the system clock")
         elif origin == "mod:random" and attr in _RANDOM_DRAW:
             self._flag(node, RULE_RANDOM, f"random.{attr}() draws from the unseeded global RNG")
+        elif origin == "mod:os" and attr in _OS_ENTROPY:
+            self._flag(node, RULE_ENTROPY, f"os.{attr}() reads OS entropy (nondeterministic)")
+        elif origin == "mod:secrets" and attr in _SECRETS_ENTROPY:
+            self._flag(node, RULE_ENTROPY, f"secrets.{attr}() draws from OS entropy")
+        elif origin == "mod:uuid" and attr in _UUID_ENTROPY:
+            self._flag(node, RULE_ENTROPY, f"uuid.{attr}() draws from ambient nondeterminism")
 
     def _check_name_call(self, node: ast.Call, func: ast.Name) -> None:
         origin = self._aliases.get(func.id)
         if origin is None:
             return
-        if origin.startswith("fn:time."):
-            name = origin.split(".", 1)[1]
-            self._flag(node, RULE_CLOCK, f"time.{name}() reads the system clock")
-        elif origin.startswith("fn:random."):
-            name = origin.split(".", 1)[1]
-            self._flag(node, RULE_RANDOM, f"random.{name}() draws from the unseeded global RNG")
+        finding = _fn_finding(origin)
+        if finding is not None:
+            self._flag(node, finding[0], finding[1])
 
     def _flag(self, node: ast.Call, rule: str, detail: str) -> None:
         self._findings.append(
