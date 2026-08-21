@@ -1,0 +1,21 @@
+[project]
+name = "qmf-risk"
+version = "0.1.0"
+description = "The ratified Book, BMS, exit, paper-mode, control, and risk-arithmetic boundary (AD-29..41). An edge module: nothing imports it."
+readme = "README.md"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "qmf-core",
+]
+
+[build-system]
+requires = ["uv_build>=0.12,<0.13"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+# PEP 420 namespace submodule. Dot notation tells uv_build the module lives at
+# src/qmf/risk/ with NO src/qmf/__init__.py anywhere in the distribution.
+module-name = "qmf.risk"
+
+[tool.uv.sources]
+qmf-core = { workspace = true }

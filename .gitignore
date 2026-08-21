@@ -7,8 +7,19 @@ __pycache__/
 .venv/
 *.whl
 
-# data downloads never belong in git
-data/
+# build artifacts (uv build / poe build-all)
+dist/
+build/
+*.tar.gz
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+
+# data downloads never belong in git (root-anchored so it never swallows the
+# qmf-data package source at packages/qmf-data/src/qmf/data/)
+/data/
 *.bi5
 
 # recorded raw evidence (append-only local archive, never committed)

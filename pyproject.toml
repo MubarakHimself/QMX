@@ -1,54 +1,71 @@
-# The toolchain the factory's own merge gate runs, in the project the factory
-# was stamped into. Not a package: nothing here is built or published, and no
-# ADW consults this file to run.
+# QMF V1 uv-workspace root.
 #
-# WHY IT IS STAMPED. Every adws/*.py carries PEP 723 inline dependencies, so
-# `uv run adws/adw_plan.py` resolves that script's own header and skips this
-# file entirely. What needs it is the integration gate in adws/engine.py
-# (`quality_commands`), which re-runs three commands against every branch
-# before it merges:
+# Two things live in this one file and MUST NOT be confused:
 #
-#     uv run --project <tree> --group dev ruff check .
-#     uv run --project <tree> --group dev mypy adws
-#     uv run --project <tree> --group dev pytest -q adws/tests
+#   1. THE SSSF FACTORY-GATE STAMP (the original contents of this file). The
+#      factory's merge gate re-runs three commands against every branch:
+#          uv run --project <tree> --group dev ruff check .
+#          uv run --project <tree> --group dev mypy adws
+#          uv run --project <tree> --group dev pytest -q adws/tests
+#      That gate is FAIL-CLOSED: a command that cannot run reads RED. Its
+#      contract is the `[dependency-groups] dev` list and the `adws/tests`
+#      pytest wiring below. Both are preserved verbatim in intent — the `dev`
+#      group keeps every tool and library the gate needs, and
+#      `[tool.pytest.ini_options] testpaths = ["adws/tests"]` is unchanged.
 #
-# That gate is FAIL-CLOSED by design - a command that could not run at all
-# reads RED, never "unverified but fine". So a stamped project without this
-# file and without adws/tests/ never merges a single card: uv answers
-# `--group dev has no effect when used outside a project` and then
-# `Failed to spawn: ruff - program not found`, the engine blocks the card with
-# that as the reason, and `systemctl is-active sdl-engine` says `active` the
-# whole time. The deploy's stamp step checks for this file for exactly that
-# reason.
+#   2. THE QMF WORKSPACE (added by Story 1.1). `[tool.uv.workspace]` declares
+#      the seven roster packages under packages/ and the first extension under
+#      extensions/. The canonical toolchain and the `poe` task surface (Tier-1
+#      `check`, plus `check-integration` and `check-release`) gate the QMF code.
 #
-# `name` and `version` are placeholders - rename them to your project's if you
-# like, nothing reads them. What must survive is the `dev` group and
-# adws/tests/: they are the gate's contract.
+# The two coexist deliberately: the SSSF commands target `adws`, the `poe`
+# tasks target `packages/ + extensions/ + tools/`, and neither weakens the
+# other. `name`/`version` remain placeholders; nothing reads them.
 
 [project]
 name = "sssf-project"
 version = "0.1.0"
-description = "A project the Super Simple Software Factory was stamped into"
+description = "A project the Super Simple Software Factory was stamped into; also the QMF V1 uv-workspace root"
+# The factory-stamp floor stays >=3.10 (the SSSF root is not a QMF package, and
+# keeping this floor keeps ruff's inferred target at py310 so `adws` lints
+# byte-identically to baseline). The actual CPython 3.14 pin (AR-04) lives in
+# `.python-version` and in every member's own `requires-python = ">=3.14,<3.15"`;
+# the workspace resolves and runs on 3.14 accordingly.
 requires-python = ">=3.10"
-# The same four every adws/*.py declares in its own PEP 723 header. Declared
-# here too because adws/tests/ imports adw_modules directly, so `uv run
+# The same libraries every adws/*.py declares in its own PEP 723 header.
+# Declared here too because adws/tests/ imports adw_modules directly, so `uv run
 # --group dev pytest` needs them importable.
 dependencies = ["pydantic", "python-dotenv", "pyyaml", "rich"]
 
+[tool.uv.workspace]
+# The QMF distribution units. Seven roster packages (SemVer lockstep) under
+# packages/, off-roster extensions (own SemVer ladders) under extensions/.
+members = ["packages/*", "extensions/*"]
+
 [dependency-groups]
-# Everything the gate's lint / typecheck / test commands need. Installs clean
-# on Windows and Linux with no external toolchain.
+# THE GATE'S CONTRACT — plus the QMF canonical toolchain, one environment for
+# both gates. The last four (pydantic, python-dotenv, pyyaml, rich) and mypy /
+# types-PyYAML are the SSSF factory-gate essentials and MUST stay: adws/tests/
+# imports adw_modules, which imports them, and the gate runs `mypy adws`.
 #
-# SELF-SUFFICIENT ON PURPOSE. The last four repeat `[project] dependencies`
-# above, and the repetition is the point: this group has to work in a project
-# that already had its own pyproject.toml, where the stamp never wrote that
-# `[project]` block at all. `adws/tests/` imports `adw_modules`, which imports
-# pydantic, yaml, dotenv and rich - so a `dev` group holding only the three
-# tools reds the merge gate on `ModuleNotFoundError: No module named 'yaml'`,
-# which looks exactly like a broken project and is not one. Adding the `dev`
-# group alone is the remediation the deploy used to print; it was incomplete,
-# and this is the list that makes it complete.
-dev = ["ruff", "pytest", "mypy", "types-PyYAML", "pydantic", "python-dotenv", "pyyaml", "rich"]
+# The pinned QMF toolchain (AD-3/AD-4; DEC-0101/0102) is added on top: ruff,
+# pyright (strict), pytest 9.x, poethepoet, and pytest-cov. Exact pins give
+# byte-identical results on every machine; the committed uv.lock nails the rest.
+dev = [
+    # SSSF factory-gate essentials (do not remove)
+    "mypy",
+    "types-PyYAML",
+    "pydantic",
+    "python-dotenv",
+    "pyyaml",
+    "rich",
+    # QMF canonical toolchain (AR-11)
+    "ruff==0.16.3",
+    "pyright==1.1.411",
+    "pytest>=9,<10",
+    "pytest-cov>=7,<8",
+    "poethepoet==0.48.0",
+]
 
 # skylos is SEPARATE from `dev`, and not because it is optional - because it
 # does not install everywhere. It depends on tree-sitter-dart-orchard, which
@@ -59,9 +76,26 @@ dev = ["ruff", "pytest", "mypy", "types-PyYAML", "pydantic", "python-dotenv", "p
 scan = ["skylos"]
 
 [tool.pytest.ini_options]
+# SSSF contract: a bare `pytest` (and the gate's `pytest -q adws/tests`) targets
+# the factory suite. `poe test` passes `packages extensions` explicitly, which
+# overrides this default and collects the QMF package suites instead.
 testpaths = ["adws/tests"]
+# QMF package sources on the import path, so `qmf.*` resolves from src/ without
+# an install at Tier 1 (additive; adws/tests never import qmf and are unaffected).
+pythonpath = [
+    "packages/qmf-core/src",
+    "packages/qmf-registry/src",
+    "packages/qmf-data/src",
+    "packages/qmf-indicators/src",
+    "packages/qmf-structure/src",
+    "packages/qmf-venue/src",
+    "packages/qmf-risk/src",
+    "extensions/qmf-calendar-forex/src",
+]
 
 [tool.mypy]
+# SSSF gate: `mypy adws` only. QMF workspace code is type-checked by pyright
+# (strict) via `poe types`; mypy stays scoped to the factory machinery.
 python_version = "3.10"
 files = ["adws"]
 # adw_data/ is runtime session output and stamped prompt files, not source.
@@ -70,7 +104,10 @@ exclude = "adws/adw_data"
 [tool.ruff]
 # adw_data/ holds runtime session output and the stamped prompt/config files,
 # copied verbatim from the skill template - not source this project owns.
-extend-exclude = ["adws/adw_data"]
+# recorder/ is the SSSF status-dashboard tooling stamped in at baseline; it is
+# not QMF roster code and not linted here (the same "scope to shipped code"
+# posture the CI applies to the AI-defect scanner).
+extend-exclude = ["adws/adw_data", "recorder"]
 line-length = 100
 
 [tool.ruff.lint]
@@ -78,3 +115,58 @@ ignore = [
     # every subprocess call inspects returncode itself - explicit check= is noise here
     "PLW1510",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests assert (S101 is the whole point of a test); test files may reach into a
+# package's private benchmark module (`_bench`) to exercise the harness.
+"packages/*/tests/*" = ["S101"]
+"extensions/*/tests/*" = ["S101"]
+
+[tool.pyright]
+# Strict, workspace-wide over the QMF code (AR-11). adws is mypy's job, not
+# pyright's, so it is not included here.
+include = ["packages", "extensions", "tools"]
+extraPaths = [
+    "packages/qmf-core/src",
+    "packages/qmf-registry/src",
+    "packages/qmf-data/src",
+    "packages/qmf-indicators/src",
+    "packages/qmf-structure/src",
+    "packages/qmf-venue/src",
+    "packages/qmf-risk/src",
+    "extensions/qmf-calendar-forex/src",
+]
+typeCheckingMode = "strict"
+pythonVersion = "3.14"
+
+[tool.poe.tasks]
+# The canonical QMF commands (AR-11), byte-identical on every machine. ruff /
+# ruff-format / pyright / pytest target the shipped workspace (packages/,
+# extensions/, tools/); the SSSF gate independently covers adws.
+fmt = "ruff format packages extensions tools"
+fmt-check = "ruff format --check packages extensions tools"
+lint = "ruff check packages extensions tools"
+types = "pyright"
+test = "pytest packages extensions --cov=qmf --cov-branch --cov-report=term-missing --cov-fail-under=80"
+secret-scan = "python tools/secret_scan.py"
+build-all = "uv build --all-packages"
+
+[tool.poe.tasks.check]
+# Tier 1 — every factory work unit. Format, lint, strict types, unit tests +
+# coverage floor, and the secret-scan gate (AR-24). Fail-closed: any nonzero
+# step fails the gate.
+sequence = ["fmt-check", "lint", "types", "test", "secret-scan"]
+default_item_type = "ref"
+
+[tool.poe.tasks.check-integration]
+# Tier 2 — landing into integration. Tier 1 plus a build of every workspace
+# package (the isolated-build / undeclared-import check is deepened by later
+# stories on top of this).
+sequence = ["check", "build-all"]
+default_item_type = "ref"
+
+[tool.poe.tasks.check-release]
+# Tier 3 — ship. Tier 2 today; the clean-install smoke on both tier-1 OSes is
+# added once a remote exists (AR-23: Ubuntu tier-1 stays untested until then).
+sequence = ["check-integration"]
+default_item_type = "ref"

@@ -1,0 +1,88 @@
+# DEPENDENCIES register (AR-07 / AD-6; DEC-0104)
+
+Every third-party dependency in this workspace is listed here with its **name**,
+**licence**, and **why**. This register is the licence gate: adding a dependency
+means adding its row here first.
+
+## Policy
+
+- **Allowed, freely:** MIT, BSD (2/3-clause), Apache-2.0, PSF.
+- **Rejected:** GPL / AGPL; any **strategy-family** dependency (a library that
+  encodes trading edge or a specific strategy school); any **platform-imposing**
+  dependency (one that dictates an event loop, reactor, daemon, or runtime the
+  platform must adopt — e.g. Twisted).
+- **LGPL:** permitted **only** if used unmodified **and** installed separately
+  (never vendored or statically bound).
+- **`qmf-core` takes zero outside dependencies** (stdlib only). numpy / pandas /
+  pyarrow are permitted **only** in outer packages, and only when actually
+  needed — none are needed at the scaffold stage, so none are declared yet.
+
+## Version ladders
+
+- The **seven roster packages** (`qmf-core`, `qmf-registry`, `qmf-data`,
+  `qmf-indicators`, `qmf-structure`, `qmf-venue`, `qmf-risk`) version in
+  **SemVer lockstep**, `0.x` until the V1 blueprint ships. (AR-09; DEC-0103)
+- **`qmf-calendar-forex`** rides its **own SemVer ladder** outside roster
+  lockstep, with **`tzdata` pinned**; a `tzdata` pin change is at minimum a
+  minor bump on that ladder. (AR-02/AR-27; DEC-0106)
+- CPython **3.14** is pinned across every package (`.python-version`,
+  per-package `requires-python`). (AR-04; DEC-0099)
+
+## Runtime dependencies
+
+| Name | Version | Licence | Used by | Why |
+|---|---|---|---|---|
+| tzdata | `==2025.2` | Apache-2.0 | `qmf-calendar-forex` (extension) | Pinned IANA time-zone database; the extension forces `TZPATH` to this pin and verifies the resolved tzdb equals it, and the pinned version participates in fingerprints. (DEC-0106) |
+
+No roster package declares a runtime outside-dependency. `qmf-registry → qmf-data`
+is the sole inter-library edge; every other roster package depends only on
+`qmf-core` (declared as workspace dependencies, not third-party). (AR-06; L30)
+
+## Toolchain (workspace `dev` dependency-group)
+
+The canonical QMF toolchain, pinned for byte-identical results on every machine
+(AR-11; DEC-0101/0102). The committed `uv.lock` pins the full transitive set.
+
+| Name | Version | Licence | Why |
+|---|---|---|---|
+| ruff | `==0.16.3` | MIT | Formatter + linter (`poe fmt` / `poe lint`). |
+| pyright | `==1.1.411` | MIT | Strict, workspace-wide type checker (`poe types`). |
+| pytest | `>=9,<10` | MIT | Test runner (`poe test`). |
+| pytest-cov | `>=7,<8` | MIT | Coverage measurement + the Tier-1 floor. |
+| poethepoet | `==0.48.0` | MIT | Task runner exposing `poe fmt / lint / types / test / check`. |
+
+## SSSF factory-gate group (`dev`, essentials) and `scan`
+
+Preserved from the factory stamp; the merge gate runs `ruff check .`,
+`mypy adws`, and `pytest -q adws/tests` against `adws/`.
+
+| Name | Version | Licence | Why |
+|---|---|---|---|
+| mypy | (lockfile) | MIT | Type-checks `adws` for the SSSF gate (`mypy adws`). |
+| types-PyYAML | (lockfile) | Apache-2.0 | Stubs so `mypy adws` resolves PyYAML. |
+| pydantic | (lockfile) | MIT | Imported by `adws/adw_modules`; needed for `adws/tests`. |
+| python-dotenv | (lockfile) | BSD-3-Clause | Imported by `adws/adw_modules`. |
+| pyyaml | (lockfile) | MIT | Imported by `adws/adw_modules`. |
+| rich | (lockfile) | MIT | Imported by `adws/adw_modules`. |
+| skylos | (lockfile) | MIT | AI-defect / dead-code scan; isolated in the `scan` group because its build does not install everywhere (treated as TOOL UNAVAILABLE on failure, never a pass/fail). |
+
+## Build backend
+
+| Name | Version | Licence | Why |
+|---|---|---|---|
+| uv_build | `>=0.12,<0.13` | Apache-2.0 OR MIT | Per-package build backend; produces the `qmf.*` PEP 420 namespace wheels with no `qmf/__init__.py`. |
+
+## Permitted but not yet added
+
+Recorded so their licences and homes are pre-cleared; add the row's version and
+flip it to a live section when a story first needs it.
+
+| Name | Licence | Intended home | Note |
+|---|---|---|---|
+| numpy | BSD-3-Clause | outer packages only | 2.5.2 pin (never in `qmf-core`). |
+| pandas | BSD-3-Clause | outer packages only | 3.0.5 pin (young major; ecosystem lag watched). |
+| pyarrow | Apache-2.0 | outer packages only | 25.0.1 pin. |
+| protobuf (runtime) | BSD-3-Clause | `qmf-venue` only | Decodes the Spotware proto at the venue edge; the OpenApiPy SDK is reference-only (its Twisted reactor is platform-imposing → rejected). (DEC-0141) |
+| TA-Lib (C + Python wrapper) | BSD-3-Clause | `qmf-indicators` | Canonical arithmetic reference, 0.7.1 + 0.7.1. (DEC-0127) |
+| click | BSD-3-Clause | QMB (off-roster app) | `qmb` CLI door, 8.4.2. (DEC-0168) |
+| optuna | MIT | QMB (off-roster app) | Default sampler adapter, 4.9.0; a major bump is a contract-versioning event. (DEC-0168) |
