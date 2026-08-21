@@ -1,6 +1,6 @@
 id: CT-03
 name: Instrument and venue identity contract
-status: provisional
+status: ratified
 version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-CORE
 consumers: [COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST]

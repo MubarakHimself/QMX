@@ -1,7 +1,7 @@
 id: CT-24
 name: Book mode and binding-transition contract
-status: provisional
-version: 1  # first minted format version; the shape is spine-ratified (AD-35/AD-29), the doc stays provisional pending corpus re-ratification (DEC-0149, DEC-0143)
+status: ratified
+version: 1  # first minted format version; the shape is spine-ratified (AD-35/AD-29), corpus signed off by the operator 2026-08-21 (DEC-0149, DEC-0143)
 owner: COMP-QMF-RISK
 consumers: []  # consumer-blind by design: transition records and mode folds are qmf-core value types wrapped into registry records by the composition root; no package imports qmf-risk under default-deny (DEC-0143, DEC-0149)
 active_consumers: []

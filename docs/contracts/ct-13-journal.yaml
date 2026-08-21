@@ -1,6 +1,6 @@
 id: CT-13
 name: Durable journal-evidence contract
-status: provisional
+status: ratified
 version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-DATA
 producers: [COMP-QMF-DATA, COMP-QMF-REGISTRY, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMB]  # qmf-data and qmf-registry wired; qmf-venue and qmf-risk both produce via the core-defined JournalSink injected at the composition root — ratified shape, no import edge (DEC-0138 venue, DEC-0145 risk), documentary until the factory ships; the risk-domain writer unit is (machine, risk role, binding) (DEC-0145); QMB's run loop emits each run's trading events on writer-scoped streams in the run's world=replay (DEC-0163)

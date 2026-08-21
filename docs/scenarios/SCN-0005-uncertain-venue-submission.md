@@ -2,7 +2,7 @@
 id: SCN-0005
 title: Uncertain Venue Submission Resolves to UNKNOWN
 type: scenario
-status: provisional
+status: ratified
 component: COMP-QMF-VENUE
 depends_on: [COMP-QMF-CORE, COMP-QMF-DATA, COMP-CTRADER]
 decisions: [DEC-0029, DEC-0059, DEC-0060, DEC-0061, DEC-0109, DEC-0135, DEC-0137, DEC-0138, DEC-0142, DEC-0148, DEC-0150, DEC-0158]

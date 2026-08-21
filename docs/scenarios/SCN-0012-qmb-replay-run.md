@@ -2,7 +2,7 @@
 id: SCN-0012
 title: An Agent Runs a Replay Backtest Against a Book
 type: scenario
-status: provisional
+status: ratified
 component: COMP-QMB
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-RISK]
 decisions: [DEC-0159, DEC-0160, DEC-0161, DEC-0162, DEC-0163, DEC-0164, DEC-0165, DEC-0168, DEC-0169, DEC-0157, DEC-0084, DEC-0172, DEC-0177, DEC-0178, DEC-0180]

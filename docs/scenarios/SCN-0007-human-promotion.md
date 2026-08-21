@@ -2,7 +2,7 @@
 id: SCN-0007
 title: An Agent Cannot Promote an Artifact to Live
 type: scenario
-status: provisional
+status: ratified
 component: COMP-QMF-REGISTRY
 depends_on: [COMP-QMF-CORE]
 decisions: [DEC-0003, DEC-0004, DEC-0033, DEC-0038, DEC-0041, DEC-0108, DEC-0116, DEC-0121, DEC-0146, DEC-0155, DEC-0158]

@@ -1,7 +1,7 @@
 id: CT-20
 name: Venue event and reconciliation contract
-status: provisional
-version: 1  # first minted format version; the event-and-reconciliation law is spine-ratified (AD-27, AD-28), the doc stays provisional pending operator corpus re-ratification (DEC-0137, DEC-0138, DEC-0140)
+status: ratified
+version: 1  # first minted format version; the event-and-reconciliation law is spine-ratified (AD-27, AD-28), corpus signed off by the operator 2026-08-21 (DEC-0137, DEC-0138, DEC-0140)
 owner: COMP-QMF-VENUE
 consumers: []  # recording is via qmf-core-defined sink protocols injected at the composition root; no package imports qmf-venue, so no dependency edge exists and consumers are application-mediated (DEC-0138)
 active_consumers: []

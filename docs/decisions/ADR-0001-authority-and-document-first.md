@@ -2,7 +2,7 @@
 id: ADR-0001
 title: Authority and document-first delivery
 type: adr
-status: provisional
+status: ratified
 depends_on: []
 decisions: [DEC-0001, DEC-0002, DEC-0003, DEC-0004]
 sources: [DEC-0001, DEC-0002, DEC-0003, DEC-0004]
@@ -13,7 +13,7 @@ stale_after: 1y
 
 # ADR-0001: Authority and document-first delivery
 
-Date: 2026-08-18. Status: provisional pending operator ratification.
+Date: 2026-08-18. status: ratified — corpus signed off by the operator 2026-08-21 (conditional go-ahead in the PRD session; the independent contradiction sweep passed).
 
 ## Context
 

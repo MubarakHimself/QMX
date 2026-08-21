@@ -2,7 +2,7 @@
 id: ADR-0018
 title: QML — the bot-authoring library
 type: adr
-status: provisional
+status: ratified
 depends_on: [COMP-QML, COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-RISK]
 decisions: [DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184, DEC-0185, DEC-0017, DEC-0022, DEC-0024, DEC-0084, DEC-0085, DEC-0086, DEC-0090, DEC-0121, DEC-0169]
 sources: [DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184, DEC-0185, _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/research-risk/qml-original-dig.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/research-backtesting/qml-dig-verification.md]
@@ -13,7 +13,7 @@ stale_after: 1y
 
 # ADR-0018: QML — the bot-authoring library
 
-Date: 2026-08-21. Status: provisional pending operator ratification of the corpus. The design itself is ratified by operator delegation (2026-08-21, spine QL-1..QL-10 FINAL — DEC-0184).
+Date: 2026-08-21. status: ratified — corpus signed off by the operator 2026-08-21 (conditional go-ahead in the PRD session; the independent contradiction sweep passed). The design itself is ratified by operator delegation (2026-08-21, spine QL-1..QL-10 FINAL — DEC-0184).
 
 ## Context
 

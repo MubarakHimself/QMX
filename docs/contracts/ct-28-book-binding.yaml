@@ -1,7 +1,7 @@
 id: CT-28
 name: Book binding record contract
-status: provisional
-version: 1  # first minted format version; the binding record is spine-ratified (AD-29), the doc stays provisional pending corpus re-ratification
+status: ratified
+version: 1  # first minted format version; the binding record is spine-ratified (AD-29), corpus signed off by the operator 2026-08-21
 owner: COMP-QMF-RISK
 consumers: []  # consumer-blind by design: qmf-risk defines CT-28 on qmf-core nouns; the composition root wires persistence and nothing imports qmf-risk under default-deny, so no package import edge exists (DEC-0158)
 active_consumers: []

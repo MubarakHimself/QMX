@@ -2,7 +2,7 @@
 id: OPS-RUNBOOK-QMF-V1
 title: QMF V1 Operations Runbook
 type: runbook
-status: provisional
+status: ratified
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP, COMP-CTRADER, COMP-DUKASCOPY, COMP-CALENDAR-FEED, COMP-OBJECT-STORAGE]
 decisions: [DEC-0001, DEC-0003, DEC-0004, DEC-0005, DEC-0008, DEC-0009, DEC-0030, DEC-0041, DEC-0045, DEC-0051, DEC-0052, DEC-0053, DEC-0059, DEC-0065, DEC-0096, DEC-0099, DEC-0100, DEC-0101, DEC-0102, DEC-0103, DEC-0106, DEC-0112, DEC-0117, DEC-0118, DEC-0119, DEC-0121, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0143, DEC-0146, DEC-0147, DEC-0149, DEC-0150, DEC-0151, DEC-0152, DEC-0153, DEC-0155, DEC-0157, DEC-0158]
 sources: [DEC-0001, DEC-0003, DEC-0004, DEC-0005, DEC-0008, DEC-0009, DEC-0030, DEC-0041, DEC-0045, DEC-0051, DEC-0052, DEC-0053, DEC-0059, DEC-0065, DEC-0096, DEC-0099, DEC-0100, DEC-0101, DEC-0102, DEC-0103, DEC-0106, DEC-0112, DEC-0118, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/time-audit-devops.md, _docwork/gaps.yaml, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/contracts/ct-09-registry-persistence.yaml, docs/contracts/ct-11-evidence-persistence.yaml, docs/contracts/ct-13-journal.yaml, docs/contracts/ct-14-backup-restore.yaml, docs/contracts/ct-15-external-source-adapter.yaml, docs/contracts/ct-19-venue-command.yaml, docs/contracts/ct-20-venue-event.yaml, docs/contracts/ct-21-venue-secret-session.yaml]

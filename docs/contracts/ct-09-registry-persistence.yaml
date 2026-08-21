@@ -1,6 +1,6 @@
 id: CT-09
 name: Registry persistence contract
-status: provisional
+status: ratified
 version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-REGISTRY
 consumers: [COMP-QMF-DATA-STORE]

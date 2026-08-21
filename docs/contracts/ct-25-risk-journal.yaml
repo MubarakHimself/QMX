@@ -1,7 +1,7 @@
 id: CT-25
 name: Risk and entity journal-projection contract
-status: provisional
-version: 1  # first minted format version; the projection and record surface is spine-ratified (AD-31), the doc stays provisional pending corpus re-ratification (DEC-0145)
+status: ratified
+version: 1  # first minted format version; the projection and record surface is spine-ratified (AD-31), corpus signed off by the operator 2026-08-21 (DEC-0145)
 owner: COMP-QMF-RISK
 consumers: []  # projection-blind: entity journals are read-time projections the composition root resolves over AD-21 writer-scoped streams; nothing imports qmf-risk under default-deny, so no package import edge exists (DEC-0145, DEC-0158)
 active_consumers: []

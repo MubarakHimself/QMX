@@ -1,7 +1,7 @@
 id: CT-34
 name: Confluence (leg-set) kind contract
-status: provisional
-version: 1  # first minted format version; CT-34 is a new qmf-registry kind ruled by the 2026-08-21 QML sitting (DEC-0175); the doc stays provisional pending corpus re-ratification
+status: ratified
+version: 1  # first minted format version; CT-34 is a new qmf-registry kind ruled by the 2026-08-21 QML sitting (DEC-0175); corpus signed off by the operator 2026-08-21
 owner: COMP-QMF-REGISTRY  # kinds are owned by qmf-registry like every kind; the CT-34 artifact is AUTHORED VIA the QML library (author-side types/helpers on qmf-core nouns), but the record kind is qmf-registry-owned (DEC-0175)
 consumers: []  # consumer-blind by design: the confluence kind is a qmf-registry record kind authored via the QML library; QML returns fingerprintable content and the composition root mints and persists the record under the AD-25 root-mints pattern, so no package import edge exists (DEC-0175)
 active_consumers: []

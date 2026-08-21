@@ -2,7 +2,7 @@
 id: DOC-CHANGELOG
 title: QMF Documentation Changelog
 type: changelog
-status: provisional
+status: ratified
 sources: [_docwork/ledger.yaml, _docwork/gaps.yaml, _docwork/feature_inventory.yaml, _docwork/review-consistency.md, _docwork/review-redteam.md, docs/index.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMB-2026-08-20/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ARCHITECTURE-SPINE.md]
 generated: 2026-08-18
 verified: 2026-08-21
@@ -13,6 +13,21 @@ stale_after: 90d
 
 This records changes to the QMF knowledge base. It is not a software release log and does not convert provisional decisions into implementation authority.
 
+## 2026-08-21 — Corpus sign-off (provisional → ratified)
+
+The operator signed off the corpus on 2026-08-21 — a conditional go-ahead given in the PRD session, contingent on an independent contradiction sweep passing. The sweep (dynamic workflow wf_93306df4-1f5, 14 agents: three corpus/PRD contradiction lenses with adversarial skeptic verification, a sign-off mechanics planner, five old-version miners, a PRD rubric reviewer, and a correlation synthesizer) passed after two desk fixes. Every docs artifact now carries `status: ratified`. Ratified status is documentation authority only: implementation authorization still arrives exclusively through the factory pipeline, and the deferred gaps stay non-authorizing.
+
+| Field | Value |
+|---|---|
+| Mode | Sign-off pass — flip the provisional corpus to ratified |
+| Authority | Operator sign-off 2026-08-21 (EXT-2093; conditional go-ahead in the PRD session; the sweep passed) |
+| Status flips | 100 docs artifacts (66 Markdown + 34 contract YAMLs) `provisional` → `ratified`; 52 ledger decisions flipped to `ratified`; 52 traceability rows updated |
+| Desk fixes ridden by the sweep | CT-28 `world` lines amended to admit the QMB `world = replay` binding with DEC-0160 cited (the glossary/qmf-risk qualifier had never been carried into the contract); ledger DEC-0056 → `superseded` by DEC-0128 and DEC-0124 → `superseded` by DEC-0134 — the only two supersession chains missing the dual-field flip |
+| DEC-0049 | RULED at sign-off (operator-direct, EXT-2093): automatic detectors may act only through entry-blocking controls at the narrowest affected scope (instrument, currency cohort, Book, venue/broker, or system), never on positions or exits (L39); the inform-vs-pause posture is UI-editable per L38 |
+| SQS | Confirmed as-documented: SQS = Spread Quality Sensor, the DEC-0153 formula untouched for V1, revisit post-V1; the stale session-memlog note is historical |
+| ENH batch | All 71 pending enhancement entries DEFERRED post-V1 by operator ruling (documentation-precision audit rows, not features) |
+| Deliberately unchanged | GAP-0016/GAP-0017 (DEC-0121), GAP-0048 content, and GAP-0049 stay deferred and non-authorizing; the SRC-01-C0022 evidence caveat is preserved; historical changelog and point-in-time ADR records are untouched |
+| Gates | validate_ledger PASS; validate_registry PASS; validate_inventory PASS (house-accepted warnings; DEC-0049 joins the uncovered-ratified class); check_citations PASS (house-accepted dead-DEC class); lint_docs CLEAN; **lint_docs --strict CLEAN — the first fully green strict run** |
 ## 2026-08-21 — QML increment absorption (change mode)
 
 Absorbed the 2026-08-21 QML architecture sitting — the child spine QL-1 through QL-10 at `architecture-QML-2026-08-21/`, status FINAL, run autonomously by operator delegation with every without-operator call tagged in the memlog and individually overturnable — into the knowledge base. ADR: [ADR-0018](decisions/ADR-0018-qml-bot-authoring-library.md) (new; architecture-preflight verdict: **new COMP-QML**, the QMX bot-authoring library — one uv-installable application-layer distribution on QMF that authors the CT-33/CT-34 artifacts, defines the bot runtime protocol, and owns the conformance gate, never a QMF roster package, framework, or engine). GAP-0047 is answered/closed. The design is ratified by delegation; implementation authorization still arrives only through the factory pipeline, and every absorbing document stays `provisional`.

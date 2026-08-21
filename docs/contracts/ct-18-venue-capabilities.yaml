@@ -1,7 +1,7 @@
 id: CT-18
 name: Venue capability-discovery contract
-status: provisional
-version: 1  # first minted format version; the shape is spine-ratified (AD-28), the doc stays provisional pending corpus re-ratification (DEC-0138, DEC-0140)
+status: ratified
+version: 1  # first minted format version; the shape is spine-ratified (AD-28), corpus signed off by the operator 2026-08-21 (DEC-0138, DEC-0140)
 owner: COMP-QMF-VENUE
 consumers: []  # consumer-blind by design: per-venue adapters implement the four venue contracts and the composition root wires them; nothing imports qmf-venue under default-deny, so no package import edge exists (DEC-0138)
 active_consumers: []

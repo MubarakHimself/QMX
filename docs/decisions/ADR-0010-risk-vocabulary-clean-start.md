@@ -2,7 +2,7 @@
 id: ADR-0010
 title: R, the dimensional law, SQS V1, and the bench vocabulary
 type: adr
-status: provisional
+status: ratified
 component: COMP-QMF-RISK
 depends_on: [COMP-QMF-CORE, COMP-QMF-DATA, COMP-QMF-REGISTRY]
 decisions: [DEC-0153, DEC-0154, DEC-0155]
@@ -14,7 +14,7 @@ stale_after: 1y
 
 # ADR-0010: R, the dimensional law, SQS V1, and the bench vocabulary
 
-Date: 2026-08-20 (rewritten in place; supersedes the 2026-08-18 restart placeholder). Status: provisional pending corpus-wide operator ratification; the underlying rulings AD-39..AD-41 are operator-ratified or corpus-closed under explicit operator delegation.
+Date: 2026-08-20 (rewritten in place; supersedes the 2026-08-18 restart placeholder). status: ratified — corpus signed off by the operator 2026-08-21 (conditional go-ahead in the PRD session; the independent contradiction sweep passed); the underlying rulings AD-39..AD-41 are operator-ratified or corpus-closed under explicit operator delegation.
 
 ## Context
 

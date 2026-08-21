@@ -2,7 +2,7 @@
 id: ADR-0011
 title: Defer consumer runtimes and products beyond QMF V1
 type: adr
-status: provisional
+status: ratified
 depends_on: []
 decisions: [DEC-0083, DEC-0087, DEC-0088, DEC-0089, DEC-0090, DEC-0091]
 sources: [DEC-0083, DEC-0087, DEC-0088, DEC-0089, DEC-0090, DEC-0091]
@@ -13,7 +13,7 @@ stale_after: 1y
 
 # ADR-0011: Defer consumer runtimes and products beyond QMF V1
 
-Date: 2026-08-18. Status: provisional pending operator ratification.
+Date: 2026-08-18. status: ratified — corpus signed off by the operator 2026-08-21 (conditional go-ahead in the PRD session; the independent contradiction sweep passed).
 
 ## Context
 

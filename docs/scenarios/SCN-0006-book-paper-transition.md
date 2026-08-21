@@ -2,7 +2,7 @@
 id: SCN-0006
 title: Book Paper Transition Is a Dated Binding-Epoch Change
 type: scenario
-status: provisional
+status: ratified
 component: COMP-QMF-RISK
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA]
 decisions: [DEC-0149, DEC-0143, DEC-0150, DEC-0157, DEC-0158, DEC-0041, DEC-0115]

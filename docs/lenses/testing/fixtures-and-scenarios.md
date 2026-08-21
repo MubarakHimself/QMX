@@ -2,7 +2,7 @@
 id: LENS-TEST-FIXTURES
 title: QMF Fixtures and Golden Scenarios
 type: lens
-status: provisional
+status: ratified
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP, COMP-CTRADER, COMP-DUKASCOPY, COMP-CALENDAR-FEED, COMP-OBJECT-STORAGE]
 decisions: [DEC-0004, DEC-0007, DEC-0026, DEC-0029, DEC-0030, DEC-0033, DEC-0038, DEC-0044, DEC-0045, DEC-0046, DEC-0054, DEC-0096, DEC-0101, DEC-0102, DEC-0106, DEC-0108, DEC-0110, DEC-0117, DEC-0118, DEC-0119, DEC-0121, DEC-0126, DEC-0127, DEC-0128, DEC-0129, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0143, DEC-0146, DEC-0147, DEC-0149, DEC-0150, DEC-0151, DEC-0152, DEC-0155, DEC-0157]
 sources: [_docwork/ledger.yaml, _docwork/gaps.yaml, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, docs/constitution.md, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/components/, docs/contracts/, docs/lenses/testing/test-strategy.md]

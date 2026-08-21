@@ -2,7 +2,7 @@
 id: ADR-0016
 title: Data rooms, splits, journal streams, and the first ratified edge
 type: adr
-status: provisional
+status: ratified
 component: COMP-QMF-DATA
 depends_on: [COMP-QMF-DATA, COMP-QMF-DATA-STORE, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-BACKUP, COMP-QMF-CORE, COMP-QMF-REGISTRY]
 decisions: [DEC-0117, DEC-0118, DEC-0119, DEC-0120]
@@ -14,7 +14,7 @@ stale_after: 1y
 
 # ADR-0016: Data rooms, splits, journal streams, and the first ratified edge
 
-Date: 2026-08-20. Status: provisional — AD-19, AD-20, and AD-21 are operator-ratified 2026-08-20 in the reopened foundation architecture sitting, with the registry-room and dependency-edge rulings added at the increment reviewer gate; this document stays provisional until the knowledge base is re-ratified.
+Date: 2026-08-20. status: ratified — AD-19, AD-20, and AD-21 are operator-ratified 2026-08-20 in the reopened foundation architecture sitting, with the registry-room and dependency-edge rulings added at the increment reviewer gate; this document stays provisional until the knowledge base is re-ratified.
 
 ## Context
 

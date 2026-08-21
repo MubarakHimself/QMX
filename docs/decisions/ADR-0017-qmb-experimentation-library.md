@@ -2,7 +2,7 @@
 id: ADR-0017
 title: QMB — the experimentation/backtesting library and qmb CLI
 type: adr
-status: provisional
+status: ratified
 depends_on: [COMP-QMB, COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-RISK]
 decisions: [DEC-0159, DEC-0160, DEC-0161, DEC-0162, DEC-0163, DEC-0164, DEC-0165, DEC-0166, DEC-0167, DEC-0168, DEC-0169, DEC-0170, DEC-0013, DEC-0083, DEC-0084, DEC-0085, DEC-0086, DEC-0087, DEC-0088]
 sources: [DEC-0159, DEC-0160, DEC-0161, DEC-0162, DEC-0163, DEC-0164, DEC-0165, DEC-0166, DEC-0167, DEC-0168, DEC-0169, _bmad-output/planning-artifacts/architecture/architecture-QMB-2026-08-20/ARCHITECTURE-SPINE.md]
@@ -13,7 +13,7 @@ stale_after: 1y
 
 # ADR-0017: QMB — the experimentation/backtesting library and qmb CLI
 
-Date: 2026-08-21. Status: provisional pending operator ratification of the corpus. The design itself is ratified by operator delegation (2026-08-20, spine B-1..B-15 FINAL).
+Date: 2026-08-21. status: ratified — corpus signed off by the operator 2026-08-21 (conditional go-ahead in the PRD session; the independent contradiction sweep passed). The design itself is ratified by operator delegation (2026-08-20, spine B-1..B-15 FINAL).
 
 ## Context
 

@@ -2,7 +2,7 @@
 id: ADR-0015
 title: Registry records, multiplicity, and the promotion skeleton
 type: adr
-status: provisional
+status: ratified
 component: COMP-QMF-REGISTRY
 depends_on: [COMP-QMF-REGISTRY, COMP-QMF-CORE, COMP-QMF-DATA]
 decisions: [DEC-0114, DEC-0115, DEC-0116, DEC-0121]
@@ -14,7 +14,7 @@ stale_after: 1y
 
 # ADR-0015: Registry records, multiplicity, and the promotion skeleton
 
-Date: 2026-08-20. Status: provisional — AD-16, AD-17, and AD-18 are operator-ratified 2026-08-20 in the reopened foundation architecture sitting; this document stays provisional until the knowledge base is re-ratified.
+Date: 2026-08-20. status: ratified — AD-16, AD-17, and AD-18 are operator-ratified 2026-08-20 in the reopened foundation architecture sitting; this document stays provisional until the knowledge base is re-ratified.
 
 ## Context
 

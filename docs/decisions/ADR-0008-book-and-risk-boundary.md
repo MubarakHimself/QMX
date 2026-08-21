@@ -2,7 +2,7 @@
 id: ADR-0008
 title: Book, BMS, binding chain, and the risk-control contracts
 type: adr
-status: provisional
+status: ratified
 component: COMP-QMF-RISK
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-VENUE]
 decisions: [DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0147, DEC-0148, DEC-0150, DEC-0151, DEC-0152, DEC-0156, DEC-0157, DEC-0158]
@@ -14,7 +14,7 @@ stale_after: 1y
 
 # ADR-0008: Book, BMS, binding chain, and the risk-control contracts
 
-Date: 2026-08-20 (rewritten in place; supersedes the 2026-08-18 GAP-defined placeholder). Status: provisional pending corpus-wide operator ratification; the underlying spine rulings AD-29..AD-38 are operator-ratified.
+Date: 2026-08-20 (rewritten in place; supersedes the 2026-08-18 GAP-defined placeholder). status: ratified — corpus signed off by the operator 2026-08-21 (conditional go-ahead in the PRD session; the independent contradiction sweep passed); the underlying spine rulings AD-29..AD-38 are operator-ratified.
 
 ## Context
 

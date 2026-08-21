@@ -2,7 +2,7 @@
 id: COMP-QMF-VENUE
 title: QMF Venue Module
 type: component-spec
-status: provisional
+status: ratified
 component: COMP-QMF-VENUE
 depends_on: [COMP-QMF-CORE]
 decisions: [DEC-0009, DEC-0101, DEC-0105, DEC-0107, DEC-0109, DEC-0111, DEC-0112, DEC-0113, DEC-0119, DEC-0120, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0140, DEC-0141, DEC-0142, DEC-0147, DEC-0148, DEC-0150, DEC-0154, DEC-0155, DEC-0158]

@@ -1,7 +1,7 @@
 id: CT-31
 name: Control-window contract
-status: provisional
-version: 1  # first minted format version; the window law is spine-ratified (AD-38), the doc stays provisional pending corpus re-ratification (DEC-0152)
+status: ratified
+version: 1  # first minted format version; the window law is spine-ratified (AD-38), corpus signed off by the operator 2026-08-21 (DEC-0152)
 owner: COMP-QMF-RISK
 consumers: []  # consumer-blind by design: window records derive from CT-10/CT-15 intake and are qmf-core value types wrapped into registry records by the composition root; no package imports qmf-risk under default-deny (DEC-0152, DEC-0143)
 active_consumers: []

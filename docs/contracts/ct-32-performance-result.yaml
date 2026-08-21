@@ -1,7 +1,7 @@
 id: CT-32
 name: Performance-result container contract
-status: provisional
-version: 1  # first minted format version; the container shape is spine-ratified (AD-41), the doc stays provisional pending corpus re-ratification (DEC-0155)
+status: ratified
+version: 1  # first minted format version; the container shape is spine-ratified (AD-41), corpus signed off by the operator 2026-08-21 (DEC-0155)
 owner: COMP-QMF-RISK
 consumers: []  # container-blind: nothing imports qmf-risk under default-deny; the composition root wires production and consumption, so no package import edge exists (DEC-0155, DEC-0158)
 active_consumers: []

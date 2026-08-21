@@ -2,7 +2,7 @@
 id: COMP-CALENDAR-FEED
 title: News-Calendar Feed
 type: component-spec
-status: provisional
+status: ratified
 component: COMP-CALENDAR-FEED
 depends_on: []
 decisions: [DEC-0009, DEC-0038, DEC-0052, DEC-0065, DEC-0074, DEC-0106, DEC-0117, DEC-0119, DEC-0152, DEC-0156, DEC-0157, DEC-0158]

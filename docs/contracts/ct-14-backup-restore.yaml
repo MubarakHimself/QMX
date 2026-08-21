@@ -1,6 +1,6 @@
 id: CT-14
 name: Off-machine backup boundary contract
-status: provisional
+status: ratified
 version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-DATA-BACKUP
 consumers: [COMP-OBJECT-STORAGE]

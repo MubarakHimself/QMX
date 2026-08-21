@@ -2,7 +2,7 @@
 id: SCN-0004
 title: Backup Does Not Claim Recoverability Before Its Boundaries Exist
 type: scenario
-status: provisional
+status: ratified
 component: COMP-QMF-DATA-BACKUP
 depends_on: [COMP-QMF-CORE, COMP-QMF-DATA-STORE, COMP-OBJECT-STORAGE]
 decisions: [DEC-0044, DEC-0045, DEC-0117, DEC-0118]

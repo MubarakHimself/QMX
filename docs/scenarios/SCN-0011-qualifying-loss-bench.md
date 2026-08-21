@@ -2,7 +2,7 @@
 id: SCN-0011
 title: A Day of Exits Benches a Seat by Qualifying-Loss Count
 type: scenario
-status: provisional
+status: ratified
 component: COMP-QMF-RISK
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA]
 decisions: [DEC-0155, DEC-0149, DEC-0143, DEC-0147, DEC-0154, DEC-0157, DEC-0158]

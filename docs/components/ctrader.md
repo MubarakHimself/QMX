@@ -2,7 +2,7 @@
 id: COMP-CTRADER
 title: cTrader Open API
 type: component-spec
-status: provisional
+status: ratified
 component: COMP-CTRADER
 depends_on: []
 decisions: [DEC-0030, DEC-0031, DEC-0053, DEC-0059, DEC-0060, DEC-0061, DEC-0065, DEC-0105, DEC-0106, DEC-0107, DEC-0119, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0148, DEC-0158]

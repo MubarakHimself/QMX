@@ -1,6 +1,6 @@
 id: CT-10
 name: Source-observation and bitemporal fact contract
-status: provisional
+status: ratified
 version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-DATA
 producers: [COMP-QMF-DATA-INGEST, COMP-QMF-VENUE]

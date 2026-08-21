@@ -1,7 +1,7 @@
 id: CT-19
 name: Venue command contract
-status: provisional
-version: 1  # first minted format version; the command law is spine-ratified (AD-27), the doc stays provisional pending operator corpus re-ratification (DEC-0137, DEC-0140)
+status: ratified
+version: 1  # first minted format version; the command law is spine-ratified (AD-27), corpus signed off by the operator 2026-08-21 (DEC-0137, DEC-0140)
 owner: COMP-QMF-VENUE
 consumers: []  # the command caller is unassigned in QMF; a per-venue adapter implements CT-19 and the composition root wires the caller, which arrives only through the factory pipeline (DEC-0137, DEC-0138)
 active_consumers: []

@@ -2,7 +2,7 @@
 id: COMP-DUKASCOPY
 title: Dukascopy Historical Data Source
 type: component-spec
-status: provisional
+status: ratified
 component: COMP-DUKASCOPY
 depends_on: []
 decisions: [DEC-0009, DEC-0013, DEC-0038, DEC-0051, DEC-0053, DEC-0107, DEC-0109, DEC-0117, DEC-0118, DEC-0119, DEC-0166]

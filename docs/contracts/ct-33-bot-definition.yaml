@@ -1,7 +1,7 @@
 id: CT-33
 name: Bot definition (declaration) kind contract
-status: provisional
-version: 1  # first minted format version; CT-33 fills AD-16's reserved Bot kind, ruled by the 2026-08-21 QML sitting (DEC-0173), closing GAP-0047; the doc stays provisional pending corpus re-ratification
+status: ratified
+version: 1  # first minted format version; CT-33 fills AD-16's reserved Bot kind, ruled by the 2026-08-21 QML sitting (DEC-0173), closing GAP-0047; corpus signed off by the operator 2026-08-21
 owner: COMP-QMF-REGISTRY  # kinds are owned by qmf-registry like every kind; the CT-33 artifact is AUTHORED VIA the QML library (its author-side types/helpers produce the declaration on qmf-core nouns), but the record kind is qmf-registry-owned (DEC-0173)
 consumers: []  # consumer-blind by design: the Bot kind is a qmf-registry record kind authored via the QML library; QML returns fingerprintable content and the composition root mints and persists the record under the AD-25 root-mints pattern, so no package import edge exists (DEC-0173)
 active_consumers: []

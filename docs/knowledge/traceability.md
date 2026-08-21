@@ -2,7 +2,7 @@
 id: KNOW-TRACEABILITY-QMF-V1
 title: QMF V1 Decision, Gap, and Feature Traceability
 type: knowledge
-status: provisional
+status: ratified
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMB, COMP-QML]
 decisions: [DEC-0001, DEC-0003, DEC-0004, DEC-0024, DEC-0120, DEC-0121, DEC-0124, DEC-0125, DEC-0126, DEC-0127, DEC-0128, DEC-0129, DEC-0130, DEC-0131, DEC-0132, DEC-0133, DEC-0134, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0140, DEC-0141, DEC-0142, DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0147, DEC-0148, DEC-0149, DEC-0150, DEC-0151, DEC-0152, DEC-0153, DEC-0154, DEC-0155, DEC-0156, DEC-0157, DEC-0158, DEC-0159, DEC-0160, DEC-0161, DEC-0162, DEC-0163, DEC-0164, DEC-0165, DEC-0166, DEC-0167, DEC-0168, DEC-0169, DEC-0170, DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184, DEC-0185]
 sources: [_docwork/ledger.yaml, _docwork/gaps.yaml, _docwork/feature_inventory.yaml, _docwork/manifest.yaml, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMB-2026-08-20/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ARCHITECTURE-SPINE.md, docs/decisions/ADR-0017-qmb-experimentation-library.md, docs/decisions/ADR-0018-qml-bot-authoring-library.md, docs/architecture/dependencies.yaml, docs/]
@@ -21,86 +21,86 @@ The locator names the primary docs-local document and section. `dead`, `supersed
 
 | Decision | Status | Primary document and section |
 |---|---|---|
-| DEC-0001 | `provisional` | [ADR-0001](../decisions/ADR-0001-authority-and-document-first.md), Decision |
-| DEC-0002 | `provisional` | [ADR-0001](../decisions/ADR-0001-authority-and-document-first.md), Decision |
-| DEC-0003 | `provisional` | [ADR-0001](../decisions/ADR-0001-authority-and-document-first.md), Decision |
-| DEC-0004 | `provisional` | [ADR-0001](../decisions/ADR-0001-authority-and-document-first.md), Decision |
-| DEC-0005 | `provisional` | [Operations runbook](../lenses/ops/runbook.md), Permission boundary |
-| DEC-0006 | `provisional` | [Constitution](../constitution.md), Laws |
-| DEC-0007 | `provisional` | [Constitution](../constitution.md), Laws |
-| DEC-0008 | `provisional` | [ADR-0002](../decisions/ADR-0002-toolbox-and-v1-roster.md), Decision |
-| DEC-0009 | `provisional` | [ADR-0002](../decisions/ADR-0002-toolbox-and-v1-roster.md), Decision |
+| DEC-0001 | `ratified` | [ADR-0001](../decisions/ADR-0001-authority-and-document-first.md), Decision |
+| DEC-0002 | `ratified` | [ADR-0001](../decisions/ADR-0001-authority-and-document-first.md), Decision |
+| DEC-0003 | `ratified` | [ADR-0001](../decisions/ADR-0001-authority-and-document-first.md), Decision |
+| DEC-0004 | `ratified` | [ADR-0001](../decisions/ADR-0001-authority-and-document-first.md), Decision |
+| DEC-0005 | `ratified` | [Operations runbook](../lenses/ops/runbook.md), Permission boundary |
+| DEC-0006 | `ratified` | [Constitution](../constitution.md), Laws |
+| DEC-0007 | `ratified` | [Constitution](../constitution.md), Laws |
+| DEC-0008 | `ratified` | [ADR-0002](../decisions/ADR-0002-toolbox-and-v1-roster.md), Decision |
+| DEC-0009 | `ratified` | [ADR-0002](../decisions/ADR-0002-toolbox-and-v1-roster.md), Decision |
 | DEC-0010 | `superseded` | [Gap report](../gap-report.md), Redesigned or superseded |
-| DEC-0011 | `provisional` | [ADR-0002](../decisions/ADR-0002-toolbox-and-v1-roster.md), Decision |
+| DEC-0011 | `ratified` | [ADR-0002](../decisions/ADR-0002-toolbox-and-v1-roster.md), Decision |
 | DEC-0012 | `superseded` | [Gap report](../gap-report.md), Redesigned or superseded |
-| DEC-0013 | `provisional` | [ADR-0002](../decisions/ADR-0002-toolbox-and-v1-roster.md), Decision |
+| DEC-0013 | `ratified` | [ADR-0002](../decisions/ADR-0002-toolbox-and-v1-roster.md), Decision |
 | DEC-0014 | `dead` | [Gap report](../gap-report.md), Dead decisions |
 | DEC-0015 | `dead` | [Gap report](../gap-report.md), Dead decisions |
 | DEC-0016 | `superseded` | [Gap report](../gap-report.md), Redesigned or superseded |
-| DEC-0017 | `provisional` | [ADR-0002](../decisions/ADR-0002-toolbox-and-v1-roster.md), Decision |
+| DEC-0017 | `ratified` | [ADR-0002](../decisions/ADR-0002-toolbox-and-v1-roster.md), Decision |
 | DEC-0018 | `superseded` | [Gap report](../gap-report.md), Redesigned or superseded |
-| DEC-0019 | `provisional` | [ADR-0002](../decisions/ADR-0002-toolbox-and-v1-roster.md), Decision |
+| DEC-0019 | `ratified` | [ADR-0002](../decisions/ADR-0002-toolbox-and-v1-roster.md), Decision |
 | DEC-0020 | `dead` | [Gap report](../gap-report.md), Dead decisions |
 | DEC-0021 | `superseded` | [Gap report](../gap-report.md), Redesigned or superseded |
-| DEC-0022 | `provisional` | [ADR-0003](../decisions/ADR-0003-definitions-only-core.md), Decision |
+| DEC-0022 | `ratified` | [ADR-0003](../decisions/ADR-0003-definitions-only-core.md), Decision |
 | DEC-0023 | `dead` | [ADR-0003](../decisions/ADR-0003-definitions-only-core.md), Options considered |
-| DEC-0024 | `provisional` | [ADR-0002](../decisions/ADR-0002-toolbox-and-v1-roster.md), Decision |
-| DEC-0025 | `provisional` | [SCN-0001](../scenarios/SCN-0001-core-freeze-gate.md), Core freeze gate |
-| DEC-0026 | `provisional` | [ADR-0003](../decisions/ADR-0003-definitions-only-core.md), Decision |
-| DEC-0027 | `provisional` | [ADR-0003](../decisions/ADR-0003-definitions-only-core.md), Decision |
-| DEC-0028 | `provisional` | [ADR-0003](../decisions/ADR-0003-definitions-only-core.md), Decision |
-| DEC-0029 | `provisional` | [ADR-0003](../decisions/ADR-0003-definitions-only-core.md), Decision |
-| DEC-0030 | `provisional` | [ADR-0003](../decisions/ADR-0003-definitions-only-core.md), Decision |
-| DEC-0031 | `provisional` | [ADR-0003](../decisions/ADR-0003-definitions-only-core.md), Decision |
+| DEC-0024 | `ratified` | [ADR-0002](../decisions/ADR-0002-toolbox-and-v1-roster.md), Decision |
+| DEC-0025 | `ratified` | [SCN-0001](../scenarios/SCN-0001-core-freeze-gate.md), Core freeze gate |
+| DEC-0026 | `ratified` | [ADR-0003](../decisions/ADR-0003-definitions-only-core.md), Decision |
+| DEC-0027 | `ratified` | [ADR-0003](../decisions/ADR-0003-definitions-only-core.md), Decision |
+| DEC-0028 | `ratified` | [ADR-0003](../decisions/ADR-0003-definitions-only-core.md), Decision |
+| DEC-0029 | `ratified` | [ADR-0003](../decisions/ADR-0003-definitions-only-core.md), Decision |
+| DEC-0030 | `ratified` | [ADR-0003](../decisions/ADR-0003-definitions-only-core.md), Decision |
+| DEC-0031 | `ratified` | [ADR-0003](../decisions/ADR-0003-definitions-only-core.md), Decision |
 | DEC-0032 | `superseded` | [Architecture spine](../../_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md), freeze-choice status (superseded by DEC-0124) |
-| DEC-0033 | `provisional` | [ADR-0004](../decisions/ADR-0004-registry-identity-lineage.md), Decision |
+| DEC-0033 | `ratified` | [ADR-0004](../decisions/ADR-0004-registry-identity-lineage.md), Decision |
 | DEC-0034 | `dead` | [ADR-0004](../decisions/ADR-0004-registry-identity-lineage.md), Options considered |
-| DEC-0035 | `provisional` | [ADR-0004](../decisions/ADR-0004-registry-identity-lineage.md), Decision |
+| DEC-0035 | `ratified` | [ADR-0004](../decisions/ADR-0004-registry-identity-lineage.md), Decision |
 | DEC-0036 | `superseded` | [Architecture spine](../../_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md), AD-16 (superseded by DEC-0114) |
 | DEC-0037 | `dead` | [ADR-0004](../decisions/ADR-0004-registry-identity-lineage.md), Options considered |
-| DEC-0038 | `provisional` | [ADR-0004](../decisions/ADR-0004-registry-identity-lineage.md), Decision |
-| DEC-0039 | `provisional` | [ADR-0004](../decisions/ADR-0004-registry-identity-lineage.md), Decision |
+| DEC-0038 | `ratified` | [ADR-0004](../decisions/ADR-0004-registry-identity-lineage.md), Decision |
+| DEC-0039 | `ratified` | [ADR-0004](../decisions/ADR-0004-registry-identity-lineage.md), Decision |
 | DEC-0040 | `superseded` | [Architecture spine](../../_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md), AD-17 (superseded by DEC-0115) |
-| DEC-0041 | `provisional` | [ADR-0004](../decisions/ADR-0004-registry-identity-lineage.md), Decision |
-| DEC-0042 | `provisional` | [ADR-0005](../decisions/ADR-0005-governed-data-evidence.md), Decision |
+| DEC-0041 | `ratified` | [ADR-0004](../decisions/ADR-0004-registry-identity-lineage.md), Decision |
+| DEC-0042 | `ratified` | [ADR-0005](../decisions/ADR-0005-governed-data-evidence.md), Decision |
 | DEC-0043 | `superseded` | [Architecture spine](../../_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md), AD-19 (superseded by DEC-0117) |
-| DEC-0044 | `provisional` | [ADR-0005](../decisions/ADR-0005-governed-data-evidence.md), Decision |
-| DEC-0045 | `provisional` | [ADR-0005](../decisions/ADR-0005-governed-data-evidence.md), Decision |
-| DEC-0046 | `provisional` | [ADR-0005](../decisions/ADR-0005-governed-data-evidence.md), Decision |
+| DEC-0044 | `ratified` | [ADR-0005](../decisions/ADR-0005-governed-data-evidence.md), Decision |
+| DEC-0045 | `ratified` | [ADR-0005](../decisions/ADR-0005-governed-data-evidence.md), Decision |
+| DEC-0046 | `ratified` | [ADR-0005](../decisions/ADR-0005-governed-data-evidence.md), Decision |
 | DEC-0047 | `superseded` | [Architecture spine](../../_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md), AD-19 (superseded by DEC-0117) |
-| DEC-0048 | `provisional` | [ADR-0005](../decisions/ADR-0005-governed-data-evidence.md), Decision |
-| DEC-0049 | `open` | [Gap report](../gap-report.md), Open ledger decisions |
+| DEC-0048 | `ratified` | [ADR-0005](../decisions/ADR-0005-governed-data-evidence.md), Decision |
+| DEC-0049 | `ratified` | [Gap report](../gap-report.md); ruled by the operator 2026-08-21 (EXT-2093) — scoped entry-blocking detector pause, L39 preserved |
 | DEC-0050 | `superseded` | [Gap report](../gap-report.md), Redesigned or superseded |
-| DEC-0051 | `provisional` | [ADR-0005](../decisions/ADR-0005-governed-data-evidence.md), Decision |
-| DEC-0052 | `provisional` | [ADR-0005](../decisions/ADR-0005-governed-data-evidence.md), Decision |
-| DEC-0053 | `provisional` | [ADR-0005](../decisions/ADR-0005-governed-data-evidence.md), Decision |
-| DEC-0054 | `provisional` | [ADR-0005](../decisions/ADR-0005-governed-data-evidence.md), Decision |
-| DEC-0055 | `provisional` | [ADR-0006](../decisions/ADR-0006-indicators-and-structure.md), Decision |
+| DEC-0051 | `ratified` | [ADR-0005](../decisions/ADR-0005-governed-data-evidence.md), Decision |
+| DEC-0052 | `ratified` | [ADR-0005](../decisions/ADR-0005-governed-data-evidence.md), Decision |
+| DEC-0053 | `ratified` | [ADR-0005](../decisions/ADR-0005-governed-data-evidence.md), Decision |
+| DEC-0054 | `ratified` | [ADR-0005](../decisions/ADR-0005-governed-data-evidence.md), Decision |
+| DEC-0055 | `ratified` | [ADR-0006](../decisions/ADR-0006-indicators-and-structure.md), Decision |
 | DEC-0056 | `superseded` | [ADR-0006](../decisions/ADR-0006-indicators-and-structure.md), superseded by DEC-0128 |
 | DEC-0057 | `out-of-scope` | [Gap report](../gap-report.md), Out-of-scope topics |
-| DEC-0058 | `provisional` | [ADR-0006](../decisions/ADR-0006-indicators-and-structure.md), Decision |
-| DEC-0059 | `provisional` | [ADR-0007](../decisions/ADR-0007-venue-neutral-integration.md), Decision |
-| DEC-0060 | `provisional` | [ADR-0007](../decisions/ADR-0007-venue-neutral-integration.md), Decision |
-| DEC-0061 | `provisional` | [ADR-0007](../decisions/ADR-0007-venue-neutral-integration.md), Decision |
+| DEC-0058 | `ratified` | [ADR-0006](../decisions/ADR-0006-indicators-and-structure.md), Decision |
+| DEC-0059 | `ratified` | [ADR-0007](../decisions/ADR-0007-venue-neutral-integration.md), Decision |
+| DEC-0060 | `ratified` | [ADR-0007](../decisions/ADR-0007-venue-neutral-integration.md), Decision |
+| DEC-0061 | `ratified` | [ADR-0007](../decisions/ADR-0007-venue-neutral-integration.md), Decision |
 | DEC-0062 | `dead` | [Gap report](../gap-report.md), Dead decisions |
 | DEC-0063 | `dead` | [QMF Venue](../components/qmf-venue.md), Authority boundary |
 | DEC-0064 | `out-of-scope` | [QMF Venue](../components/qmf-venue.md), Authority boundary |
-| DEC-0065 | `provisional` | [ADR-0008](../decisions/ADR-0008-book-and-risk-boundary.md), Decision |
-| DEC-0066 | `provisional` | [ADR-0008](../decisions/ADR-0008-book-and-risk-boundary.md), Decision |
+| DEC-0065 | `ratified` | [ADR-0008](../decisions/ADR-0008-book-and-risk-boundary.md), Decision |
+| DEC-0066 | `ratified` | [ADR-0008](../decisions/ADR-0008-book-and-risk-boundary.md), Decision |
 | DEC-0067 | `superseded` | [Gap report](../gap-report.md), Superseded baseline chains (superseded by DEC-0147, AD-33) |
-| DEC-0068 | `provisional` | [ADR-0008](../decisions/ADR-0008-book-and-risk-boundary.md), Decision |
+| DEC-0068 | `ratified` | [ADR-0008](../decisions/ADR-0008-book-and-risk-boundary.md), Decision |
 | DEC-0069 | `dead` | [ADR-0009](../decisions/ADR-0009-book-level-paper-mode.md), Options considered |
 | DEC-0070 | `superseded` | [Gap report](../gap-report.md), Superseded baseline chains (confirmed and subsumed by DEC-0149, AD-35) |
 | DEC-0071 | `dead` | [ADR-0009](../decisions/ADR-0009-book-level-paper-mode.md), Options considered |
 | DEC-0072 | `superseded` | [Gap report](../gap-report.md), Superseded baseline chains (superseded by DEC-0152, AD-38) |
 | DEC-0073 | `dead` | [Gap report](../gap-report.md), Dead decisions |
-| DEC-0074 | `provisional` | [ADR-0010](../decisions/ADR-0010-risk-vocabulary-clean-start.md), Decision |
+| DEC-0074 | `ratified` | [ADR-0010](../decisions/ADR-0010-risk-vocabulary-clean-start.md), Decision |
 | DEC-0075 | `superseded` | [Gap report](../gap-report.md), Superseded baseline chains (superseded by DEC-0153, AD-39) |
-| DEC-0076 | `provisional` | [ADR-0010](../decisions/ADR-0010-risk-vocabulary-clean-start.md), Decision |
+| DEC-0076 | `ratified` | [ADR-0010](../decisions/ADR-0010-risk-vocabulary-clean-start.md), Decision |
 | DEC-0077 | `dead` | [ADR-0010](../decisions/ADR-0010-risk-vocabulary-clean-start.md), Options considered |
-| DEC-0078 | `provisional` | [ADR-0010](../decisions/ADR-0010-risk-vocabulary-clean-start.md), Decision |
+| DEC-0078 | `ratified` | [ADR-0010](../decisions/ADR-0010-risk-vocabulary-clean-start.md), Decision |
 | DEC-0079 | `dead` | [ADR-0010](../decisions/ADR-0010-risk-vocabulary-clean-start.md), Options considered |
-| DEC-0080 | `provisional` | [ADR-0008](../decisions/ADR-0008-book-and-risk-boundary.md), Decision |
+| DEC-0080 | `ratified` | [ADR-0008](../decisions/ADR-0008-book-and-risk-boundary.md), Decision |
 | DEC-0081 | `out-of-scope` | [Gap report](../gap-report.md), Out-of-scope topics |
 | DEC-0082 | `dead` | [Gap report](../gap-report.md), Dead decisions |
 | DEC-0083 | `out-of-scope` | [ADR-0011](../decisions/ADR-0011-deferred-consumer-products.md), Decision |
@@ -112,13 +112,13 @@ The locator names the primary docs-local document and section. `dead`, `supersed
 | DEC-0089 | `out-of-scope` | [ADR-0011](../decisions/ADR-0011-deferred-consumer-products.md), Decision |
 | DEC-0090 | `out-of-scope` | [ADR-0011](../decisions/ADR-0011-deferred-consumer-products.md), Decision |
 | DEC-0091 | `out-of-scope` | [ADR-0011](../decisions/ADR-0011-deferred-consumer-products.md), Decision |
-| DEC-0092 | `provisional` | [ADR-0010](../decisions/ADR-0010-risk-vocabulary-clean-start.md), Decision |
+| DEC-0092 | `ratified` | [ADR-0010](../decisions/ADR-0010-risk-vocabulary-clean-start.md), Decision |
 | DEC-0093 | `dead` | [ADR-0010](../decisions/ADR-0010-risk-vocabulary-clean-start.md), Options considered |
 | DEC-0094 | `superseded` | [Gap report](../gap-report.md), Superseded baseline chains (superseded by DEC-0155, AD-41) |
 | DEC-0095 | `superseded` | [Gap report](../gap-report.md), Superseded baseline chains (superseded by DEC-0143, AD-29) |
-| DEC-0096 | `provisional` | [Constitution](../constitution.md), Laws |
-| DEC-0097 | `provisional` | [Constitution](../constitution.md), Laws |
-| DEC-0098 | `provisional` | [Performance budgets](../lenses/performance/budgets.md), Baselines |
+| DEC-0096 | `ratified` | [Constitution](../constitution.md), Laws |
+| DEC-0097 | `ratified` | [Constitution](../constitution.md), Laws |
+| DEC-0098 | `ratified` | [Performance budgets](../lenses/performance/budgets.md), Baselines |
 
 ### Architecture spine decisions — DEC-0099 through DEC-0125
 

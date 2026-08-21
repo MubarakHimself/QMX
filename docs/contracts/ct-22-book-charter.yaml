@@ -1,7 +1,7 @@
 id: CT-22
 name: Book definition (template) contract
-status: provisional
-version: 2  # AD-5 format-version mint (DEC-0181), QML increment 2026-08-21: v1 -> v2 adds QL-8's two admission_bar evidence fields, QL-6's exit_policy catch-all, and QL-4's footprint_requirements shape, and nothing more; pre-mint (format 1) Book definitions stay readable forever at format 1, and a format-1 reader confronting a format-2 artifact refuses `unsupported capability` per the unknown-version invariant. Format version 1 was the first mint (AD-29/AD-30/AD-32); the doc stays provisional pending corpus re-ratification
+status: ratified
+version: 2  # AD-5 format-version mint (DEC-0181), QML increment 2026-08-21: v1 -> v2 adds QL-8's two admission_bar evidence fields, QL-6's exit_policy catch-all, and QL-4's footprint_requirements shape, and nothing more; pre-mint (format 1) Book definitions stay readable forever at format 1, and a format-1 reader confronting a format-2 artifact refuses `unsupported capability` per the unknown-version invariant. Format version 1 was the first mint (AD-29/AD-30/AD-32); corpus signed off by the operator 2026-08-21
 owner: COMP-QMF-RISK
 consumers: []  # consumer-blind by design: qmf-risk defines CT-22 on qmf-core nouns; the composition root wires persistence and nothing imports qmf-risk under default-deny, so no package import edge exists (DEC-0158)
 active_consumers: []

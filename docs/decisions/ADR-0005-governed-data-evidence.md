@@ -2,7 +2,7 @@
 id: ADR-0005
 title: Governed data evidence, holdout, and durability
 type: adr
-status: provisional
+status: ratified
 component: COMP-QMF-DATA
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA-STORE]
 decisions: [DEC-0042, DEC-0044, DEC-0045, DEC-0046, DEC-0048, DEC-0051, DEC-0052, DEC-0053, DEC-0054]
@@ -14,7 +14,7 @@ stale_after: 1y
 
 # ADR-0005: Governed data evidence, holdout, and durability
 
-Date: 2026-08-18. Status: provisional pending operator ratification.
+Date: 2026-08-18. status: ratified — corpus signed off by the operator 2026-08-21 (conditional go-ahead in the PRD session; the independent contradiction sweep passed).
 
 ## Context
 

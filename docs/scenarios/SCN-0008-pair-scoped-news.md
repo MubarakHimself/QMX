@@ -2,7 +2,7 @@
 id: SCN-0008
 title: News Windows Block Entries by Instrument Scope, Live and Paper
 type: scenario
-status: provisional
+status: ratified
 component: COMP-QMF-RISK
 depends_on: [COMP-QMF-CORE, COMP-QMF-DATA]
 decisions: [DEC-0152, DEC-0157, DEC-0156, DEC-0150, DEC-0119]

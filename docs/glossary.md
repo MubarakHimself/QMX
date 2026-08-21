@@ -2,7 +2,7 @@
 id: GLOSSARY-QMF-V1
 title: QMF V1 Glossary
 type: glossary
-status: provisional
+status: ratified
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK]
 decisions: [DEC-0001, DEC-0017, DEC-0019, DEC-0024, DEC-0028, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0048, DEC-0055, DEC-0058, DEC-0059, DEC-0065, DEC-0066, DEC-0074, DEC-0076, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0114, DEC-0115, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0126, DEC-0128, DEC-0129, DEC-0130, DEC-0131, DEC-0132, DEC-0133, DEC-0134, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0147, DEC-0148, DEC-0149, DEC-0150, DEC-0151, DEC-0152, DEC-0153, DEC-0154, DEC-0155, DEC-0157, DEC-0158, DEC-0159, DEC-0160, DEC-0161, DEC-0164, DEC-0165, DEC-0169, DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184, DEC-0185]
 sources: [_docwork/ledger.yaml, _docwork/gaps.yaml, docs/registry/variables.yaml, docs/architecture/dependencies.yaml, docs/contracts/, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ARCHITECTURE-SPINE.md]
@@ -13,7 +13,7 @@ stale_after: 30d
 
 # QMF V1 Glossary
 
-This glossary fixes names for the provisional QMF V1 documentation. A definition containing `GAP(...)` is a boundary marker, not permission to choose the missing design.
+This glossary fixes names for the QMF V1 documentation (corpus signed off by the operator 2026-08-21). A definition containing `GAP(...)` is a boundary marker, not permission to choose the missing design.
 
 ## Canonical terms
 

@@ -2,7 +2,7 @@
 id: COMP-QMF-DATA-INGEST
 title: qmf-data Source-Ingest Seam
 type: component-spec
-status: provisional
+status: ratified
 component: COMP-QMF-DATA-INGEST
 depends_on: [COMP-QMF-CORE, COMP-QMF-DATA, COMP-DUKASCOPY, COMP-CALENDAR-FEED]
 decisions: [DEC-0103, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0117, DEC-0119, DEC-0135, DEC-0137, DEC-0138, DEC-0139, DEC-0038, DEC-0042, DEC-0051, DEC-0052, DEC-0053]

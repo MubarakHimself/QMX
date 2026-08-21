@@ -1,7 +1,7 @@
 id: CT-29
 name: Exit-record contract (one record per virtual-position close)
-status: provisional
-version: 1  # first minted format version; the shape is spine-ratified (AD-41, DEC-0155), the doc stays provisional pending corpus re-ratification
+status: ratified
+version: 1  # first minted format version; the shape is spine-ratified (AD-41, DEC-0155), corpus signed off by the operator 2026-08-21
 owner: COMP-QMF-RISK
 consumers: []  # consumer-blind by design: the exit record is a qmf-core value type wrapped into a registry record by the composition root; nothing imports qmf-risk under default-deny, so no package import edge exists (DEC-0155, DEC-0158)
 active_consumers: []

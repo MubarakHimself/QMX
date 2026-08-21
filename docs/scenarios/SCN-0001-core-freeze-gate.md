@@ -2,7 +2,7 @@
 id: SCN-0001
 title: Core Freeze Choices Block Implementation
 type: scenario
-status: provisional
+status: ratified
 component: COMP-QMF-CORE
 depends_on: []
 decisions: [DEC-0004, DEC-0022, DEC-0026, DEC-0027, DEC-0028, DEC-0029, DEC-0030, DEC-0031, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0127, DEC-0131, DEC-0134]

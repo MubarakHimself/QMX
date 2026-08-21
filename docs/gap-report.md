@@ -2,7 +2,7 @@
 id: DOC-GAP-REPORT
 title: QMF V1 Gap Report
 type: gap-report
-status: provisional
+status: ratified
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMB, COMP-QML]
 decisions: [DEC-0003, DEC-0004, DEC-0011, DEC-0013, DEC-0014, DEC-0015, DEC-0017, DEC-0019, DEC-0020, DEC-0022, DEC-0023, DEC-0032, DEC-0036, DEC-0040, DEC-0041, DEC-0043, DEC-0047, DEC-0049, DEC-0051, DEC-0056, DEC-0057, DEC-0062, DEC-0063, DEC-0064, DEC-0069, DEC-0071, DEC-0073, DEC-0077, DEC-0079, DEC-0081, DEC-0082, DEC-0083, DEC-0084, DEC-0085, DEC-0086, DEC-0087, DEC-0088, DEC-0089, DEC-0090, DEC-0091, DEC-0093, DEC-0099, DEC-0100, DEC-0101, DEC-0102, DEC-0103, DEC-0104, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0111, DEC-0114, DEC-0115, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0124, DEC-0125, DEC-0126, DEC-0127, DEC-0128, DEC-0129, DEC-0130, DEC-0131, DEC-0132, DEC-0133, DEC-0134, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0140, DEC-0141, DEC-0142, DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0147, DEC-0148, DEC-0149, DEC-0150, DEC-0151, DEC-0152, DEC-0153, DEC-0154, DEC-0155, DEC-0156, DEC-0157, DEC-0158, DEC-0159, DEC-0160, DEC-0161, DEC-0162, DEC-0163, DEC-0164, DEC-0165, DEC-0166, DEC-0167, DEC-0168, DEC-0169, DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184]
 sources: [_docwork/gaps.yaml, _docwork/ledger.yaml, _docwork/ratification-packet.md, docs/constitution.md, docs/architecture/dependencies.yaml, docs/components/, docs/contracts/, docs/decisions/, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/reviews/five-hats-sweep.md, _bmad-output/planning-artifacts/architecture/architecture-QMB-2026-08-20/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ARCHITECTURE-SPINE.md, docs/decisions/ADR-0017-qmb-experimentation-library.md, docs/decisions/ADR-0018-qml-bot-authoring-library.md]
@@ -21,7 +21,7 @@ This provisional report preserves the QMF V1 decision surface in a docs-local fo
 
 **Operator flag — resolved:** the Dukascopy data-licensing question was RULED CLOSED by the operator (2026-08-21): the data is used at a personal level only — backtesting his own strategies — so no licensing blocker stands; the per-window license-tag mechanism stays in force unchanged, and the question reopens only if a future posture exceeds personal use (`DEC-0166`, `DEC-0170`).
 
-A recommendation is a discussion prompt, not an answer. It grants neither implementation authority nor live-money authority; a blocking gap remains blocking until an operator ruling is recorded in the ledger and its affected contracts are ratified. An **answered** gap records an operator ruling but does not lift the corpus-wide provisional gate: the documents absorbing these rulings stay `provisional` until the knowledge base is re-ratified. (DEC-0003, DEC-0004, DEC-0041)
+A recommendation is a discussion prompt, not an answer. It grants neither implementation authority nor live-money authority; a blocking gap remains blocking until an operator ruling is recorded in the ledger and its affected contracts are ratified. An **answered** gap records an operator ruling; with the operator's corpus sign-off of 2026-08-21 the absorbing documents now carry `status: ratified`. Ratified documentation is still not implementation or live-money authority. (DEC-0003, DEC-0004, DEC-0041)
 
 ## How to navigate the decision surface
 
@@ -38,7 +38,7 @@ A recommendation is a discussion prompt, not an answer. It grants neither implem
 
 ## Answered by the architecture sittings — 45
 
-The operator ratified 44 of these gaps across the 2026-08-19 and 2026-08-20 sittings (foundation, indicators/structure, venue, and risk), and the 45th — `GAP-0047` — was ratified by operator delegation at the 2026-08-21 QML increment (`DEC-0171`–`DEC-0184`, ADR-0018). Each answer is the ratified spine rule in one line; the full text is in the cited ledger entry and its ADR. These answers are operator rulings, not implementation authority — the absorbing documents remain `provisional`.
+The operator ratified 44 of these gaps across the 2026-08-19 and 2026-08-20 sittings (foundation, indicators/structure, venue, and risk), and the 45th — `GAP-0047` — was ratified by operator delegation at the 2026-08-21 QML increment (`DEC-0171`–`DEC-0184`, ADR-0018). Each answer is the ratified spine rule in one line; the full text is in the cited ledger entry and its ADR. These answers are operator rulings, not implementation authority — the absorbing documents carry `status: ratified` since the operator's corpus sign-off of 2026-08-21.
 
 ### Foundation, runtime, contracts, and quality — 13
 
@@ -122,7 +122,7 @@ Ratified in the 2026-08-20 risk sitting (ledger `DEC-0143`–`DEC-0158`), distil
 
 ### Bot authoring (QML) — 1
 
-Ratified by operator delegation at the 2026-08-21 QML increment (spine QL-1 through QL-10, ledger `DEC-0171`–`DEC-0184`, ADR-0018), which rebuilt QML as the bot-authoring application-layer library consuming QMF contracts — CT-33/CT-34 minted as qmf-registry kinds, CT-06 updated, CT-22 and CT-23 taking AD-5 format-version-2 mints. The design is ratified by delegation; implementation authorization arrives only through the factory pipeline, and `COMP-QML` stays `provisional`.
+Ratified by operator delegation at the 2026-08-21 QML increment (spine QL-1 through QL-10, ledger `DEC-0171`–`DEC-0184`, ADR-0018), which rebuilt QML as the bot-authoring application-layer library consuming QMF contracts — CT-33/CT-34 minted as qmf-registry kinds, CT-06 updated, CT-22 and CT-23 taking AD-5 format-version-2 mints. The design is ratified by delegation; implementation authorization arrives only through the factory pipeline, and `COMP-QML` is ratified design surface (corpus sign-off 2026-08-21).
 
 | Gap | Ratified answer | Ledger |
 |---|---|---|
@@ -240,4 +240,4 @@ Earlier baselines survive only through recorded successors. The foundation archi
 
 ## Ratification handoff
 
-To close an open gap, the operator must state the ruling, the ledger must record its standing and provenance, affected contracts and component specs must be updated, and validation must pass. Editing a recommendation into imperative prose is not ratification. The 45 answered gaps have crossed the first step — an operator ruling exists in the ledger (the 45th, `GAP-0047`, by operator delegation at the 2026-08-21 QML increment) — but the corpus stays `provisional` until the whole knowledge base is re-ratified; no answered gap authorizes implementation or live money on its own. This report is the docs-local navigation surface, not a signature record.
+To close an open gap, the operator must state the ruling, the ledger must record its standing and provenance, affected contracts and component specs must be updated, and validation must pass. Editing a recommendation into imperative prose is not ratification. The 45 answered gaps have crossed the first step — an operator ruling exists in the ledger (the 45th, `GAP-0047`, by operator delegation at the 2026-08-21 QML increment) — and the whole knowledge base was re-ratified by the operator's corpus sign-off of 2026-08-21; no answered gap authorizes implementation or live money on its own. This report is the docs-local navigation surface, not a signature record.

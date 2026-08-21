@@ -2,7 +2,7 @@
 id: COMP-QMF-INDICATORS
 title: qmf-indicators
 type: component-spec
-status: provisional
+status: ratified
 component: COMP-QMF-INDICATORS
 depends_on: [COMP-QMF-CORE]
 decisions: [DEC-0009, DEC-0013, DEC-0029, DEC-0030, DEC-0055, DEC-0096, DEC-0100, DEC-0101, DEC-0103, DEC-0109, DEC-0111, DEC-0112, DEC-0113, DEC-0120, DEC-0126, DEC-0127, DEC-0128, DEC-0130, DEC-0132, DEC-0133, DEC-0134]

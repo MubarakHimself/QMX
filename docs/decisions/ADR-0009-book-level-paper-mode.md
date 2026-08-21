@@ -2,7 +2,7 @@
 id: ADR-0009
 title: Book-level paper mode as a standing evidence state
 type: adr
-status: provisional
+status: ratified
 component: COMP-QMF-RISK
 depends_on: [COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-VENUE]
 decisions: [DEC-0149, DEC-0143]
@@ -14,7 +14,7 @@ stale_after: 1y
 
 # ADR-0009: Book-level paper mode as a standing evidence state
 
-Date: 2026-08-20 (rewritten in place; supersedes the 2026-08-18 recap-only placeholder). Status: provisional pending corpus-wide operator ratification; the underlying ruling AD-35 is operator-ratified ("You ratify" delegation with riders, 2026-08-20).
+Date: 2026-08-20 (rewritten in place; supersedes the 2026-08-18 recap-only placeholder). status: ratified — corpus signed off by the operator 2026-08-21 (conditional go-ahead in the PRD session; the independent contradiction sweep passed); the underlying ruling AD-35 is operator-ratified ("You ratify" delegation with riders, 2026-08-20).
 
 ## Context
 

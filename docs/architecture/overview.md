@@ -2,7 +2,7 @@
 id: ARCH-OVERVIEW
 title: QMF V1 Architecture Overview
 type: architecture
-status: provisional
+status: ratified
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP, COMP-QMF-CALENDAR-FOREX, COMP-QMB, COMP-QML, COMP-CTRADER, COMP-DUKASCOPY, COMP-CALENDAR-FEED, COMP-OBJECT-STORAGE]
 decisions: [DEC-0008, DEC-0009, DEC-0019, DEC-0022, DEC-0024, DEC-0031, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0055, DEC-0058, DEC-0059, DEC-0061, DEC-0065, DEC-0099, DEC-0100, DEC-0104, DEC-0106, DEC-0110, DEC-0113, DEC-0114, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0126, DEC-0127, DEC-0128, DEC-0131, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0143, DEC-0144, DEC-0145, DEC-0147, DEC-0149, DEC-0150, DEC-0151, DEC-0158, DEC-0159, DEC-0161, DEC-0163, DEC-0164, DEC-0165, DEC-0169, DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0180, DEC-0181, DEC-0182, DEC-0184]
 sources: [DEC-0008, DEC-0009, DEC-0019, DEC-0022, DEC-0024, DEC-0031, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0055, DEC-0058, DEC-0059, DEC-0061, DEC-0065, DEC-0099, DEC-0100, DEC-0104, DEC-0106, DEC-0110, DEC-0113, DEC-0114, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0126, DEC-0127, DEC-0128, DEC-0131, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0143, DEC-0144, DEC-0145, DEC-0147, DEC-0149, DEC-0150, DEC-0151, DEC-0158, DEC-0159, DEC-0161, DEC-0163, DEC-0164, DEC-0165, DEC-0169, DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0180, DEC-0181, DEC-0182, DEC-0184, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMB-2026-08-20/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-venue-facts.md, docs/architecture/dependencies.yaml, docs/contracts/]
@@ -80,7 +80,7 @@ flowchart LR
 
     operator -->|"operates"| qmx
     operator -->|"runs experiments via the qmb CLI"| qmb
-    qmx -->|"composes provisional QMF libraries; no runtime or live authority"| qmf
+    qmx -->|"composes QMF libraries; no runtime or live authority"| qmf
     qmb -->|"composes QMF backend libraries; world=replay, no live authority"| qmf
     qmf -.->|"CT-19 command, CT-21 session (ratified design; no adapter)"| ctrader
     ctrader -.->|"CT-18 capability, CT-20 event; market data via CT-15"| qmf

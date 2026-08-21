@@ -2,7 +2,7 @@
 id: SCN-0009
 title: Synthetic Stress Evidence Cannot Prove Trading Edge
 type: scenario
-status: provisional
+status: ratified
 component: COMP-QMF-DATA
 depends_on: [COMP-QMF-CORE]
 decisions: [DEC-0007, DEC-0042, DEC-0054, DEC-0096, DEC-0099, DEC-0101, DEC-0111]

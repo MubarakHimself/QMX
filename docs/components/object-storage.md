@@ -2,7 +2,7 @@
 id: COMP-OBJECT-STORAGE
 title: Off-Machine Object Storage
 type: component-spec
-status: provisional
+status: ratified
 component: COMP-OBJECT-STORAGE
 depends_on: []
 decisions: [DEC-0013, DEC-0045, DEC-0103, DEC-0106, DEC-0109, DEC-0117, DEC-0118, DEC-0119]

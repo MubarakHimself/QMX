@@ -1,7 +1,7 @@
 id: CT-27
 name: BMS definition (template) contract
-status: provisional
-version: 1  # first minted format version; the BMS definition template is spine-ratified (AD-29/AD-30/AD-32), the doc stays provisional pending corpus re-ratification
+status: ratified
+version: 1  # first minted format version; the BMS definition template is spine-ratified (AD-29/AD-30/AD-32), corpus signed off by the operator 2026-08-21
 owner: COMP-QMF-RISK
 consumers: []  # consumer-blind by design: qmf-risk defines CT-27 on qmf-core nouns; the composition root wires persistence and nothing imports qmf-risk under default-deny, so no package import edge exists (DEC-0158)
 active_consumers: []

@@ -2,7 +2,7 @@
 id: SECURITY-MODEL-QMF-V1
 title: QMF V1 Security Model
 type: lens
-status: provisional
+status: ratified
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP, COMP-CTRADER, COMP-DUKASCOPY, COMP-CALENDAR-FEED, COMP-OBJECT-STORAGE]
 decisions: [DEC-0001, DEC-0009, DEC-0029, DEC-0030, DEC-0035, DEC-0038, DEC-0041, DEC-0042, DEC-0045, DEC-0048, DEC-0059, DEC-0065, DEC-0100, DEC-0104, DEC-0108, DEC-0109, DEC-0110, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0142, DEC-0143, DEC-0146, DEC-0148, DEC-0150, DEC-0151, DEC-0158]
 sources: [DEC-0001, DEC-0009, DEC-0029, DEC-0030, DEC-0035, DEC-0038, DEC-0041, DEC-0042, DEC-0045, DEC-0048, DEC-0059, DEC-0065, DEC-0104, DEC-0109, DEC-0110, DEC-0119, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _docwork/gaps.yaml, docs/architecture/dependencies.yaml, docs/contracts/ct-04-typed-refusal.yaml, docs/contracts/ct-05-version-fingerprint.yaml, docs/contracts/ct-06-registration.yaml, docs/contracts/ct-08-gate-evidence.yaml, docs/contracts/ct-10-source-observation.yaml, docs/contracts/ct-13-journal.yaml, docs/contracts/ct-14-backup-restore.yaml, docs/contracts/ct-15-external-source-adapter.yaml, docs/contracts/ct-19-venue-command.yaml, docs/contracts/ct-20-venue-event.yaml, docs/contracts/ct-21-venue-secret-session.yaml, docs/contracts/ct-22-book-charter.yaml, docs/contracts/ct-23-risk-evaluation.yaml, docs/contracts/ct-24-book-mode.yaml, docs/contracts/ct-25-risk-journal.yaml]

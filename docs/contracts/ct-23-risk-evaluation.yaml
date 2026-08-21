@@ -1,7 +1,7 @@
 id: CT-23
 name: Risk-evaluation door contract (bot-to-Book intent port)
-status: provisional
-version: 2  # AD-5 format-version mint (DEC-0182), QML increment 2026-08-21: v1 -> v2 adds one OPTIONAL entry-intent field (entry.advisory_stop_proposal, QL-7) and documents the declared full-loss price as Book-resolved at the door, and nothing more; the new field is optional, so format-2 readers accept format-1 intents unchanged and pre-mint (format 1) intents stay readable forever. Format version 1 was the first mint (AD-33, DEC-0147); GAP-0005 (version gap) answered by minting version 1; the doc stays provisional pending corpus re-ratification
+status: ratified
+version: 2  # AD-5 format-version mint (DEC-0182), QML increment 2026-08-21: v1 -> v2 adds one OPTIONAL entry-intent field (entry.advisory_stop_proposal, QL-7) and documents the declared full-loss price as Book-resolved at the door, and nothing more; the new field is optional, so format-2 readers accept format-1 intents unchanged and pre-mint (format 1) intents stay readable forever. Format version 1 was the first mint (AD-33, DEC-0147); GAP-0005 (version gap) answered by minting version 1; corpus signed off by the operator 2026-08-21
 owner: COMP-QMF-RISK
 consumers: []  # consumer-blind by design: the caller is the node/bot layer, which lives outside QMF and imports nothing under default-deny; the composition root mediates, so no package import edge exists (DEC-0147, DEC-0142)
 active_consumers: []

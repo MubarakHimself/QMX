@@ -2,7 +2,7 @@
 id: ADR-0012
 title: Runtime matrix, workspace packaging, and quality gates
 type: adr
-status: provisional
+status: ratified
 component: COMP-QMF-CORE
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK]
 decisions: [DEC-0099, DEC-0100, DEC-0101, DEC-0102, DEC-0103, DEC-0104]
@@ -14,7 +14,7 @@ stale_after: 1y
 
 # ADR-0012: Runtime matrix, workspace packaging, and quality gates
 
-Date: 2026-08-20. Status: provisional — AD-1..AD-6 are operator-ratified in the foundation architecture sitting (2026-08-19/20); this document stays provisional until the knowledge base is re-ratified.
+Date: 2026-08-20. status: ratified — AD-1..AD-6 are operator-ratified in the foundation architecture sitting (2026-08-19/20); this document stays provisional until the knowledge base is re-ratified.
 
 ## Context
 

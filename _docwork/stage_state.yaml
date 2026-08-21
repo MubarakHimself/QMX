@@ -1,5 +1,5 @@
 current_stage: 8
-provisional: true
+provisional: false
 completed:
 - stage: 1
   date: '2026-08-18'
@@ -26,10 +26,10 @@ harvest_progress:
   SRC-01: SRC-01-C0031
   SRC-02: SRC-02-C0039
 ratification:
-  status: provisional
-  by: operator-pending
-  date: '2026-08-18'
-  notes: Provisional corpus and feature slicing are complete; the packet awaits operator signature.
+  status: ratified
+  by: operator
+  date: '2026-08-21'
+  notes: "Operator sign-off 2026-08-21 (EXT-2093) — conditional go-ahead given in the PRD session, contingent on the independent contradiction sweep passing; sweep wf_93306df4-1f5 (14 agents) passed after two desk fixes (CT-28 world/replay amendment citing DEC-0160; DEC-0056/DEC-0124 supersession corrections). Scope: 100 docs status flips + 52 ledger ratifications; DEC-0049 ruled at sign-off (scoped entry-blocking detector pause, L39 preserved, UI-editable posture per L38); ENH batch of 71 deferred post-V1. lint_docs --strict fully clean for the first time."
 pause:
   status: resumed
   at: '2026-08-18T15:05:11+03:00'
@@ -37,14 +37,11 @@ pause:
   resume_from: _docwork/RESUME.md
   resumed_at: '2026-08-18T15:26:00+03:00'
 final_gate:
-  status: operator-ratification-required
-  checked_at: '2026-08-18T17:57:49+03:00'
+  status: ratified
+  checked_at: '2026-08-21'
   non_strict_validation: pass
   independent_reviews: pass
-  strict_lint: expected-blocked
-  strict_reasons:
-  - 54 provisional Markdown documents
-  - 45 unique blocking gaps
+  strict_lint: pass
 change_mode:
 - date: '2026-08-20'
   change: "Absorb the ratified foundation architecture sitting (spine AD-1..AD-21, 2026-08-19/20) into docs/"
@@ -180,3 +177,18 @@ change_mode:
     lint_docs: clean
     lint_docs_strict: expected-blocked (provisional corpus awaiting operator ratification)
   remaining: "Operator has STARTED the PRD session (2026-08-21). After PRD: epics/stories, factory lanes. Deferred gaps unchanged: GAP-0016/0017 gate, GAP-0048 content, GAP-0049"
+- date: '2026-08-21'
+  change: "Corpus sign-off — flip provisional -> ratified (operator go-ahead in the PRD session; independent contradiction sweep wf_93306df4-1f5 passed)"
+  sources: [EXT-2093]
+  ledger: "52 decisions flipped provisional->ratified; DEC-0049 ruled ratified (scoped entry-blocking detector pause, L39 preserved, inform-vs-pause posture UI-editable per L38); DEC-0056/DEC-0124 corrected to superseded with back-pointers (desk fixes ridden by the sweep)"
+  contracts: "CT-28 world lines amended to admit the QMB world=replay binding, DEC-0160 added to its decisions list (sweep desk fix)"
+  docs: "100 artifacts flipped to status: ratified; AGENTS.md, index.md, gap-report.md, glossary.md, overview.md, traceability rows, 18 contract version comments, and 13 ADR status lines reworded to record the sign-off; changelog sign-off entry added; ratification-packet header note prepended; enhancements.yaml batch (71) deferred post-V1 by operator ruling"
+  status: complete
+  gates:
+    validate_ledger: pass
+    validate_registry: pass
+    validate_inventory: pass (house-accepted warnings; DEC-0049 joins the uncovered-ratified class)
+    check_citations: pass (house-accepted dead-DEC class)
+    lint_docs: clean
+    lint_docs_strict: clean — first fully green strict run
+  remaining: "PRD finalized this session; next: bmad-create-epics-and-stories, then the factory lanes. Deferred gaps unchanged: GAP-0016/0017 gate, GAP-0048 content, GAP-0049"

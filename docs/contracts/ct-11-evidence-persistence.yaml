@@ -1,6 +1,6 @@
 id: CT-11
 name: Evidence-persistence contract
-status: provisional
+status: ratified
 version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
 owner: COMP-QMF-DATA
 consumers: [COMP-QMF-DATA-STORE, COMP-QMF-REGISTRY]

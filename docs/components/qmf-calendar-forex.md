@@ -2,7 +2,7 @@
 id: COMP-QMF-CALENDAR-FOREX
 title: qmf-calendar-forex
 type: component-spec
-status: provisional
+status: ratified
 component: COMP-QMF-CALENDAR-FOREX
 depends_on: [COMP-QMF-CORE]
 decisions: [DEC-0100, DEC-0101, DEC-0103, DEC-0104, DEC-0106, DEC-0108, DEC-0109, DEC-0111, DEC-0112, DEC-0135, DEC-0141]

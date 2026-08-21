@@ -2,7 +2,7 @@
 id: SCN-0010
 title: Same-Tick Risk Actions Arbitrate by Rank on One Command Stream
 type: scenario
-status: provisional
+status: ratified
 component: COMP-QMF-RISK
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA]
 decisions: [DEC-0150, DEC-0151, DEC-0147, DEC-0143, DEC-0158]

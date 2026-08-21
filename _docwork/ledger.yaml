@@ -2,7 +2,7 @@ ledger:
   - id: DEC-0001
     title: "Current operator rulings are authoritative"
     statement: "Current direct operator corrections and rulings govern QMF V1 when sources disagree."
-    status: provisional
+    status: ratified
     rationale: "The transcripts explicitly place current operator rulings above inherited plans, summaries, and historical material."
     sources: [EXT-0041, EXT-1143]
     component: COMP-QMF-CORE
@@ -11,7 +11,7 @@ ledger:
   - id: DEC-0002
     title: "Historical source hierarchy"
     statement: "The GitBook supplies Book and BMS governance baselines, while recovery and older QMX material supplies evidence only for semantics that have not been changed by later rulings."
-    status: provisional
+    status: ratified
     rationale: "The baseline is useful but incomplete; it does not override later corrections or recreate the old module graph."
     sources: [EXT-0042, EXT-0043, EXT-1144, EXT-1145, EXT-1147]
     component: COMP-QMF-CORE
@@ -20,7 +20,7 @@ ledger:
   - id: DEC-0003
     title: "Research never auto-adopts"
     statement: "Research and study deliverables are evidence for a later ruling; they do not become QMF contracts merely because a study was completed."
-    status: provisional
+    status: ratified
     rationale: "Both sessions distinguish study delivery from operator adoption."
     sources: [EXT-0040, EXT-0203, EXT-1046]
     component: COMP-QMF-CORE
@@ -29,7 +29,7 @@ ledger:
   - id: DEC-0004
     title: "Documentation precedes implementation"
     statement: "QMF is documented and reviewed before trading-node implementation or code generation, and deep design proceeds one focused topic at a time."
-    status: provisional
+    status: ratified
     rationale: "The operator requested a documentation handoff first and repeatedly rejected premature implementation."
     sources: [EXT-0078, EXT-0107, EXT-1112]
     component: COMP-QMF-CORE
@@ -38,7 +38,7 @@ ledger:
   - id: DEC-0005
     title: "Project initialization stays with operator tooling"
     statement: "Documentation agents must not initialize or scaffold QMX; the operator's project skills own that step."
-    status: provisional
+    status: ratified
     rationale: "The source explicitly reserves initialization and scaffolding for the user's tooling."
     sources: [EXT-0075, EXT-1142]
     component: COMP-QMF-CORE
@@ -47,7 +47,7 @@ ledger:
   - id: DEC-0006
     title: "Human and agent readability"
     statement: "QMF code and documentation must be legible to both human developers and coding agents."
-    status: provisional
+    status: ratified
     rationale: "The factory is intended to support both forms of maintainer."
     sources: [EXT-0076, EXT-1133]
     component: COMP-QMF-CORE
@@ -56,7 +56,7 @@ ledger:
   - id: DEC-0007
     title: "No shipped mock trading estate"
     statement: "QMF libraries ship without mock market data, fake bots, or default strategies; tests may use controlled fixtures but the product does not pretend those are live artifacts."
-    status: provisional
+    status: ratified
     rationale: "The operator repeatedly rejected shipping fake data and bots as platform content."
     sources: [EXT-0090, EXT-0111, EXT-1104]
     component: COMP-QMF-CORE
@@ -65,7 +65,7 @@ ledger:
   - id: DEC-0008
     title: "QMF is a toolbox"
     statement: "QMF is a set of reusable libraries and small modules from which QMX applications are built; QMF is not itself an application."
-    status: provisional
+    status: ratified
     rationale: "The operator corrected application-like framing and positioned QMF as foundation tooling."
     sources: [EXT-0013, EXT-0108]
     component: COMP-QMF-CORE
@@ -74,7 +74,7 @@ ledger:
   - id: DEC-0009
     title: "Application runtime stays outside the foundation"
     statement: "Application loops, orchestration flows, scheduled lifecycles, and product UI do not belong in the QMF foundation unless a later component contract explicitly admits them."
-    status: provisional
+    status: ratified
     rationale: "The source separates reusable contracts from the applications that consume them."
     sources: [EXT-0108, EXT-0080]
     component: COMP-QMF-CORE
@@ -93,7 +93,7 @@ ledger:
   - id: DEC-0011
     title: "Open Python toolbox"
     statement: "QMF must not box in developers or agents: ordinary Python and suitable external libraries remain usable, while uniformity is enforced at live-money and agent-harness boundaries."
-    status: provisional
+    status: ratified
     rationale: "The later correction preserves experimentation and extensibility while concentrating strictness where capital is exposed."
     sources: [EXT-0025, EXT-0026, EXT-0030, EXT-0045, EXT-0166]
     component: COMP-QMF-CORE
@@ -113,7 +113,7 @@ ledger:
   - id: DEC-0013
     title: "Build-own boundary"
     statement: "QMX-owned domain contracts and strategy semantics are implemented locally; suitable dependencies may be wrapped or used without transplanting a foreign platform contract, and separately installed compatible libraries remain permissible."
-    status: provisional
+    status: ratified
     rationale: "The operator distinguished dependency reuse from copying another framework's architecture or strategy model."
     sources: [EXT-0052, EXT-0062, EXT-0109, EXT-1059]
     component: COMP-QMF-CORE
@@ -153,7 +153,7 @@ ledger:
   - id: DEC-0017
     title: "QMF umbrella and QML Bot domain"
     statement: "QMF is the framework umbrella; QML names the future Bot-oriented library rather than the whole foundation."
-    status: provisional
+    status: ratified
     rationale: "This naming correction separates reusable framework primitives from Bot-specific machinery."
     sources: [EXT-0083, EXT-1026]
     component: COMP-QMF-CORE
@@ -173,7 +173,7 @@ ledger:
   - id: DEC-0019
     title: "QMF V1 Blueprint"
     statement: "The current documentation target is the QMF V1 Blueprint; qmf-core is only its first small foundational component."
-    status: provisional
+    status: ratified
     rationale: "The operator explicitly corrected the whole-agreement label and scope."
     sources: [EXT-0235, EXT-0237]
     component: COMP-QMF-CORE
@@ -203,7 +203,7 @@ ledger:
   - id: DEC-0022
     title: "Definitions-only qmf-core"
     statement: "qmf-core is a framework-neutral definitions library with exact primitives, domain nouns, typed refusals, and fingerprints; it contains no broker, event loop, backtest, download, or node runtime."
-    status: provisional
+    status: ratified
     rationale: "The accepted first brick is intentionally small and exposes stable language to every later consumer."
     sources: [EXT-0095, EXT-0112, EXT-0118, EXT-1131]
     component: COMP-QMF-CORE
@@ -223,7 +223,7 @@ ledger:
   - id: DEC-0024
     title: "Final QMF V1 component roster"
     statement: "QMF V1 consists of five libraries—qmf-core, qmf-registry, qmf-data, qmf-indicators, and qmf-structure—and two small modules—venue and risk."
-    status: provisional
+    status: ratified
     rationale: "This is the final simplified roster stated after the detailed studies and corrections."
     sources: [EXT-0244, EXT-0245, EXT-0246]
     component: COMP-QMF-CORE
@@ -232,7 +232,7 @@ ledger:
   - id: DEC-0025
     title: "qmf-core is the first brick"
     statement: "qmf-core is the first component to specify and build, but its six detailed freeze choices remain pending."
-    status: provisional
+    status: ratified
     rationale: "Lock 1 was accepted as the first brick without silently ratifying the proposed choices inside it."
     sources: [EXT-0177]
     component: COMP-QMF-CORE
@@ -241,7 +241,7 @@ ledger:
   - id: DEC-0026
     title: "Exact money primitives"
     statement: "qmf-core represents money and quantity exactly and does not use binary floating-point values for monetary contracts."
-    status: provisional
+    status: ratified
     rationale: "Exact money is part of the accepted definitions boundary; the precision and rounding policy remains a gap."
     sources: [EXT-0065, EXT-1131]
     component: COMP-QMF-CORE
@@ -250,7 +250,7 @@ ledger:
   - id: DEC-0027
     title: "Exact time and trading dates"
     statement: "qmf-core distinguishes exact instants, trading days, and the two date concepts required by trading semantics."
-    status: provisional
+    status: ratified
     rationale: "The sources require exact time vocabulary while leaving encoding and calendar details to ratification."
     sources: [EXT-0065, EXT-1131]
     component: COMP-QMF-CORE
@@ -259,7 +259,7 @@ ledger:
   - id: DEC-0028
     title: "Core market nouns"
     statement: "qmf-core defines Instrument, Bar, Tick, Order, Fill, Position, and Account as asset-neutral domain nouns that can later support order flow, DOM, tape, and market structure."
-    status: provisional
+    status: ratified
     rationale: "The vocabulary must support later Forex, equities, and crypto consumers without forcing a core rebuild."
     sources: [EXT-0126, EXT-1131, EXT-1132]
     component: COMP-QMF-CORE
@@ -268,7 +268,7 @@ ledger:
   - id: DEC-0029
     title: "Typed refusals and deterministic fingerprints"
     statement: "qmf-core exposes typed refusal outcomes and canonical deterministic fingerprint primitives rather than ad-hoc exceptions or unstable identifiers."
-    status: provisional
+    status: ratified
     rationale: "Downstream registration, evidence, and live gates require failures and identities that agents can reason about reproducibly."
     sources: [EXT-0065, EXT-0113, EXT-1131]
     component: COMP-QMF-CORE
@@ -277,7 +277,7 @@ ledger:
   - id: DEC-0030
     title: "Versioning from birth"
     statement: "Public QMF contracts are versioned from their first release, and incompatible semantic changes mint new versions instead of mutating old meaning."
-    status: provisional
+    status: ratified
     rationale: "The foundation is intended to remain stable while later Books, brokers, and asset classes evolve."
     sources: [EXT-0114, EXT-1134]
     component: COMP-QMF-CORE
@@ -286,7 +286,7 @@ ledger:
   - id: DEC-0031
     title: "Asset-neutral core"
     statement: "qmf-core must not assume Forex, cTrader, scalping, or a specific deployment environment; Forex is only the first seeded consumer."
-    status: provisional
+    status: ratified
     rationale: "The operator wants equities and crypto to fit later without rebuilding the foundational language."
     sources: [EXT-0118, EXT-0192, EXT-0204]
     component: COMP-QMF-CORE
@@ -305,7 +305,7 @@ ledger:
   - id: DEC-0033
     title: "qmf-registry V1 boundary"
     statement: "qmf-registry owns identity, lineage, and registration preconditions, including look-ahead causality checks and attempt-count gates."
-    status: provisional
+    status: ratified
     rationale: "The final roster folds these disciplines into registry, while their exact schemas remain for a dedicated contract pass."
     sources: [EXT-0247, EXT-0248]
     component: COMP-QMF-REGISTRY
@@ -324,7 +324,7 @@ ledger:
   - id: DEC-0035
     title: "Graph-shaped lineage without a graph database"
     statement: "Registry lineage is graph-shaped and append-only, but its V1 persistence does not require a graph database."
-    status: provisional
+    status: ratified
     rationale: "Identity and lineage were accepted in principle while database choice was deliberately kept simple."
     sources: [EXT-0158, EXT-0178, EXT-0200]
     component: COMP-QMF-REGISTRY
@@ -353,7 +353,7 @@ ledger:
   - id: DEC-0038
     title: "Content-addressed evidence with two timestamps"
     statement: "Stored result artifacts are content-addressed and preserve both event time and knowledge or ingestion time."
-    status: provisional
+    status: ratified
     rationale: "Reproducible lineage and look-ahead checks need immutable identity plus the time evidence became knowable."
     sources: [EXT-0016, EXT-0017]
     component: COMP-QMF-REGISTRY
@@ -362,7 +362,7 @@ ledger:
   - id: DEC-0039
     title: "Bot and Book lineage"
     statement: "Bots and Books accumulate lineage across first-class variants and revisions instead of being overwritten in place."
-    status: provisional
+    status: ratified
     rationale: "Career identity and variant lineage are necessary for promotion, audit, and later comparisons."
     sources: [EXT-0131, EXT-1135]
     component: COMP-QMF-REGISTRY
@@ -384,7 +384,7 @@ ledger:
   - id: DEC-0041
     title: "Human-controlled promotion"
     statement: "Only a human may promote a Bot or other registered artifact into the live zone; opaque ordinary-Python implementations may still be promoted after review."
-    status: provisional
+    status: ratified
     rationale: "This preserves an open research surface without allowing automated live-money promotion."
     sources: [EXT-0166, EXT-0167]
     component: COMP-QMF-REGISTRY
@@ -393,7 +393,7 @@ ledger:
   - id: DEC-0042
     title: "qmf-data V1 boundary"
     statement: "qmf-data separates ingestion evidence, processed data, processing mechanisms, research access, journaling, and backup as distinct concerns."
-    status: provisional
+    status: ratified
     rationale: "The component is in the final roster and the separation is directionally agreed, but the detailed six-layer schema is still study-derived."
     sources: [EXT-0152, EXT-0249]
     component: COMP-QMF-DATA
@@ -412,7 +412,7 @@ ledger:
   - id: DEC-0044
     title: "Historical data retention and sealed holdout"
     statement: "QMX retains the full obtainable history for each currency and source and seals the newest approximately twelve months as a final one-time evaluation holdout."
-    status: provisional
+    status: ratified
     rationale: "The later data ruling keeps historical evidence while protecting one untouched recent period from repeated research use."
     sources: [EXT-0219, EXT-0220, EXT-0233]
     component: COMP-QMF-DATA
@@ -421,7 +421,7 @@ ledger:
   - id: DEC-0045
     title: "Full raw evidence and off-machine backup"
     statement: "qmf-data retains complete raw evidence locally and maintains a bucket or equivalent off-machine backup with platform-level backup support."
-    status: provisional
+    status: ratified
     rationale: "The operator rejected relying only on reduced buckets and required durable recovery beyond one machine."
     sources: [EXT-0215, EXT-0233, EXT-1074]
     component: COMP-QMF-DATA
@@ -430,7 +430,7 @@ ledger:
   - id: DEC-0046
     title: "Research splits by default"
     statement: "qmf-data presents research datasets through explicit train, validation, and untouched-test splits by default."
-    status: provisional
+    status: ratified
     rationale: "The source treats split discipline as a guard against agent-driven overfitting."
     sources: [EXT-0122]
     component: COMP-QMF-DATA
@@ -449,7 +449,7 @@ ledger:
   - id: DEC-0048
     title: "Cross-domain journal and observability"
     statement: "The data foundation must support durable journal and observability records for Bot, Book, BMS, MIS, SQS, and kill-switch behavior."
-    status: provisional
+    status: ratified
     rationale: "The listed trading domains need audit evidence, although event shapes, cadence, and retention are still open."
     sources: [EXT-0154, EXT-0155]
     component: COMP-QMF-DATA
@@ -477,7 +477,7 @@ ledger:
   - id: DEC-0051
     title: "Acquisition plumbing and first-install bulk history"
     statement: "QMF V1 provides ingest plumbing and supports a bulk historical load during first installation, while scheduled acquisition lifecycle remains outside the reusable library."
-    status: provisional
+    status: ratified
     rationale: "The later source requires evidence capture now but preserves the toolbox-versus-application boundary."
     sources: [EXT-0079, EXT-0080, EXT-1155]
     component: COMP-QMF-DATA
@@ -487,7 +487,7 @@ ledger:
   - id: DEC-0052
     title: "Standalone economic-calendar recorder"
     statement: "Forward economic-calendar recording is performed by a standalone application that consumes QMF data contracts rather than by a QMF runtime module."
-    status: provisional
+    status: ratified
     rationale: "Calendar history is otherwise lost, but scheduling and operation are application responsibilities."
     sources: [EXT-0018, EXT-0031, EXT-0080]
     component: COMP-QMF-DATA
@@ -496,7 +496,7 @@ ledger:
   - id: DEC-0053
     title: "Tick acquisition sequence"
     statement: "Historical tick backfill uses Dukascopy-class evidence first, and forward broker tick capture waits for the broker API application and connection."
-    status: provisional
+    status: ratified
     rationale: "This sequence captures available history without pretending the unapproved broker feed already exists."
     sources: [EXT-0019, EXT-0081, EXT-0216]
     component: COMP-QMF-DATA
@@ -505,7 +505,7 @@ ledger:
   - id: DEC-0054
     title: "Synthetic data role"
     statement: "Synthetic market data may stress infrastructure and failure handling, but it may not validate trading edge or replace real evidence."
-    status: provisional
+    status: ratified
     rationale: "The operator allows synthetic conditions only as a robustness tool."
     sources: [EXT-0093, EXT-1075]
     component: COMP-QMF-DATA
@@ -514,7 +514,7 @@ ledger:
   - id: DEC-0055
     title: "qmf-indicators wrapper boundary"
     statement: "qmf-indicators wraps TA-Lib-class arithmetic through QMF-owned interfaces instead of reimplementing established indicator formulas."
-    status: provisional
+    status: ratified
     rationale: "The final roster explicitly chooses wrapping for light indicator arithmetic."
     sources: [EXT-0250]
     component: COMP-QMF-INDICATORS
@@ -542,7 +542,7 @@ ledger:
   - id: DEC-0058
     title: "qmf-structure boundary"
     statement: "qmf-structure owns QMX-defined causal levels, zones, and market-structure components rather than generic indicator arithmetic."
-    status: provisional
+    status: ratified
     rationale: "The final roster assigns proprietary causal structure to its own library."
     sources: [EXT-0251]
     component: COMP-QMF-STRUCTURE
@@ -551,7 +551,7 @@ ledger:
   - id: DEC-0059
     title: "Venue module boundary"
     statement: "COMP-QMF-VENUE is a small broker and venue integration module whose first implementation targets the cTrader Open API in Python."
-    status: provisional
+    status: ratified
     rationale: "The final roster treats broker connection as a small module, not as a broad trader library."
     sources: [EXT-0141, EXT-0241, EXT-0252]
     component: COMP-QMF-VENUE
@@ -560,7 +560,7 @@ ledger:
   - id: DEC-0060
     title: "No MQL implementation"
     statement: "The first venue integration uses the cTrader Open API from Python and does not use MQL."
-    status: provisional
+    status: ratified
     rationale: "The operator chose the Python cTrader path explicitly."
     sources: [EXT-0141]
     component: COMP-QMF-VENUE
@@ -569,7 +569,7 @@ ledger:
   - id: DEC-0061
     title: "Multi-venue seam"
     statement: "COMP-QMF-VENUE exposes a venue-neutral seam so later crypto and stock adapters can be added without changing foundational contracts."
-    status: provisional
+    status: ratified
     rationale: "cTrader is the first adapter, not a permanent assumption baked into qmf-core."
     sources: [EXT-0142, EXT-0252]
     component: COMP-QMF-VENUE
@@ -607,7 +607,7 @@ ledger:
   - id: DEC-0065
     title: "Risk module boundary"
     statement: "COMP-QMF-RISK owns the current versioned Book and BMS machinery, exits, correlation ledger, and money rules, with its internals deferred to a dedicated risk and trading-node session."
-    status: provisional
+    status: ratified
     rationale: "The final V1 roster includes risk as a small module but explicitly avoids pretending the detailed Book grammar is finished."
     sources: [EXT-0242, EXT-0253]
     component: COMP-QMF-RISK
@@ -616,7 +616,7 @@ ledger:
   - id: DEC-0066
     title: "Book and BMS are risk semantics"
     statement: "Books and BMS express risk, money management, and position-sizing policy rather than trading-entry logic."
-    status: provisional
+    status: ratified
     rationale: "The operator consistently separates the Bot's confluence from the Book's capital and risk behavior."
     sources: [EXT-0130, EXT-0242]
     component: COMP-QMF-RISK
@@ -639,7 +639,7 @@ ledger:
   - id: DEC-0068
     title: "Surgical risk controls and correlation"
     statement: "COMP-QMF-RISK must support independently specified risk variables, fast invalidation, dynamic stop-loss and take-profit behavior, and a correlation ledger."
-    status: provisional
+    status: ratified
     rationale: "The risk design is intentionally fine-grained rather than one global position-size rule."
     sources: [EXT-0135, EXT-0136, EXT-0137]
     component: COMP-QMF-RISK
@@ -698,7 +698,7 @@ ledger:
   - id: DEC-0074
     title: "Spread Quality Sensor"
     statement: "SQS means Spread Quality Sensor and is a risk-quality input distinct from news controls."
-    status: provisional
+    status: ratified
     rationale: "Both the later correction and QMX2 consolidation use the spread-quality expansion."
     sources: [EXT-0069, EXT-1138, EXT-1146]
     component: COMP-QMF-RISK
@@ -717,7 +717,7 @@ ledger:
   - id: DEC-0076
     title: "R is pre-trade risk"
     statement: "R denotes one unit of pre-trade risk and is not realized profit, account equity, or post-trade return."
-    status: provisional
+    status: ratified
     rationale: "This vocabulary correction is required before formulas can be dimensionally checked."
     sources: [EXT-0070]
     component: COMP-QMF-RISK
@@ -736,7 +736,7 @@ ledger:
   - id: DEC-0078
     title: "Three distinct capital concepts"
     statement: "Current roster state, risk allocation, and any surviving legacy slot concept remain distinct and must not collapse into one field."
-    status: provisional
+    status: ratified
     rationale: "The source warns that merging the three produces semantic and accounting errors."
     sources: [EXT-0072, EXT-1150]
     component: COMP-QMF-RISK
@@ -755,7 +755,7 @@ ledger:
   - id: DEC-0080
     title: "Scalping Book is not universal"
     statement: "The recovered scalping cycle is one reusable Book pattern, not a global Book law for all strategies and holding periods."
-    status: provisional
+    status: ratified
     rationale: "The operator explicitly identified the recovered design as a Scalping Book and expects other Book forms."
     sources: [EXT-0073, EXT-1139, EXT-1140]
     component: COMP-QMF-RISK
@@ -867,7 +867,7 @@ ledger:
   - id: DEC-0092
     title: "Fresh alpha-decay mathematics"
     statement: "Any future alpha-decay and benchmark mathematics is designed afresh from current definitions rather than reconstructed from unrecoverable legacy formulas."
-    status: provisional
+    status: ratified
     rationale: "The operator stopped further excavation after the legacy math proved incomplete and ambiguous."
     sources: [EXT-0264, EXT-0270]
     component: COMP-QMF-RISK
@@ -906,7 +906,7 @@ ledger:
   - id: DEC-0096
     title: "Factory module evidence"
     statement: "Every factory-built QMF component ships with executable tests and reference usage that demonstrates its public contract."
-    status: provisional
+    status: ratified
     rationale: "The factory must hand consumers verifiable contracts rather than prose-only claims."
     sources: [EXT-0089]
     component: COMP-QMF-CORE
@@ -915,7 +915,7 @@ ledger:
   - id: DEC-0097
     title: "Long-lived foundation"
     statement: "QMF is designed for durable evolution with infrequent foundational rebuilds and versioned extension rather than repeated replacement."
-    status: provisional
+    status: ratified
     rationale: "The operator's ambition is a Bloomberg-class personal platform rebuilt at most roughly twice per year."
     sources: [EXT-0110, EXT-1094, EXT-1130]
     component: COMP-QMF-CORE
@@ -924,7 +924,7 @@ ledger:
   - id: DEC-0098
     title: "Real workload design target"
     statement: "QMF contracts and implementations are designed for a real scenario of roughly forty concurrent Bots rather than toy-scale assumptions."
-    status: provisional
+    status: ratified
     rationale: "The operator gave roughly forty Bots as a real workload; this is a design case, not a measured percentile SLO."
     sources: [EXT-0212]
     component: COMP-QMF-CORE

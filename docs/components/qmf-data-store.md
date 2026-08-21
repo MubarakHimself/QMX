@@ -2,7 +2,7 @@
 id: COMP-QMF-DATA-STORE
 title: qmf-data Persistence Seam
 type: component-spec
-status: provisional
+status: ratified
 component: COMP-QMF-DATA-STORE
 depends_on: []
 decisions: [DEC-0103, DEC-0108, DEC-0109, DEC-0110, DEC-0113, DEC-0114, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0030, DEC-0035, DEC-0038, DEC-0042, DEC-0044, DEC-0045, DEC-0046, DEC-0048]
