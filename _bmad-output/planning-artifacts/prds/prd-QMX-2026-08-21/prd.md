@@ -1,6 +1,6 @@
 ---
 title: QMX Platform PRD
-status: draft
+status: final
 created: 2026-08-21
 updated: 2026-08-21
 ---
@@ -14,14 +14,14 @@ deliberately **lean but complete**: every functional requirement is stated at
 capability level and cites the `docs/` artifact (component, contract CT-*,
 ADR-*, SCN-*, constitution law L*) that holds the ratified depth. The PRD never
 restates what a cited artifact already binds; where PRD text and a cited
-artifact ever disagree, the cited artifact wins.
+artifact disagree, the cited artifact wins.
 
 Two tags mark provenance: `[ASSUMPTION]` is an inference awaiting the
 operator's confirmation; `[MINED]` is a carry from the pre-QMF versions —
 corpus-compatible direction that binds nothing until its phase's planning
 ratifies it. PRD vocabulary binds to `docs/glossary.md` verbatim; the terms
-this document leans on hardest: **Book** (chartered gatekeeper owning sizing
-and exits), **BMS** (per-account accounting/constraint layer that never
+this document leans on hardest are **Book** (chartered gatekeeper owning
+sizing and exits), **BMS** (per-account accounting/constraint layer that never
 trades), **charter doors** (a Book's admission checks), **tunnel entry**
 (running a bot through QMB's run loop — open to plain Python, unlike governed
 seats), **benched** (a seat suspended by qualifying-loss count, a read-time
@@ -69,8 +69,8 @@ platform surfaces above them are phased.
 **V1 goal: a stable platform foundation** — QMF's seven packages, the
 off-roster `qmf-calendar-forex` extension, the first adapters (Dukascopy, the
 news-calendar feed, cTrader), plus QMB and QML — buildable by the factory,
-with every contract implemented and every invariant enforced. The terminal, trading node, and agentic system are named
-phases, not V1 deliverables.
+with every contract implemented and every invariant enforced. The terminal,
+trading node, and agentic system are named phases, not V1 deliverables.
 
 ## 2. Platform composition and delivery phases
 
@@ -158,8 +158,8 @@ load-bearing ones rather than re-authoring them:
   live and paper alike; risk-reducing acts always pass (SCN-0008, SCN-0010).
 - **Correct bad source data** — corrections append; nothing overwrites
   (SCN-0002).
-- **Restore from disaster** — recoverability is only ever claimed through
-  verify primitives (SCN-0004).
+- **Restore from disaster** — recoverability is claimed only through verify
+  primitives (SCN-0004).
 
 ## 5. Functional requirements — Phase 1 (V1)
 
@@ -411,7 +411,7 @@ Mined node doctrine — all [MINED], to ratify at node planning:
   is also the future multi-account load-balancer seam.
 - *Fail-closed stand-down is an alive state.* Past a crash-loop threshold the
   process boots into stand-down: sequencers refuse-and-journal, adapter
-  connections quiesce and drain, and the operator powers surface keeps
+  connections quiesce and drain, and the operator-powers surface keeps
   serving — resurrection stays reachable exactly when needed. Paired rule: a
   protection transition counts as enforced only after the account's
   connections have quiesced and drained.
@@ -483,7 +483,7 @@ Mined console spine — all [MINED], to ratify at terminal planning:
   `configurable` but no value-status field — the terminal cannot decide
   editability from data until it does.)
 - *Promotion evidence panel and per-bot dossier.* The promotion click
-  presents conformance/certificate summary, pair/session overlap with the
+  presents a conformance/certificate summary, pair/session overlap with the
   live roster, and footprint similarity to existing bots — recomputed
   against the fresh roster at click time, because the human performs the
   dedup and correlation judgment V1 deliberately declines to automate. Every
@@ -599,8 +599,8 @@ senior DevOps engineer serving a one-man army:
   node phase will demand it (ML training, shadow rollouts, retraining under
   MIS), so the foundation must not fight it.
 - **One-person operability.** When something breaks, finding and fixing it
-  takes little — monitoring and evaluation are built in, failures surface as
-  typed refusals and journal evidence, not archaeology.
+  takes little effort — monitoring and evaluation are built in, failures
+  surface as typed refusals and journal evidence, not archaeology.
 - **External usability proves internal usability.** An agent *outside* QMX
   can use the frameworks and libraries to build and backtest bots — which
   means an agent inside QMX can by default. Same for humans: bots can be
@@ -615,14 +615,14 @@ vibe:
    checkout completes without manual intervention.
 2. *Operability:* against a named injected-failure set, the first diagnostic
    artifact the operator sees is a typed CT-04 refusal or a CT-13 journal
-   event — never a stack trace archaeology session.
+   event — never a stack-trace archaeology session.
 3. *External usability:* a scripted agent, using only the published docs and
    installed packages outside the QMX repo, authors a plain-Python bot and
    produces a CT-32 result artifact through the `qmb` CLI.
 
 *Counter-metrics:* operability achieved by scope-cutting the governance
 invariants (a platform easy to run because it skipped the doors is a
-failure); usability achieved by coupling — if a library only works inside the
+failure); usability achieved by coupling — if a library works only inside the
 QMX repo, the external-agent test fails; and fabrication [MINED] — no code,
 spec, or review agent in the factory lanes may invent mock, synthetic, or
 placeholder data: a missing value, dependency, or architectural answer fails
@@ -636,7 +636,7 @@ factory optimizes to the gate; the operator judges the thesis.
 
 **Supporting (proposed, kept from the draft):**
 
-- **Traceability:** 100% of V1 FRs trace to ratified docs/ IDs; every
+- **Traceability:** 100% of V1 FRs trace to ratified `docs/` IDs; every
   contract CT-01..CT-34 (except deferred CT-08) implemented with passing
   conformance tests. *Counter-metric:* docs-drift — code diverging from a
   cited contract without a docs change is a build-stopping defect.
@@ -654,14 +654,14 @@ factory optimizes to the gate; the operator judges the thesis.
 
 | # | Item | Status / owner |
 |---|---|---|
-| 1 | **Corpus sign-off** — operator gave a conditional go-ahead 2026-08-21; flips to signed-off once the independent contradiction sweep passes. | In progress (this session) |
+| 1 | ~~Corpus sign-off~~ — EXECUTED 2026-08-21: the contradiction sweep passed (after two desk fixes), `_docwork/stage_state.yaml` ratification now reads `ratified`, all 100 docs artifacts carry `status: ratified`, and `lint_docs --strict` is fully clean for the first time. Ratified docs remain documentation authority only — implementation arrives via the factory pipeline. | Closed |
 | 2 | **GAP-0048** backtesting fidelity taxonomy — blocks verdict-bearing backtests and `world=simulated`. | Future sitting |
 | 3 | **GAP-0049** SR*/search-quality threshold. | Future sitting |
 | 4 | **GAP-0016 / GAP-0017** causality registration gate, attempt counter (CT-08 unresolved). | Deferred per DEC-0121 |
 | 5 | ~~DEC-0049~~ — RESOLVED by operator ruling 2026-08-21: on rare (black-swan-class) data-quality/drift events a detector may pause via an entry-blocking control at the narrowest affected scope (instrument, currency cohort, Book, venue/broker, or system — never wider), never touching positions or exits (L39); inform-vs-pause posture is UI-editable per L38 (inform when the operator is reachable, pause when not). | Closed |
 | 6 | ~~CLI/package naming~~ — RESOLVED by the corpus: the `qmb` CLI is the single command-line surface (DEC-0185 Ruling C; `qmx` superseded per DEC-0159). | Closed |
 | 7 | ~~QMA name~~ — CONFIRMED by operator dictation 2026-08-21 ("QMA is mostly the agentic system"). | Closed |
-| 8 | **GitBook vs docs/ QML framing** — GitBook conservative, docs/ carries the absorbed increment; reconcile at the next GitBook update rather than assuming agreement. | Documentation pass |
+| 8 | **GitBook vs `docs/` QML framing** — GitBook conservative, `docs/` carries the absorbed increment; reconcile at the next GitBook update rather than assuming agreement. | Documentation pass |
 | 9 | ~~Phase ordering~~ — RESOLVED: Phase 1 docs-corpus scope, Phase 2 trading node (operator 2026-08-21); only the terminal's Phase-3 slot stays assumed. | Closed (terminal slot open) |
 | 10 | **Docs-tracked coordination questions** — three QML reviewer questions (CT-29 keying shape, CT-23 inbound full-loss posture, CT-34 leg cardinality — the last two answered by DEC-0185 Riders A/B) and the surfaced SQS-formula memlog conflict live in the changelog/stage-state, not here; they ride the docs process. | Docs process |
 | 11 | [MINED] **Alpha-decay signal catalog** — the corpus ratifies the concept and guardrails but no signal list. Input catalog for a future sitting: breaker-door/leash-event fire density, MAE/MFE drift, drawdown decomposition, regime/session-conditioned performance drift, plus measured proximity to a charter-death condition. Guardrails ride along: measured quantities and registry formulas only, never a declared-weight composite score; decay informs the sunset review, never disposes. | Future sitting |
@@ -671,5 +671,5 @@ factory optimizes to the gate; the operator judges the thesis.
 | 15 | [MINED] **Deep-history acquisition evidence** — TrueFX (16 majors, tick since 2009) and HistData (M1 + tick) as evaluated Dukascopy companions; Databento carries no spot FX; venue-only backfill is rate-capped into unviability, so the recent window needs a platform-continuity bridge, not broker backfill. | Input to FR-042 epics |
 
 **Live `[ASSUMPTION]` index:** (1) the terminal's Phase-3 slot (§2); (2) the
-small-team (~3) forward-compatibility hook (§3). Everything else once tagged
-has been resolved by operator ruling and untagged.
+small-team (~3) forward-compatibility hook (§3). Everything else that was
+once tagged has been resolved by operator ruling and untagged.

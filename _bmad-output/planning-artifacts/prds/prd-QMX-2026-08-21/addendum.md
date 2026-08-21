@@ -10,8 +10,8 @@ Depth the operator contributed during discovery that belongs downstream
   style) with the **trading node on a VPS** so trading runs continuously and
   independently of the operator's machine.
 - Agent workers may run **locally or in server sandboxes**; Modal and E2B were
-  named as the class of platform that could host agent sandboxes. This is a
-  direction, not a decision — no evaluation has been run.
+  named as the class of platform that could host them. This is a direction,
+  not a decision — no evaluation has been run.
 
 ## CLI positioning
 
@@ -26,12 +26,12 @@ Depth the operator contributed during discovery that belongs downstream
 
 - The old QMX had reached "entire platform finished" documentation depth. Its
   functional requirements are heavily deprecated — the agentic system most of
-  all ("so many things are going to be scrapped"), and the old backtest engine
-  was replaced wholesale by the QMB direction. Old architecture diagrams
+  all ("so many things are going to be scrapped") — and the old backtest
+  engine was replaced wholesale by the QMB direction. Old architecture diagrams
   describe connections that no longer exist. Operator applied YAGNI explicitly.
 - Everything that survived was already absorbed into `docs/` through the
   architecture sessions and documentation-factory runs, which the operator
-  regards as the thoroughly-reviewed body ("by the time something has reached
+  regards as the thoroughly reviewed body ("by the time something has reached
   docs, it has been thoroughly reviewed").
 
 ## Product framing analogy
