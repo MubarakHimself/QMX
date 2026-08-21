@@ -21,6 +21,16 @@ CT-01 **exact money, price, and quantity values** — `Money`, `Price`,
 money path (a float re-enters only through the named `from_float` boundary), the
 closed `UnitKind` vocabulary, mixed-scale lossless auto-promotion, delta-typed
 price subtraction, metadata-sourced pip/value-factor conversions, and the pinned
-canonical `fp1` identity form where equal value implies equal fingerprint. The
-remaining CT-02/CT-05 surface arrives in later stories. Build, lint, type-check,
-and test through the workspace `poe` tasks — never in isolation.
+canonical `fp1` identity form where equal value implies equal fingerprint; and
+Story 1.5 landed CT-02 **exact time, calendars, and the injected Clock** —
+`Instant` as an `int64` UTC-nanosecond count with checked arithmetic (overflow
+refused, never wrapped), `Duration`/`Interval`, the distinct `CivilDate` and
+`TradingDate` (calendar identity carried in-band, cross-calendar comparison
+refused), causality on instants only (`compare_causal` refuses at equal instants),
+the type-separated wall/monotonic kinds behind the injected `Clock` protocol with
+a pure `DataDrivenClock` for replay, `MonotonicReading` as a boot-scoped diagnostic
+that is never an `Instant`, `WriterId` with strictly-increasing `OrderingKey`s that
+carry no causal meaning, the `verify_tzdb_pin` calendar-extension seam, and
+display-only labelled rendering excluded from identity. The remaining CT-05 surface
+arrives in a later story. Build, lint, type-check, and test through the workspace
+`poe` tasks — never in isolation.
