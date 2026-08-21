@@ -160,21 +160,24 @@ fmt-check = "ruff format --check packages extensions tools"
 lint = "ruff check packages extensions tools"
 types = "pyright"
 test = "pytest packages extensions --cov=qmf --cov-branch --cov-report=term-missing --cov-fail-under=80"
-# The workspace tools (tier-1 static scanners) carry their own suite and their
-# own 80% package coverage floor, scoped to the tool module (Story 1.7; AR-20).
-test-tools = "pytest tools/tests --cov=money_path_scan --cov-branch --cov-report=term-missing --cov-fail-under=80"
+# The workspace tools (tier-1 static scanners) carry their own suite and their own
+# 80% package coverage floor, scoped to the tool modules (Story 1.7, Story 1.8; AR-20).
+test-tools = "pytest tools/tests --cov=money_path_scan --cov=ambient_scan --cov-branch --cov-report=term-missing --cov-fail-under=80"
 secret-scan = "python tools/secret_scan.py"
 # Tier-1 static scanner: fails closed on any binary float on the money path
 # (NFR-02 enforcing FR-001; CT-01, DEC-0105).
 money-path-scan = "python tools/money_path_scan.py"
+# Tier-1 static scanner: fails closed on any read of the system clock or other ambient
+# nondeterminism below the composition root (NFR-02 enforcing FR-002; CT-02, AR-16).
+ambient-scan = "python tools/ambient_scan.py"
 build-all = "uv build --all-packages"
 
 [tool.poe.tasks.check]
 # Tier 1 — every factory work unit. Format, lint, strict types, unit tests +
 # coverage floor, the workspace-tool suite, the money-path float scanner (NFR-02
-# enforcing FR-001), and the secret-scan gate (AR-24). Fail-closed: any nonzero
-# step fails the gate.
-sequence = ["fmt-check", "lint", "types", "test", "test-tools", "money-path-scan", "secret-scan"]
+# enforcing FR-001), the ambient-nondeterminism scanner (NFR-02 enforcing FR-002),
+# and the secret-scan gate (AR-24). Fail-closed: any nonzero step fails the gate.
+sequence = ["fmt-check", "lint", "types", "test", "test-tools", "money-path-scan", "ambient-scan", "secret-scan"]
 default_item_type = "ref"
 
 [tool.poe.tasks.check-integration]

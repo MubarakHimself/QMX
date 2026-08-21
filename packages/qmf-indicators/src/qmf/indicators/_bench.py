@@ -10,6 +10,9 @@ real package operations as `qmf.indicators` gains primitives. Stdlib only.
 
 from __future__ import annotations
 
+# ambient-scan: allow — benchmark harness; measures real wall-clock speed and peak
+# memory (AR-22 / NFR-04), so its time.perf_counter() reads are the sanctioned
+# exception to FR-002 (no system-clock reads below the composition root) for this file.
 import time
 import tracemalloc
 from dataclasses import dataclass
