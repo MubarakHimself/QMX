@@ -16,6 +16,7 @@ build/
 .ruff_cache/
 .mypy_cache/
 .coverage
+coverage.json
 
 # data downloads never belong in git (root-anchored so it never swallows the
 # qmf-data package source at packages/qmf-data/src/qmf/data/)

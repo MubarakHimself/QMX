@@ -159,10 +159,15 @@ fmt = "ruff format packages extensions tools"
 fmt-check = "ruff format --check packages extensions tools"
 lint = "ruff check packages extensions tools"
 types = "pyright"
-test = "pytest packages extensions --cov=qmf --cov-branch --cov-report=term-missing --cov-fail-under=80"
-# The workspace tools (tier-1 static scanners) carry their own suite and their own
-# 80% package coverage floor, scoped to the tool modules (Story 1.7, Story 1.8; AR-20).
-test-tools = "pytest tools/tests --cov=money_path_scan --cov=ambient_scan --cov-branch --cov-report=term-missing --cov-fail-under=80"
+test = "pytest packages extensions --cov=qmf --cov-branch --cov-report=term-missing --cov-report=json:coverage.json --cov-fail-under=80"
+# Mechanical per-package + contract-module enforcement on top of the aggregate floor
+# above: reads the coverage.json `test` writes and fails the gate if any package drops
+# below 80% or exact.py/chrono.py drop below 100% branch (AR-20; M1).
+cov-report = "python tools/coverage_report.py"
+# The workspace tools (tier-1 static scanners + gate helpers) carry their own suite and
+# their own 80% package coverage floor, scoped to the tool modules (Story 1.7, 1.8;
+# M1/M7/M9; AR-20).
+test-tools = "pytest tools/tests --cov=money_path_scan --cov=ambient_scan --cov=secret_scan --cov=coverage_report --cov=workspace_meta --cov-branch --cov-report=term-missing --cov-fail-under=80"
 secret-scan = "python tools/secret_scan.py"
 # Tier-1 static scanner: fails closed on any binary float on the money path
 # (NFR-02 enforcing FR-001; CT-01, DEC-0105).
@@ -171,20 +176,25 @@ money-path-scan = "python tools/money_path_scan.py"
 # nondeterminism below the composition root (NFR-02 enforcing FR-002; CT-02, AR-16).
 ambient-scan = "python tools/ambient_scan.py"
 build-all = "uv build --all-packages"
+# Tier-2 isolated-install smoke: builds each package wheel, installs it alone with only
+# its declared deps into a throwaway env, and imports its qmf.* module — so an undeclared
+# import fails the isolated build, and no wheel ships qmf/__init__.py (AR-06/AR-18; M9).
+isolated-build = "python tools/isolated_build_check.py"
 
 [tool.poe.tasks.check]
 # Tier 1 — every factory work unit. Format, lint, strict types, unit tests +
 # coverage floor, the workspace-tool suite, the money-path float scanner (NFR-02
 # enforcing FR-001), the ambient-nondeterminism scanner (NFR-02 enforcing FR-002),
-# and the secret-scan gate (AR-24). Fail-closed: any nonzero step fails the gate.
-sequence = ["fmt-check", "lint", "types", "test", "test-tools", "money-path-scan", "ambient-scan", "secret-scan"]
+# and the secret-scan gate (AR-24). `cov-report` enforces the per-package + contract-module
+# coverage floors on the JSON `test` writes (M1). Fail-closed: any nonzero step fails the gate.
+sequence = ["fmt-check", "lint", "types", "test", "cov-report", "test-tools", "money-path-scan", "ambient-scan", "secret-scan"]
 default_item_type = "ref"
 
 [tool.poe.tasks.check-integration]
-# Tier 2 — landing into integration. Tier 1 plus a build of every workspace
-# package (the isolated-build / undeclared-import check is deepened by later
-# stories on top of this).
-sequence = ["check", "build-all"]
+# Tier 2 — landing into integration. Tier 1, a build of every workspace package, and
+# the isolated-install smoke that installs each package alone and imports it so an
+# undeclared import actually fails the isolated build (AR-06/AR-18; M9).
+sequence = ["check", "build-all", "isolated-build"]
 default_item_type = "ref"
 
 [tool.poe.tasks.check-release]
