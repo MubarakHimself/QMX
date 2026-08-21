@@ -18,7 +18,6 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-import socket
 import sys
 import time
 import urllib.error
@@ -71,7 +70,7 @@ def stamp_utc(dt: datetime) -> str:
 
 
 def log(message: str) -> None:
-    line = "%s %s" % (iso_utc(utc_now()), message)
+    line = f"{iso_utc(utc_now())} {message}"
     print(line)
     try:
         os.makedirs(DATA_DIR, exist_ok=True)
@@ -125,21 +124,21 @@ def fetch(url: str):
             # 4xx other than 429 will not fix themselves; stop early.
             if error.code != 429 and error.code < 500:
                 raise
-        except (urllib.error.URLError, socket.timeout, OSError) as error:
+        except (urllib.error.URLError, TimeoutError, OSError) as error:
             last_error = error
         if attempt < len(RETRY_BACKOFF_SECONDS):
             wait = RETRY_BACKOFF_SECONDS[attempt]
-            log("  retry in %ds after: %s" % (wait, last_error))
+            log(f"  retry in {wait}s after: {last_error}")
             time.sleep(wait)
     raise last_error
 
 
 def unique_path(directory: str, base: str, extension: str) -> str:
     """Never overwrite: if the name is taken, add -1, -2, ..."""
-    candidate = os.path.join(directory, "%s.%s" % (base, extension))
+    candidate = os.path.join(directory, f"{base}.{extension}")
     counter = 1
     while os.path.exists(candidate):
-        candidate = os.path.join(directory, "%s-%d.%s" % (base, counter, extension))
+        candidate = os.path.join(directory, f"{base}-{counter}.{extension}")
         counter += 1
     return candidate
 
@@ -162,14 +161,14 @@ def record_source(variant: str, url: str, known: list) -> bool:
         status, body = fetch(url)
     except urllib.error.HTTPError as error:
         record["http_status"] = int(error.code)
-        record["error"] = "HTTP %s" % error.code
+        record["error"] = f"HTTP {error.code}"
         append_manifest(record)
-        log("  %-4s FAILED  HTTP %s" % (variant, error.code))
+        log(f"  {variant:<4} FAILED  HTTP {error.code}")
         return False
     except Exception as error:  # noqa: BLE001 - the run must always leave a trace
-        record["error"] = "%s: %s" % (type(error).__name__, error)
+        record["error"] = f"{type(error).__name__}: {error}"
         append_manifest(record)
-        log("  %-4s FAILED  %s" % (variant, record["error"]))
+        log(f"  {variant:<4} FAILED  {record['error']}")
         return False
 
     digest = hashlib.sha256(body).hexdigest()
@@ -180,19 +179,19 @@ def record_source(variant: str, url: str, known: list) -> bool:
     if digest == last_sha_for(url, known):
         record["unchanged"] = True
         append_manifest(record)
-        log("  %-4s unchanged  %d bytes  %s" % (variant, len(body), digest[:12]))
+        log(f"  {variant:<4} unchanged  {len(body)} bytes  {digest[:12]}")
         return True
 
     directory = os.path.join(RAW_DIR, fetched_at.strftime("%Y"), fetched_at.strftime("%m"))
     os.makedirs(directory, exist_ok=True)
-    path = unique_path(directory, "fetch-%s" % stamp_utc(fetched_at), variant)
+    path = unique_path(directory, f"fetch-{stamp_utc(fetched_at)}", variant)
     with open(path, "wb") as handle:  # raw bytes, byte for byte
         handle.write(body)
 
     record["unchanged"] = False
     record["path"] = os.path.relpath(path, BASE_DIR).replace("\\", "/")
     append_manifest(record)
-    log("  %-4s SAVED  %d bytes  %s  ->  %s" % (variant, len(body), digest[:12], record["path"]))
+    log(f"  {variant:<4} SAVED  {len(body)} bytes  {digest[:12]}  ->  {record['path']}")
     return True
 
 
@@ -206,7 +205,7 @@ def main() -> int:
         if record_source(variant, url, known):
             successes += 1
             known = read_manifest()
-    log("fetch done: %d/%d sources ok" % (successes, len(SOURCES)))
+    log(f"fetch done: {successes}/{len(SOURCES)} sources ok")
     return 0 if successes else 1
 
 

@@ -9,6 +9,7 @@ Stdlib only. Read-only - this script never writes to the archive.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import subprocess
@@ -31,10 +32,8 @@ MAX_EVENT_ROWS = 14
 
 # --- terminal capability ------------------------------------------------------
 
-try:
+with contextlib.suppress(Exception):
     sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
-except Exception:  # noqa: BLE001
-    pass
 
 
 def _unicode_ok() -> bool:
@@ -66,14 +65,15 @@ UNICODE = _unicode_ok()
 COLOUR = _colour_ok()
 
 BOX = {
-    True: dict(h="─", v="│", tl="┌", tr="┐", bl="└",
-               br="┘", lt="├", rt="┤"),
-    False: dict(h="-", v="|", tl="+", tr="+", bl="+", br="+", lt="+", rt="+"),
+    True: {"h": "─", "v": "│", "tl": "┌", "tr": "┐", "bl": "└",
+           "br": "┘", "lt": "├", "rt": "┤"},
+    False: {"h": "-", "v": "|", "tl": "+", "tr": "+", "bl": "+",
+            "br": "+", "lt": "+", "rt": "+"},
 }[UNICODE]
 
 
 def c(text: str, code: str) -> str:
-    return "\x1b[%sm%s\x1b[0m" % (code, text) if COLOUR else text
+    return f"\x1b[{code}m{text}\x1b[0m" if COLOUR else text
 
 
 DIM, BOLD, GREEN, YELLOW, RED, CYAN = "2", "1", "32", "33", "31", "36"
@@ -93,7 +93,7 @@ def _visible_len(text: str) -> int:
 
 
 def top(title: str) -> None:
-    label = " %s " % title
+    label = f" {title} "
     print(BOX["tl"] + label + BOX["h"] * (WIDTH - 2 - len(label)) + BOX["tr"])
 
 
@@ -107,11 +107,11 @@ def bottom() -> None:
 
 def row(text: str = "") -> None:
     pad = WIDTH - 4 - _visible_len(text)
-    print("%s %s%s %s" % (BOX["v"], text, " " * max(pad, 0), BOX["v"]))
+    print(f"{BOX['v']} {text}{' ' * max(pad, 0)} {BOX['v']}")
 
 
 def field(label: str, value: str) -> None:
-    row("%s %s" % (c(label.ljust(18), DIM), value))
+    row(f"{c(label.ljust(18), DIM)} {value}")
 
 
 # --- data ---------------------------------------------------------------------
@@ -131,21 +131,21 @@ def parse_utc(value: str):
 def human_age(seconds: float) -> str:
     seconds = int(seconds)
     if seconds < 60:
-        return "%ds ago" % seconds
+        return f"{seconds}s ago"
     if seconds < 3600:
-        return "%dm ago" % (seconds // 60)
+        return f"{seconds // 60}m ago"
     if seconds < 86400:
-        return "%dh %dm ago" % (seconds // 3600, (seconds % 3600) // 60)
-    return "%dd %dh ago" % (seconds // 86400, (seconds % 86400) // 3600)
+        return f"{seconds // 3600}h {(seconds % 3600) // 60}m ago"
+    return f"{seconds // 86400}d {(seconds % 86400) // 3600}h ago"
 
 
 def human_bytes(count: int) -> str:
     value = float(count)
     for unit in ("B", "KB", "MB", "GB"):
         if value < 1024 or unit == "GB":
-            return "%.0f %s" % (value, unit) if unit == "B" else "%.1f %s" % (value, unit)
+            return f"{value:.0f} {unit}" if unit == "B" else f"{value:.1f} {unit}"
         value /= 1024
-    return "%d B" % count
+    return f"{count} B"
 
 
 def read_manifest() -> list:
@@ -210,16 +210,16 @@ def section_archive(records: list, files: list) -> None:
         if when:
             age_seconds = (utc_now() - when).total_seconds()
             colour = GREEN if age_seconds < 26 * 3600 else (YELLOW if age_seconds < 50 * 3600 else RED)
-            field("Last fetch", "%s  %s" % (last["fetched_at_utc"], c("(" + human_age(age_seconds) + ")", colour)))
+            field("Last fetch", f"{last['fetched_at_utc']}  {c('(' + human_age(age_seconds) + ')', colour)}")
         else:
             field("Last fetch", str(last.get("fetched_at_utc")))
     else:
         field("Last fetch", c("never - archive is empty", RED))
 
-    field("Snapshots on disk", "%d files, %s" % (len(files), human_bytes(total_bytes)))
-    field("Manifest lines", "%d  (%s saved, %s unchanged, %s failed)"
-          % (len(records), len(saved), len(unchanged),
-             c(str(len(failed)), RED) if failed else "0"))
+    field("Snapshots on disk", f"{len(files)} files, {human_bytes(total_bytes)}")
+    failed_count = c(str(len(failed)), RED) if failed else "0"
+    field("Manifest lines",
+          f"{len(records)}  ({len(saved)} saved, {len(unchanged)} unchanged, {failed_count} failed)")
 
     first = records[0] if records else None
     if first:
@@ -238,9 +238,9 @@ def section_schedule() -> None:
         last_run = info.get("Last Run Time", "?")
         last_result = info.get("Last Result", "?")
         ok = status.lower() in ("ready", "running")
-        field("Task", "%s  %s" % (name, c(status, GREEN if ok else YELLOW)))
+        field("Task", f"{name}  {c(status, GREEN if ok else YELLOW)}")
         field("  next run", next_run)
-        field("  last run", "%s  (result %s)" % (last_run, last_result))
+        field("  last run", f"{last_run}  (result {last_result})")
     if not found:
         field("Task", c("NOT FOUND - nothing is recording automatically", RED))
 
@@ -253,7 +253,7 @@ def section_events(path) -> None:
         with open(path, "rb") as handle:
             events = json.loads(handle.read().decode("utf-8"))
     except Exception as error:  # noqa: BLE001
-        row(c("Could not parse %s: %s" % (os.path.basename(path), error), RED))
+        row(c(f"Could not parse {os.path.basename(path)}: {error}", RED))
         return
 
     now = utc_now()
@@ -262,20 +262,17 @@ def section_events(path) -> None:
         if str(event.get("impact", "")).lower() != "high":
             continue
         when = None
-        try:
+        with contextlib.suppress(Exception):
             when = datetime.fromisoformat(str(event.get("date", ""))).astimezone(timezone.utc)
-        except Exception:  # noqa: BLE001
-            pass
         if when and when >= now:
             upcoming.append((when, event))
     upcoming.sort(key=lambda pair: pair[0])
 
     high_total = sum(1 for e in events if str(e.get("impact", "")).lower() == "high")
-    row("%s  %s"
-        % (c(os.path.basename(path).ljust(30), DIM),
-           c("%d events, %d high-impact, %d still ahead" % (len(events), high_total, len(upcoming)), DIM)))
+    summary = f"{len(events)} events, {high_total} high-impact, {len(upcoming)} still ahead"
+    row(f"{c(os.path.basename(path).ljust(30), DIM)}  {c(summary, DIM)}")
     row()
-    row(c("%-17s %-4s %-6s %s" % ("TIME (UTC)", "CCY", "IMPACT", "EVENT"), BOLD))
+    row(c(f"{'TIME (UTC)':<17} {'CCY':<4} {'IMPACT':<6} EVENT", BOLD))
 
     if not upcoming:
         row(c("No high-impact events left in this week's feed.", DIM))
@@ -283,13 +280,11 @@ def section_events(path) -> None:
 
     for when, event in upcoming[:MAX_EVENT_ROWS]:
         title = str(event.get("title", ""))[:47]
-        row("%-17s %-4s %-6s %s"
-            % (when.strftime("%Y-%m-%d %H:%M"),
-               str(event.get("country", ""))[:4],
-               c("HIGH", RED),
-               title))
+        row(f"{when.strftime('%Y-%m-%d %H:%M'):<17} "
+            f"{str(event.get('country', ''))[:4]:<4} "
+            f"{c('HIGH', RED):<6} {title}")
     if len(upcoming) > MAX_EVENT_ROWS:
-        row(c("... and %d more" % (len(upcoming) - MAX_EVENT_ROWS), DIM))
+        row(c(f"... and {len(upcoming) - MAX_EVENT_ROWS} more", DIM))
 
 
 def main() -> int:
@@ -306,8 +301,8 @@ def main() -> int:
     rule()
     section_events(newest_json_snapshot(files))
     bottom()
-    print(c("  archive: %s" % DATA_DIR, DIM))
-    print(c("  fetch now: py -3 \"%s\"" % os.path.join(BASE_DIR, "fetch_calendar.py"), DIM))
+    print(c(f"  archive: {DATA_DIR}", DIM))
+    print(c(f'  fetch now: py -3 "{os.path.join(BASE_DIR, "fetch_calendar.py")}"', DIM))
     print()
     return 0 if records else 1
 

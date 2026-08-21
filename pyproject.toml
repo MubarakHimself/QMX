@@ -37,6 +37,18 @@ requires-python = ">=3.10"
 # --group dev pytest` needs them importable.
 dependencies = ["pydantic", "python-dotenv", "pyyaml", "rich"]
 
+[tool.uv]
+# Provision the `dev` group by default for every `uv run` / `uv sync` in this
+# workspace. The QMF Tier-1 gate runs as `uv run poe check`, and `poe` — like
+# ruff, pyright and pytest — ships only in `[dependency-groups] dev`. Pinning
+# dev as the default group guarantees a freshly cut worktree installs `poe`
+# without an explicit `--group dev`, so `uv run poe check` never fails to spawn
+# it. Belt-and-suspenders over uv's implicit dev default: explicit here so the
+# gate cannot regress on a uv-default change. `--group scan` still adds skylos
+# on top (default groups stay enabled alongside an added group), so the
+# separate scan lane is unaffected.
+default-groups = ["dev"]
+
 [tool.uv.workspace]
 # The QMF distribution units. Seven roster packages (SemVer lockstep) under
 # packages/, off-roster extensions (own SemVer ladders) under extensions/.
