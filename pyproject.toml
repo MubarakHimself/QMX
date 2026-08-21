@@ -91,6 +91,9 @@ pythonpath = [
     "packages/qmf-venue/src",
     "packages/qmf-risk/src",
     "extensions/qmf-calendar-forex/src",
+    # Workspace tools (the tier-1 static scanners) import as top-level modules so
+    # `poe test-tools` can measure their coverage (Story 1.7).
+    "tools",
 ]
 
 [tool.mypy]
@@ -107,7 +110,10 @@ exclude = "adws/adw_data"
 # recorder/ is the SSSF status-dashboard tooling stamped in at baseline; it is
 # not QMF roster code and not linted here (the same "scope to shipped code"
 # posture the CI applies to the AI-defect scanner).
-extend-exclude = ["adws/adw_data", "recorder"]
+# tools/tests/fixtures/ holds deliberately-broken sample modules (money-path
+# float violations) that the money-path scanner parses as data — not shipped
+# code, so it is neither linted nor type-checked (Story 1.7).
+extend-exclude = ["adws/adw_data", "recorder", "tools/tests/fixtures"]
 line-length = 100
 
 [tool.ruff.lint]
@@ -121,11 +127,15 @@ ignore = [
 # package's private benchmark module (`_bench`) to exercise the harness.
 "packages/*/tests/*" = ["S101"]
 "extensions/*/tests/*" = ["S101"]
+"tools/tests/*" = ["S101"]
 
 [tool.pyright]
 # Strict, workspace-wide over the QMF code (AR-11). adws is mypy's job, not
 # pyright's, so it is not included here.
 include = ["packages", "extensions", "tools"]
+# The deliberately-broken money-path fixtures are scanner input data, not code to
+# type-check (Story 1.7); the rest preserves pyright's default exclusions.
+exclude = ["**/node_modules", "**/__pycache__", "**/.*", "tools/tests/fixtures"]
 extraPaths = [
     "packages/qmf-core/src",
     "packages/qmf-registry/src",
@@ -135,6 +145,8 @@ extraPaths = [
     "packages/qmf-venue/src",
     "packages/qmf-risk/src",
     "extensions/qmf-calendar-forex/src",
+    # Workspace tools import as top-level modules (see pytest pythonpath above).
+    "tools",
 ]
 typeCheckingMode = "strict"
 pythonVersion = "3.14"
@@ -148,14 +160,21 @@ fmt-check = "ruff format --check packages extensions tools"
 lint = "ruff check packages extensions tools"
 types = "pyright"
 test = "pytest packages extensions --cov=qmf --cov-branch --cov-report=term-missing --cov-fail-under=80"
+# The workspace tools (tier-1 static scanners) carry their own suite and their
+# own 80% package coverage floor, scoped to the tool module (Story 1.7; AR-20).
+test-tools = "pytest tools/tests --cov=money_path_scan --cov-branch --cov-report=term-missing --cov-fail-under=80"
 secret-scan = "python tools/secret_scan.py"
+# Tier-1 static scanner: fails closed on any binary float on the money path
+# (NFR-02 enforcing FR-001; CT-01, DEC-0105).
+money-path-scan = "python tools/money_path_scan.py"
 build-all = "uv build --all-packages"
 
 [tool.poe.tasks.check]
 # Tier 1 — every factory work unit. Format, lint, strict types, unit tests +
-# coverage floor, and the secret-scan gate (AR-24). Fail-closed: any nonzero
+# coverage floor, the workspace-tool suite, the money-path float scanner (NFR-02
+# enforcing FR-001), and the secret-scan gate (AR-24). Fail-closed: any nonzero
 # step fails the gate.
-sequence = ["fmt-check", "lint", "types", "test", "secret-scan"]
+sequence = ["fmt-check", "lint", "types", "test", "test-tools", "money-path-scan", "secret-scan"]
 default_item_type = "ref"
 
 [tool.poe.tasks.check-integration]
