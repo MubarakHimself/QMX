@@ -15,6 +15,12 @@ pattern, and the validating `try_create` factory; Story 1.3 landed CT-03
 **instrument, venue, and account identity** — `VenueId` (operator-minted opaque
 token), `Instrument` (the never-parsed `(venue, symbol)` pair), the first-class
 `Venue` and `Account` nouns with the fixed `AccountRole` set, and the append-only
-`DatedRecord` for renames, aliases, asset-class, and metadata. The remaining
-CT-01/CT-02/CT-05 surface arrives in later stories. Build, lint, type-check, and
-test through the workspace `poe` tasks — never in isolation.
+`DatedRecord` for renames, aliases, asset-class, and metadata; Story 1.4 landed
+CT-01 **exact money, price, and quantity values** — `Money`, `Price`,
+`PriceDelta`, and `Quantity` as scaled integers with binary float banned on the
+money path (a float re-enters only through the named `from_float` boundary), the
+closed `UnitKind` vocabulary, mixed-scale lossless auto-promotion, delta-typed
+price subtraction, metadata-sourced pip/value-factor conversions, and the pinned
+canonical `fp1` identity form where equal value implies equal fingerprint. The
+remaining CT-02/CT-05 surface arrives in later stories. Build, lint, type-check,
+and test through the workspace `poe` tasks — never in isolation.
