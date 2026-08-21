@@ -6,6 +6,11 @@ readme = "README.md"
 requires-python = ">=3.14,<3.15"
 dependencies = [
     "qmf-core",
+    # Engine libraries for the CT-11/CT-09 store seam (Story 3.1; AR-30, DEC-0117).
+    # Declared here only — never in qmf-core, never at a boundary signature. Pinned
+    # for byte-identical results; registered in DEPENDENCIES.md with licence + why.
+    "pyarrow==25.0.1",
+    "duckdb==1.5.5",
 ]
 
 [build-system]

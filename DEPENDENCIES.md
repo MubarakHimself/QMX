@@ -33,10 +33,16 @@ means adding its row here first.
 | Name | Version | Licence | Used by | Why |
 |---|---|---|---|---|
 | tzdata | `==2025.2` | Apache-2.0 | `qmf-calendar-forex` (extension) | Pinned IANA time-zone database; the extension forces `TZPATH` to this pin and verifies the resolved tzdb equals it, and the pinned version participates in fingerprints. (DEC-0106) |
+| pyarrow | `==25.0.1` | Apache-2.0 | `qmf-data` (roster) | The **Parquet** store engine for the CT-11 columnar time-series raw archive; embedded, no database server. Declared only in `packages/qmf-data/pyproject.toml`; never crosses a boundary signature. (Story 3.1; AR-30, DEC-0117) |
+| duckdb | `==1.5.5` | MIT | `qmf-data` (roster) | The **DuckDB** store engine for CT-11 rebuildable analytics views only (never evidence-bearing); embedded, no database server. Declared only in `packages/qmf-data/pyproject.toml`; never crosses a boundary signature. (Story 3.1; AR-30, DEC-0117) |
 
-No roster package declares a runtime outside-dependency. `qmf-registry → qmf-data`
-is the sole inter-library edge; every other roster package depends only on
-`qmf-core` (declared as workspace dependencies, not third-party). (AR-06; L30)
+`qmf-data` is the first roster package to declare runtime outside-dependencies —
+`pyarrow` and `duckdb`, the CT-11/CT-09 store engines (Parquet + DuckDB; SQLite and
+JSONL are stdlib). They are declared **only** in `qmf-data`'s own pyproject and are
+installed into the gate environment via the root `store-engines` dependency group,
+which pulls in the `qmf-data` workspace member. `qmf-registry → qmf-data` is the sole
+inter-library edge; every other roster package depends only on `qmf-core` (declared
+as workspace dependencies, not third-party). (AR-06; L30)
 
 ## Toolchain (workspace `dev` dependency-group)
 
@@ -81,7 +87,6 @@ flip it to a live section when a story first needs it.
 |---|---|---|---|
 | numpy | BSD-3-Clause | outer packages only | 2.5.2 pin (never in `qmf-core`). |
 | pandas | BSD-3-Clause | outer packages only | 3.0.5 pin (young major; ecosystem lag watched). |
-| pyarrow | Apache-2.0 | outer packages only | 25.0.1 pin. |
 | protobuf (runtime) | BSD-3-Clause | `qmf-venue` only | Decodes the Spotware proto at the venue edge; the OpenApiPy SDK is reference-only (its Twisted reactor is platform-imposing → rejected). (DEC-0141) |
 | TA-Lib (C + Python wrapper) | BSD-3-Clause | `qmf-indicators` | Canonical arithmetic reference, 0.7.1 + 0.7.1. (DEC-0127) |
 | click | BSD-3-Clause | QMB (off-roster app) | `qmb` CLI door, 8.4.2. (DEC-0168) |

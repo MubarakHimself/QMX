@@ -47,12 +47,29 @@ dependencies = ["pydantic", "python-dotenv", "pyyaml", "rich"]
 # gate cannot regress on a uv-default change. `--group scan` still adds skylos
 # on top (default groups stay enabled alongside an added group), so the
 # separate scan lane is unaffected.
-default-groups = ["dev"]
+#
+# `store-engines` is provisioned by default too (Story 3.1). qmf-data is the
+# first roster package to declare third-party RUNTIME dependencies (pyarrow +
+# duckdb, the CT-11/CT-09 store engines) — declared ONLY in
+# packages/qmf-data/pyproject.toml. The QMF suites import `qmf.*` from src via
+# the pytest `pythonpath`, but those two engine libraries must physically be in
+# the environment for `qmf.data.store` to import at test time. Installing the
+# qmf-data workspace member (below) pulls them in, so a freshly cut worktree
+# running `uv run poe check` has Parquet + DuckDB present without ever naming the
+# engine libs outside qmf-data. The SSSF `dev` group and the adws pytest wiring
+# are untouched.
+default-groups = ["dev", "store-engines"]
 
 [tool.uv.workspace]
 # The QMF distribution units. Seven roster packages (SemVer lockstep) under
 # packages/, off-roster extensions (own SemVer ladders) under extensions/.
 members = ["packages/*", "extensions/*"]
+
+[tool.uv.sources]
+# The qmf-data workspace member, referenced by the store-engines group below so
+# its runtime engine deps (pyarrow, duckdb) land in the gate environment. The
+# engine libraries themselves stay declared only in qmf-data's own pyproject.
+qmf-data = { workspace = true }
 
 [dependency-groups]
 # THE GATE'S CONTRACT — plus the QMF canonical toolchain, one environment for
@@ -78,6 +95,14 @@ dev = [
     "pytest-cov>=7,<8",
     "poethepoet==0.48.0",
 ]
+
+# The QMF store engines, provisioned by default (see `default-groups` above).
+# This group installs the qmf-data workspace member, which transitively brings in
+# pyarrow + duckdb — the CT-11/CT-09 store engines qmf-data.store imports. Kept
+# out of `dev` so the SSSF factory-gate contract in `dev` stays byte-stable, and
+# named here so a reader sees exactly why the workspace installs a member package
+# (Story 3.1; DEC-0117).
+store-engines = ["qmf-data"]
 
 # skylos is SEPARATE from `dev`, and not because it is optional - because it
 # does not install everywhere. It depends on tree-sitter-dart-orchard, which

@@ -1,0 +1,213 @@
+"""The four swappable store engines, each behind its owned contract (AC1; AR-30).
+
+Every artifact the store persists is physically written by **exactly one** of four
+ratified local engines, and no database server, graph database, or engine outside
+the set is introduced (DEC-0117):
+
+* **Parquet** (:class:`ColumnarEngine`) — columnar time-series (the immutable raw
+  archive, evidence-bearing);
+* **DuckDB** (:class:`AnalyticsEngine`) — rebuildable analytics views **only**, never
+  evidence-bearing;
+* **SQLite** (:class:`MetadataEngine`) — transactional metadata (registry records);
+* **JSONL** (:class:`AppendStreamEngine`) — append streams (journal + lineage edges).
+
+Each engine is a :class:`typing.Protocol` with **stdlib-typed boundary signatures** —
+``str``, ``bytes``, ``int``, ``Mapping``, ``Sequence`` — so no engine-native type
+(a ``pyarrow.Table``, a ``duckdb`` connection) ever leaks across the seam and the
+engine stays swappable behind its contract. A concrete engine imports its library;
+the contract here does not.
+
+A physical failure (engine unavailable, disk full, a locked / truncated / corrupt
+file) surfaces as a **single** normalized :class:`StoreEngineError` — the concrete
+engine wraps its library's exception into this one type, so a boundary catches one
+thing and translates it to a ``storage failure`` refusal without importing any
+engine's exception classes (AC4; DEC-0109). ``StoreEngineError`` is raised only
+across the *internal* engine seam and is always caught before a package boundary.
+
+Stdlib + qmf-core only in this contract module.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+from typing import Protocol
+
+from qmf.core import Result
+
+__all__ = [
+    "AnalyticsEngine",
+    "AppendLocation",
+    "AppendStreamEngine",
+    "ColumnarEngine",
+    "MetadataEngine",
+    "StoreEngineError",
+]
+
+
+class StoreEngineError(Exception):
+    """A normalized physical-storage failure raised across the internal engine seam.
+
+    Every concrete engine wraps its library's exception — ``OSError`` (disk full,
+    locked, truncated), a ``pyarrow`` error, an ``sqlite3`` error, a ``duckdb``
+    error — into this one type, so the boundary catches ``StoreEngineError`` alone
+    and translates it to a ``storage failure`` typed refusal (AC4). It never crosses
+    a package boundary: it is an internal signal, always caught at the seam.
+
+    ``retryable`` distinguishes a transient outage (a locked file, a disk that may
+    free up) from a permanent fault (a corrupt or truncated store); the boundary maps
+    it to the refusal's retryability.
+    """
+
+    def __init__(
+        self,
+        reason: str,
+        *,
+        engine: str,
+        retryable: bool = True,
+        detail: Mapping[str, object] | None = None,
+    ) -> None:
+        super().__init__(reason)
+        self.reason = reason
+        self.engine = engine
+        self.retryable = retryable
+        self.detail: dict[str, object] = dict(detail) if detail is not None else {}
+
+
+@dataclass(frozen=True, slots=True)
+class AppendLocation:
+    """Where an appended JSONL record landed (AC3).
+
+    ``ordinal`` is the monotonic rotation ordinal of the file it was written to,
+    ``byte_offset`` its start within that file, ``length`` the line's byte length
+    (LF included), and ``sequence`` its strictly-increasing per-stream position. All
+    are plain ints — engine-native types never appear here.
+    """
+
+    ordinal: int
+    byte_offset: int
+    length: int
+    sequence: int
+
+
+class ColumnarEngine(Protocol):
+    """Owned contract for the Parquet columnar time-series engine (evidence).
+
+    Stores a whole artifact — an ordered set of JSON-native rows — as one
+    content-addressed columnar file keyed by ``key`` (the fp1 digest). The exact
+    ``canonical`` identity bytes are embedded in the file so a re-write is reconciled
+    against them without a lossy round-trip; :meth:`read` reconstructs the rows.
+    Raises :class:`StoreEngineError` on any physical failure.
+    """
+
+    def write(
+        self, key: str, rows: Sequence[Mapping[str, object]], canonical: bytes, /
+    ) -> None:  # pragma: no cover
+        """Write ``rows`` under ``key``, embedding ``canonical`` (raises on failure)."""
+        ...
+
+    def read(self, key: str, /) -> list[dict[str, object]]:  # pragma: no cover
+        """Read the rows stored under ``key`` (raises on failure or if absent)."""
+        ...
+
+    def read_canonical(self, key: str, /) -> bytes | None:  # pragma: no cover
+        """The embedded fp1 canonical bytes for ``key`` (for reconcile), or ``None``."""
+        ...
+
+    def has(self, key: str, /) -> bool:  # pragma: no cover
+        """Whether an artifact is stored under ``key`` (raises on failure)."""
+        ...
+
+    def stored_keys(self) -> list[str]:  # pragma: no cover
+        """Every stored key (the rebuildable content index; raises on failure)."""
+        ...
+
+
+class AnalyticsEngine(Protocol):
+    """Owned contract for the DuckDB analytics engine — rebuildable views ONLY.
+
+    A materialized view is never evidence-bearing: its pinned engine major is
+    recorded and a format break costs a rebuild, never evidence, so deletion is
+    licensed. The ``canonical`` identity bytes are embedded so a rebuild reconciles
+    exactly. Raises :class:`StoreEngineError` on any physical failure.
+    """
+
+    def materialize(
+        self, key: str, rows: Sequence[Mapping[str, object]], canonical: bytes, /
+    ) -> None:  # pragma: no cover
+        """(Re)build the view ``key`` from ``rows``, embedding ``canonical``."""
+        ...
+
+    def query(self, key: str, /) -> list[dict[str, object]]:  # pragma: no cover
+        """Query the materialized view ``key`` (raises on failure or if absent)."""
+        ...
+
+    def read_canonical(self, key: str, /) -> bytes | None:  # pragma: no cover
+        """The embedded fp1 canonical bytes for the view ``key``, or ``None``."""
+        ...
+
+    def drop(self, key: str, /) -> None:  # pragma: no cover
+        """Drop the rebuildable view ``key`` (raises on failure)."""
+        ...
+
+    def has(self, key: str, /) -> bool:  # pragma: no cover
+        """Whether the view ``key`` is materialized (raises on failure)."""
+        ...
+
+    def engine_major(self) -> str:  # pragma: no cover
+        """The pinned analytics-engine major recorded on every rebuildable view."""
+        ...
+
+
+class MetadataEngine(Protocol):
+    """Owned contract for the SQLite transactional-metadata engine (registry records).
+
+    Persists a per-kind versioned record keyed on its fp1 digest, append-only: a
+    record is never rewritten in place. Raises :class:`StoreEngineError` on any
+    physical failure.
+    """
+
+    def put(
+        self, digest: str, canonical: bytes, /, *, kind: str, format_version: int
+    ) -> None:  # pragma: no cover
+        """Insert a record's canonical bytes under ``digest`` (raises on failure)."""
+        ...
+
+    def get(self, digest: str, /) -> bytes | None:  # pragma: no cover
+        """The canonical bytes stored under ``digest``, or ``None`` (raises on failure)."""
+        ...
+
+    def meta(self, digest: str, /) -> Mapping[str, object] | None:  # pragma: no cover
+        """The ``kind`` / ``format_version`` metadata for ``digest`` (raises on failure)."""
+        ...
+
+    def digests(self) -> list[str]:  # pragma: no cover
+        """Every stored record digest (raises on failure)."""
+        ...
+
+
+class AppendStreamEngine(Protocol):
+    """Owned contract for the JSONL append-stream engine (journal + lineage edges).
+
+    One fp1-canonical object per line, LF-terminated, append-with-fsync, rotated
+    under a monotonic ordinal, with a locally rebuildable index and exactly one
+    holding ``WriterId`` (AC3). :meth:`acquire` is the one-writer gate and returns a
+    ``policy rejection`` refusal for a second writer; the I/O methods raise
+    :class:`StoreEngineError` on physical failure.
+    """
+
+    def acquire(self) -> Result[None]:  # pragma: no cover
+        """Take the single-writer hold, or refuse a second distinct writer (AC3)."""
+        ...
+
+    def append(self, canonical: bytes, /) -> AppendLocation:  # pragma: no cover
+        """Append one LF-terminated line with fsync + rotation (raises on failure)."""
+        ...
+
+    def find(self, digest: str, /) -> bytes | None:  # pragma: no cover
+        """The stored line bytes for ``digest`` (for reconcile), or ``None``."""
+        ...
+
+    def read_all(self) -> list[bytes]:  # pragma: no cover
+        """Every line's bytes in stream order — an unlimited reader (raises on failure)."""
+        ...
