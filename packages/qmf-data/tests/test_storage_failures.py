@@ -120,9 +120,10 @@ def test_journal_read_failure_on_corrupt_stream(store: EvidenceStore) -> None:
     writer = WriterId.try_create("node-a", "data", "dq", "boot-1")
     assert is_ok(writer)
     assert is_ok(journal.append("dq", writer.value, {"event_type": "data quality", "n": 0}))
-    # Corrupt the underlying stream file with a partial (unterminated) trailing line.
+    # Corrupt the underlying stream file with a genuinely corrupt (non-JSON) LF-terminated
+    # line — distinct from a recoverable torn tail (H2), this is real corruption and refuses.
     corrupt = store.root / "live" / "journal" / "dq" / "000000.jsonl"
-    corrupt.write_bytes(b'{"partial": ')
+    corrupt.write_bytes(b'{"event_type":"data quality","n":0}\nnot valid json\n')
     read = journal.read_stream("dq", for_world=World.LIVE)
     assert is_refusal(read)
     assert read.category.value == "storage failure"

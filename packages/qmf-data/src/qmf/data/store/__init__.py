@@ -43,7 +43,13 @@ from qmf.data.store.identity import Admission
 from qmf.data.store.journal import JournalStore
 from qmf.data.store.receipts import StoreReceipt
 from qmf.data.store.registry_room import RegistryRoom
-from qmf.data.store.rooms import EVIDENCE_BEARING_ROLES, ROOM_ROLE_VALUES, RoomRole
+from qmf.data.store.rooms import (
+    EVIDENCE_BEARING_ROLES,
+    ROOM_ROLE_VALUES,
+    ReadSeal,
+    RoomRole,
+    guard_sealed_read,
+)
 
 __all__ = [
     "EVIDENCE_BEARING_ROLES",
@@ -62,6 +68,7 @@ __all__ = [
     "JsonlAppendStream",
     "MetadataEngine",
     "ParquetColumnarEngine",
+    "ReadSeal",
     "RecordExport",
     "RegistryRoom",
     "RoomExport",
@@ -71,5 +78,6 @@ __all__ = [
     "StoreReceipt",
     "WorldStore",
     "WriteOutcome",
+    "guard_sealed_read",
     "jsonl_opener",
 ]

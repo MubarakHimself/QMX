@@ -28,6 +28,12 @@ def _writer(machine: str = "node-a", role: str = "data", stream: str = "dq") -> 
     return built.value
 
 
+def _sole_journal_file(store: EvidenceStore, stream: str) -> Path:
+    matches = sorted(store.root.glob(f"**/journal/{stream}/*.jsonl"))
+    assert len(matches) == 1, matches
+    return matches[0]
+
+
 # --- H2 (journal level): a case-alias never duplicates an append-only line ---
 
 
@@ -51,6 +57,44 @@ def test_case_alias_journal_appends_no_duplicate(store: EvidenceStore) -> None:
     read = journal.read_stream("orders", for_world=World.LIVE)
     assert is_ok(read)
     assert read.value == [e1, e2]  # exactly two lines, no duplicate
+
+
+# --- H2 (boundary level): a torn journal tail recovers read, append, backup ---
+
+
+def test_torn_journal_tail_recovers_read_append_backup(store: EvidenceStore) -> None:
+    # A crash mid-write leaves a torn (no-LF) trailing line. Previously every subsequent
+    # open — read_stream, append, AND backup — refused forever and the committed prefix was
+    # unreachable. WAL tail handling now keeps the committed prefix readable and appendable
+    # and lets backup succeed, matching FAILURES.md's recovery story (H2).
+    ws = store.for_world(World.LIVE)
+    assert is_ok(ws)
+    journal = ws.value.journal
+    writer = _writer(role="data", stream="dq")
+    assert is_ok(journal.append("dq", writer, {"event_type": "data quality", "n": 0}))
+
+    # Simulate a crash mid-write: append a torn (no-LF) partial line to the stream file.
+    with _sole_journal_file(store, "dq").open("ab") as handle:
+        handle.write(b'{"event_type":"data quality","n":1}')  # no trailing LF
+
+    # The committed prefix is still readable (the torn tail is quarantined, not fatal).
+    read = journal.read_stream("dq", for_world=World.LIVE)
+    assert is_ok(read)
+    assert read.value == [{"event_type": "data quality", "n": 0}]
+
+    # Backup no longer refuses forever — it reads the committed record.
+    backup = ws.value.backup_input.read_room(RoomRole.JOURNAL, for_world=World.LIVE)
+    assert is_ok(backup)
+    assert backup.value.record_count == 1
+
+    # And a fresh append resumes on the committed prefix.
+    assert is_ok(journal.append("dq", writer, {"event_type": "data quality", "n": 2}))
+    resumed = journal.read_stream("dq", for_world=World.LIVE)
+    assert is_ok(resumed)
+    assert resumed.value == [
+        {"event_type": "data quality", "n": 0},
+        {"event_type": "data quality", "n": 2},
+    ]
 
 
 # --- H4 (money path): an arbitrary-precision int survives the raw archive ----

@@ -261,6 +261,59 @@ def test_knowledge_record_accepts_matching_calendar() -> None:
     assert record.value.calendar_identity == cal
 
 
+# --- H4: knowledge-time can never precede observed-at (no negative-gap leak) --
+
+
+def test_knowledge_record_refuses_negative_gap() -> None:
+    # observed 2500 after knowledge 500: a fact cannot become knowable before it becomes
+    # observable, and the negative gap is exactly what slipped sealed-region data into
+    # training past the embargo check (H4; DEC-0131).
+    result = KnowledgeRecord.try_create(
+        observed_at=2_500, knowledge_time=500, kind=KnowledgeKind.STRUCTURE
+    )
+    assert is_refusal(result)
+    assert result.category is RefusalCategory.INVALID_INPUT
+    assert result.context.get("field") == "knowledge_time"
+
+
+def test_knowledge_record_allows_equal_observed_and_knowledge() -> None:
+    # The boundary case: knowledge-time equal to observed-at (gap 0) is allowed.
+    result = KnowledgeRecord.try_create(
+        observed_at=1_500, knowledge_time=1_500, kind=KnowledgeKind.INDICATOR
+    )
+    assert is_ok(result)
+
+
+def test_partition_record_defends_against_negative_gap_record() -> None:
+    # A KnowledgeRecord built through the trusted-internal frozen constructor can carry a
+    # negative gap; partition_record defends against it rather than placing sealed-region
+    # data (observed 2500, in sealed-test) into an earlier segment by its knowledge time
+    # (500, in train) — the exact AC3 leak (H4; DEC-0131).
+    manifest = _manifest()
+    leaking = KnowledgeRecord(
+        observed_at=_instant(2_500),
+        knowledge_time=_instant(500),
+        kind=KnowledgeKind.STRUCTURE,
+    )
+    result = manifest.partition_record(leaking)
+    assert is_refusal(result)
+    assert result.category is RefusalCategory.INVALID_INPUT
+    assert result.context.get("field") == "knowledge_time"
+
+
+def test_partition_record_boundary_equal_lands_by_knowledge_time() -> None:
+    # observed == knowledge (gap 0): the embargo covers it and the record is placed by its
+    # knowledge time — the documented boundary-equal embargo rule.
+    manifest = _manifest()
+    record = KnowledgeRecord.try_create(
+        observed_at=2_500, knowledge_time=2_500, kind=KnowledgeKind.STRUCTURE
+    )
+    assert is_ok(record)
+    result = manifest.partition_record(record.value)
+    assert is_ok(result)
+    assert result.value is SegmentRole.SEALED_TEST
+
+
 # --- SplitManifest: construction & identity ---------------------------------
 
 

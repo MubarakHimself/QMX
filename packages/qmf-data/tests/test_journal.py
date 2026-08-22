@@ -94,3 +94,44 @@ def test_simulated_append_is_policy_rejection(tmp_path: Path) -> None:
     result = journal.append("dq", _writer(), {"event_type": "data quality"})
     assert is_refusal(result)
     assert result.category.value == "policy rejection"
+
+
+# --- H1: the write is routed on the EVENT's own declared world ---------------
+
+
+def test_event_declaring_mismatched_world_is_policy_rejection(store: EvidenceStore) -> None:
+    # A LIVE journal store: an event that DECLARES world = simulated or world = replay must
+    # not land in the live journal room (DEC-0110, DEC-0117). Both mismatch directions.
+    journal = _journal(store)  # LIVE
+    simulated = journal.append(
+        "dq", _writer(), {"event_type": "data quality", "world": "simulated"}
+    )
+    assert is_refusal(simulated)
+    assert simulated.category.value == "policy rejection"
+    assert simulated.context.get("field") == "world"
+    replay = journal.append("dq", _writer(), {"event_type": "data quality", "world": "replay"})
+    assert is_refusal(replay)
+    assert replay.category.value == "policy rejection"
+    # Nothing landed: the stream is still empty (a never-written stream reads Ok([])).
+    read = journal.read_stream("dq", for_world=World.LIVE)
+    assert is_ok(read)
+    assert read.value == []
+
+
+def test_event_declaring_matching_world_stores(store: EvidenceStore) -> None:
+    # The matching-world happy path: an event declaring the room's own world stores.
+    journal = _journal(store)  # LIVE
+    event = {"event_type": "data quality", "world": "live", "n": 0}
+    result = journal.append("dq", _writer(), event)
+    assert is_ok(result)
+    read = journal.read_stream("dq", for_world=World.LIVE)
+    assert is_ok(read)
+    assert read.value == [event]
+
+
+def test_event_declaring_malformed_world_is_invalid_input(store: EvidenceStore) -> None:
+    journal = _journal(store)
+    bad = journal.append("dq", _writer(), {"event_type": "data quality", "world": "nowhere"})
+    assert is_refusal(bad)
+    assert bad.category.value == "invalid input"
+    assert bad.context.get("field") == "world"

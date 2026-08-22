@@ -18,6 +18,7 @@ the room vocabulary and the cross-world read gate. Stdlib + qmf-core only.
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Protocol, runtime_checkable
 
 from qmf.core import Ok, Result, TypedRefusal, World, governed_namespace, is_refusal
 from qmf.data.store.refusals import invalid_input, policy_rejection
@@ -25,10 +26,13 @@ from qmf.data.store.refusals import invalid_input, policy_rejection
 __all__ = [
     "EVIDENCE_BEARING_ROLES",
     "ROOM_ROLE_VALUES",
+    "ReadSeal",
     "RoomRole",
+    "guard_sealed_read",
     "namespace_block",
     "namespace_for_write",
     "require_same_world",
+    "require_write_world",
 ]
 
 
@@ -130,3 +134,89 @@ def require_same_world(bound_world: World, requested_world: object) -> Result[Wo
             room_world=bound_world.value,
         )
     return Ok(resolved)
+
+
+def require_write_world(bound_world: World, declared_world: object) -> TypedRefusal | None:
+    """Gate a write whose payload declares its own world against the room's world (AC5).
+
+    A journal event carries its own ``world`` (``JournalEvent.to_row`` stamps it), but the
+    physical journal room is bound to exactly one world. A payload that declares a
+    *different* world than the room's — or a ``world = simulated`` payload — is a ``policy
+    rejection``: storage separation delivers world isolation, so one world's journal room
+    never stores another world's evidence, and ``world = simulated`` has no governed
+    namespace in V1 (DEC-0110, DEC-0117). This is the write-side counterpart to
+    ``source_boundary`` routing on the observation's own world.
+
+    A payload that declares **no** world (``None``) inherits the room's world: the
+    data-policy writer (``JournalWriter``) always stamps the event with the store's world,
+    and a bare physical row carries none, so it is not refused here. A malformed world
+    value (not a ``World`` or a closed-set string) is an ``invalid input`` refusal.
+    """
+    if declared_world is None:
+        return None
+    if isinstance(declared_world, World):
+        resolved = declared_world
+    elif isinstance(declared_world, str):
+        try:
+            resolved = World(declared_world)
+        except ValueError:
+            return invalid_input(
+                "world",
+                "world is one of the closed set live | replay | simulated",
+                given=declared_world,
+            )
+    else:
+        return invalid_input(
+            "world",
+            "world is a World or one of the closed set live | replay | simulated",
+            given=repr(declared_world),
+        )
+    if resolved is not bound_world:
+        return policy_rejection(
+            "world",
+            "a journal event whose declared world differs from the room's is refused; "
+            "storage separation delivers world isolation, so one world's journal room "
+            "never stores another world's evidence, and world = simulated has no governed "
+            "namespace in V1 (DEC-0110, DEC-0117)",
+            declared=resolved.value,
+            room_world=bound_world.value,
+        )
+    return None
+
+
+@runtime_checkable
+class ReadSeal(Protocol):
+    """The CT-12 no-peek seal, consulted at a store read boundary (AC4; DEC-0119).
+
+    Injected structurally so the dependency-free store seam never imports the qmf-data
+    splits/seal vocabulary (M3). A boundary hands it the read's knowledge ``position`` and
+    the boundary's own name; the seal refuses (a ``policy rejection``) a read that reaches
+    into the sealed no-peek window and passes it otherwise, so a sealed read is never a
+    silent empty result. ``qmf.data.seal.HoldoutSeal`` satisfies this structurally.
+    """
+
+    def guard_read(
+        self, position: object, *, boundary: object
+    ) -> Result[None]:  # pragma: no cover - protocol seam
+        """Refuse a read into the sealed window at ``boundary``, or pass (value-or-refusal)."""
+        ...
+
+
+def guard_sealed_read(
+    seal: ReadSeal | None, position: object, *, boundary: str
+) -> TypedRefusal | None:
+    """Consult an injected no-peek seal at a read boundary, or pass (AC4; DEC-0119).
+
+    When a ``seal`` is wired and the caller declares its read ``position``, a read reaching
+    into the sealed no-peek window is a ``policy rejection`` returned to the caller — never a
+    silent empty result. No wired seal, or no declared position (``None``), is a pass: the
+    data-policy layer declares the knowledge position on a governed research read, and a
+    bare physical read carries none. ``boundary`` is the named ``ReadBoundary`` value the
+    seal coerces (kept a plain string so the store seam stays vocabulary-free).
+    """
+    if seal is None or position is None:
+        return None
+    guarded = seal.guard_read(position, boundary=boundary)
+    if is_refusal(guarded):
+        return guarded
+    return None

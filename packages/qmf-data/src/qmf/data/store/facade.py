@@ -28,7 +28,7 @@ from qmf.data.store.engines.parquet import ParquetColumnarEngine
 from qmf.data.store.engines.sqlite_meta import SqliteMetadataEngine
 from qmf.data.store.journal import JournalStore
 from qmf.data.store.registry_room import RegistryRoom
-from qmf.data.store.rooms import namespace_for_write
+from qmf.data.store.rooms import ReadSeal, namespace_for_write
 
 __all__ = ["EvidenceStore", "WorldStore"]
 
@@ -51,9 +51,16 @@ class WorldStore:
 class EvidenceStore:
     """A filesystem-rooted store that hands out per-world boundary bundles (AC1, AC5)."""
 
-    def __init__(self, root: Path, *, rotation_bytes: int = DEFAULT_ROTATION_BYTES) -> None:
+    def __init__(
+        self,
+        root: Path,
+        *,
+        rotation_bytes: int = DEFAULT_ROTATION_BYTES,
+        seal: ReadSeal | None = None,
+    ) -> None:
         self._root = root
         self._rotation_bytes = rotation_bytes
+        self._seal = seal
         self._worlds: dict[World, WorldStore] = {}
 
     @property
@@ -98,7 +105,9 @@ class EvidenceStore:
         open_stream = jsonl_opener(self._rotation_bytes)
         return WorldStore(
             world=world,
-            append_store=AppendStore(world, raw_engine=raw_engine, view_engine=view_engine),
+            append_store=AppendStore(
+                world, raw_engine=raw_engine, view_engine=view_engine, seal=self._seal
+            ),
             journal=JournalStore(world, journal_dir=journal_dir, open_stream=open_stream),
             registry_room=RegistryRoom(
                 world,
@@ -113,5 +122,6 @@ class EvidenceStore:
                 journal_dir=journal_dir,
                 lineage_dir=lineage_dir,
                 open_stream=open_stream,
+                seal=self._seal,
             ),
         )

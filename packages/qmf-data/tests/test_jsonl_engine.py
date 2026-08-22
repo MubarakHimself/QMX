@@ -107,10 +107,50 @@ def test_held_flag(tmp_path: Path) -> None:
     assert stream.held is True
 
 
-def test_rebuild_raises_on_partial_trailing_line(tmp_path: Path) -> None:
+# --- H2: a torn trailing line (crash mid-write) is recovered, not fatal ------
+
+
+def test_torn_trailing_line_is_quarantined_and_prefix_kept(tmp_path: Path) -> None:
+    # A crash mid-write can leave the final line without its LF (fsync incomplete). WAL
+    # tail handling: the committed prefix stays readable, the torn tail is quarantined to a
+    # .torn sidecar, and the whole stream is never made unreadable forever (H2).
     stream_dir = tmp_path / "s"
     stream_dir.mkdir(parents=True)
-    (stream_dir / "000000.jsonl").write_bytes(b'{"n":1}\n{"n":2}')  # no trailing LF
+    committed = _canon({"n": 1}) + b"\n" + _canon({"n": 2}) + b"\n"
+    torn = _canon({"n": 3})  # the interrupted write: no trailing LF
+    (stream_dir / "000000.jsonl").write_bytes(committed + torn)
+
+    reader = JsonlAppendStream(stream_dir, writer_token="<reader>")
+    reader.rebuild_index()  # must NOT raise
+    assert reader.read_all() == [_canon({"n": 1}), _canon({"n": 2})]
+    assert reader.record_count == 2
+    # the torn bytes are preserved for evidence and the data file truncated to the prefix
+    assert (stream_dir / "000000.jsonl.torn").read_bytes() == torn
+    assert (stream_dir / "000000.jsonl").read_bytes() == committed
+
+
+def test_append_resumes_after_torn_tail(tmp_path: Path) -> None:
+    # After the torn tail is quarantined on acquire, a writer appends cleanly onto the
+    # durable committed prefix, and the new line reads back with no corruption.
+    stream_dir = tmp_path / "s"
+    stream_dir.mkdir(parents=True)
+    (stream_dir / "000000.jsonl").write_bytes(_canon({"n": 1}) + b"\n" + _canon({"n": 2}))
+    writer = JsonlAppendStream(stream_dir, writer_token="w")
+    assert is_ok(writer.acquire())  # rebuild + quarantine the torn tail
+    fresh = _canon({"n": 9})
+    writer.append(fresh)
+    reader = JsonlAppendStream(stream_dir, writer_token="<reader>")
+    reader.rebuild_index()
+    assert reader.read_all() == [_canon({"n": 1}), fresh]
+
+
+def test_torn_line_in_non_tail_file_is_refused(tmp_path: Path) -> None:
+    # A torn (no-LF) line in an EARLIER rotation file is real corruption, not a crash tail:
+    # a rotation file is only left behind once complete, so a missing LF there is a refusal.
+    stream_dir = tmp_path / "s"
+    stream_dir.mkdir(parents=True)
+    (stream_dir / "000000.jsonl").write_bytes(_canon({"n": 1}) + b"\n" + _canon({"n": 2}))
+    (stream_dir / "000001.jsonl").write_bytes(_canon({"n": 3}) + b"\n")
     reader = JsonlAppendStream(stream_dir, writer_token="<reader>")
     with pytest.raises(StoreEngineError):
         reader.rebuild_index()

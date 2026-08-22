@@ -46,14 +46,20 @@ from qmf.data.store import (
     BackupInput,
     EvidenceStore,
     JournalStore,
+    ReadSeal,
     RegistryRoom,
     RoomRole,
     StoreReceipt,
     WorldStore,
+    guard_sealed_read,
 )
 from qmf.data.store.refusals import invalid_input, storage_failure
 
 __all__ = ["RebuildPins", "WorldRooms"]
+
+# The CT-12 read-boundary name a split-governed series resolution is guarded at
+# (DEC-0119); the pinned ReadBoundary value, coerced back by the injected seal.
+_RESEARCH_DOOR_BOUNDARY = "split-governed research door"
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,22 +121,26 @@ class WorldRooms:
     of them.
     """
 
-    def __init__(self, world_store: WorldStore) -> None:
+    def __init__(self, world_store: WorldStore, *, seal: ReadSeal | None = None) -> None:
         self._store = world_store
+        self._seal = seal
 
     @classmethod
-    def for_world(cls, store: EvidenceStore, world: object) -> Result[WorldRooms]:
+    def for_world(
+        cls, store: EvidenceStore, world: object, *, seal: ReadSeal | None = None
+    ) -> Result[WorldRooms]:
         """The :class:`WorldRooms` for ``world``, or a refusal (AC1, AC4).
 
         ``live`` and ``replay`` each resolve to their own independent set of seven rooms;
         ``world = simulated`` is reserved-unusable and its store has no governed namespace,
         so requesting it is a ``policy rejection`` — no simulated evidence is ever
-        instantiated (DEC-0110, DEC-0117).
+        instantiated (DEC-0110, DEC-0117). An optional no-peek ``seal`` is consulted at the
+        split-governed research door on :meth:`resolve_series` (AC4; DEC-0119).
         """
         bundle = store.for_world(world)
         if is_refusal(bundle):
             return bundle
-        return Ok(cls(bundle.value))
+        return Ok(cls(bundle.value, seal=seal))
 
     @property
     def world(self) -> World:
@@ -265,6 +275,12 @@ class WorldRooms:
         window)`` partition and its rows; a corrupt or non-series artifact is a ``storage
         failure`` refusal, never resolved as valid series evidence. The returned partition
         proves the evidence resolves inside its declared partition.
+
+        When a no-peek seal is wired, series resolution is guarded at the split-governed
+        research door: a series whose window reaches into the sealed no-peek period is a
+        ``policy rejection`` — never a silent empty result — so research never resolves its
+        own held-out evaluation period (AC4; DEC-0119). The read position is the series'
+        own window end, taken from the resolved evidence, so the seal cannot be bypassed.
         """
         rows = self._store.append_store.read_raw(archive_fingerprint, for_world=for_world)
         if is_refusal(rows):
@@ -277,7 +293,15 @@ class WorldRooms:
                 retryability=Retryability.NO,
                 context={"rows": len(materialized), "fingerprint": repr(archive_fingerprint)},
             )
-        return self._resolve_envelope(materialized[0], archive_fingerprint)
+        resolved = self._resolve_envelope(materialized[0], archive_fingerprint)
+        if is_refusal(resolved):
+            return resolved
+        sealed = guard_sealed_read(
+            self._seal, resolved.value.partition.window.end, boundary=_RESEARCH_DOOR_BOUNDARY
+        )
+        if sealed is not None:
+            return sealed
+        return resolved
 
     @staticmethod
     def _resolve_envelope(

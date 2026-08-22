@@ -263,6 +263,14 @@ class JsonlAppendStream:
         The index is never the authority — it is reconstructed from the LF-delimited
         lines across the ordinal files in order, so a lost index costs a rescan, never
         evidence. Sets the current rotation ordinal and size for the next append.
+
+        A torn (no-LF) trailing line at the very tail of the last rotation file — a
+        crash mid-write whose LF/fsync never completed — is recovered by standard WAL
+        tail handling: the partial tail is quarantined to a ``.torn`` sidecar and the
+        data file truncated to the durable committed prefix, so the committed lines stay
+        readable and appendable rather than making the whole stream unreadable forever
+        (H2). A torn line anywhere else (a non-tail rotation file) is real corruption and
+        stays a ``storage failure`` refusal.
         """
         self._index = {}
         self._order = []
@@ -270,8 +278,9 @@ class JsonlAppendStream:
         self._current_size = 0
         try:
             ordinals = self._ordinals_on_disk()
-            for ordinal in ordinals:
-                self._scan_file(ordinal)
+            last = len(ordinals) - 1
+            for position, ordinal in enumerate(ordinals):
+                self._scan_file(ordinal, is_last_file=position == last)
             if ordinals:
                 self._current_ordinal = ordinals[-1]
                 self._current_size = (
@@ -293,7 +302,7 @@ class JsonlAppendStream:
                 ordinals.append(int(match.group(1)))
         return sorted(ordinals)
 
-    def _scan_file(self, ordinal: int) -> None:
+    def _scan_file(self, ordinal: int, *, is_last_file: bool) -> None:
         """Index every LF-terminated line in one ordinal file, in order.
 
         Each line is validated as one JSON object at index time: a corrupt
@@ -303,19 +312,29 @@ class JsonlAppendStream:
         duplicate line — a line whose digest is already indexed — is skipped rather
         than re-ordered, so a physically duplicated append can never make a read
         return the same record twice under a wrong sequence (L4).
+
+        Only the final chunk of a file can lack an LF terminator. A torn (no-LF) tail is
+        tolerable ONLY as the very tail of the stream (``is_last_file``): it is
+        quarantined and the committed prefix kept (H2). A torn line in any earlier
+        rotation file is real corruption and is a ``storage failure`` refusal.
         """
         path = self._dir / _ordinal_filename(ordinal)
         offset = 0
+        torn_tail: bytes | None = None
         with path.open("rb") as handle:
             for raw in handle:
-                length = len(raw)
                 if not raw.endswith(b"\n"):
+                    if is_last_file:
+                        torn_tail = raw
+                        break
                     raise StoreEngineError(
-                        "the JSONL stream has a partial trailing line (no LF terminator)",
+                        "the JSONL stream has a partial line without an LF terminator "
+                        "before the stream tail (corruption in an earlier rotation file)",
                         engine="jsonl",
                         retryable=False,
                         detail={"stream": str(self._dir), "ordinal": ordinal},
                     )
+                length = len(raw)
                 payload = raw[:-1]
                 try:
                     json.loads(payload)
@@ -336,6 +355,40 @@ class JsonlAppendStream:
                     )
                     self._order.append(digest)
                 offset += length
+        if torn_tail is not None:
+            self._quarantine_torn_tail(ordinal, committed_prefix_len=offset, torn=torn_tail)
+
+    def _quarantine_torn_tail(
+        self, ordinal: int, *, committed_prefix_len: int, torn: bytes
+    ) -> None:
+        """Quarantine a torn (no-LF) trailing line, keeping the committed prefix (H2).
+
+        A crash mid-write can leave the final line without its LF terminator (the fsync
+        had not completed). Standard WAL tail handling: the durable committed prefix —
+        every LF-terminated line before it — stays readable and appendable, and the
+        partial tail is preserved to a ``<ordinal>.jsonl.torn`` sidecar for evidence
+        rather than making the whole stream unreadable forever. The data file is then
+        truncated to the committed prefix so the next append lands cleanly after it and a
+        later re-scan never re-reads the partial bytes. The read handle is already closed
+        before this runs, so the truncate never contends with the scan on Windows.
+        """
+        data_name = _ordinal_filename(ordinal)
+        sidecar = self._dir / f"{data_name}.torn"
+        try:
+            with sidecar.open("ab") as handle:
+                handle.write(torn)
+                handle.flush()
+                os.fsync(handle.fileno())
+            with (self._dir / data_name).open("r+b") as handle:
+                handle.truncate(committed_prefix_len)
+                handle.flush()
+                os.fsync(handle.fileno())
+        except OSError as exc:
+            raise StoreEngineError(
+                "could not quarantine a torn trailing JSONL line",
+                engine="jsonl",
+                detail={"stream": str(self._dir), "ordinal": ordinal, "os_error": str(exc)},
+            ) from exc
 
     # --- introspection (tests / diagnostics) --------------------------------
 

@@ -28,7 +28,12 @@ from qmf.data.store.engines import AppendStreamOpener, StoreEngineError
 from qmf.data.store.identity import admit
 from qmf.data.store.receipts import StoreReceipt
 from qmf.data.store.refusals import translate_engine_failure
-from qmf.data.store.rooms import RoomRole, namespace_block, require_same_world
+from qmf.data.store.rooms import (
+    RoomRole,
+    namespace_block,
+    require_same_world,
+    require_write_world,
+)
 from qmf.data.store.streams import HeldStreams, safe_segment
 
 __all__ = ["JournalStore"]
@@ -77,10 +82,20 @@ class JournalStore:
         writer is a ``policy rejection`` and does not proceed. A ``world = simulated``
         append is refused before any bytes are touched, and any engine failure is a
         ``storage failure`` refusal — no success is reported on failure (AC4, AC5).
+
+        The write is routed on **the event's own declared world**, not just the store's:
+        an event whose ``world`` differs from this boundary's room — or a ``world =
+        simulated`` event — is a ``policy rejection`` and never lands in this room, so a
+        SIMULATED or REPLAY event can never leak into the LIVE journal room (DEC-0110,
+        DEC-0117). An event that declares no world inherits the room's world (the
+        ``JournalWriter`` always stamps it; a bare physical row carries none).
         """
         blocked = namespace_block(self._world)
         if blocked is not None:
             return blocked
+        event_world = require_write_world(self._world, event.get("world"))
+        if event_world is not None:
+            return event_world
         name = safe_segment(stream_name)
         if is_refusal(name):
             return name

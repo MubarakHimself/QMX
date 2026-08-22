@@ -450,6 +450,16 @@ class KnowledgeRecord:
                 "(confirmed-at for structure, last-input knowable-at for indicators)",
                 given=repr(knowledge_time),
             )
+        if resolved_knowledge.value_ns < resolved_observed.value_ns:
+            return invalid_input(
+                "knowledge_time",
+                "knowledge-time cannot precede observed-at: a fact cannot become knowable "
+                "before it becomes observable. A negative gap (knowledge < observed) would "
+                "pass the straddle embargo check and slip sealed-region data into training "
+                "(DEC-0131)",
+                observed_ns=resolved_observed.value_ns,
+                knowledge_ns=resolved_knowledge.value_ns,
+            )
         resolved_kind = _coerce_kind(kind)
         if resolved_kind is None:
             return invalid_input(
@@ -730,6 +740,16 @@ class SplitManifest:
             denied = self._require_calendar(record.calendar_identity)
             if denied is not None:
                 return denied
+        if record.knowledge_time.value_ns < record.observed_at.value_ns:
+            return invalid_input(
+                "knowledge_time",
+                "knowledge-time precedes observed-at; a negative gap can never be covered by "
+                "an embargo and would leak sealed-region data across a boundary. A record is "
+                "normally refused this at construction (KnowledgeRecord.try_create); this is "
+                "the defensive guard for a trusted-internal-constructed record (DEC-0131)",
+                observed_ns=record.observed_at.value_ns,
+                knowledge_ns=record.knowledge_time.value_ns,
+            )
         if self.boundary_kind != "instant":
             return invalid_input(
                 "segments",

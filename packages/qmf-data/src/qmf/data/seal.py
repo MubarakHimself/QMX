@@ -266,6 +266,35 @@ class HoldoutSeal:
             )
         return Ok(position)
 
+    def guard_read(self, position: object, *, boundary: object) -> Result[None]:
+        """Guard a store read boundary against the seal, coercing store-neutral inputs (AC4).
+
+        The store seam consults the seal through this method — it is the
+        :class:`~qmf.data.store.rooms.ReadSeal` seam — so the dependency-free store never
+        imports the CT-12 ``ReadBoundary`` / ``SplitBoundary`` vocabulary (M3). ``boundary``
+        is the boundary's own :class:`ReadBoundary` (or its value string); ``position`` is
+        the read's knowledge position as a :class:`~qmf.data.splits.SplitBoundary`, an
+        :class:`~qmf.core.Instant`, or an int64 UTC-nanosecond count. A sealed position is a
+        ``policy rejection`` naming the boundary — never a silent empty result — and a
+        non-sealed position returns ``Ok(None)`` so the read proceeds. An unknown boundary,
+        or a position that is not a resolvable boundary, is an ``invalid input`` refusal.
+        """
+        resolved_boundary = _coerce_read_boundary(boundary)
+        if resolved_boundary is None:
+            return invalid_input(
+                "boundary",
+                "the read boundary is one of the closed ReadBoundary set",
+                given=repr(boundary),
+                allowed=[member.value for member in ReadBoundary],
+            )
+        resolved_position = _coerce_position(position)
+        if is_refusal(resolved_position):
+            return resolved_position
+        guarded = self.guard(resolved_position.value, boundary=resolved_boundary)
+        if is_refusal(guarded):
+            return guarded
+        return Ok(None)
+
     def authorize_final_look(
         self,
         journal: object,
@@ -403,3 +432,27 @@ def _coerce_world(value: object) -> World | None:
         except ValueError:
             return None
     return None
+
+
+def _coerce_read_boundary(value: object) -> ReadBoundary | None:
+    """Resolve ``value`` to a :class:`ReadBoundary` member (or its value string), or ``None``."""
+    if isinstance(value, ReadBoundary):
+        return value
+    if isinstance(value, str):
+        try:
+            return ReadBoundary(value)
+        except ValueError:
+            return None
+    return None
+
+
+def _coerce_position(value: object) -> Result[SplitBoundary]:
+    """Resolve a read position to a :class:`~qmf.data.splits.SplitBoundary`, or refuse.
+
+    Accepts a :class:`SplitBoundary` verbatim, or an :class:`~qmf.core.Instant` / int64
+    UTC-nanosecond count / :class:`~qmf.core.TradingDate` built through
+    :meth:`SplitBoundary.try_create`. Anything else is an ``invalid input`` refusal.
+    """
+    if isinstance(value, SplitBoundary):
+        return Ok(value)
+    return SplitBoundary.try_create(value)

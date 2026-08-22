@@ -17,6 +17,7 @@ from qmf.data.store.rooms import (
     namespace_block,
     namespace_for_write,
     require_same_world,
+    require_write_world,
 )
 
 
@@ -78,6 +79,37 @@ def test_require_same_world_refuses_cross_world() -> None:
 def test_require_same_world_rejects_unknown_world_string_and_type() -> None:
     assert is_refusal(require_same_world(World.LIVE, "banana"))
     assert is_refusal(require_same_world(World.LIVE, 42))
+
+
+# --- H1: require_write_world routes a write on the payload's own declared world ---
+
+
+def test_require_write_world_passes_none_and_matching() -> None:
+    # A payload that declares no world inherits the room's world (the writer stamps it).
+    assert require_write_world(World.LIVE, None) is None
+    # A matching declared world — a World member or its string — passes.
+    assert require_write_world(World.LIVE, World.LIVE) is None
+    assert require_write_world(World.LIVE, "live") is None
+
+
+def test_require_write_world_refuses_mismatch_and_simulated() -> None:
+    replay = require_write_world(World.LIVE, "replay")
+    assert replay is not None
+    assert replay.category is RefusalCategory.POLICY_REJECTION
+    assert replay.context.get("field") == "world"
+    assert replay.context.get("declared") == "replay"
+    simulated = require_write_world(World.LIVE, World.SIMULATED)
+    assert simulated is not None
+    assert simulated.category is RefusalCategory.POLICY_REJECTION
+
+
+def test_require_write_world_refuses_malformed() -> None:
+    bad_str = require_write_world(World.LIVE, "nowhere")
+    assert bad_str is not None
+    assert bad_str.category is RefusalCategory.INVALID_INPUT
+    bad_type = require_write_world(World.LIVE, 7)
+    assert bad_type is not None
+    assert bad_type.category is RefusalCategory.INVALID_INPUT
 
 
 def test_refusal_builders_carry_expected_categories() -> None:

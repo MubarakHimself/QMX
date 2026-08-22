@@ -39,13 +39,23 @@ entry; its designed failures are the value-level refusals a projection returns.
 - **Failure class:** `storage failure` (a CT-04 refusal category).
 - **Detection:** every engine (Parquet, DuckDB, SQLite, JSONL) wraps its library's
   exception — an `OSError` (disk full, locked, truncated), a `pyarrow` / `duckdb` /
-  `sqlite3` error, a short read below the index-recorded length, a partial trailing
-  JSONL line — into one normalized `StoreEngineError`. Each of the four boundaries
-  (CT-11 `AppendStore`, CT-13 `JournalStore`, CT-09 `RegistryRoom`, CT-26
+  `sqlite3` error, a short read below the index-recorded length, a partial JSONL line
+  **before the stream tail** — into one normalized `StoreEngineError`. Each of the four
+  boundaries (CT-11 `AppendStore`, CT-13 `JournalStore`, CT-09 `RegistryRoom`, CT-26
   `BackupInput`) catches `StoreEngineError` at the seam and calls
   `translate_engine_failure`, returning a `storage failure` typed refusal. The
   exception is **never** propagated across the package boundary, and persistence
   success is never reported on failure.
+- **Torn-tail recovery (the one exception to "any partial JSONL line is a failure").**
+  A crash mid-append can leave the **last** line of the last rotation file without its
+  LF terminator (the write's fsync never completed). This is a normal write-ahead-log
+  tail, not corruption: on index rebuild the JSONL engine **quarantines** the torn tail
+  to a `<ordinal>.jsonl.torn` sidecar (kept for evidence) and truncates the data file to
+  the durable committed prefix, so every LF-terminated line before it stays readable and
+  appendable. `read_stream`, `append`, AND `BackupInput.read_room` therefore all resume
+  over the committed prefix rather than refusing forever. A torn (no-LF) line **anywhere
+  but the tail** — in an earlier rotation file, which is only left behind once complete —
+  is genuine corruption and stays a `storage failure` refusal (retryability `no`).
 - **Auto-recovery / retry:** none automatic. A transient outage (a locked file, a
   disk that may free up) is `retryability = yes`; a corrupt or truncated store is
   `retryability = no`. The caller retries the same write once the condition clears
@@ -102,7 +112,13 @@ entry; its designed failures are the value-level refusals a projection returns.
 - **Detection:** `world = simulated` has no governed namespace in V1. Requesting a
   simulated `WorldStore` from `EvidenceStore.for_world` is refused, and each boundary
   additionally gates a write through `namespace_block` (via
-  `qmf.core.governed_namespace`) before touching any engine.
+  `qmf.core.governed_namespace`) before touching any engine. The CT-13 `JournalStore`
+  additionally routes on the **event's own declared world** (`require_write_world`): a
+  journal event whose `world` differs from the room's — a `simulated` or `replay` event
+  reaching a `live` journal room — is a `policy rejection` and never lands, so world
+  isolation holds on the event itself, not just on the store's own world (DEC-0110,
+  DEC-0117). An event that declares no world inherits the room's world (the
+  `JournalWriter` always stamps it).
 - **Auto-recovery / retry:** none automatic; the refusal cites `GAP-0048`. Produce
   evidence in a supported world (`live` or `replay`).
 - **Visible degraded state:** none; no bytes are written.
@@ -458,7 +474,12 @@ entry; its designed failures are the value-level refusals a projection returns.
   boundary while its `knowledge_time` follows it — a straddle — unless the declared embargo
   width covers the gap (`knowledge_time - observed_at`). A record whose knowledge time falls
   beyond the split's last boundary, or a trading-date split (record placement is the calendar
-  extension's job), is an `invalid input` refusal instead.
+  extension's job), is an `invalid input` refusal instead. The straddle gap is a non-negative
+  span by construction: `KnowledgeRecord.try_create` refuses a record whose knowledge-time
+  precedes its observed-at (a fact cannot become knowable before it becomes observable), and
+  `partition_record` defends against a trusted-internal-constructed record the same way — a
+  **negative** gap can never be covered by an embargo and would otherwise pass the embargo
+  check and slip sealed-region data into an earlier segment (an `invalid input` refusal).
 - **Auto-recovery / retry:** none automatic; the refusal names the `gap_ns` and the
   `embargo_ns`. Widen the embargo (a new manifest) or exclude the straddling record.
 - **Visible degraded state:** none; the record is not placed in any segment.
@@ -489,12 +510,19 @@ entry; its designed failures are the value-level refusals a projection returns.
 
 - **Failure class:** `policy rejection` (a CT-04 refusal category).
 - **Detection:** the newest sealed window (`registry:historical_holdout_months`) is a no-peek
-  lock, not retention — all history is kept regardless. `HoldoutSeal.guard` compares a read's
-  position against the frozen seal boundary and refuses a position at or after it, at each of
-  the four named `ReadBoundary` values (raw archive, processed, split-governed research door,
-  restored backup). The refusal is returned at **every** read boundary and is **never** a
-  silent empty result; it is enforced now, independent of the deferred look-ahead and
-  attempt-counter gates (GAP-0016/GAP-0017, DEC-0121).
+  lock, not retention — all history is kept regardless. A `HoldoutSeal` is **constructor-
+  injected** into the read boundaries (through the store-neutral `ReadSeal` seam, so the
+  dependency-free store never imports the CT-12 vocabulary) and **consulted on every read**,
+  never an optional per-call argument a caller can skip. It is wired at each of the four named
+  `ReadBoundary` values: the raw archive (`AppendStore.read_raw`), processed views
+  (`AppendStore.read_view`), the split-governed research door (`WorldRooms.resolve_series`,
+  which takes the read position from the series' own window so it cannot be bypassed), and
+  restored backups (`BackupInput.read_room`). `HoldoutSeal.guard_read` compares the read's
+  knowledge position against the frozen seal boundary and refuses a position at or after it
+  with a `policy rejection` naming the boundary — **never** a silent empty result. It is
+  enforced now, independent of the deferred look-ahead and attempt-counter gates
+  (GAP-0016/GAP-0017, DEC-0121). The one authorized final look stays the journaled
+  control-action path (FR-25), untouched by this read-boundary wiring.
 - **Auto-recovery / retry:** none automatic; the refusal names the `boundary` and the
   `seal_boundary`. Read outside the sealed window, or take the one authorized final look (FR-25).
 - **Visible degraded state:** none; no sealed evidence is returned, and the underlying history

@@ -26,9 +26,14 @@ from qmf.data.store.engines import (
 )
 from qmf.data.store.receipts import CONTRACT_FORMAT_VERSION
 from qmf.data.store.refusals import invalid_input, translate_engine_failure
-from qmf.data.store.rooms import RoomRole, require_same_world
+from qmf.data.store.rooms import ReadSeal, RoomRole, guard_sealed_read, require_same_world
 
 __all__ = ["BackupInput", "RecordExport", "RoomExport"]
+
+# The CT-12 read-boundary name a restored-backup read is guarded at (DEC-0119). A plain
+# string so the dependency-free store seam never imports the ReadBoundary enum; it is the
+# pinned ReadBoundary value and the seal coerces it back (M3).
+_RESTORED_BACKUP_BOUNDARY = "restored backup"
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,6 +80,7 @@ class BackupInput:
         journal_dir: Path,
         lineage_dir: Path,
         open_stream: AppendStreamOpener,
+        seal: ReadSeal | None = None,
     ) -> None:
         self._world = world
         self._raw = raw_engine
@@ -82,8 +88,11 @@ class BackupInput:
         self._journal_dir = journal_dir
         self._lineage_dir = lineage_dir
         self._open = open_stream
+        self._seal = seal
 
-    def read_room(self, room_role: object, *, for_world: object) -> Result[RoomExport]:
+    def read_room(
+        self, room_role: object, *, for_world: object, at: object | None = None
+    ) -> Result[RoomExport]:
         """Present ``room_role``'s records verbatim; a cross-world backup read refuses.
 
         ``for_world`` is required (M4). The evidence rooms (immutable raw archive,
@@ -91,10 +100,18 @@ class BackupInput:
         rebuildable and not-yet-populated rooms export empty in V1. Any engine or
         filesystem failure is a ``storage failure`` refusal, never raised across the
         seam (L1, AC4).
+
+        A restored-backup read still enforces the no-peek seal exactly as a live read
+        does (DEC-0119): when a seal is wired and the caller declares its read knowledge
+        position ``at``, a read reaching into the sealed window is a ``policy rejection``
+        at the restored-backup boundary — never a silent empty result (AC4).
         """
         gate = require_same_world(self._world, for_world)
         if is_refusal(gate):
             return gate
+        sealed = guard_sealed_read(self._seal, at, boundary=_RESTORED_BACKUP_BOUNDARY)
+        if sealed is not None:
+            return sealed
         role = _coerce_role(room_role)
         if role is None:
             return invalid_input(

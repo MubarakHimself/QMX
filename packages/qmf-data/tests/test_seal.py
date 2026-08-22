@@ -2,18 +2,25 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from qmf.core import (
     CalendarIdentity,
     CivilDate,
     Fingerprint,
     Instant,
+    Instrument,
+    Interval,
     RefusalCategory,
     TradingDate,
+    VenueId,
     World,
     WriterId,
     is_ok,
     is_refusal,
 )
+from qmf.data.partitions import SeriesPartition
+from qmf.data.rooms import WorldRooms
 from qmf.data.seal import (
     FINAL_LOOK_SUBTYPE,
     SEAL_CONTROL_STREAM,
@@ -21,7 +28,7 @@ from qmf.data.seal import (
     ReadBoundary,
 )
 from qmf.data.splits import ProducerHorizon, SplitBoundary, SplitManifest
-from qmf.data.store import EvidenceStore, JournalStore
+from qmf.data.store import EvidenceStore, JournalStore, RoomRole
 
 
 def _calendar(version: str = "v3") -> CalendarIdentity:
@@ -82,6 +89,35 @@ def _producer(name: str = "p", bound_ns: int = 50) -> ProducerHorizon:
     built = ProducerHorizon.try_create(name, bound_ns)
     assert is_ok(built)
     return built.value
+
+
+def _instant_seal(*, boundary_ns: int, world: World = World.LIVE, months: int = 12) -> HoldoutSeal:
+    # An instant-boundary seal so instant read positions compare cleanly (a trading-date
+    # seal against instant rows is the deferred calendar-extension case, GAP-0016).
+    built = HoldoutSeal.try_create(
+        seal_boundary=_instant_boundary(boundary_ns),
+        calendar_identity=_calendar(),
+        world=world,
+        holdout_months=months,
+    )
+    assert is_ok(built)
+    return built.value
+
+
+def _series_partition(*, start_ns: int, end_ns: int) -> SeriesPartition:
+    venue = VenueId.try_create("dukascopy")
+    assert is_ok(venue)
+    instrument = Instrument.try_create(venue.value, "EURUSD")
+    assert is_ok(instrument)
+    start = Instant.try_create(start_ns)
+    end = Instant.try_create(end_ns)
+    assert is_ok(start)
+    assert is_ok(end)
+    window = Interval.try_create(start.value, end.value)
+    assert is_ok(window)
+    part = SeriesPartition.try_create("dukascopy-ticks", instrument.value, window.value)
+    assert is_ok(part)
+    return part.value
 
 
 # --- construction -----------------------------------------------------------
@@ -209,15 +245,73 @@ def test_is_sealed_refuses_non_boundary() -> None:
 # --- guard at every read boundary -------------------------------------------
 
 
-def test_guard_refuses_sealed_read_at_every_boundary() -> None:
-    cal = _calendar()
-    seal = _seal(calendar=cal)
-    sealed_position = _trading_boundary(cal, 2025, 6, 1)
-    for boundary in ReadBoundary:
-        result = seal.guard(sealed_position, boundary=boundary)
-        assert is_refusal(result)
-        assert result.category is RefusalCategory.POLICY_REJECTION
-        assert result.context.get("boundary") == boundary.value
+def test_guard_refuses_sealed_read_at_every_boundary(tmp_path: Path) -> None:
+    # H3: the seal is wired INTO every read boundary and consulted on a REAL read — the raw
+    # archive, processed views, restored backup, and split-governed series resolution — not
+    # merely looped against guard() in isolation. A sealed read is a policy rejection at
+    # each; a read outside the window reads normally (AC4; DEC-0119).
+    seal = _instant_seal(boundary_ns=1_000, world=World.LIVE)
+    store = EvidenceStore(tmp_path / "store", seal=seal)
+    bundle = store.for_world(World.LIVE)
+    assert is_ok(bundle)
+    append = bundle.value.append_store
+    backup = bundle.value.backup_input
+    rooms = WorldRooms.for_world(store, World.LIVE, seal=seal)
+    assert is_ok(rooms)
+
+    raw = append.append_raw([{"t": 1, "px": 100}])
+    assert is_ok(raw)
+    view = append.materialize_view([{"bar": 1}])
+    assert is_ok(view)
+    sealed_series = rooms.value.place_series(
+        _series_partition(start_ns=2_000, end_ns=3_000), [{"t": 2_500, "px": 1}]
+    )
+    assert is_ok(sealed_series)
+    open_series = rooms.value.place_series(
+        _series_partition(start_ns=100, end_ns=500), [{"t": 300, "px": 1}]
+    )
+    assert is_ok(open_series)
+
+    sealed_at = _instant_boundary(2_000)  # >= the seal boundary 1000 -> sealed
+    open_at = _instant_boundary(500)  # < 1000 -> outside the sealed window
+
+    # raw archive boundary
+    raw_sealed = append.read_raw(raw.value.fingerprint.value, for_world=World.LIVE, at=sealed_at)
+    assert is_refusal(raw_sealed)
+    assert raw_sealed.category is RefusalCategory.POLICY_REJECTION
+    assert raw_sealed.context.get("boundary") == "raw archive"
+    assert is_ok(append.read_raw(raw.value.fingerprint.value, for_world=World.LIVE, at=open_at))
+    # a read that declares no position is not seal-relevant and reads normally
+    assert is_ok(append.read_raw(raw.value.fingerprint.value, for_world=World.LIVE))
+
+    # processed / views boundary
+    view_sealed = append.read_view(view.value.fingerprint.value, for_world=World.LIVE, at=sealed_at)
+    assert is_refusal(view_sealed)
+    assert view_sealed.context.get("boundary") == "processed"
+    assert is_ok(append.read_view(view.value.fingerprint.value, for_world=World.LIVE, at=open_at))
+
+    # restored backup boundary
+    backup_sealed = backup.read_room(
+        RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE, at=sealed_at
+    )
+    assert is_refusal(backup_sealed)
+    assert backup_sealed.context.get("boundary") == "restored backup"
+    assert is_ok(backup.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE, at=open_at))
+
+    # split-governed research door — series resolution derives its own position from the
+    # series window, so it cannot be bypassed by omitting a declared position.
+    series_sealed = rooms.value.resolve_series(
+        sealed_series.value.archive.fingerprint.value, for_world=World.LIVE
+    )
+    assert is_refusal(series_sealed)
+    assert series_sealed.category is RefusalCategory.POLICY_REJECTION
+    assert series_sealed.context.get("boundary") == "split-governed research door"
+    assert is_ok(
+        rooms.value.resolve_series(
+            open_series.value.archive.fingerprint.value, for_world=World.LIVE
+        )
+    )
+
     # Every named read boundary is covered (raw, processed, research door, restored backup).
     assert {member.value for member in ReadBoundary} == {
         "raw archive",
@@ -225,6 +319,28 @@ def test_guard_refuses_sealed_read_at_every_boundary() -> None:
         "split-governed research door",
         "restored backup",
     }
+
+
+def test_guard_read_coerces_boundary_and_position() -> None:
+    # The store seam consults the seal through guard_read with store-neutral inputs: a
+    # boundary NAME string and a position as an int64-ns count or a ReadBoundary member.
+    seal = _instant_seal(boundary_ns=1_000)
+    sealed = seal.guard_read(2_000, boundary="raw archive")
+    assert is_refusal(sealed)
+    assert sealed.category is RefusalCategory.POLICY_REJECTION
+    assert is_ok(seal.guard_read(500, boundary=ReadBoundary.RAW_ARCHIVE))
+
+
+def test_guard_read_refuses_bad_boundary_and_position() -> None:
+    seal = _instant_seal(boundary_ns=1_000)
+    bad_boundary = seal.guard_read(500, boundary="not-a-boundary")
+    assert is_refusal(bad_boundary)
+    assert bad_boundary.context.get("field") == "boundary"
+    bad_type = seal.guard_read(500, boundary=7)
+    assert is_refusal(bad_type)
+    assert bad_type.context.get("field") == "boundary"
+    bad_position = seal.guard_read("soon", boundary="raw archive")
+    assert is_refusal(bad_position)
 
 
 def test_guard_allows_pre_seal_read() -> None:

@@ -27,9 +27,21 @@ from qmf.data.store.engines import AnalyticsEngine, ColumnarEngine, StoreEngineE
 from qmf.data.store.identity import admit, resolve_fingerprint
 from qmf.data.store.receipts import StoreReceipt
 from qmf.data.store.refusals import invalid_input, missing_artifact, translate_engine_failure
-from qmf.data.store.rooms import RoomRole, namespace_block, require_same_world
+from qmf.data.store.rooms import (
+    ReadSeal,
+    RoomRole,
+    guard_sealed_read,
+    namespace_block,
+    require_same_world,
+)
 
 __all__ = ["AppendStore"]
+
+# The CT-12 read-boundary names this store consults the injected seal at (DEC-0119). Held
+# as plain strings so the dependency-free store seam never imports the ReadBoundary enum;
+# they are the pinned ReadBoundary values and the seal coerces them back (M3).
+_RAW_ARCHIVE_BOUNDARY = "raw archive"
+_PROCESSED_BOUNDARY = "processed"
 
 
 class AppendStore:
@@ -41,10 +53,12 @@ class AppendStore:
         *,
         raw_engine: ColumnarEngine,
         view_engine: AnalyticsEngine,
+        seal: ReadSeal | None = None,
     ) -> None:
         self._world = world
         self._raw = raw_engine
         self._views = view_engine
+        self._seal = seal
 
     @property
     def world(self) -> World:
@@ -104,13 +118,18 @@ class AppendStore:
         )
 
     def read_raw(
-        self, fingerprint: object, *, for_world: object
+        self, fingerprint: object, *, for_world: object, at: object | None = None
     ) -> Result[list[dict[str, object]]]:
         """Read raw-archive rows by fp1 fingerprint; a cross-world read refuses (AC5).
 
         ``for_world`` is required (M4). A well-formed fingerprint that no artifact is
         stored under is a ``stale evidence`` not-found refusal, not ``invalid input``
         (M5). The rows round-trip exactly and re-fingerprint to the same fp1 (H5).
+
+        When a no-peek seal is wired into this boundary and the caller declares its read
+        knowledge position ``at``, a read reaching into the sealed window is a ``policy
+        rejection`` at the raw-archive boundary — never a silent empty result (AC4;
+        DEC-0119). No wired seal, or no declared position, reads normally.
         """
         gate = require_same_world(self._world, for_world)
         if is_refusal(gate):
@@ -118,6 +137,9 @@ class AppendStore:
         key = resolve_fingerprint(fingerprint)
         if is_refusal(key):
             return key
+        sealed = guard_sealed_read(self._seal, at, boundary=_RAW_ARCHIVE_BOUNDARY)
+        if sealed is not None:
+            return sealed
         digest = key.value.digest
         try:
             if not self._raw.has(digest):
@@ -187,13 +209,17 @@ class AppendStore:
         )
 
     def read_view(
-        self, fingerprint: object, *, for_world: object
+        self, fingerprint: object, *, for_world: object, at: object | None = None
     ) -> Result[list[dict[str, object]]]:
         """Query a materialized analytics view by fp1 fingerprint (cross-world refuses).
 
         ``for_world`` is required (M4). A well-formed fingerprint that no view is
         materialized under is a ``stale evidence`` not-found refusal, not
         ``invalid input`` (M5).
+
+        When a no-peek seal is wired and the caller declares its read knowledge position
+        ``at``, a read reaching into the sealed window is a ``policy rejection`` at the
+        processed boundary — never a silent empty result (AC4; DEC-0119).
         """
         gate = require_same_world(self._world, for_world)
         if is_refusal(gate):
@@ -201,6 +227,9 @@ class AppendStore:
         key = resolve_fingerprint(fingerprint)
         if is_refusal(key):
             return key
+        sealed = guard_sealed_read(self._seal, at, boundary=_PROCESSED_BOUNDARY)
+        if sealed is not None:
+            return sealed
         digest = key.value.digest
         try:
             if not self._views.has(digest):
