@@ -173,12 +173,22 @@ class AppendStore:
         boundary never learns the ``qmf-core`` ``CalendarIdentity`` value type, so the
         engine seam stays value-neutral (the data-policy ``WorldRooms`` surface derives
         them from the calendar identity and requires them for a governed view).
+
+        An empty view (no rows) is an ``invalid input`` refusal, symmetric with
+        :meth:`append_raw`: a view of nothing carries no analytics and would otherwise mint
+        a receipt for a view of nothing (L5, L11).
         """
         blocked = namespace_block(self._world)
         if blocked is not None:
             return blocked
         engine = self._views
         materialized = list(rows)
+        if not materialized:
+            return invalid_input(
+                "rows",
+                "an analytics view must materialize over at least one row; an empty view is "
+                "refused rather than minting a receipt for a view of nothing (L5, L11)",
+            )
         try:
             admission = admit(
                 materialized,

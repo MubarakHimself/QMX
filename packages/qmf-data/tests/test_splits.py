@@ -760,6 +760,57 @@ def test_partition_record_straddle_accepted_with_embargo() -> None:
     assert result.value is SegmentRole.SEALED_TEST
 
 
+def test_partition_record_purge_zone_excludes_boundary_adjacent_record() -> None:
+    # L9: purge_width is applied at partition time — a cleanly-placed (non-straddling) record
+    # whose knowledge time lands within the purge width of a split boundary is excluded from
+    # BOTH adjacent segments, not admitted to either. Default manifest boundaries 1000/2000/3000.
+    manifest = _manifest(purge_ns=100, embargo_ns=100)
+    # 1950 is 50ns before the 2000 boundary (validation side): within the 100ns purge, refused.
+    validation_side = KnowledgeRecord.try_create(
+        observed_at=1_950, knowledge_time=1_950, kind=KnowledgeKind.INDICATOR
+    )
+    assert is_ok(validation_side)
+    refused_validation = manifest.partition_record(validation_side.value)
+    assert is_refusal(refused_validation)
+    assert refused_validation.category is RefusalCategory.POLICY_REJECTION
+    assert refused_validation.context.get("boundary_ns") == 2_000
+    assert refused_validation.context.get("purge_ns") == 100
+    # 2050 is 50ns after the SAME boundary (sealed-test side): also within purge — BOTH sides.
+    sealed_side = KnowledgeRecord.try_create(
+        observed_at=2_050, knowledge_time=2_050, kind=KnowledgeKind.STRUCTURE
+    )
+    assert is_ok(sealed_side)
+    refused_sealed = manifest.partition_record(sealed_side.value)
+    assert is_refusal(refused_sealed)
+    assert refused_sealed.category is RefusalCategory.POLICY_REJECTION
+    assert refused_sealed.context.get("boundary_ns") == 2_000
+
+
+def test_partition_record_at_purge_width_edge_is_admitted() -> None:
+    # A record exactly purge_width from the boundary is at the edge and admitted (the width
+    # covers strictly inside it): 1900 is exactly 100ns before the 2000 boundary.
+    manifest = _manifest(purge_ns=100, embargo_ns=100)
+    edge = KnowledgeRecord.try_create(
+        observed_at=1_900, knowledge_time=1_900, kind=KnowledgeKind.INDICATOR
+    )
+    assert is_ok(edge)
+    result = manifest.partition_record(edge.value)
+    assert is_ok(result)
+    assert result.value is SegmentRole.VALIDATION
+
+
+def test_partition_record_zero_purge_has_no_purge_zone() -> None:
+    # A zero purge width means no purge zone — a boundary-adjacent record is admitted.
+    manifest = _manifest(purge_ns=0, embargo_ns=0)
+    adjacent = KnowledgeRecord.try_create(
+        observed_at=1_999, knowledge_time=1_999, kind=KnowledgeKind.INDICATOR
+    )
+    assert is_ok(adjacent)
+    result = manifest.partition_record(adjacent.value)
+    assert is_ok(result)
+    assert result.value is SegmentRole.VALIDATION
+
+
 # --- coercion edge cases (defensive branches) -------------------------------
 
 

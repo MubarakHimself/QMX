@@ -32,7 +32,10 @@ not provide. Story 3.6 delivers the CT-25 read-time entity-journal projections
 role-scoped namespaces, and the legacy-five-stream mapping table — FR-32 through FR-36.
 Story 3.6 is **read-only**: it resolves projections over the already-recorded streams and
 writes nothing, so it introduces no new persistence failure and inherits no store-seam
-entry; its designed failures are the value-level refusals a projection returns.
+entry; its designed failures are the value-level refusals a projection returns. Two later
+entries, FR-37 and FR-38, are code-review amendments appended out of story order: FR-37
+amends Story 3.3's retention law (the citation index fails closed) and FR-38 amends Story
+3.4's dataset splits (the purge width is applied at partition time).
 
 ### FR-1: A store-engine failure is translated to a storage-failure refusal (AC4)
 
@@ -239,17 +242,21 @@ entry; its designed failures are the value-level refusals a projection returns.
   confirming, and writing resumes — the platform never quietly hands one stream to two
   writers.
 
-### FR-10: An empty raw artifact is refused, never stored as evidence
+### FR-10: An empty raw artifact or empty view is refused, never stored
 
 - **Failure class:** `invalid input` (a CT-04 refusal category).
 - **Detection:** `append_raw` with no rows is refused before any bytes are written —
-  empty evidence is meaningless and would otherwise store a receipt for nothing (L5).
+  empty evidence is meaningless and would otherwise store a receipt for nothing (L5). The
+  rule is **symmetric** across the two write seams: `materialize_view` with no rows is
+  refused the same way, so a view of nothing never mints a rebuildable-view receipt either
+  (L11). Both name the `rows` field.
 - **Auto-recovery / retry:** none automatic; the refusal names the `rows` field. Present
   at least one row.
 - **Visible degraded state:** none; nothing is stored.
 - **Notification tier:** silent-log. A wiring mistake surfaced as a value.
 - **Product-user affordance:** nothing failed at runtime for an end user; a component
-  tried to archive an empty artifact. Present the actual rows and retry.
+  tried to archive an empty artifact or materialize an empty view. Present the actual rows
+  and retry.
 
 ### FR-11: An incomplete source observation does not enter governed evidence (AC4)
 
@@ -625,10 +632,19 @@ store hiccups.
 - **Detection:** a journal stream's sequence is strictly increasing and **gapless** per
   `(writer, boot-epoch)`. `detect_sequence_gaps` (and `JournalReader.read_checked`) groups a
   stream's events by `(machine, role, stream, boot_epoch_id)` and checks each group runs
-  contiguously from the `WriterSequencer` start; a missing sequence (a lost event) or a
-  duplicate sequence is a `storage failure` refusal carrying `signal = loss`, the offending
-  writer, and the `expected_sequence` / `found_sequence`. The loss is **surfaced**, never a
-  silent success and never a silently-shortened stream.
+  contiguously from an expected base; a missing sequence (a lost event) or a duplicate
+  sequence is a `storage failure` refusal carrying `signal = loss`, the offending writer, and
+  the `expected_sequence` / `found_sequence`. The loss is **surfaced**, never a silent success
+  and never a silently-shortened stream. Two restart hazards are designed out (L10): (1) a
+  writer restarting under the **same** boot-epoch discovers its resume point via
+  `JournalWriter.resume`, which reads the recorded tail and starts one past the highest
+  sequence it already persisted — so it never re-issues an on-disk sequence that would
+  otherwise be reported as a permanent `duplicate` loss; and (2) `read_checked` **derives**
+  the expected base from the stream's own minimum observed sequence (rather than assuming
+  `0`), so a stream legitimately resumed from a non-zero start is not falsely alarmed for a
+  "gap from 0", while every interior gap and duplicate is still surfaced. A caller may still
+  pass an explicit `expected_start` to assert a specific base (e.g. `0` for a from-zero
+  stream).
 - **Auto-recovery / retry:** none — retryability is `no`, because a lost event will not
   reappear on a re-read. Recovery is to restore the stream from an off-machine backup or
   re-derive the missing evidence; the gap report says exactly which sequence is missing.
@@ -742,15 +758,22 @@ rule that keeps a projection from silently mixing live money with paper/demo evi
   a Book projection joins venue-authored orders and fills to their authorizing decision
   through the command fingerprint, never by threading Book identity into the venue payload
   (which would create the `qmf-venue -> qmf-risk` coupling default-deny forbids).
-  `guard_neutral_venue_payload` (called by `read_command_fingerprint` and by the venue-join
-  path of `entity_journal`) refuses any venue-authored event whose payload carries one of the
+  `guard_neutral_venue_payload` refuses a venue-authored event whose payload carries one of the
   `BOOK_IDENTITY_FIELDS` — `book_definition_fp`, `book_instance_id`, `bms_instance_id`,
-  `bot_definition_fp`, `seat_binding` — naming the `leaked_fields`.
+  `bot_definition_fp`, `seat_binding` — naming the `leaked_fields`. `read_command_fingerprint`
+  guards unconditionally; but the venue-join path of `entity_journal` applies the guard **only
+  to an event actually matched into the requested projection** (its command fingerprint is
+  indexed and its attribution matches the selected entity). This scoping is deliberate (L8): a
+  leaked key on a **matched** event still refuses the read, but an unrelated venue event on
+  **another** Book that happens to carry a leaked key does not poison this Book's clean
+  projection — the leak stays a data-quality fault of the leaking producer's own stream to
+  surface, not grounds to refuse an unrelated read.
 - **Auto-recovery / retry:** none automatic; the refusal names the leaked fields. Remove the
   Book identity from the venue payload and carry it on the authorizing command record instead,
   then re-project.
-- **Visible degraded state:** none; the leaked event is not projected, and the projection
-  refuses rather than silently attribute a venue event by an identity that should not be there.
+- **Visible degraded state:** none; a matched leaked event is not projected, and the
+  projection refuses rather than silently attribute a venue event by an identity that should
+  not be there; an unrelated leaked event on another Book is simply not joined into this read.
 - **Notification tier:** silent-log. A producer wiring mistake surfaced as a value.
 - **Product-user affordance:** nothing failed at runtime for an end user; a venue event was
   recorded with Book identity baked into it, which the design forbids. The refusal says which
@@ -768,7 +791,11 @@ rule that keeps a projection from silently mixing live money with paper/demo evi
   row that carries no declared `role` (`read_role`) — every projected row must carry a role.
   A risk-authored event that declares **no** binding at all (zero binding keys, e.g. a
   qmf-data control action) is not malformed — it simply does not match an entity selector and
-  is skipped, never refused.
+  is skipped, never refused. The AD-35 decay-cohort read (`decay_cohort_read`) applies the same
+  role rule with the same fail-closed edge (M7): an event carrying **no** `role` key is not a
+  cohort row and is skipped, but an event that **declares** a `role` which is malformed
+  (present but outside the closed `AccountRole` set — e.g. a typo'd `"LIVE"`) is refused, not
+  silently dropped while sibling rows survive — exactly as `book_journal` refuses the same row.
 - **Auto-recovery / retry:** none automatic; the refusal names the offending `field`
   (`book_instance_id`, `seat_binding`, `role`, …). Supply the missing part on the producing
   event and re-project.
@@ -819,3 +846,60 @@ rule that keeps a projection from silently mixing live money with paper/demo evi
 - **Product-user affordance:** nothing failed at runtime for an end user; a component asked
   for a Records stream name the platform does not carry. The refusal lists the five names that
   exist; use one of them.
+
+### FR-37: An unavailable citation index fails closed — deletion is never licensed (AC3)
+
+Amends Story 3.3's keep-forever-vs-deletion-licensed retention law (grouped with FR-15
+through FR-17).
+
+- **Failure class:** `unavailable dependency` (a CT-04 refusal category), retryability `yes`.
+- **Detection:** deletion is licensed **only** for a rebuildable analytics view that no result
+  label cites, answered by the injected `CitationIndex` seam, which reaches the registry across
+  the package boundary. That seam can be unreachable or raise (a `ConnectionError`, a timeout).
+  `RetentionPolicy.verdict_for` returns a `Result`: it catches any failure of the citation
+  read and returns an `unavailable dependency` typed refusal naming the `citations` field —
+  **never** a raised exception across the package seam (CT-04, AR-13). Because deletion is
+  licensed only on a *positive, successful* "no result label cites this" answer, a failed,
+  unreachable, stale, or empty index yields **no** deletion licence: `may_delete` returns
+  `False`. A retained-forever artifact (raw archive, journal, registry records, lineage) is
+  decided by its receipt alone and never consults the seam, so it is unaffected. This closes a
+  fail-**open** hole where a raising or empty index previously licensed deleting a cited
+  input's view (Story 3.3 AC3: "no result's cited input is ever deleted").
+- **Auto-recovery / retry:** retryability is `yes` — the dependency is transiently down.
+  Restore the citation index (the registry seam) and re-ask; deletion stays refused until a
+  successful "nothing cites this" answer is obtained.
+- **Visible degraded state:** none; nothing is deleted. The verdict fails closed — the safe
+  direction for an irreversible delete — so an artifact is retained rather than risked.
+- **Notification tier:** operator-visible. A retention verdict that cannot consult the citation
+  index is worth surfacing, since it stalls deletion housekeeping.
+- **Product-user affordance:** nothing failed at runtime for an end user; a cleanup step could
+  not confirm whether a rebuildable view is still cited by a result, so the platform keeps it
+  rather than risk deleting an input a result depends on. It retries once the registry is back.
+
+### FR-38: A record within the purge width of a split boundary is excluded from both segments (AC2, AC3)
+
+Amends Story 3.4's CT-12 dataset splits (grouped with FR-18 through FR-25).
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** `purge_width` is a required, fingerprinted manifest field; `partition_record`
+  now **applies** it (previously only `embargo_width` was applied, so a fingerprinted purge
+  width had no effect). A cleanly-placed record — one whose `observed_at` and `knowledge_time`
+  fall in the same segment — whose knowledge time lands within `purge_width` of the boundary
+  between two adjacent segments is excluded from **both**: its warm-up-plus-confirmation window
+  brushes the boundary, so admitting it to either adjacent split would leak across it, and it
+  is quarantined (refused) instead, naming the `boundary_ns`, `purge_ns`, and `distance_ns`. A
+  record exactly `purge_width` away is at the edge and admitted; a zero purge width has no
+  purge zone; the split's terminal boundary (the last segment's upper bound, beyond which a
+  record is refused as out-of-range) is not an inter-segment boundary and is not a purge edge.
+  A record that **straddles** a boundary (observed-at and knowledge-time in different segments)
+  is governed by the embargo rule (FR-22), not the purge zone.
+- **Auto-recovery / retry:** none automatic; the refusal names the `boundary_ns` and
+  `purge_ns`. A boundary-adjacent record cannot be placed in either split without leaking;
+  exclude it from training/evaluation, or mint a split whose boundaries do not fall within a
+  purge width of it.
+- **Visible degraded state:** none; the record is not placed in any segment.
+- **Notification tier:** silent-log. A leak-prevention refusal surfaced as a value.
+- **Product-user affordance:** nothing failed at runtime for an end user; a record sitting
+  right on the edge of a split boundary would have leaked information across the held-out
+  boundary. The platform excludes it from both adjacent splits rather than leak; drop the
+  boundary-adjacent record or re-cut the split.

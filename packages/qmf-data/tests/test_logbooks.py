@@ -502,6 +502,35 @@ def test_venue_leak_in_join_path_refuses() -> None:
     assert is_refusal(book_journal(events, _BOOK, role=AccountRole.LIVE, command_index=index))
 
 
+def test_venue_leak_on_another_book_does_not_poison_this_projection() -> None:
+    # L8: a leaked-key venue event that joins to a DIFFERENT book must not refuse THIS book's
+    # clean projection. The neutral-payload guard is scoped to events matched into the
+    # requested read; an unrelated leaky producer on another book is not grounds to refuse.
+    decision = _event(
+        "decision",
+        _binding_fields(command_fingerprint=_CMD_A.value),
+        outcome=DecisionOutcome.AUTHORIZED,
+        sequence=0,
+    )
+    other_decision = _event(
+        "decision",
+        _binding_fields(command_fingerprint=_CMD_B.value) | {"book_instance_id": "other-book"},
+        outcome=DecisionOutcome.AUTHORIZED,
+        sequence=1,
+    )
+    leaked_other_order = _event(
+        "order",
+        {"command_fingerprint": _CMD_B.value, "role": "live", "book_instance_id": "other-book"},
+        sequence=2,
+    )
+    events = [decision, other_decision, leaked_other_order]
+    index = _ok(CommandIndex.build(events))
+    logbook = _ok(book_journal(events, _BOOK, role=AccountRole.LIVE, command_index=index))
+    # The unrelated leaked order attributes to other-book, is not matched here, and is simply
+    # not joined — never a refusal that would poison this Book's read.
+    assert [row.event for row in logbook.rows] == [decision]
+
+
 def test_venue_event_with_untracked_command_is_skipped() -> None:
     decision = _event(
         "decision",
@@ -595,6 +624,34 @@ def test_decay_cohort_read_spans_roles_and_carries_role() -> None:
     assert len(logbook.rows) == 3
     assert any(row.binding is None for row in logbook.rows)
     assert all(isinstance(row.role, AccountRole) for row in logbook.rows)
+
+
+def test_decay_cohort_absent_role_skipped_malformed_role_refused() -> None:
+    # M7: an event with NO role key is not a cohort row and is skipped (pinned behavior),
+    # but an event that DECLARES a role which is malformed (present but outside the closed
+    # AccountRole set) is refused — matching every other projection — not silently dropped.
+    absent = _event("data quality", {"metric": "spread"}, sequence=0)
+    ok = _ok(decay_cohort_read([absent]))
+    assert ok.rows == ()  # the absent-role event contributes no cohort row
+
+    malformed = _event("data quality", {"metric": "spread", "role": "LIVE"}, sequence=0)
+    refused = decay_cohort_read([malformed])
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.INVALID_INPUT
+    assert refused.context.get("field") == "role"
+
+
+def test_decay_cohort_malformed_role_refused_like_book_journal() -> None:
+    # The same malformed-role row book_journal refuses is refused by decay_cohort_read too,
+    # rather than silently kept in the cohort read (the M7 parity the finding names).
+    malformed = _event(
+        "decision",
+        _binding_fields() | {"role": "LIVE"},
+        outcome=DecisionOutcome.AUTHORIZED,
+        sequence=0,
+    )
+    assert is_refusal(book_journal([malformed], _BOOK))
+    assert is_refusal(decay_cohort_read([malformed]))
 
 
 def test_convenience_wrappers_propagate_selector_refusals() -> None:

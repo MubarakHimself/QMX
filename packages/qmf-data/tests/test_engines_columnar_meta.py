@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
-from qmf.core import canonical_bytes, fingerprint, is_ok
+from qmf.core import Instant, canonical_bytes, fingerprint, is_ok
 from qmf.data.store.engines import StoreEngineError
 from qmf.data.store.engines import duckdb_views as duckdb_views_module
 from qmf.data.store.engines.duckdb_views import DuckDbAnalyticsEngine
@@ -193,3 +194,38 @@ def test_duckdb_corrupt_payload_decode_is_storage_failure(
     monkeypatch.setattr(duckdb_views_module.json, "loads", _boom)
     with pytest.raises(StoreEngineError):
         engine.query(key)
+
+
+def test_duckdb_materialize_serializes_value_typed_rows(tmp_path: Path) -> None:
+    """M5: a row holding a qmf-core value type (an Instant) is identity-valid — its
+    fp1-canonical bytes resolve the Instant to JSON-native content — so it materializes
+    through the canonical path, where json.dumps(dict(row)) over the raw row would raise."""
+    engine = DuckDbAnalyticsEngine(tmp_path / "proc" / "views.duckdb")
+    instant = Instant.try_create(1_700_000_000_000_000_000)
+    assert is_ok(instant)
+    rows = [{"t": instant.value, "v": 10}, {"t": instant.value, "v": 20}]
+    key, canonical = _identity(rows)  # canonical_bytes resolves the Instant to its fp1 content
+    engine.materialize(key, rows, canonical)  # must NOT raise on the value-typed row
+    assert engine.has(key)
+    # The view queries back as the canonical JSON-native form (Instant -> its fp1 identity).
+    assert engine.query(key) == json.loads(canonical)
+    assert engine.read_canonical(key) == canonical
+
+
+def test_duckdb_unserializable_canonical_is_non_retryable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """M5: a row that genuinely cannot serialize (canonical bytes not decodable JSON) is
+    a storage failure with retryability=no — a retry can never make it decode, unlike the
+    transient (retryable) engine/disk faults."""
+    engine = DuckDbAnalyticsEngine(tmp_path / "proc" / "views.duckdb")
+    rows = [{"t": 1, "v": 10}]
+    key, canonical = _identity(rows)
+
+    def _boom(_text: object) -> object:
+        raise ValueError("undecodable canonical bytes")
+
+    monkeypatch.setattr(duckdb_views_module.json, "loads", _boom)
+    with pytest.raises(StoreEngineError) as caught:
+        engine.materialize(key, rows, canonical)
+    assert caught.value.retryable is False

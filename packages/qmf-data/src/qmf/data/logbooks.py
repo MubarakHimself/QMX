@@ -850,14 +850,17 @@ def _match_venue_authored(
 ) -> Result[ProjectedRow | None]:
     """Project a venue-authored event via the command-fingerprint join (value-or-refusal).
 
-    Guards the neutral payload (a leaked Book identity is a refusal), then joins the event's
-    command fingerprint through the index. Returns ``Ok(None)`` when the event carries no
-    command fingerprint or the command is not indexed or the attribution does not match; a
-    leaked Book identity or a matched row missing its role is a refusal.
+    Joins the event's command fingerprint through the index, and — **only for an event that
+    actually joins into this requested projection** — guards its neutral payload: a leaked
+    Book/Bot identity on a *matched* event is a refusal (AC2). Returns ``Ok(None)`` when the
+    event carries no command fingerprint, the command is not indexed, or the attribution does
+    not match — the event is not part of this projection.
+
+    The guard is scoped to matched events on purpose (L8): an unrelated venue event on
+    *another* Book that happens to carry a leaked key must not poison this Book's clean read.
+    Such a leak is still a producer wiring fault, but it is a data-quality concern for the
+    leaking producer's own stream to surface — not grounds to refuse an unrelated projection.
     """
-    guard = guard_neutral_venue_payload(event)
-    if is_refusal(guard):
-        return guard
     command_fp = _coerce_fingerprint(event.payload.get(COMMAND_FINGERPRINT_KEY))
     if command_fp is None:
         return Ok(None)
@@ -871,6 +874,10 @@ def _match_venue_authored(
         matched = _binding_matches(selector, attribution.binding)
     if not matched:
         return Ok(None)
+
+    guard = guard_neutral_venue_payload(event)
+    if is_refusal(guard):
+        return guard
 
     role = read_role(event)
     if is_refusal(role):
@@ -1078,15 +1085,23 @@ def decay_cohort_read(events: Iterable[JournalEvent]) -> Result[Logbook]:
     One of the two — and only two — reads permitted to span account roles. It projects every
     cohort event that carries a ``role`` across roles (live and paper alike, so alpha-decay
     is sensed across the roles a strategy operated in), carrying ``role`` on every row and
-    declaring :attr:`CrossRoleRead.DECAY_COHORT`. An event that carries no declared role is
-    not a cohort row and is skipped; this never writes and never crosses roles on write
-    (DEC-0158).
+    declaring :attr:`CrossRoleRead.DECAY_COHORT`. An event that carries **no** ``role`` key is
+    not a cohort row and is skipped; but a row that **declares** a ``role`` which is
+    malformed (present but outside the closed :class:`~qmf.core.AccountRole` set) is a refusal
+    — the same fail-closed rule every other projection applies (FR-34), not a silent drop that
+    would keep 1 of 3 rows while ``book_journal`` refuses the same row. This never writes and
+    never crosses roles on write (DEC-0158).
     """
     rows: list[ProjectedRow] = []
     for event in events:
         role = read_role(event)
         if is_refusal(role):
-            continue
+            if ROLE_KEY not in event.payload:
+                # No role key: this event is not a cohort row (the intended skip).
+                continue
+            # A role key IS present but does not resolve to a closed AccountRole — a
+            # malformed declaration, refused rather than silently dropped (M7).
+            return role
         rows.append(
             ProjectedRow(
                 event=event,

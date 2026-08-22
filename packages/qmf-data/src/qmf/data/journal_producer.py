@@ -131,6 +131,34 @@ class JournalWriter:
         self._next_sequence = start
         self._blocked: _PendingWrite | None = None
 
+    @classmethod
+    def resume(
+        cls,
+        journal: JournalStore,
+        writer: WriterId,
+        *,
+        stream_name: str | None = None,
+    ) -> Result[JournalWriter]:
+        """Construct a writer whose next sequence resumes past the persisted stream tail (AC2).
+
+        A plain ``JournalWriter(...)`` cannot discover its resume point: on a restart under the
+        **same** ``(machine, role, stream, boot_epoch_id)`` it re-mints from ``start = 0`` and
+        re-issues sequences already on disk, which :func:`detect_sequence_gaps` then reports as
+        permanent ``duplicate`` loss (L10). This factory reads the recorded stream, finds the
+        highest sequence *this exact writer* already persisted for its boot-epoch, and starts
+        one past it — so a resumed writer never re-issues a sequence and the per-(writer,
+        boot-epoch) stream stays gapless. A never-written stream, or a fresh boot-epoch with no
+        prior events, resumes at ``0`` (its own independent run). A corrupt stream surfaces as
+        the reader's ``storage failure`` refusal, never a silent resume-at-zero that would then
+        re-issue and manufacture duplicates.
+        """
+        name = stream_name if stream_name is not None else writer.stream
+        existing = JournalReader(journal).read(name, for_world=journal.world)
+        if is_refusal(existing):
+            return existing
+        start = _resume_sequence(existing.value, writer)
+        return Ok(cls(journal, writer, stream_name=name, start=start))
+
     @property
     def world(self) -> World:
         """The world this writer's journal stream is instantiated for."""
@@ -393,18 +421,51 @@ class JournalReader:
         return Ok(events)
 
     def read_checked(
-        self, stream_name: object, *, for_world: object, expected_start: int = 0
+        self, stream_name: object, *, for_world: object, expected_start: int | None = None
     ) -> Result[list[JournalEvent]]:
         """Read a stream and refuse if a per-(writer, boot-epoch) sequence gap is found (AC2).
 
         Reads the typed events, then runs :func:`detect_sequence_gaps`; a detected gap is a
         ``storage failure`` that **signals loss and is surfaced**, never a silent success.
         On a gapless stream the events are returned in order.
+
+        When ``expected_start`` is not supplied it is **derived from the stream** — its own
+        minimum observed sequence — rather than defaulting to ``0`` (L10). A writer legitimately
+        resumed from ``start = N`` (see :meth:`resume`) begins its stream at N, and a fixed
+        ``expected_start = 0`` would falsely alarm a "gap" from 0 to N; deriving the base still
+        surfaces every interior gap and any duplicate. Pass an explicit ``expected_start`` to
+        assert a specific base (e.g. ``0`` to require a from-zero stream).
         """
         events = self.read(stream_name, for_world=for_world)
         if is_refusal(events):
             return events
+        if expected_start is None:
+            expected_start = _derived_expected_start(events.value)
         gap = detect_sequence_gaps(events.value, expected_start=expected_start)
         if is_refusal(gap):
             return gap
         return events
+
+
+def _resume_sequence(events: Sequence[JournalEvent], writer: WriterId) -> int:
+    """One past the highest sequence ``writer`` already persisted, or ``0`` if none (L10).
+
+    Matches on the full :class:`~qmf.core.WriterId` identity (machine, role, stream,
+    boot_epoch_id): resuming under the same boot-epoch continues that epoch's gapless
+    sequence, while a fresh boot-epoch (no matching events) starts its own run at ``0``.
+    """
+    persisted = [event.sequence for event in events if event.writer == writer]
+    return max(persisted) + 1 if persisted else 0
+
+
+def _derived_expected_start(events: Sequence[JournalEvent]) -> int:
+    """The stream's own first sequence — the base :meth:`JournalReader.read_checked` checks
+    contiguity from when the caller declares none (L10).
+
+    A stream legitimately resumed from ``start = N`` begins at N; defaulting the expected start
+    to ``0`` would falsely alarm a "gap" from 0 to N. Deriving the base from the minimum
+    observed sequence still surfaces every interior gap and any duplicate — only an
+    undetectable missing prefix (a lost sequence 0 that leaves no trace) is not conjured into
+    a false alarm.
+    """
+    return min((event.sequence for event in events), default=0)

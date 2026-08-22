@@ -89,6 +89,20 @@ def test_append_raw_presented_fingerprint_match_and_mismatch(store: EvidenceStor
     assert bad.category.value == "invalid input"
 
 
+def test_empty_input_is_refused_symmetrically(store: EvidenceStore) -> None:
+    # L11: append_raw already refuses an empty artifact (L5); materialize_view is made
+    # symmetric — an empty view mints no receipt for a view of nothing.
+    boundary = _append_store(store)
+    empty_raw = boundary.append_raw([])
+    assert is_refusal(empty_raw)
+    assert empty_raw.category.value == "invalid input"
+    assert empty_raw.context.get("field") == "rows"
+    empty_view = boundary.materialize_view([])
+    assert is_refusal(empty_view)
+    assert empty_view.category.value == "invalid input"
+    assert empty_view.context.get("field") == "rows"
+
+
 def test_materialize_view_is_rebuildable_not_evidence(store: EvidenceStore) -> None:
     boundary = _append_store(store)
     result = boundary.materialize_view(_ROWS)

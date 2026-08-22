@@ -338,3 +338,117 @@ def test_reader_corrupt_row_is_refused(tmp_path: Path) -> None:
     result = JournalReader(journal).read("dq", for_world=World.LIVE)
     assert is_refusal(result)
     assert result.context.get("field") == "fingerprint"
+
+
+# --- L10: restart-resume and stream-derived gap base ------------------------
+
+
+def _seed_stream(journal: JournalStore, writer: WriterId, sequences: tuple[int, ...]) -> None:
+    for seq in sequences:
+        event = JournalEvent.try_create(
+            event_type="data quality",
+            writer=writer,
+            sequence=seq,
+            instant=1_000 + seq,
+            world=World.LIVE,
+            payload={"n": seq},
+        )
+        assert is_ok(event)
+        assert is_ok(journal.append("dq", writer, event.value.to_row()))
+
+
+def test_resume_derives_next_sequence_and_produces_no_duplicates(tmp_path: Path) -> None:
+    # L10: a restart under the SAME boot_epoch_id must resume past the persisted tail, not
+    # re-issue sequences already on disk (which detect_sequence_gaps reports as duplicate loss).
+    journal_dir = tmp_path / "journal"
+    writer = _writer()
+    first = JournalStore(World.LIVE, journal_dir=journal_dir, open_stream=jsonl_opener())
+    jw = JournalWriter(first, writer, stream_name="dq")
+    for i in range(3):
+        assert is_ok(jw.record_data_quality({"n": i}, instant=1_000 + i))
+    assert jw.next_sequence == 3
+    first.close()  # clean shutdown releases the one-writer hold
+
+    # A true restart: a fresh store over the same directory, resuming the same writer.
+    second = JournalStore(World.LIVE, journal_dir=journal_dir, open_stream=jsonl_opener())
+    resumed = JournalWriter.resume(second, writer, stream_name="dq")
+    assert is_ok(resumed)
+    jw2 = resumed.value
+    assert jw2.next_sequence == 3  # derived from the tail, not restarted at 0
+    for i in range(3, 5):
+        result = jw2.record_data_quality({"n": i}, instant=1_000 + i)
+        assert is_ok(result)
+        assert result.value.event.sequence == i
+
+    checked = JournalReader(second).read_checked("dq", for_world=World.LIVE)
+    assert is_ok(checked)  # no duplicate, no gap
+    assert [e.sequence for e in checked.value] == [0, 1, 2, 3, 4]
+
+
+def test_resume_on_empty_stream_starts_at_zero(store: EvidenceStore) -> None:
+    resumed = JournalWriter.resume(_live_journal(store), _writer(), stream_name="fresh")
+    assert is_ok(resumed)
+    assert resumed.value.next_sequence == 0
+
+
+def test_resume_new_boot_epoch_starts_its_own_run_at_zero(tmp_path: Path) -> None:
+    # A resume under a DIFFERENT boot_epoch_id is a new gapless run: no matching events, so it
+    # starts at 0 — its own per-(writer, boot-epoch) sequence, independent of the prior epoch.
+    journal_dir = tmp_path / "journal"
+    epoch_one = _writer()
+    journal = JournalStore(World.LIVE, journal_dir=journal_dir, open_stream=jsonl_opener())
+    _seed_stream(journal, epoch_one, (0, 1, 2))
+    epoch_two = WriterId.try_create("node-a", "data", "dq", "boot-2")
+    assert is_ok(epoch_two)
+    resumed = JournalWriter.resume(journal, epoch_two.value, stream_name="dq")
+    assert is_ok(resumed)
+    assert resumed.value.next_sequence == 0
+
+
+def test_resume_propagates_a_corrupt_stream_refusal(tmp_path: Path) -> None:
+    # A corrupt stream surfaces as the reader's storage-failure refusal, never a silent
+    # resume-at-zero that would then re-issue and manufacture duplicates.
+    journal = JournalStore(World.LIVE, journal_dir=tmp_path / "journal", open_stream=jsonl_opener())
+    writer = _writer()
+    bad_row: Mapping[str, object] = {
+        "event_type": "data quality",
+        "writer": {
+            "machine": writer.machine,
+            "role": writer.role,
+            "stream": writer.stream,
+            "boot_epoch_id": writer.boot_epoch_id,
+        },
+        "sequence": 0,
+        "instant_ns": 1,
+        "world": "live",
+        "payload": {"n": 0},
+        "fingerprint": "fp1:sha256:" + "0" * 64,
+        "format_version": 1,
+    }
+    assert is_ok(journal.append("dq", writer, bad_row))
+    resumed = JournalWriter.resume(journal, writer, stream_name="dq")
+    assert is_refusal(resumed)
+
+
+def test_read_checked_derives_expected_start_from_stream(tmp_path: Path) -> None:
+    # L10: a stream legitimately beginning at a non-zero sequence (a writer resumed from
+    # start=N) must not trip a false "gap from 0" alarm; read_checked derives the base from
+    # the stream's own minimum. An explicit expected_start still asserts a specific base.
+    journal = JournalStore(World.LIVE, journal_dir=tmp_path / "journal", open_stream=jsonl_opener())
+    writer = _writer()
+    _seed_stream(journal, writer, (5, 6, 7))
+    reader = JournalReader(journal)
+    checked = reader.read_checked("dq", for_world=World.LIVE)
+    assert is_ok(checked)  # 5,6,7 contiguous from its own base — no false alarm
+    assert [e.sequence for e in checked.value] == [5, 6, 7]
+    strict = reader.read_checked("dq", for_world=World.LIVE, expected_start=0)
+    assert is_refusal(strict)  # an explicit from-zero assertion still surfaces the prefix gap
+
+
+def test_read_checked_still_surfaces_interior_gap_with_derived_start(tmp_path: Path) -> None:
+    journal = JournalStore(World.LIVE, journal_dir=tmp_path / "journal", open_stream=jsonl_opener())
+    writer = _writer()
+    _seed_stream(journal, writer, (5, 7))  # missing 6
+    checked = JournalReader(journal).read_checked("dq", for_world=World.LIVE)
+    assert is_refusal(checked)  # derived base 5, interior gap at 6 still surfaced as loss
+    assert checked.context.get("signal") == "loss"

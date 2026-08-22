@@ -778,6 +778,14 @@ class SplitManifest:
                     gap_ns=gap,
                     embargo_ns=self.embargo_width.value_ns,
                 )
+            # A straddle the embargo covers is governed by the embargo (the forward
+            # observed-at -> knowledge-time gap): place it by knowledge time. The purge zone
+            # below governs the complementary case — a record that sits cleanly inside one
+            # segment but brushes a boundary — so it is not re-applied here (DEC-0131).
+            return Ok(self.segments[knowledge_index].role)
+        purged = self._purge_zone_refusal(record.knowledge_time, knowledge_index)
+        if purged is not None:
+            return purged
         return Ok(self.segments[knowledge_index].role)
 
     def fp1_identity(self) -> dict[str, object]:
@@ -816,6 +824,53 @@ class SplitManifest:
             if boundary is not None and instant.value_ns < boundary.value_ns:
                 return index
         return None
+
+    def _purge_zone_refusal(
+        self, knowledge_time: Instant, knowledge_index: int
+    ) -> TypedRefusal | None:
+        """A ``policy rejection`` if ``knowledge_time`` sits within ``purge_width`` of an
+        inter-segment boundary, else ``None`` (AC2, AC3; CT-12, DEC-0131).
+
+        ``purge_width`` is a required, fingerprinted manifest field; this is where it is
+        **applied** (previously only ``embargo_width`` was, so a fingerprinted purge width had
+        no effect). A cleanly-placed (non-straddling) record whose knowledge time lands within
+        the purge width of the boundary between two adjacent segments is excluded from **both**:
+        its warm-up-plus-confirmation window brushes the boundary, so admitting it to either
+        adjacent split would leak across it, and it is quarantined (refused) instead. A record
+        exactly ``purge_width`` away is at the edge and is admitted (the width covers strictly
+        inside it). A zero purge width has no purge zone. The split's terminal boundary (the
+        last segment's upper bound) is the end of the split — records past it are refused as
+        beyond, and it is not a boundary between two adjacent segments — so it is never a purge
+        edge.
+        """
+        purge_ns = self.purge_width.value_ns
+        if purge_ns <= 0:
+            return None
+        knowledge_ns = knowledge_time.value_ns
+        # The inter-segment boundary BELOW this segment (between the previous segment and it).
+        if knowledge_index > 0:
+            lower = self.segments[knowledge_index - 1].boundary.instant
+            if lower is not None and knowledge_ns - lower.value_ns < purge_ns:
+                return self._purged(knowledge_ns, lower.value_ns, purge_ns)
+        # The inter-segment boundary ABOVE this segment (the terminal boundary excluded).
+        if knowledge_index < len(self.segments) - 1:
+            upper = self.segments[knowledge_index].boundary.instant
+            if upper is not None and upper.value_ns - knowledge_ns < purge_ns:
+                return self._purged(knowledge_ns, upper.value_ns, purge_ns)
+        return None
+
+    def _purged(self, knowledge_ns: int, boundary_ns: int, purge_ns: int) -> TypedRefusal:
+        """The purge-zone ``policy rejection`` naming the boundary and the width (DEC-0131)."""
+        return policy_rejection(
+            "record",
+            "the record's knowledge time lands within the declared purge width of a split "
+            "boundary; a boundary-adjacent record is excluded from BOTH adjacent segments "
+            "rather than admitted to either and leaked across the boundary (CT-12, DEC-0131)",
+            knowledge_ns=knowledge_ns,
+            boundary_ns=boundary_ns,
+            purge_ns=purge_ns,
+            distance_ns=abs(knowledge_ns - boundary_ns),
+        )
 
 
 def _resolve_segments(

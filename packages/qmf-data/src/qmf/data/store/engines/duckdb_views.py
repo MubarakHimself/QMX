@@ -34,6 +34,29 @@ _IDENTITY_SCHEMA = (
 _ROWS_SCHEMA = "CREATE TABLE IF NOT EXISTS _qmf_view_rows (key VARCHAR, seq BIGINT, payload JSON)"
 
 
+def _canonical_row_payloads(key: str, canonical: bytes) -> list[str]:
+    """The view's per-row JSON payloads decoded from its fp1-canonical bytes (M5).
+
+    ``canonical`` is the whole row set in the one qmf-core canonical JSON form, so each row
+    is already JSON-native (value types resolved to their ``fp1_identity``). Decoding once
+    and re-emitting each row — the Parquet engine's approach — lets an identity-valid,
+    value-typed row materialize where ``json.dumps`` over the raw row would raise. A failure
+    here means the canonical bytes are not decodable JSON: a **permanent** fault a retry can
+    never clear, so it is refused non-retryably rather than as a transient storage outage.
+    """
+    try:
+        decoded = cast("list[object]", json.loads(canonical))
+        return [json.dumps(row, ensure_ascii=False, sort_keys=True) for row in decoded]
+    except (TypeError, ValueError) as exc:
+        raise StoreEngineError(
+            "could not serialize the DuckDB analytics view rows from their fp1-canonical "
+            "bytes; the bytes are not decodable JSON and a retry cannot make them decode",
+            engine="duckdb",
+            retryable=False,
+            detail={"key": key, "error": str(exc)},
+        ) from exc
+
+
 class DuckDbAnalyticsEngine:
     """Rebuildable analytics-view storage over one embedded DuckDB database."""
 
@@ -62,21 +85,32 @@ class DuckDbAnalyticsEngine:
 
         Rebuildable: an existing view under this key is dropped and rewritten, since a
         materialized view is never evidence and a rebuild is always licensed.
+
+        Each row is stored from the **fp1-canonical bytes** — the one qmf-core canonical
+        form ``canonical_bytes`` already produced — exactly as the Parquet engine does,
+        rather than re-serializing the raw ``rows`` with ``json.dumps(dict(row))``. A row
+        holding a qmf-core value type (e.g. an ``Instant``) is JSON-native in ``canonical``
+        (its ``fp1_identity`` was resolved there) and materializes, where ``json.dumps``
+        over the raw value-typed row would raise and be mislabelled a *retryable* storage
+        failure a retry could never clear (M5). The ``rows`` argument is retained for the
+        engine contract; identity is the canonical bytes. A row that genuinely cannot be
+        serialized is refused **non-retryably** — a retry cannot make it decode.
         """
         conn = self._connect()
         try:
+            payloads = _canonical_row_payloads(key, canonical)
             conn.execute("DELETE FROM _qmf_view_rows WHERE key = ?", [key])
             conn.execute("DELETE FROM _qmf_identity WHERE key = ?", [key])
-            for seq, row in enumerate(rows):
+            for seq, payload in enumerate(payloads):
                 conn.execute(
                     "INSERT INTO _qmf_view_rows (key, seq, payload) VALUES (?, ?, ?)",
-                    [key, seq, json.dumps(dict(row), sort_keys=True)],
+                    [key, seq, payload],
                 )
             conn.execute(
                 "INSERT INTO _qmf_identity (key, canonical) VALUES (?, ?)", [key, canonical]
             )
             conn.commit()
-        except (OSError, duckdb.Error, TypeError, ValueError) as exc:
+        except (OSError, duckdb.Error) as exc:
             raise StoreEngineError(
                 "could not materialize the DuckDB analytics view",
                 engine="duckdb",

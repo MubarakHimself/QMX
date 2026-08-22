@@ -2,15 +2,24 @@
 
 from __future__ import annotations
 
-from qmf.core import Fingerprint, World, fingerprint, is_ok
+from typing import TypeVar
+
+from qmf.core import Fingerprint, RefusalCategory, Result, World, fingerprint, is_ok, is_refusal
 from qmf.data.retention import RetentionPolicy, RetentionVerdict
 from qmf.data.store import RoomRole, StoreReceipt, WriteOutcome
+
+T = TypeVar("T")
 
 
 def _fp(seed: str) -> Fingerprint:
     built = fingerprint({"seed": seed})
     assert is_ok(built)
     return built.value
+
+
+def _verdict(result: Result[RetentionVerdict]) -> RetentionVerdict:
+    assert is_ok(result), result
+    return result.value
 
 
 def _receipt(
@@ -41,11 +50,22 @@ class _Cites:
         return fingerprint.value in self._cited
 
 
+class _RaisingIndex:
+    """A citation index whose registry seam is unavailable and raises across the boundary."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def cites(self, fingerprint: Fingerprint, /) -> bool:
+        self.calls += 1
+        raise ConnectionError("registry seam unreachable")
+
+
 def test_raw_evidence_is_retained_forever_and_never_deletable() -> None:
     raw = _receipt(
         room_role=RoomRole.IMMUTABLE_RAW_ARCHIVE, retained_forever=True, is_evidence_bearing=True
     )
-    verdict = RetentionPolicy(_Cites()).verdict_for(raw)
+    verdict = _verdict(RetentionPolicy(_Cites()).verdict_for(raw))
     assert verdict == RetentionVerdict(
         retained_forever=True, deletion_licensed=False, reason=verdict.reason
     )
@@ -58,14 +78,14 @@ def test_journal_and_lineage_and_records_kept_forever() -> None:
     for role in (RoomRole.JOURNAL, RoomRole.REGISTRY_ROOM):
         receipt = _receipt(room_role=role, retained_forever=True, is_evidence_bearing=True)
         # Even a citation index that would cite it cannot make it *more* deletable.
-        verdict = RetentionPolicy(_Cites(receipt.fingerprint)).verdict_for(receipt)
+        verdict = _verdict(RetentionPolicy(_Cites(receipt.fingerprint)).verdict_for(receipt))
         assert verdict.retained_forever is True
         assert verdict.deletion_licensed is False
 
 
 def test_uncited_rebuildable_view_is_deletion_licensed() -> None:
     view = _receipt(room_role=RoomRole.PROCESSED, retained_forever=False, is_evidence_bearing=False)
-    verdict = RetentionPolicy(_Cites()).verdict_for(view)
+    verdict = _verdict(RetentionPolicy(_Cites()).verdict_for(view))
     assert verdict.retained_forever is False
     assert verdict.deletion_licensed is True
     assert "no result label cites" in verdict.reason
@@ -75,7 +95,7 @@ def test_uncited_rebuildable_view_is_deletion_licensed() -> None:
 def test_cited_rebuildable_view_is_retained_forever() -> None:
     view = _receipt(room_role=RoomRole.PROCESSED, retained_forever=False, is_evidence_bearing=False)
     policy = RetentionPolicy(_Cites(view.fingerprint))
-    verdict = policy.verdict_for(view)
+    verdict = _verdict(policy.verdict_for(view))
     assert verdict.retained_forever is True
     assert verdict.deletion_licensed is False
     assert "a result label cites" in verdict.reason
@@ -90,7 +110,7 @@ def test_citation_of_a_different_artifact_does_not_retain_this_view() -> None:
         seed="this-view",
     )
     other = _fp("some-other-artifact")
-    verdict = RetentionPolicy(_Cites(other)).verdict_for(view)
+    verdict = _verdict(RetentionPolicy(_Cites(other)).verdict_for(view))
     assert verdict.deletion_licensed is True
 
 
@@ -98,5 +118,39 @@ def test_reason_names_the_room_role_for_evidence() -> None:
     raw = _receipt(
         room_role=RoomRole.IMMUTABLE_RAW_ARCHIVE, retained_forever=True, is_evidence_bearing=True
     )
-    verdict = RetentionPolicy(_Cites()).verdict_for(raw)
+    verdict = _verdict(RetentionPolicy(_Cites()).verdict_for(raw))
     assert "immutable raw archive" in verdict.reason
+
+
+# --- M6: fail closed when the citation index is unavailable -----------------
+
+
+def test_raising_citation_index_is_a_typed_refusal_not_a_raise() -> None:
+    # A raising index must NOT propagate ConnectionError across the package boundary
+    # (CT-04, AR-13); it becomes an unavailable-dependency typed refusal instead.
+    view = _receipt(room_role=RoomRole.PROCESSED, retained_forever=False, is_evidence_bearing=False)
+    index = _RaisingIndex()
+    verdict = RetentionPolicy(index).verdict_for(view)  # must not raise
+    assert index.calls == 1
+    assert is_refusal(verdict)
+    assert verdict.category is RefusalCategory.UNAVAILABLE_DEPENDENCY
+    assert verdict.context.get("field") == "citations"
+
+
+def test_raising_citation_index_does_not_license_deletion() -> None:
+    # Fail closed against Story 3.3 AC3: a failed/unavailable citation read never licenses
+    # deleting a rebuildable view — deletion needs a positive, successful "nothing cites this".
+    view = _receipt(room_role=RoomRole.PROCESSED, retained_forever=False, is_evidence_bearing=False)
+    assert RetentionPolicy(_RaisingIndex()).may_delete(view) is False
+
+
+def test_evidence_verdict_never_consults_a_raising_index() -> None:
+    # A retained-forever artifact is decided by its receipt alone; the citation seam is never
+    # consulted, so even a raising index yields the clean keep-forever verdict.
+    raw = _receipt(
+        room_role=RoomRole.IMMUTABLE_RAW_ARCHIVE, retained_forever=True, is_evidence_bearing=True
+    )
+    index = _RaisingIndex()
+    verdict = _verdict(RetentionPolicy(index).verdict_for(raw))
+    assert index.calls == 0
+    assert verdict.deletion_licensed is False
