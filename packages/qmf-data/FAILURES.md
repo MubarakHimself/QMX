@@ -366,7 +366,13 @@ amends Story 3.3's retention law (the citation index fails closed) and FR-38 ame
   `SeriesPartition` (build it through `SeriesPartition.try_create`, which itself refuses a
   blank source, a non-`Instrument`, or a non-`Interval` window), and refuses an **empty**
   series before any bytes are written — an empty series is meaningless evidence, the same
-  L5 rule the raw archive applies to an empty artifact (FR-10). The partition rides into
+  L5 rule the raw archive applies to an empty artifact (FR-10). It **also** refuses a row
+  whose event-time (the int64 UTC-ns count under key `t`) is missing, malformed, or falls
+  outside the declared partition window `[start, end)` — checked through
+  `SeriesPartition.contains_event` — naming the offending row `index`. This keeps the stored
+  window a truthful bound on its rows, so the split-governed research door can derive a
+  no-peek seal position from the window that a caller cannot under-state to smuggle a
+  sealed-period row behind an open-window front (FR-24; DEC-0119). The partition rides into
   the stored artifact's fp1 identity, so a valid placement resolves back to exactly its
   partition (DEC-0118, DEC-0117).
 - **Auto-recovery / retry:** none automatic; the refusal names the offending `partition`
@@ -522,11 +528,21 @@ amends Story 3.3's retention law (the citation index fails closed) and FR-38 ame
   dependency-free store never imports the CT-12 vocabulary) and **consulted on every read**,
   never an optional per-call argument a caller can skip. It is wired at each of the four named
   `ReadBoundary` values: the raw archive (`AppendStore.read_raw`), processed views
-  (`AppendStore.read_view`), the split-governed research door (`WorldRooms.resolve_series`,
-  which takes the read position from the series' own window so it cannot be bypassed), and
-  restored backups (`BackupInput.read_room`). `HoldoutSeal.guard_read` compares the read's
-  knowledge position against the frozen seal boundary and refuses a position at or after it
-  with a `policy rejection` naming the boundary — **never** a silent empty result. It is
+  (`AppendStore.read_view`), the split-governed research door (`WorldRooms.resolve_series`),
+  and restored backups (`BackupInput.read_room`). `guard_sealed_read` is **fail-closed**: with
+  a seal wired, a read that declares a knowledge position reaching into the sealed window is a
+  `policy rejection`, and a read that declares **no** position is *also* a `policy rejection`
+  (a positionless read cannot be proven outside the window, so it is refused rather than served
+  fail-open — never the sealed bytes handed straight back). The three caller-facing boundaries
+  therefore require their `at` position when a seal is wired. The research door cannot declare a
+  position up front — it resolves a series only by reading the evidence — so it composes its
+  read through `AppendStore.read_raw_self_guarded`, which reads the raw rows and guards the seal
+  at a position **derived from the evidence itself**: the latest of the series' declared window
+  end and the rows' own event-times (`WorldRooms.resolve_series`), so the seal cannot be bypassed
+  by omitting a position nor by an under-stated window (which `place_series` also refuses at write
+  time, FR-16), and no path returns sealed raw bytes unguarded. `HoldoutSeal.guard_read` compares
+  the read's knowledge position against the frozen seal boundary and refuses a position at or
+  after it with a `policy rejection` naming the boundary — **never** a silent empty result. It is
   enforced now, independent of the deferred look-ahead and attempt-counter gates
   (GAP-0016/GAP-0017, DEC-0121). The one authorized final look stays the journaled
   control-action path (FR-25), untouched by this read-boundary wiring.

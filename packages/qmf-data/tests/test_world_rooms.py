@@ -213,6 +213,42 @@ def test_place_series_refuses_empty_series(store: EvidenceStore) -> None:
     assert result.context.get("field") == "rows"
 
 
+def test_place_series_refuses_row_outside_window(store: EvidenceStore) -> None:
+    rooms = _rooms(store)
+    # A row whose event-time falls outside the declared partition window is refused: the
+    # window must truthfully bound its rows so the no-peek seal cannot be gamed (AC5; DEC-0119).
+    result = rooms.place_series(_partition(start=1_000, end=2_000), [{"t": 5_000, "px": 1}])
+    assert is_refusal(result)
+    assert result.category is RefusalCategory.INVALID_INPUT
+    assert result.context.get("field") == "rows"
+    assert result.context.get("event_ns") == 5_000
+    # The half-open window excludes its end: a row exactly at `end` is outside it.
+    at_end = rooms.place_series(_partition(start=1_000, end=2_000), [{"t": 2_000, "px": 1}])
+    assert is_refusal(at_end)
+    assert at_end.category is RefusalCategory.INVALID_INPUT
+
+
+def test_place_series_refuses_row_without_valid_event_time(store: EvidenceStore) -> None:
+    rooms = _rooms(store)
+    # A row missing its int64-ns event-time under key 't' cannot be bounded, so it is refused.
+    missing = rooms.place_series(_partition(), [{"px": 1}])
+    assert is_refusal(missing)
+    assert missing.category is RefusalCategory.INVALID_INPUT
+    assert missing.context.get("field") == "rows"
+    # A non-int event-time is likewise refused.
+    non_int = rooms.place_series(_partition(), [{"t": "soon", "px": 1}])
+    assert is_refusal(non_int)
+    assert non_int.category is RefusalCategory.INVALID_INPUT
+    # A bool is an int subclass but is not an int64 event-time.
+    boolean = rooms.place_series(_partition(), [{"t": True, "px": 1}])
+    assert is_refusal(boolean)
+    assert boolean.category is RefusalCategory.INVALID_INPUT
+    # An out-of-int64-range event-time is refused by the Instant factory.
+    huge = rooms.place_series(_partition(), [{"t": 2**63, "px": 1}])
+    assert is_refusal(huge)
+    assert huge.category is RefusalCategory.INVALID_INPUT
+
+
 def test_place_series_surfaces_a_store_refusal(store: EvidenceStore) -> None:
     rooms = _rooms(store)
     # A binary float in identity content is refused by the store's fp1 serializer, and

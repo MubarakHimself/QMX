@@ -20,9 +20,9 @@ Stdlib + qmf-core; the engine libraries never appear in a signature here.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 
-from qmf.core import Ok, Result, World, is_refusal
+from qmf.core import Fingerprint, Ok, Result, World, is_refusal
 from qmf.data.store.engines import AnalyticsEngine, ColumnarEngine, StoreEngineError
 from qmf.data.store.identity import admit, resolve_fingerprint
 from qmf.data.store.receipts import StoreReceipt
@@ -126,10 +126,15 @@ class AppendStore:
         stored under is a ``stale evidence`` not-found refusal, not ``invalid input``
         (M5). The rows round-trip exactly and re-fingerprint to the same fp1 (H5).
 
-        When a no-peek seal is wired into this boundary and the caller declares its read
-        knowledge position ``at``, a read reaching into the sealed window is a ``policy
-        rejection`` at the raw-archive boundary — never a silent empty result (AC4;
-        DEC-0119). No wired seal, or no declared position, reads normally.
+        When a no-peek seal is wired into this boundary the seal is consulted on **every**
+        read, never a per-call argument a caller can skip (AC4; DEC-0119). A read that
+        declares its knowledge position ``at`` reaching into the sealed window is a ``policy
+        rejection`` at the raw-archive boundary — never a silent empty result — and a read
+        that declares **no** ``at`` while a seal is wired is *also* refused (fail-closed): a
+        positionless read cannot be proven outside the sealed window. With no seal wired,
+        ``at`` is irrelevant and the read proceeds. A caller that needs the raw bytes to
+        derive its own seal position (the split-governed research door) uses
+        :meth:`read_raw_self_guarded` instead, which derives the position from the evidence.
         """
         gate = require_same_world(self._world, for_world)
         if is_refusal(gate):
@@ -140,13 +145,60 @@ class AppendStore:
         sealed = guard_sealed_read(self._seal, at, boundary=_RAW_ARCHIVE_BOUNDARY)
         if sealed is not None:
             return sealed
-        digest = key.value.digest
+        return self._read_admitted_raw(key.value)
+
+    def read_raw_self_guarded(
+        self,
+        fingerprint: object,
+        *,
+        for_world: object,
+        boundary: str,
+        derive_position: Callable[[list[dict[str, object]]], Result[object]],
+    ) -> Result[list[dict[str, object]]]:
+        """Read raw rows and guard the no-peek seal at a position derived from them (AC4).
+
+        A caller-facing raw read declares its seal position up front (:meth:`read_raw`). A
+        boundary that cannot — the split-governed research door resolves a series only by
+        reading the evidence first — composes its read here instead: this seam reads the raw
+        rows, calls ``derive_position`` on them to obtain the knowledge position, and guards
+        the seal at ``boundary`` against **that** position. Because the position is derived
+        from the evidence and never taken as a caller argument, the seal cannot be bypassed by
+        omitting one, and there is no path that returns sealed raw bytes unguarded (the
+        fail-open hole a plain positionless read would leave). ``derive_position`` returns the
+        knowledge position, or a refusal (a corrupt or non-series artifact) that is surfaced
+        unchanged. Cross-world and stale-evidence refusals apply exactly as :meth:`read_raw`.
+        """
+        gate = require_same_world(self._world, for_world)
+        if is_refusal(gate):
+            return gate
+        key = resolve_fingerprint(fingerprint)
+        if is_refusal(key):
+            return key
+        rows = self._read_admitted_raw(key.value)
+        if is_refusal(rows):
+            return rows
+        position = derive_position(rows.value)
+        if is_refusal(position):
+            return position
+        sealed = guard_sealed_read(self._seal, position.value, boundary=boundary)
+        if sealed is not None:
+            return sealed
+        return rows
+
+    def _read_admitted_raw(self, key: Fingerprint) -> Result[list[dict[str, object]]]:
+        """Read raw-archive rows for a resolved fp1 ``key``, or a store refusal.
+
+        The seal-neutral core shared by :meth:`read_raw` and :meth:`read_raw_self_guarded`:
+        a miss is a ``stale evidence`` refusal, and an engine failure is translated to a
+        ``storage failure`` refusal, never raised across the seam (AC4).
+        """
+        digest = key.digest
         try:
             if not self._raw.has(digest):
                 return missing_artifact(
                     "fingerprint",
                     "no raw-archive artifact is stored under this fingerprint",
-                    given=key.value.value,
+                    given=key.value,
                 )
             return Ok(self._raw.read(digest))
         except StoreEngineError as exc:
@@ -227,9 +279,11 @@ class AppendStore:
         materialized under is a ``stale evidence`` not-found refusal, not
         ``invalid input`` (M5).
 
-        When a no-peek seal is wired and the caller declares its read knowledge position
-        ``at``, a read reaching into the sealed window is a ``policy rejection`` at the
-        processed boundary — never a silent empty result (AC4; DEC-0119).
+        When a no-peek seal is wired the seal is consulted on **every** read (AC4; DEC-0119):
+        a read declaring a knowledge position ``at`` that reaches into the sealed window is a
+        ``policy rejection`` at the processed boundary — never a silent empty result — and a
+        read that declares **no** ``at`` while a seal is wired is *also* refused (fail-closed),
+        since a positionless read cannot be proven outside the sealed window.
         """
         gate = require_same_world(self._world, for_world)
         if is_refusal(gate):

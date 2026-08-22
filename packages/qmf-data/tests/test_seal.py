@@ -281,14 +281,23 @@ def test_guard_refuses_sealed_read_at_every_boundary(tmp_path: Path) -> None:
     assert raw_sealed.category is RefusalCategory.POLICY_REJECTION
     assert raw_sealed.context.get("boundary") == "raw archive"
     assert is_ok(append.read_raw(raw.value.fingerprint.value, for_world=World.LIVE, at=open_at))
-    # a read that declares no position is not seal-relevant and reads normally
-    assert is_ok(append.read_raw(raw.value.fingerprint.value, for_world=World.LIVE))
+    # H3: with a seal wired, a read that declares NO position fails CLOSED. The seal is
+    # consulted on every read; a positionless read cannot be proven outside the window, so it
+    # is refused rather than served fail-open (never the sealed bytes handed straight back).
+    raw_no_pos = append.read_raw(raw.value.fingerprint.value, for_world=World.LIVE)
+    assert is_refusal(raw_no_pos)
+    assert raw_no_pos.category is RefusalCategory.POLICY_REJECTION
+    assert raw_no_pos.context.get("boundary") == "raw archive"
 
     # processed / views boundary
     view_sealed = append.read_view(view.value.fingerprint.value, for_world=World.LIVE, at=sealed_at)
     assert is_refusal(view_sealed)
     assert view_sealed.context.get("boundary") == "processed"
     assert is_ok(append.read_view(view.value.fingerprint.value, for_world=World.LIVE, at=open_at))
+    view_no_pos = append.read_view(view.value.fingerprint.value, for_world=World.LIVE)
+    assert is_refusal(view_no_pos)
+    assert view_no_pos.category is RefusalCategory.POLICY_REJECTION
+    assert view_no_pos.context.get("boundary") == "processed"
 
     # restored backup boundary
     backup_sealed = backup.read_room(
@@ -297,6 +306,10 @@ def test_guard_refuses_sealed_read_at_every_boundary(tmp_path: Path) -> None:
     assert is_refusal(backup_sealed)
     assert backup_sealed.context.get("boundary") == "restored backup"
     assert is_ok(backup.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE, at=open_at))
+    backup_no_pos = backup.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE)
+    assert is_refusal(backup_no_pos)
+    assert backup_no_pos.category is RefusalCategory.POLICY_REJECTION
+    assert backup_no_pos.context.get("boundary") == "restored backup"
 
     # split-governed research door — series resolution derives its own position from the
     # series window, so it cannot be bypassed by omitting a declared position.
@@ -319,6 +332,53 @@ def test_guard_refuses_sealed_read_at_every_boundary(tmp_path: Path) -> None:
         "split-governed research door",
         "restored backup",
     }
+
+
+def test_place_series_refuses_row_outside_window_so_the_door_cannot_be_gamed(
+    tmp_path: Path,
+) -> None:
+    # H3 / finding 5: the research door's derived seal position is ungameable only if the
+    # stored window truthfully bounds its rows. place_series refuses a row whose event-time
+    # falls outside the declared partition window, so a pre-seal window can never carry a
+    # sealed-period row that would otherwise resolve through the split-governed door.
+    seal = _instant_seal(boundary_ns=1_000, world=World.LIVE)
+    store = EvidenceStore(tmp_path / "store", seal=seal)
+    rooms = WorldRooms.for_world(store, World.LIVE, seal=seal)
+    assert is_ok(rooms)
+    leaked = rooms.value.place_series(
+        _series_partition(start_ns=100_000, end_ns=200_000),  # a pre-seal window
+        [{"t": 5_000_000, "px": 999}],  # a row deep inside the sealed period
+    )
+    assert is_refusal(leaked)
+    assert leaked.category is RefusalCategory.INVALID_INPUT
+    assert leaked.context.get("field") == "rows"
+    assert leaked.context.get("event_ns") == 5_000_000
+
+
+def test_resolve_series_derives_seal_position_from_rows_not_just_the_window(
+    tmp_path: Path,
+) -> None:
+    # Defense in depth: even an envelope written straight through the raw-archive seam with a
+    # window that under-states its rows cannot leak. resolve_series derives the seal position
+    # from the latest of the window end and the rows' own event-times, so a sealed-period row
+    # under a pre-seal window is refused at the research door, never resolved.
+    seal = _instant_seal(boundary_ns=1_000, world=World.LIVE)
+    store = EvidenceStore(tmp_path / "store", seal=seal)
+    bundle = store.for_world(World.LIVE)
+    assert is_ok(bundle)
+    rooms = WorldRooms.for_world(store, World.LIVE, seal=seal)
+    assert is_ok(rooms)
+    part = _series_partition(start_ns=100_000, end_ns=200_000)  # a pre-seal window
+    envelope: dict[str, object] = {
+        "partition": part.identity(),
+        "series": [{"t": 5_000_000, "px": 999}],  # deep inside the sealed period
+    }
+    raw = bundle.value.append_store.append_raw([envelope])
+    assert is_ok(raw)
+    resolved = rooms.value.resolve_series(raw.value.fingerprint.value, for_world=World.LIVE)
+    assert is_refusal(resolved)
+    assert resolved.category is RefusalCategory.POLICY_REJECTION
+    assert resolved.context.get("boundary") == "split-governed research door"
 
 
 def test_guard_read_coerces_boundary_and_position() -> None:

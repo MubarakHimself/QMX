@@ -205,17 +205,32 @@ class ReadSeal(Protocol):
 def guard_sealed_read(
     seal: ReadSeal | None, position: object, *, boundary: str
 ) -> TypedRefusal | None:
-    """Consult an injected no-peek seal at a read boundary, or pass (AC4; DEC-0119).
+    """Consult a wired no-peek seal at a read boundary, fail-closed (AC4; DEC-0119).
 
-    When a ``seal`` is wired and the caller declares its read ``position``, a read reaching
-    into the sealed no-peek window is a ``policy rejection`` returned to the caller — never a
-    silent empty result. No wired seal, or no declared position (``None``), is a pass: the
-    data-policy layer declares the knowledge position on a governed research read, and a
-    bare physical read carries none. ``boundary`` is the named ``ReadBoundary`` value the
-    seal coerces (kept a plain string so the store seam stays vocabulary-free).
+    A wired ``seal`` is consulted on **every** read, never an optional per-call argument a
+    caller can skip: when a ``position`` is declared, a read reaching into the sealed no-peek
+    window is a ``policy rejection`` returned to the caller — never a silent empty result. A
+    read that declares **no** position (``None``) while a seal is wired is *also* a ``policy
+    rejection`` — a positionless read cannot be proven outside the sealed window, so it is
+    refused (fail-closed) rather than served fail-open. A caller-facing boundary therefore
+    requires its ``at`` position when a seal is wired; a boundary that derives its own position
+    from the evidence (the split-governed research door) hands the derived position here so it
+    is never ``None``. No wired seal at all (``seal is None``) is the only pass. ``boundary``
+    is the named ``ReadBoundary`` value the seal coerces (kept a plain string so the store seam
+    stays vocabulary-free) and rides the refusal so the caller sees which boundary refused.
     """
-    if seal is None or position is None:
+    if seal is None:
         return None
+    if position is None:
+        return policy_rejection(
+            "seal",
+            "a read through a wired no-peek seal must declare its knowledge position; a read "
+            "that declares none cannot be proven outside the sealed no-peek window, so it is "
+            f"refused at the {boundary} boundary rather than served fail-open — the seal is "
+            "consulted on every read, never a per-call argument a caller can skip "
+            "(AC4; DEC-0119)",
+            boundary=boundary,
+        )
     guarded = seal.guard_read(position, boundary=boundary)
     if is_refusal(guarded):
         return guarded

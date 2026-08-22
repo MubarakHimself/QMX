@@ -38,7 +38,17 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import cast
 
-from qmf.core import CalendarIdentity, Ok, Result, Retryability, World, is_ok, is_refusal
+from qmf.core import (
+    CalendarIdentity,
+    Instant,
+    Ok,
+    Result,
+    Retryability,
+    TypedRefusal,
+    World,
+    is_ok,
+    is_refusal,
+)
 from qmf.data.partitions import ResolvedSeries, SeriesPartition, SeriesPlacement
 from qmf.data.store import (
     EVIDENCE_BEARING_ROLES,
@@ -51,7 +61,6 @@ from qmf.data.store import (
     RoomRole,
     StoreReceipt,
     WorldStore,
-    guard_sealed_read,
 )
 from qmf.data.store.refusals import invalid_input, storage_failure
 
@@ -239,6 +248,13 @@ class WorldRooms:
         ``world = simulated`` write and a cross-world read stay refused by the store seam.
         A non-:class:`SeriesPartition` partition, or an empty series, is an ``invalid
         input`` refusal.
+
+        Every row's event-time (int64 UTC-ns under key ``t``) must fall inside the declared
+        partition window ``[start, end)``; a row missing its event-time, or one whose
+        event-time falls outside the window, is an ``invalid input`` refusal. This keeps the
+        stored window a truthful bound on its rows, so the split-governed research door can
+        derive a no-peek seal position from the window that a caller cannot under-state to
+        smuggle a sealed-period row behind an open-window front (AC5; DEC-0119).
         """
         if not isinstance(partition, SeriesPartition):
             return invalid_input(
@@ -254,6 +270,10 @@ class WorldRooms:
                 "a time-series artifact must carry at least one row; an empty series is "
                 "refused rather than archived as evidence for nothing (L5)",
             )
+        for index, row in enumerate(series):
+            outside = self._row_outside_window(partition, row, index)
+            if outside is not None:
+                return outside
         envelope: dict[str, object] = {"partition": partition.identity(), "series": series}
         appended = self._store.append_store.append_raw(
             [envelope], presented_fingerprint=presented_fingerprint
@@ -277,31 +297,98 @@ class WorldRooms:
         proves the evidence resolves inside its declared partition.
 
         When a no-peek seal is wired, series resolution is guarded at the split-governed
-        research door: a series whose window reaches into the sealed no-peek period is a
-        ``policy rejection`` — never a silent empty result — so research never resolves its
-        own held-out evaluation period (AC4; DEC-0119). The read position is the series'
-        own window end, taken from the resolved evidence, so the seal cannot be bypassed.
+        research door: a series reaching into the sealed no-peek period is a ``policy
+        rejection`` — never a silent empty result — so research never resolves its own
+        held-out evaluation period (AC4; DEC-0119). The read position is **derived from the
+        resolved evidence itself** — the latest of the series' declared window end and its
+        rows' own event-times — never a caller argument, so the seal cannot be bypassed by
+        omitting a position nor by an under-stated window (the read is composed through
+        :meth:`AppendStore.read_raw_self_guarded`, which guards the seal at that derived
+        position and never returns sealed raw bytes unguarded).
         """
-        rows = self._store.append_store.read_raw(archive_fingerprint, for_world=for_world)
-        if is_refusal(rows):
-            return rows
-        materialized = rows.value
-        if len(materialized) != 1:
-            return storage_failure(
-                "a time-series artifact holds exactly one series envelope, but the stored "
-                f"artifact held {len(materialized)} rows; the evidence is corrupt",
-                retryability=Retryability.NO,
-                context={"rows": len(materialized), "fingerprint": repr(archive_fingerprint)},
-            )
-        resolved = self._resolve_envelope(materialized[0], archive_fingerprint)
-        if is_refusal(resolved):
-            return resolved
-        sealed = guard_sealed_read(
-            self._seal, resolved.value.partition.window.end, boundary=_RESEARCH_DOOR_BOUNDARY
+        resolved_holder: list[ResolvedSeries] = []
+
+        def _derive(rows: list[dict[str, object]]) -> Result[object]:
+            if len(rows) != 1:
+                return storage_failure(
+                    "a time-series artifact holds exactly one series envelope, but the stored "
+                    f"artifact held {len(rows)} rows; the evidence is corrupt",
+                    retryability=Retryability.NO,
+                    context={"rows": len(rows), "fingerprint": repr(archive_fingerprint)},
+                )
+            resolved = self._resolve_envelope(rows[0], archive_fingerprint)
+            if is_refusal(resolved):
+                return resolved
+            resolved_holder.append(resolved.value)
+            position: object = self._series_seal_position(resolved.value)
+            return Ok(position)
+
+        read = self._store.append_store.read_raw_self_guarded(
+            archive_fingerprint,
+            for_world=for_world,
+            boundary=_RESEARCH_DOOR_BOUNDARY,
+            derive_position=_derive,
         )
-        if sealed is not None:
-            return sealed
-        return resolved
+        if is_refusal(read):
+            return read
+        return Ok(resolved_holder[0])
+
+    @staticmethod
+    def _row_outside_window(
+        partition: SeriesPartition, row: Mapping[str, object], index: int
+    ) -> TypedRefusal | None:
+        """A refusal if ``row``'s event-time is missing or outside ``partition``'s window (AC5).
+
+        The event-time is the int64 UTC-ns count under key ``t``. A row without one cannot be
+        checked against the window, and a row whose event-time falls outside the half-open
+        ``[start, end)`` window would let an under-stated window hide a later (possibly sealed)
+        row — both are ``invalid input`` refusals naming the offending row ``index`` (DEC-0119).
+        Returns ``None`` when the row sits truthfully inside the declared window.
+        """
+        event = row.get("t")
+        if not isinstance(event, int) or isinstance(event, bool):
+            return invalid_input(
+                "rows",
+                "each time-series row must carry an int64 UTC-ns event-time under key 't' so "
+                "it can be checked against the declared partition window; a row without one "
+                "cannot be placed (AC5; DEC-0119)",
+                index=index,
+            )
+        instant = Instant.try_create(event)
+        if is_refusal(instant):
+            return instant
+        contains = partition.contains_event(instant.value)
+        if not is_ok(contains) or not contains.value:
+            return invalid_input(
+                "rows",
+                "a time-series row's event-time falls outside the declared partition window; "
+                "the partition window must truthfully bound its rows, so an under-stated "
+                "window can never place a sealed-period row behind an open-window front "
+                "(AC5; DEC-0119)",
+                index=index,
+                event_ns=event,
+                window_start_ns=partition.window.start.value_ns,
+                window_end_ns=partition.window.end.value_ns,
+            )
+        return None
+
+    @staticmethod
+    def _series_seal_position(resolved: ResolvedSeries) -> int:
+        """The knowledge position a series resolution guards the no-peek seal at (AC4; DEC-0119).
+
+        The latest of the series' declared window end and its rows' own event-times, taken
+        from the resolved evidence. Because :meth:`place_series` keeps every row inside the
+        window, the window end normally dominates; taking the maximum with the rows' own
+        event-times additionally closes any artifact archived directly through the raw-archive
+        seam with an under-stated window, so the derived position is never earlier than the
+        data it guards and the seal cannot be bypassed.
+        """
+        latest_ns = resolved.partition.window.end.value_ns
+        for row in resolved.rows:
+            event = row.get("t")
+            if isinstance(event, int) and not isinstance(event, bool) and event > latest_ns:
+                latest_ns = event
+        return latest_ns
 
     @staticmethod
     def _resolve_envelope(

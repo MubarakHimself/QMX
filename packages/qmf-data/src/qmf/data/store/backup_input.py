@@ -102,9 +102,12 @@ class BackupInput:
         seam (L1, AC4).
 
         A restored-backup read still enforces the no-peek seal exactly as a live read
-        does (DEC-0119): when a seal is wired and the caller declares its read knowledge
-        position ``at``, a read reaching into the sealed window is a ``policy rejection``
-        at the restored-backup boundary — never a silent empty result (AC4).
+        does, consulted on **every** read (DEC-0119): a read declaring a knowledge position
+        ``at`` that reaches into the sealed window is a ``policy rejection`` at the
+        restored-backup boundary — never a silent empty result — and a read that declares
+        **no** ``at`` while a seal is wired is *also* refused (fail-closed), since a
+        positionless read cannot be proven outside the sealed window and must never export
+        the sealed bytes verbatim (AC4).
         """
         gate = require_same_world(self._world, for_world)
         if is_refusal(gate):
