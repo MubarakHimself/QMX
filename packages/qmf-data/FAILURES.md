@@ -7,14 +7,19 @@ seam (`COMP-QMF-DATA-STORE`), FR-1 through FR-10; Story 3.2 delivers the CT-10
 source-observation boundary, FR-11 through FR-14; Story 3.3 delivers the seven
 room-roles per world (`WorldRooms`), the rebuildable-view rebuild pins, the
 `(source, instrument, time-window)` series partition, and the keep-forever-vs-
-deletion-licensed retention law, FR-15 through FR-17. A CT-10 write that reaches
-storage inherits the store seam's storage-failure translation (FR-1) and
-true-fp1-collision alarm (FR-2) unchanged — the boundary funnels every observation
-write through the same `append_raw` seam, so those two entries cover observation
-persistence too and are not restated below. Story 3.3's `WorldRooms` operations
-likewise ride the same store seam, so a `world = simulated` write (FR-4), a
-cross-world read (FR-5), and a storage-engine failure (FR-1) are inherited unchanged
-for its rebuildable views and series placement and are not restated below.
+deletion-licensed retention law, FR-15 through FR-17. Story 3.4 delivers the CT-12
+dataset splits and the 12-month no-peek seal (`SplitManifest`, `HoldoutSeal`), FR-18
+through FR-25. A CT-10 write that reaches storage inherits the store seam's
+storage-failure translation (FR-1) and true-fp1-collision alarm (FR-2) unchanged —
+the boundary funnels every observation write through the same `append_raw` seam, so
+those two entries cover observation persistence too and are not restated below.
+Story 3.3's `WorldRooms` operations likewise ride the same store seam, so a
+`world = simulated` write (FR-4), a cross-world read (FR-5), and a storage-engine
+failure (FR-1) are inherited unchanged for its rebuildable views and series placement
+and are not restated below. Story 3.4's one authorized final look is written through
+the CT-13 `JournalStore`, so an unpersistable final-look write inherits the store
+seam's storage-failure translation (FR-1) and the one-writer discipline (FR-6)
+unchanged, and they are not restated below.
 
 ### FR-1: A store-engine failure is translated to a storage-failure refusal (AC4)
 
@@ -359,3 +364,148 @@ for its rebuildable views and series placement and are not restated below.
   content no longer matches the series shape it was recorded under (corruption or
   tampering). The platform refuses it rather than return altered evidence; an operator
   restores it from an off-machine backup or the series is re-placed from its source.
+
+### FR-18: A split or seal boundary that is a civil date is refused (AC1)
+
+- **Failure class:** `invalid input` (a CT-04 refusal category).
+- **Detection:** split and seal boundaries are explicit stored TradingDates or Instants,
+  never civil dates (a civil date carries no calendar identity). `SplitBoundary.try_create`
+  accepts a `qmf-core` `TradingDate`, an `Instant`, or an int64 UTC-nanosecond count, and
+  refuses a `CivilDate` with a pointed reason; any other type is likewise `invalid input`.
+- **Auto-recovery / retry:** none automatic; the refusal names the `boundary` field. Present
+  a TradingDate (calendar-aligned) or an Instant and retry.
+- **Visible degraded state:** none; no manifest is built.
+- **Notification tier:** silent-log. A wiring mistake surfaced as a value.
+- **Product-user affordance:** nothing failed at runtime for an end user; a component tried
+  to build a split with a bare civil date, which pins no calendar. Supply a trading date or
+  an instant and retry.
+
+### FR-19: A non-time-ordered, mixed-kind, or empty segment set is refused (AC1)
+
+- **Failure class:** `invalid input` for empty, non-sequence, non-`SplitSegment`, mixed-kind,
+  or non-strictly-increasing segments; `policy rejection` for a segment boundary carrying a
+  calendar identity different from the manifest's pinned one.
+- **Detection:** `SplitManifest.try_create` validates the segment list before fingerprinting
+  a manifest — it must be a non-empty sequence of `SplitSegment`, every boundary must share
+  one kind (all trading-date or all instant), and boundaries must be strictly increasing so
+  segments are time-ordered and non-overlapping. A trading-date segment boundary whose
+  calendar identity differs from the pinned one is a `policy rejection` (never rescaled).
+- **Auto-recovery / retry:** none automatic; the refusal names the `segments` field (and the
+  offending `index`). Order the boundaries strictly, use one boundary kind, and pin one
+  calendar identity, then retry.
+- **Visible degraded state:** none; no manifest is built.
+- **Notification tier:** silent-log. A wiring mistake surfaced as a value.
+- **Product-user affordance:** nothing failed at runtime for an end user; a component tried
+  to build a split whose segments overlap, mix kinds, or cite a foreign calendar. The
+  refusal says which; fix the segments and retry.
+
+### FR-20: An omitted or under-covering purge/embargo width is refused (AC2)
+
+- **Failure class:** `invalid input` (a CT-04 refusal category).
+- **Detection:** `purge_width` and `embargo_width` are required manifest fields that enter
+  the split fingerprint. `SplitManifest.try_create` refuses an omitted (`None`) or negative
+  width, and refuses a width shorter than the maximum warm-up-plus-confirmation-delay bound
+  across every cited `ProducerHorizon` — a manifest that under-covers its own producers would
+  leak the held-out period, so it is refused rather than built (DEC-0131).
+- **Auto-recovery / retry:** none automatic; the refusal names the `purge_width` or
+  `embargo_width` field and the `required_ns` bound. Compute the default with
+  `ProducerHorizon.max_bound(...)`, set both widths to at least that, and retry.
+- **Visible degraded state:** none; no manifest is built.
+- **Notification tier:** silent-log. A wiring mistake surfaced as a value.
+- **Product-user affordance:** nothing failed at runtime for an end user; a component tried
+  to build a split without declaring how much data to purge and embargo around the
+  boundaries, or declared too little to cover its own producers. Supply widths that cover the
+  widest cited producer and retry.
+
+### FR-21: A split reused with a longer-horizon producer is refused (AC2)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** a manifest is fingerprinted with fixed purge and embargo widths. Reusing it
+  with a producer whose warm-up-plus-confirmation horizon exceeds either declared width would
+  leak the held-out period across a boundary. `SplitManifest.admits_producer` recomputes the
+  producer's bound against the frozen widths and refuses when it exceeds them — the split
+  refuses rather than leaks (DEC-0131).
+- **Auto-recovery / retry:** none automatic; the refusal names the `producer` field and the
+  `bound_ns` / `purge_ns` / `embargo_ns`. Mint a new manifest with widths that cover the
+  longer-horizon producer (a new fingerprint, a new split id) and use that instead.
+- **Visible degraded state:** none; the existing manifest is unchanged and still valid for
+  the producers it already covers.
+- **Notification tier:** operator-visible. Reusing a split with an artifact it was not built
+  to cover is a research-hygiene fault worth surfacing.
+- **Product-user affordance:** a longer-horizon indicator or structure was applied to a split
+  that was not built with enough purge/embargo to hold it out safely. The platform refuses
+  rather than leak; build a split sized for the new producer.
+
+### FR-22: A record straddling a boundary beyond the embargo is refused (AC3)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** records partition into segments by knowledge time (confirmed-at for a
+  structure object, the knowable-at of the last contributing input for an indicator result).
+  `SplitManifest.partition_record` refuses a record whose `observed_at` precedes a segment
+  boundary while its `knowledge_time` follows it — a straddle — unless the declared embargo
+  width covers the gap (`knowledge_time - observed_at`). A record whose knowledge time falls
+  beyond the split's last boundary, or a trading-date split (record placement is the calendar
+  extension's job), is an `invalid input` refusal instead.
+- **Auto-recovery / retry:** none automatic; the refusal names the `gap_ns` and the
+  `embargo_ns`. Widen the embargo (a new manifest) or exclude the straddling record.
+- **Visible degraded state:** none; the record is not placed in any segment.
+- **Notification tier:** silent-log. A leak-prevention refusal surfaced as a value.
+- **Product-user affordance:** nothing failed at runtime for an end user; a record whose
+  information only became knowable after a split boundary would have leaked across it, and the
+  declared embargo did not cover the gap. The platform refuses rather than leak; widen the
+  embargo or drop the record.
+
+### FR-23: A row of a foreign calendar identity is refused, never rescaled (AC5)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** a manifest and its seal pin exactly one calendar identity in-band.
+  `SplitManifest.admits_calendar`, `SplitManifest.partition_record` (for a record carrying a
+  calendar identity), and `HoldoutSeal.is_sealed` / `HoldoutSeal.guard` (for a trading-date
+  read position) refuse any row whose calendar identity differs from the pinned one — it is
+  refused, never silently rescaled to the pinned calendar (DEC-0106, DEC-0119).
+- **Auto-recovery / retry:** none automatic; the refusal names the `pinned` and `given`
+  identities. Re-express the row under the manifest's pinned calendar identity (a derived
+  value carrying lineage), never a silent rescale, and retry.
+- **Visible degraded state:** none; the row is not admitted.
+- **Notification tier:** silent-log. A wiring mistake surfaced as a value.
+- **Product-user affordance:** nothing failed at runtime for an end user; a component offered
+  a row aligned to a different market-hours calendar than the split pins. The platform refuses
+  rather than quietly rescale it; align the row to the pinned calendar and retry.
+
+### FR-24: A read into the sealed no-peek window is refused at every read boundary (AC4)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** the newest sealed window (`registry:historical_holdout_months`) is a no-peek
+  lock, not retention — all history is kept regardless. `HoldoutSeal.guard` compares a read's
+  position against the frozen seal boundary and refuses a position at or after it, at each of
+  the four named `ReadBoundary` values (raw archive, processed, split-governed research door,
+  restored backup). The refusal is returned at **every** read boundary and is **never** a
+  silent empty result; it is enforced now, independent of the deferred look-ahead and
+  attempt-counter gates (GAP-0016/GAP-0017, DEC-0121).
+- **Auto-recovery / retry:** none automatic; the refusal names the `boundary` and the
+  `seal_boundary`. Read outside the sealed window, or take the one authorized final look (FR-25).
+- **Visible degraded state:** none; no sealed evidence is returned, and the underlying history
+  remains fully retained.
+- **Notification tier:** operator-visible. A read reaching into the no-peek holdout is worth
+  surfacing so the operator knows research tried to touch its own evaluation period.
+- **Product-user affordance:** research tried to read into the newest sealed evaluation period,
+  which is locked so results are not tuned on it. The platform refuses with a clear reason
+  rather than returning an empty result that could be mistaken for "no data"; read outside the
+  seal, or use the one authorized final look.
+
+### FR-25: A second authorized final look at the sealed period is refused (AC6)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** the sealed period is entitled to exactly one authorized final look.
+  `HoldoutSeal.authorize_final_look` scans the CT-13 control-action stream for an existing
+  final look at this seal boundary (the named `sealed-period-final-look` control-action
+  subtype) and refuses a second — the sealed set is never silently recycled into research, and
+  the look does not unseal it, so `guard` still refuses research reads afterward (DEC-0119).
+- **Auto-recovery / retry:** none automatic; the refusal names the `final_look` field and the
+  `seal_boundary`. There is no second look; the one look is already journaled as evidence.
+- **Visible degraded state:** none; the first look's journal record is preserved untouched.
+- **Notification tier:** operator-visible. A second attempt to open the sealed period is a
+  research-hygiene event worth surfacing.
+- **Product-user affordance:** the one permitted final evaluation on the sealed period has
+  already been taken and recorded; the platform refuses a repeat so the holdout cannot be
+  re-used to tune results. The recorded final look stands as the evidence of that one look.

@@ -14,8 +14,14 @@ record their rebuild pins (:class:`RebuildPins`), the ``(source, instrument,
 time-window)`` series partition (:class:`SeriesPartition`, :class:`SeriesPlacement`,
 :class:`ResolvedSeries`), and the keep-forever-vs-deletion-licensed retention law
 (:class:`RetentionPolicy` over the injected :class:`CitationIndex`, yielding a
-:class:`RetentionVerdict`). The remaining data-policy contracts (CT-12 splits, the
-entity-journal projections) land in later stories on the same seam.
+:class:`RetentionVerdict`). Story 3.4 lands the CT-12 dataset splits and the no-peek seal:
+fingerprinted, time-ordered, non-overlapping :class:`SplitManifest`\\ s whose ``split_id`` is
+derived from their fp1 (:class:`SplitSegment`, :class:`SplitBoundary`, :class:`SegmentRole`,
+required purge/embargo widths leak-guarded against every cited :class:`ProducerHorizon`, and
+knowledge-time record partitioning via :class:`KnowledgeRecord`), plus the newest
+~12-month :class:`HoldoutSeal` enforced as a policy-rejection refusal at every
+:class:`ReadBoundary` with exactly one journaled final look. The remaining data-policy
+contracts (the entity-journal projections) land in later stories on the same seam.
 
 ``qmf.data`` imports only ``qmf-core`` (the fp1 vocabulary and typed refusals) plus
 its own engine libraries — the default-deny dependency direction (L30) holds, and the
@@ -28,23 +34,51 @@ from qmf.data.observation import ForeignMoney, ForeignTimestamp, SourceObservati
 from qmf.data.partitions import ResolvedSeries, SeriesPartition, SeriesPlacement
 from qmf.data.retention import CitationIndex, RetentionPolicy, RetentionVerdict
 from qmf.data.rooms import RebuildPins, WorldRooms
+from qmf.data.seal import (
+    FINAL_LOOK_SUBTYPE,
+    SEAL_CONTROL_STREAM,
+    HoldoutSeal,
+    ReadBoundary,
+)
 from qmf.data.source_boundary import ObservationReceipt, SourceObservationBoundary
+from qmf.data.splits import (
+    DEFAULT_SPLIT_ROLES,
+    KnowledgeKind,
+    KnowledgeRecord,
+    ProducerHorizon,
+    SegmentRole,
+    SplitBoundary,
+    SplitManifest,
+    SplitSegment,
+)
 from qmf.data.store import EvidenceStore
 
 __all__ = [
+    "DEFAULT_SPLIT_ROLES",
+    "FINAL_LOOK_SUBTYPE",
+    "SEAL_CONTROL_STREAM",
     "CitationIndex",
     "EvidenceStore",
     "ForeignMoney",
     "ForeignTimestamp",
+    "HoldoutSeal",
+    "KnowledgeKind",
+    "KnowledgeRecord",
     "ObservationReceipt",
+    "ProducerHorizon",
+    "ReadBoundary",
     "RebuildPins",
     "ResolvedSeries",
     "RetentionPolicy",
     "RetentionVerdict",
+    "SegmentRole",
     "SeriesPartition",
     "SeriesPlacement",
     "SourceObservation",
     "SourceObservationBoundary",
+    "SplitBoundary",
+    "SplitManifest",
+    "SplitSegment",
     "WorldRooms",
     "__version__",
 ]
