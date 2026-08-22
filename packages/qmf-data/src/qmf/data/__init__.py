@@ -45,7 +45,13 @@ through an injected :class:`ObjectStorage` port — encryption required as a poi
 no provider/credentials/RPO baked in. Story 5.2 lands the matching restore primitive
 (:class:`OffMachineRestore`): fetch + decrypt into a **replacement** store root, never
 rewriting or deleting the only local copy; restored reads still enforce the 12-month
-seal and world isolation as policy rejections.
+seal and world isolation as policy rejections. Story 5.3 lands the verify primitives
+(:class:`OffMachineVerify`): automated :meth:`~OffMachineVerify.sample_restore` and
+:meth:`~OffMachineVerify.full_restore_rehearsal` are the **only** source of a
+:class:`RecoverabilityClaim` (never a snapshot alone), corrupt restores are
+``storage failure``, and :func:`migrate_evidence` runs preflight → backup-first →
+dry-run → migrate → verify without mutating the only copy; numeric RPO/RTO/retention/
+cadence stay null node/ops pointers.
 
 ``qmf.data`` imports only ``qmf-core`` (the fp1 vocabulary and typed refusals) plus
 its own engine libraries — the default-deny dependency direction (L30) holds, and the
@@ -143,6 +149,22 @@ from qmf.data.splits import (
     SplitSegment,
 )
 from qmf.data.store import EvidenceStore
+from qmf.data.verify import (
+    MIGRATION_SEQUENCE,
+    NODE_OPS_BACKUP_RECOVERY_POINT_OBJECTIVE,
+    NODE_OPS_BACKUP_RECOVERY_TIME_OBJECTIVE,
+    NODE_OPS_BACKUP_RETENTION_PERIOD,
+    NODE_OPS_RESTORE_VERIFICATION_CADENCE,
+    RESTORABLE_ROOM_ROLES,
+    MigrationStage,
+    OffMachineVerify,
+    RecoverabilityClaim,
+    StoreMigrationReport,
+    VerifiedRoom,
+    VerifyKind,
+    migrate_evidence,
+    refuse_snapshot_alone_claim,
+)
 
 __all__ = [
     "ACCOUNT_ID_KEY",
@@ -157,7 +179,13 @@ __all__ = [
     "DEFAULT_SPLIT_ROLES",
     "ENCRYPTION_REQUIRED",
     "FINAL_LOOK_SUBTYPE",
+    "MIGRATION_SEQUENCE",
+    "NODE_OPS_BACKUP_RECOVERY_POINT_OBJECTIVE",
+    "NODE_OPS_BACKUP_RECOVERY_TIME_OBJECTIVE",
+    "NODE_OPS_BACKUP_RETENTION_PERIOD",
+    "NODE_OPS_RESTORE_VERIFICATION_CADENCE",
     "RECORDS_STREAM_MAPPING",
+    "RESTORABLE_ROOM_ROLES",
     "ROLE_KEY",
     "SEAL_CONTROL_STREAM",
     "SEAT_BINDING_KEY",
@@ -188,11 +216,13 @@ __all__ = [
     "KnowledgeRecord",
     "LineageEdgeAppender",
     "Logbook",
+    "MigrationStage",
     "ObjectStorage",
     "ObservationReceipt",
     "OffMachineBackup",
     "OffMachineCopy",
     "OffMachineRestore",
+    "OffMachineVerify",
     "PayloadCipher",
     "ProducerHorizon",
     "ProjectedRow",
@@ -200,6 +230,7 @@ __all__ = [
     "RebuildPins",
     "RecordsStreamName",
     "RecordsStreamRule",
+    "RecoverabilityClaim",
     "ResolvedSeries",
     "RestoreReceipt",
     "RetentionPolicy",
@@ -213,6 +244,9 @@ __all__ = [
     "SplitManifest",
     "SplitSegment",
     "StoragePutAck",
+    "StoreMigrationReport",
+    "VerifiedRoom",
+    "VerifyKind",
     "WorldRooms",
     "__version__",
     "bms_journal",
@@ -223,11 +257,13 @@ __all__ = [
     "entity_journal",
     "event_class_of",
     "guard_neutral_venue_payload",
+    "migrate_evidence",
     "read_binding",
     "read_bot_seat",
     "read_command_fingerprint",
     "read_role",
     "records_stream",
+    "refuse_snapshot_alone_claim",
     "role_namespace",
     "select_decisions",
     "veto_ledger",

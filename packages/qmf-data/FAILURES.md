@@ -957,3 +957,57 @@ the cross-world read). This is the read-side, defense-in-depth counterpart to FR
   world (live vs. replay) than the stream it was read from, which can only happen if the file was
   altered outside the platform. The platform refuses the stream rather than hand back mixed-world
   evidence; an operator restores it from an off-machine backup.
+
+Story 5.3 delivers the CT-14 verify primitives — automated sample-restore and full-restore
+rehearsal as the only source of a recoverability claim, plus the staged never-in-place
+migration sequence — FR-40 through FR-42.
+
+### FR-40: Recoverability is refused when asserted from a snapshot alone (AC1)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** `refuse_snapshot_alone_claim` always refuses; `OffMachineVerify` issues a
+  `RecoverabilityClaim` only after a successful sample-restore or full-restore rehearsal that
+  read the restored evidence back against a documented restore path (SCN-0004, DEC-0118).
+- **Auto-recovery / retry:** none — inventing a claim from an off-machine copy's existence is
+  a governance mistake, not a transient fault. Run the verify primitive instead.
+- **Visible degraded state:** none; no recoverability claim is returned.
+- **Notification tier:** operator-visible (a caller attempted to short-circuit verification).
+- **Product-user affordance:** having a backup file is not proof it can be restored. The
+  platform will not declare recovery complete until a sample-restore or full-restore rehearsal
+  confirms the restored evidence against a documented path.
+
+### FR-41: A corrupt or mismatched verify restore is a storage failure with no claim (AC2)
+
+- **Failure class:** `storage failure` (a CT-04 refusal category).
+- **Detection:** `OffMachineVerify.sample_restore` / `full_restore_rehearsal` restore into a
+  replacement store and compare the CT-26 re-export to the expected export. A failed decrypt,
+  bad envelope, missing object, or fingerprint/canonical mismatch returns `storage failure`
+  (`signal: corrupt-copy` or `signal: verify-mismatch`); no `RecoverabilityClaim` is issued.
+- **Auto-recovery / retry:** none automatic. A transient unreachable bucket may carry
+  `retryability = yes` from the underlying restore; a corrupt envelope or mismatch is
+  `retryability = no`.
+- **Visible degraded state:** recoverability is unproven; the source store and earlier
+  off-machine versions are left untouched.
+- **Notification tier:** operator-visible (escalating to alarm on repeated verification
+  failures against the same version).
+- **Product-user affordance:** the backup could not be proven restorable — the restored bytes
+  were missing, corrupt, or did not match the documented evidence. The platform reports
+  failure rather than a false recovery success; an operator investigates the off-machine copy
+  or re-runs backup + verify.
+
+### FR-42: An in-place or overlapping-root migration is refused (AC3)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** `migrate_evidence` requires distinct filesystem roots for `source`,
+  `destination`, and `verify_into`. A same-root source/destination is
+  `signal: refuse-in-place-migration`; a verify target that collides with either is
+  `signal: refuse-overlapping-verify-root`. The sequence is always preflight → backup-first →
+  dry-run → migrate → verify (AR-32, DEC-0118).
+- **Auto-recovery / retry:** none — re-run against a fresh destination and a distinct
+  verify-rehearsal root.
+- **Visible degraded state:** nothing is written; the source remains the intact documented
+  restore path.
+- **Notification tier:** operator-visible (wiring mistake).
+- **Product-user affordance:** a migration that would overwrite the only good local copy is
+  blocked. Point destination and verify rehearsal at separate empty store roots and retry;
+  the source stays readable throughout.

@@ -34,6 +34,14 @@ reads still enforce the wired 12-month seal and world isolation as policy
 rejections; discarding the only local raw copy is refused under this component's
 authority.
 
+Story 5.3 lands the verify primitives (`OffMachineVerify`): automated
+`sample_restore` and `full_restore_rehearsal` are the **only** source of a
+`RecoverabilityClaim` — never a snapshot alone (SCN-0004). A corrupt restore is a
+`storage failure` with no claim. `migrate_evidence` runs preflight → backup-first →
+dry-run → migrate → verify against a documented restore path and never mutates the
+only copy. Numeric restore-verification cadence, RPO, RTO, and retention stay null
+node/ops pointers.
+
 `EvidenceStore(root).for_world(world)` returns the four boundaries for one world.
 The engines sit behind their owned `typing.Protocol` contracts, so each is
 swappable. The public data-policy contracts (CT-10 observations, CT-12 splits, the

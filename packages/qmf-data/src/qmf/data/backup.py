@@ -816,7 +816,7 @@ def _unframe_plaintext(plaintext: bytes) -> Result[RoomExport]:
             "decrypted payload is not a CT-14 backup envelope; the copy is corrupt "
             "and restore completion is not claimed (DEC-0118)",
             retryable=False,
-            context={"signal": "corrupt-copy", "reason": "bad-magic"},
+            context={"signal": "corrupt-copy", "detail": "bad-magic"},
         )
     offset = len(_PLAINTEXT_MAGIC)
     try:
