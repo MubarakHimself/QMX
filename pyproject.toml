@@ -246,6 +246,8 @@ pythonVersion = "3.14"
 # which is exactly the by-name behaviour this list wants.
 exclude = [
     "adws",          # software-factory machinery — never touched by a scan-driven fix
+    "_bmad",         # BMad planning machinery — same ruling as adws
+    "recorder",      # standalone operator tool, outside the QMF roster gates
     "archive",       # retired material
     "workroom",      # working notes
     "docs",          # the knowledge base (prose, not code)
