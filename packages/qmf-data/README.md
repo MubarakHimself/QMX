@@ -57,6 +57,13 @@ separately (`TickQuote`) with source timestamps, refuses mid-merge, and emits
 `corroborates` / `disagrees-with` / revision `supersedes` edges as CT-07-shaped
 `CausalEdge` values — never a `qmf-registry` import.
 
+Story 6.3 lands the Dukascopy download-once historical tick adapter
+(`DukascopyAdapter`, `COMP-DUKASCOPY`): CT-15 provider #1 under personal-use
+licensing, stdlib bi5 decode through an injected transport (no donor
+`dukascopy-node` code), per-window `LicenseTag` provenance, and typed refusals for
+unlicensed governed-evidence use, complete-corpus downloads, and external-recovery
+ownership.
+
 `EvidenceStore(root).for_world(world)` returns the four boundaries for one world.
 The engines sit behind their owned `typing.Protocol` contracts, so each is
 swappable. The public data-policy contracts (CT-10 observations, CT-12 splits, the

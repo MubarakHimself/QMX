@@ -1182,3 +1182,66 @@ Story 6.2 delivers bid/ask preservation and source-disagreement edges
 - **Notification tier:** silent-log.
 - **Product-user affordance:** corrections append as new artifacts linked by
   lineage; the original quote stays readable forever.
+
+Story 6.3 delivers the Dukascopy download-once historical tick adapter
+(`COMP-DUKASCOPY` / `DukascopyAdapter`) — FR-53 through FR-56.
+
+### FR-53: An unlicensed window cannot become governed evidence (AC2)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** `offer_for_governed_evidence` requires a `LicensedSourceWindow`
+  whose `LicenseTag` grants use (`internal-only` or `redistribution-ok`). Tags
+  `denied`, `unknown`, or blank resolve to a refusal with
+  `signal: refuse-unlicensed-window` (DEC-0166, DEC-0170). Intake may still catalogue
+  the window; governed-evidence citation is what fails closed.
+- **Auto-recovery / retry:** none automatic; record an authorizing usage right and
+  re-offer. Retryability is `no`.
+- **Visible degraded state:** the window remains catalogable for non-evidence use;
+  no silent promotion into governed evidence.
+- **Notification tier:** operator-visible when a run cites an unlicensed window.
+- **Product-user affordance:** personal-use Dukascopy windows tagged `internal-only`
+  pass; an untagged or denied window never quietly backs a claim.
+
+### FR-54: Malformed bi5 / missing bounds / unmappable symbol are refused (AC3)
+
+- **Failure class:** `invalid input` (a CT-04 refusal category).
+- **Detection:** `decode_bi5_ticks` refuses non-LZMA or truncated frames;
+  `DukascopyAdapter.fetch` refuses missing `start_ns`/`end_ns` and symbols absent
+  from the CT-03 instrument map — no `ProviderRecord` is emitted (FM-2, DEC-0109).
+- **Auto-recovery / retry:** none; supply a valid bounded window and a mapped
+  instrument. Retryability is `no`.
+- **Visible degraded state:** none; the intake ledger is unchanged.
+- **Notification tier:** silent-log (caller / payload shape).
+- **Product-user affordance:** broken provider bytes and unmapped symbols never
+  become CT-10 evidence. Fix the fixture or the instrument map and re-fetch.
+
+### FR-55: Complete-corpus / oversized factory downloads are refused (AC4)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** `refuse_complete_corpus_download`,
+  `DukascopyAdapter.download_complete_corpus`, `bounds.complete_corpus=true`, and
+  windows longer than `FACTORY_MAX_WINDOW_NS` refuse with
+  `signal: refuse-complete-corpus`. No donor `dukascopy-node` code enters the tree;
+  only bounded adapter evidence is permitted in this pass (FM-5, DEC-0051, DEC-0166).
+- **Auto-recovery / retry:** none — shrink the window or run the install/runbook
+  path outside this factory pass.
+- **Visible degraded state:** no transport calls are made for refused bulk asks.
+- **Notification tier:** operator-visible (caller attempted a corpus pull).
+- **Product-user affordance:** use a bounded `[start_ns, end_ns)` under the
+  factory max; bulk history stays an installation action.
+
+### FR-56: External recovery / checkpoint / retry ownership are refused (AC5)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** `refuse_external_recovery` and
+  `DukascopyAdapter.checkpoint` / `recover_external` / `run_retry_loop` always
+  refuse with `signal: refuse-external-recovery`. An unavailable transport
+  propagates as `unavailable dependency` with no fabricated ticks (FM-1,
+  DEC-0051, DEC-0119).
+- **Auto-recovery / retry:** application-owned. QMF does not require the provider
+  to recover and does not install a checkpoint supervisor.
+- **Visible degraded state:** no fabricated observations; prior evidence unchanged.
+- **Notification tier:** operator-visible for sustained source outages.
+- **Product-user affordance:** drive each bounded fetch from application
+  supervision; on outage, retry under your own checkpoint — not inside qmf-data.
+

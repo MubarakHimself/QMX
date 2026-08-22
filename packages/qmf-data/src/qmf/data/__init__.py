@@ -68,7 +68,13 @@ keeps bid and ask separate with source timestamps and refuses mid-merge;
 :func:`~qmf.data.ticks.relate_source_facts` emits ``corroborates`` /
 ``disagrees-with`` :class:`CausalEdge` values; :func:`~qmf.data.ticks.link_revision`
 links a later ``(source, id, revision)`` artifact via ``supersedes`` — never overwrite,
-never a ``qmf-registry`` import (DEC-0119, DEC-0120).
+never a ``qmf-registry`` import (DEC-0119, DEC-0120). Story 6.3 lands the Dukascopy
+download-once historical tick adapter (:mod:`qmf.data.dukascopy`, ``COMP-DUKASCOPY``):
+:class:`DukascopyAdapter` is CT-15 provider #1 under personal-use licensing, decodes
+bounded bi5 evidence through an injected :class:`DukascopyTransport` (no donor
+``dukascopy-node`` code), stamps every window with a :class:`LicenseTag`, and refuses
+unlicensed governed-evidence use, complete-corpus downloads, and external-recovery
+ownership (DEC-0166, DEC-0170, DEC-0051).
 
 ``qmf.data`` imports only ``qmf-core`` (the fp1 vocabulary and typed refusals) plus
 its own engine libraries — the default-deny dependency direction (L30) holds, and the
@@ -96,6 +102,21 @@ from qmf.data.cycle import (
     OffMachineCycle,
     refuse_numeric_rpo_rto,
     refuse_schedule_ownership,
+)
+from qmf.data.dukascopy import (
+    DUKASCOPY_SOURCE,
+    FACTORY_MAX_WINDOW_NS,
+    PERSONAL_USE_LICENSE,
+    DecodedTick,
+    DukascopyAdapter,
+    DukascopyHourKey,
+    DukascopyTransport,
+    LicensedSourceWindow,
+    LicenseTag,
+    decode_bi5_ticks,
+    offer_for_governed_evidence,
+    refuse_complete_corpus_download,
+    refuse_external_recovery,
 )
 from qmf.data.ingest import (
     ExternalSourceIngest,
@@ -227,16 +248,19 @@ __all__ = [
     "CT25_CONTRACT_FORMAT_VERSION",
     "CYCLE_ROOM_ROLES",
     "DEFAULT_SPLIT_ROLES",
+    "DUKASCOPY_SOURCE",
     "EDGE_CORROBORATES",
     "EDGE_DISAGREES_WITH",
     "EDGE_SUPERSEDES",
     "ENCRYPTION_REQUIRED",
+    "FACTORY_MAX_WINDOW_NS",
     "FINAL_LOOK_SUBTYPE",
     "MIGRATION_SEQUENCE",
     "NODE_OPS_BACKUP_RECOVERY_POINT_OBJECTIVE",
     "NODE_OPS_BACKUP_RECOVERY_TIME_OBJECTIVE",
     "NODE_OPS_BACKUP_RETENTION_PERIOD",
     "NODE_OPS_RESTORE_VERIFICATION_CADENCE",
+    "PERSONAL_USE_LICENSE",
     "RECORDS_STREAM_MAPPING",
     "RESTORABLE_ROOM_ROLES",
     "ROLE_KEY",
@@ -252,6 +276,10 @@ __all__ = [
     "CommandIndex",
     "CrossRoleRead",
     "DecisionOutcome",
+    "DecodedTick",
+    "DukascopyAdapter",
+    "DukascopyHourKey",
+    "DukascopyTransport",
     "EdgeWrite",
     "EntityKind",
     "EntitySelector",
@@ -272,6 +300,8 @@ __all__ = [
     "JournalWriter",
     "KnowledgeKind",
     "KnowledgeRecord",
+    "LicenseTag",
+    "LicensedSourceWindow",
     "LineageEdgeAppender",
     "Logbook",
     "MigrationStage",
@@ -317,17 +347,21 @@ __all__ = [
     "book_journal",
     "bot_logbook",
     "decay_cohort_read",
+    "decode_bi5_ticks",
     "detect_sequence_gaps",
     "entity_journal",
     "event_class_of",
     "guard_neutral_venue_payload",
     "link_revision",
     "migrate_evidence",
+    "offer_for_governed_evidence",
     "read_binding",
     "read_bot_seat",
     "read_command_fingerprint",
     "read_role",
     "records_stream",
+    "refuse_complete_corpus_download",
+    "refuse_external_recovery",
     "refuse_ingest_schedule_ownership",
     "refuse_mid_merge",
     "refuse_numeric_rpo_rto",
