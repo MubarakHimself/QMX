@@ -51,7 +51,8 @@ present does not occur — a typed refusal is returned. A present card authorize
 exact record its signature attests **and** only while it is the current head of the
 supersedes chain: a card a later signed correction has superseded no longer speaks for the
 crossing, so the gate consults the supersession state (the ``supersedes`` edges) the caller
-supplies and refuses a superseded card (FM-5). When the card attests an AD-32
+must supply — a required argument with no default — and refuses a superseded card (FM-5).
+When the card attests an AD-32
 ``template_definition_fp1``, the gate additionally **requires** the current in-force template
 fingerprint and refuses on any mismatch — and refuses an absent argument outright, never
 skipping the check — so a signature can never authorize a crossing under a superseded
@@ -508,7 +509,7 @@ def authorize_live_promotion(
     *,
     target_fp1: object,
     card: object,
-    superseded: object = (),
+    superseded: object,
     in_force_template_fp1: object = None,
 ) -> Result[PromotionAuthorization]:
     """The live-promotion refusal law: only a human-signed, current card authorizes the
@@ -522,13 +523,17 @@ def authorize_live_promotion(
     non-card object is an ``invalid input`` wiring refusal.
 
     ``superseded`` is the supersession state the caller resolves from the CT-07
-    ``supersedes`` chain — a collection of superseded card fingerprints (the ``to_ref``
-    endpoints) or of :class:`~qmf.registry.LineageEdge`\\ s to read them from. A card whose
-    ``fp1`` appears there has been superseded by a later signed correction and is **no
-    longer the current head**, so it does not authorize the crossing — a ``policy
-    rejection`` (only the current card speaks for live money; FM-5). An empty ``superseded``
-    (the default) means nothing is superseded; a malformed ``superseded`` is an ``invalid
-    input`` wiring refusal.
+    ``supersedes`` chain and is a **required keyword argument with no default**: the caller
+    must always answer it explicitly, because omitting it is exactly what would silently
+    weaken the strongest invariant on the path to live money — only the current head of the
+    supersedes chain authorizes. Pass a collection of superseded card fingerprints (the
+    ``to_ref`` endpoints) or of :class:`~qmf.registry.LineageEdge`\\ s to read them from; pass
+    an **empty collection** to state explicitly "I checked; nothing supersedes this card". A
+    card whose ``fp1`` appears there has been superseded by a later signed correction and is
+    **no longer the current head**, so it does not authorize the crossing — a ``policy
+    rejection`` (only the current card speaks for live money; FM-5). Omitting the argument is
+    a programmer error (a ``TypeError`` at call time; AR-13); passing ``None`` — or any other
+    malformed value — is an ``invalid input`` wiring refusal, never a silent skip.
 
     ``in_force_template_fp1`` is the current in-force Book-definition/BMS-definition
     fingerprint. When the ``card`` carries an AD-32 ``template_definition_fp1``, this
@@ -569,6 +574,16 @@ def authorize_live_promotion(
             "the exact record it attests, so promotion does not occur (FM-4)",
             attested=card.attested_fp1.value,
             requested=target.value,
+        )
+    if superseded is None:
+        return _invalid(
+            "superseded",
+            "the supersession state is required and must be supplied explicitly: pass the "
+            "collection of superseded card fp1 fingerprints (or of LineageEdges to read the "
+            "supersedes chain from), or an EMPTY collection to state 'I checked; nothing "
+            "supersedes this card'. None is never a valid answer — accepting it would let a "
+            "caller silently skip the only-the-current-head check (FM-5)",
+            given=repr(superseded),
         )
     superseded_ids = _superseded_card_ids(superseded)
     if superseded_ids is None:

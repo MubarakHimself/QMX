@@ -155,3 +155,17 @@ class HeldStreams:
         for _token, stream in self._held.values():
             stream.release()
         self._held.clear()
+
+    def stream_names(self) -> tuple[str, ...]:
+        """Every stream name present under the base directory, canonical and sorted.
+
+        Enumerates the on-disk stream directories (each created on first :meth:`acquire`)
+        unioned with any held only in memory, so a caller enforcing a room-wide invariant
+        can scan across all streams rather than a single named one. A base directory that
+        does not exist yet (no stream ever written) yields an empty tuple. Names are the
+        case-folded canonical keys, ready to pass straight back to :meth:`reader`.
+        """
+        names: set[str] = set(self._held)
+        if self._base.is_dir():
+            names.update(entry.name for entry in self._base.iterdir() if entry.is_dir())
+        return tuple(sorted(names))

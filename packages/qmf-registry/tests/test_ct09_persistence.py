@@ -736,6 +736,28 @@ def test_durable_supersedes_idempotent_reappend_is_not_a_fork(tmp_path: Path) ->
     assert again.value.outcome.value == "idempotent"
 
 
+def test_durable_supersedes_refuses_a_cross_stream_fork(tmp_path: Path) -> None:
+    # Residual 7: CT-07's one-resolvable-head invariant is ROOM-WIDE, not per-stream. A
+    # second outgoing supersedes from the same subject on a DIFFERENT edge stream still forks
+    # "current", so the durable guard scans every stream in the room and refuses it — a fork
+    # can never hide by landing on a second stream.
+    persistence = _live(tmp_path)
+    assert is_ok(persistence.persist_edge(_sup("a", "b"), edge_stream="stream-1"))
+    forked = persistence.persist_edge(_sup("a", "c"), edge_stream="stream-2")
+    assert is_refusal(forked)
+    assert forked.category.value == "policy rejection"
+    assert forked.context["field"] == "supersedes"
+    # A second superseder of the same record on yet another stream is likewise refused.
+    incoming_fork = persistence.persist_edge(_sup("d", "b"), edge_stream="stream-3")
+    assert is_refusal(incoming_fork)
+    assert incoming_fork.context["field"] == "supersedes"
+    # A byte-identical re-append of the original edge stays idempotent-Ok: the same-fingerprint
+    # edge is excluded from the fork test, so room-wide linearity never trips it.
+    again = persistence.persist_edge(_sup("a", "b"), edge_stream="stream-1")
+    assert is_ok(again)
+    assert again.value.outcome.value == "idempotent"
+
+
 # --- L3: the persisted edge line IS canonical_line() (single serializer) -----
 
 

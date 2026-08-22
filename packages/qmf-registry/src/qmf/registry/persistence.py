@@ -39,11 +39,12 @@ exactly: the store fingerprints the edge's identity content directly and this mo
 presents the edge fingerprint, so the storage key IS the edge's fp1 stable id. A
 byte-identical re-write is accepted silently (idempotent); a true collision (one fp1
 addressing differing bytes) is refused and alarmed at the store boundary, never
-overwritten. ``supersedes`` stays **pinned linear on the durable path too**: before a new
-``supersedes`` edge is appended, the persisted edge set is consulted and a fork (a second
-outgoing/incoming edge, a self-loop, or a cycle) is a ``policy rejection``, so CT-07's
-one-resolvable-head invariant holds for persisted evidence, not only the in-memory
-:class:`~qmf.registry.EdgeLog`.
+overwritten. ``supersedes`` stays **pinned linear on the durable path too, and room-wide**:
+before a new ``supersedes`` edge is appended, the persisted edge set **across every edge
+stream in the registry room** is consulted and a fork (a second outgoing/incoming edge on any
+stream, a self-loop, or a cycle) is a ``policy rejection``, so CT-07's one-resolvable-head
+invariant holds for persisted evidence room-wide — a fork can never hide by landing on a
+second stream — not only within one stream or the in-memory :class:`~qmf.registry.EdgeLog`.
 
 **Rooms per world; cross-world reads and simulated writes refuse (AC3; FM-7).** A
 :class:`RegistryPersistence` is bound to exactly one world's room. :meth:`open` for
@@ -539,14 +540,15 @@ class RegistryPersistence:
         failure are the store's typed refusals. A non-edge argument, or a bad stream name, is
         an ``invalid input`` refusal.
 
-        ``supersedes`` is held **pinned linear on the durable path** (CT-07; DEC-0158): a
-        genuinely new ``supersedes`` edge is refused (``policy rejection``) when the
-        persisted edge set on this stream already carries an outgoing ``supersedes`` from its
-        subject, an incoming ``supersedes`` into its superseded record, a self-loop, or a
-        cycle — so persisted evidence keeps one resolvable "current", not only the in-memory
-        :class:`~qmf.registry.EdgeLog`. A byte-identical re-append of an existing
-        ``supersedes`` edge is idempotent (the store decides that on its own fp1), never a
-        linearity violation.
+        ``supersedes`` is held **pinned linear on the durable path** (CT-07; DEC-0158), and
+        the invariant is **room-wide, not per-stream**: a genuinely new ``supersedes`` edge is
+        refused (``policy rejection``) when the persisted edge set **across every edge stream
+        in this room** already carries an outgoing ``supersedes`` from its subject, an incoming
+        ``supersedes`` into its superseded record, a self-loop, or a cycle — so a fork can
+        never hide on a second stream, and persisted evidence keeps one resolvable "current",
+        not only the in-memory :class:`~qmf.registry.EdgeLog`. A byte-identical re-append of an
+        existing ``supersedes`` edge is idempotent (the store decides that on its own fp1),
+        never a linearity violation.
 
         After the append lands, the edge is anchored by a tamper-evident **integrity
         witness** in the (SQLite, content-addressed) record store, so a silently altered
@@ -562,7 +564,7 @@ class RegistryPersistence:
                 given=repr(edge),
             )
         if edge.edge_type is EdgeType.SUPERSEDES:
-            guard = self._guard_durable_supersedes(edge, edge_stream)
+            guard = self._guard_durable_supersedes(edge)
             if is_refusal(guard):
                 return guard
         appended = self._ws.registry_room.append_lineage_edge(
@@ -635,23 +637,44 @@ class RegistryPersistence:
             return witness
         return Ok(None)
 
-    def _guard_durable_supersedes(self, edge: LineageEdge, edge_stream: object) -> Result[None]:
+    def _guard_durable_supersedes(self, edge: LineageEdge) -> Result[None]:
         """Refuse a new ``supersedes`` edge that would fork the durable chain (M1; CT-07).
 
-        Consults the **persisted** edge set on ``edge_stream`` (read back and witness-verified
-        through :meth:`read_edges`, in this room's world) and applies CT-07's pinned-linear
-        law to the durable evidence, not only the in-memory :class:`~qmf.registry.EdgeLog`: at
-        most one outgoing ``supersedes`` per subject and at most one incoming per superseded
-        record, no self-loop, and no cycle (DEC-0158, DEC-0144). A ``supersedes`` edge already
-        present with this exact fingerprint is a byte-identical re-append the store handles as
-        idempotent, so it is excluded from the fork test and never trips linearity. A read
-        failure (corrupt/tampered stream, cross-world) propagates as itself, so nothing is
-        appended over an unreadable chain.
+        Consults the **persisted** ``supersedes`` edges **across every edge stream in this
+        room** — CT-07's one-resolvable-head invariant is room-wide, not per-stream, so a fork
+        that lands on a *different* stream (a second superseder of the same record, a second
+        outgoing edge from the same subject, a self-loop, or a cycle) must be refused exactly
+        as an in-stream fork (DEC-0158, DEC-0144). Every stream is read back and
+        witness-verified through :meth:`read_edges` in this room's world. A ``supersedes`` edge
+        already present with this exact fingerprint is a byte-identical re-append the store
+        handles as idempotent, so it is excluded from the fork test and never trips linearity.
+        A read failure (corrupt/tampered stream, cross-world) propagates as itself, so nothing
+        is appended over an unreadable chain.
         """
-        existing = self.read_edges(edge_stream, for_world=self.world)
+        existing = self._read_all_supersedes_edges()
         if is_refusal(existing):
             return existing
         return _durable_supersedes_violation(edge, existing.value)
+
+    def _read_all_supersedes_edges(self) -> Result[tuple[LineageEdge, ...]]:
+        """Every persisted ``supersedes`` edge across all edge streams in this room (M1).
+
+        Enumerates the room's edge streams (:meth:`~qmf.data.store.RegistryRoom.lineage_stream_names`)
+        and reads each back — witness-verified — through :meth:`read_edges`, collecting the
+        ``supersedes`` edges so the room-wide linearity guard sees the whole chain, not only one
+        named stream. A read failure on any stream (corrupt/tampered stream, cross-world)
+        propagates unchanged, so a fork is never admitted over an unreadable room.
+        """
+        names = self._ws.registry_room.lineage_stream_names(for_world=self.world)
+        if is_refusal(names):  # pragma: no cover - defensive: the room's own world always matches
+            return names
+        collected: list[LineageEdge] = []
+        for name in names.value:
+            edges = self.read_edges(name, for_world=self.world)
+            if is_refusal(edges):
+                return edges
+            collected.extend(edge for edge in edges.value if edge.edge_type is EdgeType.SUPERSEDES)
+        return Ok(tuple(collected))
 
 
 # --- record / edge reconstruction (the read round trip) ---------------------
@@ -662,7 +685,8 @@ def _durable_supersedes_violation(
 ) -> Result[None]:
     """The CT-07 linearity refusal a new durable ``supersedes`` edge earns, or ``Ok(None)``.
 
-    Mirrors :meth:`qmf.registry.EdgeLog._supersedes_violation` over the persisted edge set:
+    Mirrors :meth:`qmf.registry.EdgeLog._supersedes_violation` over the room-wide persisted
+    edge set (every stream's ``supersedes`` edges, not one named stream):
     ``supersedes`` is pinned linear (at most one outgoing per subject, at most one incoming
     per superseded record, no self-loop, no cycle), so "current" never forks. A branching
     version graph uses ``branches-from`` instead, which carries no such constraint (DEC-0158,

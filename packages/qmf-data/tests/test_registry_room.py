@@ -92,6 +92,29 @@ def test_lineage_edge_appends_via_jsonl(store: EvidenceStore) -> None:
     assert read.value == [edge]
 
 
+def test_lineage_stream_names_enumerates_every_stream(store: EvidenceStore) -> None:
+    room = _registry(store)
+    # No stream written yet: an empty enumeration (never a failure), even before any dir exists.
+    empty = room.lineage_stream_names(for_world=World.LIVE)
+    assert is_ok(empty)
+    assert empty.value == ()
+    assert is_ok(room.append_lineage_edge("alpha", _writer(), {"edge": "a"}))
+    assert is_ok(room.append_lineage_edge("beta", _writer(), {"edge": "b"}))
+    names = room.lineage_stream_names(for_world=World.LIVE)
+    assert is_ok(names)
+    # A room-wide scan sees every stream, so a caller enforcing a room-wide invariant can read
+    # each one rather than only a single named stream.
+    assert set(names.value) == {"alpha", "beta"}
+
+
+def test_lineage_stream_names_cross_world_refuses(store: EvidenceStore) -> None:
+    room = _registry(store)
+    assert is_ok(room.append_lineage_edge("alpha", _writer(), {"edge": "a"}))
+    refused = room.lineage_stream_names(for_world=World.REPLAY)
+    assert is_refusal(refused)
+    assert refused.category.value == "policy rejection"
+
+
 def test_cross_world_get_is_policy_rejection(store: EvidenceStore) -> None:
     room = _registry(store)
     receipt = room.put_record(_RECORD, kind="producer", format_version=1)

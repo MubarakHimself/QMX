@@ -116,16 +116,19 @@ def signed_card_has_a_derived_id() -> PromotionCard:
 def no_card_refuses_but_a_signed_card_authorizes() -> tuple[str, str]:
     """The refusal law: no card => promotion does not occur; a signed card authorizes."""
     target = _rec("bot-under-review")
-    no_card = authorize_live_promotion(target_fp1=target, card=None)
+    # `superseded` is a REQUIRED argument: pass an empty collection to state explicitly that
+    # nothing supersedes this card (there is no default that could silently skip the check).
+    no_card = authorize_live_promotion(target_fp1=target, card=None, superseded=())
     assert isinstance(no_card, TypedRefusal)  # FM-4: only a human promotes into live
     card = signed_card_has_a_derived_id()
     authorized = _unwrap(
-        authorize_live_promotion(target_fp1=target, card=card), "authorized promotion"
+        authorize_live_promotion(target_fp1=target, card=card, superseded=()),
+        "authorized promotion",
     )
     assert authorized.card is card
     assert authorized.attested_fp1 == target
     # A card attesting a DIFFERENT record does not authorize this one.
-    wrong = authorize_live_promotion(target_fp1=_rec("some-other-record"), card=card)
+    wrong = authorize_live_promotion(target_fp1=_rec("some-other-record"), card=card, superseded=())
     assert isinstance(wrong, TypedRefusal)
     return no_card.category.value, wrong.category.value
 

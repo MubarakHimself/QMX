@@ -135,17 +135,20 @@ written for someone who was not in the design room.
   (FM-8, Story 2.4), never here.
 - **Detection:** `EdgeLog.append`/`append_edge` holds `supersedes` **pinned linear** in the
   in-memory reference stream, and `RegistryPersistence.persist_edge` holds it **on the
-  durable path too**: before a genuinely new `supersedes` edge is appended, the persisted
-  edge set on that stream (read back and witness-verified) is consulted and the same law
-  applied to persisted evidence. A genuinely new `supersedes` edge is refused when its
-  subject already has an outgoing `supersedes` edge (a record may supersede at most one
-  record), when the record it supersedes already has a superseder (a second would fork
-  "current"), when it points a record at itself, or when it would close a cycle in the
-  version chain. A branching Book/BMS version graph uses `branches-from` instead, which
-  carries no linearity constraint, and a byte-identical re-append of an existing
-  `supersedes` edge is idempotent (FR-7), decided by the store's own fp1, never a linearity
-  violation. The invariant therefore holds for persisted evidence, not only the in-memory
-  `EdgeLog` — a durable stream can never fork "current" (M1).
+  durable path too, and room-wide**: CT-07's one-resolvable-head invariant is a property of
+  the whole registry room, not of any single stream, so before a genuinely new `supersedes`
+  edge is appended the persisted edge set **across every edge stream in the room** (each read
+  back and witness-verified) is consulted and the same law applied to all of it. A genuinely
+  new `supersedes` edge is refused when its subject already has an outgoing `supersedes` edge
+  **on any stream** (a record may supersede at most one record), when the record it supersedes
+  already has a superseder **on any stream** (a second would fork "current"), when it points a
+  record at itself, or when it would close a cycle in the version chain — so a fork can never
+  hide by landing on a second edge stream. A branching Book/BMS version graph uses
+  `branches-from` instead, which carries no linearity constraint, and a byte-identical
+  re-append of an existing `supersedes` edge is idempotent (FR-7), decided by the store's own
+  fp1, never a linearity violation. The invariant therefore holds for persisted evidence
+  room-wide, not only within one stream or the in-memory `EdgeLog` — a durable registry room
+  can never fork "current" (M1).
 - **Auto-recovery / retry:** none automatic. The append RETURNS a `policy rejection`
   `TypedRefusal` (retryability `no`) whose `context` names the offending `subject` /
   `superseded` fingerprints and what already occupies that slot. Nothing is committed and
@@ -210,11 +213,16 @@ written for someone who was not in the design room.
   `None`); when a card IS present but attests a different record than the one requested (its
   `context` names both the `attested` and `requested` fingerprints); and when the present
   card has been **superseded** by a later signed correction — the gate consults the
-  supersedes state the caller supplies (a collection of superseded card fingerprints, or of
-  CT-07 `supersedes` `LineageEdge`s to read them from) and refuses a card whose `fp1` appears
-  there (`superseded_card` in `context`), because only the **current head** of the supersedes
-  chain speaks for live money (FM-5). A malformed supersedes argument is an `invalid input`
-  wiring refusal. When the present card attests an **AD-32 template** (`template_definition_fp1`),
+  supersedes state the caller **must supply** (`superseded` is a required argument with **no
+  default**: a collection of superseded card fingerprints, or of CT-07 `supersedes`
+  `LineageEdge`s to read them from) and refuses a card whose `fp1` appears there
+  (`superseded_card` in `context`), because only the **current head** of the supersedes chain
+  speaks for live money (FM-5). The caller's obligation is explicit: **omitting** `superseded`
+  is a programmer error (a `TypeError` at call time, AR-13) and passing `None` is an `invalid
+  input` wiring refusal — neither can silently skip the only-the-current-head check — while an
+  **empty collection** is the legitimate answer meaning "I checked; nothing supersedes this
+  card"; any other malformed value is likewise an `invalid input` wiring refusal. When the
+  present card attests an **AD-32 template** (`template_definition_fp1`),
   the gate additionally **requires** the current in-force template fingerprint as its
   `in_force_template_fp1` argument and refuses on any mismatch (`policy rejection`, naming the
   `attested_template` and `in_force_template`); an **absent** argument is itself a refusal, never

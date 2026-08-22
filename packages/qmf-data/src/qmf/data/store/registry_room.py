@@ -337,6 +337,20 @@ class RegistryRoom:
             )
         )
 
+    def lineage_stream_names(self, *, for_world: object) -> Result[tuple[str, ...]]:
+        """Every lineage-edge stream name present in this room; a cross-world read refuses.
+
+        ``for_world`` is required (M4) — a cross-world read is a ``policy rejection``. Returns
+        the canonical names of every edge stream ever written in this room (an empty tuple
+        when none exist yet), so a caller enforcing a **room-wide** invariant over the CT-07
+        supersedes chain can read every stream, not only a single named one. Enumeration only;
+        each stream's edges are read through :meth:`read_lineage`.
+        """
+        gate = require_same_world(self._world, for_world)
+        if is_refusal(gate):
+            return gate
+        return Ok(self._lineage.stream_names())
+
     def read_lineage(
         self, edge_stream: object, *, for_world: object
     ) -> Result[list[dict[str, object]]]:

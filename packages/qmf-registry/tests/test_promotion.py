@@ -22,9 +22,11 @@ fingerprint computed by qmf-core:
 from __future__ import annotations
 
 import ast
+import inspect
 from pathlib import Path
 from typing import TypeVar
 
+import pytest
 from qmf.core import (
     Fingerprint,
     Instant,
@@ -270,7 +272,7 @@ def test_sign_propagates_record_header_refusal() -> None:
 def test_no_card_present_refuses_promotion() -> None:
     target = _rec("bot")
     refusal = _refused(
-        authorize_live_promotion(target_fp1=target, card=None),
+        authorize_live_promotion(target_fp1=target, card=None, superseded=()),
         "card",
         RefusalCategory.POLICY_REJECTION,
     )
@@ -282,7 +284,7 @@ def test_no_card_present_refuses_promotion() -> None:
 def test_signed_card_authorizes_the_exact_attested_record() -> None:
     target = _rec("bot")
     card = _card(attested_fp1=target)
-    authorized = _ok(authorize_live_promotion(target_fp1=target, card=card))
+    authorized = _ok(authorize_live_promotion(target_fp1=target, card=card, superseded=()))
     assert isinstance(authorized, PromotionAuthorization)
     assert authorized.card is card
     assert authorized.attested_fp1 == target
@@ -291,7 +293,7 @@ def test_signed_card_authorizes_the_exact_attested_record() -> None:
 def test_card_attesting_a_different_record_does_not_authorize() -> None:
     card = _card(attested_fp1=_rec("bot"))
     _refused(
-        authorize_live_promotion(target_fp1=_rec("other-record"), card=card),
+        authorize_live_promotion(target_fp1=_rec("other-record"), card=card, superseded=()),
         "card",
         RefusalCategory.POLICY_REJECTION,
     )
@@ -299,12 +301,12 @@ def test_card_attesting_a_different_record_does_not_authorize() -> None:
 
 def test_gate_refuses_bad_target_and_non_card() -> None:
     _refused(
-        authorize_live_promotion(target_fp1="not-a-fingerprint", card=_card()),
+        authorize_live_promotion(target_fp1="not-a-fingerprint", card=_card(), superseded=()),
         "target_fp1",
         RefusalCategory.INVALID_INPUT,
     )
     _refused(
-        authorize_live_promotion(target_fp1=_rec("bot"), card="not-a-card"),
+        authorize_live_promotion(target_fp1=_rec("bot"), card="not-a-card", superseded=()),
         "card",
         RefusalCategory.INVALID_INPUT,
     )
@@ -543,15 +545,40 @@ def test_superseded_card_does_not_authorize_only_the_current_head() -> None:
         "card",
         RefusalCategory.POLICY_REJECTION,
     )
-    # With no supersession recorded (the default), the card still authorizes — the gate only
-    # refuses a card the caller's supersedes state marks as superseded.
-    assert is_ok(authorize_live_promotion(target_fp1=target, card=prior))
+    # With an explicit empty supersession state ("I checked; nothing supersedes this card"),
+    # the card still authorizes — the gate only refuses a card the caller's supersedes state
+    # marks as superseded.
+    assert is_ok(authorize_live_promotion(target_fp1=target, card=prior, superseded=()))
     # A malformed supersession state is a wiring refusal.
     _refused(
         authorize_live_promotion(target_fp1=target, card=new_card, superseded="not-a-collection"),
         "superseded",
         RefusalCategory.INVALID_INPUT,
     )
+
+
+def test_supersession_state_is_a_required_argument_with_no_default() -> None:
+    # H1 (the omission path): `superseded` must be REQUIRED with no default, so a caller can
+    # never silently skip the only-the-current-head check by omitting it. The signature carries
+    # no default; omitting it is a TypeError (programmer error, AR-13); passing None is an
+    # invalid-input refusal (an empty collection is the legitimate "nothing supersedes" answer).
+    parameter = inspect.signature(authorize_live_promotion).parameters["superseded"]
+    assert parameter.default is inspect.Parameter.empty
+    assert parameter.kind is inspect.Parameter.KEYWORD_ONLY
+    target = _rec("bot")
+    card = _card(attested_fp1=target)
+    # Omitting `superseded` entirely is a TypeError at call time (no default to fall back on).
+    with pytest.raises(TypeError):
+        authorize_live_promotion(target_fp1=target, card=card)  # type: ignore[call-arg]
+    # Passing None explicitly is an invalid-input refusal, never a silent skip.
+    refusal = _refused(
+        authorize_live_promotion(target_fp1=target, card=card, superseded=None),
+        "superseded",
+        RefusalCategory.INVALID_INPUT,
+    )
+    assert refusal.retryability is Retryability.NO
+    # An explicit empty collection is the legitimate "I checked; nothing supersedes this" answer.
+    assert is_ok(authorize_live_promotion(target_fp1=target, card=card, superseded=()))
 
 
 # --- AC5: an AD-32 risk-admission card binds the template fingerprint --------
@@ -604,14 +631,14 @@ def test_live_gate_requires_and_matches_the_in_force_template() -> None:
     card = _card(attested_fp1=target, template_definition_fp1=_rec("book-def-v1"))
     # Absent in-force template => refusal (never a silent skip).
     _refused(
-        authorize_live_promotion(target_fp1=target, card=card),
+        authorize_live_promotion(target_fp1=target, card=card, superseded=()),
         "in_force_template_fp1",
         RefusalCategory.POLICY_REJECTION,
     )
     # A DIFFERENT (superseded) in-force template => refusal.
     mismatch = _refused(
         authorize_live_promotion(
-            target_fp1=target, card=card, in_force_template_fp1=_rec("book-def-v2")
+            target_fp1=target, card=card, superseded=(), in_force_template_fp1=_rec("book-def-v2")
         ),
         "card",
         RefusalCategory.POLICY_REJECTION,
@@ -620,21 +647,26 @@ def test_live_gate_requires_and_matches_the_in_force_template() -> None:
     assert mismatch.context["in_force_template"] == _rec("book-def-v2").value
     # A malformed in-force template => wiring refusal.
     _refused(
-        authorize_live_promotion(target_fp1=target, card=card, in_force_template_fp1="minted-id"),
+        authorize_live_promotion(
+            target_fp1=target, card=card, superseded=(), in_force_template_fp1="minted-id"
+        ),
         "in_force_template_fp1",
         RefusalCategory.INVALID_INPUT,
     )
     # The matching in-force template authorizes (and a string form is accepted).
     authorized = _ok(
         authorize_live_promotion(
-            target_fp1=target, card=card, in_force_template_fp1=_rec("book-def-v1")
+            target_fp1=target, card=card, superseded=(), in_force_template_fp1=_rec("book-def-v1")
         )
     )
     assert isinstance(authorized, PromotionAuthorization)
     assert authorized.card is card
     assert is_ok(
         authorize_live_promotion(
-            target_fp1=target, card=card, in_force_template_fp1=_rec("book-def-v1").value
+            target_fp1=target,
+            card=card,
+            superseded=(),
+            in_force_template_fp1=_rec("book-def-v1").value,
         )
     )
 
@@ -645,11 +677,11 @@ def test_live_gate_ignores_the_in_force_template_when_the_card_carries_none() ->
     target = _rec("bot")
     card = _card(attested_fp1=target)
     assert card.template_definition_fp1 is None
-    assert is_ok(authorize_live_promotion(target_fp1=target, card=card))
+    assert is_ok(authorize_live_promotion(target_fp1=target, card=card, superseded=()))
     # Supplying one for a template-less card is harmless (it is simply not consulted).
     assert is_ok(
         authorize_live_promotion(
-            target_fp1=target, card=card, in_force_template_fp1=_rec("book-def-v1")
+            target_fp1=target, card=card, superseded=(), in_force_template_fp1=_rec("book-def-v1")
         )
     )
 
