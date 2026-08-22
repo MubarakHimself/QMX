@@ -55,6 +55,9 @@ class _XorCipher:
     def encrypt(self, plaintext: bytes, /) -> Result[bytes]:
         return Ok(bytes(b ^ 0x5A for b in plaintext))
 
+    def decrypt(self, ciphertext: bytes, /) -> Result[bytes]:
+        return self.encrypt(ciphertext)
+
 
 class _MemoryStorage:
     """In-memory ObjectStorage double — no provider, keys, or credentials."""
@@ -82,6 +85,25 @@ class _MemoryStorage:
         self.objects[key] = payload
         return Ok(StoragePutAck(detail=(("objects", str(len(self.objects))),)))
 
+    def get(
+        self,
+        *,
+        world: str,
+        copy_version: int,
+        source_room_role: str,
+        format_version: int,
+    ) -> Result[bytes]:
+        del format_version
+        key = (world, copy_version, source_room_role)
+        payload = self.objects.get(key)
+        if payload is None:
+            return unpersistable(
+                "object storage has no such versioned copy",
+                retryability=Retryability.NO,
+                context={"signal": "missing-copy", "copy_version": copy_version},
+            )
+        return Ok(payload)
+
 
 class _UnreachableStorage:
     def put(
@@ -100,6 +122,21 @@ class _UnreachableStorage:
             context={"signal": "unreachable"},
         )
 
+    def get(
+        self,
+        *,
+        world: str,
+        copy_version: int,
+        source_room_role: str,
+        format_version: int,
+    ) -> Result[bytes]:
+        del world, copy_version, source_room_role, format_version
+        return unpersistable(
+            "object storage bucket unreachable",
+            retryability=Retryability.YES,
+            context={"signal": "unreachable"},
+        )
+
 
 class _RaisingStorage:
     def put(
@@ -112,6 +149,17 @@ class _RaisingStorage:
         format_version: int,
     ) -> Result[StoragePutAck]:
         del world, copy_version, source_room_role, payload, format_version
+        raise ConnectionError("bucket down")
+
+    def get(
+        self,
+        *,
+        world: str,
+        copy_version: int,
+        source_room_role: str,
+        format_version: int,
+    ) -> Result[bytes]:
+        del world, copy_version, source_room_role, format_version
         raise ConnectionError("bucket down")
 
 
@@ -134,10 +182,33 @@ class _MiswiredStorage:
             context={"signal": "miswired-adapter"},
         )
 
+    def get(
+        self,
+        *,
+        world: str,
+        copy_version: int,
+        source_room_role: str,
+        format_version: int,
+    ) -> Result[bytes]:
+        del world, copy_version, source_room_role, format_version
+        return TypedRefusal(
+            category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+            retryability=Retryability.YES,
+            context={"signal": "miswired-adapter"},
+        )
+
 
 class _RejectingCipher:
     def encrypt(self, plaintext: bytes, /) -> Result[bytes]:
         del plaintext
+        return TypedRefusal(
+            category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+            retryability=Retryability.NO,
+            context={"field": "cipher", "reason": "encryption key custody unresolved"},
+        )
+
+    def decrypt(self, ciphertext: bytes, /) -> Result[bytes]:
+        del ciphertext
         return TypedRefusal(
             category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
             retryability=Retryability.NO,
@@ -150,10 +221,18 @@ class _EmptyCipher:
         del plaintext
         return Ok(b"")
 
+    def decrypt(self, ciphertext: bytes, /) -> Result[bytes]:
+        del ciphertext
+        return Ok(b"")
+
 
 class _RaisingCipher:
     def encrypt(self, plaintext: bytes, /) -> Result[bytes]:
         del plaintext
+        raise RuntimeError("crypto backend exploded")
+
+    def decrypt(self, ciphertext: bytes, /) -> Result[bytes]:
+        del ciphertext
         raise RuntimeError("crypto backend exploded")
 
 

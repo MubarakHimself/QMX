@@ -42,7 +42,10 @@ CT-14 off-machine backup primitive (:mod:`qmf.data.backup`):
 :class:`OffMachineBackup` consumes CT-26 :class:`~qmf.data.store.RoomExport` input,
 encrypts through an injected :class:`PayloadCipher`, and puts a new versioned artifact
 through an injected :class:`ObjectStorage` port — encryption required as a pointer,
-no provider/credentials/RPO baked in.
+no provider/credentials/RPO baked in. Story 5.2 lands the matching restore primitive
+(:class:`OffMachineRestore`): fetch + decrypt into a **replacement** store root, never
+rewriting or deleting the only local copy; restored reads still enforce the 12-month
+seal and world isolation as policy rejections.
 
 ``qmf.data`` imports only ``qmf-core`` (the fp1 vocabulary and typed refusals) plus
 its own engine libraries — the default-deny dependency direction (L30) holds, and the
@@ -58,7 +61,9 @@ from qmf.data.backup import (
     ObjectStorage,
     OffMachineBackup,
     OffMachineCopy,
+    OffMachineRestore,
     PayloadCipher,
+    RestoreReceipt,
     StoragePutAck,
 )
 from qmf.data.journal import (
@@ -187,6 +192,7 @@ __all__ = [
     "ObservationReceipt",
     "OffMachineBackup",
     "OffMachineCopy",
+    "OffMachineRestore",
     "PayloadCipher",
     "ProducerHorizon",
     "ProjectedRow",
@@ -195,6 +201,7 @@ __all__ = [
     "RecordsStreamName",
     "RecordsStreamRule",
     "ResolvedSeries",
+    "RestoreReceipt",
     "RetentionPolicy",
     "RetentionVerdict",
     "SegmentRole",

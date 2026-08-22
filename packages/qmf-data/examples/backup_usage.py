@@ -68,6 +68,9 @@ class _XorCipher:
     def encrypt(self, plaintext: bytes, /) -> Result[bytes]:
         return Ok(bytes(b ^ 0x5A for b in plaintext))
 
+    def decrypt(self, ciphertext: bytes, /) -> Result[bytes]:
+        return self.encrypt(ciphertext)
+
 
 class _MemoryBucket:
     """Stand-in object storage — provider and credentials stay outside QMF (AC5)."""
@@ -88,6 +91,17 @@ class _MemoryBucket:
         self.objects[(world, copy_version, source_room_role)] = payload
         return Ok(StoragePutAck())
 
+    def get(
+        self,
+        *,
+        world: str,
+        copy_version: int,
+        source_room_role: str,
+        format_version: int,
+    ) -> Result[bytes]:
+        del format_version
+        return Ok(self.objects[(world, copy_version, source_room_role)])
+
 
 class _DownBucket:
     """Object storage that is unreachable — FM-2."""
@@ -102,6 +116,21 @@ class _DownBucket:
         format_version: int,
     ) -> Result[StoragePutAck]:
         del world, copy_version, source_room_role, payload, format_version
+        return unpersistable(
+            "object storage bucket unreachable",
+            retryability=Retryability.YES,
+            context={"signal": "unreachable"},
+        )
+
+    def get(
+        self,
+        *,
+        world: str,
+        copy_version: int,
+        source_room_role: str,
+        format_version: int,
+    ) -> Result[bytes]:
+        del world, copy_version, source_room_role, format_version
         return unpersistable(
             "object storage bucket unreachable",
             retryability=Retryability.YES,

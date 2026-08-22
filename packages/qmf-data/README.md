@@ -27,6 +27,13 @@ numeric RPO/RTO/retention stay node/ops-owned. Cross-world / `simulated` copies
 are policy rejections; unreachable or corrupt object storage is a storage-failure
 refusal — never raised, never claimed complete.
 
+Story 5.2 lands the matching restore primitive (`OffMachineRestore`): fetch +
+decrypt into a **replacement** `EvidenceStore` root — never an in-place rewrite of
+the only local copy — with int64 UTC-ns timestamps restored verbatim. Restored
+reads still enforce the wired 12-month seal and world isolation as policy
+rejections; discarding the only local raw copy is refused under this component's
+authority.
+
 `EvidenceStore(root).for_world(world)` returns the four boundaries for one world.
 The engines sit behind their owned `typing.Protocol` contracts, so each is
 swappable. The public data-policy contracts (CT-10 observations, CT-12 splits, the

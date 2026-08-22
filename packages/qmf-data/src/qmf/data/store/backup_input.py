@@ -42,10 +42,14 @@ class RecordExport:
 
     ``fingerprint`` is the fp1 string that keys it and ``canonical`` the exact stored
     identity bytes — a restore rewrites these unchanged (DEC-0106, DEC-0118).
+    ``stream`` carries the JSONL stream segment for journal / lineage-backed records so
+    a restore can re-append under the same stream name; raw and registry-record exports
+    leave it ``None``.
     """
 
     fingerprint: str
     canonical: bytes
+    stream: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -191,7 +195,9 @@ class BackupInput:
             reader.rebuild_index()
             for line in reader.read_all():
                 digest = hashlib.sha256(line).hexdigest()
-                exports.append(RecordExport(fingerprint=_fp1(digest), canonical=line))
+                exports.append(
+                    RecordExport(fingerprint=_fp1(digest), canonical=line, stream=sub.name)
+                )
         return tuple(exports)
 
 
