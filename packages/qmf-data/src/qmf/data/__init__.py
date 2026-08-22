@@ -37,7 +37,12 @@ risk-authored / venue-authored :class:`EventClass` split with binding identity
 role-scoped namespaces with the FM-11 cross-role guard and its two declared
 :class:`CrossRoleRead` exceptions (:func:`role_namespace`, :func:`decay_cohort_read`), and the
 legacy five Records streams as projection names over the one versioned
-:data:`RECORDS_STREAM_MAPPING` table (:func:`records_stream`).
+:data:`RECORDS_STREAM_MAPPING` table (:func:`records_stream`). Story 5.1 lands the
+CT-14 off-machine backup primitive (:mod:`qmf.data.backup`):
+:class:`OffMachineBackup` consumes CT-26 :class:`~qmf.data.store.RoomExport` input,
+encrypts through an injected :class:`PayloadCipher`, and puts a new versioned artifact
+through an injected :class:`ObjectStorage` port — encryption required as a pointer,
+no provider/credentials/RPO baked in.
 
 ``qmf.data`` imports only ``qmf-core`` (the fp1 vocabulary and typed refusals) plus
 its own engine libraries — the default-deny dependency direction (L30) holds, and the
@@ -46,6 +51,16 @@ ratified ``qmf-registry → qmf-data`` edge points AT this package.
 
 from __future__ import annotations
 
+from qmf.data.backup import (
+    BACKUP_CONTRACT_FORMAT_VERSION,
+    ENCRYPTION_REQUIRED,
+    BackupCopyReceipt,
+    ObjectStorage,
+    OffMachineBackup,
+    OffMachineCopy,
+    PayloadCipher,
+    StoragePutAck,
+)
 from qmf.data.journal import (
     CausalEdge,
     DecisionOutcome,
@@ -126,6 +141,7 @@ from qmf.data.store import EvidenceStore
 
 __all__ = [
     "ACCOUNT_ID_KEY",
+    "BACKUP_CONTRACT_FORMAT_VERSION",
     "BMS_INSTANCE_ID_KEY",
     "BOOK_DEFINITION_FP_KEY",
     "BOOK_IDENTITY_FIELDS",
@@ -134,12 +150,14 @@ __all__ = [
     "COMMAND_FINGERPRINT_KEY",
     "CT25_CONTRACT_FORMAT_VERSION",
     "DEFAULT_SPLIT_ROLES",
+    "ENCRYPTION_REQUIRED",
     "FINAL_LOOK_SUBTYPE",
     "RECORDS_STREAM_MAPPING",
     "ROLE_KEY",
     "SEAL_CONTROL_STREAM",
     "SEAT_BINDING_KEY",
     "VENUE_ID_KEY",
+    "BackupCopyReceipt",
     "BindingIdentity",
     "BotSeat",
     "CausalEdge",
@@ -165,7 +183,11 @@ __all__ = [
     "KnowledgeRecord",
     "LineageEdgeAppender",
     "Logbook",
+    "ObjectStorage",
     "ObservationReceipt",
+    "OffMachineBackup",
+    "OffMachineCopy",
+    "PayloadCipher",
     "ProducerHorizon",
     "ProjectedRow",
     "ReadBoundary",
@@ -183,6 +205,7 @@ __all__ = [
     "SplitBoundary",
     "SplitManifest",
     "SplitSegment",
+    "StoragePutAck",
     "WorldRooms",
     "__version__",
     "bms_journal",

@@ -18,6 +18,15 @@ the seven room-roles are instantiated per world; a `world = simulated` write and
 cross-world read are policy rejections; and any engine failure is translated to a
 `storage failure` refusal at the boundary, never raised across a package seam.
 
+Story 5.1 lands `COMP-QMF-DATA-BACKUP` (`qmf.data.backup`): the CT-14 encrypted,
+versioned off-machine copy primitive. It consumes CT-26 `RoomExport` input,
+encrypts through an injected `PayloadCipher`, and puts each copy as a **new**
+versioned artifact through an injected `ObjectStorage` port. Encryption is
+required as a pointer; provider selection, object-key layout, credentials, and
+numeric RPO/RTO/retention stay node/ops-owned. Cross-world / `simulated` copies
+are policy rejections; unreachable or corrupt object storage is a storage-failure
+refusal — never raised, never claimed complete.
+
 `EvidenceStore(root).for_world(world)` returns the four boundaries for one world.
 The engines sit behind their owned `typing.Protocol` contracts, so each is
 swappable. The public data-policy contracts (CT-10 observations, CT-12 splits, the
