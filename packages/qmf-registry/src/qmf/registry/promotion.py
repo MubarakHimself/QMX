@@ -717,8 +717,11 @@ def emit_promotion_event(
 
     Builds the :class:`PromotionEvent` for ``card`` (a pointer to the canonical registry
     card, plus an optional ``correlation_id``) and appends it through ``sink`` — a
-    core-defined ``JournalSink`` injected at the composition root, so emitting creates no
-    import edge (physical persistence through ``qmf-data`` lands in Story 2.4). Returns the
+    core-defined ``JournalSink`` injected at the composition root, so emitting adds no
+    import edge at all (physical persistence through ``qmf-data`` lands in Story 2.4). The
+    wording matters: a line that begins ``import <word>`` is read as a real import by
+    regex-based dependency scanners, so the prose keeps that phrase off a line start.
+    Returns the
     sink's ``Result[SinkAck]``: a durable append is an :class:`~qmf.core.Ok`
     acknowledgment, and an unpersistable append is a ``storage failure`` refusal on which
     the caller **blocks its command stream** (block-on-unpersistable). A malformed card or

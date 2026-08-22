@@ -244,6 +244,17 @@ pythonVersion = "3.14"
 # Matching semantics (skylos/core/file_discovery.py::should_exclude_path): a
 # pattern with no slash and no wildcard matches a path COMPONENT at any depth,
 # which is exactly the by-name behaviour this list wants.
+#
+# THIS LIST IS ENFORCED TWICE, and it has to be. Skylos honours it in file
+# discovery, but its prompt-injection pass also probes a hard-coded set of
+# high-priority locations — "", "docs", "prompt(s)", "config(s)", ".github" — for
+# AGENTS.md / CLAUDE.md / README.md, and that probe reads no exclude list at all
+# (skylos/analyzer.py). Run 32567871620 failed on docs/AGENTS.md for exactly that
+# reason, with "docs" sitting right here. So the CI job READS this list and
+# physically prunes those trees from its disposable checkout before scanning —
+# the only thing that binds for every pass. Passing --exclude on the CLI does not
+# help: it feeds the same set the probe ignores. This list stays the one source
+# of truth; CI derives from it, and a local `skylos .` still reads it directly.
 exclude = [
     "adws",          # software-factory machinery — never touched by a scan-driven fix
     "_bmad",         # BMad planning machinery — same ruling as adws
@@ -258,6 +269,25 @@ exclude = [
     "specs",         # specification prose
     "app_docs",      # transcripts and HTML artifacts
 ]
+
+# ONE rule is switched off, and only because it cannot read this project's
+# manifests. SKY-D223 ("undeclared import") looks for a dependency in
+# [project.dependencies] / [project.optional-dependencies] of the FIRST manifest it
+# finds walking up from the scan root, and stops there
+# (dependency_hallucination.py::_collect_declared_deps). It therefore cannot see
+# PEP 735 `[dependency-groups]`, where this workspace declares pytest and the whole
+# toolchain, nor the uv-workspace MEMBER manifests, where qmf-data declares pyarrow
+# and duckdb. Everything it flagged here — pytest x20, pyarrow, duckdb — is in fact
+# declared, just somewhere this version does not look, so its verdict on this repo
+# is systematically wrong rather than occasionally noisy. It also reads imports by
+# regex over raw text rather than by AST, so the prose "…creates no import edge…"
+# in a docstring was reported as an undeclared module named `edge`.
+#
+# SKY-D222, the hallucinated-dependency check, stays fully ON — it is the AI-defect
+# protection this gate exists for. It is not silenced anywhere; it is instead TAUGHT
+# our own package names through the derived SKYLOS_PRIVATE_DEPS_ALLOW list the CI job
+# builds from the workspace layout (see .github/workflows/skylos.yml).
+ignore = ["SKY-D223"]
 
 [tool.skylos.gate]
 # Fail-closed on real defects: every bucket below is a hard zero, so a single

@@ -43,3 +43,7 @@ Thumbs.db
 adws/adw_data/sessions/
 adws/adw_data/sssf.db*
 .env
+
+# Skylos local project state: the reference-graph index and the PyPI-existence
+# cache it rebuilds on demand. Local only, never shared (docs.skylos.dev/cli-reference).
+.skylos/
