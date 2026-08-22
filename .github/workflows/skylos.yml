@@ -1,45 +1,96 @@
 name: Skylos
-# Gates the code the factory SHIPS: the ratified layout is packages/ (roster)
-# and extensions/ (off-roster). Tooling folders (adws/, recorder/, workroom/)
-# are deliberately not scanned - they are not factory output.
+# Gates everything this repository pushes. The scan starts at the repository ROOT
+# and subtracts by NAME (`[tool.skylos] exclude` in pyproject.toml) - it is never
+# an include-list - so a top-level folder a later epic adds (qmb/, qml/, ...) is in
+# scope the moment it lands, with no edit here. Languages are auto-detected by file
+# extension in one pass, so the TypeScript and Rust that arrive later are covered
+# the same way; no language is ever named, deliberately.
+#
+# FREE TIER ONLY. Nothing here reaches Skylos Cloud: no `--upload` (and
+# `--no-upload` is passed explicitly), no `id-token` permission so GitHub OIDC
+# cannot bind a cloud project, no `skylos sync pull`, no `skylos defend`, no
+# `--verify` (the CLI's single PRO-gated flag). The scan, the AI-defect checks,
+# `cicd annotate` and `cicd gate` all run locally on the runner and cost nothing.
+#
+# The CLI is driven directly rather than through the `duriantaco/skylos` composite
+# action. That action runs an unconditional "Upload to Skylos Dashboard" step the
+# caller cannot switch off, and it exposes neither `-a` nor the repo-wide
+# exclusions this project's scope ruling needs.
 on:
   push:
     branches: [integration]
-    paths: ['packages/**', 'extensions/**']
   pull_request:
     branches: [main]
-    paths: ['packages/**', 'extensions/**']
 
-# Workflow-level permissions stay minimal (read-only); the write grant the annotator
-# needs is scoped to the job that runs it, not handed to the whole workflow.
+# Workflow-level permissions stay minimal (read-only). The job below writes
+# nothing: GitHub annotations are emitted as workflow commands on stdout, which
+# need no token and no write scope at all.
 permissions:
   contents: read
 
 jobs:
   skylos:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    # Only this job may comment on the pull request; the workflow default stays read-only.
+    # A whole-repo scan with the dependency (OSV.dev) and AI-defect (package
+    # registry) checks makes network calls, so it needs more headroom than the
+    # old packages-only scan.
+    timeout-minutes: 20
     permissions:
       contents: read
-      pull-requests: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
         with:
           fetch-depth: 0
           # Nothing here pushes; do not leave the checkout token on disk for later steps.
           persist-credentials: false
-      - id: dirs
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        with:
+          # The interpreter that RUNS Skylos, not the interpreter this project
+          # targets (that is CPython 3.14, pinned in .python-version). 3.12 is
+          # chosen because every Skylos tree-sitter dependency ships a wheel for
+          # it, so the install never falls back to a source build.
+          python-version: '3.12'
+
+      - name: Install Skylos
+        # Pinned: the gate must render the same verdict on every re-run.
+        run: python -m pip install --disable-pip-version-check "skylos==4.33.2"
+
+      - name: Scan
         run: |
-          { [ -d packages ] && echo "packages=true" || echo "packages=false"; } >> "$GITHUB_OUTPUT"
-          { [ -d extensions ] && echo "extensions=true" || echo "extensions=false"; } >> "$GITHUB_OUTPUT"
-      - name: Skylos on packages
-        if: steps.dirs.outputs.packages == 'true'
-        uses: duriantaco/skylos@de23f0c52a21c724fdbdcdaa340fc573676e9f6a  # v4.33.2
+          set +e
+          # -a is the full local audit: dead code + security/dangerous flow +
+          # secrets + quality + dependency CVEs + the evidence-backed AI-defect
+          # checks. Scope and exclusions come from [tool.skylos] in pyproject.toml,
+          # so this command is the same one a developer runs locally.
+          python -m skylos.cli . -a --no-upload --json > skylos-report.json
+          status=$?
+          set -e
+          # 0 = clean, 1 = findings (the Gate step below is what decides). Any
+          # other code means the run itself broke, and a fail-closed gate must
+          # never read a broken run as a clean one.
+          if [ "$status" -ne 0 ] && [ "$status" -ne 1 ]; then
+            echo "::error::Skylos scan exited $status; refusing to treat that as a clean result"
+            exit "$status"
+          fi
+
+      - name: Annotate the commit and PR
+        if: always()
+        # Reporting, not enforcement: annotations must never be the reason a job
+        # goes red, and must never hide the real failure underneath them. The
+        # Gate step is the only thing that blocks.
+        run: python -m skylos.cli cicd annotate --input skylos-report.json --max 50 || true
+
+      - name: Gate
+        # Fail-closed. Thresholds live in [tool.skylos.gate] in pyproject.toml;
+        # a nonzero exit here fails the job, and an incomplete analysis exits 2
+        # rather than passing.
+        run: python -m skylos.cli cicd gate --input skylos-report.json --summary
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        if: always()
         with:
-          path: packages
-      - name: Skylos on extensions
-        if: steps.dirs.outputs.extensions == 'true'
-        uses: duriantaco/skylos@de23f0c52a21c724fdbdcdaa340fc573676e9f6a  # v4.33.2
-        with:
-          path: extensions
+          name: skylos-report
+          path: skylos-report.json
+          if-no-files-found: error
+          retention-days: 30
