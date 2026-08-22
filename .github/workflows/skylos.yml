@@ -10,28 +10,36 @@ on:
     branches: [main]
     paths: ['packages/**', 'extensions/**']
 
+# Workflow-level permissions stay minimal (read-only); the write grant the annotator
+# needs is scoped to the job that runs it, not handed to the whole workflow.
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   skylos:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Only this job may comment on the pull request; the workflow default stays read-only.
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
         with:
           fetch-depth: 0
+          # Nothing here pushes; do not leave the checkout token on disk for later steps.
+          persist-credentials: false
       - id: dirs
         run: |
           { [ -d packages ] && echo "packages=true" || echo "packages=false"; } >> "$GITHUB_OUTPUT"
           { [ -d extensions ] && echo "extensions=true" || echo "extensions=false"; } >> "$GITHUB_OUTPUT"
       - name: Skylos on packages
         if: steps.dirs.outputs.packages == 'true'
-        uses: duriantaco/skylos@v4.33.2
+        uses: duriantaco/skylos@de23f0c52a21c724fdbdcdaa340fc573676e9f6a  # v4.33.2
         with:
           path: packages
       - name: Skylos on extensions
         if: steps.dirs.outputs.extensions == 'true'
-        uses: duriantaco/skylos@v4.33.2
+        uses: duriantaco/skylos@de23f0c52a21c724fdbdcdaa340fc573676e9f6a  # v4.33.2
         with:
           path: extensions

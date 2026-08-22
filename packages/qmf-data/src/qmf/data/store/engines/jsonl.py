@@ -37,7 +37,12 @@ from qmf.data.store.engines import (
 )
 from qmf.data.store.refusals import policy_rejection
 
-__all__ = ["DEFAULT_ROTATION_BYTES", "JsonlAppendStream", "jsonl_opener"]
+__all__ = [
+    "DEFAULT_MAX_SCAN_BYTES",
+    "DEFAULT_ROTATION_BYTES",
+    "JsonlAppendStream",
+    "jsonl_opener",
+]
 
 _LOCK_NAME = ".writer"
 _ORDINAL_RE = re.compile(r"\A(\d{6})\.jsonl\Z")
@@ -46,11 +51,42 @@ _ORDINAL_WIDTH = 6
 # measured volume (DEC-0118), so this is a construction-time argument, not a ratified
 # registry constant.
 DEFAULT_ROTATION_BYTES = 8 * 1024 * 1024
+# A whole rotation file is scanned line-by-line on index rebuild. A file far larger than
+# any rotation size is a corrupt or hostile stream (for instance a symlink swapped in for
+# an endless/huge file), so a whole-file scan refuses above a generous absolute ceiling
+# rather than reading unbounded bytes. Overridable per stream for the regression test.
+DEFAULT_MAX_SCAN_BYTES = 1 << 30  # 1 GiB
 
 
 def _ordinal_filename(ordinal: int) -> str:
     """The zero-padded rotation filename for ``ordinal``."""
     return f"{ordinal:0{_ORDINAL_WIDTH}d}.jsonl"
+
+
+def _guard_stream_file(root: Path, path: Path, *, must_exist: bool) -> None:
+    """Refuse a stream file that is a symlink, out-of-root, or the wrong kind (AC4).
+
+    Every evidence stream file the engine opens is a real file directly inside its stream
+    directory: never a symlink, and never a path that resolves outside the stream root, so
+    a planted link can neither redirect a read onto a file off the evidence tree nor make a
+    write follow it elsewhere. Reads and the in-place torn-tail truncate require an existing
+    regular file (``must_exist``); the ``.torn`` sidecar is created on first quarantine, so
+    it need only be absent-or-regular. A violation raises a corrupt-store
+    :class:`StoreEngineError` (``retryable=False``) the boundary translates to a
+    ``storage failure`` refusal, never a silent follow of an attacker-controlled path.
+    """
+    resolved = Path(os.path.realpath(path))
+    root_real = Path(os.path.realpath(root))
+    is_link = path.is_symlink()
+    wrong_kind = (must_exist or path.exists()) and not path.is_file()
+    if is_link or wrong_kind or not resolved.is_relative_to(root_real):
+        raise StoreEngineError(
+            "refusing to open an evidence stream file that is not a regular in-root file "
+            "(a symlink or an out-of-root path could redirect the I/O)",
+            engine="jsonl",
+            retryable=False,
+            detail={"stream": str(root), "path": str(path)},
+        )
 
 
 class JsonlAppendStream:
@@ -68,10 +104,12 @@ class JsonlAppendStream:
         *,
         writer_token: str,
         rotation_bytes: int = DEFAULT_ROTATION_BYTES,
+        max_scan_bytes: int = DEFAULT_MAX_SCAN_BYTES,
     ) -> None:
         self._dir = stream_dir
         self._writer_token = writer_token
         self._rotation_bytes = max(1, rotation_bytes)
+        self._max_scan_bytes = max(1, max_scan_bytes)
         self._index: dict[str, AppendLocation] = {}
         self._order: list[str] = []
         self._current_ordinal = 0
@@ -212,6 +250,7 @@ class JsonlAppendStream:
         if location is None:
             return None
         path = self._dir / _ordinal_filename(location.ordinal)
+        _guard_stream_file(self._dir, path, must_exist=True)
         try:
             with path.open("rb") as handle:
                 handle.seek(location.byte_offset)
@@ -319,6 +358,21 @@ class JsonlAppendStream:
         rotation file is real corruption and is a ``storage failure`` refusal.
         """
         path = self._dir / _ordinal_filename(ordinal)
+        _guard_stream_file(self._dir, path, must_exist=True)
+        size = path.stat().st_size
+        if size > self._max_scan_bytes:
+            raise StoreEngineError(
+                "the JSONL rotation file exceeds the maximum scannable size; refusing to "
+                "read it whole (a corrupt or hostile stream)",
+                engine="jsonl",
+                retryable=False,
+                detail={
+                    "stream": str(self._dir),
+                    "ordinal": ordinal,
+                    "size": size,
+                    "cap": self._max_scan_bytes,
+                },
+            )
         offset = 0
         torn_tail: bytes | None = None
         with path.open("rb") as handle:
@@ -374,12 +428,18 @@ class JsonlAppendStream:
         """
         data_name = _ordinal_filename(ordinal)
         sidecar = self._dir / f"{data_name}.torn"
+        data_path = self._dir / data_name
+        # The sidecar is created on first quarantine (absent-or-regular); the data file
+        # already exists and is truncated in place. Both must stay regular, in-root, and
+        # never a symlink, so neither write is redirected off the evidence tree (AC4).
+        _guard_stream_file(self._dir, sidecar, must_exist=False)
+        _guard_stream_file(self._dir, data_path, must_exist=True)
         try:
             with sidecar.open("ab") as handle:
                 handle.write(torn)
                 handle.flush()
                 os.fsync(handle.fileno())
-            with (self._dir / data_name).open("r+b") as handle:
+            with data_path.open("r+b") as handle:
                 handle.truncate(committed_prefix_len)
                 handle.flush()
                 os.fsync(handle.fileno())

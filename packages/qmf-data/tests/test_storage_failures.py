@@ -6,6 +6,7 @@ Protocols, so these tests double as proof that each engine is swappable (AC1).
 
 from __future__ import annotations
 
+import os
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
@@ -14,6 +15,21 @@ from qmf.data.store import AppendStore, EvidenceStore, RegistryRoom, jsonl_opene
 from qmf.data.store.engines import StoreEngineError
 
 _ROWS = [{"t": 1, "px": 100}]
+
+
+def _safe_corrupt_write(path: Path, data: bytes, *, root: Path) -> None:
+    """Overwrite an existing stream file safely: a regular, non-symlink, in-root file only.
+
+    Mirrors the engine's safe-write discipline (``jsonl._guard_stream_file``) so this test,
+    when it deliberately corrupts a stream, never follows a planted symlink and never writes
+    through a path that resolves outside the store root.
+    """
+    resolved = Path(os.path.realpath(path))
+    root_real = Path(os.path.realpath(root))
+    assert not path.is_symlink(), "refusing to corrupt-write through a symlink"
+    assert path.is_file(), "corrupt-write target must be an existing regular file"
+    assert resolved.is_relative_to(root_real), "corrupt-write target escaped the store root"
+    path.write_bytes(data)
 
 
 class _RaisingColumnar:
@@ -123,7 +139,9 @@ def test_journal_read_failure_on_corrupt_stream(store: EvidenceStore) -> None:
     # Corrupt the underlying stream file with a genuinely corrupt (non-JSON) LF-terminated
     # line — distinct from a recoverable torn tail (H2), this is real corruption and refuses.
     corrupt = store.root / "live" / "journal" / "dq" / "000000.jsonl"
-    corrupt.write_bytes(b'{"event_type":"data quality","n":0}\nnot valid json\n')
+    _safe_corrupt_write(
+        corrupt, b'{"event_type":"data quality","n":0}\nnot valid json\n', root=store.root
+    )
     read = journal.read_stream("dq", for_world=World.LIVE)
     assert is_refusal(read)
     assert read.category.value == "storage failure"

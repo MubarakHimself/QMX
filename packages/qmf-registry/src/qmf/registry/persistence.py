@@ -93,6 +93,7 @@ frozen, immutable values throughout (DEC-0101, DEC-0113).
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -916,15 +917,69 @@ class MigrationReport:
     receipts: tuple[StoreReceipt, ...]
 
 
-def _write_backup_artifact(export: RoomExport, backup_dir: Path) -> Result[str]:
+# The default backup artifact is created with an **exclusive, no-follow** open so a
+# pre-planted symlink at the target can never redirect the write onto another file: the
+# create fails if anything already exists there (``O_EXCL``) and, where the platform
+# offers it (POSIX), refuses to open through a final symlink (``O_NOFOLLOW``). Windows has
+# no ``O_NOFOLLOW`` (the flag is POSIX), so the containment + ``islink`` check in
+# :func:`_write_bytes_no_follow` carries the guard there. ``O_WRONLY`` completes the mode.
+_O_NOFOLLOW: Final[int] = getattr(os, "O_NOFOLLOW", 0)
+_BACKUP_OPEN_FLAGS: Final[int] = os.O_CREAT | os.O_EXCL | os.O_WRONLY | _O_NOFOLLOW
+
+
+def _write_bytes_no_follow(path: Path, data: bytes, *, contain_within: Path) -> Result[None]:
+    """Create *path* and write *data*, refusing a symlink-following or out-of-root write.
+
+    The pre-migration backup lands on a path under the destination store root. An attacker
+    who plants a symlink at that path — or arranges a parent that resolves outside the root
+    — could otherwise redirect a plain ``write_text`` onto a file of their choosing. Two
+    guards prevent that: the resolved target must stay inside ``contain_within`` and the
+    target must not itself be a symlink, and the file is then created **exclusively**
+    (``O_CREAT | O_EXCL``, plus ``O_NOFOLLOW`` on POSIX), so an existing target — a symlink
+    included — refuses instead of being followed. Any violation is a ``storage failure``
+    refusal and nothing is written (AC5; the Skylos symlink-write finding).
+    """
+    resolved = Path(os.path.realpath(path))
+    root_real = Path(os.path.realpath(contain_within))
+    if path.is_symlink() or not resolved.is_relative_to(root_real):
+        return _corrupt(
+            "refusing to write the pre-migration backup through a symlink or to a path that "
+            "resolves outside the intended backup root; a symlink-following write could "
+            "redirect it onto another file (AC5)",
+            path=str(path),
+            root=str(contain_within),
+        )
+    try:
+        fd = os.open(path, _BACKUP_OPEN_FLAGS, 0o600)
+        try:
+            os.write(fd, data)
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+    except OSError as exc:
+        return _corrupt(
+            "could not durably write the pre-migration backup artifact; migration does not "
+            "proceed without a backup (AC5)",
+            error=str(exc),
+            path=str(path),
+        )
+    return Ok(None)
+
+
+def _write_backup_artifact(
+    export: RoomExport, backup_dir: Path, *, contain_within: Path
+) -> Result[str]:
     """Write the source's restorable export to a real backup file, or refuse (AC5; M4).
 
     The default backup sink: serializes the verbatim :class:`~qmf.data.store.RoomExport`
     (each record's fp1 plus its exact stored canonical bytes) to one file under
     ``backup_dir`` and returns its path, so ``backed_up`` reflects a real artifact rather
-    than a hard-coded constant. A filesystem failure is a ``storage failure`` refusal that
-    aborts the migration before any migrate write (backup-first). Canonical bytes are UTF-8
-    (fp1-canonical JSON / JSONL lines), so they round-trip through the JSON text field.
+    than a hard-coded constant. The write is symlink-safe and contained within
+    ``contain_within`` (the destination store root) — a planted symlink or an out-of-root
+    target is refused rather than followed (see :func:`_write_bytes_no_follow`). A
+    filesystem failure is a ``storage failure`` refusal that aborts the migration before any
+    migrate write (backup-first). Canonical bytes are UTF-8 (fp1-canonical JSON / JSONL
+    lines), so they round-trip through the JSON text field.
     """
     try:
         records = [
@@ -938,10 +993,7 @@ def _write_backup_artifact(export: RoomExport, backup_dir: Path) -> Result[str]:
             "records": records,
         }
         backup_dir.mkdir(parents=True, exist_ok=True)
-        path = backup_dir / f"{export.world.value}-registry-room.backup.json"
-        path.write_text(
-            json.dumps(payload, sort_keys=True, separators=(",", ":")), encoding="utf-8"
-        )
+        data = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     except (OSError, ValueError) as exc:  # pragma: no cover - defensive: the store bytes are UTF-8
         return _corrupt(
             "could not write the pre-migration backup artifact; migration does not proceed "
@@ -949,6 +1001,10 @@ def _write_backup_artifact(export: RoomExport, backup_dir: Path) -> Result[str]:
             error=str(exc),
             backup_dir=str(backup_dir),
         )
+    path = backup_dir / f"{export.world.value}-registry-room.backup.json"
+    written = _write_bytes_no_follow(path, data, contain_within=contain_within)
+    if is_refusal(written):
+        return written
     return Ok(str(path))
 
 
@@ -1036,7 +1092,11 @@ def migrate_registry_format(
     if backup_sink is not None:
         written = backup_sink(export.value)
     else:
-        written = _write_backup_artifact(export.value, destination.root / "pre-migration-backup")
+        written = _write_backup_artifact(
+            export.value,
+            destination.root / "pre-migration-backup",
+            contain_within=destination.root,
+        )
     if is_refusal(written):
         return written
     backup_path = written.value

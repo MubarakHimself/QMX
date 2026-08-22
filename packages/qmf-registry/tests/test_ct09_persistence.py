@@ -914,3 +914,59 @@ def test_migration_aborts_when_the_backup_sink_refuses(tmp_path: Path) -> None:
     # Nothing was migrated: the destination never received the record.
     key = _unwrap(persistence_fingerprint(_unwrap(_bump_to(2)(records[0]), "bumped")), "key")
     assert is_refusal(destination.load_record(key, for_world=World.LIVE))
+
+
+# --- symlink-safe backup write (the Skylos symlink-following-write finding) --------
+
+
+def test_migration_aborts_when_the_backup_target_already_exists(tmp_path: Path) -> None:
+    # The default backup is created with an exclusive, no-follow open (O_CREAT | O_EXCL):
+    # a pre-existing artifact at the target is refused rather than clobbered, so a
+    # symlink swapped in for that path can never be followed and overwritten.
+    source, records = _seeded_source(tmp_path)
+    destination = _live(tmp_path / "dst")
+    backup_dir = destination.root / "pre-migration-backup"
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    target = backup_dir / "live-registry-room.backup.json"
+    target.write_text("pre-existing", encoding="utf-8")
+    refused = migrate_registry_format(
+        records,
+        source=source,
+        destination=destination,
+        transform=_bump_to(2),
+        to_format_version=2,
+    )
+    assert is_refusal(refused)
+    assert refused.category.value == "storage failure"
+    # The pre-existing artifact was not clobbered, and nothing migrated to the destination.
+    assert target.read_text(encoding="utf-8") == "pre-existing"
+    key = _unwrap(persistence_fingerprint(_unwrap(_bump_to(2)(records[0]), "bumped")), "key")
+    assert is_refusal(destination.load_record(key, for_world=World.LIVE))
+
+
+def test_migration_refuses_a_symlinked_backup_target(tmp_path: Path) -> None:
+    # An attacker who plants a symlink at the default backup path must not get the backup
+    # write redirected onto the link's target; the migration refuses and aborts.
+    source, records = _seeded_source(tmp_path)
+    destination = _live(tmp_path / "dst")
+    backup_dir = destination.root / "pre-migration-backup"
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    outside = tmp_path / "outside-secret.txt"
+    outside.write_text("do not clobber", encoding="utf-8")
+    try:
+        (backup_dir / "live-registry-room.backup.json").symlink_to(outside)
+    except (OSError, NotImplementedError):
+        pytest.skip("symlink creation is not permitted on this platform")
+    refused = migrate_registry_format(
+        records,
+        source=source,
+        destination=destination,
+        transform=_bump_to(2),
+        to_format_version=2,
+    )
+    assert is_refusal(refused)
+    assert refused.category.value == "storage failure"
+    # The symlink's target was not clobbered, and nothing migrated to the destination.
+    assert outside.read_text(encoding="utf-8") == "do not clobber"
+    key = _unwrap(persistence_fingerprint(_unwrap(_bump_to(2)(records[0]), "bumped")), "key")
+    assert is_refusal(destination.load_record(key, for_world=World.LIVE))

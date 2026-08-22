@@ -258,3 +258,64 @@ def test_append_without_hold_raises(tmp_path: Path) -> None:
     reader = JsonlAppendStream(tmp_path / "s", writer_token="<reader>")
     with pytest.raises(StoreEngineError):
         reader.append(_canon({"n": 1}))
+
+
+# --- symlink-safe I/O: a stream file is a regular, in-root, non-symlink file only ----
+
+
+def _try_symlink(link: Path, target: Path) -> None:
+    """Create a symlink or skip the test where the platform forbids it (Windows dev)."""
+    try:
+        link.symlink_to(target)
+    except (OSError, NotImplementedError):
+        pytest.skip("symlink creation is not permitted on this platform")
+
+
+def test_find_refuses_a_vanished_rotation_file(tmp_path: Path) -> None:
+    # The read guard requires a regular in-root file: if the indexed rotation file is gone
+    # (deleted or swapped for a non-file), find refuses rather than opening a stray path.
+    stream = _stream(tmp_path)
+    canonical = _canon({"n": 1})
+    stream.append(canonical)
+    digest = hashlib.sha256(canonical).hexdigest()
+    (tmp_path / "s" / "000000.jsonl").unlink()
+    with pytest.raises(StoreEngineError):
+        stream.find(digest)
+
+
+def test_scan_refuses_an_oversize_rotation_file(tmp_path: Path) -> None:
+    # A whole-file scan refuses above the size cap rather than reading unbounded bytes.
+    stream_dir = tmp_path / "s"
+    stream_dir.mkdir(parents=True)
+    (stream_dir / "000000.jsonl").write_bytes(_canon({"n": 1}) + b"\n")
+    reader = JsonlAppendStream(stream_dir, writer_token="<reader>", max_scan_bytes=1)
+    with pytest.raises(StoreEngineError):
+        reader.rebuild_index()
+
+
+def test_rebuild_refuses_a_symlinked_rotation_file(tmp_path: Path) -> None:
+    # A rotation file that is a symlink could redirect the read off the evidence tree; the
+    # scan refuses it rather than following the link.
+    stream_dir = tmp_path / "s"
+    stream_dir.mkdir(parents=True)
+    outside = tmp_path / "outside.jsonl"
+    outside.write_bytes(_canon({"n": 1}) + b"\n")
+    _try_symlink(stream_dir / "000000.jsonl", outside)
+    reader = JsonlAppendStream(stream_dir, writer_token="<reader>")
+    with pytest.raises(StoreEngineError):
+        reader.rebuild_index()
+
+
+def test_quarantine_refuses_a_symlinked_torn_sidecar(tmp_path: Path) -> None:
+    # A torn tail triggers quarantine to a .torn sidecar; a symlink pre-planted there must
+    # not be followed (a symlink-following write could clobber another file).
+    stream_dir = tmp_path / "s"
+    stream_dir.mkdir(parents=True)
+    (stream_dir / "000000.jsonl").write_bytes(_canon({"n": 1}) + b"\n" + _canon({"n": 2}))
+    outside = tmp_path / "outside-target.txt"
+    outside.write_text("do not clobber", encoding="utf-8")
+    _try_symlink(stream_dir / "000000.jsonl.torn", outside)
+    reader = JsonlAppendStream(stream_dir, writer_token="<reader>")
+    with pytest.raises(StoreEngineError):
+        reader.rebuild_index()
+    assert outside.read_text(encoding="utf-8") == "do not clobber"
