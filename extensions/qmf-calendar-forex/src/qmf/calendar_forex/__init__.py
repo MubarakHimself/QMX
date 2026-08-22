@@ -10,6 +10,11 @@ stores an ``unavailable dependency`` TypedRefusal and the package does not
 become a usable provider. A ``tzdata`` pin change is at least a minor SemVer
 bump on this extension's ladder. Depends only on ``qmf-core`` and the pinned
 ``tzdata``.
+
+Composition-root wiring uses the named :func:`register_forex_17ny` surface —
+never ambient package scanning, entry points, or ``pkgutil``. Distribution
+identity + version ride into downstream fingerprints alongside the rule set and
+IANA tzdata; binding stays separate from rule-set identity.
 """
 
 from __future__ import annotations
@@ -21,13 +26,25 @@ from qmf.calendar_forex._provider import (
     ROLLOVER_ZONE,
     Forex17NYCalendar,
 )
+from qmf.calendar_forex._registration import (
+    ARTIFACT_IDENTITY_FORMAT_VERSION,
+    DISTRIBUTION_NAME,
+    DISTRIBUTION_VERSION,
+    CalendarBinding,
+    ForexCalendarRegistration,
+    TzdataPinLineageEdge,
+    describe_tzdata_pin_lineage,
+    register_forex_17ny,
+)
 from qmf.calendar_forex._tzdb import (
     PINNED_TZDATA_PACKAGE,
     PINNED_TZDB_VERSION,
     RULE_SET,
     RULE_SET_VERSION,
-    provider_state,
-    verify_import_tzdb,
+    calendar_identity,
+    provider_ready,
+    tzdata_version,
+    tzdb_verification,
 )
 from qmf.core.chrono import CalendarIdentity
 from qmf.core.refusal import (
@@ -40,6 +57,9 @@ from qmf.core.refusal import (
 )
 
 __all__ = [
+    "ARTIFACT_IDENTITY_FORMAT_VERSION",
+    "DISTRIBUTION_NAME",
+    "DISTRIBUTION_VERSION",
     "PINNED_TZDATA_PACKAGE",
     "PINNED_TZDB_VERSION",
     "RECURRING_HOLIDAYS",
@@ -48,27 +68,28 @@ __all__ = [
     "ROLLOVER_ZONE",
     "RULE_SET",
     "RULE_SET_VERSION",
+    "CalendarBinding",
     "Forex17NYCalendar",
+    "ForexCalendarRegistration",
+    "TzdataPinLineageEdge",
     "__version__",
     "calendar_identity",
+    "describe_tzdata_pin_lineage",
     "get_calendar_identity",
     "get_provider",
     "is_holiday",
     "provider_ready",
+    "register_forex_17ny",
     "tzdata_version",
     "tzdb_verification",
 ]
 
 # Own SemVer ladder (off-roster extension), independent of roster lockstep.
-# Display-only provenance — never part of fp1 identity.
+# Per AD-2 this distribution identity + version are identity fields of every
+# artifact the extension produces (via register_forex_17ny / fp1_identity).
 # A tzdata pin change (PINNED_TZDATA_PACKAGE / PINNED_TZDB_VERSION) is at least
 # a minor bump on this ladder; do not bump unless the pin actually changes.
-__version__ = "0.1.0"
-
-
-# Import-time verification: force TZPATH, compare pin to resolved tzdb (FM-1).
-tzdb_verification: Result[CalendarIdentity] = verify_import_tzdb()
-calendar_identity, tzdata_version, provider_ready = provider_state(tzdb_verification)
+__version__ = DISTRIBUTION_VERSION
 
 
 def get_calendar_identity() -> Result[CalendarIdentity]:

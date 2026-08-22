@@ -113,3 +113,10 @@ def provider_state(
         identity = result.value
         return identity, identity.tzdata_version, True
     return None, None, False
+
+
+# Import-time verification runs once when this module loads (package import path).
+# Composition-root registration reads these without importing the package root,
+# avoiding an init ↔ registration cycle.
+tzdb_verification: Result[CalendarIdentity] = verify_import_tzdb()
+calendar_identity, tzdata_version, provider_ready = provider_state(tzdb_verification)
