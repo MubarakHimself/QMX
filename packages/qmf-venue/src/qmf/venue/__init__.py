@@ -20,10 +20,31 @@ injected AD-6 integer release tag, so the adapter owns its own transport, zero S
 SDK code runs, and a tag change is a governed re-verification event (AR-43, FR-026,
 DEC-0141). Importing ``google.protobuf`` here is the module's only third-party import;
 a compiled proto message never leaks into ``qmf-core``.
+
+Story 8.3 adds the connection manager, the secret lifecycle, and injected-sink wiring
+(:mod:`qmf.venue.connection`): the :class:`~qmf.venue.connection.ConnectionManager` is
+the sole owner of venue sessions and the single in-memory holder of secret *values*,
+fed by a composition-root-injected :class:`~qmf.core.SecretStore` port (read + atomic
+replace) and calling the injected core sink protocols synchronously. Credentials never
+leave it and never render; rotation is store-before-discard; a ``storage failure`` from
+any command-path sink blocks the command stream while the sensing pipe is unaffected;
+and an :class:`~qmf.venue.connection.AccountBinding`'s secret reference is
+occurrence/display-only and excluded from fp1 (CT-21, AR-37, AR-38, AR-47; DEC-0136,
+DEC-0138).
 """
 
 from __future__ import annotations
 
+from qmf.venue.connection import (
+    AccountBinding,
+    BlockCause,
+    CommandPipeStatus,
+    ConnectionManager,
+    HealthReport,
+    PipeState,
+    venue_command_stream,
+    venue_writer_id,
+)
 from qmf.venue.observation import (
     MeasuredFact,
     ProbeCheck,
@@ -58,12 +79,18 @@ from qmf.venue.proto import (
 
 __all__ = [
     "SPOTWARE_PROTO_PACKAGE",
+    "AccountBinding",
     "AccountMoneyRecord",
+    "BlockCause",
     "CapabilityProbe",
+    "CommandPipeStatus",
     "CompiledProto",
+    "ConnectionManager",
     "Finding",
     "FindingsNote",
+    "HealthReport",
     "MeasuredFact",
+    "PipeState",
     "ProbeCheck",
     "ProbeReport",
     "ProbeTransport",
@@ -83,6 +110,8 @@ __all__ = [
     "assess_tag_change",
     "compile_descriptor_set",
     "descriptor_set_digest",
+    "venue_command_stream",
+    "venue_writer_id",
 ]
 
 # Roster SemVer, in lockstep across the seven roster packages (0.x until the
