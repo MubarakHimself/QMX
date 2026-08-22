@@ -1,0 +1,38 @@
+"""The CT-17 reference-usage example must stay executable (L27, tier-1 artifact).
+
+Runs ``examples/structure_usage.py`` as a fresh process — the same subprocess idiom the
+qmf-core and qmf-registry example tests use — and checks it exits clean and demonstrates
+the object mint, the derived fingerprint, cross-sandbox dedup, immutability, and the
+emission-invariant refusals.
+"""
+
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+_PKG_ROOT = Path(__file__).resolve().parents[1]
+_EXAMPLE = _PKG_ROOT / "examples" / "structure_usage.py"
+_CORE_SRC = _PKG_ROOT.parent / "qmf-core" / "src"
+
+
+def test_reference_usage_example_runs_clean() -> None:
+    # The example imports qmf.core and qmf.structure; put both on the path (the package
+    # imports only qmf.core, but the example is executed as a standalone process).
+    pythonpath = os.pathsep.join([str(_PKG_ROOT / "src"), str(_CORE_SRC)])
+    env = {**os.environ, "PYTHONPATH": pythonpath}
+    completed = subprocess.run(
+        [sys.executable, str(_EXAMPLE)],
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "minted at observation, derived fp1: fp1:sha256:" in completed.stdout
+    assert "two sandboxes deduplicate: True" in completed.stdout
+    assert "object immutable and unstamped" in completed.stdout
+    assert "anchor end after observed-at refused: invalid input" in completed.stdout
+    assert "observed-at behind consumed input refused: invalid input" in completed.stdout
