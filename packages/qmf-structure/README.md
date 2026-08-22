@@ -37,8 +37,25 @@ clock-confirmed is legal. Invalidation never cascades automatically: a family
 declares an `InvalidationPredicate` and a reader calls `resolve_cascade` to compute
 cascade at read time from lineage.
 
+Story 9.3 — evidence class as first-class identity, knowledge-time provenance, and
+split-manifest governance. `read_confirmed` is the governed read requesting confirmed
+evidence — it refuses an unconfirmed or provisional row with a `policy rejection`,
+**never a silent filter** (FM-4), over the `EvidenceRow` seam both a `StructureObject`
+and a `ResultLabel` satisfy. `may_consume` is the knowledge-time consumption rule
+(`confirmed-at <= T`; equality is consumption), and `causally_precedes` the distinct
+refuse-at-equal causality test. `structure_result_label` builds the CT-05 result label
+from the **configured-family** producer identity plus input fingerprints, so an object
+computed on a revised input receives a different label by construction; `world =
+simulated` is refused (GAP-0048). `evaluate_citation` (`CitationKind`,
+`GovernanceVerdict`) is the governed-evidence citation law — in-memory persists nothing,
+a journal-event or result-label citation makes the object governed evidence — and
+`promote_scanned` promotes only confirmed scan hits. `required_embargo_width` turns a
+family's confirmation-delay bound into a split embargo width (an unbounded family is
+excluded from split-governed evidence), and `admit_across_boundary` (`SplitAdmission`)
+is the FM-7 boundary refusal, partitioning by confirmed-at.
+
 The library returns fingerprintable content and never stamps records; the
 composition root holds the `WriterId` and the per-writer sequence. It imports
 **only** `qmf-core`. Later CT-17 surface (composites, sloped and
-calendar-anchored families, splits) arrives in later stories. Build, lint,
+calendar-anchored families) arrives in later stories. Build, lint,
 type-check, and test it through the workspace `poe` tasks — never in isolation.

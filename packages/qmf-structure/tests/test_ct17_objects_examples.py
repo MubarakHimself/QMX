@@ -40,3 +40,8 @@ def test_reference_usage_example_runs_clean() -> None:
     assert "still valid is a read-time fold (before=True, after=False)" in completed.stdout
     assert "confirmation record references object by fp1: fp1:sha256:" in completed.stdout
     assert "refit mints a new artifact, prior untouched: True" in completed.stdout
+    assert "confirmed read refuses an unconfirmed row: policy rejection" in completed.stdout
+    assert "equality is consumption (True), causality refuses equal (True)" in completed.stdout
+    assert "revised input yields a different result label: True" in completed.stdout
+    assert "citation makes object governed evidence: True" in completed.stdout
+    assert "split embargo refuses a straddling record: policy rejection" in completed.stdout

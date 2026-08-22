@@ -32,6 +32,23 @@ never cascades automatically: a family declares an :class:`InvalidationPredicate
 reader calls :func:`resolve_cascade` to compute cascade at read time (DEC-0129, DEC-0131,
 DEC-0114).
 
+Landed (Story 9.3): evidence class as first-class identity, knowledge-time provenance, and
+split-manifest governance. :func:`read_confirmed` is the governed read requesting confirmed
+evidence — it refuses an unconfirmed or provisional row with a ``policy rejection``, never a
+silent filter (FM-4), over the :class:`EvidenceRow` seam both a :class:`StructureObject` and
+a :class:`~qmf.core.ResultLabel` satisfy. :func:`may_consume` is the knowledge-time
+consumption rule (``confirmed-at <= T``; equality is consumption) and :func:`causally_precedes`
+the distinct refuse-at-equal causality test. :func:`structure_result_label` builds the CT-05
+result label — the configured-family producer identity plus input fingerprints, so a revised
+input yields a different label by construction; ``world = simulated`` is refused (GAP-0048).
+:func:`evaluate_citation` (:class:`CitationKind`, :class:`GovernanceVerdict`) is the
+governed-evidence citation law — in-memory persists nothing, a journal-event or result-label
+citation makes the object governed evidence — and :func:`promote_scanned` promotes only
+confirmed scan hits. :func:`required_embargo_width` turns a family's confirmation-delay bound
+into a split embargo width (an unbounded family is excluded from split-governed evidence), and
+:func:`admit_across_boundary` (:class:`SplitAdmission`) is the FM-7 boundary refusal —
+partitioning by confirmed-at (DEC-0129, DEC-0131, DEC-0119, DEC-0110).
+
 Every ``fp1`` fingerprint is computed in ``qmf-core`` and nowhere else; this package
 imports **only** ``qmf.core`` in V1 (the default-deny dependency direction, L30). The
 library returns fingerprintable content and never stamps records — the composition root
@@ -69,17 +86,36 @@ from qmf.structure.objects import (
     StructureObject,
     check_emission_invariant,
 )
+from qmf.structure.provenance import (
+    CitationKind,
+    EvidenceRow,
+    GovernanceVerdict,
+    causally_precedes,
+    evaluate_citation,
+    may_consume,
+    promote_scanned,
+    read_confirmed,
+    structure_result_label,
+)
+from qmf.structure.splits import (
+    SplitAdmission,
+    admit_across_boundary,
+    required_embargo_width,
+)
 
 __all__ = [
     "CONTRACT_FORMAT_VERSION",
     "KNOWN_GEOMETRIES",
     "AnchorSpan",
     "CascadeResolution",
+    "CitationKind",
     "ConfirmationRecord",
     "ConfirmationRule",
     "DeclaredFamily",
     "EmissionWitness",
+    "EvidenceRow",
     "FamilyIdentity",
+    "GovernanceVerdict",
     "InteractionRecord",
     "InvalidationPredicate",
     "InvalidationRecord",
@@ -88,14 +124,23 @@ __all__ = [
     "LifecycleRecord",
     "Refit",
     "ResolvedState",
+    "SplitAdmission",
     "StructureFamily",
     "StructureObject",
     "__version__",
+    "admit_across_boundary",
     "admit_to_governed_library",
+    "causally_precedes",
     "check_emission_invariant",
+    "evaluate_citation",
+    "may_consume",
+    "promote_scanned",
+    "read_confirmed",
     "refit",
+    "required_embargo_width",
     "resolve_cascade",
     "resolve_state",
+    "structure_result_label",
 ]
 
 # Roster SemVer, in lockstep across the seven roster packages (0.x until the

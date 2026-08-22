@@ -148,3 +148,61 @@ written for someone who was not in the design room.
 - **Product-user affordance:** nothing failed for an end user; a developer folded the wrong
   records into an object's state. The refusal's `context` names the object and record
   fingerprints (or the instants in conflict); pass the object's own record stream and retry.
+
+### FR-6: A confirmed read over unconfirmed evidence, or a scanner promoting one (CT-17, FM-4)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** evidence class (`confirmed | unconfirmed | provisional`) is a declared
+  identity field of a `StructureObject` and a named part of the CT-05 result label — the
+  `EvidenceRow` seam both satisfy. `read_confirmed(rows)` is the governed read requesting
+  confirmed evidence: it returns every row only when they are all confirmed and RETURNS a
+  `policy rejection` (naming the offending row's `index` and `evidence_class`) the moment it
+  sees an unconfirmed or provisional row — **never a silent filter**, so a consumer can never
+  quietly drop the rows it should have refused. `promote_scanned(obj)` is the scanner-side
+  gate: a scanner runs ungoverned and promotes only confirmed objects, so a non-confirmed
+  scan hit is refused as a `policy rejection` (`field: evidence_class`), never promoted. A
+  malformed row (no `evidence_class`, or one that is not an `EvidenceClass`) is `invalid
+  input` instead.
+- **Auto-recovery / retry:** none automatic. The refusal is recoverable, not transient: the
+  unconfirmed row links to its confirmed successor through the Story 9.2 `confirmed-as` edge,
+  so the caller follows that edge to the confirmed artifact and reads again. `retryability`
+  is `no` — the same unconfirmed row will always be refused; only a different (confirmed)
+  request succeeds. Nothing is raised.
+- **Visible degraded state:** none. No rows are consumed and no object is promoted; the
+  unconfirmed evidence simply never enters confirmed governed evidence.
+- **Notification tier:** silent-log. A confirmed read over unconfirmed rows is a
+  consumer/wiring decision surfaced as a value, not an operational alarm.
+- **Product-user affordance:** nothing failed at runtime for an end user; a consumer asked
+  for confirmed evidence but was handed unconfirmed rows. Follow each unconfirmed row's
+  `confirmed-as` edge to its confirmed successor (or wait for confirmation), then read again.
+
+### FR-7: A split record straddling a boundary beyond its embargo, or an unbounded family in a split (CT-17, FM-7)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** structure records partition into splits by **knowledge time — confirmed-at**.
+  `admit_across_boundary(...)` implements the manifest's refusal: a record whose `observed_at`
+  precedes a split boundary (`observed_at < boundary`) while its `confirmed_at` follows it
+  (`confirmed_at > boundary`) **straddles** the boundary — it lands (by confirmed-at) in the
+  later segment yet was derivable from data before it. The manifest RETURNS a `policy
+  rejection` (`field: boundary`, with `gap_ns` and `embargo_ns` in `context`) unless the
+  declared embargo covers the knowledge-time gap `confirmed_at - observed_at`. The embargo
+  width comes from `required_embargo_width(rule, observation_width=...)`, which turns the
+  family's confirmation-delay bound (an integer count of observations at its BarSpec) into a
+  time width; a record confirmed within its declared bound is always covered, and only one
+  that took longer to confirm than declared is refused. An **unbounded** confirmation-delay
+  declaration has no finite embargo width and is legal only for families excluded from
+  split-governed evidence: `required_embargo_width` RETURNS a `policy rejection` (`field:
+  confirmation_delay_bound`) for it. A non-`Instant` boundary, a confirmed-at behind an
+  observed-at, or a negative/non-`Duration` embargo is `invalid input` instead.
+- **Auto-recovery / retry:** none automatic. The record is not placed in the split; the
+  caller either declares a wider embargo (a new manifest) or excludes the record, and a
+  family that cannot state a finite confirmation-delay bound stays out of split-governed
+  evidence entirely. `retryability` is `no`. Nothing is raised.
+- **Visible degraded state:** none. No record leaks across the boundary; the split stays a
+  clean, knowledge-time-ordered partition.
+- **Notification tier:** silent-log. A straddling record or an unbounded family is a
+  data-governance decision surfaced as a value, not an operational alarm.
+- **Product-user affordance:** nothing failed at runtime for an end user; a split would have
+  leaked a record whose observation reached across the boundary. Widen the declared embargo
+  to cover the confirmation-delay gap, or exclude the family from split-governed evidence —
+  the refusal's `context` names the gap and the embargo that failed to cover it.

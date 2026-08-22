@@ -31,6 +31,18 @@ Story 9.2 — the append-only lifecycle and the read-time fold:
 6. A refit mints a **new** artifact with a ``supersedes`` edge and keeps the lineage's
    first observed-at; the prior object is untouched — a correction never overwrites (FM-3).
 
+Story 9.3 — evidence class, knowledge-time provenance, and split-manifest governance:
+
+7. A read requesting confirmed evidence refuses an unconfirmed row with a ``policy
+   rejection`` — never a silent filter (FM-4).
+8. A decision at T may consume evidence with ``confirmed-at <= T`` (equality is
+   consumption); the refuse-at-equal rule is for causality tests, not consumption.
+9. A structure object computed on a revised input receives a **different result label**
+   through its input fingerprints, rather than silently changing.
+10. A citation by a journal event or result label makes an object governed evidence; and a
+    family's confirmation-delay bound feeds a split embargo that refuses a straddling
+    record beyond it (FM-7).
+
 Every ``fp1`` fingerprint is computed in qmf-core, and this module imports only qmf.core
 and qmf.structure.
 """
@@ -40,6 +52,7 @@ from __future__ import annotations
 from typing import TypeVar
 
 from qmf.core import (
+    Duration,
     EvidenceClass,
     ExactRational,
     Instant,
@@ -49,11 +62,13 @@ from qmf.core import (
     TypedRefusal,
     UnitKind,
     VenueId,
+    World,
     fingerprint,
     is_ok,
 )
 from qmf.structure import (
     AnchorSpan,
+    CitationKind,
     ConfirmationRecord,
     ConfirmationRule,
     DeclaredFamily,
@@ -61,9 +76,16 @@ from qmf.structure import (
     InvalidationRecord,
     LifecycleEdgeKind,
     StructureObject,
+    admit_across_boundary,
+    causally_precedes,
     check_emission_invariant,
+    evaluate_citation,
+    may_consume,
+    read_confirmed,
     refit,
+    required_embargo_width,
     resolve_state,
+    structure_result_label,
 )
 
 T = TypeVar("T")
@@ -278,6 +300,92 @@ def refit_mints_a_new_artifact_not_an_overwrite() -> tuple[str, str]:
     return prior_fp.value, _unwrap(result.superseding.content_fingerprint(), "new fp1").value
 
 
+def _minted(evidence_class: EvidenceClass, low: int = 108_000) -> StructureObject:
+    """Mint an object with a chosen evidence class (a Story 9.3 identity field)."""
+    anchor = _unwrap(
+        AnchorSpan.try_create(
+            Instant(value_ns=1_700_000_000_000_000_000),
+            Instant(value_ns=1_700_000_060_000_000_000),
+            _price(low),
+            _price(low + 500),
+        ),
+        "anchor span",
+    )
+    return _unwrap(
+        StructureObject.try_create(
+            _family(),
+            _tolerance(),
+            anchor,
+            Instant(value_ns=1_700_000_120_000_000_000),
+            evidence_class,
+        ),
+        "minted object",
+    )
+
+
+def confirmed_read_refuses_unconfirmed() -> str:
+    """A read requesting confirmed evidence refuses an unconfirmed row — never a filter."""
+    confirmed = _minted(EvidenceClass.CONFIRMED)
+    unconfirmed = _minted(EvidenceClass.UNCONFIRMED, low=108_100)
+    result = read_confirmed([confirmed, unconfirmed])
+    assert isinstance(result, TypedRefusal)  # not a silent filter — a refusal (FM-4)
+    assert result.category.value == "policy rejection"
+    return result.category.value
+
+
+def consumption_vs_causality() -> tuple[bool, bool]:
+    """Equality is consumption; the causality test refuses equal (concurrent) instants."""
+    t = Instant(value_ns=1_700_000_120_000_000_000)
+    consumed = is_ok(may_consume(t, at=t))  # confirmed-at == T is consumption
+    causal = causally_precedes(t, later=t)  # equal instants: refuse-at-equal
+    causal_refused = isinstance(causal, TypedRefusal)
+    assert consumed is True
+    assert causal_refused
+    return consumed, causal_refused
+
+
+def revised_input_gives_a_different_label() -> bool:
+    """A structure object computed on a revised input receives a different result label."""
+    obj = _minted(EvidenceClass.CONFIRMED)
+    original = _unwrap(_minted(EvidenceClass.CONFIRMED, low=107_500).content_fingerprint(), "in")
+    revised = _unwrap(_minted(EvidenceClass.CONFIRMED, low=107_600).content_fingerprint(), "in")
+    label_a = _unwrap(
+        structure_result_label(obj, world=World.LIVE, input_fingerprints=[original]), "label a"
+    )
+    label_b = _unwrap(
+        structure_result_label(obj, world=World.LIVE, input_fingerprints=[revised]), "label b"
+    )
+    return label_a.computation_identity != label_b.computation_identity
+
+
+def citation_makes_object_governed_evidence() -> bool:
+    """In-memory use persists nothing; a result-label citation makes it governed evidence."""
+    in_memory = _unwrap(evaluate_citation(CitationKind.IN_MEMORY), "in-memory verdict")
+    cited = _unwrap(evaluate_citation(CitationKind.RESULT_LABEL), "cited verdict")
+    assert in_memory.governed is False
+    assert cited.governed is True
+    return cited.governed and not in_memory.governed
+
+
+def split_embargo_refuses_a_straddling_record() -> str:
+    """A family's confirmation-delay bound feeds a split embargo that refuses a leak (FM-7)."""
+    minute = 60_000_000_000
+    rule = _family().confirmation_rule  # a 3-observation delay bound
+    embargo = _unwrap(
+        required_embargo_width(rule, observation_width=Duration(value_ns=minute)), "embargo"
+    )
+    base = 1_700_000_000_000_000_000
+    # A record confirmed later than its declared bound straddles the boundary and leaks.
+    result = admit_across_boundary(
+        boundary=Instant(value_ns=base + 5 * minute),
+        observed_at=Instant(value_ns=base + 3 * minute),
+        confirmed_at=Instant(value_ns=base + 9 * minute),
+        embargo_width=embargo,
+    )
+    assert isinstance(result, TypedRefusal)
+    return result.category.value
+
+
 def main() -> None:
     obj = minted_object_has_derived_fingerprint()
     fp = _unwrap(obj.content_fingerprint(), "fp1")
@@ -301,6 +409,21 @@ def main() -> None:
 
     prior_fp, new_fp = refit_mints_a_new_artifact_not_an_overwrite()
     print(f"refit mints a new artifact, prior untouched: {prior_fp != new_fp}")
+
+    refused = confirmed_read_refuses_unconfirmed()
+    print(f"confirmed read refuses an unconfirmed row: {refused}")
+
+    consumed, causal_refused = consumption_vs_causality()
+    print(f"equality is consumption ({consumed}), causality refuses equal ({causal_refused})")
+
+    print(
+        f"revised input yields a different result label: {revised_input_gives_a_different_label()}"
+    )
+
+    print(f"citation makes object governed evidence: {citation_makes_object_governed_evidence()}")
+
+    split_refused = split_embargo_refuses_a_straddling_record()
+    print(f"split embargo refuses a straddling record: {split_refused}")
 
 
 if __name__ == "__main__":
