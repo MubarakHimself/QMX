@@ -42,6 +42,14 @@ dry-run → migrate → verify against a documented restore path and never mutat
 only copy. Numeric restore-verification cadence, RPO, RTO, and retention stay null
 node/ops pointers.
 
+Story 5.4 lands the application-owned nightly cycle helper (`OffMachineCycle`):
+`run_once` backs up every room-role (including the registry room) for one world,
+puts encrypted versioned copies through CT-14, and runs sample-restore (plus an
+optional full-restore rehearsal when the application opts in). There are **no**
+threads, cron, or daemons in `qmf-data` — asking the boundary to own the schedule
+or a numeric RPO/RTO is a typed policy rejection. Encryption stays a required
+pointer; credentials never enter the cycle report.
+
 `EvidenceStore(root).for_world(world)` returns the four boundaries for one world.
 The engines sit behind their owned `typing.Protocol` contracts, so each is
 swappable. The public data-policy contracts (CT-10 observations, CT-12 splits, the

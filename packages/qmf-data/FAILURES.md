@@ -1011,3 +1011,55 @@ migration sequence — FR-40 through FR-42.
 - **Product-user affordance:** a migration that would overwrite the only good local copy is
   blocked. Point destination and verify rehearsal at separate empty store roots and retry;
   the source stays readable throughout.
+
+Story 5.4 delivers the application-owned nightly off-machine cycle helper —
+`OffMachineCycle.run_once` as a composition-root one-shot with no threads/cron/daemon
+in `qmf-data` — FR-43 through FR-45.
+
+### FR-43: Asking QMF to own the nightly schedule or a daemon is refused (AC2)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** `refuse_schedule_ownership` and the `OffMachineCycle.own_schedule` /
+  `start_daemon` helpers always refuse with `signal: refuse-schedule-ownership`.
+  `qmf.data.cycle` imports no `threading` / `sched` / `asyncio` / cron machinery; the
+  application calls `run_once` when `registry:backup_cadence` = nightly arrives
+  (FM-6, FM-9, DEC-0118, DEC-0051).
+- **Auto-recovery / retry:** none — schedule ownership is a governance mistake, not a
+  transient fault. Drive each cycle from application/ops cron or supervision instead.
+- **Visible degraded state:** none; no cycle runs and no daemon starts.
+- **Notification tier:** operator-visible (a caller attempted to put scheduling inside
+  the library).
+- **Product-user affordance:** the backup library will not install a nightly job or
+  background thread. Wire your own scheduler to call the one-cycle helper each night.
+
+### FR-44: Asking QMF to own a numeric RPO/RTO/retention target is refused (AC2)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** `refuse_numeric_rpo_rto` and `OffMachineCycle.set_recovery_point_objective`
+  / `set_recovery_time_objective` always refuse with `signal: refuse-numeric-rpo-rto`.
+  The node/ops pointers (`NODE_OPS_BACKUP_RECOVERY_POINT_OBJECTIVE` and kin) stay
+  `None` and are never filled from a recommendation (DEC-0118).
+- **Auto-recovery / retry:** none — set the numeric targets at the node/ops sitting,
+  not through this boundary.
+- **Visible degraded state:** none; no target is recorded.
+- **Notification tier:** operator-visible (wiring mistake).
+- **Product-user affordance:** recovery-point and recovery-time numbers are chosen by
+  operations, not by the backup library. The library only ships the primitives that
+  meet whatever targets ops later name.
+
+### FR-45: A nightly cycle into `world = simulated` or an in-place sample root is refused (AC3)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** `OffMachineCycle.run_once` refuses `world = simulated` (DEC-0110) and
+  refuses a `sample_into` / `full_into` root that collides with the source archive
+  (`signal: refuse-in-place-restore` / `refuse-overlapping-verify-root`). Cross-world
+  CT-26 / CT-14 gates inside the cycle inherit the same policy-rejection path as the
+  backup primitives (DEC-0117).
+- **Auto-recovery / retry:** none for simulated/in-place; re-run against `live` or
+  `replay` with distinct replacement store roots.
+- **Visible degraded state:** no off-machine copies or restores are claimed; the source
+  archive stays intact.
+- **Notification tier:** operator-visible.
+- **Product-user affordance:** simulated evidence is not backed up into the governed
+  path, and a cycle will not overwrite the only local copy while verifying. Point the
+  sample/full restore roots at empty directories and use `live` or `replay`.

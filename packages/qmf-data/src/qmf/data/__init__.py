@@ -51,7 +51,12 @@ seal and world isolation as policy rejections. Story 5.3 lands the verify primit
 :class:`RecoverabilityClaim` (never a snapshot alone), corrupt restores are
 ``storage failure``, and :func:`migrate_evidence` runs preflight → backup-first →
 dry-run → migrate → verify without mutating the only copy; numeric RPO/RTO/retention/
-cadence stay null node/ops pointers.
+cadence stay null node/ops pointers. Story 5.4 lands the application-owned nightly
+cycle helper (:class:`OffMachineCycle`): :meth:`~OffMachineCycle.run_once` runs one
+CT-26 → CT-14 → sample-restore (+ optional full-restore rehearsal) cycle with no
+threads, cron, or daemon in ``qmf-data``; asking the boundary to own the schedule or a
+numeric RPO/RTO is a typed refusal (:func:`refuse_schedule_ownership`,
+:func:`refuse_numeric_rpo_rto`).
 
 ``qmf.data`` imports only ``qmf-core`` (the fp1 vocabulary and typed refusals) plus
 its own engine libraries — the default-deny dependency direction (L30) holds, and the
@@ -71,6 +76,14 @@ from qmf.data.backup import (
     PayloadCipher,
     RestoreReceipt,
     StoragePutAck,
+)
+from qmf.data.cycle import (
+    BACKUP_CADENCE,
+    CYCLE_ROOM_ROLES,
+    NightlyCycleReport,
+    OffMachineCycle,
+    refuse_numeric_rpo_rto,
+    refuse_schedule_ownership,
 )
 from qmf.data.journal import (
     CausalEdge,
@@ -168,6 +181,7 @@ from qmf.data.verify import (
 
 __all__ = [
     "ACCOUNT_ID_KEY",
+    "BACKUP_CADENCE",
     "BACKUP_CONTRACT_FORMAT_VERSION",
     "BMS_INSTANCE_ID_KEY",
     "BOOK_DEFINITION_FP_KEY",
@@ -176,6 +190,7 @@ __all__ = [
     "BOT_DEFINITION_FP_KEY",
     "COMMAND_FINGERPRINT_KEY",
     "CT25_CONTRACT_FORMAT_VERSION",
+    "CYCLE_ROOM_ROLES",
     "DEFAULT_SPLIT_ROLES",
     "ENCRYPTION_REQUIRED",
     "FINAL_LOOK_SUBTYPE",
@@ -217,10 +232,12 @@ __all__ = [
     "LineageEdgeAppender",
     "Logbook",
     "MigrationStage",
+    "NightlyCycleReport",
     "ObjectStorage",
     "ObservationReceipt",
     "OffMachineBackup",
     "OffMachineCopy",
+    "OffMachineCycle",
     "OffMachineRestore",
     "OffMachineVerify",
     "PayloadCipher",
@@ -263,6 +280,8 @@ __all__ = [
     "read_command_fingerprint",
     "read_role",
     "records_stream",
+    "refuse_numeric_rpo_rto",
+    "refuse_schedule_ownership",
     "refuse_snapshot_alone_claim",
     "role_namespace",
     "select_decisions",
