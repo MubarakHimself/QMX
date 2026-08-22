@@ -20,8 +20,16 @@ derived from their fp1 (:class:`SplitSegment`, :class:`SplitBoundary`, :class:`S
 required purge/embargo widths leak-guarded against every cited :class:`ProducerHorizon`, and
 knowledge-time record partitioning via :class:`KnowledgeRecord`), plus the newest
 ~12-month :class:`HoldoutSeal` enforced as a policy-rejection refusal at every
-:class:`ReadBoundary` with exactly one journaled final look. The remaining data-policy
-contracts (the entity-journal projections) land in later stories on the same seam.
+:class:`ReadBoundary` with exactly one journaled final look. Story 3.5 lands the durable
+journal data-policy over the same seam: the seven ratified event types
+(:class:`JournalEventType`) as fp1-canonical :class:`JournalEvent` values with
+``correlation_id`` and ``display_time`` excluded from identity, the decision event's
+mandatory closed :class:`DecisionOutcome` selected by projection (:func:`select_decisions`,
+:func:`veto_ledger`), cross-stream causal linkage as typed :class:`CausalEdge` records,
+gapless per-(writer, boot-epoch) sequences with loss surfaced (:func:`detect_sequence_gaps`),
+and the :class:`JournalWriter` producer (block-on-unpersistable) / :class:`JournalReader`
+pair. The remaining data-policy contracts (the entity-journal projections) land in Story 3.6
+on the same seam.
 
 ``qmf.data`` imports only ``qmf-core`` (the fp1 vocabulary and typed refusals) plus
 its own engine libraries — the default-deny dependency direction (L30) holds, and the
@@ -30,6 +38,22 @@ ratified ``qmf-registry → qmf-data`` edge points AT this package.
 
 from __future__ import annotations
 
+from qmf.data.journal import (
+    CausalEdge,
+    DecisionOutcome,
+    JournalEvent,
+    JournalEventType,
+    detect_sequence_gaps,
+    select_decisions,
+    veto_ledger,
+)
+from qmf.data.journal_producer import (
+    EdgeWrite,
+    JournalAppendReceipt,
+    JournalReader,
+    JournalWriter,
+    LineageEdgeAppender,
+)
 from qmf.data.observation import ForeignMoney, ForeignTimestamp, SourceObservation
 from qmf.data.partitions import ResolvedSeries, SeriesPartition, SeriesPlacement
 from qmf.data.retention import CitationIndex, RetentionPolicy, RetentionVerdict
@@ -57,13 +81,22 @@ __all__ = [
     "DEFAULT_SPLIT_ROLES",
     "FINAL_LOOK_SUBTYPE",
     "SEAL_CONTROL_STREAM",
+    "CausalEdge",
     "CitationIndex",
+    "DecisionOutcome",
+    "EdgeWrite",
     "EvidenceStore",
     "ForeignMoney",
     "ForeignTimestamp",
     "HoldoutSeal",
+    "JournalAppendReceipt",
+    "JournalEvent",
+    "JournalEventType",
+    "JournalReader",
+    "JournalWriter",
     "KnowledgeKind",
     "KnowledgeRecord",
+    "LineageEdgeAppender",
     "ObservationReceipt",
     "ProducerHorizon",
     "ReadBoundary",
@@ -81,6 +114,9 @@ __all__ = [
     "SplitSegment",
     "WorldRooms",
     "__version__",
+    "detect_sequence_gaps",
+    "select_decisions",
+    "veto_ledger",
 ]
 
 # Roster SemVer, in lockstep across the seven roster packages (0.x until the

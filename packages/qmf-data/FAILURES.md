@@ -19,7 +19,15 @@ failure (FR-1) are inherited unchanged for its rebuildable views and series plac
 and are not restated below. Story 3.4's one authorized final look is written through
 the CT-13 `JournalStore`, so an unpersistable final-look write inherits the store
 seam's storage-failure translation (FR-1) and the one-writer discipline (FR-6)
-unchanged, and they are not restated below.
+unchanged, and they are not restated below. Story 3.5 delivers the durable journal
+data-policy — the seven event types, the gapless per-writer sequence, the decision
+outcome, the typed causal edge, and the `JournalWriter` producer — FR-26 through FR-31.
+Its `JournalWriter` appends through the same CT-13 `JournalStore`, so a `world =
+simulated` write (FR-4), a cross-world read (FR-5), a second distinct writer on a held
+stream (FR-6), a true fp1 collision (FR-2), and the raw storage-failure translation
+(FR-1) are inherited unchanged; FR-26 and FR-27 below build the block-on-unpersistable
+*command-stream* discipline on top of that translation, which the store seam alone does
+not provide.
 
 ### FR-1: A store-engine failure is translated to a storage-failure refusal (AC4)
 
@@ -509,3 +517,154 @@ unchanged, and they are not restated below.
 - **Product-user affordance:** the one permitted final evaluation on the sealed period has
   already been taken and recorded; the platform refuses a repeat so the holdout cannot be
   re-used to tune results. The recorded final look stands as the evidence of that one look.
+
+### FR-26: An unpersistable journal event blocks the command stream (AC5)
+
+This is the block-on-unpersistable mode. Read it as the whole story, not a one-liner: it
+is the rule that keeps a journal from ever quietly losing a state change when the durable
+store hiccups.
+
+- **Failure class:** `storage failure` (a CT-04 refusal category).
+- **What "block-on-unpersistable" means, in plain terms.** A journal event records that
+  something happened — a decision was made, a control action was taken, a data-quality
+  problem was seen. If that record cannot be written to durable storage (the disk is full,
+  the file is locked, the store is down), the component holding the `WriterId` must **stop
+  and wait**, not keep going as if the record had been saved. "Keep going" would mean the
+  system acted on a state change it never durably recorded — the exact silent-loss the
+  journal exists to prevent. So a failed append **blocks the writer's command stream**: the
+  event is kept in memory, no later event is accepted, and the writer stays blocked until
+  the store recovers and the kept event is written for real.
+- **Detection.** `JournalWriter.record` (and `record_multiroom` / `record_data_quality` /
+  `record_control_action`) appends through the CT-13 `JournalStore`, which translates any
+  engine failure to a `storage failure` refusal (FR-1). The writer recognizes it with
+  `qmf.core.is_unpersistable` and, instead of advancing, enters a **blocked** state that
+  retains the exact built event (`JournalWriter.blocked_event`). While blocked, every
+  further `record` returns a `storage failure` refusal naming the `blocked_stream` and
+  `blocked_sequence`, and **consumes no sequence** — so the per-`(writer, boot-epoch)`
+  sequence stays gapless and the retry reuses the same number.
+- **Auto-recovery / retry:** no automatic retry — the caller drives it. Once the store is
+  back, the component holding the `WriterId` calls `JournalWriter.retry_blocked`, which
+  re-runs the exact retained append. A journal append is content-addressed, so a
+  byte-identical re-append is idempotent (no duplicate line); on success the previously
+  unpersistable event **is journaled on recovery**, the writer unblocks, and the sequence
+  advances by exactly one. If the store is still down the writer stays blocked and the
+  refusal repeats — the event is never dropped and never double-written.
+- **Visible degraded state:** the writer's command stream is **blocked** — no new journal
+  event is written on that stream — until the retained event is durably journaled. Readers
+  are unaffected (unlimited readers). The retained event is held in memory and is the first
+  thing written on recovery, so nothing that was accepted-then-failed is ever lost.
+- **Notification tier:** operator-visible, escalating to alarm on a prolonged outage. A
+  blocked command stream means a producing component cannot record state; that is an
+  operational condition worth surfacing.
+- **Product-user affordance:** an action could not be recorded because durable storage was
+  unavailable, so the platform paused that component's recording rather than pretending the
+  action was saved. Nothing the end user did is lost — the pending record is held and
+  written the moment storage returns, and the stream resumes exactly where it stopped. If
+  the outage persists, an operator restores storage; there is no data to re-enter.
+
+### FR-27: A partial multi-room journal write blocks the command stream (AC5)
+
+- **Failure class:** `storage failure` (a CT-04 refusal category).
+- **Detection:** some journal operations write to more than one room — a journal event plus
+  a causal lineage edge that references it (a cross-stream link). `JournalWriter`
+  runs the journal append first, then each secondary room write (an `EdgeWrite` thunk given
+  the new event's fp1). If the journal event lands but a secondary write refuses — a
+  **partial multi-room write** — the writer treats the whole operation as unpersistable and
+  **blocks**, retaining the entire operation (the event and its secondary writes), exactly
+  as FR-26 does for a single-room failure. The sequence does not advance on a partial write.
+- **Auto-recovery / retry:** the caller calls `retry_blocked` once the failing room
+  recovers; it re-runs the whole operation. Both the journal append and the lineage-edge
+  append are content-addressed and idempotent, so re-running a partially-completed operation
+  never double-writes the half that already landed — it simply completes the half that did
+  not. On full success the writer unblocks and the sequence advances once.
+- **Visible degraded state:** the command stream is blocked until every room in the
+  operation has committed; a half-written link is never reported as done.
+- **Notification tier:** operator-visible. A room that accepts the event but not its linked
+  edge is an operational fault worth surfacing.
+- **Product-user affordance:** a recorded action and its cross-reference must both be saved
+  together; one saved without the other would leave a dangling link, so the platform pauses
+  rather than report a half-saved operation. On recovery it finishes the missing half and
+  resumes — nothing is lost or duplicated.
+
+### FR-28: A detected sequence gap signals loss and is surfaced (AC2)
+
+- **Failure class:** `storage failure` (a CT-04 refusal category), retryability `no`.
+- **Detection:** a journal stream's sequence is strictly increasing and **gapless** per
+  `(writer, boot-epoch)`. `detect_sequence_gaps` (and `JournalReader.read_checked`) groups a
+  stream's events by `(machine, role, stream, boot_epoch_id)` and checks each group runs
+  contiguously from the `WriterSequencer` start; a missing sequence (a lost event) or a
+  duplicate sequence is a `storage failure` refusal carrying `signal = loss`, the offending
+  writer, and the `expected_sequence` / `found_sequence`. The loss is **surfaced**, never a
+  silent success and never a silently-shortened stream.
+- **Auto-recovery / retry:** none — retryability is `no`, because a lost event will not
+  reappear on a re-read. Recovery is to restore the stream from an off-machine backup or
+  re-derive the missing evidence; the gap report says exactly which sequence is missing.
+- **Visible degraded state:** the reader refuses the stream as incomplete rather than
+  returning a truncated set that could be mistaken for the whole; other streams are
+  unaffected.
+- **Notification tier:** operator-visible. A gap in an append-only journal is an
+  evidence-integrity event.
+- **Product-user affordance:** a record of events came back with a hole in it, meaning at
+  least one event was lost from durable storage. The platform refuses the incomplete stream
+  rather than quietly hand back a partial history; an operator restores the missing records
+  from backup.
+
+### FR-29: A decision event without its mandatory closed outcome is refused (AC3)
+
+- **Failure class:** `invalid input` (a CT-04 refusal category).
+- **Detection:** a `decision` event carries a mandatory closed `outcome` — `authorized |
+  refused-by-door | suppressed`. `JournalEvent.try_create` refuses a decision event that
+  omits the outcome, or gives one outside the closed set, or is `refused-by-door` /
+  `suppressed` without the refusing-door / suppressing-authority reference in its payload;
+  it also refuses any **non**-decision event that carries an outcome. This keeps every
+  decision selectable on a declared field with a resolvable reference, so a projection (the
+  legacy `veto_ledger` = `outcome = refused-by-door`) never selects on ad-hoc key presence.
+- **Auto-recovery / retry:** none automatic; the refusal names the offending `field`
+  (`outcome`, `refusing_door`, or `suppressing_authority`). Supply the closed outcome and
+  its reference, then rebuild.
+- **Visible degraded state:** none; the event is not built and nothing is journaled.
+- **Notification tier:** silent-log. A producer wiring mistake surfaced as a value.
+- **Product-user affordance:** nothing failed at runtime for an end user; a component tried
+  to journal a decision without saying how it was decided (allowed, refused by which door,
+  or suppressed by which authority). The refusal says which part is missing; the producer
+  supplies it and resubmits.
+
+### FR-30: A journal event outside the seven types is refused (AC1)
+
+- **Failure class:** `invalid input` (a CT-04 refusal category).
+- **Detection:** the journal records exactly seven event types — decision, order, fill, risk
+  transition, promotion, data quality, control action — an enum addable in a later contract
+  version but never redefined. `JournalEvent.try_create` refuses any `event_type` outside the
+  set (the refusal lists the allowed values), so an ad-hoc "heartbeat" or "debug" record can
+  never become journal evidence.
+- **Auto-recovery / retry:** none automatic; the refusal names the `event_type` field and the
+  allowed set. Use one of the seven types, or route the record to operator logging (which is
+  a distinct thing from the journal), and retry.
+- **Visible degraded state:** none; the event is not built and nothing is journaled.
+- **Notification tier:** silent-log. A wiring mistake surfaced as a value.
+- **Product-user affordance:** nothing failed at runtime for an end user; a component tried
+  to record a kind of event the journal does not carry. The refusal says which kinds are
+  allowed; use one of them, or send diagnostic detail to the operator log instead.
+
+### FR-31: A corrupt or tampered journal row is refused, never read back as valid (AC4)
+
+- **Failure class:** `invalid input` (a CT-04 refusal category).
+- **Detection:** `JournalEvent.from_row` rebuilds the value through `try_create` and then
+  recomputes its fp1, refusing when the recomputed fingerprint differs from the row's
+  recorded `fingerprint` — so a corrupted or edited row (a changed sequence, instant, world,
+  or payload) can never round-trip as valid evidence. `correlation_id` and `display_time` are
+  excluded from identity, so editing those does not change the fingerprint (they are
+  display/linking annotations, not evidence identity), while any identity field that was
+  altered is caught. A row that is not a mapping, or that omits its fingerprint, is likewise
+  refused.
+- **Auto-recovery / retry:** none automatic; retryability is `no` — the stored bytes are
+  wrong and retrying the read will not fix them. Restore the artifact from an off-machine
+  backup or re-derive the event.
+- **Visible degraded state:** none; no event is returned, and the corrupt row is never
+  presented as valid evidence.
+- **Notification tier:** operator-visible. Stored journal evidence that no longer matches its
+  own fingerprint is an integrity event worth surfacing.
+- **Product-user affordance:** a stored journal record could not be read because its content
+  no longer matches the fingerprint it was recorded under (corruption or tampering). The
+  platform refuses it rather than return altered evidence; an operator restores it from an
+  off-machine backup.
