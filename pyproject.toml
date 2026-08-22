@@ -64,7 +64,15 @@ dependencies = ["pydantic", "python-dotenv", "pyyaml", "rich"]
 # in the extension's own pyproject, and installing the workspace member pulls
 # that pin into the gate environment so import-time TZPATH verification can run
 # under `poe test` without weakening `dev` or the adws pytest wiring.
-default-groups = ["dev", "store-engines", "calendar-tzdata"]
+#
+# `venue-proto` follows the SAME pattern for qmf-venue (Story 8.2; DEC-0141): its
+# pinned `protobuf` runtime is declared only in the venue's own pyproject, and
+# installing the workspace member pulls that pin into the gate environment so
+# `qmf.venue.proto` (which imports `google.protobuf` to compile the pinned Spotware
+# release IN-HOUSE) imports at test time under `poe test`. Kept out of `dev` so the
+# SSSF factory-gate contract stays byte-stable; protobuf stays declared only in
+# qmf-venue and never leaks into another package.
+default-groups = ["dev", "store-engines", "calendar-tzdata", "venue-proto"]
 
 [tool.uv.workspace]
 # The QMF distribution units. Seven roster packages (SemVer lockstep) under
@@ -79,6 +87,10 @@ qmf-data = { workspace = true }
 # The qmf-calendar-forex workspace member, referenced by calendar-tzdata below so
 # its pinned tzdata lands in the gate environment (Story 4.1; DEC-0106).
 qmf-calendar-forex = { workspace = true }
+# The qmf-venue workspace member, referenced by venue-proto below so its pinned
+# protobuf runtime lands in the gate environment (Story 8.2; DEC-0141). The
+# protobuf library itself stays declared only in qmf-venue's own pyproject.
+qmf-venue = { workspace = true }
 
 [dependency-groups]
 # THE GATE'S CONTRACT — plus the QMF canonical toolchain, one environment for
@@ -118,6 +130,13 @@ store-engines = ["qmf-data"]
 # import-time TZPATH / tzdb verification under `poe test`. Kept out of `dev` so
 # the SSSF factory-gate contract stays byte-stable (Story 4.1; DEC-0106).
 calendar-tzdata = ["qmf-calendar-forex"]
+
+# The venue transport's pinned protobuf runtime, provisioned by default. Installs
+# the qmf-venue workspace member so `protobuf==7.36.0` is present for the in-house
+# proto compilation `qmf.venue.proto` performs under `poe test`. Kept out of `dev`
+# so the SSSF factory-gate contract stays byte-stable, and named here so a reader
+# sees exactly why the workspace installs the venue member (Story 8.2; DEC-0141).
+venue-proto = ["qmf-venue"]
 
 # skylos is SEPARATE from `dev`, and not because it is optional - because it
 # does not install everywhere. It depends on tree-sitter-dart-orchard, which
