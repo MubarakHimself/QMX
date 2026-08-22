@@ -1063,3 +1063,74 @@ in `qmf-data` — FR-43 through FR-45.
 - **Product-user affordance:** simulated evidence is not backed up into the governed
   path, and a cycle will not overwrite the only local copy while verifying. Point the
   sample/full restore roots at empty directories and use `live` or `replay`.
+
+Story 6.1 delivers the CT-15 external-source ingest seam (`COMP-QMF-DATA-INGEST` /
+`ExternalSourceIngest`) — provider port ownership, idempotent
+`(source, source-native id, revision)` intake into CT-10 producer values,
+application-routed admission, and out-of-authority refusals — FR-46 through FR-49.
+
+### FR-46: A malformed provider record or missing CT-03 mapping is refused (AC4)
+
+- **Failure class:** `invalid input` (a CT-04 refusal category).
+- **Detection:** `ExternalSourceIngest.normalize` / `intake` require event-time,
+  known-at, source, source-native id, revision, and a CT-03 `Instrument` mapping
+  before minting a CT-10 `SourceObservation`. A blank or absent key part, a missing
+  bitemporal field, or a record without an instrument mapping is refused naming the
+  offending field; no observation is emitted (FM-2, FM-6, DEC-0109, DEC-0117).
+- **Auto-recovery / retry:** none automatic; retryability is `no`. Supply the missing
+  field or a valid `(venue, opaque-symbol)` instrument mapping and retry the bounded
+  call.
+- **Visible degraded state:** none; the ledger is unchanged and no CT-10 value exists
+  for the bad record.
+- **Notification tier:** silent-log (caller wiring / provider payload shape).
+- **Product-user affordance:** incomplete or unmapped source material never becomes
+  governed evidence. Fix the provider payload or the instrument map and re-fetch.
+
+### FR-47: An unavailable or rate-limited source fabricates no observation (AC5)
+
+- **Failure class:** `transient venue failure` (rate-limit) or `unavailable dependency`
+  (source down) — returned by the injected `ExternalSourcePort`, propagated unchanged
+  by `ExternalSourceIngest.fetch_and_intake`.
+- **Detection:** the port returns a typed refusal; ingest emits no `ProviderRecord`
+  and writes nothing to the intake ledger (FM-1, DEC-0109, DEC-0135). A read-only
+  `source` presented as a `VenueId` is separately refused as `policy rejection`
+  (`signal: refuse-source-as-venue`; FM-7, DEC-0117).
+- **Auto-recovery / retry:** category-dependent — rate-limit may carry
+  `after-condition`; unavailable dependency is typically retryable once the provider
+  recovers. The application owns the retry loop (DEC-0119).
+- **Visible degraded state:** no fabricated tick or news observation enters CT-10.
+- **Notification tier:** operator-visible for sustained outages; silent-log for a
+  single rate-limit hop the application will retry.
+- **Product-user affordance:** a source outage fails closed. Wait / retry under
+  application supervision; never treat silence as a fresh empty market.
+
+### FR-48: Asking ingest to own a scheduler, daemon, or retry loop is refused (AC6)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** `qmf.data.ingest.refuse_schedule_ownership` and
+  `ExternalSourceIngest.start_scheduler` / `run_daemon` / `run_retry_loop` always
+  refuse with `signal: refuse-schedule-ownership`. The seam is a called CT-15 port;
+  scheduling, retries, supervision, and UI stay application-owned (FM-5, DEC-0119,
+  DEC-0051).
+- **Auto-recovery / retry:** none — schedule ownership is a governance mistake. Drive
+  each bounded `fetch_and_intake` from application/ops cron or supervision instead.
+- **Visible degraded state:** none; no downloader thread or daemon starts.
+- **Notification tier:** operator-visible (a caller attempted to put lifecycle inside
+  the library).
+- **Product-user affordance:** ingest will not install a poller or background retry
+  loop. Wire your own scheduler to call the seam for each bounded window.
+
+### FR-49: A duplicate intake key is idempotent; a new revision is a new artifact (AC2)
+
+- **Failure class:** not a failure — designed idempotent success
+  (`IntakeOutcome.IDEMPOTENT`) or a distinct produced artifact for a new revision.
+- **Detection:** `ExternalSourceIngest.intake` keys the in-process ledger on
+  `IntakeKey(source, source_native_id, revision)`. A re-arrival under the same key
+  returns the prior observation (never an erase or silent merge). A new `revision`
+  mints a distinct CT-10 `fp1` (and may set `correction_of`); it is never treated as
+  an fp1 collision (FM-3, DEC-0119, DEC-0108).
+- **Auto-recovery / retry:** not applicable; re-submitting the same key is safe.
+- **Visible degraded state:** none; earlier evidence remains readable and unchanged.
+- **Notification tier:** silent-log for idempotent hits; normal for new revisions.
+- **Product-user affordance:** replaying a provider page or a correction under a new
+  revision is safe — duplicates collapse, corrections append.

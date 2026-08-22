@@ -56,7 +56,13 @@ cycle helper (:class:`OffMachineCycle`): :meth:`~OffMachineCycle.run_once` runs 
 CT-26 → CT-14 → sample-restore (+ optional full-restore rehearsal) cycle with no
 threads, cron, or daemon in ``qmf-data``; asking the boundary to own the schedule or a
 numeric RPO/RTO is a typed refusal (:func:`refuse_schedule_ownership`,
-:func:`refuse_numeric_rpo_rto`).
+:func:`refuse_numeric_rpo_rto`). Story 6.1 lands the CT-15 external-source ingest
+seam (:mod:`qmf.data.ingest`, ``COMP-QMF-DATA-INGEST``): :class:`ExternalSourceIngest`
+owns and calls the injected :class:`ExternalSourcePort`, normalizes
+:class:`ProviderRecord` responses into CT-10 producer values under idempotent
+:class:`IntakeKey` ``(source, source-native id, revision)`` intake, application-routes
+them to :class:`SourceObservationBoundary`, and refuses scheduler/daemon/retry-loop
+ownership (:func:`~qmf.data.ingest.refuse_schedule_ownership`).
 
 ``qmf.data`` imports only ``qmf-core`` (the fp1 vocabulary and typed refusals) plus
 its own engine libraries — the default-deny dependency direction (L30) holds, and the
@@ -84,6 +90,19 @@ from qmf.data.cycle import (
     OffMachineCycle,
     refuse_numeric_rpo_rto,
     refuse_schedule_ownership,
+)
+from qmf.data.ingest import (
+    ExternalSourceIngest,
+    ExternalSourcePort,
+    IntakeKey,
+    IntakeOutcome,
+    IntakeReceipt,
+    ProviderRecord,
+    SourceRequest,
+    refuse_source_as_venue,
+)
+from qmf.data.ingest import (
+    refuse_schedule_ownership as refuse_ingest_schedule_ownership,
 )
 from qmf.data.journal import (
     CausalEdge,
@@ -219,9 +238,14 @@ __all__ = [
     "EntitySelector",
     "EventClass",
     "EvidenceStore",
+    "ExternalSourceIngest",
+    "ExternalSourcePort",
     "ForeignMoney",
     "ForeignTimestamp",
     "HoldoutSeal",
+    "IntakeKey",
+    "IntakeOutcome",
+    "IntakeReceipt",
     "JournalAppendReceipt",
     "JournalEvent",
     "JournalEventType",
@@ -243,6 +267,7 @@ __all__ = [
     "PayloadCipher",
     "ProducerHorizon",
     "ProjectedRow",
+    "ProviderRecord",
     "ReadBoundary",
     "RebuildPins",
     "RecordsStreamName",
@@ -257,6 +282,7 @@ __all__ = [
     "SeriesPlacement",
     "SourceObservation",
     "SourceObservationBoundary",
+    "SourceRequest",
     "SplitBoundary",
     "SplitManifest",
     "SplitSegment",
@@ -280,9 +306,11 @@ __all__ = [
     "read_command_fingerprint",
     "read_role",
     "records_stream",
+    "refuse_ingest_schedule_ownership",
     "refuse_numeric_rpo_rto",
     "refuse_schedule_ownership",
     "refuse_snapshot_alone_claim",
+    "refuse_source_as_venue",
     "role_namespace",
     "select_decisions",
     "veto_ledger",
