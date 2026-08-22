@@ -14,11 +14,16 @@ _CORE_SRC = _PKG_ROOT.parent / "qmf-core" / "src"
 
 
 def test_reference_usage_example_runs_clean() -> None:
-    env = {**os.environ, "PYTHONPATH": os.pathsep.join([str(_PKG_ROOT / "src"), str(_CORE_SRC)])}
+    env = {
+        **os.environ,
+        "PYTHONPATH": os.pathsep.join([str(_PKG_ROOT / "src"), str(_CORE_SRC)]),
+        "PYTHONIOENCODING": "utf-8",
+    }
     completed = subprocess.run(
         [sys.executable, str(_EXAMPLE)],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         env=env,
         check=False,
     )
