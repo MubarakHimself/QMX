@@ -189,3 +189,103 @@ written for someone who was not in the design room.
 - **Product-user affordance:** nothing failed for an end user; a developer appended an
   edge minted by a different writer onto a stream that already has its own single writer.
   Each edge stream has exactly one writer — open a stream per writer — then retry.
+
+### FR-9: Live promotion with no human-signed promotion-occurrence card (CT-06, FM-4)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** `authorize_live_promotion` is the refusal law for crossing into the live
+  zone. It is refused when no human-signed promotion-occurrence card is present (`card` is
+  `None`), and — a variant of the same law — when a card IS present but attests a different
+  record than the one requested (its `context` names both the `attested` and `requested`
+  fingerprints). Only a human promotes an artifact into the live zone (AR-39, DEC-0041); an
+  agent's passed checks or recommendation is never an authorization.
+- **Auto-recovery / retry:** none automatic. The gate RETURNS a `policy rejection`
+  `TypedRefusal` (retryability `no`); promotion does not occur and no live capability is
+  granted. A human must sign a promotion-occurrence card attesting THIS record (its exact
+  `fp1` and, for a risk admission, the exact template fingerprint), after which the request
+  is made again. Nothing is raised.
+- **Visible degraded state:** none. The artifact stays in its pre-promotion zone; no live
+  capability is granted and no state changes.
+- **Notification tier:** operator-visible. The absence of a human signature on the path to
+  live money is a decision surfaced to the operator, not a silent log line — but it is a
+  normal governance outcome, not an alarm.
+- **Product-user affordance:** nothing failed at runtime; the platform refused to move an
+  artifact toward live money because no human signed off on it (or the signature was for a
+  different artifact). A human must read the plain-words summary and sign the promotion
+  card attesting this exact artifact; passing any number of automated checks cannot
+  substitute for that signature.
+
+### FR-10: Invalid promotion-card construction (CT-06, ADR-0015)
+
+- **Failure class:** `invalid input` (a CT-04 refusal category).
+- **Detection:** `PromotionCard.sign` validates every part before minting — a blank
+  `signer` (the human-only reviewer identity), a blank or missing `plain_words_summary` (it
+  is mandatory and an identity field), an `attested_fp1` that is not an `fp1` fingerprint, a
+  `template_definition_fp1` (for an AD-32 risk admission) that is not an `fp1` fingerprint,
+  or a `signed_at` that is not an `Instant`; the delegated `RegistrationRecord` factory then
+  refuses a bad `writer` or `sequence`. V1 signing takes no cryptographic dependency — the
+  signer is the recorded reviewer identity — and the stable id is derived from the card's
+  identity content, never accepted from the caller.
+- **Auto-recovery / retry:** none automatic. `sign` RETURNS an `invalid input`
+  `TypedRefusal` (retryability `no`) whose `context` names the offending `field`; the caller
+  corrects the part and retries. Nothing is raised, and no card is minted.
+- **Visible degraded state:** none. Construction simply does not yield a card; no state
+  changes.
+- **Notification tier:** silent-log. A malformed card part is a programming/wiring mistake
+  surfaced as a value.
+- **Product-user affordance:** nothing failed for an end user; a developer or workflow
+  assembling a promotion card supplied a bad part (a missing summary, a non-`fp1` attested
+  reference, and so on). The refusal's `context` says which field was wrong; fix it and
+  retry — the plain-words summary is mandatory because the signature attests the exact words
+  a human read.
+
+### FR-11: Promotion-summary correction that supersedes nothing (CT-06, CT-07, FM-5)
+
+- **Failure class:** `invalid input` (a CT-04 refusal category).
+- **Detection:** `correct_summary` mints a NEW card with the corrected summary and a CT-07
+  `supersedes` edge linking it to the prior card. It is refused when `prior` is not a
+  `PromotionCard`, when the corrected summary is itself invalid (a blank summary, a bad
+  writer/sequence — propagated from `PromotionCard.sign`), when the corrected summary is
+  UNCHANGED (it would mint the identical card, with nothing to supersede), or when the
+  supersedes-edge writer is not a `WriterId` (propagated from `LineageEdge.try_create`). The
+  signed record is never edited in place — a correction is always a new card, because the
+  signature attests the exact words read.
+- **Auto-recovery / retry:** none automatic. The operation RETURNS an `invalid input`
+  `TypedRefusal` (retryability `no`) whose `context` names the offending field; the caller
+  supplies a genuinely different, valid summary (and valid writers) and retries. Nothing is
+  raised, no card is minted, and no edge is appended.
+- **Visible degraded state:** none. The prior card and its lineage are unchanged.
+- **Notification tier:** silent-log. A degenerate or malformed correction is a
+  programming/wiring mistake surfaced as a value.
+- **Product-user affordance:** nothing failed for an end user; a developer tried to correct
+  a signed summary with the same words, a malformed summary, or a bad writer. To fix a typo,
+  supply the corrected words — a new signed card is minted and linked to the prior one; the
+  original signed card is preserved untouched because the signature attests the exact words
+  read.
+
+### FR-12: Unpersistable promotion journal event (CT-13, block-on-unpersistable)
+
+- **Failure class:** `storage failure` (a CT-04 refusal category), for the unpersistable
+  path; `invalid input` for a wiring mistake.
+- **Detection:** `emit_promotion_event` builds the CT-13 promotion event (only the card's
+  `fp1` plus `correlation_id`) and appends it through the core `JournalSink` injected at the
+  composition root. When the sink cannot durably persist the event it returns a
+  `storage failure` refusal (recognized by `is_unpersistable`); a `card` that is not a
+  signed `PromotionCard`, or a `sink` that is not a `JournalSink`, is an `invalid input`
+  refusal before anything is emitted. The registry card stays canonical — the journal never
+  holds a second promotion schema.
+- **Auto-recovery / retry:** none automatic. On a `storage failure` the writer that holds
+  the `WriterId` must **block its command stream** until the store recovers, then re-emit
+  (block-on-unpersistable) — the intent is never dropped and success is never assumed. On an
+  `invalid input` the caller fixes the card or the sink wiring and retries. Nothing is
+  raised.
+- **Visible degraded state:** the emitting writer's command stream is blocked until the
+  journal append lands; the promotion card itself is already canonical in the registry, so
+  no promotion fact is lost — only its journal pointer is pending. (Physical persistence
+  lands in Story 2.4; this seam surfaces the refusal.)
+- **Notification tier:** operator-visible for the storage failure (a blocked stream needs
+  attention); silent-log for the wiring `invalid input`.
+- **Product-user affordance:** nothing an end user did caused an unpersistable event; the
+  journal store is unavailable, so the platform blocks rather than pretending the event
+  landed. It resumes once storage recovers. A wiring `invalid input` means a developer
+  passed a bad card or sink — the refusal's `context` says which; fix it and retry.

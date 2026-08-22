@@ -17,10 +17,22 @@ resolvable head), leaves ``branches-from`` multi-headed, keeps a byte-identical
 re-append idempotent while refusing and alarming a true collision, and rebuilds its
 derived indexes from the edge evidence (DEC-0114, DEC-0158, DEC-0144, DEC-0119).
 
-Every ``fp1`` fingerprint is computed in ``qmf-core`` and nowhere else; this module
-imports only ``qmf.core``. Under default-deny no library imports ``qmf-registry`` —
-registration and lineage are invoked by the application at the composition root
-(DEC-0120). Durable persistence through ``qmf-data``'s store-seam is Story 2.4.
+Landed (Story 2.3): the human-signed promotion occurrence — the only path to live money.
+:class:`PromotionCard` mints the reserved CT-06 ``promotion-occurrence-card`` kind with a
+human-only signer, a mandatory plain-words summary declared an identity field, the
+attested record's ``fp1``, and (for an AD-32 risk admission) the Book/BMS-definition
+fingerprint as an identity field; :func:`authorize_live_promotion` refuses a live
+promotion with no such card present (FM-4); :func:`correct_summary` mints a NEW card with
+a CT-07 ``supersedes`` edge rather than editing the signed words; and
+:class:`PromotionEvent` / :func:`emit_promotion_event` emit the CT-13 ``promotion`` event
+— only the card's ``fp1`` plus ``correlation_id`` — through the core
+:class:`~qmf.core.JournalSink` seam (DEC-0116, DEC-0158, DEC-0041).
+
+Every ``fp1`` fingerprint is computed in ``qmf-core`` and nowhere else; this package
+imports only ``qmf.core`` (its promotion module also composes its own siblings
+``records`` and ``lineage``). Under default-deny no library imports ``qmf-registry`` —
+registration, lineage, and promotion are invoked by the application at the composition
+root (DEC-0120). Durable persistence through ``qmf-data``'s store-seam is Story 2.4.
 """
 
 from __future__ import annotations
@@ -31,6 +43,17 @@ from qmf.registry.lineage import (
     EdgeLog,
     EdgeType,
     LineageEdge,
+)
+from qmf.registry.promotion import (
+    KIND_PROMOTION_OCCURRENCE_CARD,
+    PROMOTION_CARD_CONTRACT_FORMAT_VERSION,
+    PromotionAuthorization,
+    PromotionCard,
+    PromotionCorrection,
+    PromotionEvent,
+    authorize_live_promotion,
+    correct_summary,
+    emit_promotion_event,
 )
 from qmf.registry.records import (
     CONTRACT_FORMAT_VERSION,
@@ -47,6 +70,8 @@ from qmf.registry.records import (
 __all__ = [
     "CONTRACT_FORMAT_VERSION",
     "EDGE_CONTRACT_FORMAT_VERSION",
+    "KIND_PROMOTION_OCCURRENCE_CARD",
+    "PROMOTION_CARD_CONTRACT_FORMAT_VERSION",
     "RESERVED_KIND_NAMES",
     "EdgeAppendReceipt",
     "EdgeLog",
@@ -55,11 +80,18 @@ __all__ = [
     "KindContract",
     "KindRegistry",
     "LineageEdge",
+    "PromotionAuthorization",
+    "PromotionCard",
+    "PromotionCorrection",
+    "PromotionEvent",
     "Registrar",
     "RegistrationReceipt",
     "RegistrationRecord",
     "WriteOutcome",
     "__version__",
+    "authorize_live_promotion",
+    "correct_summary",
+    "emit_promotion_event",
 ]
 
 # Roster SemVer, in lockstep across the seven roster packages (0.x until the

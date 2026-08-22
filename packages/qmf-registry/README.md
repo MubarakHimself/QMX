@@ -29,8 +29,24 @@ rebuilds its derived indexes from the edge evidence. Physical persistence
 (append-with-fsync, size-rotation, the CT-11 append-store) is Story 2.4; this story
 defines the vocabulary, validation, and in-memory surface.
 
-Every `fp1` fingerprint is computed in `qmf-core`; this package imports only
-`qmf.core`, and registration and lineage are invoked at the application composition
-root. The human-signed promotion occurrence is Story 2.3, and durable persistence
-through `qmf-data`'s store-seam is Story 2.4. Build, lint, type-check, and test
-through the workspace `poe` tasks — never in isolation.
+CT-06 promotion card + CT-13 promotion event landed (Story 2.3): the human-signed
+promotion occurrence — the only path to live money. `PromotionCard.sign` mints the
+reserved `promotion-occurrence-card` CT-06 kind with a human-only signer, a mandatory
+plain-words summary declared an identity field (so the signature attests the exact
+words read), the attested record's `fp1`, and — for an AD-32 risk admission — the
+Book-definition (or BMS-definition) fingerprint as an identity field, so a signature
+can never attest a superseded template. `authorize_live_promotion` is the refusal law:
+with no human-signed card present, promotion does not occur (FM-4) — only a human
+promotes into the live zone. `correct_summary` mints a NEW card linked to the prior via
+a CT-07 `supersedes` edge rather than editing the signed words. `PromotionEvent` /
+`emit_promotion_event` emit the CT-13 `promotion` event — only the card's `fp1` plus
+`correlation_id`, never a second schema — through the core `JournalSink` seam; the
+registry card stays canonical. V1 signing is the operator's recorded approval, with no
+cryptographic dependency.
+
+Every `fp1` fingerprint is computed in `qmf-core`; this package imports only `qmf.core`
+(the promotion module also composes its own siblings `records` and `lineage`), and
+registration, lineage, and promotion are invoked at the application composition root.
+The promotion gate's own workflow, UI, and timing remain platform territory outside
+QMF, and durable persistence through `qmf-data`'s store-seam is Story 2.4. Build, lint,
+type-check, and test through the workspace `poe` tasks — never in isolation.
