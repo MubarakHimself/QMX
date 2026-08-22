@@ -38,7 +38,7 @@ import json
 import struct
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Final, Protocol, cast
+from typing import Final, Protocol, TypedDict, cast
 
 from qmf.core import (
     Ok,
@@ -356,11 +356,7 @@ class OffMachineRestore:
                 given=repr(source_room_role),
                 allowed=[member.value for member in RoomRole],
             )
-        if (
-            isinstance(copy_version, bool)
-            or not isinstance(copy_version, int)
-            or copy_version < 1
-        ):
+        if isinstance(copy_version, bool) or copy_version < 1:
             return invalid_input(
                 "copy_version",
                 "copy_version is a positive ordinal identifying one off-machine artifact",
@@ -655,14 +651,21 @@ def _decode_rows(canonical: bytes) -> Result[list[dict[str, object]]]:
             retryable=False,
             context={"signal": "corrupt-copy", "error": str(exc)},
         )
-    if not isinstance(decoded, list) or not decoded:
+    if not isinstance(decoded, list):
         return invalid_input(
             "canonical",
             "raw-archive canonical bytes must decode to a non-empty list of row mappings",
             given=repr(decoded)[:200],
         )
+    decoded_rows = cast("list[object]", decoded)
+    if not decoded_rows:
+        return invalid_input(
+            "canonical",
+            "raw-archive canonical bytes must decode to a non-empty list of row mappings",
+            given=repr(decoded_rows)[:200],
+        )
     rows: list[dict[str, object]] = []
-    for item in decoded:
+    for item in decoded_rows:
         if not isinstance(item, Mapping):
             return invalid_input(
                 "canonical",
@@ -693,9 +696,7 @@ def _decode_mapping(canonical: bytes) -> Result[dict[str, object]]:
     return Ok(dict(cast("Mapping[str, object]", decoded)))
 
 
-def _governed_world(
-    expected: World, for_world: object, *, field_label: str
-) -> Result[World]:
+def _governed_world(expected: World, for_world: object, *, field_label: str) -> Result[World]:
     """Resolve and gate ``for_world`` against ``expected``; refuse simulated/cross-world."""
     if for_world is None:
         return TypedRefusal(
@@ -864,7 +865,16 @@ def _unframe_plaintext(plaintext: bytes) -> Result[RoomExport]:
     )
 
 
-def _parse_meta(text: str) -> dict[str, object]:
+class _BackupMeta(TypedDict):
+    """Typed fields from the framed UTF-8 backup meta block."""
+
+    format_version: int
+    world: str
+    role: str
+    count: int
+
+
+def _parse_meta(text: str) -> _BackupMeta:
     """Parse the framed UTF-8 meta block into typed fields."""
     fields: dict[str, str] = {}
     for line in text.splitlines():

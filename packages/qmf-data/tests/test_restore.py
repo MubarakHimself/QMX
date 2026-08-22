@@ -302,9 +302,7 @@ def test_registry_and_journal_restore(store: EvidenceStore, tmp_path: Path) -> N
     restored_reg = _world(replacement).backup_input.read_room(
         RoomRole.REGISTRY_ROOM, for_world=World.LIVE
     )
-    restored_j = _world(replacement).backup_input.read_room(
-        RoomRole.JOURNAL, for_world=World.LIVE
-    )
+    restored_j = _world(replacement).backup_input.read_room(RoomRole.JOURNAL, for_world=World.LIVE)
     assert is_ok(restored_reg)
     assert is_ok(restored_j)
     assert restored_reg.value.record_count == 2
@@ -312,9 +310,7 @@ def test_registry_and_journal_restore(store: EvidenceStore, tmp_path: Path) -> N
     assert restored_j.value.records[0].stream == "dq"
 
 
-def test_missing_off_machine_copy_is_storage_failure(
-    store: EvidenceStore, tmp_path: Path
-) -> None:
+def test_missing_off_machine_copy_is_storage_failure(store: EvidenceStore, tmp_path: Path) -> None:
     replacement = EvidenceStore(tmp_path / "replacement")
     result = OffMachineRestore(_MemoryStorage(), _XorCipher()).restore_copy(
         world=World.LIVE,
@@ -326,5 +322,3 @@ def test_missing_off_machine_copy_is_storage_failure(
     )
     assert is_refusal(result)
     assert result.category is RefusalCategory.STORAGE_FAILURE
-
-
