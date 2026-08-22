@@ -18,8 +18,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from qmf.core import Ok, Result, World, is_refusal
-from qmf.data.store.engines import ColumnarEngine, MetadataEngine, StoreEngineError
-from qmf.data.store.engines.jsonl import JsonlAppendStream
+from qmf.data.store.engines import (
+    AppendStreamOpener,
+    ColumnarEngine,
+    MetadataEngine,
+    StoreEngineError,
+)
 from qmf.data.store.receipts import CONTRACT_FORMAT_VERSION
 from qmf.data.store.refusals import invalid_input, translate_engine_failure
 from qmf.data.store.rooms import RoomRole, require_same_world
@@ -70,21 +74,23 @@ class BackupInput:
         record_engine: MetadataEngine,
         journal_dir: Path,
         lineage_dir: Path,
+        open_stream: AppendStreamOpener,
     ) -> None:
         self._world = world
         self._raw = raw_engine
         self._records = record_engine
         self._journal_dir = journal_dir
         self._lineage_dir = lineage_dir
+        self._open = open_stream
 
-    def read_room(
-        self, room_role: object, *, for_world: object | None = None
-    ) -> Result[RoomExport]:
+    def read_room(self, room_role: object, *, for_world: object) -> Result[RoomExport]:
         """Present ``room_role``'s records verbatim; a cross-world backup read refuses.
 
-        The evidence rooms (immutable raw archive, journal) and the registry room
-        (records + lineage edges) are exported; the rebuildable and not-yet-populated
-        rooms export empty in V1. Any engine failure is a ``storage failure`` refusal.
+        ``for_world`` is required (M4). The evidence rooms (immutable raw archive,
+        journal) and the registry room (records + lineage edges) are exported; the
+        rebuildable and not-yet-populated rooms export empty in V1. Any engine or
+        filesystem failure is a ``storage failure`` refusal, never raised across the
+        seam (L1, AC4).
         """
         gate = require_same_world(self._world, for_world)
         if is_refusal(gate):
@@ -139,14 +145,29 @@ class BackupInput:
         return tuple(exports)
 
     def _export_streams(self, base_dir: Path) -> tuple[RecordExport, ...]:
-        """Every line of every stream under ``base_dir``, verbatim in stream order."""
-        if not base_dir.is_dir():
-            return ()
+        """Every line of every stream under ``base_dir``, verbatim in stream order.
+
+        Directory enumeration is guarded: a filesystem ``OSError`` (a locked or
+        vanished room directory) is normalized to a ``StoreEngineError`` so the
+        boundary translates it to a ``storage failure`` refusal rather than letting a
+        bare ``OSError`` cross the seam (L1, AC4).
+        """
+        try:
+            if not base_dir.is_dir():
+                return ()
+            children = sorted(base_dir.iterdir())
+        except OSError as exc:
+            raise StoreEngineError(
+                "could not enumerate the room's streams for backup",
+                engine="jsonl",
+                retryable=False,
+                detail={"room": str(base_dir), "os_error": str(exc)},
+            ) from exc
         exports: list[RecordExport] = []
-        for sub in sorted(base_dir.iterdir()):
+        for sub in children:
             if not sub.is_dir():
                 continue
-            reader = JsonlAppendStream(sub, writer_token="<backup>")
+            reader = self._open(sub, "<backup>")
             reader.rebuild_index()
             for line in reader.read_all():
                 digest = hashlib.sha256(line).hexdigest()

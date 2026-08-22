@@ -90,14 +90,20 @@ def namespace_block(world: World) -> TypedRefusal | None:
 def require_same_world(bound_world: World, requested_world: object) -> Result[World]:
     """Gate a read against the room's own world; a cross-world read refuses (AC5).
 
-    A store boundary is bound to exactly one world's room instance. A read that
-    names a *different* world than the caller's is a ``policy rejection`` — world
-    isolation is storage separation, so one world's room never serves another's
-    evidence (DEC-0117, DEC-0110). ``None`` means "the caller's own world" and is
-    always allowed.
+    A store boundary is bound to exactly one world's room instance. The caller must
+    **declare** the world it is reading as — there is no implicit "my own world"
+    default, so the guard always evaluates and an omitted declaration can never read
+    freely (M4). A read that names a *different* world than the room's is a ``policy
+    rejection`` — world isolation is storage separation, so one world's room never
+    serves another's evidence (DEC-0117, DEC-0110). A missing declaration (``None``)
+    is an ``invalid input`` refusal: a read must state its world.
     """
     if requested_world is None:
-        return Ok(bound_world)
+        return invalid_input(
+            "for_world",
+            "a read must declare the world it is reading as; there is no implicit "
+            "same-world default, so a cross-world read is always evaluated (M4)",
+        )
     if isinstance(requested_world, World):
         resolved = requested_world
     elif isinstance(requested_world, str):

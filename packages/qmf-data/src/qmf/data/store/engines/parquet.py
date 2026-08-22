@@ -4,9 +4,15 @@ The concrete :class:`~qmf.data.store.engines.ColumnarEngine`. A columnar artifac
 an ordered set of JSON-native rows — is written as one content-addressed Parquet
 file, ``<fp1-digest>.parquet``, via a temp-file + atomic-rename so a torn write never
 leaves a half file under a real key. The exact fp1 canonical bytes are embedded in
-the Parquet **schema metadata**, so a re-write reconciles against the original bytes
-without a lossy columnar round-trip, and a corrupt/truncated file surfaces as a
-``storage failure`` rather than a silent wrong answer.
+the Parquet **schema metadata** and are the artifact's authoritative, evidence-bearing
+form: :meth:`read` decodes those canonical bytes, so the raw archive round-trips
+**exactly** — heterogeneous row schemas are not unified into a common column with
+``None`` backfilled, and an arbitrary-precision integer (qmf-core canonicalizes big
+ints by design — the money path) survives rather than overflowing an inferred int64
+column, so a read-back always re-fingerprints to the same fp1 (H4, H5; DEC-0108). The
+columnar table stores each row's canonical JSON as a string column, so pyarrow never
+infers a numeric column a big int could overflow; a corrupt/truncated file surfaces as
+a ``storage failure`` rather than a silent wrong answer.
 
 Parquet (pyarrow) is a store engine declared only in qmf-data's pyproject; it never
 appears in a boundary signature. Every pyarrow / ``OSError`` failure is wrapped into
@@ -23,6 +29,7 @@ package stays strictly typed.
 
 from __future__ import annotations
 
+import json
 import os
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -36,6 +43,7 @@ __all__ = ["ParquetColumnarEngine"]
 
 _SUFFIX = ".parquet"
 _CANONICAL_KEY = b"qmf_fp1_canonical"
+_ROW_COLUMN = "qmf_row"
 
 
 class ParquetColumnarEngine:
@@ -53,16 +61,30 @@ class ParquetColumnarEngine:
         return self._dir / f"{key}{_SUFFIX}"
 
     def write(self, key: str, rows: Sequence[Mapping[str, object]], canonical: bytes, /) -> None:
-        """Write ``rows`` to ``<key>.parquet`` with ``canonical`` embedded (raises)."""
+        """Write ``rows`` to ``<key>.parquet`` with ``canonical`` embedded (raises).
+
+        The authoritative artifact is the ``canonical`` bytes embedded in the schema
+        metadata; the columnar table stores each row's canonical JSON as a **string**,
+        so pyarrow never infers a numeric column an arbitrary-precision int could
+        overflow, and a heterogeneous row schema is never unified with ``None``
+        backfilled (H4, H5). A serialization or overflow error at this boundary is
+        translated to a ``storage failure`` rather than crossing the seam (AC4).
+        """
         try:
             self._dir.mkdir(parents=True, exist_ok=True)
-            table = pa.Table.from_pylist(list(rows))
+            # The canonical bytes ARE the list of rows in canonical JSON; decode once
+            # to store each row as a JSON string (JSON-native by construction, since
+            # canonical_bytes produced it — no big-int overflow, no schema unification).
+            decoded = cast("list[object]", json.loads(canonical))
+            payloads = [json.dumps(row, ensure_ascii=False, sort_keys=True) for row in decoded]
+            column = pa.array(payloads, type=pa.string())
+            table = pa.table({_ROW_COLUMN: column})
             table = table.replace_schema_metadata({_CANONICAL_KEY: canonical})
             target = self._path(key)
             tmp = target.with_suffix(_SUFFIX + ".tmp")
             pq.write_table(table, str(tmp))
             os.replace(tmp, target)
-        except (OSError, pa.ArrowException) as exc:
+        except (OSError, pa.ArrowException, ValueError, TypeError, OverflowError) as exc:
             raise StoreEngineError(
                 "could not write the Parquet columnar artifact",
                 engine="parquet",
@@ -70,18 +92,32 @@ class ParquetColumnarEngine:
             ) from exc
 
     def read(self, key: str, /) -> list[dict[str, object]]:
-        """Read the rows stored under ``key`` (raises if absent or corrupt)."""
-        path = self._path(key)
-        try:
-            table = pq.read_table(str(path))
-            return cast("list[dict[str, object]]", table.to_pylist())
-        except (OSError, pa.ArrowException) as exc:
+        """Read the rows stored under ``key`` (raises if absent or corrupt).
+
+        Decodes the embedded fp1 canonical bytes — the authoritative, lossless form —
+        so the read-back is byte-for-byte the stored artifact and re-fingerprints to
+        the same fp1 (H5; DEC-0108). A missing or corrupt file, or metadata that no
+        longer carries the canonical bytes, is a ``storage failure``.
+        """
+        canonical = self.read_canonical(key)
+        if canonical is None:
             raise StoreEngineError(
-                "could not read the Parquet columnar artifact (missing, locked, or corrupt)",
+                "could not read the Parquet columnar artifact (missing or missing its "
+                "canonical identity bytes)",
+                engine="parquet",
+                retryable=False,
+                detail={"key": key},
+            )
+        try:
+            decoded = json.loads(canonical)
+        except ValueError as exc:
+            raise StoreEngineError(
+                "the Parquet columnar artifact carries corrupt canonical bytes",
                 engine="parquet",
                 retryable=False,
                 detail={"key": key, "error": str(exc)},
             ) from exc
+        return cast("list[dict[str, object]]", decoded)
 
     def read_canonical(self, key: str, /) -> bytes | None:
         """The embedded fp1 canonical bytes for ``key``, or ``None`` if absent."""

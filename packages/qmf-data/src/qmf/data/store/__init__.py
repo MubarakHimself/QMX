@@ -29,12 +29,13 @@ from qmf.data.store.engines import (
     AnalyticsEngine,
     AppendLocation,
     AppendStreamEngine,
+    AppendStreamOpener,
     ColumnarEngine,
     MetadataEngine,
     StoreEngineError,
 )
 from qmf.data.store.engines.duckdb_views import DuckDbAnalyticsEngine
-from qmf.data.store.engines.jsonl import JsonlAppendStream
+from qmf.data.store.engines.jsonl import JsonlAppendStream, jsonl_opener
 from qmf.data.store.engines.parquet import ParquetColumnarEngine
 from qmf.data.store.engines.sqlite_meta import SqliteMetadataEngine
 from qmf.data.store.facade import EvidenceStore, WorldStore
@@ -52,6 +53,7 @@ __all__ = [
     "AppendLocation",
     "AppendStore",
     "AppendStreamEngine",
+    "AppendStreamOpener",
     "BackupInput",
     "ColumnarEngine",
     "DuckDbAnalyticsEngine",
@@ -69,4 +71,5 @@ __all__ = [
     "StoreReceipt",
     "WorldStore",
     "WriteOutcome",
+    "jsonl_opener",
 ]

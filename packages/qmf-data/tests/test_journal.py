@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from qmf.core import World, WriterId, is_ok, is_refusal
-from qmf.data.store import EvidenceStore, JournalStore
+from qmf.data.store import EvidenceStore, JournalStore, jsonl_opener
 
 
 def _writer(role: str = "data", stream: str = "dq", boot: str = "boot-1") -> WriterId:
@@ -50,7 +50,7 @@ def test_idempotent_reappend_does_not_duplicate(store: EvidenceStore) -> None:
     assert is_ok(first)
     assert is_ok(second)
     assert second.value.outcome.value == "idempotent"
-    read = journal.read_stream("ca")
+    read = journal.read_stream("ca", for_world=World.LIVE)
     assert is_ok(read)
     assert len(read.value) == 1
 
@@ -60,14 +60,14 @@ def test_sequences_increase_and_read_in_order(store: EvidenceStore) -> None:
     writer = _writer()
     for i in range(5):
         assert is_ok(journal.append("dq", writer, {"event_type": "data quality", "n": i}))
-    read = journal.read_stream("dq")
+    read = journal.read_stream("dq", for_world=World.LIVE)
     assert is_ok(read)
     assert [event["n"] for event in read.value] == [0, 1, 2, 3, 4]
 
 
 def test_read_unknown_stream_is_empty(store: EvidenceStore) -> None:
     journal = _journal(store)
-    read = journal.read_stream("never-written")
+    read = journal.read_stream("never-written", for_world=World.LIVE)
     assert is_ok(read)
     assert read.value == []
 
@@ -88,7 +88,9 @@ def test_invalid_stream_name_is_invalid_input(store: EvidenceStore) -> None:
 
 
 def test_simulated_append_is_policy_rejection(tmp_path: Path) -> None:
-    journal = JournalStore(World.SIMULATED, journal_dir=tmp_path / "journal")
+    journal = JournalStore(
+        World.SIMULATED, journal_dir=tmp_path / "journal", open_stream=jsonl_opener()
+    )
     result = journal.append("dq", _writer(), {"event_type": "data quality"})
     assert is_refusal(result)
     assert result.category.value == "policy rejection"

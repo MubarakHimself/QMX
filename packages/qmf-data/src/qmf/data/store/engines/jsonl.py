@@ -23,15 +23,21 @@ same canonical bytes, so the identity guard and this index agree.
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import re
 from pathlib import Path
 
 from qmf.core import Ok, Result
-from qmf.data.store.engines import AppendLocation, StoreEngineError
+from qmf.data.store.engines import (
+    AppendLocation,
+    AppendStreamEngine,
+    AppendStreamOpener,
+    StoreEngineError,
+)
 from qmf.data.store.refusals import policy_rejection
 
-__all__ = ["JsonlAppendStream"]
+__all__ = ["DEFAULT_ROTATION_BYTES", "JsonlAppendStream", "jsonl_opener"]
 
 _LOCK_NAME = ".writer"
 _ORDINAL_RE = re.compile(r"\A(\d{6})\.jsonl\Z")
@@ -77,15 +83,26 @@ class JsonlAppendStream:
     def acquire(self) -> Result[None]:
         """Take the single-writer hold, refusing a second distinct writer (AC3).
 
-        A ``.writer`` lock naming a *different* writer is a ``policy rejection`` — the
-        second writer does not proceed (DEC-0113). The same writer (a restart under a
-        new boot/epoch keeps the same ``(machine, role, stream)`` identity) re-acquires
+        The hold is taken by an **atomic** ``O_CREAT | O_EXCL`` create of the
+        ``.writer`` lock, so two writers racing to acquire a fresh stream can never
+        both win: exactly one create succeeds (that writer stamps its token), and
+        every other caller lands on the ``FileExistsError`` read-and-compare path.
+        A lock naming a *different* writer is a ``policy rejection`` — the second
+        writer does not proceed (DEC-0113). The same writer (a restart under a new
+        boot/epoch keeps the same ``(machine, role, stream)`` identity) re-acquires
         silently. The index is (re)built from the data files on acquire.
         """
         try:
             self._dir.mkdir(parents=True, exist_ok=True)
             lock = self._dir / _LOCK_NAME
-            if lock.exists():
+            token = self._writer_token.encode("utf-8")
+            try:
+                fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            except FileExistsError:
+                # Another caller already holds (or is taking) the lock. Read its
+                # stamped token and let only the *same* writer re-acquire; anyone
+                # else — including a caller that observes a not-yet-stamped empty
+                # lock mid-race — is refused, so the lock is never double-taken.
                 holder = lock.read_text(encoding="utf-8")
                 if holder != self._writer_token:
                     return policy_rejection(
@@ -97,7 +114,10 @@ class JsonlAppendStream:
                         attempted=self._writer_token,
                     )
             else:
-                lock.write_text(self._writer_token, encoding="utf-8")
+                try:
+                    os.write(fd, token)
+                finally:
+                    os.close(fd)
         except OSError as exc:
             raise StoreEngineError(
                 "could not acquire the JSONL stream lock",
@@ -108,14 +128,48 @@ class JsonlAppendStream:
         self._held = True
         return Ok(None)
 
+    def release(self) -> None:
+        """Release this writer's one-writer hold, removing its ``.writer`` lock (M6).
+
+        Only a lock that names *this* writer is removed — a reader or backup handle
+        (which never acquired) can never unlock another writer's stream. Idempotent:
+        releasing an unheld or already-released stream is a no-op. After release the
+        stream is free for the same or another writer to acquire, so a clean shutdown
+        or a deliberate handoff never leaves a stream owned forever.
+        """
+        lock = self._dir / _LOCK_NAME
+        try:
+            if lock.is_file() and lock.read_text(encoding="utf-8") == self._writer_token:
+                lock.unlink()
+        except OSError as exc:
+            raise StoreEngineError(
+                "could not release the JSONL stream lock",
+                engine="jsonl",
+                retryable=False,
+                detail={"stream": str(self._dir), "os_error": str(exc)},
+            ) from exc
+        self._held = False
+
     # --- append (write) -----------------------------------------------------
 
     def append(self, canonical: bytes, /) -> AppendLocation:
         """Append one LF-terminated line with fsync, rotating under the ordinal (AC3).
 
-        Raises :class:`StoreEngineError` on any physical failure — the boundary
-        translates it to a ``storage failure`` refusal and never reports success (AC4).
+        The one-writer hold is verified first: a handle that does not hold the stream
+        (a reader or backup handle, or a writer that never acquired) may not append,
+        so a read handle is structurally unable to write (M6, DEC-0113). Raises
+        :class:`StoreEngineError` on that guard and on any physical failure — the
+        boundary translates it to a ``storage failure`` refusal and never reports
+        success (AC4).
         """
+        if not self._held:
+            raise StoreEngineError(
+                "append attempted on a stream this handle does not hold; only the "
+                "acquiring writer may append (M6, DEC-0113)",
+                engine="jsonl",
+                retryable=False,
+                detail={"stream": str(self._dir)},
+            )
         line = canonical + b"\n"
         digest = hashlib.sha256(canonical).hexdigest()
         try:
@@ -240,7 +294,16 @@ class JsonlAppendStream:
         return sorted(ordinals)
 
     def _scan_file(self, ordinal: int) -> None:
-        """Index every LF-terminated line in one ordinal file, in order."""
+        """Index every LF-terminated line in one ordinal file, in order.
+
+        Each line is validated as one JSON object at index time: a corrupt
+        (non-JSON) line is store corruption and surfaces as a ``StoreEngineError``
+        the boundary translates to a ``storage failure`` refusal, never a raw
+        ``JSONDecodeError`` across the package seam (AC4; H3). A byte-identical
+        duplicate line — a line whose digest is already indexed — is skipped rather
+        than re-ordered, so a physically duplicated append can never make a read
+        return the same record twice under a wrong sequence (L4).
+        """
         path = self._dir / _ordinal_filename(ordinal)
         offset = 0
         with path.open("rb") as handle:
@@ -253,14 +316,25 @@ class JsonlAppendStream:
                         retryable=False,
                         detail={"stream": str(self._dir), "ordinal": ordinal},
                     )
-                digest = hashlib.sha256(raw[:-1]).hexdigest()
-                self._index[digest] = AppendLocation(
-                    ordinal=ordinal,
-                    byte_offset=offset,
-                    length=length,
-                    sequence=len(self._order),
-                )
-                self._order.append(digest)
+                payload = raw[:-1]
+                try:
+                    json.loads(payload)
+                except ValueError as exc:
+                    raise StoreEngineError(
+                        "the JSONL stream has a corrupt (non-JSON) line",
+                        engine="jsonl",
+                        retryable=False,
+                        detail={"stream": str(self._dir), "ordinal": ordinal},
+                    ) from exc
+                digest = hashlib.sha256(payload).hexdigest()
+                if digest not in self._index:
+                    self._index[digest] = AppendLocation(
+                        ordinal=ordinal,
+                        byte_offset=offset,
+                        length=length,
+                        sequence=len(self._order),
+                    )
+                    self._order.append(digest)
                 offset += length
 
     # --- introspection (tests / diagnostics) --------------------------------
@@ -279,3 +353,20 @@ class JsonlAppendStream:
     def current_ordinal(self) -> int:
         """The current rotation ordinal (the file the next append targets)."""
         return self._current_ordinal
+
+
+def jsonl_opener(rotation_bytes: int = DEFAULT_ROTATION_BYTES) -> AppendStreamOpener:
+    """An :class:`AppendStreamOpener` bound to the JSONL engine and one rotation size.
+
+    The composition root builds this once and injects it into every append boundary
+    (journal, lineage edges, backup), so the concrete :class:`JsonlAppendStream`
+    never appears in a boundary signature and the engine stays swappable (M3). Each
+    call opens (or re-opens) the stream rooted at ``stream_dir`` for ``writer_token``.
+    """
+
+    def _open(stream_dir: Path, writer_token: str, /) -> AppendStreamEngine:
+        return JsonlAppendStream(
+            stream_dir, writer_token=writer_token, rotation_bytes=rotation_bytes
+        )
+
+    return _open

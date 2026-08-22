@@ -24,11 +24,10 @@ from pathlib import Path
 from typing import cast
 
 from qmf.core import Ok, Result, World, WriterId, is_refusal
-from qmf.data.store.engines import MetadataEngine, StoreEngineError
-from qmf.data.store.engines.jsonl import DEFAULT_ROTATION_BYTES
+from qmf.data.store.engines import AppendStreamOpener, MetadataEngine, StoreEngineError
 from qmf.data.store.identity import admit, resolve_fingerprint
 from qmf.data.store.receipts import StoreReceipt
-from qmf.data.store.refusals import invalid_input, translate_engine_failure
+from qmf.data.store.refusals import invalid_input, missing_artifact, translate_engine_failure
 from qmf.data.store.rooms import RoomRole, namespace_block, require_same_world
 from qmf.data.store.streams import HeldStreams, safe_segment
 
@@ -36,7 +35,12 @@ __all__ = ["RegistryRoom"]
 
 
 class RegistryRoom:
-    """The CT-09 registry room for one world — SQLite records + JSONL lineage edges."""
+    """The CT-09 registry room for one world — SQLite records + JSONL lineage edges.
+
+    The lineage append-stream engine is injected as ``open_stream`` (an
+    :class:`~qmf.data.store.engines.AppendStreamOpener`), so the concrete JSONL engine
+    never appears in this boundary's signature and stays swappable (M3).
+    """
 
     def __init__(
         self,
@@ -44,16 +48,20 @@ class RegistryRoom:
         *,
         record_engine: MetadataEngine,
         lineage_dir: Path,
-        rotation_bytes: int = DEFAULT_ROTATION_BYTES,
+        open_stream: AppendStreamOpener,
     ) -> None:
         self._world = world
         self._records = record_engine
-        self._lineage = HeldStreams(lineage_dir, rotation_bytes=rotation_bytes)
+        self._lineage = HeldStreams(lineage_dir, open_stream=open_stream)
 
     @property
     def world(self) -> World:
         """The world whose registry room this boundary writes and reads."""
         return self._world
+
+    def close(self) -> None:
+        """Release every held lineage-edge stream's one-writer lock (M6)."""
+        self._lineage.release_all()
 
     # --- per-kind versioned records (SQLite) --------------------------------
 
@@ -68,9 +76,14 @@ class RegistryRoom:
         """Persist a per-kind versioned record, fp1-keyed and append-only (AC2, AC5).
 
         ``kind`` names the registry kind; ``format_version`` is the record's positive
-        integer contract format version. A byte-identical re-write is idempotent, a
-        true collision is refused and alarmed; a ``world = simulated`` write is a
-        ``policy rejection``; an engine failure is a ``storage failure`` refusal.
+        integer contract format version. The fp1 identity is computed over the **full**
+        record — the body plus its ``kind`` and ``format_version`` — per CT-05's
+        identity-by-default law, so the same body under a different kind or format
+        version is a *different* fingerprint and a *distinct* stored record, never a
+        silent idempotent collapse (H6, DEC-0108). The receipt echoes the actual stored
+        ``format_version``. A byte-identical re-write is idempotent, a true collision is
+        refused and alarmed; a ``world = simulated`` write is a ``policy rejection``; an
+        engine failure is a ``storage failure`` refusal.
         """
         blocked = namespace_block(self._world)
         if blocked is not None:
@@ -92,9 +105,18 @@ class RegistryRoom:
         engine = self._records
         version = format_version
         record_kind = kind
+        # The stored artifact is the full record: kind and format_version are inside the
+        # fingerprinted identity, so they can never sit outside it and let two distinct
+        # records alias (H6). The body nests under "body", so a body key named "kind" or
+        # "format_version" never collides with the envelope's fields.
+        full_record: dict[str, object] = {
+            "kind": record_kind,
+            "format_version": version,
+            "body": dict(record),
+        }
         try:
             admission = admit(
-                dict(record),
+                full_record,
                 existing_bytes=engine.get,
                 persist=lambda fp, canonical: engine.put(
                     fp.digest, canonical, kind=record_kind, format_version=version
@@ -115,11 +137,18 @@ class RegistryRoom:
                 engine="sqlite",
                 is_evidence_bearing=True,
                 retained_forever=True,
+                format_version=version,
             )
         )
 
-    def get_record(self, fingerprint: object, *, for_world: object | None = None) -> Result[bytes]:
-        """The canonical bytes of a record by fp1 fingerprint; a cross-world read refuses."""
+    def get_record(self, fingerprint: object, *, for_world: object) -> Result[bytes]:
+        """The canonical bytes of the full record by fp1 fingerprint; cross-world refuses.
+
+        ``for_world`` is required (M4). A well-formed fingerprint that no record is
+        stored under is a ``stale evidence`` not-found refusal, not ``invalid input`` —
+        the fingerprint parsed, the reference is simply absent (M5). The returned bytes
+        are the full record envelope (kind + format_version + body) the write stored (H6).
+        """
         gate = require_same_world(self._world, for_world)
         if is_refusal(gate):
             return gate
@@ -131,7 +160,7 @@ class RegistryRoom:
         except StoreEngineError as exc:
             return translate_engine_failure(exc)
         if stored is None:
-            return invalid_input(
+            return missing_artifact(
                 "fingerprint",
                 "no registry record is stored under this fingerprint",
                 given=key.value.value,
@@ -192,9 +221,14 @@ class RegistryRoom:
         )
 
     def read_lineage(
-        self, edge_stream: object, *, for_world: object | None = None
+        self, edge_stream: object, *, for_world: object
     ) -> Result[list[dict[str, object]]]:
-        """Read a lineage-edge stream in order; a cross-world read refuses (AC5)."""
+        """Read a lineage-edge stream in order; a cross-world read refuses (AC5).
+
+        ``for_world`` is required (M4). A never-written edge stream reads as ``Ok([])``
+        (lazily created). A corrupt edge line is a ``storage failure`` refusal, never a
+        raw decode error across the seam (H3, AC4).
+        """
         gate = require_same_world(self._world, for_world)
         if is_refusal(gate):
             return gate
@@ -206,10 +240,10 @@ class RegistryRoom:
             return Ok([])
         try:
             reader.rebuild_index()
-            lines = reader.read_all()
+            edges = [_load(line) for line in reader.read_all()]
         except StoreEngineError as exc:
             return translate_engine_failure(exc)
-        return Ok([_load(line) for line in lines])
+        return Ok(edges)
 
 
 def _discard(_location: object) -> None:

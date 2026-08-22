@@ -58,8 +58,12 @@ def test_namespace_block_none_for_writable_refusal_for_simulated() -> None:
     assert blocked.category is RefusalCategory.POLICY_REJECTION
 
 
-def test_require_same_world_allows_none_and_same() -> None:
-    assert is_ok(require_same_world(World.LIVE, None))
+def test_require_same_world_requires_declaration_and_allows_same() -> None:
+    # M4: an omitted (None) world declaration is refused (invalid input) so the guard
+    # always evaluates; declaring the room's own world (member or string) is allowed.
+    none_declared = require_same_world(World.LIVE, None)
+    assert is_refusal(none_declared)
+    assert none_declared.category is RefusalCategory.INVALID_INPUT
     assert is_ok(require_same_world(World.LIVE, World.LIVE))
     assert is_ok(require_same_world(World.LIVE, "live"))
 

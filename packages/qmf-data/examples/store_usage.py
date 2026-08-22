@@ -30,10 +30,16 @@ T = TypeVar("T")
 
 
 def _unwrap(result: Result[T], what: str) -> T:
-    """Tiny demo helper: a call we assert must succeed here."""
+    """Tiny demo helper: a call we require to succeed here."""
     if is_ok(result):
         return result.value
     raise AssertionError(f"expected {what} to succeed, got {result}")
+
+
+def _require(condition: object, what: str) -> None:
+    """A real check (not a bare ``assert``, which ``-O`` strips) for a demonstrated fact."""
+    if not condition:
+        raise AssertionError(f"expected {what}")
 
 
 def _writer() -> WriterId:
@@ -52,10 +58,10 @@ def four_boundaries_over_four_engines(world: WorldStore) -> None:
         world.registry_room.put_record({"kind": "producer"}, kind="producer", format_version=1),
         "registry record",
     )
-    assert raw.engine == "parquet"
-    assert view.engine == "duckdb"
-    assert journal.engine == "jsonl"
-    assert record.engine == "sqlite"
+    _require(raw.engine == "parquet", "raw archive on parquet")
+    _require(view.engine == "duckdb", "view on duckdb")
+    _require(journal.engine == "jsonl", "journal on jsonl")
+    _require(record.engine == "sqlite", "registry record on sqlite")
 
 
 def idempotent_rewrite(world: WorldStore) -> str:
@@ -63,20 +69,28 @@ def idempotent_rewrite(world: WorldStore) -> str:
     rows = [{"t": 9, "px": 200}]
     first = _unwrap(world.append_store.append_raw(rows), "first raw")
     again = _unwrap(world.append_store.append_raw(rows), "idempotent raw")
-    assert first.fingerprint == again.fingerprint
+    _require(first.fingerprint == again.fingerprint, "same fingerprint on re-write")
     return again.outcome.value
 
 
 def simulated_and_cross_world_refused(store: EvidenceStore, world: WorldStore) -> None:
     """A simulated store is refused; a cross-world read is a policy rejection."""
     simulated = store.for_world(World.SIMULATED)
-    assert is_refusal(simulated)
-    assert simulated.category.value == "policy rejection"
+    _require(is_refusal(simulated), "simulated store refused")
+    _require(
+        is_refusal(simulated) and simulated.category.value == "policy rejection",
+        "simulated is a policy rejection",
+    )
 
     receipt = _unwrap(world.append_store.append_raw([{"t": 2, "px": 300}]), "raw")
+    # The caller declares it is reading the replay world, but the store is live —
+    # a cross-world read is refused (the world declaration is required, M4).
     cross = world.append_store.read_raw(receipt.fingerprint.value, for_world=World.REPLAY)
-    assert is_refusal(cross)
-    assert cross.category.value == "policy rejection"
+    _require(is_refusal(cross), "cross-world read refused")
+    _require(
+        is_refusal(cross) and cross.category.value == "policy rejection",
+        "cross-world read is a policy rejection",
+    )
 
 
 def one_writer_per_stream(world: WorldStore) -> str:
@@ -85,13 +99,16 @@ def one_writer_per_stream(world: WorldStore) -> str:
     second = _unwrap(WriterId.try_create("node-b", "data", "ctrl", "boot-1"), "writer b")
     _unwrap(world.journal.append("ctrl", first, {"event_type": "control action"}), "first append")
     refusal = world.journal.append("ctrl", second, {"event_type": "control action"})
-    assert is_refusal(refusal)
-    return refusal.category.value
+    _require(is_refusal(refusal), "second writer refused")
+    return refusal.category.value if is_refusal(refusal) else "unexpected-ok"
 
 
 def backup_reads_verbatim(world: WorldStore) -> int:
     """The CT-26 backup input presents the raw archive verbatim."""
-    export = _unwrap(world.backup_input.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE), "backup export")
+    export = _unwrap(
+        world.backup_input.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=world.world),
+        "backup export",
+    )
     return export.record_count
 
 

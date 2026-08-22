@@ -26,7 +26,7 @@ from qmf.core import Ok, Result, World, is_refusal
 from qmf.data.store.engines import AnalyticsEngine, ColumnarEngine, StoreEngineError
 from qmf.data.store.identity import admit, resolve_fingerprint
 from qmf.data.store.receipts import StoreReceipt
-from qmf.data.store.refusals import invalid_input, translate_engine_failure
+from qmf.data.store.refusals import invalid_input, missing_artifact, translate_engine_failure
 from qmf.data.store.rooms import RoomRole, namespace_block, require_same_world
 
 __all__ = ["AppendStore"]
@@ -62,15 +62,23 @@ class AppendStore:
         """Persist columnar time-series ``rows`` into the immutable raw archive.
 
         The rows are content-addressed on their fp1 fingerprint and written by the
-        Parquet engine. A byte-identical re-write is idempotent; a true collision is
-        refused and alarmed; a float/null in identity content is an ``invalid input``
-        refusal; an engine failure is a ``storage failure`` refusal (AC2, AC4).
+        Parquet engine. An empty artifact (no rows) is an ``invalid input`` refusal —
+        empty evidence is meaningless and would otherwise store a receipt for nothing
+        (L5). A byte-identical re-write is idempotent; a true collision is refused and
+        alarmed; a float/null in identity content is an ``invalid input`` refusal; an
+        engine failure is a ``storage failure`` refusal (AC2, AC4).
         """
         blocked = namespace_block(self._world)
         if blocked is not None:
             return blocked
         engine = self._raw
         materialized = list(rows)
+        if not materialized:
+            return invalid_input(
+                "rows",
+                "an evidence artifact must carry at least one row; an empty artifact is "
+                "refused rather than stored as evidence for nothing (L5)",
+            )
         try:
             admission = admit(
                 materialized,
@@ -96,9 +104,14 @@ class AppendStore:
         )
 
     def read_raw(
-        self, fingerprint: object, *, for_world: object | None = None
+        self, fingerprint: object, *, for_world: object
     ) -> Result[list[dict[str, object]]]:
-        """Read raw-archive rows by fp1 fingerprint; a cross-world read refuses (AC5)."""
+        """Read raw-archive rows by fp1 fingerprint; a cross-world read refuses (AC5).
+
+        ``for_world`` is required (M4). A well-formed fingerprint that no artifact is
+        stored under is a ``stale evidence`` not-found refusal, not ``invalid input``
+        (M5). The rows round-trip exactly and re-fingerprint to the same fp1 (H5).
+        """
         gate = require_same_world(self._world, for_world)
         if is_refusal(gate):
             return gate
@@ -108,7 +121,7 @@ class AppendStore:
         digest = key.value.digest
         try:
             if not self._raw.has(digest):
-                return invalid_input(
+                return missing_artifact(
                     "fingerprint",
                     "no raw-archive artifact is stored under this fingerprint",
                     given=key.value.value,
@@ -163,9 +176,14 @@ class AppendStore:
         )
 
     def read_view(
-        self, fingerprint: object, *, for_world: object | None = None
+        self, fingerprint: object, *, for_world: object
     ) -> Result[list[dict[str, object]]]:
-        """Query a materialized analytics view by fp1 fingerprint (cross-world refuses)."""
+        """Query a materialized analytics view by fp1 fingerprint (cross-world refuses).
+
+        ``for_world`` is required (M4). A well-formed fingerprint that no view is
+        materialized under is a ``stale evidence`` not-found refusal, not
+        ``invalid input`` (M5).
+        """
         gate = require_same_world(self._world, for_world)
         if is_refusal(gate):
             return gate
@@ -175,7 +193,7 @@ class AppendStore:
         digest = key.value.digest
         try:
             if not self._views.has(digest):
-                return invalid_input(
+                return missing_artifact(
                     "fingerprint",
                     "no analytics view is materialized under this fingerprint",
                     given=key.value.value,

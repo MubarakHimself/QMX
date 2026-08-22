@@ -7,6 +7,7 @@ backup input.
 
 from __future__ import annotations
 
+import ast
 import os
 import subprocess
 import sys
@@ -32,3 +33,10 @@ def test_reference_usage_example_runs_clean() -> None:
     assert "simulated store and cross-world read: both policy rejection" in completed.stdout
     assert "second writer on a held stream: policy rejection" in completed.stdout
     assert "backup input read raw-archive records verbatim: 3" in completed.stdout
+
+
+def test_example_uses_no_bare_assert() -> None:
+    """L6: the shipped example must not rely on bare ``assert`` — ``-O`` strips it, so
+    its self-checks would silently vanish. It uses real raise-based checks instead."""
+    tree = ast.parse(_EXAMPLE.read_text(encoding="utf-8"))
+    assert not [node for node in ast.walk(tree) if isinstance(node, ast.Assert)]

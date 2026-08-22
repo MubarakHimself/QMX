@@ -32,7 +32,7 @@ def _populate(w: WorldStore) -> None:
 def test_backup_reads_raw_archive_verbatim(store: EvidenceStore) -> None:
     w = _world(store)
     _populate(w)
-    result = w.backup_input.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE)
+    result = w.backup_input.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE)
     assert is_ok(result)
     export = result.value
     assert export.record_count == 1
@@ -47,7 +47,7 @@ def test_backup_reads_raw_archive_verbatim(store: EvidenceStore) -> None:
 def test_backup_reads_journal_lines(store: EvidenceStore) -> None:
     w = _world(store)
     _populate(w)
-    result = w.backup_input.read_room("journal")
+    result = w.backup_input.read_room("journal", for_world=World.LIVE)
     assert is_ok(result)
     assert result.value.record_count == 1
 
@@ -55,7 +55,7 @@ def test_backup_reads_journal_lines(store: EvidenceStore) -> None:
 def test_backup_reads_registry_records_and_edges(store: EvidenceStore) -> None:
     w = _world(store)
     _populate(w)
-    result = w.backup_input.read_room(RoomRole.REGISTRY_ROOM)
+    result = w.backup_input.read_room(RoomRole.REGISTRY_ROOM, for_world=World.LIVE)
     assert is_ok(result)
     # one SQLite record + one JSONL lineage edge
     assert result.value.record_count == 2
@@ -63,7 +63,7 @@ def test_backup_reads_registry_records_and_edges(store: EvidenceStore) -> None:
 
 def test_backup_unpopulated_room_is_empty(store: EvidenceStore) -> None:
     w = _world(store)
-    result = w.backup_input.read_room(RoomRole.PROCESSED)
+    result = w.backup_input.read_room(RoomRole.PROCESSED, for_world=World.LIVE)
     assert is_ok(result)
     assert result.value.record_count == 0
 
@@ -78,6 +78,6 @@ def test_backup_cross_world_read_is_policy_rejection(store: EvidenceStore) -> No
 
 def test_backup_invalid_role_is_invalid_input(store: EvidenceStore) -> None:
     w = _world(store)
-    result = w.backup_input.read_room("not a room")
+    result = w.backup_input.read_room("not a room", for_world=World.LIVE)
     assert is_refusal(result)
     assert result.category.value == "invalid input"

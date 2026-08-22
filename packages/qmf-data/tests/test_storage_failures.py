@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from qmf.core import World, WriterId, is_ok, is_refusal
-from qmf.data.store import AppendStore, EvidenceStore, RegistryRoom
+from qmf.data.store import AppendStore, EvidenceStore, RegistryRoom, jsonl_opener
 from qmf.data.store.engines import StoreEngineError
 
 _ROWS = [{"t": 1, "px": 100}]
@@ -81,7 +81,7 @@ def test_raw_write_failure_translates_to_storage_failure() -> None:
 
 
 def test_raw_read_failure_translates_to_storage_failure() -> None:
-    result = _append_store().read_raw("fp1:sha256:" + "0" * 64)
+    result = _append_store().read_raw("fp1:sha256:" + "0" * 64, for_world=World.LIVE)
     assert is_refusal(result)
     assert result.category.value == "storage failure"
 
@@ -93,19 +93,22 @@ def test_view_materialize_failure_translates() -> None:
 
 
 def test_view_query_failure_translates() -> None:
-    result = _append_store().read_view("fp1:sha256:" + "0" * 64)
+    result = _append_store().read_view("fp1:sha256:" + "0" * 64, for_world=World.LIVE)
     assert is_refusal(result)
     assert result.category.value == "storage failure"
 
 
 def test_record_put_and_get_failures_translate(tmp_path: Path) -> None:
     room = RegistryRoom(
-        World.LIVE, record_engine=_RaisingMetadata(), lineage_dir=tmp_path / "lineage"
+        World.LIVE,
+        record_engine=_RaisingMetadata(),
+        lineage_dir=tmp_path / "lineage",
+        open_stream=jsonl_opener(),
     )
     put = room.put_record({"kind": "x"}, kind="x", format_version=1)
     assert is_refusal(put)
     assert put.category.value == "storage failure"
-    get = room.get_record("fp1:sha256:" + "0" * 64)
+    get = room.get_record("fp1:sha256:" + "0" * 64, for_world=World.LIVE)
     assert is_refusal(get)
     assert get.category.value == "storage failure"
 
@@ -120,6 +123,6 @@ def test_journal_read_failure_on_corrupt_stream(store: EvidenceStore) -> None:
     # Corrupt the underlying stream file with a partial (unterminated) trailing line.
     corrupt = store.root / "live" / "journal" / "dq" / "000000.jsonl"
     corrupt.write_bytes(b'{"partial": ')
-    read = journal.read_stream("dq")
+    read = journal.read_stream("dq", for_world=World.LIVE)
     assert is_refusal(read)
     assert read.category.value == "storage failure"

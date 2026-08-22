@@ -56,7 +56,7 @@ def _append_read(store: EvidenceStore, writer: WriterId, load: int) -> None:
         result = journal.append("bench", writer, {"event_type": "data quality", "n": index})
         if not is_ok(result):  # pragma: no cover - the bench path never refuses
             raise RuntimeError(f"benchmark append refused at {index}: {result}")
-    read = journal.read_stream("bench")
+    read = journal.read_stream("bench", for_world=World.LIVE)
     if not is_ok(read) or len(read.value) != load:  # pragma: no cover - read matches appends
         raise RuntimeError("benchmark read did not return every appended event")
 

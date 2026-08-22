@@ -23,7 +23,7 @@ from qmf.core import Ok, Result, World, is_ok
 from qmf.data.store.append_store import AppendStore
 from qmf.data.store.backup_input import BackupInput
 from qmf.data.store.engines.duckdb_views import DuckDbAnalyticsEngine
-from qmf.data.store.engines.jsonl import DEFAULT_ROTATION_BYTES
+from qmf.data.store.engines.jsonl import DEFAULT_ROTATION_BYTES, jsonl_opener
 from qmf.data.store.engines.parquet import ParquetColumnarEngine
 from qmf.data.store.engines.sqlite_meta import SqliteMetadataEngine
 from qmf.data.store.journal import JournalStore
@@ -81,7 +81,13 @@ class EvidenceStore:
         return Ok(bundle)
 
     def _build(self, world: World, namespace: str) -> WorldStore:
-        """Wire the four boundaries for ``world`` under its namespace directory."""
+        """Wire the four boundaries for ``world`` under its namespace directory.
+
+        This is the composition root — the one place the concrete JSONL engine is
+        named. It builds one :class:`~qmf.data.store.engines.AppendStreamOpener` bound
+        to the JSONL engine and the rotation size, and injects it into every append
+        boundary, so no boundary signature names the concrete engine (M3).
+        """
         base = self._root / namespace
         registry_dir = base / "registry-room"
         raw_engine = ParquetColumnarEngine(base / "immutable-raw-archive")
@@ -89,17 +95,16 @@ class EvidenceStore:
         record_engine = SqliteMetadataEngine(registry_dir / "records.sqlite")
         journal_dir = base / "journal"
         lineage_dir = registry_dir / "lineage"
+        open_stream = jsonl_opener(self._rotation_bytes)
         return WorldStore(
             world=world,
             append_store=AppendStore(world, raw_engine=raw_engine, view_engine=view_engine),
-            journal=JournalStore(
-                world, journal_dir=journal_dir, rotation_bytes=self._rotation_bytes
-            ),
+            journal=JournalStore(world, journal_dir=journal_dir, open_stream=open_stream),
             registry_room=RegistryRoom(
                 world,
                 record_engine=record_engine,
                 lineage_dir=lineage_dir,
-                rotation_bytes=self._rotation_bytes,
+                open_stream=open_stream,
             ),
             backup_input=BackupInput(
                 world,
@@ -107,5 +112,6 @@ class EvidenceStore:
                 record_engine=record_engine,
                 journal_dir=journal_dir,
                 lineage_dir=lineage_dir,
+                open_stream=open_stream,
             ),
         )

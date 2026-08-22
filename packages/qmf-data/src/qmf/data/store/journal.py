@@ -24,8 +24,7 @@ from pathlib import Path
 from typing import cast
 
 from qmf.core import Ok, Result, World, WriterId, is_refusal
-from qmf.data.store.engines import StoreEngineError
-from qmf.data.store.engines.jsonl import DEFAULT_ROTATION_BYTES
+from qmf.data.store.engines import AppendStreamOpener, StoreEngineError
 from qmf.data.store.identity import admit
 from qmf.data.store.receipts import StoreReceipt
 from qmf.data.store.refusals import translate_engine_failure
@@ -36,22 +35,31 @@ __all__ = ["JournalStore"]
 
 
 class JournalStore:
-    """The CT-13 journal for one world — N one-writer JSONL streams (AC1, AC3)."""
+    """The CT-13 journal for one world — N one-writer JSONL streams (AC1, AC3).
+
+    The append-stream engine is injected as ``open_stream`` (an
+    :class:`~qmf.data.store.engines.AppendStreamOpener`), so the concrete JSONL engine
+    never appears in this boundary's signature and stays swappable (M3).
+    """
 
     def __init__(
         self,
         world: World,
         *,
         journal_dir: Path,
-        rotation_bytes: int = DEFAULT_ROTATION_BYTES,
+        open_stream: AppendStreamOpener,
     ) -> None:
         self._world = world
-        self._streams = HeldStreams(journal_dir, rotation_bytes=rotation_bytes)
+        self._streams = HeldStreams(journal_dir, open_stream=open_stream)
 
     @property
     def world(self) -> World:
         """The world whose journal room this boundary writes and reads."""
         return self._world
+
+    def close(self) -> None:
+        """Release every held journal stream's one-writer lock (M6)."""
+        self._streams.release_all()
 
     # --- append (write) -----------------------------------------------------
 
@@ -110,9 +118,16 @@ class JournalStore:
     # --- read (unlimited readers) -------------------------------------------
 
     def read_stream(
-        self, stream_name: object, *, for_world: object | None = None
+        self, stream_name: object, *, for_world: object
     ) -> Result[list[dict[str, object]]]:
-        """Read every event in a named stream in order; a cross-world read refuses (AC5)."""
+        """Read every event in a named stream in order; a cross-world read refuses (AC5).
+
+        ``for_world`` is required — the caller declares the world it reads as, so the
+        cross-world guard always evaluates (M4). A never-written stream reads as
+        ``Ok([])`` (streams are lazily created; an absent stream is an empty one). A
+        corrupt stream (a non-JSON or partial line) is a ``storage failure`` refusal,
+        never a raw decode error across the seam (H3, AC4).
+        """
         gate = require_same_world(self._world, for_world)
         if is_refusal(gate):
             return gate
@@ -124,10 +139,10 @@ class JournalStore:
             return Ok([])
         try:
             reader.rebuild_index()
-            lines = reader.read_all()
+            events = [_load(line) for line in reader.read_all()]
         except StoreEngineError as exc:
             return translate_engine_failure(exc)
-        return Ok([_load(line) for line in lines])
+        return Ok(events)
 
 
 def _discard(_location: object) -> None:

@@ -25,6 +25,7 @@ from qmf.data.store.engines import StoreEngineError
 
 __all__ = [
     "invalid_input",
+    "missing_artifact",
     "policy_rejection",
     "storage_failure",
     "translate_engine_failure",
@@ -42,6 +43,28 @@ def invalid_input(field: str, reason: str, **extra: object) -> TypedRefusal:
     context.update(extra)
     return TypedRefusal(
         category=RefusalCategory.INVALID_INPUT,
+        retryability=Retryability.NO,
+        context=context,
+    )
+
+
+def missing_artifact(field: str, reason: str, **extra: object) -> TypedRefusal:
+    """Build a ``stale evidence`` refusal for a well-formed read key that names nothing.
+
+    A read presenting a *well-formed* fp1 fingerprint that no artifact is stored under
+    is a not-found miss, not a malformed argument (M5): the argument parsed fine, the
+    reference is simply stale/dangling. It is distinct from a malformed fingerprint
+    string, which stays ``invalid input``. Retryability is ``no`` — the artifact is
+    absent, and retrying the same read will not conjure it; produce or cite the artifact
+    first. Fingerprint-keyed reads (raw archive, analytics view, registry record) refuse
+    on a miss this way, while a never-written append stream reads as ``Ok([])`` because
+    streams are lazily created and an absent stream is indistinguishable from an empty
+    one (documented in FAILURES.md).
+    """
+    context: dict[str, object] = {"field": field, "reason": reason}
+    context.update(extra)
+    return TypedRefusal(
+        category=RefusalCategory.STALE_EVIDENCE,
         retryability=Retryability.NO,
         context=context,
     )

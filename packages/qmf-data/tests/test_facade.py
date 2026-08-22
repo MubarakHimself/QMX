@@ -49,9 +49,13 @@ def test_world_isolation_is_storage_separation(store: EvidenceStore) -> None:
     receipt = live.value.append_store.append_raw([{"t": 1, "px": 100}])
     assert is_ok(receipt)
     # The same fingerprint is absent in the replay world's room — separate storage.
-    read = replay.value.append_store.read_raw(receipt.value.fingerprint.value)
+    # The replay caller declares its own (replay) world, so the read is not a
+    # cross-world refusal; the artifact is simply not stored here → stale evidence (M5).
+    read = replay.value.append_store.read_raw(
+        receipt.value.fingerprint.value, for_world=World.REPLAY
+    )
     assert is_refusal(read)
-    assert read.category.value == "invalid input"
+    assert read.category.value == "stale evidence"
 
 
 def test_root_property(tmp_path: Path) -> None:

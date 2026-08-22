@@ -44,18 +44,20 @@ def test_read_raw_round_trips(store: EvidenceStore) -> None:
     boundary = _append_store(store)
     receipt = boundary.append_raw(_ROWS)
     assert is_ok(receipt)
-    read = boundary.read_raw(receipt.value.fingerprint.value)
+    read = boundary.read_raw(receipt.value.fingerprint.value, for_world=World.LIVE)
     assert is_ok(read)
     assert read.value == _ROWS
 
 
-def test_read_raw_absent_is_invalid_input(store: EvidenceStore) -> None:
+def test_read_raw_absent_is_stale_evidence(store: EvidenceStore) -> None:
     boundary = _append_store(store)
     fp = fingerprint({"nope": 1})
     assert is_ok(fp)
-    result = boundary.read_raw(fp.value.value)
+    # M5: a well-formed fingerprint that names no artifact is a not-found (stale
+    # evidence) refusal, not an invalid-input caller error.
+    result = boundary.read_raw(fp.value.value, for_world=World.LIVE)
     assert is_refusal(result)
-    assert result.category.value == "invalid input"
+    assert result.category.value == "stale evidence"
 
 
 def test_read_raw_cross_world_is_policy_rejection(store: EvidenceStore) -> None:
@@ -103,13 +105,14 @@ def test_read_view_round_trips_and_absent_refuses(store: EvidenceStore) -> None:
     boundary = _append_store(store)
     receipt = boundary.materialize_view(_ROWS)
     assert is_ok(receipt)
-    read = boundary.read_view(receipt.value.fingerprint.value)
+    read = boundary.read_view(receipt.value.fingerprint.value, for_world=World.LIVE)
     assert is_ok(read)
     assert read.value == _ROWS
     fp = fingerprint({"absent": True})
     assert is_ok(fp)
-    missing = boundary.read_view(fp.value.value)
+    missing = boundary.read_view(fp.value.value, for_world=World.LIVE)
     assert is_refusal(missing)
+    assert missing.category.value == "stale evidence"
 
 
 def test_simulated_write_is_policy_rejection(tmp_path: Path) -> None:

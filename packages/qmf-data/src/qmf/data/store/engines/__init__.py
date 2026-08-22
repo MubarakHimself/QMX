@@ -31,6 +31,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Protocol
 
 from qmf.core import Result
@@ -39,6 +40,7 @@ __all__ = [
     "AnalyticsEngine",
     "AppendLocation",
     "AppendStreamEngine",
+    "AppendStreamOpener",
     "ColumnarEngine",
     "MetadataEngine",
     "StoreEngineError",
@@ -193,7 +195,10 @@ class AppendStreamEngine(Protocol):
     under a monotonic ordinal, with a locally rebuildable index and exactly one
     holding ``WriterId`` (AC3). :meth:`acquire` is the one-writer gate and returns a
     ``policy rejection`` refusal for a second writer; the I/O methods raise
-    :class:`StoreEngineError` on physical failure.
+    :class:`StoreEngineError` on physical failure. This is the seam the append
+    boundaries (journal, lineage edges, backup) inject and depend on — a concrete
+    engine is opened through an :class:`AppendStreamOpener`, never named at a
+    boundary — so the JSONL engine is swappable behind this contract (AC1; M3).
     """
 
     def acquire(self) -> Result[None]:  # pragma: no cover
@@ -208,6 +213,36 @@ class AppendStreamEngine(Protocol):
         """The stored line bytes for ``digest`` (for reconcile), or ``None``."""
         ...
 
+    def location_of(self, digest: str, /) -> AppendLocation | None:  # pragma: no cover
+        """The indexed location for ``digest`` (ordinal, offset, sequence), or ``None``."""
+        ...
+
     def read_all(self) -> list[bytes]:  # pragma: no cover
         """Every line's bytes in stream order — an unlimited reader (raises on failure)."""
+        ...
+
+    def rebuild_index(self) -> None:  # pragma: no cover
+        """Rebuild the in-memory index by scanning the data files (raises on failure)."""
+        ...
+
+    def release(self) -> None:  # pragma: no cover
+        """Release the one-writer hold (remove this writer's lock), so a later handoff
+        or clean shutdown does not leave the stream owned forever (M6)."""
+        ...
+
+
+class AppendStreamOpener(Protocol):
+    """A factory that opens a named append stream behind :class:`AppendStreamEngine`.
+
+    The composition root (the ``EvidenceStore`` facade) builds one opener bound to a
+    concrete engine and a rotation size, and injects it into every append boundary,
+    so the concrete engine (JSONL) never appears in a boundary signature and the
+    engine stays swappable (M3). ``writer_token`` is the holding writer's stable
+    identity for the stream (a reader passes a non-writer sentinel).
+    """
+
+    def __call__(
+        self, stream_dir: Path, writer_token: str, /
+    ) -> AppendStreamEngine:  # pragma: no cover
+        """Open the stream rooted at ``stream_dir`` for ``writer_token``."""
         ...

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import threading
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -124,3 +125,96 @@ def test_find_raises_on_truncated_file(tmp_path: Path) -> None:
     (tmp_path / "s" / "000000.jsonl").write_bytes(b"{")
     with pytest.raises(StoreEngineError):
         stream.find(digest)
+
+
+# --- H1: the acquire lock is atomic (O_EXCL), never TOCTOU -------------------
+
+
+def _race_one_trial(stream_dir: Path) -> int:
+    """Two distinct writers race to acquire ``stream_dir``; return how many won."""
+    barrier = threading.Barrier(2)
+    guard = threading.Lock()
+    oks: list[str] = []
+
+    def run(token: str) -> None:
+        engine = JsonlAppendStream(stream_dir, writer_token=token)
+        barrier.wait()
+        result = engine.acquire()
+        if is_ok(result):
+            with guard:
+                oks.append(token)
+
+    threads = [threading.Thread(target=run, args=(name,)) for name in ("writer-1", "writer-2")]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    return len(oks)
+
+
+def test_racing_distinct_writers_never_both_acquire(tmp_path: Path) -> None:
+    """H1: two distinct writers racing to acquire a fresh stream — exactly one wins.
+
+    The old ``exists()``-then-``write_text`` acquire let both threads pass the check
+    and both stamp the lock; the atomic ``O_CREAT | O_EXCL`` create makes exactly one
+    create succeed. Repeated trials keep this deterministic in outcome regardless of
+    timing.
+    """
+    for trial in range(120):
+        winners = _race_one_trial(tmp_path / f"s{trial}")
+        assert winners == 1, f"trial {trial}: {winners} writers acquired one fresh stream"
+
+
+# --- H3: a corrupt (non-JSON) line is store corruption, never a decode leak --
+
+
+def test_rebuild_raises_on_corrupt_non_json_line(tmp_path: Path) -> None:
+    stream_dir = tmp_path / "s"
+    stream_dir.mkdir(parents=True)
+    (stream_dir / "000000.jsonl").write_bytes(b'{"n":1}\nthis is not json\n')
+    reader = JsonlAppendStream(stream_dir, writer_token="<reader>")
+    with pytest.raises(StoreEngineError):
+        reader.rebuild_index()
+
+
+# --- L4: a physically duplicated line is deduped, never read twice -----------
+
+
+def test_duplicate_disk_line_is_deduped_on_rebuild(tmp_path: Path) -> None:
+    stream_dir = tmp_path / "s"
+    stream_dir.mkdir(parents=True)
+    line = _canon({"n": 1}) + b"\n"
+    (stream_dir / "000000.jsonl").write_bytes(line + line)  # the same line twice
+    reader = JsonlAppendStream(stream_dir, writer_token="<reader>")
+    reader.rebuild_index()
+    assert reader.record_count == 1
+    assert reader.read_all() == [line[:-1]]
+
+
+# --- M6: hold discipline — release, and reader/backup handles cannot write ---
+
+
+def test_release_frees_the_lock_for_a_new_writer(tmp_path: Path) -> None:
+    first = JsonlAppendStream(tmp_path / "s", writer_token="writer-a")
+    assert is_ok(first.acquire())
+    first.release()
+    assert first.held is False
+    assert not (tmp_path / "s" / ".writer").exists()
+    # A different writer may now take the freed stream.
+    second = JsonlAppendStream(tmp_path / "s", writer_token="writer-b")
+    assert is_ok(second.acquire())
+
+
+def test_release_only_removes_its_own_lock(tmp_path: Path) -> None:
+    holder = JsonlAppendStream(tmp_path / "s", writer_token="writer-a")
+    assert is_ok(holder.acquire())
+    # A reader handle (never acquired) must not be able to unlock another writer.
+    reader = JsonlAppendStream(tmp_path / "s", writer_token="<reader>")
+    reader.release()
+    assert (tmp_path / "s" / ".writer").read_text(encoding="utf-8") == "writer-a"
+
+
+def test_append_without_hold_raises(tmp_path: Path) -> None:
+    reader = JsonlAppendStream(tmp_path / "s", writer_token="<reader>")
+    with pytest.raises(StoreEngineError):
+        reader.append(_canon({"n": 1}))

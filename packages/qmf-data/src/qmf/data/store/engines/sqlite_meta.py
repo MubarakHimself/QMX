@@ -9,8 +9,12 @@ a re-write against them exactly.
 
 SQLite is the stdlib ``sqlite3`` module — no database server (DEC-0117). A locked,
 truncated, or corrupt database surfaces as a
-:class:`~qmf.data.store.engines.StoreEngineError` (a locked db is retryable; a corrupt
-one is not), which the boundary translates to a ``storage failure`` refusal (AC4).
+:class:`~qmf.data.store.engines.StoreEngineError`, which the boundary translates to a
+``storage failure`` refusal (AC4). Retryability is classified by exception **type**,
+never by string-matching the message (L3): only a locked/busy database is retryable;
+a constraint violation (``IntegrityError``) and a corrupt/malformed database are
+permanent, so neither is reported as a retryable failure that would invite an
+infinite retry.
 
 Stdlib only.
 """
@@ -51,7 +55,7 @@ class SqliteMetadataEngine:
             raise StoreEngineError(
                 "could not open the SQLite metadata database",
                 engine="sqlite",
-                retryable=not _is_corruption(exc),
+                retryable=_retryable(exc),
                 detail={"db": str(self._db_path), "error": str(exc)},
             ) from exc
         try:
@@ -61,7 +65,7 @@ class SqliteMetadataEngine:
             raise StoreEngineError(
                 "could not initialize the SQLite metadata schema (corrupt database)",
                 engine="sqlite",
-                retryable=not _is_corruption(exc),
+                retryable=_retryable(exc),
                 detail={"db": str(self._db_path), "error": str(exc)},
             ) from exc
         return conn
@@ -83,7 +87,7 @@ class SqliteMetadataEngine:
             raise StoreEngineError(
                 "could not insert the registry record",
                 engine="sqlite",
-                retryable=not _is_corruption(exc),
+                retryable=_retryable(exc),
                 detail={"digest": digest, "error": str(exc)},
             ) from exc
         finally:
@@ -99,7 +103,7 @@ class SqliteMetadataEngine:
             raise StoreEngineError(
                 "could not read the registry record",
                 engine="sqlite",
-                retryable=not _is_corruption(exc),
+                retryable=_retryable(exc),
                 detail={"digest": digest, "error": str(exc)},
             ) from exc
         finally:
@@ -120,7 +124,7 @@ class SqliteMetadataEngine:
             raise StoreEngineError(
                 "could not read the registry record metadata",
                 engine="sqlite",
-                retryable=not _is_corruption(exc),
+                retryable=_retryable(exc),
                 detail={"digest": digest, "error": str(exc)},
             ) from exc
         finally:
@@ -139,7 +143,7 @@ class SqliteMetadataEngine:
             raise StoreEngineError(
                 "could not list the registry records",
                 engine="sqlite",
-                retryable=not _is_corruption(exc),
+                retryable=_retryable(exc),
                 detail={"db": str(self._db_path), "error": str(exc)},
             ) from exc
         finally:
@@ -147,6 +151,21 @@ class SqliteMetadataEngine:
         return [cast("str", row[0]) for row in rows]
 
 
-def _is_corruption(exc: Exception) -> bool:
-    """Whether a SQLite error names a corrupt/malformed database (not retryable)."""
-    return isinstance(exc, sqlite3.DatabaseError) and "malformed" in str(exc).lower()
+def _retryable(exc: Exception) -> bool:
+    """Whether a SQLite/OS failure is worth retrying, classified by exception TYPE (L3).
+
+    A constraint violation (``sqlite3.IntegrityError`` — e.g. a duplicate primary key)
+    is permanent: retrying re-fails, so it must never be reported as retryable (an
+    infinite-retry invitation). A locked or busy database (``sqlite3.OperationalError``
+    naming "locked"/"busy") is transient and retryable. Any other ``sqlite3.DatabaseError``
+    (a corrupt or malformed database, "file is not a database") is permanent. A bare
+    ``OSError`` (a disk that may free up) is retryable by default.
+    """
+    if isinstance(exc, sqlite3.IntegrityError):
+        return False
+    if isinstance(exc, sqlite3.OperationalError):
+        text = str(exc).lower()
+        return "locked" in text or "busy" in text
+    # Any other sqlite3.DatabaseError (corrupt/malformed) is permanent; a bare OSError
+    # (a disk that may free up) is transient.
+    return not isinstance(exc, sqlite3.DatabaseError)

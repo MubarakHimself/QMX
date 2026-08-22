@@ -86,7 +86,12 @@ class DuckDbAnalyticsEngine:
             conn.close()
 
     def query(self, key: str, /) -> list[dict[str, object]]:
-        """Query the materialized view ``key`` (raises if absent or corrupt)."""
+        """Query the materialized view ``key`` (raises if absent or corrupt).
+
+        The JSON decode of each stored payload runs **inside** the guarded block, so
+        a corrupt payload is a ``storage failure`` rather than a raw ``ValueError``
+        escaping across the seam (L2, AC4).
+        """
         conn = self._connect()
         try:
             present = conn.execute("SELECT 1 FROM _qmf_identity WHERE key = ?", [key]).fetchone()
@@ -100,7 +105,8 @@ class DuckDbAnalyticsEngine:
             result = conn.execute(
                 "SELECT payload FROM _qmf_view_rows WHERE key = ? ORDER BY seq", [key]
             ).fetchall()
-        except duckdb.Error as exc:
+            rows = [cast("dict[str, object]", json.loads(cast("str", row[0]))) for row in result]
+        except (duckdb.Error, ValueError) as exc:
             raise StoreEngineError(
                 "could not query the DuckDB analytics view (locked or corrupt)",
                 engine="duckdb",
@@ -109,7 +115,7 @@ class DuckDbAnalyticsEngine:
             ) from exc
         finally:
             conn.close()
-        return [cast("dict[str, object]", json.loads(cast("str", row[0]))) for row in result]
+        return rows
 
     def read_canonical(self, key: str, /) -> bytes | None:
         """The embedded fp1 canonical bytes for the view ``key``, or ``None``."""

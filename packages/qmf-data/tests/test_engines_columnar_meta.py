@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 from qmf.core import canonical_bytes, fingerprint, is_ok
 from qmf.data.store.engines import StoreEngineError
+from qmf.data.store.engines import duckdb_views as duckdb_views_module
 from qmf.data.store.engines.duckdb_views import DuckDbAnalyticsEngine
 from qmf.data.store.engines.parquet import ParquetColumnarEngine
 from qmf.data.store.engines.sqlite_meta import SqliteMetadataEngine
@@ -47,6 +48,20 @@ def test_parquet_empty_rows(tmp_path: Path) -> None:
     engine.write(key, [], canonical)
     assert engine.read(key) == []
     assert engine.read_canonical(key) == canonical
+
+
+def test_parquet_heterogeneous_and_big_int_round_trip(tmp_path: Path) -> None:
+    """H4/H5: heterogeneous rows and an arbitrary-precision int round-trip exactly and
+    re-fingerprint to the same fp1 (no None backfill, no int64 overflow)."""
+    engine = ParquetColumnarEngine(tmp_path / "raw")
+    rows = [{"a": 1}, {"b": 2}, {"big": 2**70}]
+    key, canonical = _identity(rows)
+    engine.write(key, rows, canonical)  # must not overflow
+    back = engine.read(key)
+    assert back == rows  # exact, not [{"a":1},{"a":None},...]
+    again = fingerprint(back)
+    assert is_ok(again)
+    assert again.value.digest == key  # re-fingerprints to the same fp1
 
 
 def test_parquet_read_raises_on_corrupt_file(tmp_path: Path) -> None:
@@ -99,6 +114,30 @@ def test_sqlite_corrupt_database_raises(tmp_path: Path) -> None:
         engine.get("0" * 64)
 
 
+def test_sqlite_duplicate_insert_is_not_retryable(tmp_path: Path) -> None:
+    """L3: a constraint violation (IntegrityError) is permanent — never retryable,
+    so it can never invite an infinite retry (classified by exception type, not by
+    string-matching the message)."""
+    engine = SqliteMetadataEngine(tmp_path / "reg" / "records.sqlite")
+    key, canonical = _identity({"kind": "x"})
+    engine.put(key, canonical, kind="x", format_version=1)
+    with pytest.raises(StoreEngineError) as caught:
+        engine.put(key, canonical, kind="x", format_version=1)
+    assert caught.value.retryable is False
+
+
+def test_sqlite_corrupt_database_is_not_retryable(tmp_path: Path) -> None:
+    """L3: a corrupt/malformed database is permanent — not a retryable failure."""
+    db = tmp_path / "reg" / "records.sqlite"
+    engine = SqliteMetadataEngine(db)
+    key, canonical = _identity({"kind": "seed"})
+    engine.put(key, canonical, kind="seed", format_version=1)
+    db.write_bytes(b"this is definitely not a sqlite database")
+    with pytest.raises(StoreEngineError) as caught:
+        engine.get("0" * 64)
+    assert caught.value.retryable is False
+
+
 # --- DuckDB -----------------------------------------------------------------
 
 
@@ -136,3 +175,21 @@ def test_duckdb_read_canonical_none_and_drop(tmp_path: Path) -> None:
     engine.materialize(key, rows, canonical)
     engine.drop(key)
     assert engine.has(key) is False
+
+
+def test_duckdb_corrupt_payload_decode_is_storage_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """L2: a payload that fails to JSON-decode is a storage failure raised inside the
+    guarded block, never a raw ValueError escaping query()."""
+    engine = DuckDbAnalyticsEngine(tmp_path / "proc" / "views.duckdb")
+    rows = [{"t": 1, "v": 10}]
+    key, canonical = _identity(rows)
+    engine.materialize(key, rows, canonical)
+
+    def _boom(_text: str) -> object:
+        raise ValueError("corrupt payload")
+
+    monkeypatch.setattr(duckdb_views_module.json, "loads", _boom)
+    with pytest.raises(StoreEngineError):
+        engine.query(key)
