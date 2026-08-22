@@ -97,15 +97,22 @@ def record_round_trips_content_addressed(root: Path) -> RegistrationRecord:
     persistence = _persistence(root)
     record = _record({"id": "sma-20", "period": 20})
     receipt = _unwrap(persistence.persist_record(record), "persist record")
-    # Content-addressed: the store key is a pure function of the record's identity.
+    # Content-addressed: the storage key IS the record's own fp1 stable id (never a second
+    # fingerprint wrapping it), so the receipt key, persistence_fingerprint, and stable_id
+    # all coincide (CT-09 record_stable_id is the storage key).
     assert receipt.fingerprint == _unwrap(persistence_fingerprint(record), "persistence key")
+    assert receipt.fingerprint == record.stable_id
     assert receipt.fingerprint.value.startswith("fp1:sha256:")
     assert receipt.outcome.value == "stored"
-    loaded = _unwrap(persistence.load_record(receipt.fingerprint, for_world=World.LIVE), "load")
+    loaded = _unwrap(persistence.load_record(record.stable_id, for_world=World.LIVE), "load")
     # The recomputed CT-06 stable id equals the original's — a faithful round trip.
     assert loaded.stable_id == record.stable_id
     assert loaded.kind == "producer"
     assert dict(loaded.body) == {"id": "sma-20", "period": 20}
+    # The display-only occurrence facts (writer, per-writer sequence) round-trip too, from a
+    # sidecar keyed by the same digest and OUTSIDE identity (who wrote it, in what order).
+    assert loaded.writer == record.writer
+    assert loaded.sequence == record.sequence
     return record
 
 
@@ -241,7 +248,11 @@ def migration_is_staged_and_never_in_place(source_root: Path, dest_root: Path) -
     )
     # The source is the intact restore path; the migration wrote only to the destination.
     assert report.restore_path == str(source_root)
+    # backed_up reflects a REAL written backup artifact (not a hard-coded constant), and the
+    # procedure states plainly that it migrates records only (CT-07 edges are not migrated).
     assert report.backed_up is True
+    assert Path(report.backup_path).is_file()
+    assert report.records_only is True
     assert report.migrated_count == 2
     assert report.verified_count == 2
     assert report.to_format_version == 2

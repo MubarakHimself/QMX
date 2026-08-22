@@ -23,8 +23,13 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import cast
 
-from qmf.core import Ok, Result, World, WriterId, is_refusal
-from qmf.data.store.engines import AppendStreamOpener, MetadataEngine, StoreEngineError
+from qmf.core import Ok, Result, World, WriterId, canonical_bytes, is_refusal
+from qmf.data.store.engines import (
+    AppendStreamOpener,
+    MetadataEngine,
+    OccurrenceSink,
+    StoreEngineError,
+)
 from qmf.data.store.identity import admit, resolve_fingerprint
 from qmf.data.store.receipts import StoreReceipt
 from qmf.data.store.refusals import invalid_input, missing_artifact, translate_engine_failure
@@ -141,6 +146,84 @@ class RegistryRoom:
             )
         )
 
+    def put_identity_record(
+        self,
+        identity: Mapping[str, object],
+        *,
+        kind: object,
+        format_version: object,
+        occurrence: Mapping[str, object] | None = None,
+        presented_fingerprint: object | None = None,
+    ) -> Result[StoreReceipt]:
+        """Persist a record keyed on its OWN fp1 identity, append-only (AC2, AC5; CT-09).
+
+        Unlike :meth:`put_record`, the fp1 key is computed over ``identity`` **exactly** — a
+        record's full CT-06 fp1 identity content, whose fingerprint IS the record's stable id
+        — so the storage key is the record's fp1 stable id, never a second wrapping
+        fingerprint (CT-09 ``record_stable_id`` is the storage key; DEC-0108). ``kind`` and
+        ``format_version`` are still recorded as the engine's metadata columns and echoed on
+        the receipt. ``occurrence``, when present and the engine supports it
+        (:class:`~qmf.data.store.engines.OccurrenceSink`), is stored in a display-only
+        per-record sidecar (writer, per-writer sequence, created-at) keyed by the record's
+        digest and **excluded from identity**, first-write-wins so an idempotent dedup never
+        collides (M5; DEC-0110). Idempotent/collision, ``world = simulated``/cross-world, and
+        storage-failure semantics all match :meth:`put_record`.
+        """
+        blocked = namespace_block(self._world)
+        if blocked is not None:
+            return blocked
+        if not isinstance(kind, str) or kind.strip() == "":
+            return invalid_input(
+                "kind", "a registry record names a non-empty kind", given=repr(kind)
+            )
+        if (
+            isinstance(format_version, bool)
+            or not isinstance(format_version, int)
+            or format_version < 1
+        ):
+            return invalid_input(
+                "format_version",
+                "a record's contract format version is a positive integer (DEC-0103)",
+                given=repr(format_version),
+            )
+        engine = self._records
+        version = format_version
+        record_kind = kind
+        try:
+            admission = admit(
+                dict(identity),
+                existing_bytes=engine.get,
+                persist=lambda fp, canonical: engine.put(
+                    fp.digest, canonical, kind=record_kind, format_version=version
+                ),
+                presented_fingerprint=presented_fingerprint,
+            )
+        except StoreEngineError as exc:
+            return translate_engine_failure(exc)
+        if is_refusal(admission):
+            return admission
+        admitted = admission.value
+        if occurrence is not None and isinstance(engine, OccurrenceSink):
+            serialized = canonical_bytes(dict(occurrence))
+            if is_refusal(serialized):
+                return serialized
+            try:
+                engine.put_occurrence(admitted.fingerprint.digest, serialized.value)
+            except StoreEngineError as exc:
+                return translate_engine_failure(exc)
+        return Ok(
+            StoreReceipt(
+                outcome=admitted.outcome,
+                fingerprint=admitted.fingerprint,
+                world=self._world,
+                room_role=RoomRole.REGISTRY_ROOM,
+                engine="sqlite",
+                is_evidence_bearing=True,
+                retained_forever=True,
+                format_version=version,
+            )
+        )
+
     def get_record(self, fingerprint: object, *, for_world: object) -> Result[bytes]:
         """The canonical bytes of the full record by fp1 fingerprint; cross-world refuses.
 
@@ -166,6 +249,40 @@ class RegistryRoom:
                 given=key.value.value,
             )
         return Ok(stored)
+
+    def get_record_occurrence(
+        self, fingerprint: object, *, for_world: object
+    ) -> Result[Mapping[str, object] | None]:
+        """The display-only occurrence facts stored for a record, or ``None`` (M5; AC5).
+
+        ``for_world`` is required; a cross-world read is a ``policy rejection``. A well-formed
+        fingerprint with no occurrence sidecar — a record persisted without occurrence facts,
+        or an engine that does not support the sidecar — reads back ``Ok(None)``: absence is a
+        normal answer, not a failure. The facts (writer, per-writer sequence, created-at) are
+        display-only and were never part of the record's fp1 identity (DEC-0110).
+        """
+        gate = require_same_world(self._world, for_world)
+        if is_refusal(gate):
+            return gate
+        key = resolve_fingerprint(fingerprint)
+        if is_refusal(key):
+            return key
+        engine = self._records
+        if not isinstance(engine, OccurrenceSink):
+            return Ok(None)
+        try:
+            raw = engine.get_occurrence(key.value.digest)
+        except StoreEngineError as exc:
+            return translate_engine_failure(exc)
+        if raw is None:
+            return Ok(None)
+        try:
+            decoded: object = json.loads(raw)
+        except ValueError:  # pragma: no cover - occurrence writes are canonical by construction
+            return Ok(None)
+        if not isinstance(decoded, dict):  # pragma: no cover - defensive
+            return Ok(None)
+        return Ok(cast("dict[str, object]", decoded))
 
     # --- pinned-JSONL lineage edges -----------------------------------------
 

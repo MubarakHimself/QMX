@@ -521,6 +521,91 @@ def test_registrar_record_for_hit_miss_and_malformed() -> None:
     assert registrar.record_for("not-a-fingerprint") is None
 
 
+def test_idempotent_registration_returns_the_stored_record() -> None:
+    # L1: on the idempotent path the receipt carries the ALREADY-STORED record (the first
+    # writer's occurrence facts), not the caller's twin — parity with EdgeLog, which returns
+    # the admitted edge on an idempotent re-append.
+    registrar = Registrar(_registry())
+    first = registrar.register(
+        kind="instrument-class",
+        body=_body(),
+        writer=_writer("node-a"),
+        sequence=0,
+        created_at=_instant(),
+    )
+    assert is_ok(first)
+    twin = registrar.register(
+        kind="instrument-class",
+        body=_body(),
+        writer=_writer("node-b"),
+        sequence=99,
+        created_at=_instant(_CREATED_NS + 900),
+    )
+    assert is_ok(twin)
+    assert twin.value.outcome is WriteOutcome.IDEMPOTENT
+    # The stored record's occurrence facts are the FIRST writer's, not the caller's.
+    assert twin.value.record.writer == _writer("node-a")
+    assert twin.value.record.sequence == 0
+    assert twin.value.record is first.value.record
+
+
+def test_registrar_enforces_per_writer_sequence_monotonicity() -> None:
+    # L2: the per-writer sequence is a strictly-increasing ordering key. A genuinely-new
+    # record from a writer whose sequence does not exceed that writer's last is refused; an
+    # idempotent re-write is exempt (it is the same occurrence replayed).
+    registrar = Registrar(_registry())
+    writer = _writer("node-a")
+    assert is_ok(
+        registrar.register(
+            kind="instrument-class",
+            body={"target_fp1": "EURUSD", "asset_class": "fx-major"},
+            writer=writer,
+            sequence=7,
+            created_at=_instant(),
+        )
+    )
+    # The same writer at a LOWER sequence (a different body, so a genuinely-new record).
+    backwards = registrar.register(
+        kind="instrument-class",
+        body={"target_fp1": "GBPUSD", "asset_class": "fx-major"},
+        writer=writer,
+        sequence=3,
+        created_at=_instant(),
+    )
+    assert isinstance(backwards, TypedRefusal)
+    assert backwards.category is RefusalCategory.INVALID_INPUT
+    assert backwards.context["field"] == "sequence"
+    # Repeating the same sequence for a new record is likewise refused.
+    repeated = registrar.register(
+        kind="instrument-class",
+        body={"target_fp1": "USDJPY", "asset_class": "fx-major"},
+        writer=writer,
+        sequence=7,
+        created_at=_instant(),
+    )
+    assert isinstance(repeated, TypedRefusal)
+    assert repeated.context["field"] == "sequence"
+    # A strictly-greater sequence is accepted, and a DIFFERENT writer has its own counter.
+    assert is_ok(
+        registrar.register(
+            kind="instrument-class",
+            body={"target_fp1": "AUDUSD", "asset_class": "fx-major"},
+            writer=writer,
+            sequence=8,
+            created_at=_instant(),
+        )
+    )
+    assert is_ok(
+        registrar.register(
+            kind="instrument-class",
+            body={"target_fp1": "NZDUSD", "asset_class": "fx-major"},
+            writer=_writer("node-b"),
+            sequence=0,
+            created_at=_instant(),
+        )
+    )
+
+
 # --- AC3: the pure FM-6 rule the Registrar composes -------------------------
 
 

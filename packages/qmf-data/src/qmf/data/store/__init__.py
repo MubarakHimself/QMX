@@ -32,6 +32,7 @@ from qmf.data.store.engines import (
     AppendStreamOpener,
     ColumnarEngine,
     MetadataEngine,
+    OccurrenceSink,
     StoreEngineError,
 )
 from qmf.data.store.engines.duckdb_views import DuckDbAnalyticsEngine
@@ -67,6 +68,7 @@ __all__ = [
     "JournalStore",
     "JsonlAppendStream",
     "MetadataEngine",
+    "OccurrenceSink",
     "ParquetColumnarEngine",
     "ReadSeal",
     "RecordExport",

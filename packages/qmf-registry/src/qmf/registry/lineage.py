@@ -380,11 +380,15 @@ class LineageEdge:
         """The pinned JSONL line for this edge (CT-07; DEC-0108, DEC-0114).
 
         One ``fp1``-canonical JSON object — keys sorted at every depth, compact, UTF-8,
-        NFC-normalized, computed only through qmf-core's single serializer — terminated
-        with a single ``\\n`` (LF). This is exactly the byte sequence Story 2.4's CT-11
-        append-store appends (with fsync, size-rotation, and a monotonic file ordinal);
-        this module produces the line, not the file. Returns value-or-refusal, though
-        the identity content is canonical by construction.
+        NFC-normalized — terminated with a single ``\\n`` (LF). It is
+        ``canonical_bytes(self.fp1_identity())`` plus the LF, and the CT-11 append-store
+        serializes the **same** ``fp1_identity()`` through the **same** qmf-core
+        ``canonical_bytes`` and appends it with the same LF — so the two derive from one
+        identity content through one serializer and **cannot drift**: this method's bytes are
+        byte-for-byte the persisted line (a contract test pins that equality). This module
+        produces the line, not the file (fsync, size-rotation, and the monotonic file ordinal
+        are Story 2.4). Returns value-or-refusal, though the identity content is canonical by
+        construction.
         """
         serialized = canonical_bytes(self.fp1_identity())
         if is_refusal(serialized):  # pragma: no cover - identity is canonical by construction
@@ -437,6 +441,7 @@ class EdgeLog:
         # The append-ordered edge evidence — the source of truth every index derives from.
         self._admitted: list[LineageEdge] = []
         # Derived indexes (rebuildable from ``_admitted``).
+        self._by_digest: dict[str, LineageEdge] = {}
         self._supersedes_out: dict[str, str] = {}
         self._supersedes_in: dict[str, str] = {}
 
@@ -499,8 +504,17 @@ class EdgeLog:
             return decision
         if decision.value is WriteOutcome.IDEMPOTENT:
             # A byte-identical re-append: the edge is already on the stream, so return
-            # the admitted one and do NOT re-run the linearity law (it already passed).
-            return Ok(EdgeAppendReceipt(outcome=decision.value, edge=self._admitted_edge(digest)))
+            # the admitted one (an O(1) index lookup, never a linear scan) and do NOT
+            # re-run the linearity law (it already passed).
+            admitted = self._by_digest.get(digest)
+            if admitted is None:  # pragma: no cover - an idempotent hit is always admitted
+                return _policy(
+                    "edge",
+                    "an idempotent re-append resolved no admitted edge under its digest "
+                    "(the derived index is inconsistent); rebuild the indexes and retry",
+                    digest=digest,
+                )
+            return Ok(EdgeAppendReceipt(outcome=decision.value, edge=admitted))
         if edge.edge_type is EdgeType.SUPERSEDES:
             violation = self._supersedes_violation(edge)
             if violation is not None:
@@ -509,15 +523,6 @@ class EdgeLog:
         self._admitted.append(edge)
         self._index(edge)
         return Ok(EdgeAppendReceipt(outcome=decision.value, edge=edge))
-
-    def _admitted_edge(self, digest: str) -> LineageEdge:
-        """The admitted edge under ``digest`` (present on the idempotent path)."""
-        for edge in self._admitted:
-            if edge.edge_fingerprint.digest == digest:
-                return edge
-        raise AssertionError(  # pragma: no cover - an idempotent hit is always admitted
-            "idempotent re-append with no admitted edge under its digest"
-        )
 
     def _supersedes_violation(self, edge: LineageEdge) -> TypedRefusal | None:
         """The linearity refusal a new ``supersedes`` edge earns, or ``None`` (DEC-0158,
@@ -587,7 +592,8 @@ class EdgeLog:
         return False
 
     def _index(self, edge: LineageEdge) -> None:
-        """Fold one admitted edge into the derived supersedes indexes."""
+        """Fold one admitted edge into the derived indexes (digest lookup + supersedes)."""
+        self._by_digest[edge.edge_fingerprint.digest] = edge
         if edge.edge_type is EdgeType.SUPERSEDES:
             self._supersedes_out[edge.from_ref.value] = edge.to_ref.value
             self._supersedes_in[edge.to_ref.value] = edge.from_ref.value
@@ -597,10 +603,12 @@ class EdgeLog:
         DEC-0114).
 
         Indexes over edges are local and rebuildable: losing one costs a rebuild, never
-        evidence. This clears the derived lookup structures and replays the
-        append-ordered :attr:`_admitted` edges through :meth:`_index`, so the indexes
-        after a rebuild are identical to the incrementally-maintained ones.
+        evidence. This clears the derived lookup structures — the digest→edge index and the
+        supersedes chain indexes — and replays the append-ordered :attr:`_admitted` edges
+        through :meth:`_index`, so the indexes after a rebuild are identical to the
+        incrementally-maintained ones.
         """
+        self._by_digest = {}
         self._supersedes_out = {}
         self._supersedes_in = {}
         for edge in self._admitted:

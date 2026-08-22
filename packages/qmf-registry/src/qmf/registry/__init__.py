@@ -60,6 +60,7 @@ from qmf.registry.lineage import (
     LineageEdge,
 )
 from qmf.registry.persistence import (
+    BackupSink,
     LoadedRecord,
     MigrationReport,
     RecordTransform,
@@ -97,6 +98,7 @@ __all__ = [
     "KIND_PROMOTION_OCCURRENCE_CARD",
     "PROMOTION_CARD_CONTRACT_FORMAT_VERSION",
     "RESERVED_KIND_NAMES",
+    "BackupSink",
     "EdgeAppendReceipt",
     "EdgeLog",
     "EdgeType",

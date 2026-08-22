@@ -31,8 +31,9 @@ from qmf.core import (
     fingerprint,
     is_ok,
     is_refusal,
+    unpersistable,
 )
-from qmf.data.store import EvidenceStore, RegistryRoom, StoreEngineError, jsonl_opener
+from qmf.data.store import EvidenceStore, RegistryRoom, RoomExport, StoreEngineError, jsonl_opener
 from qmf.registry import (
     EdgeType,
     LineageEdge,
@@ -582,19 +583,23 @@ def test_tampered_record_bytes_read_back_as_storage_failure(tmp_path: Path) -> N
     # H3 (unverified read-back): the recomputed fingerprint of a persisted record is asserted
     # equal to its storage key, so tampering the stored canonical bytes (keeping the digest
     # key) is caught on read and refused, never served as a silently different record.
+    # M2: the store keys a record on its OWN fp1 stable id, so the stored bytes ARE the CT-06
+    # fp1 identity content directly (no second wrapping envelope); the body sits one level in.
     persistence = _live(tmp_path)
     record = _record({"max_risk_pct": 1})
     receipt = _unwrap(persistence.persist_record(record), "persist record")
     key = receipt.fingerprint
+    # M2: the storage key IS the record's fp1 stable id.
+    assert key == record.stable_id
 
     db = persistence.root / "live" / "registry-room" / "records.sqlite"
     conn = sqlite3.connect(db)
     try:
         row = conn.execute("SELECT canonical FROM records WHERE digest=?", (key.digest,)).fetchone()
         assert row is not None
-        envelope = json.loads(row[0])
-        envelope["body"]["body"]["max_risk_pct"] = 99  # silent content tamper
-        tampered = json.dumps(envelope, separators=(",", ":"), sort_keys=True).encode()
+        identity = json.loads(row[0])
+        identity["body"]["max_risk_pct"] = 99  # silent content tamper
+        tampered = json.dumps(identity, separators=(",", ":"), sort_keys=True).encode()
         conn.execute("UPDATE records SET canonical=? WHERE digest=?", (tampered, key.digest))
         conn.commit()
     finally:
@@ -630,3 +635,260 @@ def test_tampered_edge_line_read_back_as_storage_failure(tmp_path: Path) -> None
     refused = persistence.read_edges("lineage", for_world=World.LIVE)
     assert is_refusal(refused)
     assert refused.category.value == "storage failure"
+
+
+# --- M2: the storage key IS the record's own fp1 stable id -------------------
+
+
+def test_persistence_key_is_the_records_own_stable_id(tmp_path: Path) -> None:
+    persistence = _live(tmp_path)
+    record = _record({"id": "sma-20", "period": 20})
+    # persistence_fingerprint IS the record's stable id (no second wrapping fingerprint).
+    key = _unwrap(persistence_fingerprint(record), "key")
+    assert key == record.stable_id
+    receipt = _unwrap(persistence.persist_record(record), "persist")
+    assert receipt.fingerprint == record.stable_id
+    # A read keyed on the record's stable id directly (what CT-09 AC2 says the key is) works.
+    loaded = _unwrap(persistence.load_record(record.stable_id, for_world=World.LIVE), "load")
+    assert loaded.stable_id == record.stable_id
+    assert loaded.persisted_fingerprint == record.stable_id
+
+
+# --- M5: display-only occurrence facts round-trip ---------------------------
+
+
+def test_occurrence_facts_round_trip_writer_and_sequence(tmp_path: Path) -> None:
+    persistence = _live(tmp_path)
+    writer = _writer("node-x")
+    record = _record({"id": "occ"}, writer=writer, sequence=42)
+    receipt = _unwrap(persistence.persist_record(record), "persist")
+    loaded = _unwrap(persistence.load_record(receipt.fingerprint, for_world=World.LIVE), "load")
+    # Who wrote the registration and in what order survives the round trip (M5).
+    assert loaded.writer == writer
+    assert loaded.sequence == 42
+    assert loaded.created_at == record.created_at
+
+
+def test_occurrence_sidecar_keeps_the_first_writers_facts_on_dedup(tmp_path: Path) -> None:
+    persistence = _live(tmp_path)
+    first_writer = _writer("node-a")
+    record = _record({"id": "occ"}, writer=first_writer, sequence=1)
+    assert is_ok(persistence.persist_record(record))
+    # A twin with the SAME identity but a different writer/sequence dedups; the occurrence
+    # sidecar is first-write-wins, so the first writer's facts are kept (no collision).
+    twin = _record({"id": "occ"}, writer=_writer("node-b"), sequence=99)
+    again = _unwrap(persistence.persist_record(twin), "twin")
+    assert again.outcome.value == "idempotent"
+    loaded = _unwrap(persistence.load_record(again.fingerprint, for_world=World.LIVE), "load")
+    assert loaded.writer == first_writer
+    assert loaded.sequence == 1
+
+
+# --- M1: supersedes is pinned linear on the durable path --------------------
+
+
+def _sup(from_tag: str, to_tag: str) -> LineageEdge:
+    a = _unwrap(fingerprint({"rec": from_tag}), from_tag)
+    b = _unwrap(fingerprint({"rec": to_tag}), to_tag)
+    return _unwrap(LineageEdge.try_create(EdgeType.SUPERSEDES, a, b, _writer()), "supersedes edge")
+
+
+def test_durable_supersedes_refuses_a_second_superseder(tmp_path: Path) -> None:
+    # M1: two records superseding the same record fork "current"; the durable path refuses
+    # the second, so CT-07's one-resolvable-head invariant holds for persisted evidence.
+    persistence = _live(tmp_path)
+    assert is_ok(persistence.persist_edge(_sup("b", "a"), edge_stream="lineage"))
+    forked = persistence.persist_edge(_sup("c", "a"), edge_stream="lineage")
+    assert is_refusal(forked)
+    assert forked.category.value == "policy rejection"
+    assert forked.context["field"] == "supersedes"
+
+
+def test_durable_supersedes_refuses_a_second_outgoing_edge(tmp_path: Path) -> None:
+    persistence = _live(tmp_path)
+    assert is_ok(persistence.persist_edge(_sup("a", "b"), edge_stream="out"))
+    forked = persistence.persist_edge(_sup("a", "c"), edge_stream="out")
+    assert is_refusal(forked)
+    assert forked.context["field"] == "supersedes"
+
+
+def test_durable_supersedes_refuses_self_loop_and_cycle(tmp_path: Path) -> None:
+    persistence = _live(tmp_path)
+    x = _unwrap(fingerprint({"rec": "x"}), "x")
+    loop = _unwrap(LineageEdge.try_create(EdgeType.SUPERSEDES, x, x, _writer()), "self-loop")
+    refused_loop = persistence.persist_edge(loop, edge_stream="loop")
+    assert is_refusal(refused_loop)
+    assert refused_loop.context["field"] == "supersedes"
+    # A -> B, B -> C, then C -> A would close a cycle, leaving no resolvable head.
+    assert is_ok(persistence.persist_edge(_sup("a", "b"), edge_stream="cyc"))
+    assert is_ok(persistence.persist_edge(_sup("b", "c"), edge_stream="cyc"))
+    cycle = persistence.persist_edge(_sup("c", "a"), edge_stream="cyc")
+    assert is_refusal(cycle)
+    assert cycle.context["field"] == "supersedes"
+
+
+def test_durable_supersedes_idempotent_reappend_is_not_a_fork(tmp_path: Path) -> None:
+    persistence = _live(tmp_path)
+    edge = _sup("b", "a")
+    assert is_ok(persistence.persist_edge(edge, edge_stream="s"))
+    again = persistence.persist_edge(edge, edge_stream="s")
+    assert is_ok(again)
+    assert again.value.outcome.value == "idempotent"
+
+
+# --- L3: the persisted edge line IS canonical_line() (single serializer) -----
+
+
+def test_persisted_edge_line_equals_canonical_line(tmp_path: Path) -> None:
+    persistence = _live(tmp_path)
+    edge = _sup("newer", "older")
+    assert is_ok(persistence.persist_edge(edge, edge_stream="lineage"))
+    seg = list(
+        (persistence.root / "live" / "registry-room" / "lineage" / "lineage").glob("*.jsonl")
+    )
+    assert seg
+    assert seg[0].read_bytes() == _unwrap(edge.canonical_line(), "canonical line")
+
+
+# --- L5: a read-back body is deep-frozen exactly like the write side ---------
+
+
+def test_loaded_body_is_deep_frozen(tmp_path: Path) -> None:
+    persistence = _live(tmp_path)
+    record = _record({"id": "x", "cfg": {"nested": [1, 2]}})
+    receipt = _unwrap(persistence.persist_record(record), "persist")
+    loaded = _unwrap(persistence.load_record(receipt.fingerprint, for_world=World.LIVE), "load")
+    with pytest.raises(TypeError):
+        cast("dict[str, object]", loaded.body)["id"] = "tampered"
+    nested = cast("dict[str, object]", loaded.body["cfg"])
+    with pytest.raises(TypeError):
+        nested["nested"] = "tampered"
+
+
+# --- M6: close() releases the one-writer lock for a handoff ------------------
+
+
+def _other_writer() -> WriterId:
+    built = WriterId.try_create("node-a", "reviewer", "producer", "boot-1")
+    assert is_ok(built)
+    return built.value
+
+
+def test_close_releases_the_writer_lock_for_a_handoff(tmp_path: Path) -> None:
+    persistence = _live(tmp_path)
+    a = _unwrap(fingerprint({"a": 1}), "a")
+    b = _unwrap(fingerprint({"b": 2}), "b")
+    e1 = _unwrap(LineageEdge.try_create(EdgeType.OCCURRENCE_OF, a, b, _writer()), "e1")
+    assert is_ok(persistence.persist_edge(e1, edge_stream="s"))
+    # A second writer is refused while the first holds the stream's on-disk lock.
+    e2 = _unwrap(LineageEdge.try_create(EdgeType.OCCURRENCE_OF, b, a, _other_writer()), "e2")
+    blocked = persistence.persist_edge(e2, edge_stream="s")
+    assert is_refusal(blocked)
+    assert blocked.category.value == "policy rejection"
+    # After close() the lock is released, so the handoff to the second writer succeeds.
+    persistence.close()
+    assert is_ok(persistence.persist_edge(e2, edge_stream="s"))
+
+
+def test_context_manager_releases_the_lock_on_exit(tmp_path: Path) -> None:
+    store = EvidenceStore(tmp_path / "store")
+    persistence = _unwrap(RegistryPersistence.open(store, World.LIVE), "open")
+    a = _unwrap(fingerprint({"a": 1}), "a")
+    b = _unwrap(fingerprint({"b": 2}), "b")
+    with persistence as held:
+        e1 = _unwrap(LineageEdge.try_create(EdgeType.OCCURRENCE_OF, a, b, _writer()), "e1")
+        assert is_ok(held.persist_edge(e1, edge_stream="s"))
+    # The block exit released the lock, so a different writer can now take the stream.
+    e2 = _unwrap(LineageEdge.try_create(EdgeType.OCCURRENCE_OF, b, a, _other_writer()), "e2")
+    assert is_ok(persistence.persist_edge(e2, edge_stream="s"))
+
+
+# --- M4: migration guards, real backup artifact, records-only ---------------
+
+
+def test_migration_across_worlds_is_refused(tmp_path: Path) -> None:
+    source = _live(tmp_path / "src")
+    dest_store = EvidenceStore(tmp_path / "dst")
+    destination = _unwrap(RegistryPersistence.open(dest_store, World.REPLAY), "replay destination")
+    record = _record({"id": "x"})
+    assert is_ok(source.persist_record(record))
+    refused = migrate_registry_format(
+        [record],
+        source=source,
+        destination=destination,
+        transform=_bump_to(2),
+        to_format_version=2,
+    )
+    assert is_refusal(refused)
+    assert refused.category.value == "policy rejection"
+    assert refused.context.get("field") == "destination"
+
+
+def test_migration_writes_a_real_backup_artifact_and_is_records_only(tmp_path: Path) -> None:
+    source, records = _seeded_source(tmp_path)
+    destination = _live(tmp_path / "dst")
+    report = _unwrap(
+        migrate_registry_format(
+            records,
+            source=source,
+            destination=destination,
+            transform=_bump_to(2),
+            to_format_version=2,
+        ),
+        "migrate",
+    )
+    assert report.backed_up is True
+    assert report.records_only is True
+    backup = Path(report.backup_path)
+    assert backup.is_file()  # backed_up reflects a REAL written artifact, not a constant
+    payload = json.loads(backup.read_text(encoding="utf-8"))
+    assert payload["world"] == "live"
+    assert len(payload["records"]) >= 2
+
+
+def test_migration_uses_a_supplied_backup_sink(tmp_path: Path) -> None:
+    source, records = _seeded_source(tmp_path)
+    destination = _live(tmp_path / "dst")
+    seen: list[RoomExport] = []
+
+    def sink(export: RoomExport) -> Result[str]:
+        seen.append(export)
+        return Ok("backup://written-elsewhere")
+
+    report = _unwrap(
+        migrate_registry_format(
+            records,
+            source=source,
+            destination=destination,
+            transform=_bump_to(2),
+            to_format_version=2,
+            backup_sink=sink,
+        ),
+        "migrate with sink",
+    )
+    assert report.backed_up is True
+    assert report.backup_path == "backup://written-elsewhere"
+    assert len(seen) == 1
+    assert seen[0].record_count >= 2
+
+
+def test_migration_aborts_when_the_backup_sink_refuses(tmp_path: Path) -> None:
+    source, records = _seeded_source(tmp_path)
+    destination = _live(tmp_path / "dst")
+
+    def sink(_export: RoomExport) -> Result[str]:
+        return unpersistable("the backup destination is unavailable")
+
+    refused = migrate_registry_format(
+        records,
+        source=source,
+        destination=destination,
+        transform=_bump_to(2),
+        to_format_version=2,
+        backup_sink=sink,
+    )
+    assert is_refusal(refused)
+    assert refused.category.value == "storage failure"
+    # Nothing was migrated: the destination never received the record.
+    key = _unwrap(persistence_fingerprint(_unwrap(_bump_to(2)(records[0]), "bumped")), "key")
+    assert is_refusal(destination.load_record(key, for_world=World.LIVE))

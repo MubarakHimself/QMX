@@ -32,7 +32,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 from qmf.core import Result
 
@@ -43,6 +43,7 @@ __all__ = [
     "AppendStreamOpener",
     "ColumnarEngine",
     "MetadataEngine",
+    "OccurrenceSink",
     "StoreEngineError",
 ]
 
@@ -185,6 +186,31 @@ class MetadataEngine(Protocol):
 
     def digests(self) -> list[str]:  # pragma: no cover
         """Every stored record digest (raises on failure)."""
+        ...
+
+
+@runtime_checkable
+class OccurrenceSink(Protocol):
+    """Optional metadata-engine capability: a per-record display-only occurrence sidecar.
+
+    A registry record is content-addressed on its fp1 identity, which **excludes** every
+    occurrence fact — the writer, the per-writer sequence, and created-at (DEC-0110) — so
+    those facts have no home in the identity key. An engine that also satisfies this
+    protocol keeps them recoverable in a sidecar keyed by the record's fp1 digest, outside
+    identity: who wrote a registration and in what order survives a persist/load round trip
+    (M5). ``put_occurrence`` is **first-write-wins** (an idempotent re-persist of the same
+    identity by a second writer keeps the first occurrence, so a dedup never collides). The
+    capability is optional — an engine without it simply carries no occurrence facts — so it
+    is checked with :func:`isinstance` at the boundary rather than widening
+    :class:`MetadataEngine`.
+    """
+
+    def put_occurrence(self, digest: str, occurrence: bytes, /) -> None:  # pragma: no cover
+        """Store display-only occurrence bytes under ``digest``, first-write-wins (raises)."""
+        ...
+
+    def get_occurrence(self, digest: str, /) -> bytes | None:  # pragma: no cover
+        """The occurrence bytes stored under ``digest``, or ``None`` (raises on failure)."""
         ...
 
 

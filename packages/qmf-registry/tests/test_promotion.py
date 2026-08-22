@@ -596,6 +596,64 @@ def test_template_fingerprint_accepts_a_string() -> None:
     assert card.template_definition_fp1 == _rec("book-def-v1")
 
 
+def test_live_gate_requires_and_matches_the_in_force_template() -> None:
+    # M3: when the card attests an AD-32 template, the gate REQUIRES the in-force template
+    # fingerprint and refuses on mismatch; an absent argument is a refusal, never a skip, so a
+    # signature can never authorize a crossing under a superseded template (DEC-0158).
+    target = _rec("admission")
+    card = _card(attested_fp1=target, template_definition_fp1=_rec("book-def-v1"))
+    # Absent in-force template => refusal (never a silent skip).
+    _refused(
+        authorize_live_promotion(target_fp1=target, card=card),
+        "in_force_template_fp1",
+        RefusalCategory.POLICY_REJECTION,
+    )
+    # A DIFFERENT (superseded) in-force template => refusal.
+    mismatch = _refused(
+        authorize_live_promotion(
+            target_fp1=target, card=card, in_force_template_fp1=_rec("book-def-v2")
+        ),
+        "card",
+        RefusalCategory.POLICY_REJECTION,
+    )
+    assert mismatch.context["attested_template"] == _rec("book-def-v1").value
+    assert mismatch.context["in_force_template"] == _rec("book-def-v2").value
+    # A malformed in-force template => wiring refusal.
+    _refused(
+        authorize_live_promotion(target_fp1=target, card=card, in_force_template_fp1="minted-id"),
+        "in_force_template_fp1",
+        RefusalCategory.INVALID_INPUT,
+    )
+    # The matching in-force template authorizes (and a string form is accepted).
+    authorized = _ok(
+        authorize_live_promotion(
+            target_fp1=target, card=card, in_force_template_fp1=_rec("book-def-v1")
+        )
+    )
+    assert isinstance(authorized, PromotionAuthorization)
+    assert authorized.card is card
+    assert is_ok(
+        authorize_live_promotion(
+            target_fp1=target, card=card, in_force_template_fp1=_rec("book-def-v1").value
+        )
+    )
+
+
+def test_live_gate_ignores_the_in_force_template_when_the_card_carries_none() -> None:
+    # M3: a card with no attested template does not consult the in-force template — an
+    # ordinary (non-risk-admission) promotion authorizes without one.
+    target = _rec("bot")
+    card = _card(attested_fp1=target)
+    assert card.template_definition_fp1 is None
+    assert is_ok(authorize_live_promotion(target_fp1=target, card=card))
+    # Supplying one for a template-less card is harmless (it is simply not consulted).
+    assert is_ok(
+        authorize_live_promotion(
+            target_fp1=target, card=card, in_force_template_fp1=_rec("book-def-v1")
+        )
+    )
+
+
 # --- AC4: the CT-13 promotion event carries only a pointer ------------------
 
 

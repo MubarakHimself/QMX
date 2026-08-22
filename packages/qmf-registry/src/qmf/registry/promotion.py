@@ -44,13 +44,18 @@ Book-definition/BMS-definition fingerprint as ``template_definition_fp1``; a new
 version has a new fingerprint, so a card that attested the old template has a different
 ``fp1`` and can never silently stand for the new one.
 
-**Only a human promotes into the live zone, and only the current card (FM-4; AR-39;
-DEC-0041).** :func:`authorize_live_promotion` is the refusal law: a live-promotion request
-with no human-signed promotion-occurrence card present does not occur — a typed refusal is
-returned. A present card authorizes only the exact record its signature attests **and** only
-while it is the current head of the supersedes chain: a card a later signed correction has
-superseded no longer speaks for the crossing, so the gate consults the supersession state
-(the ``supersedes`` edges) the caller supplies and refuses a superseded card (FM-5).
+**Only a human promotes into the live zone, only the current card, and only under the
+in-force template (FM-4; AR-39; DEC-0041, DEC-0158).** :func:`authorize_live_promotion` is
+the refusal law: a live-promotion request with no human-signed promotion-occurrence card
+present does not occur — a typed refusal is returned. A present card authorizes only the
+exact record its signature attests **and** only while it is the current head of the
+supersedes chain: a card a later signed correction has superseded no longer speaks for the
+crossing, so the gate consults the supersession state (the ``supersedes`` edges) the caller
+supplies and refuses a superseded card (FM-5). When the card attests an AD-32
+``template_definition_fp1``, the gate additionally **requires** the current in-force template
+fingerprint and refuses on any mismatch — and refuses an absent argument outright, never
+skipping the check — so a signature can never authorize a crossing under a superseded
+template (DEC-0158).
 
 Default-deny holds: this module imports **only** ``qmf.core`` and its own package
 siblings ``qmf.registry.records`` (the canonical CT-06 record) and ``qmf.registry.lineage``
@@ -500,10 +505,14 @@ def _superseded_card_ids(value: object) -> frozenset[str] | None:
 
 
 def authorize_live_promotion(
-    *, target_fp1: object, card: object, superseded: object = ()
+    *,
+    target_fp1: object,
+    card: object,
+    superseded: object = (),
+    in_force_template_fp1: object = None,
 ) -> Result[PromotionAuthorization]:
     """The live-promotion refusal law: only a human-signed, current card authorizes the
-    crossing (AC2; FM-4, FM-5; AR-39; DEC-0041).
+    crossing (AC2; FM-4, FM-5; AR-39; DEC-0041, DEC-0158).
 
     ``target_fp1`` names the record being promoted into the live zone. With no
     human-signed promotion-occurrence card present (``card`` is ``None``), promotion does
@@ -519,8 +528,17 @@ def authorize_live_promotion(
     longer the current head**, so it does not authorize the crossing — a ``policy
     rejection`` (only the current card speaks for live money; FM-5). An empty ``superseded``
     (the default) means nothing is superseded; a malformed ``superseded`` is an ``invalid
-    input`` wiring refusal. The promotion gate's own workflow, UI, and timing are platform
-    territory outside QMF — this is the record vocabulary and the refusal law only.
+    input`` wiring refusal.
+
+    ``in_force_template_fp1`` is the current in-force Book-definition/BMS-definition
+    fingerprint. When the ``card`` carries an AD-32 ``template_definition_fp1``, this
+    argument is **required** and the gate refuses unless it equals what the card attests: a
+    signature can never attest a superseded template, so a card that attested an old template
+    version does not authorize a crossing under a new one, and an **absent** in-force
+    template is itself a refusal (never a silent skip; DEC-0158; AD-32). When the card
+    carries no template, ``in_force_template_fp1`` is not consulted. The promotion gate's own
+    workflow, UI, and timing are platform territory outside QMF — this is the record
+    vocabulary and the refusal law only.
     """
     target = _coerce_fingerprint(target_fp1)
     if target is None:
@@ -570,6 +588,37 @@ def authorize_live_promotion(
             superseded_card=card.stable_id.value,
             requested=target.value,
         )
+    if card.template_definition_fp1 is not None:
+        if in_force_template_fp1 is None:
+            return _policy(
+                "in_force_template_fp1",
+                "this card attests an AD-32 template (template_definition_fp1) but no "
+                "in-force template fingerprint was supplied to compare it against; a "
+                "signature can never attest a superseded template, so the crossing is "
+                "refused until the current in-force template is supplied and matches — an "
+                "absent argument is a refusal, never a skip (DEC-0158; AD-32)",
+                attested_template=card.template_definition_fp1.value,
+                requested=target.value,
+            )
+        in_force = _coerce_fingerprint(in_force_template_fp1)
+        if in_force is None:
+            return _invalid(
+                "in_force_template_fp1",
+                "the in-force template is named by an fp1 fingerprint (fp1:sha256:<hex>); a "
+                "minted or mutable id is never a template reference (DEC-0108)",
+                given=repr(in_force_template_fp1),
+            )
+        if card.template_definition_fp1 != in_force:
+            return _policy(
+                "card",
+                "the promotion card attests a template that is not the in-force template; a "
+                "signature attests only the exact template version its signer read, so a "
+                "card that attested a superseded template does not authorize the crossing "
+                "(DEC-0158; AD-32)",
+                attested_template=card.template_definition_fp1.value,
+                in_force_template=in_force.value,
+                requested=target.value,
+            )
     return Ok(PromotionAuthorization(card=card, attested_fp1=target))
 
 

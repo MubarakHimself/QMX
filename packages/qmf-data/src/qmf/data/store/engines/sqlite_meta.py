@@ -39,9 +39,27 @@ CREATE TABLE IF NOT EXISTS records (
 )
 """
 
+# The display-only occurrence sidecar (M5; DEC-0110). Keyed by the record's fp1 digest
+# (a foreign reference to `records.digest`), it carries the occurrence facts excluded from
+# fp1 identity — the writer, the per-writer sequence, and created-at — so who wrote a
+# registration and in what order survives a persist/load round trip. It is NOT part of the
+# content-addressed identity: it is a separate table, first-write-wins on insert.
+_OCCURRENCE_SCHEMA = """
+CREATE TABLE IF NOT EXISTS record_occurrences (
+    digest     TEXT PRIMARY KEY,
+    occurrence BLOB NOT NULL
+)
+"""
+
 
 class SqliteMetadataEngine:
-    """Append-only content-addressed record storage over one SQLite database."""
+    """Append-only content-addressed record storage over one SQLite database.
+
+    Satisfies :class:`~qmf.data.store.engines.MetadataEngine` and, additionally,
+    :class:`~qmf.data.store.engines.OccurrenceSink` — it keeps a per-record display-only
+    occurrence sidecar (writer, per-writer sequence, created-at) keyed by the record's fp1
+    digest and outside identity, first-write-wins (M5; DEC-0110).
+    """
 
     def __init__(self, db_path: Path) -> None:
         self._db_path = db_path
@@ -60,6 +78,7 @@ class SqliteMetadataEngine:
             ) from exc
         try:
             conn.execute(_SCHEMA)
+            conn.execute(_OCCURRENCE_SCHEMA)
         except sqlite3.Error as exc:
             conn.close()  # never leak the handle when the schema step fails (corrupt db)
             raise StoreEngineError(
@@ -102,6 +121,53 @@ class SqliteMetadataEngine:
         except sqlite3.Error as exc:
             raise StoreEngineError(
                 "could not read the registry record",
+                engine="sqlite",
+                retryable=_retryable(exc),
+                detail={"digest": digest, "error": str(exc)},
+            ) from exc
+        finally:
+            conn.close()
+        if row is None:
+            return None
+        return cast("bytes", row[0])
+
+    def put_occurrence(self, digest: str, occurrence: bytes, /) -> None:
+        """Store display-only occurrence bytes under ``digest``, first-write-wins (M5).
+
+        ``INSERT OR IGNORE`` — never ``INSERT OR REPLACE`` — so a second writer's re-persist
+        of the same record identity keeps the FIRST occurrence and an idempotent dedup never
+        collides on the sidecar. The occurrence facts (writer, per-writer sequence,
+        created-at) are excluded from the record's fp1 identity (DEC-0110); they live here,
+        never in the identity key.
+        """
+        conn = self._connect()
+        try:
+            conn.execute(
+                "INSERT OR IGNORE INTO record_occurrences (digest, occurrence) VALUES (?, ?)",
+                (digest, occurrence),
+            )
+            conn.commit()
+        except sqlite3.Error as exc:
+            raise StoreEngineError(
+                "could not insert the record occurrence sidecar",
+                engine="sqlite",
+                retryable=_retryable(exc),
+                detail={"digest": digest, "error": str(exc)},
+            ) from exc
+        finally:
+            conn.close()
+
+    def get_occurrence(self, digest: str, /) -> bytes | None:
+        """The occurrence bytes stored under ``digest``, or ``None`` (raises on failure)."""
+        conn = self._connect()
+        try:
+            cursor = conn.execute(
+                "SELECT occurrence FROM record_occurrences WHERE digest = ?", (digest,)
+            )
+            row = cursor.fetchone()
+        except sqlite3.Error as exc:
+            raise StoreEngineError(
+                "could not read the record occurrence sidecar",
                 engine="sqlite",
                 retryable=_retryable(exc),
                 detail={"digest": digest, "error": str(exc)},

@@ -438,6 +438,22 @@ def test_readers_return_empty_on_malformed_lookup() -> None:
     assert log.edges_to(_fp("b")) == (log.edges()[0],)
 
 
+def test_idempotent_reappend_returns_the_admitted_edge_via_index() -> None:
+    # L4: the idempotent path resolves the admitted edge through the O(1) digest index and
+    # returns the already-admitted edge object (never a fresh build, never a raise). The index
+    # is rebuildable — after a rebuild the digest lookup is reconstructed and still resolves.
+    log = EdgeLog(_writer())
+    first = _ok(log.append(edge_type=EdgeType.OCCURRENCE_OF, from_ref=_fp("a"), to_ref=_fp("b")))
+    assert first.outcome is WriteOutcome.STORED
+    again = _ok(log.append(edge_type=EdgeType.OCCURRENCE_OF, from_ref=_fp("a"), to_ref=_fp("b")))
+    assert again.outcome is WriteOutcome.IDEMPOTENT
+    assert again.edge is first.edge  # the admitted edge object, resolved from the index
+    log.rebuild_indexes()
+    third = _ok(log.append(edge_type=EdgeType.OCCURRENCE_OF, from_ref=_fp("a"), to_ref=_fp("b")))
+    assert third.outcome is WriteOutcome.IDEMPOTENT
+    assert third.edge is first.edge  # the digest index was rebuilt, so it still resolves
+
+
 def test_lineage_module_imports_only_qmf_core() -> None:
     source = Path(lineage_module.__file__).read_text(encoding="utf-8")
     tree = ast.parse(source)

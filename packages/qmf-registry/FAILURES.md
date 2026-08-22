@@ -133,14 +133,19 @@ written for someone who was not in the design room.
 - **Failure class:** `policy rejection` (a CT-04 refusal category). The registry-layer
   guard is pure; a `storage failure` category arises only at the qmf-data boundary
   (FM-8, Story 2.4), never here.
-- **Detection:** `EdgeLog.append`/`append_edge` holds `supersedes` **pinned linear**. A
-  genuinely new `supersedes` edge is refused when its subject already has an outgoing
-  `supersedes` edge (a record may supersede at most one record), when the record it
-  supersedes already has a superseder (a second would fork "current"), when it points a
-  record at itself, or when it would close a cycle in the version chain. A branching
-  Book/BMS version graph uses `branches-from` instead, which carries no linearity
-  constraint, and a byte-identical re-append of an existing `supersedes` edge is
-  idempotent (FR-7), never a linearity violation.
+- **Detection:** `EdgeLog.append`/`append_edge` holds `supersedes` **pinned linear** in the
+  in-memory reference stream, and `RegistryPersistence.persist_edge` holds it **on the
+  durable path too**: before a genuinely new `supersedes` edge is appended, the persisted
+  edge set on that stream (read back and witness-verified) is consulted and the same law
+  applied to persisted evidence. A genuinely new `supersedes` edge is refused when its
+  subject already has an outgoing `supersedes` edge (a record may supersede at most one
+  record), when the record it supersedes already has a superseder (a second would fork
+  "current"), when it points a record at itself, or when it would close a cycle in the
+  version chain. A branching Book/BMS version graph uses `branches-from` instead, which
+  carries no linearity constraint, and a byte-identical re-append of an existing
+  `supersedes` edge is idempotent (FR-7), decided by the store's own fp1, never a linearity
+  violation. The invariant therefore holds for persisted evidence, not only the in-memory
+  `EdgeLog` — a durable stream can never fork "current" (M1).
 - **Auto-recovery / retry:** none automatic. The append RETURNS a `policy rejection`
   `TypedRefusal` (retryability `no`) whose `context` names the offending `subject` /
   `superseded` fingerprints and what already occupies that slot. Nothing is committed and
@@ -209,9 +214,15 @@ written for someone who was not in the design room.
   CT-07 `supersedes` `LineageEdge`s to read them from) and refuses a card whose `fp1` appears
   there (`superseded_card` in `context`), because only the **current head** of the supersedes
   chain speaks for live money (FM-5). A malformed supersedes argument is an `invalid input`
-  wiring refusal. Only a human promotes an artifact into the live zone (AR-39, DEC-0041); an
-  agent's passed checks or recommendation is never an authorization, and neither is a
-  superseded card.
+  wiring refusal. When the present card attests an **AD-32 template** (`template_definition_fp1`),
+  the gate additionally **requires** the current in-force template fingerprint as its
+  `in_force_template_fp1` argument and refuses on any mismatch (`policy rejection`, naming the
+  `attested_template` and `in_force_template`); an **absent** argument is itself a refusal, never
+  a silent skip, and a malformed one is an `invalid input` wiring refusal — so a signature can
+  never authorize a crossing under a superseded template (DEC-0158; AD-32). A card that carries
+  no template does not consult it. Only a human promotes an artifact into the live zone (AR-39,
+  DEC-0041); an agent's passed checks or recommendation is never an authorization, and neither
+  is a superseded card or a card attesting a superseded template.
 - **Auto-recovery / retry:** none automatic. The gate RETURNS a `policy rejection`
   `TypedRefusal` (retryability `no`); promotion does not occur and no live capability is
   granted. A human must sign a promotion-occurrence card attesting THIS record (its exact
@@ -342,10 +353,12 @@ written for someone who was not in the design room.
   stored evidence, since the writes here are canonical by construction — is itself surfaced as
   a `storage failure` (retryability `no`), never served as a valid or wrong artifact.
   Read-back is verified against a tamper-independent authority, so a **silently altered**
-  artifact never reads back as valid either: `load_record` recomputes the store's
-  content-addressed fingerprint over the whole persisted record envelope and refuses
-  (`storage failure`) when it does not equal the key the record was read under, so tampered
-  canonical bytes (the digest key unchanged) are caught. A lineage edge — persisted to a
+  artifact never reads back as valid either: a record is stored keyed on its **own fp1 stable
+  id** (the stored bytes ARE its CT-06 fp1 identity content, no wrapping envelope; M2), so
+  `load_record` recomputes that fp1 over the persisted identity and refuses (`storage failure`)
+  when it does not equal the key the record was read under — one recompute both verifies
+  integrity and yields the stable id, and tampered canonical bytes (the digest key unchanged)
+  are caught. A lineage edge — persisted to a
   JSONL stream whose per-line index is rebuilt from the line bytes on read (AR-31), which
   carries no tamper-independent authority of its own — is additionally anchored by a
   tamper-evident **integrity witness** in the (content-addressed, SQLite) record store;
@@ -375,12 +388,23 @@ written for someone who was not in the design room.
 - **Detection:** `migrate_registry_format` runs preflight → backup-first → dry-run → migrate →
   verify and refuses before or during a stage rather than mutating the only copy. A
   same-root `source`/`destination` is refused (`invalid input`, `field: destination`) so a
-  migration is never in-place; a non-positive `to_format_version` is `invalid input`; a
-  preflight record that does not already read back from the source aborts with that read's
-  refusal (a missing record is `stale evidence`); a `transform` that refuses, returns a
-  non-record, or returns a record NOT stamping the target format version aborts the dry-run
-  with **nothing written**; and a destination store fault during the migrate stage aborts with
-  no partial migration claimed complete.
+  migration is never in-place; a **cross-world** `source`/`destination` (e.g. a live source
+  into a replay destination) is refused (`policy rejection`, `field: destination`) so a
+  migration stays within one world and a live corpus is never copied into the replay namespace
+  (FM-7); a non-positive `to_format_version` is `invalid input`; a preflight record that does
+  not already read back from the source aborts with that read's refusal (a missing record is
+  `stale evidence`); a `transform` that refuses, returns a non-record, or returns a record NOT
+  stamping the target format version aborts the dry-run with **nothing written**; and a
+  destination store fault during the migrate stage aborts with no partial migration claimed
+  complete. The **backup-first** stage does not merely read the source's restorable export and
+  drop it — it **writes a real backup artifact** (through a caller-supplied `backup_sink` or,
+  by default, a file under the destination root) before any migrate write, and the report's
+  `backed_up`/`backup_path` reflect that real write rather than a hard-coded constant; a
+  backup-write failure (or a refusing sink) is returned and aborts the migration before any
+  destination write. The procedure migrates **records only** — the report states this
+  explicitly (`records_only`), so a reader never mistakes a verified record migration for a
+  lineage-edge migration; CT-07 edges are append-only and format-stamped per line and are not
+  transformed here (M4).
 - **Auto-recovery / retry:** none automatic. The operation RETURNS the refusal; on any
   pre-migrate refusal nothing is written, and the source (append-only, only read) remains the
   intact restore path named by the report's `restore_path`. The caller fixes the offending
@@ -392,7 +416,31 @@ written for someone who was not in the design room.
 - **Notification tier:** silent-log for the wiring guards; operator-visible if a store fault
   aborts a migrate in progress (the destination is incomplete and must be rebuilt or discarded).
 - **Product-user affordance:** nothing failed for an end user; a developer or operator ran a
-  format migration with a bad shape — the same store as source and destination, a bad target
-  version, a record not present in the source, or a transform that did not produce a valid
-  record stamping the new version. The refusal's `context` names the problem; correct it and
-  re-run. The only copy is never mutated, so a refused migration is always safe to retry.
+  format migration with a bad shape — the same store as source and destination, a different
+  world for source and destination, a bad target version, a record not present in the source,
+  or a transform that did not produce a valid record stamping the new version. The refusal's
+  `context` names the problem; correct it and re-run. The only copy is never mutated, so a
+  refused migration is always safe to retry.
+
+### FR-16: Per-writer registration sequence going backwards (CT-06, DEC-0106)
+
+- **Failure class:** `invalid input` (a CT-04 refusal category).
+- **Detection:** `Registrar` tracks each writer's high-water sequence and enforces that a
+  genuinely-new (`stored`) record's `sequence` **strictly exceeds** the last sequence stored
+  for the same writer — the per-writer sequence is a strictly-increasing ordering key
+  (DEC-0106), so a writer's registration stream that goes backwards or repeats a sequence is
+  refused (`field: sequence`, with the writer's `order_tuple`, the `last_sequence`, and the
+  `given` value in `context`). A byte-identical re-write is `idempotent` — the same occurrence
+  replayed — and is **exempt** from the check (and returns the already-stored record, not the
+  caller's twin), so deduplication is never mistaken for a backwards sequence. The first record
+  from a writer sets the high-water mark and always passes; each writer has its own counter.
+- **Auto-recovery / retry:** none automatic. `register` RETURNS the `invalid input`
+  `TypedRefusal` (retryability `no`); nothing is admitted and nothing is raised. The caller
+  supplies the writer's next strictly-increasing sequence and retries.
+- **Visible degraded state:** none. The stored records and each writer's counter are unchanged.
+- **Notification tier:** silent-log. A sequence that goes backwards is a wiring/ordering
+  mistake surfaced as a value, not an operational alarm.
+- **Product-user affordance:** nothing failed for an end user; a developer wired a writer's
+  registration stream out of order (a sequence at or below one the writer already used). The
+  per-writer sequence must strictly increase — mint it from a `WriterSequencer` (or otherwise
+  advance it) and retry; it is an ordering key, never an identity or dedup key.

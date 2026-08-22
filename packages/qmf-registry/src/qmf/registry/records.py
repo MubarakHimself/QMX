@@ -780,6 +780,10 @@ class Registrar:
         self._kinds: KindRegistry = kinds
         self._bytes: dict[str, bytes] = {}
         self._records: dict[str, RegistrationRecord] = {}
+        # Per-writer high-water sequence: the last sequence a genuinely-new (``stored``)
+        # record from each writer carried, so the next new record from that writer must
+        # strictly exceed it (L2; DEC-0106).
+        self._last_sequence: dict[tuple[str, str, str, str], int] = {}
 
     def register(
         self,
@@ -834,6 +838,14 @@ class Registrar:
         first write stores, a byte-identical re-write is idempotent, and differing
         bytes under one stable id are a true collision — refused and alarmed, never
         overwritten (DEC-0108).
+
+        A genuinely-new (``stored``) record additionally enforces **per-writer sequence
+        monotonicity**: its ``sequence`` must strictly exceed the last sequence stored for
+        the same writer, so a writer's registration stream never goes backwards or repeats a
+        sequence (L2; DEC-0106). A byte-identical re-write is ``idempotent`` — it is the same
+        occurrence replayed, so it is exempt from the monotonicity check and returns the
+        **already-stored** record, not the caller's (parity with
+        :meth:`~qmf.registry.EdgeLog.append_edge`; L1).
         """
         canonical = canonical_bytes(record.fp1_identity())
         if is_refusal(canonical):  # pragma: no cover - identity is canonical by construction
@@ -844,9 +856,45 @@ class Registrar:
         if is_refusal(decision):
             return decision
         if decision.value is WriteOutcome.STORED:
+            monotonic = self._check_sequence(record)
+            if monotonic is not None:
+                return monotonic
             self._bytes[digest] = canonical.value
             self._records[digest] = record
-        return Ok(RegistrationReceipt(outcome=decision.value, record=record))
+            self._last_sequence[record.writer.order_tuple()] = record.sequence
+            return Ok(RegistrationReceipt(outcome=decision.value, record=record))
+        # Idempotent re-write: return the already-stored record (its first writer's
+        # occurrence facts), not the caller's twin, exactly as EdgeLog returns the admitted
+        # edge (L1). A byte-identical re-write always has a stored record under this digest.
+        stored = self._records.get(digest)
+        return Ok(
+            RegistrationReceipt(
+                outcome=decision.value, record=stored if stored is not None else record
+            )
+        )
+
+    def _check_sequence(self, record: RegistrationRecord) -> Result[RegistrationReceipt] | None:
+        """The per-writer monotonicity refusal a genuinely-new record earns, or ``None`` (L2).
+
+        A record whose ``sequence`` does not strictly exceed the last sequence stored for its
+        writer is an ``invalid input`` refusal — the per-writer sequence is a strictly
+        increasing ordering key, so a stream that goes backwards or repeats a sequence is a
+        wiring/ordering mistake surfaced as a value, never silently accepted (DEC-0106). The
+        first record from a writer sets the high-water mark and always passes.
+        """
+        writer_key = record.writer.order_tuple()
+        last = self._last_sequence.get(writer_key)
+        if last is not None and record.sequence <= last:
+            return _invalid(
+                "sequence",
+                "the per-writer sequence is a strictly-increasing ordering key; this writer "
+                "already registered at or beyond this sequence, so it must not go backwards "
+                "or repeat (DEC-0106)",
+                writer=list(writer_key),
+                last_sequence=last,
+                given=record.sequence,
+            )
+        return None
 
     def record_for(self, stable_id: object) -> RegistrationRecord | None:
         """The registered record under ``stable_id``, or ``None`` if none is stored.
