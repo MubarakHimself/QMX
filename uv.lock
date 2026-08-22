@@ -1350,6 +1350,9 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
+calendar-tzdata = [
+    { name = "qmf-calendar-forex" },
+]
 dev = [
     { name = "mypy" },
     { name = "poethepoet" },
@@ -1379,6 +1382,7 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
+calendar-tzdata = [{ name = "qmf-calendar-forex", editable = "extensions/qmf-calendar-forex" }]
 dev = [
     { name = "mypy" },
     { name = "poethepoet", specifier = "==0.48.0" },

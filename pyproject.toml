@@ -58,7 +58,13 @@ dependencies = ["pydantic", "python-dotenv", "pyyaml", "rich"]
 # running `uv run poe check` has Parquet + DuckDB present without ever naming the
 # engine libs outside qmf-data. The SSSF `dev` group and the adws pytest wiring
 # are untouched.
-default-groups = ["dev", "store-engines"]
+#
+# `calendar-tzdata` follows the same pattern for the off-roster
+# qmf-calendar-forex extension (Story 4.1): its pinned `tzdata` is declared only
+# in the extension's own pyproject, and installing the workspace member pulls
+# that pin into the gate environment so import-time TZPATH verification can run
+# under `poe test` without weakening `dev` or the adws pytest wiring.
+default-groups = ["dev", "store-engines", "calendar-tzdata"]
 
 [tool.uv.workspace]
 # The QMF distribution units. Seven roster packages (SemVer lockstep) under
@@ -70,6 +76,9 @@ members = ["packages/*", "extensions/*"]
 # its runtime engine deps (pyarrow, duckdb) land in the gate environment. The
 # engine libraries themselves stay declared only in qmf-data's own pyproject.
 qmf-data = { workspace = true }
+# The qmf-calendar-forex workspace member, referenced by calendar-tzdata below so
+# its pinned tzdata lands in the gate environment (Story 4.1; DEC-0106).
+qmf-calendar-forex = { workspace = true }
 
 [dependency-groups]
 # THE GATE'S CONTRACT — plus the QMF canonical toolchain, one environment for
@@ -103,6 +112,12 @@ dev = [
 # named here so a reader sees exactly why the workspace installs a member package
 # (Story 3.1; DEC-0117).
 store-engines = ["qmf-data"]
+
+# The forex calendar's pinned tzdata, provisioned by default. Installs the
+# qmf-calendar-forex workspace member so `tzdata==2025.2` is present for
+# import-time TZPATH / tzdb verification under `poe test`. Kept out of `dev` so
+# the SSSF factory-gate contract stays byte-stable (Story 4.1; DEC-0106).
+calendar-tzdata = ["qmf-calendar-forex"]
 
 # skylos is SEPARATE from `dev`, and not because it is optional - because it
 # does not install everywhere. It depends on tree-sitter-dart-orchard, which

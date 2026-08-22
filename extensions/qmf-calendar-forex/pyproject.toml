@@ -4,6 +4,8 @@ version = "0.1.0"
 description = "The first market-hours calendar extension. Off-roster, on its own SemVer ladder, with tzdata pinned."
 readme = "README.md"
 requires-python = ">=3.14,<3.15"
+# tzdata pin change is at least a minor SemVer bump on THIS extension's ladder
+# (AR-27); do not bump the package version unless the pin actually changes.
 dependencies = [
     "qmf-core",
     "tzdata==2025.2",
