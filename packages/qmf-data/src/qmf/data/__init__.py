@@ -62,7 +62,13 @@ owns and calls the injected :class:`ExternalSourcePort`, normalizes
 :class:`ProviderRecord` responses into CT-10 producer values under idempotent
 :class:`IntakeKey` ``(source, source-native id, revision)`` intake, application-routes
 them to :class:`SourceObservationBoundary`, and refuses scheduler/daemon/retry-loop
-ownership (:func:`~qmf.data.ingest.refuse_schedule_ownership`).
+ownership (:func:`~qmf.data.ingest.refuse_schedule_ownership`). Story 6.2 lands bid/ask
+preservation and source-disagreement edges (:mod:`qmf.data.ticks`): :class:`TickQuote`
+keeps bid and ask separate with source timestamps and refuses mid-merge;
+:func:`~qmf.data.ticks.relate_source_facts` emits ``corroborates`` /
+``disagrees-with`` :class:`CausalEdge` values; :func:`~qmf.data.ticks.link_revision`
+links a later ``(source, id, revision)`` artifact via ``supersedes`` — never overwrite,
+never a ``qmf-registry`` import (DEC-0119, DEC-0120).
 
 ``qmf.data`` imports only ``qmf-core`` (the fp1 vocabulary and typed refusals) plus
 its own engine libraries — the default-deny dependency direction (L30) holds, and the
@@ -181,6 +187,16 @@ from qmf.data.splits import (
     SplitSegment,
 )
 from qmf.data.store import EvidenceStore
+from qmf.data.ticks import (
+    EDGE_CORROBORATES,
+    EDGE_DISAGREES_WITH,
+    EDGE_SUPERSEDES,
+    TickObservation,
+    TickQuote,
+    link_revision,
+    refuse_mid_merge,
+    relate_source_facts,
+)
 from qmf.data.verify import (
     MIGRATION_SEQUENCE,
     NODE_OPS_BACKUP_RECOVERY_POINT_OBJECTIVE,
@@ -211,6 +227,9 @@ __all__ = [
     "CT25_CONTRACT_FORMAT_VERSION",
     "CYCLE_ROOM_ROLES",
     "DEFAULT_SPLIT_ROLES",
+    "EDGE_CORROBORATES",
+    "EDGE_DISAGREES_WITH",
+    "EDGE_SUPERSEDES",
     "ENCRYPTION_REQUIRED",
     "FINAL_LOOK_SUBTYPE",
     "MIGRATION_SEQUENCE",
@@ -288,6 +307,8 @@ __all__ = [
     "SplitSegment",
     "StoragePutAck",
     "StoreMigrationReport",
+    "TickObservation",
+    "TickQuote",
     "VerifiedRoom",
     "VerifyKind",
     "WorldRooms",
@@ -300,6 +321,7 @@ __all__ = [
     "entity_journal",
     "event_class_of",
     "guard_neutral_venue_payload",
+    "link_revision",
     "migrate_evidence",
     "read_binding",
     "read_bot_seat",
@@ -307,10 +329,12 @@ __all__ = [
     "read_role",
     "records_stream",
     "refuse_ingest_schedule_ownership",
+    "refuse_mid_merge",
     "refuse_numeric_rpo_rto",
     "refuse_schedule_ownership",
     "refuse_snapshot_alone_claim",
     "refuse_source_as_venue",
+    "relate_source_facts",
     "role_namespace",
     "select_decisions",
     "veto_ledger",

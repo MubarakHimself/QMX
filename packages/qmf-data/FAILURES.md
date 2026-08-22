@@ -1134,3 +1134,51 @@ application-routed admission, and out-of-authority refusals — FR-46 through FR
 - **Notification tier:** silent-log for idempotent hits; normal for new revisions.
 - **Product-user affordance:** replaying a provider page or a correction under a new
   revision is safe — duplicates collapse, corrections append.
+
+Story 6.2 delivers bid/ask preservation and source-disagreement edges
+(`TickQuote`, `relate_source_facts`, `link_revision`) — FR-50 through FR-52.
+
+### FR-50: Collapsing bid/ask into a mid is refused (AC1)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** `TickQuote.try_create` / `refuse_mid_merge` / ingest
+  `_resolve_optional_tick_quote` refuse any presented `mid` with
+  `signal: refuse-mid-merge`. Bid and ask stay separate scaled integers with their
+  source timestamps; mid is never evidence on this seam (DEC-0119, DEC-0105). A
+  tick record with only one of bid/ask is `invalid input`.
+- **Auto-recovery / retry:** none — supply both sides and never a mid. Derive mid
+  elsewhere under lineage if a consumer needs it.
+- **Visible degraded state:** no tick quote is minted; the intake ledger is unchanged.
+- **Notification tier:** silent-log (caller/payload shape).
+- **Product-user affordance:** the platform will not store a blended mid as tick
+  evidence. Keep bid and ask (and their timestamps) and re-submit.
+
+### FR-51: Source disagreement is edged, never averaged (AC2)
+
+- **Failure class:** not a failure — designed `corroborates` / `disagrees-with`
+  `CausalEdge` values (CT-07-shaped) when two distinct sources report the same fact.
+- **Detection:** `relate_source_facts` requires two `TickObservation` values from
+  different sources sharing instrument + event-time. Matching bid/ask (+ present
+  timestamps) yields `corroborates`; any difference yields `disagrees-with`. Both
+  observation fingerprints remain; nothing is merged (FM-3, DEC-0119). Same-source
+  or different-fact pairs are `invalid input`.
+- **Auto-recovery / retry:** not applicable for the edge itself; fix wiring if the
+  pair is refused as not-the-same-fact.
+- **Visible degraded state:** none — both source observations stay inspectable.
+- **Notification tier:** silent-log.
+- **Product-user affordance:** conflicting feeds stay visible as lineage edges; the
+  framework never picks a blended number for you.
+
+### FR-52: A revision link requires a distinct new artifact (AC3)
+
+- **Failure class:** `invalid input` when the pair is not a true revision.
+- **Detection:** `link_revision` requires the same `(source, source-native id)`, a
+  different `revision`, and distinct observation `fp1`s, then emits a `supersedes`
+  edge (newer → earlier). Same revision or a different intake key is refused —
+  evidence is never overwritten (DEC-0119, DEC-0108).
+- **Auto-recovery / retry:** mint the later revision under a new revision token (and
+  optionally `correction_of`) and link again.
+- **Visible degraded state:** earlier evidence remains; no in-place edit occurs.
+- **Notification tier:** silent-log.
+- **Product-user affordance:** corrections append as new artifacts linked by
+  lineage; the original quote stays readable forever.

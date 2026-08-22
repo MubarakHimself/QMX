@@ -53,6 +53,7 @@ from qmf.core import (
 from qmf.data.observation import ForeignMoney, ForeignTimestamp, SourceObservation
 from qmf.data.source_boundary import ObservationReceipt, SourceObservationBoundary
 from qmf.data.store.refusals import invalid_input, policy_rejection
+from qmf.data.ticks import TickObservation, TickQuote, refuse_mid_merge
 
 __all__ = [
     "CONTRACT_FORMAT_VERSION",
@@ -202,12 +203,17 @@ class IntakeReceipt:
 
     The application routes :attr:`observation` into
     :meth:`SourceObservationBoundary.admit`; this receipt itself does not persist.
+    When the provider record carried bid/ask, :attr:`quote` holds them separately
+    (never a mid) and :attr:`tick` is the bound :class:`~qmf.data.ticks.TickObservation`
+    for source-disagreement edges (Story 6.2; DEC-0119).
     """
 
     observation: SourceObservation
     intake_key: IntakeKey
     instrument: Instrument
     outcome: IntakeOutcome
+    quote: TickQuote | None = None
+    tick: TickObservation | None = None
     format_version: int = CONTRACT_FORMAT_VERSION
 
 
@@ -236,6 +242,10 @@ class ProviderRecord:
     mapping. Optional foreign timestamp / money blocks are stored verbatim when present
     (AC3). ``correction_of`` is set only when this record revises an earlier observation's
     ``fp1``.
+
+    Tick sides (Story 6.2): optional ``bid`` / ``ask`` (scaled integers) with optional
+    per-side source timestamps are preserved separately and never merged. A presented
+    ``mid`` is a ``policy rejection``. When either side is present both are required.
     """
 
     source: object
@@ -247,6 +257,11 @@ class ProviderRecord:
     foreign_timestamp: object | None = None
     foreign_money: object | None = None
     correction_of: object | None = None
+    bid: object | None = None
+    ask: object | None = None
+    bid_timestamp: object | None = None
+    ask_timestamp: object | None = None
+    mid: object | None = None
 
 
 class ExternalSourcePort(Protocol):
@@ -295,12 +310,14 @@ class ExternalSourceIngest:
         world: object,
         receive_wall_time: object,
         receive_monotonic_diagnostic: object | None = None,
-    ) -> Result[tuple[SourceObservation, IntakeKey, Instrument]]:
+    ) -> Result[tuple[SourceObservation, IntakeKey, Instrument, TickQuote | None]]:
         """Validate a provider record and mint a CT-10 :class:`SourceObservation` (AC1–AC4).
 
         Does not consult the idempotent ledger and does not persist — pure
         normalize. A missing bitemporal field, intake key part, or CT-03 instrument
-        mapping is ``invalid input`` and emits no observation.
+        mapping is ``invalid input`` and emits no observation. When bid/ask are
+        present they are preserved as a :class:`~qmf.data.ticks.TickQuote` (fourth
+        tuple element); a presented mid is refused (Story 6.2).
         """
         if not isinstance(record, ProviderRecord):
             return _invalid(
@@ -320,6 +337,9 @@ class ExternalSourceIngest:
         foreign_money = _resolve_optional_foreign_money(record.foreign_money)
         if is_refusal(foreign_money):
             return foreign_money
+        quote = _resolve_optional_tick_quote(record)
+        if is_refusal(quote):
+            return quote
         built = SourceObservation.try_create(
             event_time=record.event_time,
             known_at=record.known_at,
@@ -337,7 +357,7 @@ class ExternalSourceIngest:
         )
         if is_refusal(built):
             return built
-        return Ok((built.value, key.value, instrument.value))
+        return Ok((built.value, key.value, instrument.value, quote.value))
 
     def intake(
         self,
@@ -365,7 +385,7 @@ class ExternalSourceIngest:
         )
         if is_refusal(normalized):
             return normalized
-        observation, key, instrument = normalized.value
+        observation, key, instrument, quote = normalized.value
         prior = self._ledger.get(key)
         if prior is not None:
             return Ok(
@@ -374,13 +394,22 @@ class ExternalSourceIngest:
                     intake_key=key,
                     instrument=prior.instrument,
                     outcome=IntakeOutcome.IDEMPOTENT,
+                    quote=prior.quote,
+                    tick=prior.tick,
                 )
             )
+        tick = (
+            TickObservation(observation=observation, quote=quote, instrument=instrument)
+            if quote is not None
+            else None
+        )
         receipt = IntakeReceipt(
             observation=observation,
             intake_key=key,
             instrument=instrument,
             outcome=IntakeOutcome.PRODUCED,
+            quote=quote,
+            tick=tick,
         )
         self._ledger[key] = receipt
         return Ok(receipt)
@@ -548,3 +577,43 @@ def _resolve_optional_foreign_money(value: object | None) -> Result[ForeignMoney
         "foreign money is a ForeignMoney or a mapping of verbatim/scale (or omitted)",
         given=repr(value),
     )
+
+
+def _resolve_optional_tick_quote(record: ProviderRecord) -> Result[TickQuote | None]:
+    """Build a :class:`TickQuote` when bid/ask are present; refuse a mid (Story 6.2).
+
+    A record with neither side is a non-tick fact (news calendar, etc.) and returns
+    ``None``. Either side alone, or a presented mid, is refused — sides stay paired
+    and never collapsed.
+    """
+    if record.mid is not None:
+        return refuse_mid_merge(given=record.mid)
+    has_bid = record.bid is not None
+    has_ask = record.ask is not None
+    if not has_bid and not has_ask:
+        if record.bid_timestamp is not None or record.ask_timestamp is not None:
+            return _invalid(
+                "bid",
+                "per-side source timestamps require both bid and ask; tick sides are "
+                "never partial (DEC-0119)",
+            )
+        return Ok(None)
+    if has_bid != has_ask:
+        return _invalid(
+            "bid" if not has_bid else "ask",
+            "tick observations preserve bid and ask together — one side alone is "
+            "invalid input (DEC-0119, DEC-0105)",
+            bid=repr(record.bid),
+            ask=repr(record.ask),
+        )
+    built = TickQuote.try_create(
+        bid=record.bid,
+        ask=record.ask,
+        bid_timestamp=record.bid_timestamp,
+        ask_timestamp=record.ask_timestamp,
+        mid=record.mid,
+    )
+    if is_refusal(built):
+        return built
+    resolved: TickQuote | None = built.value
+    return Ok(resolved)

@@ -50,6 +50,13 @@ threads, cron, or daemons in `qmf-data` — asking the boundary to own the sched
 or a numeric RPO/RTO is a typed policy rejection. Encryption stays a required
 pointer; credentials never enter the cycle report.
 
+Story 6.1 lands the CT-15 ingest seam (`ExternalSourceIngest`): an injected
+provider port, idempotent `(source, source-native id, revision)` intake into CT-10
+producer values, and application-routed admission. Story 6.2 preserves bid and ask
+separately (`TickQuote`) with source timestamps, refuses mid-merge, and emits
+`corroborates` / `disagrees-with` / revision `supersedes` edges as CT-07-shaped
+`CausalEdge` values — never a `qmf-registry` import.
+
 `EvidenceStore(root).for_world(world)` returns the four boundaries for one world.
 The engines sit behind their owned `typing.Protocol` contracts, so each is
 swappable. The public data-policy contracts (CT-10 observations, CT-12 splits, the
