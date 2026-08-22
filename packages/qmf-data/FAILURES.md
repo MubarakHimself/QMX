@@ -1245,3 +1245,71 @@ Story 6.3 delivers the Dukascopy download-once historical tick adapter
 - **Product-user affordance:** drive each bounded fetch from application
   supervision; on outage, retry under your own checkpoint — not inside qmf-data.
 
+Story 6.4 delivers the news-calendar feed as a governed CT-15 source
+(`COMP-CALENDAR-FEED` / `CalendarFeedAdapter`, `CalendarFeedImport`) — FR-57
+through FR-60.
+
+### FR-57: A failed refresh / unknown coverage / missing exposure fails closed (AC4)
+
+- **Failure class:** visible degradation journaled as CT-13 `data quality` (not a
+  silent success); underlying provider outages surface as `unavailable dependency`
+  / `transient venue failure` before the import folds them into fail-closed.
+- **Detection:** `CalendarFeedImport.run` on transport refusal, `coverage_known=False`,
+  or a missing key in `currency_exposures` when `require_exposures_for` is set builds
+  a `FailClosedSignal` (`failed-refresh` | `unknown-coverage` |
+  `missing-currency-exposure`) with `treated_as_affected=True` and `alarm=True`, then
+  journals it via `journal_fail_closed` (SCN-0008, DEC-0152, FM-4).
+- **Auto-recovery / retry:** none inside qmf-data. The standalone recorder owns
+  retry/backoff; downstream CT-31 treats the instrument as affected until a healthy
+  refresh and declared exposures restore coverage. Retryability of the *provider*
+  refusal follows the transport; the fail-closed signal itself is not a live skip.
+- **Visible degraded state:** no fabricated calendar observations; prior evidence
+  unchanged; treated-as-affected downstream (blocks new entries at CT-31).
+- **Notification tier:** alarm (payload `alarm: true`).
+- **Product-user affordance:** a missed or uncertain news feed is never permission to
+  trade. Fix the refresh / declare currency-exposure records / restore coverage;
+  there is no live skip button (`refuse_live_skip`).
+
+### FR-58: Asking for a live skip around calendar fail-closed is refused (AC4)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** `refuse_live_skip` and `CalendarFeedAdapter.live_skip` always refuse
+  with `signal: refuse-live-skip` and `treated_as_affected: true` (DEC-0152).
+- **Auto-recovery / retry:** none — operator control is upstream configuration
+  between sessions, never a click.
+- **Visible degraded state:** fail-closed posture unchanged.
+- **Notification tier:** operator-visible.
+- **Product-user affordance:** you cannot click past a failed calendar refresh;
+  configure exemptions as dated fingerprinted records consumed at compile time.
+
+### FR-59: Minting a QMX severity scale over impact labels is refused (AC2)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** `refuse_minted_severity_scale` and
+  `CalendarFeedAdapter.mint_severity_scale` refuse with
+  `signal: refuse-minted-severity`. Provider `impact` strings stay verbatim on
+  `CalendarEvent.impact_label` (DEC-0152, DEC-0156).
+- **Auto-recovery / retry:** none — severity-to-window is a declared node mapping
+  outside this feed.
+- **Visible degraded state:** none; evidence still carries the provider label.
+- **Notification tier:** silent-log.
+- **Product-user affordance:** High/Medium/Low (or any provider token) is stored as
+  received; QMX does not invent its own severity ladder in V1.
+
+### FR-60: Claiming operational retention authorization is refused (AC5)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** `refuse_authorized_retention_claim` and
+  `CalendarFeedAdapter.claim_retention_authorized` refuse with
+  `signal: refuse-authorized-retention` and
+  `legal_archiving_posture: open-operator-item`. Every import receipt and
+  data-quality payload records that open posture — never an authorizing claim
+  (FM-3, DEC-0119, DEC-0052).
+- **Auto-recovery / retry:** none — the operator resolves legal archiving outside
+  QMF.
+- **Visible degraded state:** ingest may still run; retention is not attested as
+  authorized.
+- **Notification tier:** operator-visible when a caller asserts authorization.
+- **Product-user affordance:** archiving the feed does not mean QMF licensed
+  long-term retention; that remains an open operator item.
+

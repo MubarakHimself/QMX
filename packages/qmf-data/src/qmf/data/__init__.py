@@ -74,7 +74,13 @@ download-once historical tick adapter (:mod:`qmf.data.dukascopy`, ``COMP-DUKASCO
 bounded bi5 evidence through an injected :class:`DukascopyTransport` (no donor
 ``dukascopy-node`` code), stamps every window with a :class:`LicenseTag`, and refuses
 unlicensed governed-evidence use, complete-corpus downloads, and external-recovery
-ownership (DEC-0166, DEC-0170, DEC-0051).
+ownership (DEC-0166, DEC-0170, DEC-0051). Story 6.4 lands the news-calendar feed as a
+governed CT-15 source (:mod:`qmf.data.calendar_feed`, ``COMP-CALENDAR-FEED``):
+:class:`CalendarFeedAdapter` keeps provider-native ``(source, id, revision)`` identity
+with verbatim impact labels (no QMX severity scale), :class:`CalendarFeedImport`
+journals every import as a CT-13 ``data quality`` event, and failed refresh / unknown
+coverage / missing currency-exposure fail closed as treated-as-affected with no live
+skip — legal archiving stays an open operator item (DEC-0119, DEC-0152).
 
 ``qmf.data`` imports only ``qmf-core`` (the fp1 vocabulary and typed refusals) plus
 its own engine libraries — the default-deny dependency direction (L30) holds, and the
@@ -94,6 +100,24 @@ from qmf.data.backup import (
     PayloadCipher,
     RestoreReceipt,
     StoragePutAck,
+)
+from qmf.data.calendar_feed import (
+    CALENDAR_FEED_SOURCE,
+    LEGAL_ARCHIVING_POSTURE,
+    CalendarEvent,
+    CalendarFeedAdapter,
+    CalendarFeedImport,
+    CalendarFeedTransport,
+    CalendarImportReceipt,
+    FailClosedReason,
+    FailClosedSignal,
+    decode_calendar_snapshot,
+    fail_closed,
+    journal_fail_closed,
+    journal_import,
+    refuse_authorized_retention_claim,
+    refuse_live_skip,
+    refuse_minted_severity_scale,
 )
 from qmf.data.cycle import (
     BACKUP_CADENCE,
@@ -244,6 +268,7 @@ __all__ = [
     "BOOK_IDENTITY_FIELDS",
     "BOOK_INSTANCE_ID_KEY",
     "BOT_DEFINITION_FP_KEY",
+    "CALENDAR_FEED_SOURCE",
     "COMMAND_FINGERPRINT_KEY",
     "CT25_CONTRACT_FORMAT_VERSION",
     "CYCLE_ROOM_ROLES",
@@ -255,6 +280,7 @@ __all__ = [
     "ENCRYPTION_REQUIRED",
     "FACTORY_MAX_WINDOW_NS",
     "FINAL_LOOK_SUBTYPE",
+    "LEGAL_ARCHIVING_POSTURE",
     "MIGRATION_SEQUENCE",
     "NODE_OPS_BACKUP_RECOVERY_POINT_OBJECTIVE",
     "NODE_OPS_BACKUP_RECOVERY_TIME_OBJECTIVE",
@@ -270,6 +296,11 @@ __all__ = [
     "BackupCopyReceipt",
     "BindingIdentity",
     "BotSeat",
+    "CalendarEvent",
+    "CalendarFeedAdapter",
+    "CalendarFeedImport",
+    "CalendarFeedTransport",
+    "CalendarImportReceipt",
     "CausalEdge",
     "CitationIndex",
     "CommandAttribution",
@@ -287,6 +318,8 @@ __all__ = [
     "EvidenceStore",
     "ExternalSourceIngest",
     "ExternalSourcePort",
+    "FailClosedReason",
+    "FailClosedSignal",
     "ForeignMoney",
     "ForeignTimestamp",
     "HoldoutSeal",
@@ -348,10 +381,14 @@ __all__ = [
     "bot_logbook",
     "decay_cohort_read",
     "decode_bi5_ticks",
+    "decode_calendar_snapshot",
     "detect_sequence_gaps",
     "entity_journal",
     "event_class_of",
+    "fail_closed",
     "guard_neutral_venue_payload",
+    "journal_fail_closed",
+    "journal_import",
     "link_revision",
     "migrate_evidence",
     "offer_for_governed_evidence",
@@ -360,10 +397,13 @@ __all__ = [
     "read_command_fingerprint",
     "read_role",
     "records_stream",
+    "refuse_authorized_retention_claim",
     "refuse_complete_corpus_download",
     "refuse_external_recovery",
     "refuse_ingest_schedule_ownership",
+    "refuse_live_skip",
     "refuse_mid_merge",
+    "refuse_minted_severity_scale",
     "refuse_numeric_rpo_rto",
     "refuse_schedule_ownership",
     "refuse_snapshot_alone_claim",

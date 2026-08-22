@@ -64,6 +64,13 @@ licensing, stdlib bi5 decode through an injected transport (no donor
 unlicensed governed-evidence use, complete-corpus downloads, and external-recovery
 ownership.
 
+Story 6.4 lands the news-calendar feed (`CalendarFeedAdapter` /
+`CalendarFeedImport`, `COMP-CALENDAR-FEED`): CT-15 provider with provider-native
+`(source, id, revision)` identity, verbatim impact labels (no QMX severity scale),
+every import journaled as a CT-13 `data quality` event, and fail-closed
+degradation on failed refresh / unknown coverage / missing currency-exposure —
+treated-as-affected, no live skip; legal archiving stays an open operator item.
+
 `EvidenceStore(root).for_world(world)` returns the four boundaries for one world.
 The engines sit behind their owned `typing.Protocol` contracts, so each is
 swappable. The public data-policy contracts (CT-10 observations, CT-12 splits, the
