@@ -18,6 +18,10 @@ import pytest
 from qmf.core.exact import (
     CONTRACT_FORMAT_VERSION,
     MAX_SCALE,
+    MONEY_STORAGE_SCALE,
+    PRICE_DELTA_STORAGE_SCALE,
+    PRICE_STORAGE_SCALE,
+    QUANTITY_STORAGE_SCALE,
     ExactRational,
     Money,
     Price,
@@ -630,6 +634,7 @@ def test_quantity_and_value_factor_canonical_content() -> None:
         "unit": "lot",
         "num": 5,
         "den": 2,
+        "storage_scale": QUANTITY_STORAGE_SCALE,
         "format_version": 1,
     }
     vf = ValueFactor.try_create(10, 1, instrument, "USD")
@@ -638,6 +643,49 @@ def test_quantity_and_value_factor_canonical_content() -> None:
     assert vf_form["class"] == "value-factor"
     assert vf_form["instrument"] == {"venue": "venue-x", "symbol": "EURUSD"}
     assert vf_form["currency"] == "USD"
+
+
+def test_canonical_form_carries_declared_storage_scale_per_value_class() -> None:
+    # The pinned canonical form carries the declared canonical storage scale per
+    # value class (epics Story 1.4; DEC-0158). Each scaled-integer value class stamps
+    # its own class constant — an integer, never a float on the money path.
+    instrument = _instrument()
+    assert _money(150).fp1_identity()["storage_scale"] == MONEY_STORAGE_SCALE
+    assert Price(15000, instrument, 5).fp1_identity()["storage_scale"] == PRICE_STORAGE_SCALE
+    assert _delta(5).fp1_identity()["storage_scale"] == PRICE_DELTA_STORAGE_SCALE
+    assert _quantity(100).fp1_identity()["storage_scale"] == QUANTITY_STORAGE_SCALE
+    for scale in (
+        MONEY_STORAGE_SCALE,
+        PRICE_STORAGE_SCALE,
+        QUANTITY_STORAGE_SCALE,
+        PRICE_DELTA_STORAGE_SCALE,
+    ):
+        assert isinstance(scale, int) and not isinstance(scale, bool)
+        assert 0 <= scale <= MAX_SCALE
+
+
+def test_storage_scale_is_a_class_property_so_scale_invariance_still_holds() -> None:
+    # The declared storage scale is a property of the CLASS, not the instance, so
+    # carrying it in identity content never forks two constructions of the same
+    # value built at different input scales — equal value still implies equal
+    # fingerprint, storage scale included (DEC-0158).
+    a = _money(150, "USD", 2).fp1_identity()  # 1.50
+    b = _money(15000, "USD", 4).fp1_identity()  # 1.5000
+    assert a == b
+    assert a["storage_scale"] == b["storage_scale"] == MONEY_STORAGE_SCALE
+
+
+def test_pure_rationals_carry_no_storage_scale() -> None:
+    # ExactRational and ValueFactor are stored directly as num/den (no scale field);
+    # they are not scaled-integer value classes, so they carry no storage scale — the
+    # declared scale is named only for Money/Price/Quantity/PriceDelta.
+    instrument = _instrument()
+    rational = ExactRational.try_create(3, 2, UnitKind.R_MULTIPLE)
+    vf = ValueFactor.try_create(1, 2, instrument, "USD")
+    assert is_ok(rational)
+    assert is_ok(vf)
+    assert "storage_scale" not in rational.value.fp1_identity()
+    assert "storage_scale" not in vf.value.fp1_identity()
 
 
 def test_unchecked_constructor_is_available_for_trusted_use() -> None:

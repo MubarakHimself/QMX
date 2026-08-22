@@ -40,10 +40,12 @@ addable-never-redefined vocabulary — a null unit-kind is a typed refusal, neve
 default. When a value enters ``fp1`` identity content it takes the pinned
 canonical form (:meth:`Money.fp1_identity` et al.): the exact rational reduced to
 lowest terms, denominator strictly positive, sign on the numerator, two-key
-serialization, stamped with contract format version 1. The reduced rational is
-the scale-normalized canonical storage form for its value class, so one amount
-stored at two scales — or ``6/4`` versus ``3/2`` — can never fork identity, and
-equal value implies equal fingerprint by construction (DEC-0158).
+serialization, **and the declared canonical storage scale for its value class**
+(:data:`MONEY_STORAGE_SCALE` and its siblings), stamped with contract format
+version 1. The reduced rational carries the magnitude; the declared storage scale
+is a property of the *class* — identical for every instance — so one amount stored
+at two input scales, or ``6/4`` versus ``3/2``, can never fork identity, and equal
+value implies equal fingerprint by construction (DEC-0158).
 
 Every value type follows the one CT-04 construction pattern: an **unchecked
 constructor** (the frozen dataclass) for trusted internal use, plus a validating
@@ -66,6 +68,10 @@ from qmf.core.refusal import Ok, RefusalCategory, Result, Retryability, TypedRef
 __all__ = [
     "CONTRACT_FORMAT_VERSION",
     "MAX_SCALE",
+    "MONEY_STORAGE_SCALE",
+    "PRICE_DELTA_STORAGE_SCALE",
+    "PRICE_STORAGE_SCALE",
+    "QUANTITY_STORAGE_SCALE",
     "ExactRational",
     "Money",
     "Price",
@@ -90,6 +96,30 @@ CONTRACT_FORMAT_VERSION: Final[int] = 1
 # keeping ``10**scale`` a cheap integer; a scale above it is refused as invalid
 # input, never accepted.
 MAX_SCALE: Final[int] = 72
+
+# The declared canonical storage scale (count of decimal places) each scaled-integer
+# value class is stored at — one of the parts of CT-01's pinned canonical form that a
+# value carries into ``fp1`` identity content (Story 1.4; DEC-0158). A value's
+# magnitude is still serialized as the exact rational reduced to lowest terms
+# (``num``/``den``); the storage scale is the declared frame that reduction is
+# understood against, carried so identity records the storage contract explicitly
+# rather than silently normalizing it away.
+#
+# Crucially it is a property of the value *class*, not the instance: it is identical
+# for every ``Money`` (resp. ``Price``, ``Quantity``, ``PriceDelta``), so carrying it
+# in identity content can never let two constructions of the same value at different
+# input scales — e.g. ``Money(150, "USD", 2)`` and ``Money(15000, "USD", 4)`` — fork
+# their fingerprint. Equal value still implies equal fingerprint by construction.
+#
+# Each is pinned at the deepest realistic instrument precision the exact-value
+# vocabulary serves (crypto's deepest minor units are ~18 decimal places; cf.
+# ``MAX_SCALE``), so a class's declared storage frame is at least as fine as its
+# finest member. The four are declared separately, one per value class, and are each
+# independently addable/amendable in a later spine amendment.
+MONEY_STORAGE_SCALE: Final[int] = 18
+PRICE_STORAGE_SCALE: Final[int] = 18
+QUANTITY_STORAGE_SCALE: Final[int] = 18
+PRICE_DELTA_STORAGE_SCALE: Final[int] = 18
 
 
 class UnitKind(StrEnum):
@@ -445,8 +475,10 @@ class Money:
         """The pinned canonical ``fp1`` identity content for this amount (DEC-0158).
 
         The magnitude is the exact rational reduced to lowest terms (denominator
-        strictly positive, sign on the numerator, two keys always present), so an
-        amount stored at two scales shares one fingerprint by construction.
+        strictly positive, sign on the numerator, two keys always present), carried
+        alongside the declared class storage scale (:data:`MONEY_STORAGE_SCALE`), so
+        an amount stored at two scales shares one fingerprint by construction — the
+        storage scale is a class constant, identical across every Money.
         """
         magnitude = self.as_fraction()
         return {
@@ -455,6 +487,7 @@ class Money:
             "currency": self.currency,
             "num": magnitude.numerator,
             "den": magnitude.denominator,
+            "storage_scale": MONEY_STORAGE_SCALE,
             "format_version": CONTRACT_FORMAT_VERSION,
         }
 
@@ -562,7 +595,12 @@ class Price:
         return Fraction(self.value, 10**self.scale)
 
     def fp1_identity(self) -> dict[str, object]:
-        """The pinned canonical ``fp1`` identity content for this price (DEC-0158)."""
+        """The pinned canonical ``fp1`` identity content for this price (DEC-0158).
+
+        The reduced-rational magnitude is carried alongside the declared class
+        storage scale (:data:`PRICE_STORAGE_SCALE`), a class constant identical
+        across every Price, so a level stored at two scales shares one fingerprint.
+        """
         magnitude = self.as_fraction()
         return {
             "class": "price",
@@ -570,6 +608,7 @@ class Price:
             "instrument": _instrument_content(self.instrument),
             "num": magnitude.numerator,
             "den": magnitude.denominator,
+            "storage_scale": PRICE_STORAGE_SCALE,
             "format_version": CONTRACT_FORMAT_VERSION,
         }
 
@@ -723,7 +762,10 @@ class PriceDelta:
         """The pinned canonical ``fp1`` identity content for this delta (DEC-0158).
 
         The ``class`` discriminator is ``price-delta`` — distinct from ``price`` —
-        so a delta and a level of equal magnitude never share a fingerprint.
+        so a delta and a level of equal magnitude never share a fingerprint. The
+        reduced-rational magnitude is carried alongside the declared class storage
+        scale (:data:`PRICE_DELTA_STORAGE_SCALE`), a class constant identical across
+        every PriceDelta, so a delta stored at two scales shares one fingerprint.
         """
         magnitude = self.as_fraction()
         return {
@@ -732,6 +774,7 @@ class PriceDelta:
             "instrument": _instrument_content(self.instrument),
             "num": magnitude.numerator,
             "den": magnitude.denominator,
+            "storage_scale": PRICE_DELTA_STORAGE_SCALE,
             "format_version": CONTRACT_FORMAT_VERSION,
         }
 
@@ -813,7 +856,12 @@ class Quantity:
         return Fraction(self.value, 10**self.scale)
 
     def fp1_identity(self) -> dict[str, object]:
-        """The pinned canonical ``fp1`` identity content for this quantity (DEC-0158)."""
+        """The pinned canonical ``fp1`` identity content for this quantity (DEC-0158).
+
+        The reduced-rational magnitude is carried alongside the declared class
+        storage scale (:data:`QUANTITY_STORAGE_SCALE`), a class constant identical
+        across every Quantity, so a count stored at two scales shares one fingerprint.
+        """
         magnitude = self.as_fraction()
         return {
             "class": "quantity",
@@ -821,6 +869,7 @@ class Quantity:
             "unit": self.unit,
             "num": magnitude.numerator,
             "den": magnitude.denominator,
+            "storage_scale": QUANTITY_STORAGE_SCALE,
             "format_version": CONTRACT_FORMAT_VERSION,
         }
 
