@@ -259,7 +259,8 @@ class HoldoutSeal:
                 "seal",
                 f"a read into the sealed no-peek window is refused at the {boundary.value} "
                 "boundary; sealed rows are never returned as a silent empty result, and the "
-                "seal is enforced independent of the deferred look-ahead gates (DEC-0119, DEC-0121)",
+                "seal is enforced independent of the deferred look-ahead gates "
+                "(DEC-0119, DEC-0121)",
                 boundary=boundary.value,
                 seal_boundary=self.seal_boundary.label(),
                 gap="GAP-0016",
@@ -362,7 +363,9 @@ class HoldoutSeal:
         return self.seal_boundary.label()
 
     def _existing_final_look(self, events: list[dict[str, object]]) -> Result[StoreReceipt] | None:
-        """A ``policy rejection`` if a final look for this seal is already journaled, else ``None``."""
+        """A ``policy rejection`` if a final look for this seal is already journaled,
+        else ``None``.
+        """
         label = self.seal_boundary.label()
         for event in events:
             if (

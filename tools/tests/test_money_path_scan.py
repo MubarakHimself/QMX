@@ -278,7 +278,10 @@ def test_unrelated_constructor_is_not_a_sink() -> None:
 def test_cls_try_create_is_not_name_anchored() -> None:
     # ``cls.try_create`` inside a classmethod is out of the scanner's precision
     # boundary (documented); it must not raise a false positive.
-    src = "class Money:\n    @classmethod\n    def f(cls, x):\n        return cls.try_create(x, 'USD', 2)"
+    src = (
+        "class Money:\n    @classmethod\n    def f(cls, x):\n"
+        "        return cls.try_create(x, 'USD', 2)"
+    )
     assert _rules(src) == []
 
 

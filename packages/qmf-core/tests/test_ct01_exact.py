@@ -424,7 +424,8 @@ def test_delta_to_money_converts_exactly_via_value_factor() -> None:
     instrument = _instrument()
     move = _delta(100, 5, instrument)  # 0.00100 price units
     quantity = _quantity(2, "lot", 0)  # 2 lots
-    # value-factor: 100000 money-minor-units of price-delta per lot => 1.0 money per full price unit.
+    # value-factor: 100000 money-minor-units of price-delta per lot
+    # => 1.0 money per full price unit.
     vf = ValueFactor.try_create(100000, 1, instrument, "USD")
     assert is_ok(vf)
     result = move.to_money(vf.value, quantity, scale=2)

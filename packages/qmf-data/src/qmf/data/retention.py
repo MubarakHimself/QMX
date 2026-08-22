@@ -153,7 +153,7 @@ class RetentionPolicy:
         """
         try:
             return bool(self._citations.cites(fingerprint))
-        except Exception as exc:  # noqa: BLE001 - fail closed on ANY dependency error (AC3)
+        except Exception as exc:  # fail closed on ANY dependency error (AC3)
             return TypedRefusal(
                 category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
                 retryability=Retryability.YES,

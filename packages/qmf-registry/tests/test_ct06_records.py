@@ -384,8 +384,8 @@ def test_is_reserved_and_reserved_names_honored() -> None:
     assert registry.is_reserved("treasury-boundary-event")
     assert not registry.is_reserved("instrument-class")
     assert not registry.is_reserved(123)
-    assert RESERVED_KIND_NAMES == frozenset(
-        {"promotion-occurrence-card", "treasury-boundary-event"}
+    assert (
+        frozenset({"promotion-occurrence-card", "treasury-boundary-event"}) == RESERVED_KIND_NAMES
     )
 
 

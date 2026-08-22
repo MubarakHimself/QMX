@@ -135,7 +135,8 @@ def main() -> None:
     )
     first_wall, elapsed = clock_is_injected(clock)
     print(
-        f"injected clock wall_now = {first_wall.value_ns} ns; monotonic elapsed = {elapsed.value_ns} ns"
+        f"injected clock wall_now = {first_wall.value_ns} ns; "
+        f"monotonic elapsed = {elapsed.value_ns} ns"
     )
 
     sequencer = ordering_has_no_causal_meaning(clock)

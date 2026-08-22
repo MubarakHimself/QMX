@@ -34,7 +34,7 @@ def test_room_role_vocabulary_matches_ct11_order() -> None:
 
 
 def test_only_raw_archive_and_journal_are_evidence_bearing() -> None:
-    assert EVIDENCE_BEARING_ROLES == frozenset({RoomRole.IMMUTABLE_RAW_ARCHIVE, RoomRole.JOURNAL})
+    assert frozenset({RoomRole.IMMUTABLE_RAW_ARCHIVE, RoomRole.JOURNAL}) == EVIDENCE_BEARING_ROLES
 
 
 def test_namespace_for_write_routes_live_and_replay_apart() -> None:

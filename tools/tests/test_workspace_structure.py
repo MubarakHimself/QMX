@@ -35,7 +35,7 @@ MEMBERS_BY_NAME = {m.name: m for m in MEMBERS}
 
 def test_all_roster_packages_are_present() -> None:
     names = {m.name for m in MEMBERS if not m.is_extension}
-    assert ROSTER_PACKAGES <= names, f"missing roster packages: {ROSTER_PACKAGES - names}"
+    assert names >= ROSTER_PACKAGES, f"missing roster packages: {ROSTER_PACKAGES - names}"
 
 
 # --- (a) no qmf/__init__.py in any distribution -----------------------------

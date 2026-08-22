@@ -154,17 +154,53 @@ extend-exclude = ["adws/adw_data", "recorder", "tools/tests/fixtures"]
 line-length = 100
 
 [tool.ruff.lint]
+# A REAL rule set for the shipped QMF workspace (packages/, extensions/, tools/).
+# This block previously carried no `select`, so ruff ran only its E4/E7/E9/F
+# defaults while the `ignore`/`per-file-ignores` below referenced rules (PLW1510,
+# S101) that were never enabled — the gate read far stronger than it was. The
+# families below are the pragmatic strong set; the noisy design-threshold and
+# false-positive-prone rules are held out in `ignore` with a reason each, and adws
+# (read-only factory machinery, see per-file-ignores) is kept at its baseline.
+select = ["E", "W", "F", "I", "UP", "B", "S", "C4", "SIM", "RUF", "PL"]
 ignore = [
     # every subprocess call inspects returncode itself - explicit check= is noise here
     "PLW1510",
+    # S603 flags EVERY subprocess call as "untrusted input"; ours use fixed argv
+    # (sys.executable + literal args), so it fires everywhere with no actionable signal.
+    "S603",
+    # RUF002 flags intentional typographic/mathematical Unicode in docstrings (en
+    # dashes in prose, the set-union symbol ∪ in registry records); "fixing" them
+    # would corrupt the notation. RUF001/RUF003 stay on for identifiers/comments.
+    "RUF002",
+    # PLR design-threshold heuristics — magic-value comparisons and the too-many-*
+    # counts (returns, branches, arguments, statements, positional args) — are
+    # arbitrary thresholds that bury real signal. Held out; the rest of PL stays on.
+    "PLR2004",
+    "PLR0911",
+    "PLR0912",
+    "PLR0913",
+    "PLR0915",
+    "PLR0917",
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# Tests assert (S101 is the whole point of a test); test files may reach into a
-# package's private benchmark module (`_bench`) to exercise the harness.
-"packages/*/tests/*" = ["S101"]
-"extensions/*/tests/*" = ["S101"]
-"tools/tests/*" = ["S101"]
+# adws/ is the SSSF factory machinery and is READ-ONLY in this worktree, yet the
+# SSSF merge gate runs `ruff check .` over the WHOLE tree. Exempt adws from every
+# family newly enabled above (everything beyond ruff's E4/E7/E9/F + F baseline) so
+# it keeps linting byte-identically to baseline and the root gate stays green with
+# zero adws edits. Only adds the carve-out; nothing here weakens packages/ code.
+"adws/**" = ["E1", "E2", "E3", "E5", "W", "I", "UP", "B", "S", "C4", "SIM", "RUF", "PL"]
+# Tests assert (S101 is the whole point of a test); use fake tokens/secrets as
+# fixtures (S105/S106/S107); and do deliberate local imports to exercise import-time
+# behaviour (PLC0415). Test files may also reach into a package's private benchmark
+# module (`_bench`) to exercise the harness.
+"packages/*/tests/*" = ["S101", "S105", "S106", "S107", "PLC0415"]
+"extensions/*/tests/*" = ["S101", "S105", "S106", "S107", "PLC0415"]
+"tools/tests/*" = ["S101", "S105", "S106", "S107", "PLC0415"]
+# Example scripts use `assert` as a teaching/verification device (like a doctest —
+# it shows the reader the expected result); they carry no other carve-out.
+"packages/*/examples/*" = ["S101"]
+"extensions/*/examples/*" = ["S101"]
 
 [tool.pyright]
 # Strict, workspace-wide over the QMF code (AR-11). adws is mypy's job, not

@@ -294,7 +294,7 @@ class _Analyzer:
     def _bind(self, target: ast.expr, value: ast.expr, tainted: set[str]) -> Iterator[str]:
         if isinstance(target, (ast.Tuple, ast.List)):
             if isinstance(value, (ast.Tuple, ast.List)) and len(value.elts) == len(target.elts):
-                for element_target, element_value in zip(target.elts, value.elts):
+                for element_target, element_value in zip(target.elts, value.elts, strict=True):
                     yield from self._bind(element_target, element_value, tainted)
             elif self._is_tainted(value, tainted):
                 yield from _names_of(target)

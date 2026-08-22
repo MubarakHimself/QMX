@@ -454,7 +454,8 @@ class RegistryPersistence:
 
         The record's full CT-06 fp1 identity content is handed to the store's per-world
         registry room, keyed on **the record's own fp1 stable id**
-        (:func:`persistence_fingerprint` is exactly :attr:`~qmf.registry.RegistrationRecord.stable_id`,
+        (:func:`persistence_fingerprint` is exactly
+        :attr:`~qmf.registry.RegistrationRecord.stable_id`,
         and the receipt's fingerprint equals it — CT-09 ``record_stable_id`` is the storage
         key). The display-only occurrence facts (writer, per-writer sequence, created-at)
         ride an occurrence sidecar keyed by the same digest and **outside identity**
@@ -660,7 +661,8 @@ class RegistryPersistence:
     def _read_all_supersedes_edges(self) -> Result[tuple[LineageEdge, ...]]:
         """Every persisted ``supersedes`` edge across all edge streams in this room (M1).
 
-        Enumerates the room's edge streams (:meth:`~qmf.data.store.RegistryRoom.lineage_stream_names`)
+        Enumerates the room's edge streams
+        (:meth:`~qmf.data.store.RegistryRoom.lineage_stream_names`)
         and reads each back — witness-verified — through :meth:`read_edges`, collecting the
         ``supersedes`` edges so the room-wide linearity guard sees the whole chain, not only one
         named stream. A read failure on any stream (corrupt/tampered stream, cross-world)
