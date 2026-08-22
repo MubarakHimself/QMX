@@ -289,3 +289,81 @@ written for someone who was not in the design room.
   journal store is unavailable, so the platform blocks rather than pretending the event
   landed. It resumes once storage recovers. A wiring `invalid input` means a developer
   passed a bad card or sink — the refusal's `context` says which; fix it and retry.
+
+### FR-13: Cross-world read or simulated-world persistence (CT-09, FM-7)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** `RegistryPersistence` is bound to exactly one world's registry room.
+  `RegistryPersistence.open` for `world = simulated` is refused when the qmf-data store
+  resolves the per-world bundle — `simulated` has no governed namespace in V1, so a non-live
+  world never writes the live evidence namespace. Every read declares the world it reads as
+  (there is no implicit same-world default): `load_record` / `read_edges` with a `for_world`
+  that differs from the room's world are refused at the qmf-data boundary. World isolation is
+  storage separation, so one world's room never serves another's evidence.
+- **Auto-recovery / retry:** none automatic. The operation RETURNS a `policy rejection`
+  `TypedRefusal` (retryability `no`); nothing is read or written. The caller opens the
+  correct world's persistence (never `simulated` in V1) and declares the matching `for_world`,
+  then retries. Nothing is raised across the seam.
+- **Visible degraded state:** none. No cross-world data is served and no simulated evidence is
+  written; stored state is unchanged.
+- **Notification tier:** silent-log. A cross-world read or a simulated-world write is a
+  wiring/governance mistake surfaced as a value, not an operational alarm.
+- **Product-user affordance:** nothing failed at runtime for an end user; a developer read a
+  record or edge as the wrong world, or tried to persist into the reserved `simulated` world.
+  The refusal's `context` names the requested and room worlds; open the right world and declare
+  the matching read world, then retry — `simulated` stays unusable until GAP-0048.
+
+### FR-14: Underlying store failure or corrupt persisted artifact (CT-09, FM-8)
+
+- **Failure class:** `storage failure` (a CT-04 refusal category).
+- **Detection:** every persist/load routes through qmf-data's CT-11 store seam, which
+  **translates a store-library exception to a `storage failure` typed refusal at the qmf-data
+  boundary** — a disk-full, corrupt, locked, or truncated store never propagates as an
+  exception across the package seam (`RegistryPersistence.persist_record` /
+  `persist_edge` / `load_record` / `read_edges` simply return the store's refusal). A read
+  that returns bytes the registry cannot parse back into its CT-06/CT-07 shape — corrupt
+  stored evidence, since the writes here are canonical by construction — is itself surfaced as
+  a `storage failure` (retryability `no`), never served as a valid or wrong artifact.
+- **Auto-recovery / retry:** none automatic. A transient outage carries retryability `yes`
+  (block until the store recovers, then retry — no partial registration is ever claimed
+  successful); a corrupt/truncated store carries retryability `no` and needs operator
+  intervention or a restore. Nothing is raised across the seam.
+- **Visible degraded state:** the write did not land (no partial registration is claimed) or
+  the read did not serve; the caller that holds the `WriterId` blocks on a retryable outage
+  rather than assuming success.
+- **Notification tier:** operator-visible — a failing or corrupt store needs attention, and a
+  corrupt artifact is an evidence-integrity event.
+- **Product-user affordance:** nothing an end user did caused this; the underlying store is
+  full, locked, truncated, or corrupt. The platform refuses rather than pretending the write
+  landed or serving corrupt bytes. A transient outage clears on retry once storage recovers; a
+  corrupt store needs an operator restore from the off-machine backup.
+
+### FR-15: Registry format migration refused (CT-09, AR-32, AR-25)
+
+- **Failure class:** `invalid input` (for the guards and a bad transform), or the propagated
+  category of an aborting stage (`stale evidence` for a preflight miss, `storage failure` for a
+  store fault) — all CT-04 refusal categories.
+- **Detection:** `migrate_registry_format` runs preflight → backup-first → dry-run → migrate →
+  verify and refuses before or during a stage rather than mutating the only copy. A
+  same-root `source`/`destination` is refused (`invalid input`, `field: destination`) so a
+  migration is never in-place; a non-positive `to_format_version` is `invalid input`; a
+  preflight record that does not already read back from the source aborts with that read's
+  refusal (a missing record is `stale evidence`); a `transform` that refuses, returns a
+  non-record, or returns a record NOT stamping the target format version aborts the dry-run
+  with **nothing written**; and a destination store fault during the migrate stage aborts with
+  no partial migration claimed complete.
+- **Auto-recovery / retry:** none automatic. The operation RETURNS the refusal; on any
+  pre-migrate refusal nothing is written, and the source (append-only, only read) remains the
+  intact restore path named by the report's `restore_path`. The caller fixes the offending
+  input (distinct destination root, positive target version, a transform that stamps it) and
+  retries. Nothing is raised.
+- **Visible degraded state:** none — the source is never mutated in place, so a failed
+  migration leaves the original corpus fully readable; a partially-written destination is a
+  fresh, discardable store.
+- **Notification tier:** silent-log for the wiring guards; operator-visible if a store fault
+  aborts a migrate in progress (the destination is incomplete and must be rebuilt or discarded).
+- **Product-user affordance:** nothing failed for an end user; a developer or operator ran a
+  format migration with a bad shape — the same store as source and destination, a bad target
+  version, a record not present in the source, or a transform that did not produce a valid
+  record stamping the new version. The refusal's `context` names the problem; correct it and
+  re-run. The only copy is never mutated, so a refused migration is always safe to retry.

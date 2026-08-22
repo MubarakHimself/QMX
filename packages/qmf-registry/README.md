@@ -44,9 +44,28 @@ a CT-07 `supersedes` edge rather than editing the signed words. `PromotionEvent`
 registry card stays canonical. V1 signing is the operator's recorded approval, with no
 cryptographic dependency.
 
-Every `fp1` fingerprint is computed in `qmf-core`; this package imports only `qmf.core`
-(the promotion module also composes its own siblings `records` and `lineage`), and
-registration, lineage, and promotion are invoked at the application composition root.
-The promotion gate's own workflow, UI, and timing remain platform territory outside
-QMF, and durable persistence through `qmf-data`'s store-seam is Story 2.4. Build, lint,
-type-check, and test through the workspace `poe` tasks — never in isolation.
+CT-09 registry persistence landed (Story 2.4): the durable tail, over the single ratified
+inter-library edge `qmf-registry → qmf-data`. `RegistryPersistence` persists CT-06 records
+(SQLite metadata) and CT-07 lineage edges (JSONL append streams) into the **per-world
+registry room** through `qmf-data`'s CT-11 append-store — no database server, stdlib-typed
+at the seam. Storage is content-addressed on `fp1` (`persistence_fingerprint`, never a
+timestamp or minted id): a byte-identical re-write is idempotent while a true collision is
+refused and alarmed; a persisted record round-trips to a `LoadedRecord` (its recomputed
+stable id equal to the original's) and an edge to a `LineageEdge` (keyed on its own edge
+fingerprint exactly). Rooms are per world — a cross-world read and a `world = simulated`
+write are policy rejections (FM-7). An underlying store failure — disk-full, corrupt,
+locked, truncated — is a `storage failure` typed refusal translated at the qmf-data
+boundary, never raised across the package seam, and no partial registration is claimed
+successful (FM-8). `migrate_registry_format` runs the staged
+preflight→backup-first→dry-run→migrate→verify format migration to a distinct destination —
+never mutating the only copy in place — with the source store as the documented restore
+path, and every serialized artifact stamps its contract format version so history stays
+readable forever.
+
+Every `fp1` fingerprint is computed in `qmf-core`; this package imports `qmf.core`, its own
+siblings (`records`, `lineage`, `promotion`), and — through the one ratified edge —
+`qmf.data.store` for persistence. Under default-deny no library imports `qmf-registry`;
+registration, lineage, promotion, and persistence are invoked at the application composition
+root. The promotion gate's own workflow, UI, and timing remain platform territory outside
+QMF. Build, lint, type-check, and test through the workspace `poe` tasks — never in
+isolation.
