@@ -28,8 +28,16 @@ mandatory closed :class:`DecisionOutcome` selected by projection (:func:`select_
 :func:`veto_ledger`), cross-stream causal linkage as typed :class:`CausalEdge` records,
 gapless per-(writer, boot-epoch) sequences with loss surfaced (:func:`detect_sequence_gaps`),
 and the :class:`JournalWriter` producer (block-on-unpersistable) / :class:`JournalReader`
-pair. The remaining data-policy contracts (the entity-journal projections) land in Story 3.6
-on the same seam.
+pair. Story 3.6 lands the CT-25 read-time entity-journal projections (logbooks) over the same
+recorded streams: the Book journal, BMS journal, and per-bot journal (the operator's logbook)
+as :class:`Logbook` views selected by :class:`EntitySelector` entity identity
+(:func:`entity_journal`, :func:`book_journal`, :func:`bms_journal`, :func:`bot_logbook`), the
+risk-authored / venue-authored :class:`EventClass` split with binding identity
+(:class:`BindingIdentity`) and the pinned command-fingerprint join (:class:`CommandIndex`),
+role-scoped namespaces with the FM-11 cross-role guard and its two declared
+:class:`CrossRoleRead` exceptions (:func:`role_namespace`, :func:`decay_cohort_read`), and the
+legacy five Records streams as projection names over the one versioned
+:data:`RECORDS_STREAM_MAPPING` table (:func:`records_stream`).
 
 ``qmf.data`` imports only ``qmf-core`` (the fp1 vocabulary and typed refusals) plus
 its own engine libraries — the default-deny dependency direction (L30) holds, and the
@@ -53,6 +61,45 @@ from qmf.data.journal_producer import (
     JournalReader,
     JournalWriter,
     LineageEdgeAppender,
+)
+from qmf.data.logbooks import (
+    ACCOUNT_ID_KEY,
+    BMS_INSTANCE_ID_KEY,
+    BOOK_DEFINITION_FP_KEY,
+    BOOK_IDENTITY_FIELDS,
+    BOOK_INSTANCE_ID_KEY,
+    BOT_DEFINITION_FP_KEY,
+    COMMAND_FINGERPRINT_KEY,
+    CT25_CONTRACT_FORMAT_VERSION,
+    RECORDS_STREAM_MAPPING,
+    ROLE_KEY,
+    SEAT_BINDING_KEY,
+    VENUE_ID_KEY,
+    BindingIdentity,
+    BotSeat,
+    CommandAttribution,
+    CommandIndex,
+    CrossRoleRead,
+    EntityKind,
+    EntitySelector,
+    EventClass,
+    Logbook,
+    ProjectedRow,
+    RecordsStreamName,
+    RecordsStreamRule,
+    bms_journal,
+    book_journal,
+    bot_logbook,
+    decay_cohort_read,
+    entity_journal,
+    event_class_of,
+    guard_neutral_venue_payload,
+    read_binding,
+    read_bot_seat,
+    read_command_fingerprint,
+    read_role,
+    records_stream,
+    role_namespace,
 )
 from qmf.data.observation import ForeignMoney, ForeignTimestamp, SourceObservation
 from qmf.data.partitions import ResolvedSeries, SeriesPartition, SeriesPlacement
@@ -78,13 +125,33 @@ from qmf.data.splits import (
 from qmf.data.store import EvidenceStore
 
 __all__ = [
+    "ACCOUNT_ID_KEY",
+    "BMS_INSTANCE_ID_KEY",
+    "BOOK_DEFINITION_FP_KEY",
+    "BOOK_IDENTITY_FIELDS",
+    "BOOK_INSTANCE_ID_KEY",
+    "BOT_DEFINITION_FP_KEY",
+    "COMMAND_FINGERPRINT_KEY",
+    "CT25_CONTRACT_FORMAT_VERSION",
     "DEFAULT_SPLIT_ROLES",
     "FINAL_LOOK_SUBTYPE",
+    "RECORDS_STREAM_MAPPING",
+    "ROLE_KEY",
     "SEAL_CONTROL_STREAM",
+    "SEAT_BINDING_KEY",
+    "VENUE_ID_KEY",
+    "BindingIdentity",
+    "BotSeat",
     "CausalEdge",
     "CitationIndex",
+    "CommandAttribution",
+    "CommandIndex",
+    "CrossRoleRead",
     "DecisionOutcome",
     "EdgeWrite",
+    "EntityKind",
+    "EntitySelector",
+    "EventClass",
     "EvidenceStore",
     "ForeignMoney",
     "ForeignTimestamp",
@@ -97,10 +164,14 @@ __all__ = [
     "KnowledgeKind",
     "KnowledgeRecord",
     "LineageEdgeAppender",
+    "Logbook",
     "ObservationReceipt",
     "ProducerHorizon",
+    "ProjectedRow",
     "ReadBoundary",
     "RebuildPins",
+    "RecordsStreamName",
+    "RecordsStreamRule",
     "ResolvedSeries",
     "RetentionPolicy",
     "RetentionVerdict",
@@ -114,7 +185,20 @@ __all__ = [
     "SplitSegment",
     "WorldRooms",
     "__version__",
+    "bms_journal",
+    "book_journal",
+    "bot_logbook",
+    "decay_cohort_read",
     "detect_sequence_gaps",
+    "entity_journal",
+    "event_class_of",
+    "guard_neutral_venue_payload",
+    "read_binding",
+    "read_bot_seat",
+    "read_command_fingerprint",
+    "read_role",
+    "records_stream",
+    "role_namespace",
     "select_decisions",
     "veto_ledger",
 ]

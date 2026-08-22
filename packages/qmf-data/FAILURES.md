@@ -27,7 +27,12 @@ simulated` write (FR-4), a cross-world read (FR-5), a second distinct writer on 
 stream (FR-6), a true fp1 collision (FR-2), and the raw storage-failure translation
 (FR-1) are inherited unchanged; FR-26 and FR-27 below build the block-on-unpersistable
 *command-stream* discipline on top of that translation, which the store seam alone does
-not provide.
+not provide. Story 3.6 delivers the CT-25 read-time entity-journal projections
+(logbooks) — the Book/BMS/per-bot journals, the command-fingerprint join, the
+role-scoped namespaces, and the legacy-five-stream mapping table — FR-32 through FR-36.
+Story 3.6 is **read-only**: it resolves projections over the already-recorded streams and
+writes nothing, so it introduces no new persistence failure and inherits no store-seam
+entry; its designed failures are the value-level refusals a projection returns.
 
 ### FR-1: A store-engine failure is translated to a storage-failure refusal (AC4)
 
@@ -668,3 +673,121 @@ store hiccups.
   no longer matches the fingerprint it was recorded under (corruption or tampering). The
   platform refuses it rather than return altered evidence; an operator restores it from an
   off-machine backup.
+
+### FR-32: An entity-journal projection spanning account roles without a declared cross-role read is refused (AC3)
+
+This is the FM-11 paper-and-live separation mode. Read it as the whole story: it is the
+rule that keeps a projection from silently mixing live money with paper/demo evidence.
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **What it means, in plain terms.** Paper and live are separated by construction: each
+  account role (live, demo, paper-validation, paper-benched) resolves in its **own**
+  role-scoped namespace, and `role = live` resolves in the live evidence namespace that
+  admits only live rows (`role_namespace`). A projection that would combine rows of more
+  than one role into one view is aggregating across roles — which is allowed **only** when
+  the caller explicitly declares it, so live results are never silently blended with paper.
+- **Detection:** `entity_journal` (and the `book_journal` / `bms_journal` / `bot_logbook`
+  conveniences) collects the roles carried on the selected rows. When the caller passes
+  neither a single `role` scope nor a declared `cross_role` read, and the selected rows span
+  more than one role, it returns a `policy rejection` naming the `roles` found and the
+  `selector`. Passing a single `role` resolves inside that one namespace (rows of other
+  roles are simply outside it); passing both `role` and `cross_role` is a contradiction
+  (`invalid input`).
+- **Auto-recovery / retry:** none automatic; the refusal names the `roles` present. Read one
+  role's namespace (`role=...`), or — only for the two declared exceptions — pass the
+  cross-role read: the AD-35 decay-cohort read (`decay_cohort_read`) or the multi-role entity
+  projection (`cross_role=MULTI_ROLE_ENTITY`), each carrying `role` on every row.
+- **Visible degraded state:** none; no blended view is returned. There is **no write
+  exception ever** — this projection layer writes nothing and never crosses roles on write.
+- **Notification tier:** operator-visible. A projection reaching across account roles without
+  declaring it is a governance event worth surfacing.
+- **Product-user affordance:** a view tried to combine records from more than one account
+  role (for example live and paper) without saying so; the platform refuses rather than mix
+  live money with paper evidence. Ask for one role's logbook, or explicitly request the
+  cross-role view the platform allows (the decay-cohort read or a single entity that ran in
+  more than one role).
+
+### FR-33: Book/Bot identity in a venue-authored payload is refused (AC2)
+
+- **Failure class:** `invalid input` (a CT-04 refusal category).
+- **Detection:** the neutral venue port cannot carry Book identity and must not learn it —
+  a Book projection joins venue-authored orders and fills to their authorizing decision
+  through the command fingerprint, never by threading Book identity into the venue payload
+  (which would create the `qmf-venue -> qmf-risk` coupling default-deny forbids).
+  `guard_neutral_venue_payload` (called by `read_command_fingerprint` and by the venue-join
+  path of `entity_journal`) refuses any venue-authored event whose payload carries one of the
+  `BOOK_IDENTITY_FIELDS` — `book_definition_fp`, `book_instance_id`, `bms_instance_id`,
+  `bot_definition_fp`, `seat_binding` — naming the `leaked_fields`.
+- **Auto-recovery / retry:** none automatic; the refusal names the leaked fields. Remove the
+  Book identity from the venue payload and carry it on the authorizing command record instead,
+  then re-project.
+- **Visible degraded state:** none; the leaked event is not projected, and the projection
+  refuses rather than silently attribute a venue event by an identity that should not be there.
+- **Notification tier:** silent-log. A producer wiring mistake surfaced as a value.
+- **Product-user affordance:** nothing failed at runtime for an end user; a venue event was
+  recorded with Book identity baked into it, which the design forbids. The refusal says which
+  fields leaked; the producer keeps the venue payload neutral and lets the Book projection
+  join through the command fingerprint.
+
+### FR-34: A malformed or missing projection identity field is refused during selection (AC2, AC3)
+
+- **Failure class:** `invalid input` (a CT-04 refusal category).
+- **Detection:** a risk-authored event that a projection matches must carry well-formed
+  identity fields under the pinned CT-25 keys. During selection the projection refuses a
+  **partial** binding identity (some of the four binding keys present, others missing or
+  blank — `read_binding`), a **partial** per-bot identity (a Bot definition fp without its
+  seat binding, or vice versa, or a malformed fingerprint — `read_bot_seat`), and a matched
+  row that carries no declared `role` (`read_role`) — every projected row must carry a role.
+  A risk-authored event that declares **no** binding at all (zero binding keys, e.g. a
+  qmf-data control action) is not malformed — it simply does not match an entity selector and
+  is skipped, never refused.
+- **Auto-recovery / retry:** none automatic; the refusal names the offending `field`
+  (`book_instance_id`, `seat_binding`, `role`, …). Supply the missing part on the producing
+  event and re-project.
+- **Visible degraded state:** none; the projection is not returned. It fails closed rather
+  than emit a row whose identity or role is half-declared.
+- **Notification tier:** silent-log. A producer wiring mistake surfaced as a value.
+- **Product-user affordance:** nothing failed at runtime for an end user; a record that a
+  logbook tried to attribute was missing part of its identity (which Book/bot it belongs to,
+  or which account role it ran under). The refusal says which field; the producer supplies it
+  and the logbook resolves.
+
+### FR-35: A conflicting command-fingerprint attribution is refused (AC2)
+
+- **Failure class:** `invalid input` (a CT-04 refusal category).
+- **Detection:** the command-fingerprint join is built by `CommandIndex.build` from the
+  risk-authored events that carry a command fingerprint (the command records). One command
+  fingerprint identifies one command, so it must attribute to exactly one binding. A repeated
+  fingerprint with a **byte-identical** attribution is idempotent; a repeated fingerprint
+  resolving to a **different** binding is refused, naming the `command_fingerprint` — one
+  command must never map to two Books. A command record carrying a command fingerprint but no
+  valid binding, or a malformed command fingerprint, is likewise refused.
+- **Auto-recovery / retry:** none automatic; the refusal names the conflicting
+  `command_fingerprint`. The conflict signals corrupt or mis-stamped command records; restore
+  the affected records from an off-machine backup or re-derive them, then rebuild the index.
+- **Visible degraded state:** none; the index is not built, so no venue event is joined under
+  an ambiguous attribution.
+- **Notification tier:** operator-visible. One command fingerprint attributing to two
+  bindings is an evidence-integrity event worth surfacing.
+- **Product-user affordance:** two command records claimed the same command identity but point
+  at different Books; the platform refuses to build the join rather than attribute an order or
+  fill to the wrong Book. An operator restores the affected records and the join rebuilds.
+
+### FR-36: An unknown legacy Records projection name is refused (AC4)
+
+- **Failure class:** `invalid input` (a CT-04 refusal category).
+- **Detection:** the legacy five Records streams survive as **projection names only** —
+  `veto_ledger`, `trade_journal`, `book_journal`, `ksa_audit_log`, `correlation_ledger` —
+  mapped onto the seven journal event types by the one versioned `RECORDS_STREAM_MAPPING`
+  table. `records_stream` resolves only those five names (as a `RecordsStreamName` or its
+  string); any other name is refused, naming the `allowed` set. No second event catalog is
+  minted, and `veto_ledger` selects on the decision event's declared `outcome =
+  refused-by-door` field, never on key presence.
+- **Auto-recovery / retry:** none automatic; the refusal names the `given` name and the five
+  allowed names. Use one of the five legacy projection names, or an entity-journal projection
+  for a per-entity view.
+- **Visible degraded state:** none; nothing is projected.
+- **Notification tier:** silent-log. A wiring mistake surfaced as a value.
+- **Product-user affordance:** nothing failed at runtime for an end user; a component asked
+  for a Records stream name the platform does not carry. The refusal lists the five names that
+  exist; use one of them.
