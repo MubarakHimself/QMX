@@ -23,7 +23,7 @@ def test_reference_usage_example_runs_clean() -> None:
         check=False,
     )
     assert completed.returncode == 0, completed.stderr
-    assert "CT-15 → CT-10 routed:" in completed.stdout
+    assert "CT-15 -> CT-10 routed:" in completed.stdout
     assert "idempotent key; revision is a new fp1 artifact" in completed.stdout
     assert "foreign timestamp and money: stored verbatim" in completed.stdout
     assert "incomplete / unmapped instrument: invalid input" in completed.stdout

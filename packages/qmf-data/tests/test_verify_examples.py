@@ -31,7 +31,7 @@ def test_reference_usage_example_runs_clean() -> None:
     assert "sample-restore: recoverability claimed" in completed.stdout
     assert "corrupt restore: storage failure (no recoverability claim)" in completed.stdout
     assert (
-        "migration: preflight → backup-first → dry-run → migrate → verify; "
+        "migration: preflight -> backup-first -> dry-run -> migrate -> verify; "
         "source untouched; recoverability via full-restore rehearsal" in completed.stdout
     )
 

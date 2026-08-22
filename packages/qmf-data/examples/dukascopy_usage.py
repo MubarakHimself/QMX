@@ -178,7 +178,7 @@ def main() -> None:
     )
     if not is_refusal(unmapped) or unmapped.category is not RefusalCategory.INVALID_INPUT:
         raise AssertionError("expected unmappable instrument invalid input")
-    print("malformed / unmappable → invalid input")
+    print("malformed / unmappable -> invalid input")
 
     # AC4 — complete corpus refused.
     corpus = adapter.download_complete_corpus()

@@ -26,7 +26,7 @@ def test_reference_usage_example_runs_clean() -> None:
     assert "download-once CT-10:" in completed.stdout
     assert "license-tagged window:" in completed.stdout
     assert "unlicensed window refused for governed evidence" in completed.stdout
-    assert "malformed / unmappable → invalid input" in completed.stdout
+    assert "malformed / unmappable -> invalid input" in completed.stdout
     assert "complete-corpus download refused" in completed.stdout
     assert "external recovery / checkpoint ownership refused" in completed.stdout
 
