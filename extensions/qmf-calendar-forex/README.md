@@ -7,14 +7,18 @@ The first market-hours calendar extension. Off-roster, on its own SemVer ladder,
 
 ## Status
 
-Story 4.1 — package scaffold with import-time tzdb verification. At import the
-package forces `TZPATH` to its pinned `tzdata==2025.2` (IANA `2025b`), calls
-`qmf.core.verify_tzdb_pin`, and on match exposes a ready `CalendarIdentity`
-(`forex-17NY` / `v1` / verified tzdata version) for downstream fingerprints. On
+Story 4.2 — forex-17NY CT-02 market-hours calendar provider on top of the Story 4.1
+scaffold. At import the package forces `TZPATH` to its pinned `tzdata==2025.2`
+(IANA `2025b`), calls `qmf.core.verify_tzdb_pin`, and on match exposes a ready
+`CalendarIdentity` (`forex-17NY` / `v1` / verified tzdata version) plus
+`Forex17NYCalendar` via `get_provider()`. The provider applies the
+`registry:forex_rollover` rule (17:00 America/New_York), returns `TradingDate`
+through `qmf.core.TradingDate.try_create`, models weekend gaps and the pinned
+holiday set as `SessionWindow` data, refuses day-boundary and news questions as
+out of authority, and fingerprints only through `qmf.core.fingerprint`. On tzdb
 mismatch it stores an `unavailable dependency` TypedRefusal and does not become
-a usable provider. The CT-02 rollover / session-schedule surface arrives in later
-stories. Build, lint, type-check, and test it through the workspace `poe` tasks —
-never in isolation.
+a usable provider. Build, lint, type-check, and test it through the workspace
+`poe` tasks — never in isolation.
 
 ## SemVer and the tzdata pin
 
