@@ -295,7 +295,7 @@ def main() -> None:
         boundary = SourceObservationBoundary(EvidenceStore(Path(tmp)))
 
         fp = fetch_normalize_and_route(ingest, boundary)
-        print(f"CT-15 → CT-10 routed: {fp[:24]}...")
+        print(f"CT-15 -> CT-10 routed: {fp[:24]}...")
 
         original_fp, revision_fp = idempotent_and_revision(ingest)
         _require(original_fp != revision_fp, "revision distinct")

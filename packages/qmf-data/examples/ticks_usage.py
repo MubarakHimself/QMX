@@ -268,7 +268,7 @@ def revision_linked(ingest: ExternalSourceIngest) -> str:
     )
     _require(edge.edge_type == EDGE_SUPERSEDES, "supersedes edge")
     return (
-        f"r2 supersedes r1 ({edge.from_ref.value[-12:]} → {edge.to_ref.value[-12:]}); "
+        f"r2 supersedes r1 ({edge.from_ref.value[-12:]} -> {edge.to_ref.value[-12:]}); "
         "earlier evidence kept"
     )
 
