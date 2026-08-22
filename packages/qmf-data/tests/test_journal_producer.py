@@ -8,6 +8,7 @@ on recovery), and the reader's gap-as-loss signal.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -43,6 +44,12 @@ def _live_journal(store: EvidenceStore) -> JournalStore:
     world = store.for_world(World.LIVE)
     assert is_ok(world)
     return world.value.journal
+
+
+def _sole_journal_file(store: EvidenceStore, stream: str) -> Path:
+    matches = sorted(store.root.glob(f"**/journal/{stream}/*.jsonl"))
+    assert len(matches) == 1, matches
+    return matches[0]
 
 
 class _FlakyStream:
@@ -338,6 +345,43 @@ def test_reader_corrupt_row_is_refused(tmp_path: Path) -> None:
     result = JournalReader(journal).read("dq", for_world=World.LIVE)
     assert is_refusal(result)
     assert result.context.get("field") == "fingerprint"
+
+
+def test_reader_refuses_a_hand_planted_foreign_world_row(store: EvidenceStore) -> None:
+    # Read-side world guard (defense in depth): the write-side guard already blocks a
+    # cross-world event from ever landing, but a well-formed foreign-world row hand-planted
+    # DIRECTLY into a live stream file must not be served either. read_stream re-checks every
+    # stored row's declared world against the room's and refuses a mismatch as corrupt
+    # evidence — world isolation holds on the stored bytes, not just the read's declared world.
+    journal = _live_journal(store)
+    writer = _writer()
+    jw = JournalWriter(journal, writer, stream_name="dq")
+    assert is_ok(jw.record_data_quality({"n": 0}, instant=1))  # a legitimate live row
+
+    # A valid REPLAY event: its world is folded into fp1, so the row carries a valid
+    # fingerprint and would pass from_row's tamper check — only the world guard catches it.
+    foreign = JournalEvent.try_create(
+        event_type="data quality",
+        writer=writer,
+        sequence=0,
+        instant=2,
+        world=World.REPLAY,
+        payload={"n": 1},
+    )
+    assert is_ok(foreign)
+
+    # Direct file tampering: append the replay row as an LF-terminated line to the live file.
+    with _sole_journal_file(store, "dq").open("ab") as handle:
+        handle.write(json.dumps(foreign.value.to_row()).encode("utf-8") + b"\n")
+
+    result = JournalReader(journal).read("dq", for_world=World.LIVE)
+    assert is_refusal(result)
+    assert result.category.value == "storage failure"
+    assert result.retryability.value == "no"
+    assert result.context.get("room_world") == "live"
+    assert result.context.get("declared") == "replay"
+    # The store-level read_stream is the choke point, so a plain read_stream refuses too.
+    assert is_refusal(journal.read_stream("dq", for_world=World.LIVE))
 
 
 # --- L10: restart-resume and stream-derived gap base ------------------------

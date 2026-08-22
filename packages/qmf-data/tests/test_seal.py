@@ -381,6 +381,44 @@ def test_resolve_series_derives_seal_position_from_rows_not_just_the_window(
     assert resolved.context.get("boundary") == "split-governed research door"
 
 
+def test_facade_seal_guards_the_research_door_even_when_the_store_has_no_seal(
+    tmp_path: Path,
+) -> None:
+    # Dead-seal regression: a caller may wire the no-peek seal ONLY at WorldRooms, over a
+    # store that itself has no seal. resolve_series must still consult that facade-level seal
+    # at the split-governed research door — otherwise wiring the seal only here yields a
+    # silently unguarded door (the docstring promise held only when the store also had one).
+    seal = _instant_seal(boundary_ns=1_000, world=World.LIVE)
+    store = EvidenceStore(tmp_path / "store")  # NO store-level seal is wired
+    bundle = store.for_world(World.LIVE)
+    assert is_ok(bundle)
+    rooms = WorldRooms.for_world(store, World.LIVE, seal=seal)  # the seal is wired ONLY here
+    assert is_ok(rooms)
+
+    # A series whose window reaches into the sealed no-peek period is refused at the door...
+    sealed_series = rooms.value.place_series(
+        _series_partition(start_ns=2_000, end_ns=3_000), [{"t": 2_500, "px": 1}]
+    )
+    assert is_ok(sealed_series)
+    sealed = rooms.value.resolve_series(
+        sealed_series.value.archive.fingerprint.value, for_world=World.LIVE
+    )
+    assert is_refusal(sealed)
+    assert sealed.category is RefusalCategory.POLICY_REJECTION
+    assert sealed.context.get("boundary") == "split-governed research door"
+
+    # ...while a series outside the sealed window still resolves (the seal only locks the holdout).
+    open_series = rooms.value.place_series(
+        _series_partition(start_ns=100, end_ns=500), [{"t": 300, "px": 1}]
+    )
+    assert is_ok(open_series)
+    assert is_ok(
+        rooms.value.resolve_series(
+            open_series.value.archive.fingerprint.value, for_world=World.LIVE
+        )
+    )
+
+
 def test_guard_read_coerces_boundary_and_position() -> None:
     # The store seam consults the seal through guard_read with store-neutral inputs: a
     # boundary NAME string and a position as an int64-ns count or a ReadBoundary member.

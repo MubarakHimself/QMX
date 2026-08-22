@@ -540,7 +540,12 @@ amends Story 3.3's retention law (the citation index fails closed) and FR-38 ame
   at a position **derived from the evidence itself**: the latest of the series' declared window
   end and the rows' own event-times (`WorldRooms.resolve_series`), so the seal cannot be bypassed
   by omitting a position nor by an under-stated window (which `place_series` also refuses at write
-  time, FR-16), and no path returns sealed raw bytes unguarded. `HoldoutSeal.guard_read` compares
+  time, FR-16), and no path returns sealed raw bytes unguarded. The research door consults the
+  seal **whichever surface it is wired at**: a seal wired into the store's `AppendStore` is
+  guarded by `read_raw_self_guarded`, and a seal wired into `WorldRooms.for_world` is consulted by
+  `resolve_series` at the **same** derived position — so wiring the seal at either surface (or
+  both) leaves no unguarded research door, and wiring it only at `WorldRooms` (over a store with no
+  seal) is no longer a silently unguarded door. `HoldoutSeal.guard_read` compares
   the read's knowledge position against the frozen seal boundary and refuses a position at or
   after it with a `policy rejection` naming the boundary — **never** a silent empty result. It is
   enforced now, independent of the deferred look-ahead and attempt-counter gates
@@ -919,3 +924,36 @@ Amends Story 3.4's CT-12 dataset splits (grouped with FR-18 through FR-25).
   right on the edge of a split boundary would have leaked information across the held-out
   boundary. The platform excludes it from both adjacent splits rather than leak; drop the
   boundary-adjacent record or re-cut the split.
+
+### FR-39: A stored journal row of a foreign world is refused on read, never served (AC5)
+
+Amends Story 3.1's cross-world isolation (grouped with FR-4 the write-side world guard and FR-5
+the cross-world read). This is the read-side, defense-in-depth counterpart to FR-4.
+
+- **Failure class:** `storage failure` (a CT-04 refusal category), retryability `no`.
+- **Detection:** world isolation is storage separation, enforced on **both** the write side and
+  the read side. On the write side, `require_write_world` blocks a journal event whose declared
+  world differs from the room's from ever landing (FR-4). On the read side, `JournalStore.read_stream`
+  now re-checks **every stored row's own declared world** against the room's world
+  (`guard_stored_row_world`) after loading the stream and before returning it. Because the write-side
+  guard blocks a cross-world event on the way in, a stored row that declares a *different* world than
+  the room's can only have arrived through **direct file tampering** — corrupt stored evidence, not a
+  caller mistake — so it is surfaced exactly how a torn middle line or a sequence gap is (a
+  `storage failure`, retryability `no`) and never served as valid. The refusal names the offending
+  `row_index`, the `declared` world, and the `room_world`. A row that declares **no** world inherits
+  the room's world (a bare physical row carries none), exactly as the write-side guard treats it, so
+  a legitimately world-less row is never refused. `read_stream` is the store-seam choke point for
+  every governed reader — `JournalReader.read` / `read_checked`, the seal's control-action stream
+  scan, `JournalWriter.resume` — so all of them inherit the guard; the verbatim `BackupInput` copy
+  path is deliberately not gated (a backup copies bytes as-is, tampered or not, for forensics).
+- **Auto-recovery / retry:** none automatic; retryability is `no` — the stored bytes are wrong and
+  retrying the same read will not fix them. Restore the stream from an off-machine backup or
+  re-derive the affected records; the refusal says which row and which world.
+- **Visible degraded state:** none; no evidence is returned, and the tampered row is never presented
+  as valid. Other streams are unaffected.
+- **Notification tier:** operator-visible. A stored journal row belonging to another world is an
+  evidence-integrity event worth surfacing — governed storage separation was violated on disk.
+- **Product-user affordance:** a record of events came back with a row belonging to a different
+  world (live vs. replay) than the stream it was read from, which can only happen if the file was
+  altered outside the platform. The platform refuses the stream rather than hand back mixed-world
+  evidence; an operator restores it from an off-machine backup.

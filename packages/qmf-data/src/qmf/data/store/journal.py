@@ -30,6 +30,7 @@ from qmf.data.store.receipts import StoreReceipt
 from qmf.data.store.refusals import translate_engine_failure
 from qmf.data.store.rooms import (
     RoomRole,
+    guard_stored_row_world,
     namespace_block,
     require_same_world,
     require_write_world,
@@ -142,6 +143,14 @@ class JournalStore:
         ``Ok([])`` (streams are lazily created; an absent stream is an empty one). A
         corrupt stream (a non-JSON or partial line) is a ``storage failure`` refusal,
         never a raw decode error across the seam (H3, AC4).
+
+        Each stored row is additionally re-checked against the room's world
+        (:func:`guard_stored_row_world`) — the symmetric read-side counterpart to the
+        write-side ``require_write_world`` guard. A row whose declared world differs from
+        the room's can only have arrived through direct file tampering (the write-side guard
+        blocks it on the way in), so it is surfaced as a corrupt-evidence ``storage
+        failure`` and never served, and world isolation holds on the stored bytes
+        themselves (DEC-0110, DEC-0117).
         """
         gate = require_same_world(self._world, for_world)
         if is_refusal(gate):
@@ -157,6 +166,10 @@ class JournalStore:
             events = [_load(line) for line in reader.read_all()]
         except StoreEngineError as exc:
             return translate_engine_failure(exc)
+        for index, event in enumerate(events):
+            foreign = guard_stored_row_world(self._world, event.get("world"), index=index)
+            if foreign is not None:
+                return foreign
         return Ok(events)
 
 

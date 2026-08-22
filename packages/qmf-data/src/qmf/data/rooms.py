@@ -61,6 +61,7 @@ from qmf.data.store import (
     RoomRole,
     StoreReceipt,
     WorldStore,
+    guard_sealed_read,
 )
 from qmf.data.store.refusals import invalid_input, storage_failure
 
@@ -305,6 +306,12 @@ class WorldRooms:
         omitting a position nor by an under-stated window (the read is composed through
         :meth:`AppendStore.read_raw_self_guarded`, which guards the seal at that derived
         position and never returns sealed raw bytes unguarded).
+
+        The seal is honored **whichever place it is wired**: a seal wired here on
+        :meth:`for_world` is consulted at the derived position, and a seal wired into the
+        store's :class:`~qmf.data.store.AppendStore` is consulted at the same position by
+        ``read_raw_self_guarded`` — so wiring the seal at either surface (or both) leaves no
+        unguarded research door, and neither can be bypassed by wiring only the other.
         """
         resolved_holder: list[ResolvedSeries] = []
 
@@ -321,6 +328,14 @@ class WorldRooms:
                 return resolved
             resolved_holder.append(resolved.value)
             position: object = self._series_seal_position(resolved.value)
+            # Consult the facade-level no-peek seal at the research door too, so the seal
+            # holds whichever place it is wired: a caller that wires it ONLY here (over a
+            # store with no seal) still gets a guarded door, and the store-level seal is
+            # guarded separately by read_raw_self_guarded below. Both consult the same
+            # derived position, so neither can be bypassed (AC4; DEC-0119).
+            sealed = guard_sealed_read(self._seal, position, boundary=_RESEARCH_DOOR_BOUNDARY)
+            if sealed is not None:
+                return sealed
             return Ok(position)
 
         read = self._store.append_store.read_raw_self_guarded(

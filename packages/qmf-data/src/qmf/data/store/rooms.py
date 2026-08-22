@@ -20,8 +20,16 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Protocol, runtime_checkable
 
-from qmf.core import Ok, Result, TypedRefusal, World, governed_namespace, is_refusal
-from qmf.data.store.refusals import invalid_input, policy_rejection
+from qmf.core import (
+    Ok,
+    Result,
+    Retryability,
+    TypedRefusal,
+    World,
+    governed_namespace,
+    is_refusal,
+)
+from qmf.data.store.refusals import invalid_input, policy_rejection, storage_failure
 
 __all__ = [
     "EVIDENCE_BEARING_ROLES",
@@ -29,6 +37,7 @@ __all__ = [
     "ReadSeal",
     "RoomRole",
     "guard_sealed_read",
+    "guard_stored_row_world",
     "namespace_block",
     "namespace_for_write",
     "require_same_world",
@@ -182,6 +191,43 @@ def require_write_world(bound_world: World, declared_world: object) -> TypedRefu
             room_world=bound_world.value,
         )
     return None
+
+
+def guard_stored_row_world(
+    bound_world: World, declared_world: object, *, index: int
+) -> TypedRefusal | None:
+    """Refuse a *stored* row whose declared world differs from the room's (integrity).
+
+    The read-side, defense-in-depth counterpart to :func:`require_write_world`. The
+    write-side guard already blocks a cross-world event from ever landing, so a stored row
+    that declares a world **different** from the room's can only have arrived through direct
+    file tampering — corrupt stored evidence, not a caller mistake. It is surfaced as a
+    ``storage failure`` (retryability ``no``, exactly how a torn middle line or a sequence
+    gap is surfaced), never served as valid, so world isolation holds on the stored bytes
+    themselves and not merely on the read's declared world (DEC-0110, DEC-0117).
+
+    A row that declares **no** world (``None``) inherits the room's world — a bare physical
+    row carries none — exactly as the write-side guard treats it, so this never refuses a
+    legitimately world-less row. ``index`` is the offending row's position in the stream,
+    carried on the refusal for the operator. Returns ``None`` when the row belongs here.
+    """
+    if declared_world is None or declared_world == bound_world.value:
+        return None
+    return storage_failure(
+        "a stored journal row declares a world different from the room's; the write-side "
+        "guard blocks a cross-world event from ever landing, so this row can only have "
+        "arrived through direct file tampering — corrupt evidence that is refused rather "
+        "than served, so world isolation holds on the stored bytes themselves, never just "
+        "on the read's declared world (DEC-0110, DEC-0117)",
+        retryability=Retryability.NO,
+        context={
+            "field": "world",
+            "signal": "world-isolation",
+            "declared": declared_world,
+            "room_world": bound_world.value,
+            "row_index": index,
+        },
+    )
 
 
 @runtime_checkable
