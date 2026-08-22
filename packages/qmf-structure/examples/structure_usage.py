@@ -1,11 +1,13 @@
-"""Reference usage — CT-17 causal structure object mint and emission invariant
-(COMP-QMF-STRUCTURE).
+"""Reference usage — CT-17 causal structure object mint, emission invariant, and the
+append-only lifecycle with its read-time fold (COMP-QMF-STRUCTURE).
 
 Executable::
 
     python packages/qmf-structure/examples/structure_usage.py
 
-Shows the five things Story 9.1 pins down:
+Shows what Stories 9.1 and 9.2 pin down.
+
+Story 9.1 — the mint and the emission invariant:
 
 1. A structure object is minted **once at observation** against a declared family,
    carrying family identity + version, exact-rational parameters, its confirmation rule,
@@ -19,8 +21,18 @@ Shows the five things Story 9.1 pins down:
    ``observed_at``, and an ``observed_at`` behind a consumed input's evidence time, are
    each ``invalid input`` refusals (FM-1). Equal instants are legal (consumption, not
    look-ahead).
-5. Every ``fp1`` fingerprint is computed in qmf-core, and this module imports only
-   qmf.core and qmf.structure.
+
+Story 9.2 — the append-only lifecycle and the read-time fold:
+
+5. Confirmation, invalidation, and interaction records are separate append-only typed
+   records referencing the object by ``fp1``; "still valid at T" is a **read-time fold**
+   over the record stream, never a stored field. Reading at a later T sees a later fact;
+   reading before it does not (look-ahead-safe).
+6. A refit mints a **new** artifact with a ``supersedes`` edge and keeps the lineage's
+   first observed-at; the prior object is untouched — a correction never overwrites (FM-3).
+
+Every ``fp1`` fingerprint is computed in qmf-core, and this module imports only qmf.core
+and qmf.structure.
 """
 
 from __future__ import annotations
@@ -42,11 +54,16 @@ from qmf.core import (
 )
 from qmf.structure import (
     AnchorSpan,
+    ConfirmationRecord,
     ConfirmationRule,
     DeclaredFamily,
     FamilyIdentity,
+    InvalidationRecord,
+    LifecycleEdgeKind,
     StructureObject,
     check_emission_invariant,
+    refit,
+    resolve_state,
 )
 
 T = TypeVar("T")
@@ -203,6 +220,64 @@ def emission_invariant_refuses_lookahead() -> tuple[TypedRefusal, TypedRefusal]:
     return ordering, lookahead
 
 
+def lifecycle_state_is_a_read_time_fold() -> tuple[bool, bool]:
+    """Confirmation/invalidation are append-only records; validity is a read-time fold."""
+    obj = minted_object_has_derived_fingerprint()
+    obj_fp = _unwrap(obj.content_fingerprint(), "object fp1")
+    invalidation = _unwrap(
+        InvalidationRecord.try_create(obj_fp, Instant(value_ns=1_700_000_360_000_000_000)),
+        "invalidation record",
+    )
+    # Read before the invalidation instant: still valid. Read after it: no longer valid.
+    before = _unwrap(
+        resolve_state(obj, [invalidation], at=Instant(value_ns=1_700_000_300_000_000_000)),
+        "state before",
+    )
+    after = _unwrap(
+        resolve_state(obj, [invalidation], at=Instant(value_ns=1_700_000_400_000_000_000)),
+        "state after",
+    )
+    assert not hasattr(obj, "still_valid")  # never a stored field
+    assert before.still_valid is True
+    assert after.still_valid is False
+    return before.still_valid, after.still_valid
+
+
+def confirmation_record_references_object_by_fingerprint() -> str:
+    """A confirmation record references its object by fp1 and its instant is identity."""
+    obj = minted_object_has_derived_fingerprint()
+    obj_fp = _unwrap(obj.content_fingerprint(), "object fp1")
+    record = _unwrap(
+        ConfirmationRecord.try_create(obj_fp, Instant(value_ns=1_700_000_300_000_000_000)),
+        "confirmation record",
+    )
+    assert record.object_ref == obj_fp
+    return _unwrap(record.content_fingerprint(), "record fp1").value
+
+
+def refit_mints_a_new_artifact_not_an_overwrite() -> tuple[str, str]:
+    """A refit mints a new artifact with a supersedes edge; the prior object is untouched."""
+    prior = minted_object_has_derived_fingerprint()
+    prior_fp = _unwrap(prior.content_fingerprint(), "prior fp1")
+    new_anchor = _unwrap(
+        AnchorSpan.try_create(
+            Instant(value_ns=1_700_000_000_000_000_000),
+            Instant(value_ns=1_700_000_060_000_000_000),
+            _price(108_100),  # a new fit
+            _price(108_700),
+        ),
+        "refit anchor",
+    )
+    result = _unwrap(
+        refit(prior, anchor=new_anchor, observed_at=Instant(value_ns=1_700_000_300_000_000_000)),
+        "refit",
+    )
+    assert result.supersedes_edge.kind is LifecycleEdgeKind.SUPERSEDES
+    assert result.superseded_ref == prior_fp
+    assert _unwrap(prior.content_fingerprint(), "prior fp1 after") == prior_fp  # untouched
+    return prior_fp.value, _unwrap(result.superseding.content_fingerprint(), "new fp1").value
+
+
 def main() -> None:
     obj = minted_object_has_derived_fingerprint()
     fp = _unwrap(obj.content_fingerprint(), "fp1")
@@ -217,6 +292,15 @@ def main() -> None:
     ordering, lookahead = emission_invariant_refuses_lookahead()
     print(f"anchor end after observed-at refused: {ordering.category.value}")
     print(f"observed-at behind consumed input refused: {lookahead.category.value}")
+
+    before, after = lifecycle_state_is_a_read_time_fold()
+    print(f"still valid is a read-time fold (before={before}, after={after})")
+
+    record_fp = confirmation_record_references_object_by_fingerprint()
+    print(f"confirmation record references object by fp1: {record_fp[:19]}...")
+
+    prior_fp, new_fp = refit_mints_a_new_artifact_not_an_overwrite()
+    print(f"refit mints a new artifact, prior untouched: {prior_fp != new_fp}")
 
 
 if __name__ == "__main__":

@@ -2,8 +2,9 @@
 
 Runs ``examples/structure_usage.py`` as a fresh process — the same subprocess idiom the
 qmf-core and qmf-registry example tests use — and checks it exits clean and demonstrates
-the object mint, the derived fingerprint, cross-sandbox dedup, immutability, and the
-emission-invariant refusals.
+the object mint, the derived fingerprint, cross-sandbox dedup, immutability, the
+emission-invariant refusals, the append-only lifecycle read-time fold, and the refit that
+mints a new artifact instead of overwriting.
 """
 
 from __future__ import annotations
@@ -36,3 +37,6 @@ def test_reference_usage_example_runs_clean() -> None:
     assert "object immutable and unstamped" in completed.stdout
     assert "anchor end after observed-at refused: invalid input" in completed.stdout
     assert "observed-at behind consumed input refused: invalid input" in completed.stdout
+    assert "still valid is a read-time fold (before=True, after=False)" in completed.stdout
+    assert "confirmation record references object by fp1: fp1:sha256:" in completed.stdout
+    assert "refit mints a new artifact, prior untouched: True" in completed.stdout
