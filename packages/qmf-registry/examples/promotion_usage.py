@@ -137,6 +137,9 @@ def correcting_the_summary_mints_a_new_card() -> tuple[str, str]:
         correct_summary(
             prior,
             "Promote the EUR/USD scalping bot to live after paper review.",
+            # A correction is a FRESH human approval: the reviewer who read the corrected
+            # words signs the new card, never the prior card's signature reused (H2).
+            signer="operator:mubarak",
             writer=_writer("node-a"),
             sequence=1,
             signed_at=_instant(_SIGNED_NS + 60),

@@ -453,6 +453,35 @@ def test_registrar_refuses_unknown_and_reserved_kinds() -> None:
     assert reserved.context["reserved"] is True
 
 
+def test_try_create_refuses_reserved_kinds_on_the_public_path() -> None:
+    # H2 / Story 2.1 AC4: reserved kind names are honored on EVERY admission path, the public
+    # RegistrationRecord.try_create included — so a promotion-occurrence card can never be
+    # forged by minting a reserved-kind record with a card-shaped body through this factory.
+    for name in sorted(RESERVED_KIND_NAMES):
+        refused = RegistrationRecord.try_create(
+            name,
+            1,
+            (),
+            {"signer": "not-a-human", "plain_words_summary": "forged", "attested_fp1": "x"},
+            _writer(),
+            0,
+            _instant(),
+        )
+        assert isinstance(refused, TypedRefusal)
+        assert refused.category is RefusalCategory.INVALID_INPUT
+        assert refused.context["kind"] == name
+        assert refused.context["reserved"] is True
+
+
+def test_is_genuine_reserved_record_is_false_for_ordinary_and_non_records() -> None:
+    # H2: only a reserved-kind record minted through the dedicated signing path is genuine.
+    # An ordinary registration record (built through the public factory) never is, and a
+    # non-record is never genuine either.
+    assert records_module.is_genuine_reserved_record(_record()) is False
+    assert records_module.is_genuine_reserved_record(object()) is False
+    assert records_module.is_genuine_reserved_record(None) is False
+
+
 def test_registrar_refuses_bad_field_and_non_mapping_body() -> None:
     registrar = Registrar(_registry())
     bad_field = registrar.register(

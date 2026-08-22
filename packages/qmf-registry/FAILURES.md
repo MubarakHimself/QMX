@@ -16,7 +16,14 @@ written for someone who was not in the design room.
   generic path; and a body carrying a field the kind's contract does not define (or
   missing a required one) is refused with the offending `unknown` / `missing` field
   names. Kinds — and a kind's field set — are addable in a later version, never
-  redefined.
+  redefined. Reserved names are honored on **every** admission path, not only the
+  `KindRegistry`/`Registrar` surface: the public `RegistrationRecord.try_create` refuses
+  a reserved kind outright (`reserved: true`), and `RegistryPersistence.persist_record`
+  refuses a reserved-kind record that was not minted through its dedicated signing path
+  (FR-9's `policy rejection`), so a promotion-occurrence card can never be forged by
+  minting a reserved-kind record with a card-shaped body and persisting it (Story 2.1
+  AC4; DEC-0116, DEC-0158). Only `PromotionCard.sign` mints a reserved kind, through the
+  package-internal reserved-mint path that marks the record genuine.
 - **Auto-recovery / retry:** none automatic. The operation RETURNS the `invalid input`
   `TypedRefusal` (retryability `no`); the caller registers the kind first, corrects the
   body to the kind's field set, or routes a reserved kind through its own contract, then
@@ -195,10 +202,16 @@ written for someone who was not in the design room.
 - **Failure class:** `policy rejection` (a CT-04 refusal category).
 - **Detection:** `authorize_live_promotion` is the refusal law for crossing into the live
   zone. It is refused when no human-signed promotion-occurrence card is present (`card` is
-  `None`), and — a variant of the same law — when a card IS present but attests a different
-  record than the one requested (its `context` names both the `attested` and `requested`
-  fingerprints). Only a human promotes an artifact into the live zone (AR-39, DEC-0041); an
-  agent's passed checks or recommendation is never an authorization.
+  `None`); when a card IS present but attests a different record than the one requested (its
+  `context` names both the `attested` and `requested` fingerprints); and when the present
+  card has been **superseded** by a later signed correction — the gate consults the
+  supersedes state the caller supplies (a collection of superseded card fingerprints, or of
+  CT-07 `supersedes` `LineageEdge`s to read them from) and refuses a card whose `fp1` appears
+  there (`superseded_card` in `context`), because only the **current head** of the supersedes
+  chain speaks for live money (FM-5). A malformed supersedes argument is an `invalid input`
+  wiring refusal. Only a human promotes an artifact into the live zone (AR-39, DEC-0041); an
+  agent's passed checks or recommendation is never an authorization, and neither is a
+  superseded card.
 - **Auto-recovery / retry:** none automatic. The gate RETURNS a `policy rejection`
   `TypedRefusal` (retryability `no`); promotion does not occur and no live capability is
   granted. A human must sign a promotion-occurrence card attesting THIS record (its exact
@@ -243,13 +256,17 @@ written for someone who was not in the design room.
 
 - **Failure class:** `invalid input` (a CT-04 refusal category).
 - **Detection:** `correct_summary` mints a NEW card with the corrected summary and a CT-07
-  `supersedes` edge linking it to the prior card. It is refused when `prior` is not a
-  `PromotionCard`, when the corrected summary is itself invalid (a blank summary, a bad
+  `supersedes` edge linking it to the prior card. The corrected card is signed under a
+  **fresh human approval**: the required `signer` argument is the reviewer who read the NEW
+  words, and the new card is signed under it — never the prior card's signature reused over
+  words that human never read (that reuse is exactly the forgery this refuses; H2, ADR-0015).
+  It is refused when `prior` is not a `PromotionCard`, when `signer` is blank or absent (no
+  fresh approval), when the corrected summary is itself invalid (a blank summary, a bad
   writer/sequence — propagated from `PromotionCard.sign`), when the corrected summary is
-  UNCHANGED (it would mint the identical card, with nothing to supersede), or when the
-  supersedes-edge writer is not a `WriterId` (propagated from `LineageEdge.try_create`). The
-  signed record is never edited in place — a correction is always a new card, because the
-  signature attests the exact words read.
+  UNCHANGED under the same signer (it would mint the identical card, with nothing to
+  supersede), or when the supersedes-edge writer is not a `WriterId` (propagated from
+  `LineageEdge.try_create`). The signed record is never edited in place — a correction is
+  always a new card, because the signature attests the exact words read.
 - **Auto-recovery / retry:** none automatic. The operation RETURNS an `invalid input`
   `TypedRefusal` (retryability `no`) whose `context` names the offending field; the caller
   supplies a genuinely different, valid summary (and valid writers) and retries. Nothing is
@@ -324,6 +341,18 @@ written for someone who was not in the design room.
   that returns bytes the registry cannot parse back into its CT-06/CT-07 shape — corrupt
   stored evidence, since the writes here are canonical by construction — is itself surfaced as
   a `storage failure` (retryability `no`), never served as a valid or wrong artifact.
+  Read-back is verified against a tamper-independent authority, so a **silently altered**
+  artifact never reads back as valid either: `load_record` recomputes the store's
+  content-addressed fingerprint over the whole persisted record envelope and refuses
+  (`storage failure`) when it does not equal the key the record was read under, so tampered
+  canonical bytes (the digest key unchanged) are caught. A lineage edge — persisted to a
+  JSONL stream whose per-line index is rebuilt from the line bytes on read (AR-31), which
+  carries no tamper-independent authority of its own — is additionally anchored by a
+  tamper-evident **integrity witness** in the (content-addressed, SQLite) record store;
+  `read_edges` refuses (`storage failure`) any reconstructed edge whose `fp1` fingerprint has
+  no witness, so a canonical-preserving edit of a stored edge line (which the JSONL index
+  cannot detect) reconstructs to an unwitnessed edge and is never served as a valid edge
+  pointing elsewhere.
 - **Auto-recovery / retry:** none automatic. A transient outage carries retryability `yes`
   (block until the store recovers, then retry — no partial registration is ever claimed
   successful); a corrupt/truncated store carries retryability `no` and needs operator

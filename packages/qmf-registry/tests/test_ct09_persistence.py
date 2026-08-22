@@ -13,6 +13,8 @@ with format stamping (AC5), and the round-trip reference identity (AC6).
 
 from __future__ import annotations
 
+import json
+import sqlite3
 from collections.abc import Mapping
 from dataclasses import replace
 from pathlib import Path
@@ -34,6 +36,7 @@ from qmf.data.store import EvidenceStore, RegistryRoom, StoreEngineError, jsonl_
 from qmf.registry import (
     EdgeType,
     LineageEdge,
+    PromotionCard,
     RecordTransform,
     RegistrationRecord,
     RegistryPersistence,
@@ -537,3 +540,93 @@ def test_each_writable_world_gets_its_own_room(tmp_path: Path, world: World) -> 
     receipt = opened.value.persist_record(_record({"id": "sma-20"}))
     assert is_ok(receipt)
     assert opened.value.world is world
+
+
+# --- H2: the persist boundary refuses a forged reserved kind, accepts the genuine card ---
+
+
+def _promotion_card() -> PromotionCard:
+    card = PromotionCard.sign(
+        signer="operator:mubarak",
+        plain_words_summary="Promote strategy X to live with a 0.5% risk cap.",
+        attested_fp1="fp1:sha256:" + "ab" * 32,
+        writer=_writer(),
+        sequence=0,
+        signed_at=_instant(),
+    )
+    assert is_ok(card)
+    return card.value
+
+
+def test_persist_record_accepts_the_genuine_card_but_refuses_a_forgery(tmp_path: Path) -> None:
+    # H2 (reserved-kind forgery): a reserved CT-06 kind persists only when it was minted
+    # through the dedicated signing path. The genuine promotion card's record persists; a
+    # byte-identical look-alike whose provenance was stripped is refused at this choke point,
+    # never stored as if it were a signed card.
+    persistence = _live(tmp_path)
+    card = _promotion_card()
+    genuine = persistence.persist_record(card.record)
+    assert is_ok(genuine)
+    forged = replace(card.record, _reserved_provenance=None)  # a look-alike, same stable id
+    assert forged.stable_id == card.record.stable_id
+    refused = persistence.persist_record(forged)
+    assert is_refusal(refused)
+    assert refused.category.value == "policy rejection"
+    assert refused.context["reserved"] is True
+
+
+# --- H3: a silently altered stored artifact reads back as a storage-failure refusal ------
+
+
+def test_tampered_record_bytes_read_back_as_storage_failure(tmp_path: Path) -> None:
+    # H3 (unverified read-back): the recomputed fingerprint of a persisted record is asserted
+    # equal to its storage key, so tampering the stored canonical bytes (keeping the digest
+    # key) is caught on read and refused, never served as a silently different record.
+    persistence = _live(tmp_path)
+    record = _record({"max_risk_pct": 1})
+    receipt = _unwrap(persistence.persist_record(record), "persist record")
+    key = receipt.fingerprint
+
+    db = persistence.root / "live" / "registry-room" / "records.sqlite"
+    conn = sqlite3.connect(db)
+    try:
+        row = conn.execute("SELECT canonical FROM records WHERE digest=?", (key.digest,)).fetchone()
+        assert row is not None
+        envelope = json.loads(row[0])
+        envelope["body"]["body"]["max_risk_pct"] = 99  # silent content tamper
+        tampered = json.dumps(envelope, separators=(",", ":"), sort_keys=True).encode()
+        conn.execute("UPDATE records SET canonical=? WHERE digest=?", (tampered, key.digest))
+        conn.commit()
+    finally:
+        conn.close()
+
+    refused = persistence.load_record(key, for_world=World.LIVE)
+    assert is_refusal(refused)
+    assert refused.category.value == "storage failure"
+
+
+def test_tampered_edge_line_read_back_as_storage_failure(tmp_path: Path) -> None:
+    # H3 (unverified read-back): every persisted edge is anchored by a tamper-evident
+    # integrity witness, so a silently altered JSONL line reconstructs to an edge fingerprint
+    # with no witness and is refused on read, never served as a valid edge pointing elsewhere.
+    persistence = _live(tmp_path)
+    a = _unwrap(fingerprint({"a": 1}), "a")
+    b = _unwrap(fingerprint({"b": 2}), "b")
+    assert isinstance(a, Fingerprint)
+    assert isinstance(b, Fingerprint)
+    edge = _unwrap(LineageEdge.try_create(EdgeType.SUPERSEDES, b, a, _writer()), "edge")
+    assert is_ok(persistence.persist_edge(edge, edge_stream="lineage"))
+    # A clean read still round-trips.
+    assert is_ok(persistence.read_edges("lineage", for_world=World.LIVE))
+
+    evil = "fp1:sha256:" + "ee" * 32
+    seg = list(
+        (persistence.root / "live" / "registry-room" / "lineage" / "lineage").glob("*.jsonl")
+    )
+    assert seg
+    data = seg[0].read_bytes()
+    seg[0].write_bytes(data.replace(a.value.encode(), evil.encode()))
+
+    refused = persistence.read_edges("lineage", for_world=World.LIVE)
+    assert is_refusal(refused)
+    assert refused.category.value == "storage failure"

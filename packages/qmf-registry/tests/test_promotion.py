@@ -60,6 +60,7 @@ from qmf.registry.promotion import (
     KIND_PROMOTION_OCCURRENCE_CARD,
     PROMOTION_CARD_CONTRACT_FORMAT_VERSION,
 )
+from qmf.registry.records import is_genuine_reserved_record
 
 _SIGNED_NS = 1_700_000_000_000_000_000
 
@@ -318,6 +319,7 @@ def test_correcting_the_summary_mints_a_new_card_and_supersedes_edge() -> None:
         correct_summary(
             prior,
             "Promote the EUR/USD scalping bot to live.",
+            signer="operator:mubarak",
             writer=_writer(),
             sequence=1,
             signed_at=_instant(_SIGNED_NS + 60),
@@ -326,10 +328,10 @@ def test_correcting_the_summary_mints_a_new_card_and_supersedes_edge() -> None:
     assert isinstance(correction, PromotionCorrection)
     new_card = correction.corrected_card
     edge = correction.supersedes_edge
-    # A NEW card (different id, because the summary is an identity field), same signer and
-    # attested record; the prior card is untouched.
+    # A NEW card (different id, because the summary is an identity field), re-signed by the
+    # human who read the corrected words, same attested record; the prior card is untouched.
     assert new_card.stable_id != prior.stable_id
-    assert new_card.signer == prior.signer
+    assert new_card.signer == "operator:mubarak"
     assert new_card.attested_fp1 == prior.attested_fp1
     assert prior.plain_words_summary == "Promote the EURUSD scalping bot to live."
     # The supersedes edge links new -> prior (a correction, never an in-place edit).
@@ -346,6 +348,7 @@ def test_correction_preserves_the_template_fingerprint() -> None:
         correct_summary(
             prior,
             "Admit the scalping Book charter v1 to live (typo fixed).",
+            signer="operator:mubarak",
             writer=_writer(),
             sequence=1,
             signed_at=_instant(_SIGNED_NS + 60),
@@ -360,6 +363,7 @@ def test_correction_uses_a_distinct_edge_writer_when_given() -> None:
         correct_summary(
             prior,
             "A corrected summary of the promotion.",
+            signer="operator:mubarak",
             writer=_writer("node-a"),
             sequence=1,
             signed_at=_instant(_SIGNED_NS + 60),
@@ -381,7 +385,12 @@ def test_correction_refuses_an_unchanged_summary() -> None:
     prior = _card(plain_words_summary="Same words.")
     _refused(
         correct_summary(
-            prior, "Same words.", writer=_writer(), sequence=1, signed_at=_instant(_SIGNED_NS + 60)
+            prior,
+            "Same words.",
+            signer="operator:mubarak",
+            writer=_writer(),
+            sequence=1,
+            signed_at=_instant(_SIGNED_NS + 60),
         ),
         "plain_words_summary",
         RefusalCategory.INVALID_INPUT,
@@ -391,7 +400,14 @@ def test_correction_refuses_an_unchanged_summary() -> None:
 def test_correction_propagates_a_bad_corrected_summary() -> None:
     prior = _card()
     _refused(
-        correct_summary(prior, "   ", writer=_writer(), sequence=1, signed_at=_instant()),
+        correct_summary(
+            prior,
+            "   ",
+            signer="operator:mubarak",
+            writer=_writer(),
+            sequence=1,
+            signed_at=_instant(),
+        ),
         "plain_words_summary",
         RefusalCategory.INVALID_INPUT,
     )
@@ -403,12 +419,137 @@ def test_correction_propagates_a_bad_edge_writer() -> None:
         correct_summary(
             prior,
             "A different corrected summary.",
+            signer="operator:mubarak",
             writer=_writer(),
             sequence=1,
             signed_at=_instant(_SIGNED_NS + 60),
             edge_writer="not-a-writer",
         ),
         "writer",
+        RefusalCategory.INVALID_INPUT,
+    )
+
+
+# --- H2/H1: a correction is a FRESH human approval, never the prior signature -----------
+
+
+def test_correction_requires_a_fresh_signer_and_never_reuses_the_prior_signature() -> None:
+    # H2 (re-sign forgery): correct_summary must NOT mint new words under the prior card's
+    # signature. A fresh human approval (signer) is required; without it the correction is
+    # refused, so "NO risk cap" text can never be signed under the prior "0.5% risk cap"
+    # reviewer's identity.
+    prior = _card(
+        signer="operator:mubarak",
+        plain_words_summary="Promote strategy X to live with a 0.5% risk cap.",
+    )
+    # No fresh signer -> refused (the prior signature is never reused over unread words).
+    no_signer = _refused(
+        correct_summary(
+            prior,
+            "Promote strategy X to live with NO risk cap.",
+            writer=_writer(),
+            sequence=1,
+            signed_at=_instant(_SIGNED_NS + 60),
+        ),
+        "signer",
+        RefusalCategory.INVALID_INPUT,
+    )
+    assert no_signer.retryability is Retryability.NO
+    # A blank fresh signer is likewise refused.
+    _refused(
+        correct_summary(
+            prior,
+            "Promote strategy X to live with NO risk cap.",
+            signer="   ",
+            writer=_writer(),
+            sequence=1,
+            signed_at=_instant(_SIGNED_NS + 60),
+        ),
+        "signer",
+        RefusalCategory.INVALID_INPUT,
+    )
+    # With a fresh approval, the corrected card is signed by whoever read the NEW words —
+    # never inherited from the prior card.
+    correction = _ok(
+        correct_summary(
+            prior,
+            "Promote strategy X to live with NO risk cap.",
+            signer="reviewer:amina",
+            writer=_writer(),
+            sequence=1,
+            signed_at=_instant(_SIGNED_NS + 60),
+        )
+    )
+    assert correction.corrected_card.signer == "reviewer:amina"
+    assert correction.corrected_card.signer != prior.signer
+    assert (
+        correction.corrected_card.plain_words_summary
+        == "Promote strategy X to live with NO risk cap."
+    )
+
+
+def test_genuine_card_record_is_recognized_and_forgery_is_not() -> None:
+    # H2: the card minted through PromotionCard.sign carries the reserved-mint provenance, so
+    # a persist boundary can tell it from a forged look-alike. The card's kind is reserved.
+    card = _card()
+    assert card.kind in RESERVED_KIND_NAMES
+    assert is_genuine_reserved_record(card.record) is True
+    # A record of the same reserved kind that did NOT come through the signing path is never
+    # genuine (see test_ct09 for the persist-boundary refusal of such a look-alike).
+    assert is_genuine_reserved_record(object()) is False
+
+
+# --- H1: only the current head of the supersedes chain authorizes -----------------------
+
+
+def test_superseded_card_does_not_authorize_only_the_current_head() -> None:
+    # H1 (superseded-card forgery): the live gate consults the supersedes chain. A card a
+    # later signed correction has superseded is no longer the current head and does not
+    # authorize the crossing, even though it still attests the same record.
+    target = _rec("strategy-x")
+    prior = _card(
+        signer="operator:mubarak",
+        attested_fp1=target,
+        plain_words_summary="Promote strategy X to live with a 0.5% risk cap.",
+    )
+    correction = _ok(
+        correct_summary(
+            prior,
+            "Promote strategy X to live with a 0.5% risk cap (typo fixed).",
+            signer="operator:mubarak",
+            writer=_writer(),
+            sequence=1,
+            signed_at=_instant(_SIGNED_NS + 60),
+        )
+    )
+    new_card = correction.corrected_card
+    superseded = [correction.supersedes_edge]  # the CT-07 supersedes edge (to_ref = prior)
+    # The current head authorizes.
+    authorized = _ok(
+        authorize_live_promotion(target_fp1=target, card=new_card, superseded=superseded)
+    )
+    assert isinstance(authorized, PromotionAuthorization)
+    assert authorized.card is new_card
+    # The superseded prior card does NOT authorize.
+    refusal = _refused(
+        authorize_live_promotion(target_fp1=target, card=prior, superseded=superseded),
+        "card",
+        RefusalCategory.POLICY_REJECTION,
+    )
+    assert refusal.context["superseded_card"] == prior.stable_id.value
+    # The supersession state may also be given as a collection of superseded fingerprints.
+    _refused(
+        authorize_live_promotion(target_fp1=target, card=prior, superseded=[prior.stable_id]),
+        "card",
+        RefusalCategory.POLICY_REJECTION,
+    )
+    # With no supersession recorded (the default), the card still authorizes — the gate only
+    # refuses a card the caller's supersedes state marks as superseded.
+    assert is_ok(authorize_live_promotion(target_fp1=target, card=prior))
+    # A malformed supersession state is a wiring refusal.
+    _refused(
+        authorize_live_promotion(target_fp1=target, card=new_card, superseded="not-a-collection"),
+        "superseded",
         RefusalCategory.INVALID_INPUT,
     )
 

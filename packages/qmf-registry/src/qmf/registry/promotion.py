@@ -29,11 +29,14 @@ schema. :func:`emit_promotion_event` hands it to the core-defined
 through ``qmf-data`` lands in Story 2.4), so emitting creates no import edge and the
 journal never holds a second copy of the promotion fact.
 
-**A signature attests the exact words read; a correction mints a new card (FM-5).** The
-mandatory summary being an identity field means it cannot be edited in place. Correcting
-it is :func:`correct_summary`: a **new** card is minted (a different ``fp1``, because the
-summary is identity) and linked to the prior card with a CT-07 ``supersedes`` edge — the
-signed record is never rewritten.
+**A signature attests the exact words read; a correction mints a new card under a fresh
+human approval (FM-5).** The mandatory summary being an identity field means it cannot be
+edited in place. Correcting it is :func:`correct_summary`: a **new** card is minted (a
+different ``fp1``, because the summary is identity) and linked to the prior card with a
+CT-07 ``supersedes`` edge — the signed record is never rewritten. The corrected card is
+signed by the reviewer who read the **new** words, supplied as a required ``signer``
+argument: a correction is a fresh human approval, never the prior card's signature
+reused over words that human never read (H2; ADR-0015; DEC-0116).
 
 **Because the attested template is an identity field, a signature can never attest a
 superseded template (DEC-0158).** A card attesting an AD-32 admission carries the
@@ -41,10 +44,13 @@ Book-definition/BMS-definition fingerprint as ``template_definition_fp1``; a new
 version has a new fingerprint, so a card that attested the old template has a different
 ``fp1`` and can never silently stand for the new one.
 
-**Only a human promotes into the live zone (FM-4; AR-39; DEC-0041).**
-:func:`authorize_live_promotion` is the refusal law: a live-promotion request with no
-human-signed promotion-occurrence card present does not occur — a typed refusal is
-returned. A present card authorizes only the exact record its signature attests.
+**Only a human promotes into the live zone, and only the current card (FM-4; AR-39;
+DEC-0041).** :func:`authorize_live_promotion` is the refusal law: a live-promotion request
+with no human-signed promotion-occurrence card present does not occur — a typed refusal is
+returned. A present card authorizes only the exact record its signature attests **and** only
+while it is the current head of the supersedes chain: a card a later signed correction has
+superseded no longer speaks for the crossing, so the gate consults the supersession state
+(the ``supersedes`` edges) the caller supplies and refuses a superseded card (FM-5).
 
 Default-deny holds: this module imports **only** ``qmf.core`` and its own package
 siblings ``qmf.registry.records`` (the canonical CT-06 record) and ``qmf.registry.lineage``
@@ -57,6 +63,7 @@ throughout (DEC-0101, DEC-0113).
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Final, cast
 
@@ -297,11 +304,14 @@ class PromotionCard:
         }
         if template is not None:
             body[_TEMPLATE_FP1_KEY] = template.value
-        # Build the canonical CT-06 record directly under the reserved kind: the generic
-        # KindRegistry/Registrar path refuses reserved kinds, so this dedicated path is the
-        # only one that mints a promotion-occurrence card (DEC-0116). RegistrationRecord
-        # derives the stable id from the identity content and validates writer/sequence.
-        built = RegistrationRecord.try_create(
+        # Build the canonical CT-06 record through the dedicated reserved-mint path: the
+        # public RegistrationRecord.try_create and the generic KindRegistry/Registrar path
+        # both refuse reserved kinds, so this is the ONLY path that mints a
+        # promotion-occurrence card, and the record it produces is marked genuine so a
+        # persist boundary can tell it from a forged look-alike (H2; DEC-0116, DEC-0158).
+        # RegistrationRecord derives the stable id from the identity content and validates
+        # writer/sequence.
+        built = RegistrationRecord._mint_reserved(  # pyright: ignore[reportPrivateUsage]
             KIND_PROMOTION_OCCURRENCE_CARD,
             PROMOTION_CARD_CONTRACT_FORMAT_VERSION,
             (),
@@ -375,6 +385,7 @@ def correct_summary(
     prior: object,
     corrected_summary: object,
     *,
+    signer: object = None,
     writer: object,
     sequence: object,
     signed_at: object,
@@ -382,13 +393,22 @@ def correct_summary(
 ) -> Result[PromotionCorrection]:
     """Correct a signed card's plain-words summary, returning value-or-refusal (AC3; FM-5).
 
-    Mints a NEW :class:`PromotionCard` carrying the same signer, attested record, and
-    template but the ``corrected_summary`` — a different ``fp1`` because the summary is an
-    identity field — and builds the CT-07 ``supersedes`` edge linking the new card to the
-    prior one. The signed record is never edited in place, because the signature attests
-    the exact words read (DEC-0116). ``writer`` signs the new card; ``edge_writer`` writes
-    the supersedes edge (defaulting to ``writer``). A correction whose summary is unchanged
-    would mint the identical card with nothing to supersede — an ``invalid input`` refusal.
+    Mints a NEW :class:`PromotionCard` carrying the ``corrected_summary`` — a different
+    ``fp1`` because the summary is an identity field — under a **fresh human approval**, and
+    builds the CT-07 ``supersedes`` edge linking the new card to the prior one. The signed
+    record is never edited in place, because a signature attests the exact words read
+    (DEC-0116).
+
+    ``signer`` is the human reviewer who read the **corrected** words and is **required**:
+    the new card is signed under this identity, never the prior card's signer — reusing the
+    prior signature over words that human never read is exactly the forgery this refuses
+    (H2; ADR-0015). ``attested_fp1`` and ``template_definition_fp1`` are carried over from
+    the prior card (a correction is the same attestation with different words), but the
+    ``signer`` and the ``signed_at`` instant are the fresh approval's, never inherited.
+    ``writer`` signs the new card's record; ``edge_writer`` writes the supersedes edge
+    (defaulting to ``writer``). A blank/absent ``signer`` is an ``invalid input`` refusal, as
+    is a correction whose summary is unchanged (it would mint the identical card with nothing
+    to supersede).
     """
     if not isinstance(prior, PromotionCard):
         return _invalid(
@@ -396,8 +416,18 @@ def correct_summary(
             "a correction supersedes a prior signed PromotionCard",
             given=repr(prior),
         )
+    fresh_signer = _clean_str(signer)
+    if fresh_signer is None:
+        return _invalid(
+            "signer",
+            "a summary correction is a fresh human approval: the corrected card must be "
+            "signed by the reviewer who read the NEW words (supplied as `signer`), never "
+            "under the prior card's signature — that signature attests only the words it "
+            "carried (FM-5; ADR-0015; DEC-0116)",
+            given=repr(signer),
+        )
     corrected = PromotionCard.sign(
-        signer=prior.signer,
+        signer=fresh_signer,
         plain_words_summary=corrected_summary,
         attested_fp1=prior.attested_fp1,
         writer=writer,
@@ -444,18 +474,53 @@ class PromotionAuthorization:
     attested_fp1: Fingerprint
 
 
-def authorize_live_promotion(*, target_fp1: object, card: object) -> Result[PromotionAuthorization]:
-    """The live-promotion refusal law: only a human-signed card authorizes the crossing
-    (AC2; FM-4; AR-39; DEC-0041).
+def _superseded_card_ids(value: object) -> frozenset[str] | None:
+    """Resolve the supplied supersession state to a set of superseded card ``fp1`` strings.
+
+    Accepts a collection of :class:`~qmf.core.Fingerprint`\\ s or valid ``fp1:sha256:<hex>``
+    strings — the ``to_ref`` (superseded) endpoints of the ``supersedes`` chain — or a
+    collection of :class:`~qmf.registry.LineageEdge`\\ s, from which the ``supersedes``
+    edges' ``to_ref``\\ s are taken (any other edge type is ignored). A bare string/bytes is
+    not a collection of references and resolves to ``None`` (an ``invalid input`` wiring
+    refusal at the call site); an empty collection means nothing is superseded.
+    """
+    if isinstance(value, (str, bytes)) or not isinstance(value, Iterable):
+        return None
+    resolved: set[str] = set()
+    for item in cast("Iterable[object]", value):
+        if isinstance(item, LineageEdge):
+            if item.edge_type is EdgeType.SUPERSEDES:
+                resolved.add(item.to_ref.value)
+            continue
+        fp = _coerce_fingerprint(item)
+        if fp is None:
+            return None
+        resolved.add(fp.value)
+    return frozenset(resolved)
+
+
+def authorize_live_promotion(
+    *, target_fp1: object, card: object, superseded: object = ()
+) -> Result[PromotionAuthorization]:
+    """The live-promotion refusal law: only a human-signed, current card authorizes the
+    crossing (AC2; FM-4, FM-5; AR-39; DEC-0041).
 
     ``target_fp1`` names the record being promoted into the live zone. With no
     human-signed promotion-occurrence card present (``card`` is ``None``), promotion does
     not occur — a ``policy rejection`` refusal is returned, because only a human promotes
     an artifact into the live zone. A present :class:`PromotionCard` authorizes only the
     exact record its signature attests; a card attesting a different record is refused. A
-    non-card object is an ``invalid input`` wiring refusal. The promotion gate's own
-    workflow, UI, and timing are platform territory outside QMF — this is the record
-    vocabulary and the refusal law only.
+    non-card object is an ``invalid input`` wiring refusal.
+
+    ``superseded`` is the supersession state the caller resolves from the CT-07
+    ``supersedes`` chain — a collection of superseded card fingerprints (the ``to_ref``
+    endpoints) or of :class:`~qmf.registry.LineageEdge`\\ s to read them from. A card whose
+    ``fp1`` appears there has been superseded by a later signed correction and is **no
+    longer the current head**, so it does not authorize the crossing — a ``policy
+    rejection`` (only the current card speaks for live money; FM-5). An empty ``superseded``
+    (the default) means nothing is superseded; a malformed ``superseded`` is an ``invalid
+    input`` wiring refusal. The promotion gate's own workflow, UI, and timing are platform
+    territory outside QMF — this is the record vocabulary and the refusal law only.
     """
     target = _coerce_fingerprint(target_fp1)
     if target is None:
@@ -485,6 +550,24 @@ def authorize_live_promotion(*, target_fp1: object, card: object) -> Result[Prom
             "the promotion card attests a different record; a signature authorizes only "
             "the exact record it attests, so promotion does not occur (FM-4)",
             attested=card.attested_fp1.value,
+            requested=target.value,
+        )
+    superseded_ids = _superseded_card_ids(superseded)
+    if superseded_ids is None:
+        return _invalid(
+            "superseded",
+            "the supersession state is a collection of superseded card fp1 fingerprints "
+            "(or of LineageEdges to read the supersedes chain from); a bare string is not "
+            "a collection of references",
+            given=repr(superseded),
+        )
+    if card.stable_id.value in superseded_ids:
+        return _policy(
+            "card",
+            "the promotion card has been superseded by a later signed correction; only "
+            "the current head of the supersedes chain authorizes the live crossing, so "
+            "promotion does not occur (FM-5, FM-4)",
+            superseded_card=card.stable_id.value,
             requested=target.value,
         )
     return Ok(PromotionAuthorization(card=card, attested_fp1=target))

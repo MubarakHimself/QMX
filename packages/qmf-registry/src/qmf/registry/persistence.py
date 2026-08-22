@@ -80,7 +80,7 @@ import json
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import cast
+from typing import Final, cast
 
 from qmf.core import (
     Fingerprint,
@@ -104,7 +104,11 @@ from qmf.data.store import (
     WorldStore,
 )
 from qmf.registry.lineage import LineageEdge
-from qmf.registry.records import RegistrationRecord
+from qmf.registry.records import (
+    RESERVED_KIND_NAMES,
+    RegistrationRecord,
+    is_genuine_reserved_record,
+)
 
 __all__ = [
     "LoadedRecord",
@@ -147,6 +151,60 @@ def _corrupt(reason: str, **extra: object) -> TypedRefusal:
     or edge, so a corrupt store never masquerades as an absent or a wrong artifact.
     """
     return unpersistable(reason, retryability=Retryability.NO, context=dict(extra))
+
+
+def _policy(field: str, reason: str, **extra: object) -> TypedRefusal:
+    """Build a ``policy rejection`` refusal for a governance/integrity refusal at the seam.
+
+    A forged reserved-kind record presented for persistence (a look-alike of the
+    human-signed promotion-occurrence card, the only path to live money) is refused as a
+    policy rejection — the same category the promotion gate returns — never stored as if it
+    were a signed card (H2; DEC-0116; FM-4). ``retryability`` is ``no``; nothing is written.
+    """
+    context: dict[str, object] = {"field": field, "reason": reason}
+    context.update(extra)
+    return TypedRefusal(
+        category=RefusalCategory.POLICY_REJECTION,
+        retryability=Retryability.NO,
+        context=context,
+    )
+
+
+# --- lineage-edge integrity witness (H3; FM-8) ------------------------------
+
+# A lineage edge persists to an append-only JSONL stream whose per-line index is
+# rebuilt from the line bytes on read (AR-31), so the JSONL tail carries no
+# tamper-independent authority: a canonical-preserving edit of a stored line re-derives a
+# self-consistent edge fingerprint and would otherwise read back as a valid edge pointing
+# elsewhere. To close that, every persisted edge is also anchored by a tiny **integrity
+# witness** in the registry room's SQLite record store — content-addressed and keyed by
+# digest, so it is tamper-evident on its own. On read-back the reconstructed edge's fp1
+# fingerprint must resolve to its witness; an edge whose witness is absent is a silently
+# altered (or forged) line and is refused as a ``storage failure`` (never served as a valid
+# edge). The witness kind is internal and is not a CT-06 registration kind.
+_EDGE_WITNESS_KIND: Final[str] = "ct07-lineage-edge-integrity-witness"
+_EDGE_WITNESS_FORMAT_VERSION: Final[int] = 1
+_EDGE_WITNESS_FP_KEY: Final[str] = "witnessed_edge_fp1"
+
+
+def _edge_witness_body(edge_fingerprint: Fingerprint) -> dict[str, object]:
+    """The witness record body — the edge's own ``fp1`` fingerprint, nothing else."""
+    return {_EDGE_WITNESS_FP_KEY: edge_fingerprint.value}
+
+
+def _edge_witness_key(edge_fingerprint: Fingerprint) -> Result[Fingerprint]:
+    """The content-addressed store key an edge's integrity witness persists under.
+
+    Derived from the edge fingerprint alone by mirroring the store's ``put_record``
+    envelope (``{kind, format_version, body}``), so a reader recomputes the same key from a
+    reconstructed edge without holding any receipt — a pure function of the edge's identity.
+    """
+    envelope: dict[str, object] = {
+        "kind": _EDGE_WITNESS_KIND,
+        "format_version": _EDGE_WITNESS_FORMAT_VERSION,
+        "body": _edge_witness_body(edge_fingerprint),
+    }
+    return fingerprint(envelope)
 
 
 # --- the persisted record identity view -------------------------------------
@@ -291,12 +349,28 @@ class RegistryPersistence:
         ``world = simulated`` room, an underlying store failure, and a corrupt engine are
         surfaced as the store's own typed refusals — never raised across the seam. A
         non-record argument is an ``invalid input`` refusal.
+
+        A record of a **reserved** CT-06 kind (the human-signed promotion-occurrence card,
+        the only path to live money) is persisted **only** when it was minted through its
+        dedicated path (:func:`~qmf.registry.records.is_genuine_reserved_record`); a forged
+        look-alike — even one byte-identical to a genuine card — is a ``policy rejection``,
+        never stored as if it were a signed card, so the generic persist surface can never
+        forge a promotion card (H2; DEC-0116, DEC-0158; FM-4).
         """
         if not isinstance(record, RegistrationRecord):
             return _invalid(
                 "record",
                 "persistence writes a RegistrationRecord (the CT-06 per-kind record)",
                 given=repr(record),
+            )
+        if record.kind in RESERVED_KIND_NAMES and not is_genuine_reserved_record(record):
+            return _policy(
+                "record",
+                "a reserved CT-06 kind (the human-signed promotion-occurrence card) is "
+                "persisted only when minted through its dedicated signing path; a forged "
+                "look-alike is refused, never stored as a signed card (H2; DEC-0116; FM-4)",
+                kind=record.kind,
+                reserved=True,
             )
         return self._ws.registry_room.put_record(
             record.fp1_identity(),
@@ -338,6 +412,13 @@ class RegistryPersistence:
         is refused and alarmed; a second writer on the stream, a simulated room, and a store
         failure are the store's typed refusals. A non-edge argument, or a bad stream name, is
         an ``invalid input`` refusal.
+
+        After the append lands, the edge is anchored by a tamper-evident **integrity
+        witness** in the (SQLite, content-addressed) record store, so a silently altered
+        JSONL line — which the rebuilt-from-content JSONL index cannot catch on its own —
+        reconstructs to an edge fingerprint with no witness and is refused on read-back
+        (:meth:`read_edges`; H3; FM-8). A witness store failure is returned as itself; a
+        byte-identical re-persist re-writes the witness idempotently.
         """
         if not isinstance(edge, LineageEdge):
             return _invalid(
@@ -345,12 +426,22 @@ class RegistryPersistence:
                 "persistence appends a LineageEdge (the CT-07 typed lineage edge)",
                 given=repr(edge),
             )
-        return self._ws.registry_room.append_lineage_edge(
+        appended = self._ws.registry_room.append_lineage_edge(
             edge_stream,
             edge.writer,
             edge.fp1_identity(),
             presented_fingerprint=edge.edge_fingerprint,
         )
+        if is_refusal(appended):
+            return appended
+        witness = self._ws.registry_room.put_record(
+            _edge_witness_body(edge.edge_fingerprint),
+            kind=_EDGE_WITNESS_KIND,
+            format_version=_EDGE_WITNESS_FORMAT_VERSION,
+        )
+        if is_refusal(witness):
+            return witness
+        return appended
 
     def read_edges(
         self, edge_stream: object, *, for_world: object
@@ -360,10 +451,12 @@ class RegistryPersistence:
         ``for_world`` is required — a read that crosses worlds is a ``policy rejection``
         (M4; FM-7). A never-written stream reads as an empty tuple (streams are lazily
         created). Every line reconstructs a full :class:`~qmf.registry.LineageEdge` —
-        edges carry no occurrence-only fields, so the round trip is total — and each
-        recomputed edge fingerprint is asserted equal, so a corrupt line is a ``storage
-        failure`` refusal, never a silently wrong edge. A bad stream name is an ``invalid
-        input`` refusal (surfaced by the store).
+        edges carry no occurrence-only fields, so the round trip is total. Each
+        reconstructed edge's ``fp1`` fingerprint is then verified against its tamper-evident
+        integrity witness in the record store (:meth:`persist_edge`): a line whose witness
+        is absent is a silently altered (or forged) edge and is refused as a ``storage
+        failure``, never served as a valid edge pointing elsewhere (AC6; FM-8). A bad
+        stream name is an ``invalid input`` refusal (surfaced by the store).
         """
         raw = self._ws.registry_room.read_lineage(edge_stream, for_world=for_world)
         if is_refusal(raw):
@@ -373,8 +466,35 @@ class RegistryPersistence:
             rebuilt = _reconstruct_edge(line)
             if is_refusal(rebuilt):
                 return rebuilt
+            witnessed = self._verify_edge_witness(rebuilt.value, for_world=for_world)
+            if is_refusal(witnessed):
+                return witnessed
             edges.append(rebuilt.value)
         return Ok(tuple(edges))
+
+    def _verify_edge_witness(self, edge: LineageEdge, *, for_world: object) -> Result[None]:
+        """Assert a reconstructed edge resolves to its tamper-evident integrity witness.
+
+        Recomputes the witness store key from the edge's ``fp1`` fingerprint and reads it
+        back from the (content-addressed, tamper-evident) record store. A present witness is
+        the edge unaltered; an **absent** witness (``stale evidence``) means the stored line
+        was silently altered or forged — the reconstructed fingerprint has no witness — and
+        is surfaced as a ``storage failure`` refusal, never a valid edge (H3; AC6; FM-8). A
+        cross-world or store failure on the witness read surfaces as the store's own refusal.
+        """
+        key = _edge_witness_key(edge.edge_fingerprint)
+        if is_refusal(key):  # pragma: no cover - the edge fingerprint is fp1-clean by construction
+            return _corrupt("a persisted lineage edge fingerprint is not fp1-clean")
+        witness = self._ws.registry_room.get_record(key.value, for_world=for_world)
+        if is_refusal(witness):
+            if witness.category is RefusalCategory.STALE_EVIDENCE:
+                return _corrupt(
+                    "a persisted lineage edge has no integrity witness; the stored line was "
+                    "altered or forged, so the edge is not served (AC6; FM-8)",
+                    edge_fingerprint=edge.edge_fingerprint.value,
+                )
+            return witness
+        return Ok(None)
 
 
 # --- record / edge reconstruction (the read round trip) ---------------------
@@ -440,6 +560,22 @@ def _reconstruct_record(persisted_fp: Fingerprint, raw: bytes) -> Result[LoadedR
         if resolved is None:  # pragma: no cover - defensive
             return _corrupt("a persisted at-birth parent reference is not an fp1 fingerprint")
         refs.append(resolved)
+    # Recompute the store's content-addressed key over the WHOLE persisted envelope (kind +
+    # format_version + fp1 identity) and assert it equals the key the record was read under.
+    # The store key is the digest the SQLite engine filed the row under — retained
+    # independently of the ``canonical`` bytes it returns — so a silently altered record
+    # (its bytes tampered while the key is unchanged) recomputes to a different fingerprint
+    # and is refused as a ``storage failure``, never served as a valid record (AC6; FM-8).
+    recomputed_key = fingerprint(envelope.value)
+    if is_refusal(recomputed_key):  # pragma: no cover - the envelope is fp1-clean by construction
+        return _corrupt("a persisted record envelope is not fp1-clean")
+    if recomputed_key.value != persisted_fp:
+        return _corrupt(
+            "a persisted record's recomputed fingerprint does not match its storage key; "
+            "the stored bytes were altered, so the record is not served (AC6; FM-8)",
+            expected=persisted_fp.value,
+            recomputed=recomputed_key.value.value,
+        )
     derived = fingerprint(identity)
     if is_refusal(derived):  # pragma: no cover - defensive: identity content is fp1-clean
         return _corrupt("a persisted record identity is not fp1-clean")

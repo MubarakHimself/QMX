@@ -56,7 +56,7 @@ immutable values throughout (DEC-0101, DEC-0113).
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Final, Protocol, cast, runtime_checkable
 
@@ -105,6 +105,17 @@ CONTRACT_FORMAT_VERSION: Final[int] = 1
 RESERVED_KIND_NAMES: Final[frozenset[str]] = frozenset(
     {"promotion-occurrence-card", "treasury-boundary-event"}
 )
+
+# Provenance sentinel for a reserved-kind record minted through its own dedicated,
+# package-internal path (:meth:`RegistrationRecord._mint_reserved`, used only by the
+# human-signed promotion card, Story 2.3). The public :meth:`RegistrationRecord.try_create`
+# and the generic KindRegistry/Registrar path refuse reserved kinds outright, so a reserved
+# CT-06 kind can be built ONLY through that dedicated path — and only such a record carries
+# this sentinel. A forged look-alike (even one byte-identical to a genuine card) never does,
+# so a persist boundary accepts the real card while refusing the forgery (H2; DEC-0116,
+# DEC-0158; FM-4; ADR-0015). Object identity, never a value, so it cannot be spoofed by a
+# body field.
+_RESERVED_MINT_PROVENANCE: Final = object()
 
 
 # --- refusal builders -------------------------------------------------------
@@ -271,6 +282,13 @@ class RegistrationRecord:
     sequence: int
     created_at: Instant
     stable_id: Fingerprint
+    # Provenance of a reserved-kind mint (identity-excluded, never part of fp1). ``None``
+    # for every ordinary record and for a forged reserved look-alike; the dedicated
+    # reserved-mint path stamps :data:`_RESERVED_MINT_PROVENANCE`. ``compare=False`` keeps
+    # it out of equality/hash and ``repr=False`` out of the repr, so two field-identical
+    # records still compare equal while a persist boundary can still tell a genuine card
+    # from a forgery (H2).
+    _reserved_provenance: object = field(default=None, compare=False, repr=False)
 
     def __post_init__(self) -> None:
         # Deep-snapshot the body so a later mutation of the caller's dict — or of a
@@ -292,14 +310,93 @@ class RegistrationRecord:
         """Validate the header and body, derive the stable id, and build a
         :class:`RegistrationRecord`, returning value-or-refusal.
 
-        The ``kind`` must be a non-blank token; ``contract_format_version`` a positive
-        integer; ``at_birth_parent_refs`` a (possibly empty) sequence of fingerprints;
-        ``body`` a mapping whose content is ``fp1``-clean (a float, a null, or a
-        non-string key is refused when the identity is fingerprinted, via qmf-core);
-        ``writer`` a :class:`~qmf.core.WriterId`; ``sequence`` a non-negative integer;
-        and ``created_at`` an :class:`~qmf.core.Instant`. The stable id is **not**
-        accepted from the caller — it is fingerprinted from the identity content, so a
-        record can never claim an id its content does not derive (DEC-0114, DEC-0108).
+        The ``kind`` must be a non-blank token that is **not** one of the two
+        :data:`RESERVED_KIND_NAMES` — a reserved CT-06 kind (the human-signed
+        promotion-occurrence card) is minted only through its own dedicated path, never
+        this generic public factory, so a forged card can never be constructed here
+        (H2; DEC-0116, DEC-0158; FM-4). ``contract_format_version`` a positive integer;
+        ``at_birth_parent_refs`` a (possibly empty) sequence of fingerprints; ``body`` a
+        mapping whose content is ``fp1``-clean (a float, a null, or a non-string key is
+        refused when the identity is fingerprinted, via qmf-core); ``writer`` a
+        :class:`~qmf.core.WriterId`; ``sequence`` a non-negative integer; and
+        ``created_at`` an :class:`~qmf.core.Instant`. The stable id is **not** accepted
+        from the caller — it is fingerprinted from the identity content, so a record can
+        never claim an id its content does not derive (DEC-0114, DEC-0108).
+        """
+        kind_token = _clean_str(kind)
+        if kind_token is not None and kind_token in RESERVED_KIND_NAMES:
+            return _invalid(
+                "kind",
+                "this kind name is reserved and honored; a reserved CT-06 kind (the "
+                "human-signed promotion-occurrence card) is minted only through its own "
+                "dedicated path, never this generic registration factory (DEC-0116, "
+                "DEC-0158; FM-1, FM-4)",
+                given=repr(kind),
+                kind=kind_token,
+                reserved=True,
+            )
+        return cls._build(
+            kind,
+            contract_format_version,
+            at_birth_parent_refs,
+            body,
+            writer,
+            sequence,
+            created_at,
+            provenance=None,
+        )
+
+    @classmethod
+    def _mint_reserved(
+        cls,
+        kind: object,
+        contract_format_version: object,
+        at_birth_parent_refs: object,
+        body: object,
+        writer: object,
+        sequence: object,
+        created_at: object,
+    ) -> Result[RegistrationRecord]:
+        """Mint a **reserved** CT-06 kind through its dedicated, package-internal path
+        (H2; DEC-0116, DEC-0158).
+
+        Identical validation to :meth:`try_create` but it does not refuse the reserved
+        kind and it stamps :data:`_RESERVED_MINT_PROVENANCE` on the record, marking it as
+        genuinely minted here. Only the human-signed promotion card (Story 2.3) calls this;
+        it is not part of the public registration surface, so the only reserved-kind record
+        that ever carries the provenance marker is one this path produced — a forged
+        look-alike never does (:func:`is_genuine_reserved_record`).
+        """
+        return cls._build(
+            kind,
+            contract_format_version,
+            at_birth_parent_refs,
+            body,
+            writer,
+            sequence,
+            created_at,
+            provenance=_RESERVED_MINT_PROVENANCE,
+        )
+
+    @classmethod
+    def _build(
+        cls,
+        kind: object,
+        contract_format_version: object,
+        at_birth_parent_refs: object,
+        body: object,
+        writer: object,
+        sequence: object,
+        created_at: object,
+        *,
+        provenance: object,
+    ) -> Result[RegistrationRecord]:
+        """Validate every header/body part, derive the stable id, and build the record.
+
+        The single construction path shared by the public :meth:`try_create` (reserved
+        kinds already refused, ``provenance`` ``None``) and the package-internal
+        :meth:`_mint_reserved` (reserved kind allowed, ``provenance`` the reserved-mint
+        sentinel). The stable id is fingerprinted from the identity content only.
         """
         kind_token = _clean_str(kind)
         if kind_token is None:
@@ -364,6 +461,7 @@ class RegistrationRecord:
                 sequence=sequence,
                 created_at=created_at,
                 stable_id=derived.value,
+                _reserved_provenance=provenance,
             )
         )
 
@@ -387,6 +485,24 @@ class RegistrationRecord:
         things and **never** unions them.
         """
         return self.at_birth_parent_refs
+
+
+def is_genuine_reserved_record(record: object) -> bool:
+    """Whether ``record`` is a reserved-kind CT-06 record minted through its dedicated
+    package-internal path (H2; DEC-0116, DEC-0158).
+
+    A reserved kind cannot be built through the public :meth:`RegistrationRecord.try_create`
+    (which refuses reserved kinds outright) or the generic
+    :class:`Registrar`/:class:`KindRegistry` path — only
+    :meth:`RegistrationRecord._mint_reserved`, used by the human-signed promotion card, mints
+    one and stamps :data:`_RESERVED_MINT_PROVENANCE`. A forged look-alike — even one
+    byte-identical to a genuine card, with the same stable id — is never stamped, so a
+    persist boundary refuses it while accepting the real card (FM-4; ADR-0015).
+    """
+    if not isinstance(record, RegistrationRecord):
+        return False
+    provenance = record._reserved_provenance  # pyright: ignore[reportPrivateUsage]
+    return provenance is _RESERVED_MINT_PROVENANCE
 
 
 # --- per-kind contracts and the addable kind registry -----------------------
