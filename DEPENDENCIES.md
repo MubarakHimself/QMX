@@ -35,6 +35,7 @@ means adding its row here first.
 | tzdata | `==2025.2` | Apache-2.0 | `qmf-calendar-forex` (extension) | Pinned IANA time-zone database; the extension forces `TZPATH` to this pin and verifies the resolved tzdb equals it, and the pinned version participates in fingerprints. (DEC-0106) |
 | pyarrow | `==25.0.1` | Apache-2.0 | `qmf-data` (roster) | The **Parquet** store engine for the CT-11 columnar time-series raw archive; embedded, no database server. Declared only in `packages/qmf-data/pyproject.toml`; never crosses a boundary signature. (Story 3.1; AR-30, DEC-0117) |
 | duckdb | `==1.5.5` | MIT | `qmf-data` (roster) | The **DuckDB** store engine for CT-11 rebuildable analytics views only (never evidence-bearing); embedded, no database server. Declared only in `packages/qmf-data/pyproject.toml`; never crosses a boundary signature. (Story 3.1; AR-30, DEC-0117) |
+| protobuf | `==7.36.0` | BSD-3-Clause | `qmf-venue` (roster) | The Protobuf **runtime** for the venue transport. qmf-venue owns its own transport: the Spotware `openapi-proto-messages` release (integer tag **91**, `registry:venue_protocol_artifact`) is compiled **in-house** from its proto message definitions (data, not code) via `google.protobuf`, and **zero Spotware code runs** — the OpenApiPy SDK is reference-only (its pinned Twisted reactor is platform-imposing → rejected below). Declared only in `packages/qmf-venue/pyproject.toml`; never crosses a boundary signature and never leaks a compiled message into `qmf-core`. (Story 8.2; AR-43, DEC-0141) |
 
 `qmf-data` is the first roster package to declare runtime outside-dependencies —
 `pyarrow` and `duckdb`, the CT-11/CT-09 store engines (Parquet + DuckDB; SQLite and
@@ -43,6 +44,13 @@ installed into the gate environment via the root `store-engines` dependency grou
 which pulls in the `qmf-data` workspace member. `qmf-registry → qmf-data` is the sole
 inter-library edge; every other roster package depends only on `qmf-core` (declared
 as workspace dependencies, not third-party). (AR-06; L30)
+
+`qmf-venue` follows the identical pattern for `protobuf`: it is declared **only** in
+`qmf-venue`'s own pyproject and installed into the gate environment via the root
+`venue-proto` dependency group, which pulls in the `qmf-venue` workspace member. The
+protobuf runtime is a **qmf-venue-only** dependency — no other package declares or
+imports it — and qmf-venue still imports only `qmf-core` among the roster (protobuf
+is third-party, not a workspace edge). (AR-06/AR-43; L30; DEC-0141)
 
 ## Toolchain (workspace `dev` dependency-group)
 
@@ -87,7 +95,6 @@ flip it to a live section when a story first needs it.
 |---|---|---|---|
 | numpy | BSD-3-Clause | outer packages only | 2.5.2 pin (never in `qmf-core`). |
 | pandas | BSD-3-Clause | outer packages only | 3.0.5 pin (young major; ecosystem lag watched). |
-| protobuf (runtime) | BSD-3-Clause | `qmf-venue` only | Decodes the Spotware proto at the venue edge; the OpenApiPy SDK is reference-only (its Twisted reactor is platform-imposing → rejected). (DEC-0141) |
 | TA-Lib (C + Python wrapper) | BSD-3-Clause | `qmf-indicators` | Canonical arithmetic reference, 0.7.1 + 0.7.1. (DEC-0127) |
 | click | BSD-3-Clause | QMB (off-roster app) | `qmb` CLI door, 8.4.2. (DEC-0168) |
 | optuna | MIT | QMB (off-roster app) | Default sampler adapter, 4.9.0; a major bump is a contract-versioning event. (DEC-0168) |
