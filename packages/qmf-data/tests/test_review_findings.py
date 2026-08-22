@@ -74,7 +74,9 @@ def test_torn_journal_tail_recovers_read_append_backup(store: EvidenceStore) -> 
     assert is_ok(journal.append("dq", writer, {"event_type": "data quality", "n": 0}))
 
     # Simulate a crash mid-write: append a torn (no-LF) partial line to the stream file.
-    with _sole_journal_file(store, "dq").open("ab") as handle:
+    journal_file = _sole_journal_file(store, "dq")
+    assert journal_file.is_file(), "the journal rotation file must exist before tampering"
+    with journal_file.open("ab") as handle:
         handle.write(b'{"event_type":"data quality","n":1}')  # no trailing LF
 
     # The committed prefix is still readable (the torn tail is quarantined, not fatal).

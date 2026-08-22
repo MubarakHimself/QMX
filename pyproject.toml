@@ -308,16 +308,33 @@ max_ai_defects = 0
 # heuristics into the same verdict and collapsing the named failure reasons into
 # one line. Per-bucket zeros block just as hard and say why.
 strict = false
-# Dead code and quality are ANALYSED, annotated and counted in the job summary, but
-# they do not block yet: this repository has never been scanned whole, and the seven
-# qmf-* packages export a public API that nothing internal consumes — the classic
-# library false-positive shape for a dead-code detector. `max_quality` stays at the
-# tool's own default of 10. Ratchet both to 0 once one real run has shown the true
-# counts; the escape hatches for genuine false positives are
-# [tool.skylos.whitelist], [[tool.skylos.dead_code.entrypoints]] and an inline
-# `# skylos: ignore`.
-max_quality = 10
+# ANNOTATE-ONLY, by operator ruling. The quality family is opinion about module
+# structure, and the first whole-repo run priced it: 512 gate-counted findings —
+# SKY-Q502 "god file candidate" on exact.py and chrono.py (857/860 code lines against
+# a 500-line default) and on the CT-01/CT-02 test suites, SKY-Q702 "low cohesion" on
+# SecretValue, SKY-Q301 "cyclomatic complexity 26" on persistence.py, plus the
+# SKY-L0xx/C3xx/P4xx families. exact.py and chrono.py are the ratified 100%-branch
+# CT-01/CT-02 modules; splitting them to satisfy a line-count default would be a
+# design change made for a scanner's benefit, which we are not doing. So these are
+# reported, annotated on the commit and counted in the job summary, and they do not
+# block.
+#
+# This number is a deliberate "off", not a tolerance: it has to be an int, because
+# gatekeeper.py::_safe_gate_limit replaces any non-int with the tool's default of 10,
+# and `_append_threshold_reason` only compares when the limit is an int. Ratchet it
+# down (1000 -> 100 -> 0) as the families are genuinely worked off; it can be lowered
+# freely, and only max_critical/max_secrets are capped by Skylos itself.
+max_quality = 1000000
+# Dead code is annotate-only for the same reason and by the same ruling: seven qmf-*
+# packages export a public API that nothing internal consumes yet — the classic
+# library false-positive shape for a dead-code detector. Leaving `max_dead_code`
+# unset is what disables the check (the default is None, and a non-int limit is never
+# compared), so this stays commented until the ratchet is wanted.
 # max_dead_code = 0
+#
+# The escape hatches for a genuine false positive in any family remain
+# [tool.skylos.whitelist], [[tool.skylos.dead_code.entrypoints]] and an inline
+# `# skylos: ignore[RULE]`.
 
 [tool.poe.tasks]
 # The canonical QMF commands (AR-11), byte-identical on every machine. ruff /

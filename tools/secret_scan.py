@@ -137,7 +137,13 @@ def scan_text(text: str, filename: str) -> list[Finding]:
 
 
 def scan_file(path: Path, *, root: Path = ROOT) -> list[Finding]:
-    """Scan one file, reporting its path relative to ``root`` when possible."""
+    """Scan one file, reporting its path relative to ``root`` when possible.
+
+    Only a regular file is read. A directory, device, FIFO or dangling symlink is not
+    a document that can carry a committed secret, and reading a FIFO would block the
+    gate forever, so the check sits immediately before the read it guards."""
+    if not path.is_file():
+        return []
     try:
         text = path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError):

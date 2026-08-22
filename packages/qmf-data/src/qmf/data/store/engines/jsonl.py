@@ -27,6 +27,7 @@ import json
 import os
 import re
 from pathlib import Path
+from typing import IO
 
 from qmf.core import Ok, Result
 from qmf.data.store.engines import (
@@ -87,6 +88,35 @@ def _guard_stream_file(root: Path, path: Path, *, must_exist: bool) -> None:
             retryable=False,
             detail={"stream": str(root), "path": str(path)},
         )
+
+
+def _open_stream_file(root: Path, path: Path, mode: str, *, must_exist: bool) -> IO[bytes]:
+    """Guard a stream file and open it in one step (AC4).
+
+    Every read and every in-place write in this engine goes through here, so the proof
+    that the target is a regular, in-root, non-symlink file sits in the same call as
+    the ``open`` it protects rather than a few lines away in the caller. Two things
+    follow. The window between validating a path and using it is as narrow as this
+    engine can make it without dropping to raw file descriptors. And the guarantee is
+    checkable at the point of use — by a reader and by a static analyzer alike, neither
+    of which can follow a guard that lives in a different function.
+
+    ``must_exist`` distinguishes a target that has to be there already (every read, and
+    the in-place torn-tail truncate) from one that may be created on first use (the
+    ``.torn`` sidecar). The regular-file property is re-asserted here immediately before
+    the open; :func:`_guard_stream_file` also checks it, and that repetition is the
+    point — it is the last thing that happens before the handle is taken.
+    """
+    _guard_stream_file(root, path, must_exist=must_exist)
+    if must_exist and not path.is_file():
+        raise StoreEngineError(
+            "the evidence stream file vanished or stopped being a regular file between "
+            "the guard and the open; refusing to read or write it",
+            engine="jsonl",
+            retryable=False,
+            detail={"stream": str(root), "path": str(path)},
+        )
+    return path.open(mode)
 
 
 class JsonlAppendStream:
@@ -261,9 +291,8 @@ class JsonlAppendStream:
         if location is None:
             return None
         path = self._dir / _ordinal_filename(location.ordinal)
-        _guard_stream_file(self._dir, path, must_exist=True)
         try:
-            with path.open("rb") as handle:
+            with _open_stream_file(self._dir, path, "rb", must_exist=True) as handle:
                 handle.seek(location.byte_offset)
                 raw = handle.read(location.length)
         except OSError as exc:
@@ -386,7 +415,7 @@ class JsonlAppendStream:
             )
         offset = 0
         torn_tail: bytes | None = None
-        with path.open("rb") as handle:
+        with _open_stream_file(self._dir, path, "rb", must_exist=True) as handle:
             for raw in handle:
                 if not raw.endswith(b"\n"):
                     if is_last_file:
@@ -443,14 +472,12 @@ class JsonlAppendStream:
         # The sidecar is created on first quarantine (absent-or-regular); the data file
         # already exists and is truncated in place. Both must stay regular, in-root, and
         # never a symlink, so neither write is redirected off the evidence tree (AC4).
-        _guard_stream_file(self._dir, sidecar, must_exist=False)
-        _guard_stream_file(self._dir, data_path, must_exist=True)
         try:
-            with sidecar.open("ab") as handle:
+            with _open_stream_file(self._dir, sidecar, "ab", must_exist=False) as handle:
                 handle.write(torn)
                 handle.flush()
                 os.fsync(handle.fileno())
-            with data_path.open("r+b") as handle:
+            with _open_stream_file(self._dir, data_path, "r+b", must_exist=True) as handle:
                 handle.truncate(committed_prefix_len)
                 handle.flush()
                 os.fsync(handle.fileno())

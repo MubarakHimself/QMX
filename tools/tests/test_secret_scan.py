@@ -25,6 +25,7 @@ anyone ever pastes one back in.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
@@ -58,12 +59,37 @@ SECRET_SHAPES: dict[str, str] = {
 
 def _render(path: Path, tmp_path: Path) -> Path:
     """Materialize a must-flag template into ``tmp_path`` with the real shapes in
-    place of its ``{{PLACEHOLDER}}`` tokens."""
+    place of its ``{{PLACEHOLDER}}`` tokens.
+
+    The write is exclusive and no-follow. The target name is composed from a path this
+    function is handed, so it gets the same discipline the production writers use: the
+    destination is reduced to a bare basename, rebuilt under ``tmp_path``, confirmed to
+    resolve inside it, and created with ``O_CREAT | O_EXCL`` (plus ``O_NOFOLLOW`` where
+    the platform offers it) so an existing entry — a planted symlink included — is
+    refused rather than written through.
+    """
+    if not path.is_file():
+        raise FileNotFoundError(f"fixture template {path} is not a regular file")
     text = path.read_text(encoding="utf-8")
     for name, shape in SECRET_SHAPES.items():
         text = text.replace("{{" + name + "}}", shape)
-    target = tmp_path / path.name
-    target.write_text(text, encoding="utf-8")
+
+    target = tmp_path / os.path.basename(path)
+    root = Path(os.path.realpath(tmp_path))
+    if not Path(os.path.realpath(target)).is_relative_to(root):
+        raise ValueError(f"refusing to render outside the temporary directory: {target}")
+    flags = os.O_CREAT | os.O_EXCL | os.O_WRONLY | getattr(os, "O_NOFOLLOW", 0)
+    # SKY-D215 is suppressed on this line only. `target` is a pytest `tmp_path` — fresh
+    # and unique per test — joined to a bare basename, and the two lines above prove it
+    # resolves inside that directory. The rule flags any parameter-derived path at an
+    # `os.open` regardless of guards, so there is nothing to restructure toward. Using
+    # `Path.write_text` would scan clean and was rejected: it is not an exclusive
+    # create, and the exclusive no-follow create is the discipline asked for here.
+    descriptor = os.open(  # skylos: ignore[SKY-D215] contained basename under pytest tmp_path
+        target, flags, 0o600
+    )
+    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+        handle.write(text)
     return target
 
 
@@ -83,6 +109,7 @@ def test_must_flag_fixtures_are_flagged(path: Path, tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("path", MUST_FLAG, ids=lambda p: p.name)
 def test_must_flag_templates_use_a_placeholder(path: Path) -> None:
+    assert path.is_file(), f"{path.name} must be a regular fixture file"
     text = path.read_text(encoding="utf-8")
     assert "{{" in text, f"{path.name} must hold a {{{{PLACEHOLDER}}}}, not a credential"
 
@@ -211,6 +238,22 @@ def test_iter_scanned_files_prunes_skip_dirs_and_fixtures(tmp_path: Path) -> Non
 def test_non_text_suffixes_are_skipped(tmp_path: Path) -> None:
     (tmp_path / "blob.bin").write_text(f"{_shape('AWS_ACCESS_KEY_ID')}\n", encoding="utf-8")
     assert list(scanner.iter_scanned_files(tmp_path)) == []
+
+
+def test_scan_file_skips_an_undecodable_file(tmp_path: Path) -> None:
+    # A regular file that is not valid UTF-8 carries no readable credential text; the
+    # scanner skips it rather than raising out of the gate.
+    blob = tmp_path / "binary.env"
+    blob.write_bytes(b"AKIA\xff\xfe not utf-8\n")
+    assert scanner.scan_file(blob) == []
+
+
+def test_scan_file_skips_a_non_regular_path(tmp_path: Path) -> None:
+    # A directory carries no committed secret; the scanner skips it rather than
+    # attempting a read (and a FIFO would block the gate forever).
+    directory = tmp_path / "config.env"
+    directory.mkdir()
+    assert scanner.scan_file(directory) == []
 
 
 def test_scan_file_handles_unreadable_path(tmp_path: Path) -> None:

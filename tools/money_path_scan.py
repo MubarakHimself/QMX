@@ -489,6 +489,21 @@ def scan_file(path: Path, *, root: Path = ROOT) -> list[Finding]:
         rel = path.resolve().relative_to(root).as_posix()
     except ValueError:
         rel = path.as_posix()
+    # A regular file, or nothing. A directory, a device or a FIFO would either raise
+    # here or — for a FIFO — block the gate forever on a read that never ends, and a
+    # dangling symlink would read as an absent file. Refusing up front keeps the
+    # fail-closed promise literal, and keeps the check next to the read it guards.
+    if not path.is_file():
+        return [
+            Finding(
+                rel,
+                1,
+                1,
+                RULE_UNSCANNABLE,
+                "not a regular file (a directory, device, FIFO or dangling symlink); "
+                "the gate fails closed rather than reading through it",
+            )
+        ]
     try:
         source = path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as exc:

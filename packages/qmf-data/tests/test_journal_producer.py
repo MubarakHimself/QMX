@@ -371,7 +371,9 @@ def test_reader_refuses_a_hand_planted_foreign_world_row(store: EvidenceStore) -
     assert is_ok(foreign)
 
     # Direct file tampering: append the replay row as an LF-terminated line to the live file.
-    with _sole_journal_file(store, "dq").open("ab") as handle:
+    journal_file = _sole_journal_file(store, "dq")
+    assert journal_file.is_file(), "the journal rotation file must exist before tampering"
+    with journal_file.open("ab") as handle:
         handle.write(json.dumps(foreign.value.to_row()).encode("utf-8") + b"\n")
 
     result = JournalReader(journal).read("dq", for_world=World.LIVE)

@@ -156,14 +156,19 @@ def _int(value: object) -> int:
 
 def main(report_path: Path = REPORT_PATH) -> int:
     """Load ``coverage.json`` and enforce the floors, exiting nonzero on any breach."""
-    try:
-        report = json.loads(report_path.read_text(encoding="utf-8"))
-    except FileNotFoundError:
+    # "No usable report" is decided once, before the read, and covers every shape of it:
+    # absent, a directory, a dangling symlink, a device. This replaces a
+    # `except FileNotFoundError` further down that only ever saw the absent case — and
+    # a FIFO, which that branch could not have caught, would have hung the gate on a
+    # read that never returned. The check sits immediately before the read it guards.
+    if not report_path.is_file():
         sys.stdout.write(
             f"cov-report: FAIL - no coverage report at {report_path}; run `poe test` first "
             f"so the JSON report is produced.\n"
         )
         return 1
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         sys.stdout.write(f"cov-report: FAIL - could not read {report_path}: {exc}\n")
         return 1

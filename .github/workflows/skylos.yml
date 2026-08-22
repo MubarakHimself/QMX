@@ -62,9 +62,7 @@ jobs:
         # namespace a later epic adds is covered the day it lands.
         run: |
           python - <<'PY' >> "$GITHUB_ENV"
-          import os
           import pathlib
-          import shutil
           import sys
           import tomllib
 
@@ -72,28 +70,42 @@ jobs:
           config = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
           excluded = set(config["tool"]["skylos"]["exclude"])
 
-          # PRUNE the excluded trees, do not merely declare them.
+          # CLOSE THE ONE HOLE IN THE EXCLUDE LIST - surgically.
           #
-          # Skylos honours [tool.skylos].exclude in its file-discovery walk, but the
-          # prompt-injection pass ALSO probes a hard-coded list of high-priority
+          # Skylos honours [tool.skylos].exclude everywhere except one place: the
+          # prompt-injection pass ALSO probes a hard-coded set of high-priority
           # locations - "", "docs", "prompt(s)", "config(s)", ".github", ".continue" -
-          # for AGENTS.md / CLAUDE.md / README.md and friends, and that probe consults
-          # no exclude list at all (skylos/analyzer.py). That is why docs/AGENTS.md was
-          # scanned and flagged CRITICAL while "docs" sat in the exclude list. Passing
-          # --exclude on the CLI would change nothing: it feeds the very set the probe
-          # ignores. Deleting the trees is the only thing that binds for EVERY pass.
+          # for AGENTS.md / CLAUDE.md / README.md and friends, and that probe reads no
+          # exclude list at all (skylos/analyzer.py). That is why docs/AGENTS.md was
+          # flagged CRITICAL with "docs" sitting in the exclude list. Passing --exclude
+          # on the CLI changes nothing: it feeds the very set the probe ignores. Only
+          # removing the file from this checkout binds.
           #
-          # Safe by construction: this checkout is disposable and nothing is pushed
-          # from this job (persist-credentials: false, permissions contents: read).
-          for dirpath, dirnames, _ in os.walk(root, topdown=True):
-              for name in list(dirnames):
-                  if name == ".git":
-                      dirnames.remove(name)
-                  elif name in excluded:
-                      target = pathlib.Path(dirpath) / name
-                      shutil.rmtree(target, ignore_errors=True)
-                      dirnames.remove(name)
-                      print(f"pruned {target.as_posix()}", file=sys.stderr)
+          # Round 2 deleted the whole excluded trees, and that was too blunt: the
+          # diff-aware AI-defect rules read git, not the working tree, so wiping adws/
+          # read as "every CLI flag in adws was deleted in this diff" and invented 51
+          # SKY-A104 findings. So we delete only what the probe can actually reach - the
+          # agent-instruction basenames inside excluded trees. Today that is exactly one
+          # file, and it is markdown, so no diff-aware rule has anything to say about it.
+          #
+          # Coupled to skylos==4.33.2 (pinned above). If a later version widens that
+          # probe, the leak returns as a visible CI failure, never as a silent hole.
+          # Safe by construction: this checkout is disposable and nothing is pushed from
+          # this job (persist-credentials: false, permissions contents: read).
+          probe_names = {
+              "readme.md", "readme.rst", "readme.txt", "security.md",
+              "contributing.md", "contributing.rst", "prompt.md", "prompts.md",
+              "prompts.yaml", "prompts.yml", "agents.md", "claude.md",
+              ".cursorrules", ".clinerules", ".windsurfrules",
+          }
+          for name in sorted(excluded):
+              tree = root / name
+              if not tree.is_dir():
+                  continue
+              for candidate in sorted(tree.rglob("*")):
+                  if candidate.is_file() and candidate.name.lower() in probe_names:
+                      candidate.unlink()
+                      print(f"removed from scan: {candidate.as_posix()}", file=sys.stderr)
 
           # DECLARE our own importable names.
           #

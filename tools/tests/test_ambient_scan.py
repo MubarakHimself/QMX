@@ -395,6 +395,18 @@ def test_unreadable_path_is_reported_as_a_finding(tmp_path: Path) -> None:
     assert findings[0].rule == scanner.RULE_UNSCANNABLE
 
 
+def test_non_regular_path_is_reported_as_a_finding(tmp_path: Path) -> None:
+    # A directory (or a device, FIFO or dangling symlink) is not a source file. The
+    # gate refuses it up front rather than reading through it — a FIFO would otherwise
+    # block the scan on a read that never returns.
+    directory = tmp_path / "looks_like.py"
+    directory.mkdir()
+    findings = scanner.scan_file(directory)
+    assert len(findings) == 1
+    assert findings[0].rule == scanner.RULE_UNSCANNABLE
+    assert "not a regular file" in findings[0].detail
+
+
 def test_undecodable_file_is_reported_as_a_finding(tmp_path: Path) -> None:
     # Regression (L9): a file that is not valid UTF-8 is a finding, never silence.
     bad = tmp_path / "latin1.py"

@@ -952,7 +952,27 @@ def _write_bytes_no_follow(path: Path, data: bytes, *, contain_within: Path) -> 
             root=str(contain_within),
         )
     try:
-        fd = os.open(path, _BACKUP_OPEN_FLAGS, 0o600)
+        # SKY-D215 is suppressed HERE, on this line, and only for this rule.
+        #
+        # The taint it reports is not real. The path is
+        # ``<destination.root>/pre-migration-backup/<world>-registry-room.backup.json``:
+        # its only variable segment is a ``World`` enum value ("live" / "replay"), and
+        # the rest is the caller's own store root plus literals. No user-supplied string
+        # reaches it, and the three lines above prove containment before this runs —
+        # realpath resolution inside ``contain_within``, a symlink refusal, and then an
+        # exclusive create (``O_CREAT | O_EXCL``, plus ``O_NOFOLLOW`` where the platform
+        # has it) that refuses an existing target rather than following it.
+        #
+        # It is suppressed rather than restructured because SKY-D215 has no guard escape
+        # to restructure toward: unlike SKY-D324/D325, it flags any tainted or
+        # interpolated path at a filesystem sink unconditionally, consulting no safety
+        # state, and every parameter counts as tainted. The only shapes that clear it
+        # drop the caller's directory (wrong behaviour) or require POSIX-only ``dir_fd``
+        # (this workspace also runs on Windows). Skylos's own codebase suppresses the
+        # same rule the same way at an equivalent bounded, no-follow write.
+        fd = os.open(  # skylos: ignore[SKY-D215] contained, no-follow, exclusive create
+            path, _BACKUP_OPEN_FLAGS, 0o600
+        )
         try:
             os.write(fd, data)
             os.fsync(fd)

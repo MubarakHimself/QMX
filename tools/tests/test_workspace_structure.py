@@ -107,6 +107,8 @@ def test_no_member_imports_an_edge_module() -> None:
 
 def _imported_modules(path: Path) -> set[str]:
     """The dotted module names imported by one source file (import + from-import)."""
+    if not path.is_file():
+        return set()
     try:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     except (OSError, SyntaxError):

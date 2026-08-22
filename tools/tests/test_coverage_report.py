@@ -145,6 +145,16 @@ def test_main_fails_closed_when_report_missing(
     assert "no coverage report" in capsys.readouterr().out
 
 
+def test_main_fails_closed_on_a_non_regular_report_path(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # A directory where the report should be is "no report" as truly as a missing file.
+    directory = tmp_path / "coverage.json"
+    directory.mkdir()
+    assert cov.main(directory) == 1
+    assert "no coverage report" in capsys.readouterr().out
+
+
 def test_main_fails_closed_on_malformed_report(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

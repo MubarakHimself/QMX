@@ -89,7 +89,15 @@ class Member:
 
 def _load_member(directory: Path, *, is_extension: bool) -> Member:
     """Parse one member's ``pyproject.toml`` into a :class:`Member`."""
-    data = tomllib.loads((directory / "pyproject.toml").read_text(encoding="utf-8"))
+    manifest = directory / "pyproject.toml"
+    # A workspace member is defined by a real manifest file; anything else (a missing
+    # one, a directory of that name, a dangling symlink) is a broken member, and the
+    # check belongs immediately before the read it guards. `iter_members` already
+    # filters on the same predicate, so this is defence in depth for a direct caller
+    # rather than a reachable path through the public surface.
+    if not manifest.is_file():  # pragma: no cover - defensive: iter_members pre-filters
+        raise FileNotFoundError(f"workspace member {directory} has no pyproject.toml manifest")
+    data = tomllib.loads(manifest.read_text(encoding="utf-8"))
     project = data.get("project", {})
     name = project.get("name", directory.name)
     dependencies = tuple(_dep_name(spec) for spec in project.get("dependencies", []))
