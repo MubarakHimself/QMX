@@ -4,11 +4,17 @@ Failure-register entries for `qmf-data`, per the workspace convention
 (`conventions/failure-register.md`, NFR-11). One entry per designed failure mode,
 written for someone who was not in the design room. Story 3.1 delivers the store
 seam (`COMP-QMF-DATA-STORE`), FR-1 through FR-10; Story 3.2 delivers the CT-10
-source-observation boundary, FR-11 through FR-14. A CT-10 write that reaches storage
-inherits the store seam's storage-failure translation (FR-1) and true-fp1-collision
-alarm (FR-2) unchanged — the boundary funnels every observation write through the
-same `append_raw` seam, so those two entries cover observation persistence too and
-are not restated below.
+source-observation boundary, FR-11 through FR-14; Story 3.3 delivers the seven
+room-roles per world (`WorldRooms`), the rebuildable-view rebuild pins, the
+`(source, instrument, time-window)` series partition, and the keep-forever-vs-
+deletion-licensed retention law, FR-15 through FR-17. A CT-10 write that reaches
+storage inherits the store seam's storage-failure translation (FR-1) and
+true-fp1-collision alarm (FR-2) unchanged — the boundary funnels every observation
+write through the same `append_raw` seam, so those two entries cover observation
+persistence too and are not restated below. Story 3.3's `WorldRooms` operations
+likewise ride the same store seam, so a `world = simulated` write (FR-4), a
+cross-world read (FR-5), and a storage-engine failure (FR-1) are inherited unchanged
+for its rebuildable views and series placement and are not restated below.
 
 ### FR-1: A store-engine failure is translated to a storage-failure refusal (AC4)
 
@@ -289,3 +295,67 @@ are not restated below.
   no longer matches the fingerprint it was recorded under (corruption or tampering). The
   platform refuses it rather than return altered evidence; an operator restores it from an
   off-machine backup or the source is re-ingested.
+
+### FR-15: A governed rebuildable view offered without valid rebuild pins is refused (AC2)
+
+- **Failure class:** `invalid input` (a CT-04 refusal category).
+- **Detection:** a rebuildable analytics view is never evidence — an engine format break
+  costs a rebuild — so a faithful rebuild must replay against the exact calendar the view
+  was built under. `WorldRooms.materialize_view` therefore **requires** a `RebuildPins`
+  value (a `qmf-core` `CalendarIdentity`, which itself pins the tzdata version); a value
+  that is not a `RebuildPins` is refused before anything is materialized, and the view's
+  receipt records both the calendar identity and the tzdata version alongside the engine
+  major (DEC-0117, DEC-0103, DEC-0106). `RebuildPins.try_create` refuses a
+  non-`CalendarIdentity` at construction with the same category.
+- **Auto-recovery / retry:** none automatic; the refusal names the `pins` (or
+  `calendar_identity`) field. Build `RebuildPins.try_create(calendar_identity)` from the
+  calendar the view was computed under and retry.
+- **Visible degraded state:** none; nothing is materialized.
+- **Notification tier:** silent-log. A wiring mistake surfaced as a value.
+- **Product-user affordance:** nothing failed at runtime for an end user; a component
+  tried to materialize a rebuildable view without recording which calendar a rebuild must
+  pin. Supply the calendar identity and retry — so a later engine-format rebuild can never
+  silently re-derive a session boundary or the seal under a newer tzdata release.
+
+### FR-16: A malformed series partition or an empty series is an invalid-input refusal (AC5)
+
+- **Failure class:** `invalid input` (a CT-04 refusal category).
+- **Detection:** time-series evidence is placed within its `(source, instrument,
+  time-window)` partition. `WorldRooms.place_series` refuses a `partition` that is not a
+  `SeriesPartition` (build it through `SeriesPartition.try_create`, which itself refuses a
+  blank source, a non-`Instrument`, or a non-`Interval` window), and refuses an **empty**
+  series before any bytes are written — an empty series is meaningless evidence, the same
+  L5 rule the raw archive applies to an empty artifact (FR-10). The partition rides into
+  the stored artifact's fp1 identity, so a valid placement resolves back to exactly its
+  partition (DEC-0118, DEC-0117).
+- **Auto-recovery / retry:** none automatic; the refusal names the offending `partition`
+  or `rows` field. Build a valid partition, present at least one row, and retry.
+- **Visible degraded state:** none; nothing is stored.
+- **Notification tier:** silent-log. A programming or wiring mistake surfaced as a value.
+- **Product-user affordance:** nothing failed at runtime for an end user; a component tried
+  to archive time-series evidence without a well-formed `(source, instrument, time-window)`
+  partition, or with no rows. The refusal says which field; fix the call and retry.
+
+### FR-17: A corrupt series envelope is a storage-failure refusal, never resolved as valid (AC5)
+
+- **Failure class:** `storage failure` (a CT-04 refusal category), retryability `no`.
+- **Detection:** `WorldRooms.resolve_series` reads a placed series back from the immutable
+  raw archive and rebuilds it. A stored artifact that does not hold exactly one series
+  envelope, an envelope missing its `partition` mapping or `series` list, a partition that
+  no longer rebuilds (a corrupt venue token, a start after its end), or a series row that
+  is not a mapping is surfaced as a corrupt-evidence `storage failure` — the stored bytes
+  are wrong, so the evidence is never resolved as a valid series (H5, DEC-0108). A
+  well-formed key that names no raw-archive artifact stays a `stale evidence` miss (FR-8),
+  and a rebuildable view — which lives in the processed room, never the raw archive — is
+  therefore never resolved as series evidence at all (it reads as a raw-archive miss).
+- **Auto-recovery / retry:** none automatic; retryability is `no` — the stored bytes are
+  wrong and retrying the same read will not fix them. Restore the artifact from an
+  off-machine backup or re-place the series from its source.
+- **Visible degraded state:** none; no series is returned, and the corrupt artifact is
+  never presented as valid evidence.
+- **Notification tier:** operator-visible. Stored governed evidence that no longer matches
+  the series shape is an integrity event worth surfacing.
+- **Product-user affordance:** a stored time-series artifact could not be read because its
+  content no longer matches the series shape it was recorded under (corruption or
+  tampering). The platform refuses it rather than return altered evidence; an operator
+  restores it from an off-machine backup or the series is re-placed from its source.

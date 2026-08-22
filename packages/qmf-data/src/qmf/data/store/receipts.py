@@ -34,6 +34,15 @@ class StoreReceipt:
     rebuildable view (deletion licensed until a result label cites it). ``engine_major``
     is set only for a rebuildable analytics view; ``sequence`` only for an append
     stream (the per-writer position).
+
+    ``rebuild_calendar_identity`` and ``rebuild_tzdata_version`` are the original
+    calendar identity and tzdata version a rebuild of a rebuildable analytics view must
+    pin, so a format break replays against the exact calendar the view was built under
+    and never silently re-derives it (CT-11 ``rebuild_calendar_identity`` /
+    ``rebuild_tzdata_version``; DEC-0117, DEC-0103). They are set only for a rebuildable
+    view whose caller declared its rebuild pins (the data-policy ``WorldRooms`` surface
+    requires them) and stay ``None`` for evidence-bearing raw and journal artifacts,
+    which are never rebuilt.
     """
 
     outcome: WriteOutcome
@@ -46,3 +55,5 @@ class StoreReceipt:
     format_version: int = CONTRACT_FORMAT_VERSION
     engine_major: str | None = None
     sequence: int | None = None
+    rebuild_calendar_identity: str | None = None
+    rebuild_tzdata_version: str | None = None

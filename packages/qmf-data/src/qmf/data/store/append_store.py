@@ -137,11 +137,20 @@ class AppendStore:
         rows: Sequence[Mapping[str, object]],
         *,
         presented_fingerprint: object | None = None,
+        rebuild_calendar_identity: str | None = None,
+        rebuild_tzdata_version: str | None = None,
     ) -> Result[StoreReceipt]:
         """Materialize a rebuildable analytics view over ``rows`` via the DuckDB engine.
 
         The view is never evidence-bearing: its pinned engine major is recorded on the
         receipt so a format break costs a rebuild, never evidence (DEC-0103, DEC-0117).
+        ``rebuild_calendar_identity`` and ``rebuild_tzdata_version`` are the original
+        calendar identity and tzdata version a rebuild must pin; they ride onto the
+        receipt verbatim so a format break replays against the exact calendar the view
+        was built under (CT-11; DEC-0117, DEC-0103). Both are stdlib strings — the
+        boundary never learns the ``qmf-core`` ``CalendarIdentity`` value type, so the
+        engine seam stays value-neutral (the data-policy ``WorldRooms`` surface derives
+        them from the calendar identity and requires them for a governed view).
         """
         blocked = namespace_block(self._world)
         if blocked is not None:
@@ -172,6 +181,8 @@ class AppendStore:
                 is_evidence_bearing=False,
                 retained_forever=False,
                 engine_major=self._views.engine_major(),
+                rebuild_calendar_identity=rebuild_calendar_identity,
+                rebuild_tzdata_version=rebuild_tzdata_version,
             )
         )
 
