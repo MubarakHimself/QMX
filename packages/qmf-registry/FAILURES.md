@@ -430,6 +430,43 @@ written for someone who was not in the design room.
   `context` names the problem; correct it and re-run. The only copy is never mutated, so a
   refused migration is always safe to retry.
 
+### FR-15a: Migration into a destination that already holds a pre-migration backup (CT-09, AR-32)
+
+- **Failure class:** `invalid input` (a CT-04 refusal category), on `field: destination` —
+  the same family as FR-15's same-root guard.
+- **Detection:** the backup-first stage's default sink writes one artifact,
+  `<destination.root>/pre-migration-backup/<world>-registry-room.backup.json`. Before
+  writing, it checks whether that path is already taken by a real file. A destination root
+  that has already been migrated into still holds the previous run's backup, so a second
+  `migrate_registry_format` into the same root is refused **by name**: the `context` carries
+  `backup_path` and a `reason` stating that a backup already exists there, that a migration
+  writes its backup to a fresh destination root, and that the remedy is to remove that
+  backup once it is no longer the restore path or to re-run against a fresh destination.
+  Without this guard the exclusive create (`O_CREAT | O_EXCL`, FR-14's symlink-safety
+  measure) still refused — but as a raw `storage failure` carrying an OS errno, which reads
+  as a disk fault rather than the wiring mistake it is. A **symlink** at that path is a
+  different failure and stays FR-14's `storage failure`: it is a hostile path, not an
+  already-taken one. A caller-supplied `backup_sink` owns its own naming and is not subject
+  to this guard.
+- **Design note — why refuse rather than auto-name:** the alternative, giving each backup a
+  unique name, cannot be built here. A timestamped name would read the system clock below
+  the composition root, which FR-002 forbids and the ambient-nondeterminism gate fails
+  closed on; an ordinal name would need a directory scan, reintroducing the
+  check-then-create race the exclusive create exists to remove. Both would also quietly
+  normalise repeat migrations into a destination that is not fresh, which the ratified
+  never-in-place, distinct-destination semantics (AR-32) forbid.
+- **Auto-recovery / retry:** none automatic. The operation RETURNS the refusal at
+  backup-first, **before any migrate write**, so the second run changes nothing. The
+  operator either removes the previous backup (once it is no longer the restore path) or
+  re-runs against a fresh destination root, then retries. Nothing is raised.
+- **Visible degraded state:** none. The previous run's backup is left byte-identical, the
+  source is untouched, and the destination gains nothing from the refused run.
+- **Notification tier:** silent-log. Re-pointing a migration at an already-migrated
+  destination is a wiring/operator mistake surfaced as a value.
+- **Product-user affordance:** nothing failed for an end user. An operator re-ran a format
+  migration into a destination root that already holds a pre-migration backup. The refusal
+  names that exact path and the two ways forward; pick one and re-run.
+
 ### FR-16: Per-writer registration sequence going backwards (CT-06, DEC-0106)
 
 - **Failure class:** `invalid input` (a CT-04 refusal category).

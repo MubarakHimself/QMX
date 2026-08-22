@@ -982,6 +982,12 @@ def _write_backup_artifact(
     filesystem failure is a ``storage failure`` refusal that aborts the migration before any
     migrate write (backup-first). Canonical bytes are UTF-8 (fp1-canonical JSON / JSONL
     lines), so they round-trip through the JSON text field.
+
+    A destination that **already holds** a pre-migration backup is refused by name — an
+    ``invalid input`` on ``field: destination``, the same family as the same-root guard —
+    rather than clobbering that backup or surfacing a raw errno. A migration targets a
+    fresh destination root; a second migration into an already-migrated one is a wiring
+    mistake with a stated remedy (FR-15).
     """
     try:
         records = [
@@ -1004,6 +1010,33 @@ def _write_backup_artifact(
             backup_dir=str(backup_dir),
         )
     path = backup_dir / f"{export.world.value}-registry-room.backup.json"
+    # A backup artifact is never clobbered and never silently multiplied. The exclusive
+    # create below already refuses an existing target, but it does so as a raw OS errno;
+    # a destination that ALREADY holds a pre-migration backup is a designed, named
+    # refusal instead, in the same `invalid input` / `field: destination` family as the
+    # same-root guard: a migration targets a FRESH destination root, so a second
+    # migration into one that has already been migrated into is a wiring mistake, not a
+    # storage fault (AC5; AR-32; FR-15).
+    #
+    # Deliberately NOT solved by making the filename unique. A timestamped name would
+    # have to read the system clock below the composition root, which FR-002 bans and
+    # the ambient-nondeterminism gate fails closed on; an ordinal name would need a
+    # directory scan, reintroducing exactly the check-then-create race the exclusive
+    # create exists to remove — and both would quietly normalise repeat migrations into
+    # a non-fresh destination, which the ratified never-in-place semantics forbid.
+    #
+    # A symlink at the target is left to `_write_bytes_no_follow`: that is a hostile
+    # path, not an already-taken one, and it stays a `storage failure`.
+    if not path.is_symlink() and path.exists():
+        return _invalid(
+            "destination",
+            f"a pre-migration backup already exists at {path}; a migration writes its "
+            "backup to a fresh destination root and never overwrites an existing backup "
+            "artifact. Remove that backup once it is no longer the restore path, or "
+            "re-run the migration against a fresh destination root (AC5; AR-32)",
+            backup_path=str(path),
+            destination_root=str(contain_within),
+        )
     written = _write_bytes_no_follow(path, data, contain_within=contain_within)
     if is_refusal(written):
         return written
@@ -1034,7 +1067,9 @@ def migrate_registry_format(
       a real backup artifact (through ``backup_sink`` or a default file under the destination
       root) before any migrate write; ``backed_up`` reflects that real write and
       ``backup_path`` names it. ``source.root`` is the documented restore path; the source,
-      append-only and only read here, stays the intact original.
+      append-only and only read here, stays the intact original. The default sink never
+      overwrites an existing backup: a destination root that already holds one is
+      ``invalid input`` on ``field: destination``, naming the path and the remedy.
     * **dry-run** — ``transform`` is applied to every record in memory and each result is
       validated as a well-formed record stamping ``to_format_version``; **no writes** occur,
       and any transform refusal aborts with nothing written.

@@ -306,6 +306,41 @@ def test_rebuild_refuses_a_symlinked_rotation_file(tmp_path: Path) -> None:
         reader.rebuild_index()
 
 
+def test_append_refuses_a_symlinked_rotation_target(tmp_path: Path) -> None:
+    # The write path is guarded like the read paths: a link pre-planted at the NEXT
+    # rotation ordinal (never seen by the acquire-time scan, because it is not reached
+    # yet) must not be followed when the stream rolls onto it.
+    stream = _stream(tmp_path, rotation=1)  # every line after the first rotates
+    stream.append(_canon({"n": 0}))
+    outside = tmp_path / "outside-append.txt"
+    outside.write_text("do not clobber", encoding="utf-8")
+    _try_symlink(tmp_path / "s" / "000001.jsonl", outside)
+    with pytest.raises(StoreEngineError):
+        stream.append(_canon({"n": 1}))
+    assert outside.read_text(encoding="utf-8") == "do not clobber"
+
+
+def test_append_refuses_a_rotation_target_detected_as_a_symlink(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The same guard, proven on every platform. Creating a real symlink needs a
+    # privilege some dev boxes withhold, so the test above can skip; here symlink
+    # DETECTION is patched for exactly the next rotation target, so this one never
+    # skips and the write guard is always exercised.
+    stream = _stream(tmp_path, rotation=1)
+    stream.append(_canon({"n": 0}))
+    target = tmp_path / "s" / "000001.jsonl"
+    real_is_symlink = Path.is_symlink
+
+    def detects_the_rotation_target_as_a_link(self: Path) -> bool:
+        return True if self == target else real_is_symlink(self)
+
+    monkeypatch.setattr(Path, "is_symlink", detects_the_rotation_target_as_a_link)
+    with pytest.raises(StoreEngineError):
+        stream.append(_canon({"n": 1}))
+    assert not target.exists(), "the guard must refuse before the rotation file is created"
+
+
 def test_quarantine_refuses_a_symlinked_torn_sidecar(tmp_path: Path) -> None:
     # A torn tail triggers quarantine to a .torn sidecar; a symlink pre-planted there must
     # not be followed (a symlink-following write could clobber another file).

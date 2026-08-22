@@ -920,9 +920,10 @@ def test_migration_aborts_when_the_backup_sink_refuses(tmp_path: Path) -> None:
 
 
 def test_migration_aborts_when_the_backup_target_already_exists(tmp_path: Path) -> None:
-    # The default backup is created with an exclusive, no-follow open (O_CREAT | O_EXCL):
-    # a pre-existing artifact at the target is refused rather than clobbered, so a
-    # symlink swapped in for that path can never be followed and overwritten.
+    # A backup artifact is never clobbered. An existing one at the target is a DESIGNED
+    # refusal that names the path and the remedy — `invalid input` on `field: destination`,
+    # the same family as the same-root guard — not the raw errno the exclusive create
+    # would otherwise surface.
     source, records = _seeded_source(tmp_path)
     destination = _live(tmp_path / "dst")
     backup_dir = destination.root / "pre-migration-backup"
@@ -937,10 +938,52 @@ def test_migration_aborts_when_the_backup_target_already_exists(tmp_path: Path) 
         to_format_version=2,
     )
     assert is_refusal(refused)
-    assert refused.category.value == "storage failure"
+    assert refused.category.value == "invalid input"
+    assert refused.context.get("field") == "destination"
+    assert refused.context.get("backup_path") == str(target)
+    # The reason states the remedy in words, not an errno.
+    assert "already exists" in str(refused.context.get("reason"))
     # The pre-existing artifact was not clobbered, and nothing migrated to the destination.
     assert target.read_text(encoding="utf-8") == "pre-existing"
     key = _unwrap(persistence_fingerprint(_unwrap(_bump_to(2)(records[0]), "bumped")), "key")
+    assert is_refusal(destination.load_record(key, for_world=World.LIVE))
+
+
+def test_a_second_migration_into_the_same_destination_is_refused_by_name(tmp_path: Path) -> None:
+    # The behaviour that guard exists for: migrating twice into one destination root. The
+    # first run leaves its pre-migration backup there; the second must refuse deliberately
+    # (never clobbering the first backup, never reporting a raw storage fault), and must
+    # abort at backup-first with nothing written by the second run.
+    source, records = _seeded_source(tmp_path)
+    destination = _live(tmp_path / "dst")
+    first = _unwrap(
+        migrate_registry_format(
+            records,
+            source=source,
+            destination=destination,
+            transform=_bump_to(2),
+            to_format_version=2,
+        ),
+        "first migration",
+    )
+    backup = Path(first.backup_path)
+    original = backup.read_bytes()
+
+    second = migrate_registry_format(
+        records,
+        source=source,
+        destination=destination,
+        transform=_bump_to(3),
+        to_format_version=3,
+    )
+    assert is_refusal(second)
+    assert second.category.value == "invalid input"
+    assert second.context.get("field") == "destination"
+    assert second.context.get("backup_path") == str(backup)
+    # The first run's backup — the restore path — is byte-identical afterwards.
+    assert backup.read_bytes() == original
+    # The second run wrote nothing: its target-version records are absent.
+    key = _unwrap(persistence_fingerprint(_unwrap(_bump_to(3)(records[0]), "bumped")), "key")
     assert is_refusal(destination.load_record(key, for_world=World.LIVE))
 
 

@@ -195,10 +195,13 @@ class JsonlAppendStream:
 
         The one-writer hold is verified first: a handle that does not hold the stream
         (a reader or backup handle, or a writer that never acquired) may not append,
-        so a read handle is structurally unable to write (M6, DEC-0113). Raises
-        :class:`StoreEngineError` on that guard and on any physical failure — the
-        boundary translates it to a ``storage failure`` refusal and never reports
-        success (AC4).
+        so a read handle is structurally unable to write (M6, DEC-0113). The rotation
+        target is then guarded exactly as every read target is — a symlink, an
+        out-of-root path, or a non-regular file is refused rather than written through,
+        so the next ordinal cannot be pre-seeded with a link that redirects the append
+        (AC4). Raises :class:`StoreEngineError` on either guard and on any physical
+        failure — the boundary translates it to a ``storage failure`` refusal and never
+        reports success (AC4).
         """
         if not self._held:
             raise StoreEngineError(
@@ -215,6 +218,14 @@ class JsonlAppendStream:
                 self._current_ordinal += 1
                 self._current_size = 0
             path = self._dir / _ordinal_filename(self._current_ordinal)
+            # The write path carries the same guard as every read path. The exposure it
+            # closes is the NEXT rotation ordinal: acquire scans only the files that
+            # exist then, so a link planted at an ordinal this stream has not reached
+            # yet is never seen at acquire — and an unguarded open-for-append would
+            # follow it on rotation. `must_exist=False` because a fresh rotation target
+            # is legitimately absent; an existing one must still be a regular in-root
+            # file (AC4).
+            _guard_stream_file(self._dir, path, must_exist=False)
             offset = self._current_size
             with path.open("ab") as handle:
                 handle.write(line)
