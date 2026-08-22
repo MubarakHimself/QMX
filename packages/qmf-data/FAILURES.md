@@ -3,7 +3,12 @@
 Failure-register entries for `qmf-data`, per the workspace convention
 (`conventions/failure-register.md`, NFR-11). One entry per designed failure mode,
 written for someone who was not in the design room. Story 3.1 delivers the store
-seam (`COMP-QMF-DATA-STORE`); these are its designed failures.
+seam (`COMP-QMF-DATA-STORE`), FR-1 through FR-10; Story 3.2 delivers the CT-10
+source-observation boundary, FR-11 through FR-14. A CT-10 write that reaches storage
+inherits the store seam's storage-failure translation (FR-1) and true-fp1-collision
+alarm (FR-2) unchanged — the boundary funnels every observation write through the
+same `append_raw` seam, so those two entries cover observation persistence too and
+are not restated below.
 
 ### FR-1: A store-engine failure is translated to a storage-failure refusal (AC4)
 
@@ -205,3 +210,82 @@ seam (`COMP-QMF-DATA-STORE`); these are its designed failures.
 - **Notification tier:** silent-log. A wiring mistake surfaced as a value.
 - **Product-user affordance:** nothing failed at runtime for an end user; a component
   tried to archive an empty artifact. Present the actual rows and retry.
+
+### FR-11: An incomplete source observation does not enter governed evidence (AC4)
+
+- **Failure class:** `invalid input` (a CT-04 refusal category).
+- **Detection:** the CT-10 fact law requires every observation to carry event-time,
+  known-at, source, source-native id, revision, receive-wall-time, an AD-8 WriterId, a
+  per-writer sequence, a world, and a *computable* fp1 identity.
+  `SourceObservation.try_create` validates each part and refuses the first missing or
+  malformed one; the fingerprint is computed by `qmf.core.fingerprint`, so a value that
+  cannot be canonicalized (a binary float in identity content) also refuses. The boundary
+  additionally refuses any value that is not a complete `SourceObservation` before it
+  reaches storage (`SourceObservationBoundary.admit`), so a raw dict or a half-built
+  record never becomes governed evidence (FM-1, DEC-0117, DEC-0109).
+- **Auto-recovery / retry:** none automatic; the refusal names the offending `field`.
+  Supply the missing part and rebuild.
+- **Visible degraded state:** none; nothing is admitted or stored.
+- **Notification tier:** silent-log. A producer wiring mistake surfaced as a value.
+- **Product-user affordance:** nothing failed at runtime for an end user; a source feed
+  presented a fact missing a required bitemporal field (when it occurred, when it became
+  knowable, who wrote it, or which provider it came from). The refusal says which field;
+  the producer supplies it and resubmits.
+
+### FR-12: A `world = simulated` observation write is a policy rejection (AC5)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** an observation carries its own `world`. `SourceObservationBoundary.admit`
+  routes the write through `EvidenceStore.for_world(observation.world)`, and
+  `world = simulated` has no governed namespace in V1 (`qmf.core.governed_namespace`), so
+  the store refuses the world before any bytes are touched. The observation VALUE may
+  exist with `world = simulated`; only *writing* it into governed evidence is refused
+  (DEC-0110, DEC-0117).
+- **Auto-recovery / retry:** none automatic; the refusal cites `GAP-0048`. Produce the
+  observation in a supported world (`live` or `replay`).
+- **Visible degraded state:** none; no evidence is written.
+- **Notification tier:** silent-log. Attempting a reserved-unusable world is a policy
+  mistake surfaced as a value.
+- **Product-user affordance:** nothing failed at runtime; a component tried to record a
+  synthetic-world observation, which V1 does not admit into governed storage. Use a
+  supported world.
+
+### FR-13: A cross-world observation read is a policy rejection (AC5)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** `SourceObservationBoundary.read` reaches the room of the declared
+  `in_world` and passes the caller's declared `for_world` down to the store's `read_raw`,
+  which refuses when they differ (`require_same_world`). World isolation is storage
+  separation — one world's room never serves another world's evidence, and a
+  `world = simulated` room has no governed namespace and is likewise refused (DEC-0117,
+  DEC-0110).
+- **Auto-recovery / retry:** none automatic; the refusal names the `requested` and the
+  `room_world`. Read from the evidence's own world (declare it correctly).
+- **Visible degraded state:** none; no evidence is returned.
+- **Notification tier:** silent-log.
+- **Product-user affordance:** nothing failed; a component asked one world's room for
+  another world's observations, or declared the wrong world. Declare the correct world
+  and read again.
+
+### FR-14: A corrupt or tampered observation row is refused, never read back as valid
+
+- **Failure class:** `invalid input` for a row whose recorded fp1 no longer matches its
+  content; `storage failure` (retryability `no`) for an artifact that does not hold
+  exactly one observation row.
+- **Detection:** `SourceObservation.from_row` rebuilds the value through `try_create` and
+  then recomputes its fp1, refusing when the recomputed fingerprint differs from the row's
+  recorded `fingerprint` — so a corrupted or edited row can never round-trip as valid
+  evidence. `SourceObservationBoundary.read` additionally refuses an archive artifact that
+  does not hold exactly one row (a source observation is a single record), surfacing it as
+  a corrupt-evidence `storage failure` (H5, DEC-0108).
+- **Auto-recovery / retry:** none automatic; retryability is `no` — the stored bytes are
+  wrong and retrying the same read will not fix them. Restore the artifact from backup or
+  re-ingest the source fact.
+- **Visible degraded state:** none; no evidence is returned, and the corrupt artifact is
+  never presented as valid.
+- **Notification tier:** operator-visible. Stored governed evidence that no longer matches
+  its own fingerprint is an integrity event worth surfacing.
+- **Product-user affordance:** a stored observation could not be read because its content
+  no longer matches the fingerprint it was recorded under (corruption or tampering). The
+  platform refuses it rather than return altered evidence; an operator restores it from an
+  off-machine backup or the source is re-ingested.
