@@ -31,10 +31,39 @@ any command-path sink blocks the command stream while the sensing pipe is unaffe
 and an :class:`~qmf.venue.connection.AccountBinding`'s secret reference is
 occurrence/display-only and excluded from fp1 (CT-21, AR-37, AR-38, AR-47; DEC-0136,
 DEC-0138).
+
+Story 8.4 adds two-artifact capability discovery wired in a fixed order
+(:mod:`qmf.venue.capabilities`): the static, adapter-version-scoped, credential-free
+:class:`~qmf.venue.capabilities.CapabilityDeclaration` (carrying the venue protocol
+artifact identity, a marking per roster field, the pinned :class:`~qmf.venue.capabilities.ErrorMap`,
+and an identity-bearing fingerprint) plus the per-(VenueId, account) venue-observation
+profile, orchestrated by :class:`~qmf.venue.capabilities.CapabilityDiscovery`. The
+declaration is present at construction and the profile must exist before the first
+command and before any evidence-bearing decode; a measured-at-connection capability
+consumed before its profile exists is an unavailable-dependency refusal, a
+measured-but-unverified one consumed in evidence-bearing work is a policy-rejection
+refusal, and an undeclared capability or unsupported close scope is an
+unsupported-capability refusal never widened; an unmapped venue error code takes the
+fail-closed default — transient venue failure, retryable = no, outcome = UNKNOWN, plus an
+alarm — and a verified daily boundary anchors a venue-scoped market-hours calendar for
+venue-native BarSpec (FR-022, CT-18, AR-45, AR-46, SC-09; DEC-0135, DEC-0137, DEC-0138,
+DEC-0141).
 """
 
 from __future__ import annotations
 
+from qmf.venue.capabilities import (
+    CapabilityDeclaration,
+    CapabilityDiscovery,
+    CapabilityField,
+    CapabilityFieldName,
+    CloseScope,
+    ErrorMap,
+    ErrorMapResolution,
+    ErrorMapRow,
+    FieldMarking,
+    SubmissionOutcomeClass,
+)
 from qmf.venue.connection import (
     AccountBinding,
     BlockCause,
@@ -82,10 +111,19 @@ __all__ = [
     "AccountBinding",
     "AccountMoneyRecord",
     "BlockCause",
+    "CapabilityDeclaration",
+    "CapabilityDiscovery",
+    "CapabilityField",
+    "CapabilityFieldName",
     "CapabilityProbe",
+    "CloseScope",
     "CommandPipeStatus",
     "CompiledProto",
     "ConnectionManager",
+    "ErrorMap",
+    "ErrorMapResolution",
+    "ErrorMapRow",
+    "FieldMarking",
     "Finding",
     "FindingsNote",
     "HealthReport",
@@ -97,6 +135,7 @@ __all__ = [
     "ProbeVerdict",
     "ProtoArtifact",
     "SpotSample",
+    "SubmissionOutcomeClass",
     "SymbolMetadataRecord",
     "TagChangeAssessment",
     "Tick",
