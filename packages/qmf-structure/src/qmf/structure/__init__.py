@@ -49,6 +49,24 @@ into a split embargo width (an unbounded family is excluded from split-governed 
 :func:`admit_across_boundary` (:class:`SplitAdmission`) is the FM-7 boundary refusal —
 partitioning by confirmed-at (DEC-0129, DEC-0131, DEC-0119, DEC-0110).
 
+Landed (Story 9.4): the first governed family, the CT-17 conformance harness, and the
+light/heavy benchmark policy. :class:`SwingPointFamily` is the first governed family from the
+seed candidates — a swing-point family whose confirmation rule is precise, consuming
+:class:`PriceObservation` source/bar inputs as declared inputs, holding no privilege over
+operator-authored peers and naming no trading school (FM-9). :class:`CompositeObject`,
+:class:`SlopedObject`, and :class:`CalendarAnchoredLevel` extend the geometry so the CT-17
+concept-walk :data:`~qmf.structure.conformance.CONCEPT_WALK_REGISTER` stays fully expressible.
+:func:`route` is the CT-16/CT-17 routing test and :func:`consume_indicator_input` the FM-6
+declared-input consumption (a family consumes an indicator's result, never re-implements it).
+:class:`BenchmarkRung`, :class:`DeclaredBudget`, :func:`evaluate_light_claim`, and
+:func:`check_regression` are the light/heavy four-bound policy over the three structure rungs —
+a light claim exceeding a bound or lacking a baseline is refused, and a peak-memory regression
+fails exactly as a slowdown does (FM-8). :func:`graduate_to_governed` is the escape-hatch
+graduation: an ungoverned experiment enters governed evidence only through the extension shape
+with a ``promoted-from`` lineage edge to the originating experiment (L33). The benchmark harness
+(:mod:`qmf.structure._bench`) has the same standing as the unit tests (DEC-0129, DEC-0128,
+DEC-0126, DEC-0133).
+
 Every ``fp1`` fingerprint is computed in ``qmf-core`` and nowhere else; this package
 imports **only** ``qmf.core`` in V1 (the default-deny dependency direction, L30). The
 library returns fingerprintable content and never stamps records — the composition root
@@ -58,6 +76,39 @@ records (DEC-0120, DEC-0129).
 
 from __future__ import annotations
 
+from qmf.structure.budget import (
+    BenchmarkRung,
+    DeclaredBudget,
+    LightVerdict,
+    Measurement,
+    RegressionVerdict,
+    check_regression,
+    evaluate_light_claim,
+)
+from qmf.structure.composites import (
+    CompositeChild,
+    CompositeObject,
+)
+from qmf.structure.conformance import (
+    CONCEPT_WALK_REGISTER,
+    ConceptWalkItem,
+)
+from qmf.structure.families import (
+    SWING_POINT_CONFIRMATION_RULE,
+    HighLowObservation,
+    PriceObservation,
+    SwingKind,
+    SwingPoint,
+    SwingPointFamily,
+)
+from qmf.structure.geometry import (
+    AnchorPoint,
+    CalendarAnchoredLevel,
+    EvaluationRuleRef,
+    SamplingPolicy,
+    ScheduleGapPolicy,
+    SlopedObject,
+)
 from qmf.structure.lifecycle import (
     CascadeResolution,
     ConfirmationRecord,
@@ -97,6 +148,17 @@ from qmf.structure.provenance import (
     read_confirmed,
     structure_result_label,
 )
+from qmf.structure.research import (
+    Graduation,
+    GraduationEdge,
+    graduate_to_governed,
+)
+from qmf.structure.routing import (
+    IndicatorResultInput,
+    RoutingKind,
+    consume_indicator_input,
+    route,
+)
 from qmf.structure.splits import (
     SplitAdmission,
     admit_across_boundary,
@@ -104,35 +166,64 @@ from qmf.structure.splits import (
 )
 
 __all__ = [
+    "CONCEPT_WALK_REGISTER",
     "CONTRACT_FORMAT_VERSION",
     "KNOWN_GEOMETRIES",
+    "SWING_POINT_CONFIRMATION_RULE",
+    "AnchorPoint",
     "AnchorSpan",
+    "BenchmarkRung",
+    "CalendarAnchoredLevel",
     "CascadeResolution",
     "CitationKind",
+    "CompositeChild",
+    "CompositeObject",
+    "ConceptWalkItem",
     "ConfirmationRecord",
     "ConfirmationRule",
+    "DeclaredBudget",
     "DeclaredFamily",
     "EmissionWitness",
+    "EvaluationRuleRef",
     "EvidenceRow",
     "FamilyIdentity",
     "GovernanceVerdict",
+    "Graduation",
+    "GraduationEdge",
+    "HighLowObservation",
+    "IndicatorResultInput",
     "InteractionRecord",
     "InvalidationPredicate",
     "InvalidationRecord",
     "LifecycleEdge",
     "LifecycleEdgeKind",
     "LifecycleRecord",
+    "LightVerdict",
+    "Measurement",
+    "PriceObservation",
     "Refit",
+    "RegressionVerdict",
     "ResolvedState",
+    "RoutingKind",
+    "SamplingPolicy",
+    "ScheduleGapPolicy",
+    "SlopedObject",
     "SplitAdmission",
     "StructureFamily",
     "StructureObject",
+    "SwingKind",
+    "SwingPoint",
+    "SwingPointFamily",
     "__version__",
     "admit_across_boundary",
     "admit_to_governed_library",
     "causally_precedes",
     "check_emission_invariant",
+    "check_regression",
+    "consume_indicator_input",
     "evaluate_citation",
+    "evaluate_light_claim",
+    "graduate_to_governed",
     "may_consume",
     "promote_scanned",
     "read_confirmed",
@@ -140,6 +231,7 @@ __all__ = [
     "required_embargo_width",
     "resolve_cascade",
     "resolve_state",
+    "route",
     "structure_result_label",
 ]
 

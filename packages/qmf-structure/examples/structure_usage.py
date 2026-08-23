@@ -43,6 +43,17 @@ Story 9.3 — evidence class, knowledge-time provenance, and split-manifest gove
     family's confirmation-delay bound feeds a split embargo that refuses a straddling
     record beyond it (FM-7).
 
+Story 9.4 — the first governed family, the routing test, and the light/heavy benchmark:
+
+11. The swing-point family (the first governed family) detects pivots from declared source/bar
+    observations, mints them look-ahead-safe (observed at the right-window bar), and confirms
+    one the moment a later bar closes beyond its break level — admitted through the same gate
+    as any operator-authored peer, with no privilege (DEC-0133).
+12. The routing test separates the libraries: a value per evaluation instant is CT-16, a
+    discrete object with a birth and a lifetime is CT-17.
+13. A light claim is policed: exceeding a declared bound (or lacking a baseline) is refused,
+    and a peak-memory regression fails exactly as a slowdown does (FM-8).
+
 Every ``fp1`` fingerprint is computed in qmf-core, and this module imports only qmf.core
 and qmf.structure.
 """
@@ -68,23 +79,34 @@ from qmf.core import (
 )
 from qmf.structure import (
     AnchorSpan,
+    BenchmarkRung,
     CitationKind,
     ConfirmationRecord,
     ConfirmationRule,
+    DeclaredBudget,
     DeclaredFamily,
     FamilyIdentity,
+    HighLowObservation,
     InvalidationRecord,
     LifecycleEdgeKind,
+    Measurement,
+    RoutingKind,
     StructureObject,
+    SwingKind,
+    SwingPointFamily,
     admit_across_boundary,
+    admit_to_governed_library,
     causally_precedes,
     check_emission_invariant,
+    check_regression,
     evaluate_citation,
+    evaluate_light_claim,
     may_consume,
     read_confirmed,
     refit,
     required_embargo_width,
     resolve_state,
+    route,
     structure_result_label,
 )
 
@@ -386,6 +408,82 @@ def split_embargo_refuses_a_straddling_record() -> str:
     return result.category.value
 
 
+def _bar(index: int, high: int, low: int, close: int) -> HighLowObservation:
+    """A declared source/bar observation the swing-point family consumes as a declared input."""
+    return _unwrap(
+        HighLowObservation.try_create(
+            Instant(value_ns=1_700_000_000_000_000_000 + index * 60_000_000_000),
+            _price(high),
+            _price(low),
+            _price(close),
+        ),
+        "observation",
+    )
+
+
+def swing_family_detects_confirms_and_holds_no_privilege() -> tuple[str, bool]:
+    """The first governed family: detect a look-ahead-safe pivot, confirm it, and prove no
+    privilege — it is admitted through the same gate as any operator-authored family."""
+    family = _unwrap(
+        SwingPointFamily.create(left=1, right=1, confirmation_delay_bound=3), "swing family"
+    )
+    series = [
+        _bar(0, 108_100, 107_900, 108_000),
+        _bar(1, 108_300, 108_000, 108_200),
+        _bar(2, 108_900, 108_400, 108_600),  # a swing high
+        _bar(3, 108_500, 108_100, 108_300),
+        _bar(4, 108_450, 107_500, 107_600),  # closes below the pivot low: confirms the high
+        _bar(5, 108_400, 108_000, 108_350),
+    ]
+    swings = _unwrap(family.detect(series), "detected swings")
+    high = next(swing for swing in swings if swing.kind is SwingKind.HIGH)
+    # Observed at the right-window bar (index 3), never at the pivot bar (index 2): no repaint.
+    assert high.object.observed_at == Instant(
+        value_ns=1_700_000_000_000_000_000 + 3 * 60_000_000_000
+    )
+    record = _unwrap(family.confirmation_for(high, series), "confirmation")
+    assert isinstance(record, ConfirmationRecord)
+    # No privilege: the seed family is admitted exactly as any operator-authored peer.
+    admitted = is_ok(admit_to_governed_library(family))
+    return str(record.at.value_ns), admitted
+
+
+def routing_test_separates_the_libraries() -> tuple[str, str]:
+    """A value per evaluation instant is CT-16; a discrete object with a lifetime is CT-17."""
+    indicator = _unwrap(
+        route(value_per_evaluation_instant=True, discrete_with_birth_and_lifetime=False), "ct16"
+    )
+    structure = _unwrap(
+        route(value_per_evaluation_instant=False, discrete_with_birth_and_lifetime=True), "ct17"
+    )
+    assert indicator is RoutingKind.VALUE_PER_INSTANT
+    assert structure is RoutingKind.DISCRETE_OBJECT
+    return indicator.value, structure.value
+
+
+def light_claim_is_policed_and_memory_regresses_like_a_slowdown() -> tuple[bool, bool]:
+    """A light claim without a baseline is refused; a peak-memory regression fails the gate."""
+    budget = _unwrap(
+        DeclaredBudget.try_create(
+            per_update_cost_ceiling_ns=1_000,
+            object_set_size_ceiling=200,
+            scan_window_ceiling=50,
+            synchronous_available=True,
+        ),
+        "budget",
+    )
+    no_baseline = evaluate_light_claim(
+        budget, per_update_cost_ns=500, object_set_size=100, scan_window=20, has_baseline=False
+    )
+    baseline = Measurement(rung=BenchmarkRung.ACTIVE_OBJECT_SET_SIZE, seconds=1.0, peak_bytes=1_000)
+    regressed = check_regression(
+        baseline,
+        Measurement(rung=BenchmarkRung.ACTIVE_OBJECT_SET_SIZE, seconds=1.0, peak_bytes=2_000),
+        tolerance_bps=0,
+    )
+    return isinstance(no_baseline, TypedRefusal), isinstance(regressed, TypedRefusal)
+
+
 def main() -> None:
     obj = minted_object_has_derived_fingerprint()
     fp = _unwrap(obj.content_fingerprint(), "fp1")
@@ -424,6 +522,22 @@ def main() -> None:
 
     split_refused = split_embargo_refuses_a_straddling_record()
     print(f"split embargo refuses a straddling record: {split_refused}")
+
+    confirmed_at, admitted = swing_family_detects_confirms_and_holds_no_privilege()
+    print(
+        f"swing-point family confirms a pivot at {confirmed_at} (admitted={admitted}, no privilege)"
+    )
+
+    ct16, ct17 = routing_test_separates_the_libraries()
+    print(f"routing test: value-per-instant is {ct16}, discrete-object is {ct17}")
+
+    no_baseline_refused, memory_regression_refused = (
+        light_claim_is_policed_and_memory_regresses_like_a_slowdown()
+    )
+    print(
+        f"light claim without a baseline refused: {no_baseline_refused}; "
+        f"peak-memory regression fails like a slowdown: {memory_regression_refused}"
+    )
 
 
 if __name__ == "__main__":
