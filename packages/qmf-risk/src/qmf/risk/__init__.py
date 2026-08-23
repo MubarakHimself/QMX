@@ -128,6 +128,35 @@ binding-transition stream (FR-029, FR-033, FR-035; CT-24; DEC-0149):
   :func:`~qmf.risk.paper.reject_paper_pnl_to_treasury`; and the return-to-live asymmetry
   :func:`~qmf.risk.paper.authorize_return_to_live` /
   :func:`~qmf.risk.paper.mint_return_to_live_transition`.
+
+Story 10.6 lands the CT-23 risk-evaluation door — Book-resolved sizing and
+risk-monotonic intents (FR-028, FR-032; CT-23; DEC-0147, DEC-0177, DEC-0185):
+
+* :mod:`qmf.risk.door` — the one inbound bot-to-Book door carrying exactly two typed
+  families (:class:`~qmf.risk.door.IntentFamily`) plus declared evidence slots
+  (:class:`~qmf.risk.door.EvidenceSlot`, :class:`~qmf.risk.door.CitedEvidence`) and
+  nothing else, with an inbound ``requested_r`` an ``invalid input`` refusal because the
+  bot may not size (:func:`~qmf.risk.door.reject_inbound_requested_r`,
+  :class:`~qmf.risk.door.RiskEvaluationRequest`); the :class:`~qmf.risk.door.EntryIntent`
+  with its advisory ``proposed_r`` and typed :class:`~qmf.risk.door.ReasonCode`, whose
+  declared full-loss price is **derived at the Book door** by the per-family
+  :class:`~qmf.risk.door.ExitLogicRef` (:func:`~qmf.risk.door.derive_full_loss_price_at_door`,
+  :func:`~qmf.risk.door.admit_entry_intent` stamping the Book-resolved values onto a frozen
+  :class:`~qmf.risk.door.AdmittedEntry`); the :class:`~qmf.risk.door.ExitIntent` V1 kinds
+  (:class:`~qmf.risk.door.ExitKind`) with ``close_partial`` an ``unsupported capability``
+  refusal (:func:`~qmf.risk.door.reject_close_partial`) and a
+  :class:`~qmf.risk.door.TightenProtectiveStop` naming a direction and a bound never a
+  price; the four :class:`~qmf.risk.door.RiskMonotonicViolation` policy rejections
+  (:func:`~qmf.risk.door.check_stop_not_widened`,
+  :func:`~qmf.risk.door.check_target_within_envelope`,
+  :func:`~qmf.risk.door.check_no_reopen`, :func:`~qmf.risk.door.check_no_size_increase`);
+  and the ExitLogicRef mode registry (:data:`~qmf.risk.door.EXIT_LOGIC_MODE_REGISTRY`,
+  :data:`~qmf.risk.door.ADOPT_BOT_ADVISORY_STOP_MODE`) whose adopt-the-bot's-advisory-stop
+  mode is an ``unavailable dependency`` refusal while CT-23 sits at
+  :data:`~qmf.risk.door.CT23_ACTIVE_FORMAT_VERSION` (format 1)
+  (:func:`~qmf.risk.door.check_exit_logic_mode_available`), with forward-compatible
+  parsing (:func:`~qmf.risk.door.parse_inbound_intent`) that keeps format-1 artifacts
+  readable forever and never breaks on an unknown optional field.
 """
 
 from __future__ import annotations
@@ -218,6 +247,42 @@ from qmf.risk.dimensional import (
     check_formula,
     derive_unit_kind,
 )
+from qmf.risk.door import (
+    ADOPT_BOT_ADVISORY_STOP_MODE,
+    ADOPT_BOT_ADVISORY_STOP_MODE_ID,
+    CT23_ACTIVE_FORMAT_VERSION,
+    CT23_ADVISORY_STOP_FORMAT_VERSION,
+    CT23_KNOWN_FORMAT_VERSIONS,
+    EXIT_LOGIC_MODE_REGISTRY,
+    AdmittedEntry,
+    CitedEvidence,
+    EntryIntent,
+    EvidenceSlot,
+    ExitIntent,
+    ExitKind,
+    ExitLogicMode,
+    ExitLogicModule,
+    ExitLogicRef,
+    IntentFamily,
+    ReasonCode,
+    RiskEvaluationRequest,
+    RiskMonotonicViolation,
+    StopMoveDirection,
+    TightenProtectiveStop,
+    admit_entry_intent,
+    check_exit_logic_mode_available,
+    check_no_reopen,
+    check_no_size_increase,
+    check_stop_not_widened,
+    check_target_within_envelope,
+    derive_full_loss_price_at_door,
+    evaluate_exit_intent,
+    parse_inbound_intent,
+    refuse_no_full_loss_price,
+    reject_close_partial,
+    reject_inbound_requested_r,
+    reject_risk_monotonic_violation,
+)
 from qmf.risk.grammar import (
     AdmissionImpact,
     AuthorityGrade,
@@ -302,6 +367,8 @@ from qmf.risk.versioning import (
 
 __all__ = [
     "ADMISSION_LAYERS",
+    "ADOPT_BOT_ADVISORY_STOP_MODE",
+    "ADOPT_BOT_ADVISORY_STOP_MODE_ID",
     "BENCH_THRESHOLD_VARIABLE",
     "BMS_CONTRACT_FORMAT_VERSION",
     "BMS_SECTIONS",
@@ -309,6 +376,10 @@ __all__ = [
     "BOOK_LIMIT_UNIT_KINDS",
     "BOOK_SECTIONS",
     "BREAKEVEN",
+    "CT23_ACTIVE_FORMAT_VERSION",
+    "CT23_ADVISORY_STOP_FORMAT_VERSION",
+    "CT23_KNOWN_FORMAT_VERSIONS",
+    "EXIT_LOGIC_MODE_REGISTRY",
     "FORBIDDEN_ADMISSION_GATES",
     "FORM_0006",
     "FULL_ORIGINAL_LOSS",
@@ -328,6 +399,7 @@ __all__ = [
     "AdmissionPage",
     "AdmissionRequirement",
     "AdmittedBinding",
+    "AdmittedEntry",
     "AuthorityGrade",
     "Band",
     "BinOp",
@@ -346,6 +418,7 @@ __all__ = [
     "BookMode",
     "CallableProducer",
     "CapabilityCheckResult",
+    "CitedEvidence",
     "ClearingCause",
     "Comparison",
     "ComparisonOp",
@@ -357,11 +430,19 @@ __all__ = [
     "ControlRankTable",
     "CurrentPointer",
     "Direction",
+    "EntryIntent",
     "EvidenceRequirements",
+    "EvidenceSlot",
     "ExecutionResolution",
     "ExecutionTarget",
+    "ExitIntent",
+    "ExitKind",
+    "ExitLogicMode",
+    "ExitLogicModule",
+    "ExitLogicRef",
     "FormulaOp",
     "FormulaSpec",
+    "IntentFamily",
     "Layer1Result",
     "Layer2Result",
     "ModeFoldResult",
@@ -376,10 +457,13 @@ __all__ = [
     "PositionModel",
     "ProducerContract",
     "RFaces",
+    "ReasonCode",
     "Ref",
     "RequirementVerdict",
     "ReturnMechanism",
     "ReturnToLiveOutcome",
+    "RiskEvaluationRequest",
+    "RiskMonotonicViolation",
     "RoutingOutcome",
     "RuledThreshold",
     "SeatState",
@@ -388,11 +472,13 @@ __all__ = [
     "StateCarry",
     "StateCarryChoice",
     "StateCarryCounter",
+    "StopMoveDirection",
     "TemplateSection",
     "TemplateVariable",
     "TemplateVersionGraph",
     "Threshold",
     "TieDisposition",
+    "TightenProtectiveStop",
     "TreasuryBoundaryKind",
     "TriggerDisposition",
     "TriggerKind",
@@ -404,6 +490,7 @@ __all__ = [
     "WorkedExample",
     "__version__",
     "admit",
+    "admit_entry_intent",
     "admit_entry_r_faces",
     "assemble_admission_page",
     "authorize_return_to_live",
@@ -413,27 +500,39 @@ __all__ = [
     "check_b_split",
     "check_constraint",
     "check_control_rank_uniqueness",
+    "check_exit_logic_mode_available",
     "check_formula",
     "check_live_binding_admissible",
     "check_no_paper_role_gates_live",
+    "check_no_reopen",
     "check_no_scale_in",
+    "check_no_size_increase",
     "check_rank_table_non_contradiction",
     "check_seat_r_ceiling",
+    "check_stop_not_widened",
+    "check_target_within_envelope",
     "check_worked_examples",
+    "derive_full_loss_price_at_door",
     "derive_original_risk_distance",
     "derive_unit_kind",
     "diff_variable_maps",
     "evaluate_bar",
+    "evaluate_exit_intent",
     "evaluate_requirement",
     "is_paper_role",
     "mint_return_to_live_transition",
     "money_to_r",
+    "parse_inbound_intent",
     "r_to_money",
     "recompute_worked_example",
     "reconcile_loss_floor",
+    "refuse_no_full_loss_price",
     "reject_bar_aggregate",
+    "reject_close_partial",
     "reject_forbidden_admission_gate",
+    "reject_inbound_requested_r",
     "reject_paper_pnl_to_treasury",
+    "reject_risk_monotonic_violation",
     "reset_paper_epoch",
     "resolve_execution_target",
     "run_layer1_linters",
