@@ -1,14 +1,73 @@
-"""qmf.indicators — two-mode indicator protocol.
+"""qmf.indicators — the two-mode CT-16 indicator library.
 
-Roster package of the QMF V1 uv workspace. Scaffold: this module declares the
-package identity and version only; its public contracts (the CT-* surface) land
-in later stories. Nothing here reaches across a sibling boundary — the
-default-deny dependency direction (L30) is preserved by construction.
+Roster package of the QMF V1 uv workspace. It re-exports the public CT-16 surface as
+it lands story by story.
+
+Landed (Story 7.1): the CT-16 **configured-indicator declaration record and its fp1
+identity** — the frozen :class:`ConfiguredIndicator` whose ``fp1`` (computed by the
+single ``qmf-core`` fingerprint function, nowhere else) spans the **entire declared
+configuration**: the ``formula_id``, the per-configured-indicator
+``contract_format_version``, the exact-rational ``parameters`` (a binary float is
+refused — exact rationals only), the ordered named ``inputs`` (each a
+:class:`SeriesInput` carrying instrument-or-source identity, a ``BarSpec`` identity
+reference, channel kind, quote side, and — for a derived input — the upstream
+fingerprint), the ``calendar_requirements`` (rule set + version + tzdata version), the
+``alignment_policy`` and ``missing_value_policy``, the ``warm_up`` count, the ordered
+``output_schema`` of :class:`OutputChannel`\\ s, the ``supported_modes``, and the
+identity-bearing :class:`ArithmeticReference` — plus the declared-when-present
+:class:`EmissionPolicy`, warm-up time bound, and light-claim :class:`DeclaredBudget`.
+Two configurations differing in any one element receive distinct fingerprints, that
+``fp1`` is the only dedup key, and an element missing from the fingerprint is a contract
+defect (:data:`IDENTITY_ELEMENTS`) (DEC-0126, DEC-0127, DEC-0128, DEC-0105, DEC-0108).
+
+Default-deny holds: this package imports **only** ``qmf.core`` — every ``fp1``
+fingerprint is computed there — and nothing imports ``qmf-indicators``; a configuration
+is assembled by the application at the composition root (DEC-0120). Public value types
+are frozen dataclasses and the public seam is a :class:`typing.Protocol` (DEC-0101).
 """
 
 from __future__ import annotations
 
-__all__ = ["__version__"]
+from qmf.indicators.configured_indicator import (
+    CONTRACT_FORMAT_VERSION,
+    IDENTITY_ELEMENTS,
+    OPTIONAL_IDENTITY_ELEMENTS,
+    AlignmentPolicy,
+    ArithmeticReference,
+    ChannelKind,
+    ConfiguredIndicator,
+    DeclaredBudget,
+    EmissionPolicy,
+    EmissionTiming,
+    MissingValuePolicy,
+    OutputArity,
+    OutputChannel,
+    QuoteSide,
+    SeriesInput,
+    SupportedMode,
+    SupportsFp1Identity,
+)
+
+__all__ = [
+    "CONTRACT_FORMAT_VERSION",
+    "IDENTITY_ELEMENTS",
+    "OPTIONAL_IDENTITY_ELEMENTS",
+    "AlignmentPolicy",
+    "ArithmeticReference",
+    "ChannelKind",
+    "ConfiguredIndicator",
+    "DeclaredBudget",
+    "EmissionPolicy",
+    "EmissionTiming",
+    "MissingValuePolicy",
+    "OutputArity",
+    "OutputChannel",
+    "QuoteSide",
+    "SeriesInput",
+    "SupportedMode",
+    "SupportsFp1Identity",
+    "__version__",
+]
 
 # Roster SemVer, in lockstep across the seven roster packages (0.x until the
 # V1 blueprint ships). Display-only provenance — never part of fp1 identity.
