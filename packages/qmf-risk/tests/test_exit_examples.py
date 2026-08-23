@@ -31,7 +31,10 @@ def test_reference_usage_example_runs_clean() -> None:
     assert "bench fold: qualifying_loss_count=2" in completed.stdout
     assert "recording precedes interpretation: refused (stale evidence)" in completed.stdout
     assert "move-to-breakeven ratchet: zero-offset ok" in completed.stdout
-    assert "kill_line_flat != protection_forced_flat: True" in completed.stdout
+    assert (
+        "kill_line_flat and protection_forced_flat are distinct taxonomy members: "
+        "kill_line_flat / protection_forced_flat"
+    ) in completed.stdout
 
 
 def test_example_uses_no_bare_assert() -> None:
