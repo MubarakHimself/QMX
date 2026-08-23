@@ -105,6 +105,29 @@ check (FR-031, FR-027; CT-28, CT-27; DEC-0143, DEC-0158):
   :func:`~qmf.risk.binding.check_rank_table_non_contradiction`; and the append-only
   :class:`~qmf.risk.binding.BookBindingLog` guarding epoch uniqueness and
   one-BMS-at-a-time.
+
+Story 10.5 lands paper as a dated binding-epoch change — the CT-24 Book-mode /
+binding-transition stream (FR-029, FR-033, FR-035; CT-24; DEC-0149):
+
+* :mod:`qmf.risk.paper` — the three never-interchanged vocabularies
+  (:class:`~qmf.risk.paper.BookMode` ``LIVE|PAPER``, :class:`~qmf.risk.paper.SeatState`
+  ``active|benched``, and the binding state) with
+  :func:`~qmf.risk.paper.validate_book_mode` refusing a seat/binding-state word in the
+  mode field; the CT-24 :class:`~qmf.risk.paper.BindingTransitionRecord` and the
+  :class:`~qmf.risk.paper.BindingTransitionStream` whose
+  :meth:`~qmf.risk.paper.BindingTransitionStream.current_mode` is the read-time
+  most-restrictive fold (:class:`~qmf.risk.paper.ModeFoldResult`); the routing-separated
+  :func:`~qmf.risk.paper.resolve_execution_target` over
+  (:class:`~qmf.risk.paper.BookMode`, :class:`~qmf.risk.paper.SeatState`,
+  :class:`~qmf.risk.paper.ActiveControl` set) into a single
+  :class:`~qmf.risk.paper.ExecutionTarget` /
+  :class:`~qmf.risk.paper.ExecutionResolution`; the one-active-target-per-binding
+  :class:`~qmf.risk.paper.PaperTargetLog`; frozen paper money as the
+  :class:`~qmf.risk.paper.PaperEpochRecord` / :class:`~qmf.risk.paper.PaperEpochLog` with
+  :func:`~qmf.risk.paper.reset_paper_epoch` and the money-boundary guard
+  :func:`~qmf.risk.paper.reject_paper_pnl_to_treasury`; and the return-to-live asymmetry
+  :func:`~qmf.risk.paper.authorize_return_to_live` /
+  :func:`~qmf.risk.paper.mint_return_to_live_transition`.
 """
 
 from __future__ import annotations
@@ -212,6 +235,33 @@ from qmf.risk.numeraire import (
     validate_accounting_currency,
     validate_book_limit,
 )
+from qmf.risk.paper import (
+    ActiveControl,
+    BindingTransitionRecord,
+    BindingTransitionStream,
+    BookMode,
+    ClearingCause,
+    ExecutionResolution,
+    ExecutionTarget,
+    ModeFoldResult,
+    PaperEpochLog,
+    PaperEpochRecord,
+    PaperTargetLog,
+    PaperTargetRecord,
+    ReturnMechanism,
+    ReturnToLiveOutcome,
+    RoutingOutcome,
+    SeatState,
+    TreasuryBoundaryKind,
+    TriggerDisposition,
+    TriggerKind,
+    authorize_return_to_live,
+    mint_return_to_live_transition,
+    reject_paper_pnl_to_treasury,
+    reset_paper_epoch,
+    resolve_execution_target,
+    validate_book_mode,
+)
 from qmf.risk.r_faces import (
     BREAKEVEN,
     FULL_ORIGINAL_LOSS,
@@ -271,6 +321,7 @@ __all__ = [
     "SEAT_R_CEILING_CONSTRAINT",
     "STATE_CARRY_COUNTERS",
     "V1_NUMERAIRE",
+    "ActiveControl",
     "AdmissionBar",
     "AdmissionImpact",
     "AdmissionLayer",
@@ -282,6 +333,8 @@ __all__ = [
     "BinOp",
     "BindingLineageEdgeKind",
     "BindingState",
+    "BindingTransitionRecord",
+    "BindingTransitionStream",
     "BmsDefinition",
     "BmsInstanceId",
     "BookBindingLog",
@@ -290,8 +343,10 @@ __all__ = [
     "BookDefinition",
     "BookInstance",
     "BookInstanceId",
+    "BookMode",
     "CallableProducer",
     "CapabilityCheckResult",
+    "ClearingCause",
     "Comparison",
     "ComparisonOp",
     "ComparisonRule",
@@ -303,20 +358,31 @@ __all__ = [
     "CurrentPointer",
     "Direction",
     "EvidenceRequirements",
+    "ExecutionResolution",
+    "ExecutionTarget",
     "FormulaOp",
     "FormulaSpec",
     "Layer1Result",
     "Layer2Result",
+    "ModeFoldResult",
     "NotYetRuled",
     "OperatorSignature",
     "PairingRecord",
+    "PaperEpochLog",
+    "PaperEpochRecord",
+    "PaperTargetLog",
+    "PaperTargetRecord",
     "PendingSlot",
     "PositionModel",
     "ProducerContract",
     "RFaces",
     "Ref",
     "RequirementVerdict",
+    "ReturnMechanism",
+    "ReturnToLiveOutcome",
+    "RoutingOutcome",
     "RuledThreshold",
+    "SeatState",
     "SignedLedgerEdge",
     "SourceLayer",
     "StateCarry",
@@ -327,6 +393,9 @@ __all__ = [
     "TemplateVersionGraph",
     "Threshold",
     "TieDisposition",
+    "TreasuryBoundaryKind",
+    "TriggerDisposition",
+    "TriggerKind",
     "UiEditability",
     "VariableDiff",
     "VariableEvidence",
@@ -337,6 +406,7 @@ __all__ = [
     "admit",
     "admit_entry_r_faces",
     "assemble_admission_page",
+    "authorize_return_to_live",
     "average_r_multiple",
     "bar_is_blank",
     "bind_time_capability_check",
@@ -356,18 +426,23 @@ __all__ = [
     "evaluate_bar",
     "evaluate_requirement",
     "is_paper_role",
+    "mint_return_to_live_transition",
     "money_to_r",
     "r_to_money",
     "recompute_worked_example",
     "reconcile_loss_floor",
     "reject_bar_aggregate",
     "reject_forbidden_admission_gate",
+    "reject_paper_pnl_to_treasury",
+    "reset_paper_epoch",
+    "resolve_execution_target",
     "run_layer1_linters",
     "run_layer2_shakedown",
     "sign_admission",
     "sizing_producer",
     "validate_accounting_currency",
     "validate_book_limit",
+    "validate_book_mode",
     "validate_money_rules",
     "value_unit_kind",
 ]
