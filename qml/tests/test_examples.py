@@ -60,3 +60,12 @@ def test_footprint_usage_example_runs_clean() -> None:
     assert "omitted AD-22 field at Layer 1: invalid input" in completed.stdout
     assert "transitive-union complete: True" in completed.stdout
     assert "derived warm-up observations: 20" in completed.stdout
+
+
+def test_confluence_usage_example_runs_clean() -> None:
+    completed = _run_example("confluence_usage.py")
+    assert completed.returncode == 0, completed.stderr
+    assert "confluence authoring ok" in completed.stdout
+    assert "two sandboxes reuse one confluence: True" in completed.stdout
+    assert "unresolvable producer at Layer 1: unavailable dependency" in completed.stdout
+    assert "order-significance changes fingerprint: True" in completed.stdout

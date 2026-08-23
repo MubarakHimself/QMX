@@ -17,11 +17,43 @@ from qmf.core.refusal import Ok, Result
 from qmf.registry.records import CONTRACT_FORMAT_VERSION as REGISTRY_ENVELOPE_FORMAT_VERSION
 
 from qml._refuse import invalid, unsupported
+from qml.declaration.confluence import (
+    CONFLUENCE_KIND_FORMAT_VERSION,
+    FORBIDDEN_CONDITION_FIELDS,
+    KIND_CONFLUENCE,
+    LEG_ROLES,
+    Confluence,
+    ConfluenceLeg,
+    ConfluenceOrdering,
+    LegRole,
+    confluence_kind_contract,
+    install_confluence_kind,
+    mint_confluence,
+    parse_leg_role,
+    parse_ordering,
+    register_confluence,
+    resolve_confluence_at_layer1,
+)
 
 __all__ = [
+    "CONFLUENCE_KIND_FORMAT_VERSION",
+    "FORBIDDEN_CONDITION_FIELDS",
+    "KIND_CONFLUENCE",
+    "LEG_ROLES",
     "REGISTRY_ENVELOPE_FORMAT_VERSION",
     "AuthoredArtifact",
     "AuthoredKind",
+    "Confluence",
+    "ConfluenceLeg",
+    "ConfluenceOrdering",
+    "LegRole",
+    "confluence_kind_contract",
+    "install_confluence_kind",
+    "mint_confluence",
+    "parse_leg_role",
+    "parse_ordering",
+    "register_confluence",
+    "resolve_confluence_at_layer1",
 ]
 
 _EMPTY_BODY: Final[Mapping[str, object]] = MappingProxyType({})
