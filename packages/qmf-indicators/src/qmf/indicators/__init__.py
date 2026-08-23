@@ -56,6 +56,29 @@ a result from restored state carries the snapshot fingerprint as an input finger
 restoring across a different tuple is an ``unavailable dependency`` refusal (FM-7)
 (DEC-0126, DEC-0113, DEC-0103, DEC-0106).
 
+Landed (Story 7.5): **the conformance harness, the light/heavy benchmark budgets, and the
+one named catalog surface.** :data:`~qmf.indicators.conformance.CONCEPT_WALK_REGISTER` is the
+CT-16 conformance register — the concept-walk list the contract must keep expressible — and
+:func:`~qmf.indicators.conformance.run_conformance` proves at tier 2 that every register
+concept (multi-instrument and multi-BarSpec input sets, derived-series chaining, non-time bar
+kinds, calendar-scoped windows and calendar-anchored sampling, projected outputs under
+knowable-at, batch-only statistical methods, price-valued outputs re-entering the money path,
+and delta-typed price differences) is expressible as a governed configuration. The benchmark
+harness records **two rungs** — :class:`~qmf.indicators.benchmark.BenchmarkRung` burst
+throughput and per-tick latency per accepted input observation, with the no-op tick path
+measured separately — and :func:`~qmf.indicators.benchmark.regression_gate` fails the tier-2
+gate on a latency, throughput, **or** peak-memory regression alike. Light versus heavy is
+per configuration: :func:`~qmf.indicators.budget.evaluate_light_claim` refuses a light claim
+made without a recorded live-path rung baseline or whose benchmark misses a declared bound
+(FM-6), every configuration is heavy by default, and
+:func:`~qmf.indicators.budget.guard_synchronous_entry` returns ``unsupported capability`` for
+a heavy configuration's synchronous entry point (FM-3). Extensions enter through the one named
+:class:`~qmf.indicators.catalog.Catalog` by **explicit registration — never ambient
+scanning** — carrying their distribution identity and version as mandatory fields of every
+artifact (FM-8), and :func:`~qmf.indicators.catalog.graduate` is the only door from
+plain-Python research into governed evidence, requiring a lineage edge back to the originating
+research artifact (L33) (DEC-0126, DEC-0127, DEC-0128, DEC-0111, DEC-0133, DEC-0100).
+
 Default-deny holds: this package imports **only** ``qmf.core`` — every ``fp1``
 fingerprint is computed there; the ``ta-lib`` reference is a third-party runtime
 dependency kept behind the package-neutral surface — and nothing imports
@@ -88,6 +111,35 @@ from qmf.indicators.batch import (
     compute_batch,
     require_governed,
 )
+from qmf.indicators.benchmark import (
+    PERMILLE,
+    BenchmarkBaseline,
+    BenchmarkMeasurement,
+    BenchmarkRung,
+    NoOpTickMeasurement,
+    RegressionReport,
+    RegressionTolerance,
+    RungMeasurement,
+    compare_to_baseline,
+    regression_gate,
+)
+from qmf.indicators.budget import (
+    BudgetVerdict,
+    LightHeavyVerdict,
+    evaluate_light_claim,
+    guard_synchronous_entry,
+)
+from qmf.indicators.catalog import (
+    EXTENSION_DISTRIBUTION_FIELD,
+    EXTENSION_VERSION_FIELD,
+    Catalog,
+    ExtensionIdentity,
+    RegisteredExtension,
+    ResearchLineage,
+    graduate,
+    require_extension_identity,
+    stamp_extension_identity,
+)
 from qmf.indicators.configured_indicator import (
     CONTRACT_FORMAT_VERSION,
     IDENTITY_ELEMENTS,
@@ -106,6 +158,15 @@ from qmf.indicators.configured_indicator import (
     SeriesInput,
     SupportedMode,
     SupportsFp1Identity,
+)
+from qmf.indicators.conformance import (
+    CONCEPT_WALK_REGISTER,
+    ConceptCheck,
+    ConceptExpression,
+    ConceptWalk,
+    ConformanceReport,
+    check_expressible,
+    run_conformance,
 )
 from qmf.indicators.series import (
     IndicatorSeries,
@@ -134,13 +195,17 @@ from qmf.indicators.streaming import (
 
 __all__ = [
     "CANONICAL_OWNERS",
+    "CONCEPT_WALK_REGISTER",
     "CONTRACT_FORMAT_VERSION",
     "CROSS_TUPLE_IS_A_REGISTERED_ARTIFACT",
     "DEFAULT_ANALYTIC_SCALE",
     "DEFAULT_MODE_EQUALITY_ULPS",
+    "EXTENSION_DISTRIBUTION_FIELD",
+    "EXTENSION_VERSION_FIELD",
     "IDENTITY_ELEMENTS",
     "LEADING_UNDEFINED_MAPPING",
     "OPTIONAL_IDENTITY_ELEMENTS",
+    "PERMILLE",
     "SEEDING_RULE",
     "SNAPSHOT_FORMAT_VERSION",
     "AlignmentMode",
@@ -149,24 +214,41 @@ __all__ = [
     "AsOfSample",
     "BatchKernel",
     "BatchResult",
+    "BenchmarkBaseline",
+    "BenchmarkMeasurement",
+    "BenchmarkRung",
+    "BudgetVerdict",
+    "Catalog",
     "ChannelKind",
     "ChannelSample",
+    "ConceptCheck",
+    "ConceptExpression",
+    "ConceptWalk",
     "ConfiguredIndicator",
+    "ConformanceReport",
     "DeclaredBudget",
     "EmissionPolicy",
     "EmissionTiming",
+    "ExtensionIdentity",
     "FormulaOwner",
     "FormulaOwnership",
     "IndicatorSeries",
     "InputSeries",
     "KernelOutput",
+    "LightHeavyVerdict",
     "MissingValuePolicy",
     "ModeEqualityComparator",
+    "NoOpTickMeasurement",
     "OutputArity",
     "OutputChannel",
     "PresenceState",
     "QuoteSide",
     "ReferenceKernel",
+    "RegisteredExtension",
+    "RegressionReport",
+    "RegressionTolerance",
+    "ResearchLineage",
+    "RungMeasurement",
     "SeriesInput",
     "SnapshotScope",
     "StreamingHealth",
@@ -180,15 +262,24 @@ __all__ = [
     "align_to_instant",
     "assert_mode_equality",
     "canonical_owner",
+    "check_expressible",
+    "compare_to_baseline",
     "compute_batch",
+    "evaluate_light_claim",
+    "graduate",
+    "guard_synchronous_entry",
     "ownership_conformance_defects",
     "presence_code",
     "presence_from_code",
     "reference_grounded_defects",
     "reference_status",
+    "regression_gate",
+    "require_extension_identity",
     "require_governed",
     "resolve_canonical_arithmetic",
+    "run_conformance",
     "series_equal_within_ulps",
+    "stamp_extension_identity",
 ]
 
 # Roster SemVer, in lockstep across the seven roster packages (0.x until the
