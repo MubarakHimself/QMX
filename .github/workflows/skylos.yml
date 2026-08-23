@@ -1,7 +1,8 @@
 name: Skylos
-# Gates everything this repository pushes. The scan starts at the repository ROOT
-# and subtracts by NAME (`[tool.skylos] exclude` in pyproject.toml) - it is never
-# an include-list - so a top-level folder a later epic adds (qmb/, qml/, ...) is in
+# Gates integration, immutable factory candidates, and main-bound pull requests.
+# The scan starts at the repository ROOT and subtracts by NAME
+# (`[tool.skylos] exclude` in pyproject.toml); it is never an include-list, so a
+# top-level folder a later epic adds (qmb/, qml/, ...) is in
 # scope the moment it lands, with no edit here. Languages are auto-detected by file
 # extension in one pass, so the TypeScript and Rust that arrive later are covered
 # the same way; no language is ever named, deliberately.
@@ -19,6 +20,8 @@ name: Skylos
 on:
   push:
     branches: [integration]
+    tags:
+      - 'factory-candidate/**'
   pull_request:
     branches: [main]
 
