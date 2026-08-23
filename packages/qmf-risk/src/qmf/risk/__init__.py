@@ -85,6 +85,26 @@ money (FR-027, FR-035; CT-22, CT-27; DEC-0146):
   (:func:`~qmf.risk.admission.reject_forbidden_admission_gate`), and the worked-example
   recompute over the cited-producer seam (:class:`~qmf.risk.admission.ProducerContract`,
   :func:`~qmf.risk.admission.check_worked_examples`).
+
+Story 10.4 lands the binding chain, the identity trinity, and the bind-time capability
+check (FR-031, FR-027; CT-28, CT-27; DEC-0143, DEC-0158):
+
+* :mod:`qmf.risk.binding` — the :class:`~qmf.risk.binding.BookBindingRecord` on the
+  tuple ``(BookInstanceId, BmsInstanceId, VenueId, AccountId, world)`` with ``role``
+  deliberately absent, its full-record fingerprint the binding **epoch**; the identity
+  trinity (a Book version fingerprint, the operator-minted
+  :class:`~qmf.risk.binding.BookInstance` / :class:`~qmf.risk.binding.BookInstanceId`,
+  and the content-derived :class:`~qmf.risk.binding.BmsInstanceId`); the mandatory
+  complete per-counter :class:`~qmf.risk.binding.StateCarry` with its
+  ``carry``-requires-:class:`~qmf.risk.binding.SignedLedgerEdge` invariant and the
+  independent :class:`~qmf.risk.binding.ContinuesPerformanceEdge`; the
+  :func:`~qmf.risk.binding.bind_time_capability_check` over the CT-18 projection
+  (:class:`~qmf.risk.binding.VenueBindingProfile`,
+  :class:`~qmf.risk.binding.BookBindingRequirements`) with the settlement-currency
+  policy rejection and the netted-account shared-flatten refusal; the
+  :func:`~qmf.risk.binding.check_rank_table_non_contradiction`; and the append-only
+  :class:`~qmf.risk.binding.BookBindingLog` guarding epoch uniqueness and
+  one-BMS-at-a-time.
 """
 
 from __future__ import annotations
@@ -131,6 +151,28 @@ from qmf.risk.admission_bar import (
     evaluate_requirement,
     is_paper_role,
     reject_bar_aggregate,
+)
+from qmf.risk.binding import (
+    STATE_CARRY_COUNTERS,
+    BindingLineageEdgeKind,
+    BindingState,
+    BmsInstanceId,
+    BookBindingLog,
+    BookBindingRecord,
+    BookBindingRequirements,
+    BookInstance,
+    BookInstanceId,
+    CapabilityCheckResult,
+    ContinuesPerformanceEdge,
+    PairingRecord,
+    PositionModel,
+    SignedLedgerEdge,
+    StateCarry,
+    StateCarryChoice,
+    StateCarryCounter,
+    VenueBindingProfile,
+    bind_time_capability_check,
+    check_rank_table_non_contradiction,
 )
 from qmf.risk.control_rank import (
     ControlActionKind,
@@ -227,6 +269,7 @@ __all__ = [
     "PAPER_ACCOUNT_ROLES",
     "SEAT_LOSS_RUN_ALLOWANCE_VARIABLE",
     "SEAT_R_CEILING_CONSTRAINT",
+    "STATE_CARRY_COUNTERS",
     "V1_NUMERAIRE",
     "AdmissionBar",
     "AdmissionImpact",
@@ -237,13 +280,23 @@ __all__ = [
     "AuthorityGrade",
     "Band",
     "BinOp",
+    "BindingLineageEdgeKind",
+    "BindingState",
     "BmsDefinition",
+    "BmsInstanceId",
+    "BookBindingLog",
+    "BookBindingRecord",
+    "BookBindingRequirements",
     "BookDefinition",
+    "BookInstance",
+    "BookInstanceId",
     "CallableProducer",
+    "CapabilityCheckResult",
     "Comparison",
     "ComparisonOp",
     "ComparisonRule",
     "ConstraintSpec",
+    "ContinuesPerformanceEdge",
     "ControlActionKind",
     "ControlRankRow",
     "ControlRankTable",
@@ -256,13 +309,19 @@ __all__ = [
     "Layer2Result",
     "NotYetRuled",
     "OperatorSignature",
+    "PairingRecord",
     "PendingSlot",
+    "PositionModel",
     "ProducerContract",
     "RFaces",
     "Ref",
     "RequirementVerdict",
     "RuledThreshold",
+    "SignedLedgerEdge",
     "SourceLayer",
+    "StateCarry",
+    "StateCarryChoice",
+    "StateCarryCounter",
     "TemplateSection",
     "TemplateVariable",
     "TemplateVersionGraph",
@@ -271,6 +330,7 @@ __all__ = [
     "UiEditability",
     "VariableDiff",
     "VariableEvidence",
+    "VenueBindingProfile",
     "VersionEdgeKind",
     "WorkedExample",
     "__version__",
@@ -279,6 +339,7 @@ __all__ = [
     "assemble_admission_page",
     "average_r_multiple",
     "bar_is_blank",
+    "bind_time_capability_check",
     "check_b_split",
     "check_constraint",
     "check_control_rank_uniqueness",
@@ -286,6 +347,7 @@ __all__ = [
     "check_live_binding_admissible",
     "check_no_paper_role_gates_live",
     "check_no_scale_in",
+    "check_rank_table_non_contradiction",
     "check_seat_r_ceiling",
     "check_worked_examples",
     "derive_original_risk_distance",
