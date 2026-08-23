@@ -92,10 +92,47 @@ after the submit stamp resolves rejected-by-venue (superseded-by-terminal-subjec
 outcome, never UNKNOWN — while an absent or already-terminal subject resolves without
 submission (:func:`~qmf.venue.events.resolve_subject_terminal`) (FR-024, CT-20, AR-47,
 SCN-0005; DEC-0137, DEC-0138, DEC-0140, DEC-0148, DEC-0150, DEC-0158).
+
+Story 8.7 adds the UNKNOWN command-stream block and its explicit resolution
+(:mod:`qmf.venue.blocking`): while an ``UNKNOWN`` is outstanding on a ``(VenueId, account)``
+stream the :class:`~qmf.venue.blocking.UnknownGate` refuses new commands
+(:meth:`~qmf.venue.blocking.UnknownGate.admit`; ``transient venue failure``, after-condition
+= resolution) and never clears its own block — a refused **risk-reducing** act
+(``cancel_order``, ``close_position``, ``close_all``, ``amend_protection``) never evaporates
+but is preserved as a :class:`~qmf.venue.blocking.StandingProtectionIntent` journaled before
+dispatch and re-decided (explicitly not retried) against a ``reconciled`` verdict only, with
+``drift``, ``unknown``, and ``out-of-lookback`` alarming and holding it open
+(:meth:`~qmf.venue.blocking.UnknownGate.redecide_standing_intent`); the risk-reducing kinds
+dispatch ahead of ``place_order`` on every shared throttle
+(:func:`~qmf.venue.blocking.order_for_shared_throttle`) and ``suspend-new`` takes local
+effect instantly with no venue round-trip
+(:meth:`~qmf.venue.blocking.UnknownGate.suspend_new`); and the block clears only on an
+explicit :meth:`~qmf.venue.blocking.UnknownGate.resolve_unknown` call carrying one of
+``observed-accepted | observed-absent | operator-attested`` — the
+:class:`~qmf.venue.blocking.ResolveResolution` set — itself recorded as an observation,
+never on a reconciliation verdict alone (FR-023, CT-19, SCN-0005; DEC-0137, DEC-0148,
+DEC-0150, DEC-0158).
 """
 
 from __future__ import annotations
 
+from qmf.venue.blocking import (
+    RISK_REDUCING_KINDS,
+    AdmissionDisposition,
+    AdmissionResult,
+    ResolveObservation,
+    ResolveResolution,
+    StandingIntentDecision,
+    StandingIntentDisposition,
+    StandingIntentJournalEvent,
+    StandingProtectionIntent,
+    StreamBlockCause,
+    UnknownBlock,
+    UnknownGate,
+    is_risk_reducing,
+    order_for_shared_throttle,
+    throttle_priority,
+)
 from qmf.venue.capabilities import (
     CapabilityDeclaration,
     CapabilityDiscovery,
@@ -203,9 +240,12 @@ from qmf.venue.proto import (
 
 __all__ = [
     "FOUR_OUTCOME_LAW",
+    "RISK_REDUCING_KINDS",
     "SPOTWARE_PROTO_PACKAGE",
     "AccountBinding",
     "AccountMoneyRecord",
+    "AdmissionDisposition",
+    "AdmissionResult",
     "BindingOutcome",
     "BlockCause",
     "CapabilityDeclaration",
@@ -257,7 +297,14 @@ __all__ = [
     "Reconciliation",
     "ReconciliationReadback",
     "ReconciliationVerdict",
+    "ResolveObservation",
+    "ResolveResolution",
     "SpotSample",
+    "StandingIntentDecision",
+    "StandingIntentDisposition",
+    "StandingIntentJournalEvent",
+    "StandingProtectionIntent",
+    "StreamBlockCause",
     "SubjectResolution",
     "SubjectTerminalOutcome",
     "SubmissionOutcome",
@@ -271,6 +318,8 @@ __all__ = [
     "TransactionBoundary",
     "Trendbar",
     "TrendbarSample",
+    "UnknownBlock",
+    "UnknownGate",
     "UnknownTrigger",
     "UpstreamAssumption",
     "VenueEvidenceClass",
@@ -286,11 +335,14 @@ __all__ = [
     "detect_out_of_sequence",
     "fold_order_state",
     "is_legal_transition",
+    "is_risk_reducing",
     "is_success",
     "journal_event_type",
     "meet_outcomes",
     "observation_journal_event_type",
+    "order_for_shared_throttle",
     "resolve_subject_terminal",
+    "throttle_priority",
     "venue_command_stream",
     "venue_writer_id",
 ]
