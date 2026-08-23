@@ -112,6 +112,33 @@ explicit :meth:`~qmf.venue.blocking.UnknownGate.resolve_unknown` call carrying o
 :class:`~qmf.venue.blocking.ResolveResolution` set — itself recorded as an observation,
 never on a reconciliation verdict alone (FR-023, CT-19, SCN-0005; DEC-0137, DEC-0148,
 DEC-0150, DEC-0158).
+
+Story 8.8 lands the cTrader adapter as adapter #1, honoring the ratified venue facts as
+per-broker configuration (:mod:`qmf.venue.ctrader`). The cTrader-platform facts are standing
+obligations named at their point of use (DEC-0135): inbound decode crosses the named
+money-path boundary — per-field Unix-ms UTC timestamps with mandatory receive-time recording,
+no server clock existing (:func:`~qmf.venue.ctrader.decode_timestamp`); the 1/100000
+market-data wire scale as an exact scaled integer
+(:func:`~qmf.venue.ctrader.decode_market_data_price`); execution prices as raw doubles
+crossing AD-7's boundary to the instrument's declared digits under a declared rounding mode
+(:func:`~qmf.venue.ctrader.decode_execution_price`); and a ``moneyDigits`` exponent on the
+nine money-bearing messages (:data:`~qmf.venue.ctrader.MONEY_BEARING_MESSAGES`) whose absence
+refuses that message's money decode (:func:`~qmf.venue.ctrader.decode_money`). The adapter
+paces itself at 50/s non-historical + 5/s historical per connection
+(:class:`~qmf.venue.ctrader.RatePacer`), adopts the 10-second heartbeat bound, and enforces
+the one-week historical tick-span cap (:func:`~qmf.venue.ctrader.tick_span_within_cap`), with
+demo and live separate hosts requiring two simultaneous connections
+(:class:`~qmf.venue.ctrader.SessionTopology`). The ~30-day access token and never-expiring
+refresh token with cTID re-authorization are the declared
+:class:`~qmf.venue.ctrader.TokenLifecycle`; heartbeat, token refresh, reconnect, gap replay,
+and verification monitors are declared schedulable duties
+(:data:`~qmf.venue.ctrader.SESSION_DUTIES`) the application's scheduler drives; and session
+recovery never resubmits a command (:class:`~qmf.venue.ctrader.SessionRecovery`). The demoted
+17:00-New-York daily boundary and BID-derived trendbar basis are never hardcoded —
+:class:`~qmf.venue.ctrader.CTraderBrokerConfiguration` reads each from the venue-observation
+profile, verify-or-refuse — and which broker fronts the platform is deployment configuration,
+so :class:`~qmf.venue.ctrader.CTraderAdapter` names no broker and stays venue-blind above the
+port (FR-025, FR-026, AR-42, AR-46; DEC-0135, DEC-0139).
 """
 
 from __future__ import annotations
@@ -181,6 +208,38 @@ from qmf.venue.connection import (
     venue_command_stream,
     venue_writer_id,
 )
+from qmf.venue.ctrader import (
+    ACCESS_TOKEN_LIFETIME_CLASS,
+    HEARTBEAT_BOUND_SECONDS,
+    HISTORICAL_RATE_LIMIT_PER_SECOND,
+    HISTORICAL_TICK_SPAN_CAP_MS,
+    INVALIDATION_ANCHOR,
+    MARKET_DATA_WIRE_SCALE_EXPONENT,
+    MONEY_BEARING_MESSAGES,
+    NON_HISTORICAL_RATE_LIMIT_PER_SECOND,
+    REFRESH_TOKEN_LIFETIME_CLASS,
+    SESSION_DUTIES,
+    ConnectionEndpoint,
+    CTraderAdapter,
+    CTraderBrokerConfiguration,
+    DecodedExecutionPrice,
+    DecodedTimestamp,
+    InFlightResolution,
+    RatePacer,
+    RequestClass,
+    SchedulableDuty,
+    SessionDuty,
+    SessionRecovery,
+    SessionTopology,
+    TimestampUnit,
+    TokenLifecycle,
+    VenueEnvironment,
+    decode_execution_price,
+    decode_market_data_price,
+    decode_money,
+    decode_timestamp,
+    tick_span_within_cap,
+)
 from qmf.venue.events import (
     EventRecorder,
     InboundVenueEvent,
@@ -239,8 +298,18 @@ from qmf.venue.proto import (
 )
 
 __all__ = [
+    "ACCESS_TOKEN_LIFETIME_CLASS",
     "FOUR_OUTCOME_LAW",
+    "HEARTBEAT_BOUND_SECONDS",
+    "HISTORICAL_RATE_LIMIT_PER_SECOND",
+    "HISTORICAL_TICK_SPAN_CAP_MS",
+    "INVALIDATION_ANCHOR",
+    "MARKET_DATA_WIRE_SCALE_EXPONENT",
+    "MONEY_BEARING_MESSAGES",
+    "NON_HISTORICAL_RATE_LIMIT_PER_SECOND",
+    "REFRESH_TOKEN_LIFETIME_CLASS",
     "RISK_REDUCING_KINDS",
+    "SESSION_DUTIES",
     "SPOTWARE_PROTO_PACKAGE",
     "AccountBinding",
     "AccountMoneyRecord",
@@ -248,6 +317,8 @@ __all__ = [
     "AdmissionResult",
     "BindingOutcome",
     "BlockCause",
+    "CTraderAdapter",
+    "CTraderBrokerConfiguration",
     "CapabilityDeclaration",
     "CapabilityDiscovery",
     "CapabilityField",
@@ -264,7 +335,10 @@ __all__ = [
     "CompiledProto",
     "CompoundChild",
     "CompoundCommand",
+    "ConnectionEndpoint",
     "ConnectionManager",
+    "DecodedExecutionPrice",
+    "DecodedTimestamp",
     "ErrorMap",
     "ErrorMapResolution",
     "ErrorMapRow",
@@ -273,6 +347,7 @@ __all__ = [
     "Finding",
     "FindingsNote",
     "HealthReport",
+    "InFlightResolution",
     "InboundVenueEvent",
     "JournalEvent",
     "MeasuredFact",
@@ -294,11 +369,17 @@ __all__ = [
     "ProtectionAmendment",
     "ProtectionSide",
     "ProtoArtifact",
+    "RatePacer",
     "Reconciliation",
     "ReconciliationReadback",
     "ReconciliationVerdict",
+    "RequestClass",
     "ResolveObservation",
     "ResolveResolution",
+    "SchedulableDuty",
+    "SessionDuty",
+    "SessionRecovery",
+    "SessionTopology",
     "SpotSample",
     "StandingIntentDecision",
     "StandingIntentDisposition",
@@ -315,6 +396,8 @@ __all__ = [
     "Tick",
     "TickHistorySample",
     "TimeInForce",
+    "TimestampUnit",
+    "TokenLifecycle",
     "TransactionBoundary",
     "Trendbar",
     "TrendbarSample",
@@ -322,6 +405,7 @@ __all__ = [
     "UnknownGate",
     "UnknownTrigger",
     "UpstreamAssumption",
+    "VenueEnvironment",
     "VenueEvidenceClass",
     "VenueNativeIdentity",
     "VenueObservationProfile",
@@ -330,6 +414,10 @@ __all__ = [
     "assess_tag_change",
     "command_id_mapping_is_injective_total",
     "compile_descriptor_set",
+    "decode_execution_price",
+    "decode_market_data_price",
+    "decode_money",
+    "decode_timestamp",
     "derive_child_identity",
     "descriptor_set_digest",
     "detect_out_of_sequence",
@@ -343,6 +431,7 @@ __all__ = [
     "order_for_shared_throttle",
     "resolve_subject_terminal",
     "throttle_priority",
+    "tick_span_within_cap",
     "venue_command_stream",
     "venue_writer_id",
 ]
