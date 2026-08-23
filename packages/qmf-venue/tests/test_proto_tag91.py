@@ -54,6 +54,11 @@ _PACKAGE = "qmx.venue.spot"
 _MESSAGE = "Envelope"
 _FULL_NAME = f"{_PACKAGE}.{_MESSAGE}"
 
+# A generous ceiling on any single source file the import walk reads (kilobytes in
+# practice); it bounds the read in _imported_modules so a hostile tree entry can never
+# force an unbounded one.
+_MAX_SOURCE_BYTES = 1 << 20  # 1 MiB
+
 
 # --- helpers ----------------------------------------------------------------
 
@@ -137,8 +142,18 @@ def _registry_variable(name: str) -> dict[str, Any]:
 
 
 def _imported_modules(path: Path) -> set[str]:
-    """Every dotted module name imported by one source file (import + from-import)."""
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    """Every dotted module name imported by one source file (import + from-import).
+
+    The path is resolved and must be a regular file inside ``_ROOT`` — never a symlink,
+    never resolving out of the workspace — and its size is capped before the read, so a
+    planted symlink or an oversized file can neither redirect nor unbound it.
+    """
+    resolved = path.resolve()
+    assert not path.is_symlink(), resolved
+    assert resolved.is_file() and resolved.is_relative_to(_ROOT), resolved
+    size = resolved.stat().st_size
+    assert size <= _MAX_SOURCE_BYTES, resolved
+    tree = ast.parse(resolved.read_text(encoding="utf-8"), filename=str(resolved))
     names: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
