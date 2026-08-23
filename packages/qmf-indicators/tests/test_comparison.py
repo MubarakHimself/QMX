@@ -259,7 +259,7 @@ def test_compare_refuses_different_producer_identities() -> None:
     other = _before_result(config_b)
     refusal = compare_reference_outputs(config_a, before, other)
     assert is_refusal(refusal) and refusal.context["field"] == "results"
-    assert "producer" in refusal.context["reason"]
+    assert "producer" in str(refusal.context["reason"])
 
 
 def test_compare_refuses_different_canonical_inputs() -> None:
@@ -271,7 +271,7 @@ def test_compare_refuses_different_canonical_inputs() -> None:
     other = _before_result(config, values=[3, 6, 9, 12, 15, 21])
     refusal = compare_reference_outputs(config, before, other)
     assert is_refusal(refusal) and refusal.context["field"] == "results"
-    assert "different canonical inputs" in refusal.context["reason"]
+    assert "different canonical inputs" in str(refusal.context["reason"])
 
 
 def test_compare_refuses_a_result_missing_a_declared_channel() -> None:
