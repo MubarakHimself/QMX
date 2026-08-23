@@ -423,9 +423,7 @@ def test_bench_fold_is_bounded_by_binding_epoch() -> None:
     )
     assert is_ok(in_a)
     assert is_ok(in_b)
-    folded = fold_bench(
-        (in_a.value, in_b.value), binding_epoch=epoch_a, q=q, threshold=1
-    )
+    folded = fold_bench((in_a.value, in_b.value), binding_epoch=epoch_a, q=q, threshold=1)
     assert is_ok(folded)
     assert folded.value.qualifying_loss_count == 1
     assert len(folded.value.considered) == 1

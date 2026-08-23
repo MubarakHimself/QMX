@@ -564,9 +564,7 @@ def reject_composite_expression(expression: object) -> TypedRefusal:
     )
 
 
-def reject_multi_role_result(
-    *, account_binding_role: object, population: object
-) -> Result[None]:
+def reject_multi_role_result(*, account_binding_role: object, population: object) -> Result[None]:
     """Refuse a result that spans account roles (DEC-0155).
 
     The container carries exactly one account-binding role. A population declaring
@@ -636,9 +634,7 @@ def check_publish_never_act(act: object) -> Result[None]:
     )
 
 
-def check_replay_never_gates_live(
-    result: object, *, gating_live: object
-) -> Result[None]:
+def check_replay_never_gates_live(result: object, *, gating_live: object) -> Result[None]:
     """Refuse a replay-world result gating live money (DEC-0162, DEC-0169).
 
     A ``world = replay`` (or pre-GAP-0048) result can never gate live money; the
@@ -764,9 +760,7 @@ def consume_bench_crossing_at_door(
     return _Ok(publication)
 
 
-def require_baseline_for_decay(
-    result: object, *, for_decay_judgment: object
-) -> Result[None]:
+def require_baseline_for_decay(result: object, *, for_decay_judgment: object) -> Result[None]:
     """Refuse a decay judgment without a baseline pointer (DEC-0155)."""
     if not isinstance(result, PerformanceResult):
         return invalid(

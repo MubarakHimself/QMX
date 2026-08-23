@@ -12,8 +12,9 @@ mechanically enforces the two story acceptance criteria the aggregate cannot:
 
 * **Per-package floor (AR-20).** Every workspace package's own combined
   line+branch coverage must be at least 80%. A package is derived from each measured
-  file's ``packages/<pkg>/`` or ``extensions/<pkg>/`` path, so one package cratering
-  can never hide behind another's fully-covered scaffold.
+  file's ``packages/<pkg>/``, ``extensions/<pkg>/``, or application-root (``qml/``,
+  ``qmb/``) path, so one package cratering can never hide behind another's fully-covered
+  scaffold.
 * **Full-branch contract modules.** ``qmf/core/exact.py`` and ``qmf/core/chrono.py``
   must have **100% branch** coverage — every decision exit taken. These modules must
   be present in the report; a contract module that was never measured fails the gate
@@ -48,9 +49,9 @@ FULL_BRANCH_MODULES: tuple[str, ...] = (
     "qmf/core/chrono.py",
 )
 
-# Pull the package name out of a measured file's path: packages/<pkg>/... or
-# extensions/<pkg>/....
-_PACKAGE_RE = re.compile(r"(?:packages|extensions)/([^/]+)/")
+# Pull the package name out of a measured file's path: packages/<pkg>/...,
+# extensions/<pkg>/..., or an application root (qml/, qmb/).
+_PACKAGE_RE = re.compile(r"(?:packages|extensions)/([^/]+)/|(qml|qmb)/")
 
 
 def _norm(path: str) -> str:
@@ -62,7 +63,9 @@ def _package_of(path: str) -> str | None:
     """The workspace package a measured file belongs to, or ``None`` if it is not a
     workspace-package source file."""
     match = _PACKAGE_RE.search(_norm(path))
-    return match.group(1) if match else None
+    if match is None:
+        return None
+    return match.group(1) or match.group(2)
 
 
 def _as_mapping(value: object) -> Mapping[str, object]:

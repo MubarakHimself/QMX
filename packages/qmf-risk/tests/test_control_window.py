@@ -91,9 +91,7 @@ def _exposure(
     *currencies: str,
     record_id: str = "exp-1",
 ) -> CurrencyExposureRecord:
-    result = CurrencyExposureRecord.try_create(
-        instrument, currencies, _instant(500), record_id
-    )
+    result = CurrencyExposureRecord.try_create(instrument, currencies, _instant(500), record_id)
     assert is_ok(result)
     return result.value
 
@@ -332,10 +330,7 @@ def test_missing_exposure_treated_as_affected_and_alarms() -> None:
     assert is_ok(scope)
     disposition = instrument_in_scope(scope.value, orphan)
     assert is_ok(disposition)
-    assert (
-        disposition.value
-        is ScopeResolutionDisposition.TREATED_AS_AFFECTED_MISSING_EXPOSURE
-    )
+    assert disposition.value is ScopeResolutionDisposition.TREATED_AS_AFFECTED_MISSING_EXPOSURE
     window = _news_window(scope=scope.value)
     evaluation = evaluate_entry_under_windows(
         instrument=orphan,

@@ -129,7 +129,9 @@ def run_smoke(root: Path = ROOT) -> None:
     """Build, verify namespace hygiene, and isolated-install-and-import every member."""
     members = list(workspace_meta.iter_members(root))
     if not members:
-        raise SmokeError("no workspace members found under packages/ or extensions/")
+        raise SmokeError(
+            "no workspace members found under packages/, extensions/, or application roots"
+        )
     with tempfile.TemporaryDirectory(prefix="qmf-isolated-build-") as tmp:
         work_dir = Path(tmp)
         dist_dir = work_dir / "dist"

@@ -1,0 +1,25 @@
+[project]
+name = "qml"
+version = "0.1.0"
+description = "QMX bot-authoring library. Application-layer product built on QMF; never a roster package and never a CLI."
+requires-python = ">=3.14,<3.15"
+# SemVer is display-only provenance (DEC-0180) — CT-33 fp1 and the logic source-manifest
+# carry identity. No new runtime dependency beyond the qmf-* packages consumed in lockstep.
+dependencies = [
+    "qmf-core",
+    "qmf-registry",
+    "qmf-risk",
+]
+
+[build-system]
+requires = ["uv_build>=0.12,<0.13"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+# Top-level import qml — not a qmf.* PEP 420 namespace submodule.
+module-name = "qml"
+
+[tool.uv.sources]
+qmf-core = { workspace = true }
+qmf-registry = { workspace = true }
+qmf-risk = { workspace = true }

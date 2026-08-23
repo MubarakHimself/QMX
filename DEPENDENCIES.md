@@ -25,6 +25,10 @@ means adding its row here first.
 - **`qmf-calendar-forex`** rides its **own SemVer ladder** outside roster
   lockstep, with **`tzdata` pinned**; a `tzdata` pin change is at minimum a
   minor bump on that ladder. (AR-02/AR-27; DEC-0106)
+- **`qml`** is an application-layer product outside the seven-package roster,
+  on its **own SemVer ladder as display-only provenance** (never identity). It
+  adds **no new runtime dependency** beyond `qmf-core`, `qmf-registry`, and
+  `qmf-risk`. (DEC-0180)
 - CPython **3.14** is pinned across every package (`.python-version`,
   per-package `requires-python`). (AR-04; DEC-0099)
 

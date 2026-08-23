@@ -48,9 +48,10 @@ a local before it is drawn from are outside its precision boundary (documented,
 deliberately conservative).
 
 **Scope.** The gate scans shipped source only — ``packages/*/src``, ``extensions/*/src``,
-and the top-level ``tools`` scripts — and skips ``tests`` trees, whose fixtures
-deliberately feed banned reads to assert they are flagged. Stdlib only; run via
-``python tools/ambient_scan.py`` or ``poe ambient-scan``.
+the same ``src`` layout under ``qml/`` (and later ``qmb/``), and the top-level ``tools``
+scripts — and skips ``tests`` trees, whose fixtures deliberately feed banned reads to
+assert they are flagged. Stdlib only; run via ``python tools/ambient_scan.py`` or
+``poe ambient-scan``.
 """
 
 from __future__ import annotations
@@ -66,7 +67,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SELF = Path(__file__).resolve()
 
 # Shipped-source roots. Test trees are excluded (see module docstring).
-SCAN_ROOTS: tuple[str, ...] = ("packages", "extensions", "tools")
+SCAN_ROOTS: tuple[str, ...] = ("packages", "extensions", "qml", "qmb", "tools")
 SKIP_DIRS: frozenset[str] = frozenset(
     {
         "tests",

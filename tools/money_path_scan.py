@@ -39,10 +39,10 @@ prover: a green result means "no binary float was seen reaching a money-path
 value", not "provably float-free on the money path".
 
 **Scope.** The gate scans shipped source only — ``packages/*/src``,
-``extensions/*/src``, and the top-level ``tools`` scripts — and skips ``tests``
-trees, whose negative cases deliberately feed floats to money constructors to
-assert they are refused. Stdlib only; run via ``python tools/money_path_scan.py``
-or ``poe money-path-scan``.
+``extensions/*/src``, the same ``src`` layout under ``qml/`` (and later ``qmb/``),
+and the top-level ``tools`` scripts — and skips ``tests`` trees, whose negative
+cases deliberately feed floats to money constructors to assert they are refused.
+Stdlib only; run via ``python tools/money_path_scan.py`` or ``poe money-path-scan``.
 """
 
 from __future__ import annotations
@@ -57,7 +57,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SELF = Path(__file__).resolve()
 
 # Shipped-source roots. Test trees are excluded (see module docstring).
-SCAN_ROOTS: tuple[str, ...] = ("packages", "extensions", "tools")
+SCAN_ROOTS: tuple[str, ...] = ("packages", "extensions", "qml", "qmb", "tools")
 SKIP_DIRS: frozenset[str] = frozenset(
     {
         "tests",

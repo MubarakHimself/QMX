@@ -751,9 +751,7 @@ def partition_by_close_reason(
                 detail=attributed.context.get("reason"),
             )
         buckets[attributed.value.close_reason.value].append(attributed.value)
-    return _Ok(
-        MappingProxyType({key: tuple(value) for key, value in buckets.items() if value})
-    )
+    return _Ok(MappingProxyType({key: tuple(value) for key, value in buckets.items() if value}))
 
 
 # --- the bench fold ----------------------------------------------------------
@@ -773,9 +771,7 @@ class BenchFoldResult:
     considered: tuple[ExitRecord, ...]
 
 
-def classify_bench_disposition(
-    record: object, *, q: object
-) -> Result[BenchDisposition]:
+def classify_bench_disposition(record: object, *, q: object) -> Result[BenchDisposition]:
     """Classify one close for the bench predicate (DEC-0155, DEC-0157).
 
     A stamped :attr:`CloseOutcome.BREAKEVEN` **never** counts under any ``q``. Else the
@@ -1118,9 +1114,7 @@ class ExitRecordStream:
         entry = self._by_position.get(virtual_position_ref.value)
         return entry is not None and entry.persisted and entry.journaled
 
-    def records(
-        self, *, binding_epoch: object = None
-    ) -> tuple[ExitRecord, ...]:
+    def records(self, *, binding_epoch: object = None) -> tuple[ExitRecord, ...]:
         """Every minted exit record, optionally filtered to one binding epoch."""
         items = [self._by_fingerprint[fp.value].record for fp in self._order]
         if binding_epoch is None:
@@ -1129,9 +1123,7 @@ class ExitRecordStream:
             return ()
         return tuple(r for r in items if r.binding_epoch == binding_epoch)
 
-    def check_seat_may_mint_intent(
-        self, *, closed_virtual_position_ref: object
-    ) -> Result[None]:
+    def check_seat_may_mint_intent(self, *, closed_virtual_position_ref: object) -> Result[None]:
         """Refuse a later same-seat intent until the closing exit is fully recorded."""
         if closed_virtual_position_ref is None:
             return _Ok(None)

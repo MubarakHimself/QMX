@@ -302,9 +302,7 @@ class RiskWriterUnit:
                 "a writer-scoped stream name is a non-blank token",
                 given=repr(stream),
             )
-        return WriterId.try_create(
-            self.machine, self.risk_role, stream_token, self.boot_epoch_id
-        )
+        return WriterId.try_create(self.machine, self.risk_role, stream_token, self.boot_epoch_id)
 
     def fp1_identity(self) -> dict[str, object]:
         """The pinned canonical ``fp1`` identity content for this writer unit."""

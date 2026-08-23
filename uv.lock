@@ -12,6 +12,7 @@ members = [
     "qmf-risk",
     "qmf-structure",
     "qmf-venue",
+    "qml",
     "sssf-project",
 ]
 
@@ -1235,6 +1236,23 @@ requires-dist = [
 ]
 
 [[package]]
+name = "qml"
+version = "0.1.0"
+source = { editable = "qml" }
+dependencies = [
+    { name = "qmf-core" },
+    { name = "qmf-registry" },
+    { name = "qmf-risk" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "qmf-core", editable = "packages/qmf-core" },
+    { name = "qmf-registry", editable = "packages/qmf-registry" },
+    { name = "qmf-risk", editable = "packages/qmf-risk" },
+]
+
+[[package]]
 name = "readchar"
 version = "4.2.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1444,6 +1462,9 @@ dev = [
 indicators-talib = [
     { name = "qmf-indicators" },
 ]
+qml-lib = [
+    { name = "qml" },
+]
 scan = [
     { name = "skylos" },
 ]
@@ -1478,6 +1499,7 @@ dev = [
     { name = "types-pyyaml" },
 ]
 indicators-talib = [{ name = "qmf-indicators", editable = "packages/qmf-indicators" }]
+qml-lib = [{ name = "qml", editable = "qml" }]
 scan = [{ name = "skylos" }]
 store-engines = [{ name = "qmf-data", editable = "packages/qmf-data" }]
 venue-proto = [{ name = "qmf-venue", editable = "packages/qmf-venue" }]

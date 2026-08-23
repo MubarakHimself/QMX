@@ -169,9 +169,7 @@ def test_every_measure_requires_unit_kind_no_composite() -> None:
 
 def test_multi_role_result_is_policy_rejection() -> None:
     multi = _population(roles=(AccountRole.LIVE, AccountRole.DEMO))
-    refused = reject_multi_role_result(
-        account_binding_role=AccountRole.LIVE, population=multi
-    )
+    refused = reject_multi_role_result(account_binding_role=AccountRole.LIVE, population=multi)
     assert is_refusal(refused)
     assert refused.category is RefusalCategory.POLICY_REJECTION
     minted = mint_performance_result(

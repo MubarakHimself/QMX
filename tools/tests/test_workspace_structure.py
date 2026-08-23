@@ -5,10 +5,11 @@ against the live workspace tree via :mod:`workspace_meta`:
 
 * **(a) No ``qmf/__init__.py`` anywhere.** Every distribution is a PEP 420 namespace
   submodule; a package init would collide two wheels on the ``qmf`` namespace.
-* **(b) Dependency direction is default-deny.** ``qmf-core`` depends on nothing; the
-  sole inter-library edge beyond ``-> qmf-core`` is ``qmf-registry -> qmf-data``; the
-  edge modules ``qmf-venue`` / ``qmf-risk`` are depended on by nobody, and no member
-  imports them either.
+* **(b) Dependency direction is default-deny and roster-scoped.** ``qmf-core``
+  depends on nothing; the sole roster inter-library edge beyond ``-> qmf-core`` is
+  ``qmf-registry -> qmf-data``; the edge modules ``qmf-venue`` / ``qmf-risk`` are
+  depended on by no roster package. Application-layer products may import
+  ``qmf.risk`` (never ``qmf.venue``).
 
 The install-and-import proof that an *undeclared* import fails lives in the Tier-2
 isolated-build smoke (``tools/isolated_build_check.py``); these Tier-1 tests pin the
@@ -24,8 +25,10 @@ import pytest
 import workspace_meta
 from workspace_meta import (
     EDGE_MODULES,
+    EXPECTED_APPLICATION_DEPS,
     EXPECTED_ROSTER_DEPS,
     ROSTER_PACKAGES,
+    VENUE_EDGE,
     Member,
 )
 
@@ -34,8 +37,9 @@ MEMBERS_BY_NAME = {m.name: m for m in MEMBERS}
 
 
 def test_all_roster_packages_are_present() -> None:
-    names = {m.name for m in MEMBERS if not m.is_extension}
+    names = {m.name for m in MEMBERS if m.is_roster}
     assert names >= ROSTER_PACKAGES, f"missing roster packages: {ROSTER_PACKAGES - names}"
+    assert names == ROSTER_PACKAGES
 
 
 # --- (a) no qmf/__init__.py in any distribution -----------------------------
@@ -77,32 +81,64 @@ def test_sole_second_inter_library_edge_is_registry_to_data() -> None:
     extra_edges = {
         m.name: sorted(m.roster_dependencies - {"qmf-core"})
         for m in MEMBERS
-        if not m.is_extension and (m.roster_dependencies - {"qmf-core"})
+        if m.is_roster and (m.roster_dependencies - {"qmf-core"})
     }
     assert extra_edges == {"qmf-registry": ["qmf-data"]}
 
 
-def test_edge_modules_are_depended_on_by_nobody() -> None:
+def test_roster_and_extensions_do_not_depend_on_edge_modules() -> None:
     for member in MEMBERS:
+        if member.is_application:
+            continue
         offending = member.roster_dependencies & EDGE_MODULES
         assert not offending, f"{member.name} depends on edge module(s) {sorted(offending)}"
 
 
-def test_no_member_imports_an_edge_module() -> None:
-    # Static check: no member's source contains `import qmf.venue` / `import qmf.risk`
-    # (nothing depends on OR imports the edge modules).
-    edge_imports = {"qmf.venue", "qmf.risk"}
+def test_no_member_imports_qmf_venue() -> None:
     violations: list[str] = []
     for member in MEMBERS:
         for path in sorted(member.source_package_dir().rglob("*.py")):
             for imported in _imported_modules(path):
-                is_edge = imported in edge_imports or any(
-                    imported.startswith(edge + ".") for edge in edge_imports
-                )
-                # A module never imports itself into a violation.
-                if is_edge and not imported.startswith(member.module_name):
+                is_venue = imported == "qmf.venue" or imported.startswith("qmf.venue.")
+                if is_venue and not imported.startswith(member.module_name):
                     violations.append(f"{path}: imports {imported}")
-    assert violations == [], f"edge-module imports found: {violations}"
+    assert violations == [], f"qmf.venue imports found: {violations}"
+
+
+def test_roster_and_extensions_do_not_import_qmf_risk() -> None:
+    violations: list[str] = []
+    for member in MEMBERS:
+        if member.is_application:
+            continue
+        for path in sorted(member.source_package_dir().rglob("*.py")):
+            for imported in _imported_modules(path):
+                is_risk = imported == "qmf.risk" or imported.startswith("qmf.risk.")
+                if is_risk and not imported.startswith(member.module_name):
+                    violations.append(f"{path}: imports {imported}")
+    assert violations == [], f"qmf.risk imports found outside applications: {violations}"
+
+
+def test_qml_is_application_layer_not_roster() -> None:
+    member = MEMBERS_BY_NAME["qml"]
+    assert member.is_application
+    assert not member.is_extension
+    assert not member.is_roster
+    assert member.name not in ROSTER_PACKAGES
+    assert member.module_name == "qml"
+    assert member.roster_dependencies == EXPECTED_APPLICATION_DEPS["qml"]
+    assert VENUE_EDGE not in member.roster_dependencies
+    assert set(member.dependencies) == member.roster_dependencies
+
+
+def test_qml_imports_qmf_risk_and_not_qmf_venue() -> None:
+    member = MEMBERS_BY_NAME["qml"]
+    imported: set[str] = set()
+    for path in sorted(member.source_package_dir().rglob("*.py")):
+        imported |= _imported_modules(path)
+    assert any(name == "qmf.risk" or name.startswith("qmf.risk.") for name in imported)
+    assert any(name == "qmf.core" or name.startswith("qmf.core.") for name in imported)
+    assert any(name == "qmf.registry" or name.startswith("qmf.registry.") for name in imported)
+    assert not any(name == "qmf.venue" or name.startswith("qmf.venue.") for name in imported)
 
 
 def _imported_modules(path: Path) -> set[str]:

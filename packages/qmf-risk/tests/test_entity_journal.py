@@ -299,9 +299,7 @@ def test_bot_journal_requires_seat_binding() -> None:
     assert is_ok(writer)
     stream = WriterScopedStream.try_create(writer.value, (event, _risk_event(sequence=2)))
     assert is_ok(stream)
-    projected = project_entity_journal(
-        selector.value, (stream.value,), role_scope=AccountRole.LIVE
-    )
+    projected = project_entity_journal(selector.value, (stream.value,), role_scope=AccountRole.LIVE)
     assert is_ok(projected)
     assert len(projected.value.rows) == 1
 

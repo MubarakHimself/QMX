@@ -7,13 +7,17 @@ callers need without either re-implementing the parse.
 
 The invariants this metadata lets a caller enforce (AR-06/AR-18; L30; DEC-0104):
 
-* Every distribution is a **PEP 420 namespace submodule** — the code lives at
-  ``src/qmf/<name>/`` with **no** ``src/qmf/__init__.py`` anywhere, so the seven
-  roster wheels and the calendar extension can co-occupy the ``qmf`` namespace.
-* **Dependency direction is default-deny.** ``qmf-core`` depends on nothing;
-  ``qmf-registry`` is the sole roster package with a second inter-library edge
-  (``-> qmf-data``); every other roster package depends only on ``qmf-core``; and
-  the two edge modules ``qmf-venue`` / ``qmf-risk`` are depended on by nobody.
+* Roster and extension distributions are **PEP 420 namespace submodules** — the
+  code lives at ``src/qmf/<name>/`` with **no** ``src/qmf/__init__.py`` anywhere,
+  so the seven roster wheels and the calendar extension can co-occupy the ``qmf``
+  namespace. Application-layer products (``qml``, later ``qmb``) import as their
+  own top-level package and still must not ship ``qmf/__init__.py``.
+* **Dependency direction is default-deny and roster-scoped.** ``qmf-core``
+  depends on nothing; ``qmf-registry`` is the sole roster package with a second
+  inter-library edge (``-> qmf-data``); every other roster package depends only on
+  ``qmf-core``; and the two edge modules ``qmf-venue`` / ``qmf-risk`` are depended
+  on by no roster package. Application-layer products may consume ``qmf-risk``
+  (never ``qmf-venue``) at their composition root (DEC-0171, DEC-0184).
 
 Stdlib only. Read-only over the workspace tree; no build, no install.
 """
@@ -44,9 +48,21 @@ ROSTER_PACKAGES: frozenset[str] = frozenset(
     }
 )
 
-# The edge modules nothing may depend on or import (AD-29..41 for risk; the venue
-# edge). They are leaves of the dependency DAG.
+# The edge modules no *roster* package may depend on or import (AD-29..41 for
+# risk; the venue edge). They are leaves of the roster DAG. Applications may
+# consume qmf-risk; nothing consumes qmf-venue (DEC-0171).
 EDGE_MODULES: frozenset[str] = frozenset({"qmf-venue", "qmf-risk"})
+VENUE_EDGE: str = "qmf-venue"
+
+# Application-layer products live at the repo root (not packages/, not
+# extensions/). A missing directory is skipped so qmb can land later.
+APPLICATION_ROOTS: tuple[str, ...] = ("qml", "qmb")
+
+# Expected workspace deps for application members. qml consumes qmf-core,
+# qmf-registry, and qmf-risk only (Story 11.1; DEC-0171).
+EXPECTED_APPLICATION_DEPS: dict[str, frozenset[str]] = {
+    "qml": frozenset({"qmf-core", "qmf-registry", "qmf-risk"}),
+}
 
 # The expected roster dependency map (workspace deps only). qmf-core depends on
 # nothing; qmf-registry additionally depends on qmf-data; the rest depend only on
@@ -64,17 +80,23 @@ EXPECTED_ROSTER_DEPS: dict[str, frozenset[str]] = {
 
 @dataclass(frozen=True)
 class Member:
-    """One workspace member (a roster package or an off-roster extension)."""
+    """One workspace member (roster package, off-roster extension, or application)."""
 
     name: str
     directory: Path
     module_name: str
     dependencies: tuple[str, ...]
     is_extension: bool
+    is_application: bool = False
+
+    @property
+    def is_roster(self) -> bool:
+        """True for the seven lockstep ``qmf-*`` packages under ``packages/``."""
+        return not self.is_extension and not self.is_application
 
     @property
     def import_name(self) -> str:
-        """The importable module, e.g. ``qmf.core`` — the build-backend module name."""
+        """The importable module, e.g. ``qmf.core`` or ``qml``."""
         return self.module_name
 
     @property
@@ -83,11 +105,11 @@ class Member:
         return frozenset(d for d in self.dependencies if d.startswith("qmf-"))
 
     def source_package_dir(self) -> Path:
-        """The ``src/qmf/<name>`` directory holding the member's source."""
+        """The ``src/...`` directory holding the member's importable package."""
         return self.directory / "src" / Path(*self.module_name.split("."))
 
 
-def _load_member(directory: Path, *, is_extension: bool) -> Member:
+def _load_member(directory: Path, *, is_extension: bool, is_application: bool = False) -> Member:
     """Parse one member's ``pyproject.toml`` into a :class:`Member`."""
     manifest = directory / "pyproject.toml"
     # A workspace member is defined by a real manifest file; anything else (a missing
@@ -108,6 +130,7 @@ def _load_member(directory: Path, *, is_extension: bool) -> Member:
         module_name=module_name,
         dependencies=dependencies,
         is_extension=is_extension,
+        is_application=is_application,
     )
 
 
@@ -124,13 +147,17 @@ def _dep_name(spec: str) -> str:
 
 
 def iter_members(root: Path = ROOT) -> Iterator[Member]:
-    """Yield every workspace member — roster packages then extensions, name-sorted."""
+    """Yield every workspace member — roster, then extensions, then applications."""
     packages = root / "packages"
     extensions = root / "extensions"
     for directory in sorted(p for p in packages.glob("*") if (p / "pyproject.toml").is_file()):
         yield _load_member(directory, is_extension=False)
     for directory in sorted(p for p in extensions.glob("*") if (p / "pyproject.toml").is_file()):
         yield _load_member(directory, is_extension=True)
+    for name in APPLICATION_ROOTS:
+        directory = root / name
+        if (directory / "pyproject.toml").is_file():
+            yield _load_member(directory, is_extension=False, is_application=True)
 
 
 def find_qmf_init_files(root: Path = ROOT) -> list[Path]:

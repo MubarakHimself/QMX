@@ -434,8 +434,7 @@ def _coerce_currency_set(value: object) -> frozenset[str] | TypedRefusal:
         if token is None:
             return invalid(
                 "exposures",
-                "each currency exposure is a non-empty opaque token; never parsed "
-                "from a symbol",
+                "each currency exposure is a non-empty opaque token; never parsed from a symbol",
                 given=repr(item),
             )
         tokens.add(token)
@@ -485,10 +484,7 @@ class ResolvedInstrumentScope:
         return {
             "class": "resolved-instrument-scope",
             "instruments": sorted(
-                (
-                    {"venue": i.venue.value, "symbol": i.symbol}
-                    for i in self.instruments
-                ),
+                ({"venue": i.venue.value, "symbol": i.symbol} for i in self.instruments),
                 key=lambda row: (row["venue"], row["symbol"]),
             ),
             "treated_as_affected_missing_exposure": sorted(
@@ -553,9 +549,7 @@ def resolve_instrument_scope(
     )
 
 
-def _coerce_instrument_set(
-    value: object, *, field: str
-) -> frozenset[Instrument] | TypedRefusal:
+def _coerce_instrument_set(value: object, *, field: str) -> frozenset[Instrument] | TypedRefusal:
     """Resolve a collection of :class:`Instrument` values."""
     given = type_name(value)
     if isinstance(value, (str, bytes, Mapping)) or not isinstance(value, Iterable):
@@ -595,9 +589,7 @@ def _coerce_exposure_records(
     return tuple(items)
 
 
-def instrument_in_scope(
-    scope: object, instrument: object
-) -> Result[ScopeResolutionDisposition]:
+def instrument_in_scope(scope: object, instrument: object) -> Result[ScopeResolutionDisposition]:
     """Classify whether ``instrument`` is blocked by ``scope`` (DEC-0152)."""
     if not isinstance(scope, ResolvedInstrumentScope):
         return invalid(
@@ -1029,9 +1021,7 @@ class ControlWindowRevisionLog:
         return append_window_revision(self, revision)
 
 
-def append_window_revision(
-    log: object, revision: object
-) -> Result[ControlWindowRevisionLog]:
+def append_window_revision(log: object, revision: object) -> Result[ControlWindowRevisionLog]:
     """Append a window revision; intake never refuses on narrowing (DEC-0152).
 
     A later revision that would narrow is still recorded. The widen-never-shrink
@@ -1064,9 +1054,7 @@ def append_window_revision(
     )
 
 
-def fold_effective_window(
-    revisions: object, *, decision_at: object
-) -> Result[EffectiveWindow]:
+def fold_effective_window(revisions: object, *, decision_at: object) -> Result[EffectiveWindow]:
     """Widen-never-shrink read-time fold at ``decision_at`` (DEC-0152, DEC-0158).
 
     The effective window is the union of the bounds of every revision known at
