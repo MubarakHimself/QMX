@@ -47,6 +47,33 @@ reference-owned formula requires the verified reference), the conformance checks
 re-implementing a reference-owned formula as a contract defect (FM-5), and no TA-Lib
 object crosses any public boundary.
 
-The two-mode compute protocol, the concrete wrapper set, and the full conformance
-harness arrive in later stories. Build, lint, type-check, and test it through the
-workspace `poe` tasks — never in isolation.
+Story 7.3 landed **batch mode with as-of-only alignment and presence-mapped
+outputs**. The bulk series vocabulary (`series.py`) carries a CT-16 column in the
+pinned form — immutable little-endian `int64` values, an out-of-band scale, a
+parallel integer-encoded presence map (`PresenceState` mirrors
+`registry:presence_map_states` verbatim — `present | provisional | not_ready | gap
+| absent_by_schedule`), and a parallel knowable-at run: `InputSeries` for an input
+column and `IndicatorSeries` for an output channel, whose `equals` compares
+presence maps first and values only at present positions. `compute_batch`
+(`batch.py`) computes a configured indicator over whole input series and returns
+one **full-length, index-aligned** `IndicatorSeries` per output channel plus the
+AD-12 result label. Begin-index trimming is prohibited (output length equals input
+length); every position carries a presence value; no NaN or sentinel is ever
+written. A market-hours-closed input position is `absent_by_schedule` (never a
+gap); a calendar-open position with no data follows the declared missing-value
+policy — `mark-gap` marks a `gap`, `refuse` returns a `policy rejection` — never
+silent filling. Warm-up is an integer count of completed observations, at least the
+reference's lookback (a shorter warm-up is refused); during warm-up the output is a
+marked `not_ready` value, never a number. Every output sample carries a knowable-at
+(the max over its contributing inputs), and provisional samples never enter
+governed evidence (`require_governed`). `align_to_instant` aligns a value to an
+evaluation instant **as-of only** — the last value known at or before it; a
+forward-fill or interpolation request across the instant is a `policy rejection`
+(no look-ahead, FM-1). The numeric core is a `BatchKernel` seam; `ReferenceKernel`
+is the bridge that wraps the pinned reference where it owns a formula — descaling to
+the analytic reference and rescaling its result to a scaled integer under an
+explicit half-even rounding mode, so no binary float crosses the engine or persists.
+
+The streaming mode, the tier-2 equality law, the concrete wrapper set, and the full
+conformance harness arrive in later stories. Build, lint, type-check, and test it
+through the workspace `poe` tasks — never in isolation.
