@@ -39,7 +39,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Final
+from typing import Final, cast
 
 from qmf.core import (
     AccountRole,
@@ -584,7 +584,7 @@ def _coerce_fill_references(value: object) -> Result[tuple[Fingerprint, ...]]:
             given=type_name(value),
         )
     items: list[Fingerprint] = []
-    for index, item in enumerate(value):
+    for index, item in enumerate(cast("Sequence[object]", value)):
         if not isinstance(item, Fingerprint):
             return invalid(
                 "fill_references",
@@ -611,7 +611,7 @@ def _coerce_cost_components(value: object) -> Result[tuple[CostComponent, ...]]:
         )
     items: list[CostComponent] = []
     seen: set[str] = set()
-    for index, item in enumerate(value):
+    for index, item in enumerate(cast("Sequence[object]", value)):
         if not isinstance(item, CostComponent):
             return invalid(
                 "cost_components",
@@ -741,14 +741,14 @@ def partition_by_close_reason(
             given=type_name(records),
         )
     buckets: dict[str, list[TradeAttribution]] = {reason.value: [] for reason in CloseReason}
-    for index, item in enumerate(records):
+    for index, item in enumerate(cast("Sequence[object]", records)):
         attributed = attribute_whole_trade(item)
         if is_refusal(attributed):
             return invalid(
                 "records",
                 "every member must be an attributable ExitRecord",
                 index=index,
-                detail=attributed.context.get("reason") if isinstance(attributed, TypedRefusal) else None,
+                detail=attributed.context.get("reason"),
             )
         buckets[attributed.value.close_reason.value].append(attributed.value)
     return _Ok(
@@ -865,7 +865,7 @@ def fold_bench(
     breakevens = 0
     scratches = 0
     gains = 0
-    for index, item in enumerate(records):
+    for index, item in enumerate(cast("Sequence[object]", records)):
         if not isinstance(item, ExitRecord):
             return invalid(
                 "records",

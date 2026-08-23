@@ -25,6 +25,7 @@ from qmf.core import (
     Money,
     PriceDelta,
     RefusalCategory,
+    Result,
     UnitKind,
     VenueId,
     World,
@@ -42,6 +43,7 @@ from qmf.risk.exit_record import (
     CloseReason,
     ClosingAuthority,
     CostComponent,
+    ExitRecord,
     ExitRecordStream,
     ExitResultLabel,
     attribute_whole_trade,
@@ -54,7 +56,6 @@ from qmf.risk.exit_record import (
     realized_r_of,
 )
 from qmf.risk.r_faces import FULL_ORIGINAL_LOSS, RFaces
-
 
 # --- builders ----------------------------------------------------------------
 
@@ -121,7 +122,7 @@ def _mint(
     recorded_at: Instant | None = None,
     arbitration: Fingerprint | None = None,
     venue_obs: Fingerprint | None = None,
-) -> object:
+) -> Result[ExitRecord]:
     binding_epoch = epoch if epoch is not None else _fp("epoch-1")
     mech = mechanism if mechanism is not None else close_reason
     arb = arbitration
@@ -168,12 +169,17 @@ def test_mint_exit_record_carries_frozen_r_faces_and_derived_realized_r() -> Non
     assert record.close_reason is CloseReason.PROTECTIVE_STOP_FILL
     assert record.result_label.account_role is AccountRole.LIVE
     # realized_r is derived, never a stored independent field
-    assert not hasattr(record, "__dataclass_fields__") or "realized_r" not in record.__dataclass_fields__
+    assert (
+        not hasattr(record, "__dataclass_fields__")
+        or "realized_r" not in record.__dataclass_fields__
+    )
     realized = record.realized_r()
     assert is_ok(realized)
     # net = -100.00 - 2.00 = -102.00; / 100.00 = -1.02
     assert realized.value.as_fraction() == Fraction(-102, 100)
-    assert realized_r_of(record).value == realized.value
+    via_helper = realized_r_of(record)
+    assert is_ok(via_helper)
+    assert via_helper.value == realized.value
 
 
 def test_stream_refuses_second_mint_for_same_virtual_position() -> None:
@@ -372,22 +378,24 @@ def test_bench_fold_counts_qualifying_losses_ignores_breakeven_and_scratch() -> 
         authority=ClosingAuthority.BOOK_POLICY,
         recorded_at=_instant(4),
     )
-    assert all(is_ok(r) for r in (be, scratch, ql1, ql2))
+    assert is_ok(be)
+    assert is_ok(scratch)
+    assert is_ok(ql1)
+    assert is_ok(ql2)
     records = (be.value, scratch.value, ql1.value, ql2.value)
 
-    assert classify_bench_disposition(be.value, q=q).value is BenchDisposition.BREAKEVEN
-    assert (
-        classify_bench_disposition(scratch.value, q=q).value
-        is BenchDisposition.SCRATCH_OR_PARTIAL_LOSS
-    )
-    assert (
-        classify_bench_disposition(ql1.value, q=q).value
-        is BenchDisposition.QUALIFYING_LOSS_EXIT
-    )
-    assert (
-        classify_bench_disposition(ql2.value, q=q).value
-        is BenchDisposition.QUALIFYING_LOSS_EXIT
-    )
+    be_disp = classify_bench_disposition(be.value, q=q)
+    scratch_disp = classify_bench_disposition(scratch.value, q=q)
+    ql1_disp = classify_bench_disposition(ql1.value, q=q)
+    ql2_disp = classify_bench_disposition(ql2.value, q=q)
+    assert is_ok(be_disp)
+    assert is_ok(scratch_disp)
+    assert is_ok(ql1_disp)
+    assert is_ok(ql2_disp)
+    assert be_disp.value is BenchDisposition.BREAKEVEN
+    assert scratch_disp.value is BenchDisposition.SCRATCH_OR_PARTIAL_LOSS
+    assert ql1_disp.value is BenchDisposition.QUALIFYING_LOSS_EXIT
+    assert ql2_disp.value is BenchDisposition.QUALIFYING_LOSS_EXIT
 
     folded = fold_bench(records, binding_epoch=epoch, q=q, threshold=threshold)
     assert is_ok(folded)
@@ -413,7 +421,8 @@ def test_bench_fold_is_bounded_by_binding_epoch() -> None:
         realized_pnl=-10000,
         authority=ClosingAuthority.VENUE,
     )
-    assert is_ok(in_a) and is_ok(in_b)
+    assert is_ok(in_a)
+    assert is_ok(in_b)
     folded = fold_bench(
         (in_a.value, in_b.value), binding_epoch=epoch_a, q=q, threshold=1
     )
@@ -431,9 +440,13 @@ def test_breakeven_never_counts_under_any_q() -> None:
     )
     assert is_ok(be)
     tiny_q = _r(1, 1000)  # 0.001R
-    assert classify_bench_disposition(be.value, q=tiny_q).value is BenchDisposition.BREAKEVEN
+    tiny_disp = classify_bench_disposition(be.value, q=tiny_q)
+    assert is_ok(tiny_disp)
+    assert tiny_disp.value is BenchDisposition.BREAKEVEN
     huge_q = _r(100)
-    assert classify_bench_disposition(be.value, q=huge_q).value is BenchDisposition.BREAKEVEN
+    huge_disp = classify_bench_disposition(be.value, q=huge_q)
+    assert is_ok(huge_disp)
+    assert huge_disp.value is BenchDisposition.BREAKEVEN
 
 
 # --- AC5: recording precedes interpretation ----------------------------------
