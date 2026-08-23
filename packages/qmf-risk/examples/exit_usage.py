@@ -7,12 +7,13 @@ Executable::
 Mints four SCN-0011-shaped exit records for one binding epoch, derives single-sourced
 ``realized_r`` from frozen fields, credits whole-trade attribution to the opening Bot,
 folds the qualifying-loss bench (breakeven and scratch excluded), enforces
-recording-precedes-interpretation, and shows the V1 move-to-breakeven ratchet.
+10→recording-precedes-interpretation, and shows the V1 move-to-breakeven ratchet.
 """
 
 from __future__ import annotations
 
 from fractions import Fraction
+from typing import TypeVar
 
 from qmf.core import (
     AccountRole,
@@ -48,6 +49,14 @@ from qmf.risk.exit_record import (
     partition_by_close_reason,
 )
 
+T = TypeVar("T")
+
+
+def _unwrap(result: Result[T], message: str) -> T:
+    if is_ok(result):
+        return result.value
+    raise RuntimeError(message)
+
 
 def _require(condition: bool, message: str) -> None:
     if not condition:
@@ -55,46 +64,41 @@ def _require(condition: bool, message: str) -> None:
 
 
 def _fp(seed: str) -> Fingerprint:
-    result = fingerprint({"seed": seed})
-    _require(is_ok(result), f"fingerprint failed for {seed!r}")
-    return result.value
+    return _unwrap(fingerprint({"seed": seed}), f"fingerprint failed for {seed!r}")
 
 
 def _instant(ns: int) -> Instant:
-    result = Instant.try_create(ns)
-    _require(is_ok(result), "instant mint failed")
-    return result.value
+    return _unwrap(Instant.try_create(ns), "instant mint failed")
 
 
 def _money(value: int) -> Money:
-    result = Money.try_create(value, "USD", 2)
-    _require(is_ok(result), "money mint failed")
-    return result.value
+    return _unwrap(Money.try_create(value, "USD", 2), "money mint failed")
 
 
 def _delta(value: int) -> PriceDelta:
     instrument = Instrument(venue=VenueId(value="ctrader"), symbol="EURUSD")
-    result = PriceDelta.try_create(value, instrument, 5)
-    _require(is_ok(result), "price-delta mint failed")
-    return result.value
+    return _unwrap(PriceDelta.try_create(value, instrument, 5), "price-delta mint failed")
 
 
 def _r(numerator: int, denominator: int = 1) -> ExactRational:
-    result = ExactRational.try_create(numerator, denominator, UnitKind.R_MULTIPLE)
-    _require(is_ok(result), "r-multiple mint failed")
-    return result.value
+    return _unwrap(
+        ExactRational.try_create(numerator, denominator, UnitKind.R_MULTIPLE),
+        "r-multiple mint failed",
+    )
 
 
 def _label() -> ExitResultLabel:
-    result = ExitResultLabel.try_create(AccountRole.LIVE, World.LIVE)
-    _require(is_ok(result), "result-label mint failed")
-    return result.value
+    return _unwrap(
+        ExitResultLabel.try_create(AccountRole.LIVE, World.LIVE),
+        "result-label mint failed",
+    )
 
 
 def _cost(name: str, amount: int) -> CostComponent:
-    result = CostComponent.try_create(name, _money(amount), "broker")
-    _require(is_ok(result), "cost-component mint failed")
-    return result.value
+    return _unwrap(
+        CostComponent.try_create(name, _money(amount), "broker"),
+        "cost-component mint failed",
+    )
 
 
 def _mint(
@@ -178,48 +182,45 @@ def main() -> None:
     stream = ExitRecordStream()
     records: list[ExitRecord] = []
     for seed, pnl, reason, outcome, authority, costs, ns in specs:
-        minted = _mint(
-            seed=seed,
-            epoch=epoch,
-            realized_pnl=pnl,
-            close_reason=reason,
-            outcome=outcome,
-            authority=authority,
-            recorded_at=_instant(ns),
-            costs=costs,
+        minted = _unwrap(
+            _mint(
+                seed=seed,
+                epoch=epoch,
+                realized_pnl=pnl,
+                close_reason=reason,
+                outcome=outcome,
+                authority=authority,
+                recorded_at=_instant(ns),
+                costs=costs,
+            ),
+            f"exit mint failed for {seed}",
         )
-        _require(is_ok(minted), f"exit mint failed for {seed}")
-        fp = stream.mint(minted.value)
-        _require(is_ok(fp), f"stream mint failed for {seed}")
-        _require(is_ok(stream.mark_persisted(fp.value)), "persist failed")
-        _require(is_ok(stream.mark_journaled(fp.value)), "journal failed")
-        records.append(minted.value)
+        fp = _unwrap(stream.mint(minted), f"stream mint failed for {seed}")
+        _unwrap(stream.mark_persisted(fp), "persist failed")
+        _unwrap(stream.mark_journaled(fp), "journal failed")
+        records.append(minted)
 
-    ql1_r = records[2].realized_r()
-    _require(is_ok(ql1_r), "realized_r derivation failed")
+    ql1_r = _unwrap(records[2].realized_r(), "realized_r derivation failed")
     print(
         f"single-sourced realized_r for protective-stop full loss: "
-        f"{ql1_r.value.as_fraction()} (expected -51/50)"
+        f"{ql1_r.as_fraction()} (expected -51/50)"
     )
-    _require(ql1_r.value.as_fraction() == Fraction(-102, 100), "realized_r mismatch")
+    _require(ql1_r.as_fraction() == Fraction(-102, 100), "realized_r mismatch")
 
-    attributed = attribute_whole_trade(records[3])
-    _require(is_ok(attributed), "attribution failed")
+    attributed = _unwrap(attribute_whole_trade(records[3]), "attribution failed")
     print(
-        f"whole-trade attribution credits opening bot={attributed.value.opening_bot_id} "
-        f"close_reason={attributed.value.close_reason.value}"
+        f"whole-trade attribution credits opening bot={attributed.opening_bot_id} "
+        f"close_reason={attributed.close_reason.value}"
     )
-    partitioned = partition_by_close_reason(tuple(records))
-    _require(is_ok(partitioned), "partition failed")
+    partitioned = _unwrap(partition_by_close_reason(tuple(records)), "partition failed")
     print(
         "reports partition by close reason: "
-        + ", ".join(f"{k}={len(v)}" for k, v in sorted(partitioned.value.items()))
+        + ", ".join(f"{k}={len(v)}" for k, v in sorted(partitioned.items()))
     )
 
     dispositions: list[BenchDisposition] = []
     for raw in (classify_bench_disposition(r, q=q) for r in records):
-        _require(is_ok(raw), "disposition classify failed")
-        dispositions.append(raw.value)
+        dispositions.append(_unwrap(raw, "disposition classify failed"))
     print("bench dispositions: " + ", ".join(d.value for d in dispositions))
     _require(
         dispositions[0] is BenchDisposition.BREAKEVEN
@@ -229,51 +230,56 @@ def main() -> None:
         "unexpected dispositions",
     )
 
-    folded = fold_bench(tuple(records), binding_epoch=epoch, q=q, threshold=threshold)
-    _require(is_ok(folded), "bench fold failed")
-    print(
-        f"bench fold: qualifying_loss_count={folded.value.qualifying_loss_count} "
-        f"threshold={threshold} crossed={folded.value.threshold_crossed}"
+    folded = _unwrap(
+        fold_bench(tuple(records), binding_epoch=epoch, q=q, threshold=threshold),
+        "bench fold failed",
     )
-    _require(folded.value.qualifying_loss_count == 2, "expected two qualifying losses")
-    _require(folded.value.threshold_crossed is True, "expected threshold crossed")
+    print(
+        f"bench fold: qualifying_loss_count={folded.qualifying_loss_count} "
+        f"threshold={threshold} crossed={folded.threshold_crossed}"
+    )
+    _require(folded.qualifying_loss_count == 2, "expected two qualifying losses")
+    _require(folded.threshold_crossed is True, "expected threshold crossed")
 
     # Recording precedes interpretation: an unrecorded close refuses.
-    pending = _mint(
-        seed="pending",
-        epoch=epoch,
-        realized_pnl=-10000,
-        close_reason=CloseReason.BOT_INTENT,
-        outcome=CloseOutcome.LOSS,
-        authority=ClosingAuthority.BOOK_POLICY,
-        recorded_at=_instant(5),
+    pending = _unwrap(
+        _mint(
+            seed="pending",
+            epoch=epoch,
+            realized_pnl=-10000,
+            close_reason=CloseReason.BOT_INTENT,
+            outcome=CloseOutcome.LOSS,
+            authority=ClosingAuthority.BOOK_POLICY,
+            recorded_at=_instant(5),
+        ),
+        "pending mint failed",
     )
-    _require(is_ok(pending), "pending mint failed")
-    pending_fp = stream.mint(pending.value)
-    _require(is_ok(pending_fp), "pending stream mint failed")
+    _unwrap(stream.mint(pending), "pending stream mint failed")
     stale = stream.check_seat_may_mint_intent(
-        closed_virtual_position_ref=pending.value.virtual_position_ref
+        closed_virtual_position_ref=pending.virtual_position_ref
     )
-    _require(is_refusal(stale), "expected refusal for unrecorded close")
+    if not is_refusal(stale):
+        raise RuntimeError("expected refusal for unrecorded close")
     _require(stale.category is RefusalCategory.STALE_EVIDENCE, "expected stale")
     print(f"recording precedes interpretation: refused ({stale.category.value})")
 
-    ratchet = check_move_to_breakeven_ratchet(
-        original_risk_distance=_delta(50),
-        proposed_risk_distance=_delta(0),
+    _unwrap(
+        check_move_to_breakeven_ratchet(
+            original_risk_distance=_delta(50),
+            proposed_risk_distance=_delta(0),
+        ),
+        "breakeven ratchet should accept zero offset",
     )
-    _require(is_ok(ratchet), "breakeven ratchet should accept zero offset")
     widen = check_move_to_breakeven_ratchet(
         original_risk_distance=_delta(50),
         proposed_risk_distance=_delta(60),
     )
-    _require(is_refusal(widen), "widen must refuse")
+    if not is_refusal(widen):
+        raise RuntimeError("widen must refuse")
     print(
         f"move-to-breakeven ratchet: zero-offset ok; widen refused "
         f"({widen.category.value}); R stays frozen so -1R keeps meaning a full original loss"
     )
-    distinct = CloseReason.KILL_LINE_FLAT is not CloseReason.PROTECTION_FORCED_FLAT
-    print(f"kill_line_flat != protection_forced_flat: {distinct}")
     print(
         "kill_line_flat and protection_forced_flat are distinct taxonomy members: "
         f"{CloseReason.KILL_LINE_FLAT.value} / {CloseReason.PROTECTION_FORCED_FLAT.value}"
