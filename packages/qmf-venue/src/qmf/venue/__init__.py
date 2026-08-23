@@ -68,6 +68,30 @@ and a compound command's outcome is the meet of its children — any child UNKNO
 parent UNKNOWN, any non-success makes it partially-executed, never a success
 (:class:`~qmf.venue.commands.CompoundCommand`, :func:`~qmf.venue.commands.meet_outcomes`)
 (FR-023, CT-19, CT-20, AR-44, AR-48; DEC-0137, DEC-0138, DEC-0140, DEC-0148).
+
+Story 8.6 adds record-before-interpret events and on-demand reconciliation
+(:mod:`qmf.venue.events`): every inbound venue event is stored verbatim through
+:class:`~qmf.venue.events.EventRecorder` — with the mandatory receive wall time and
+boot-scoped monotonic stamp — and journaled before any state evaluation as one ordered
+multi-room unit (raw archive, journal, registry room) with a named
+:class:`~qmf.venue.events.TransactionBoundary`, a partial write being a storage-failure
+refusal that blocks the command stream (the sensing pipe unaffected) and is journaled on
+recovery; the order-state machine is a read-time fold over the observation stream
+(:func:`~qmf.venue.events.fold_order_state`, :class:`~qmf.venue.events.OrderStateProjection`)
+and never a stored field, command outcome and order state stay separate streams, and a
+terminal state is decided only by fills and venue lifecycle events; an observation with no
+legal transition is annotated with a typed
+:class:`~qmf.venue.events.OutOfSequenceEdge` and forces its owning command to UNKNOWN
+(adapters never synthesize an observation); reconciliation is an on-demand read-back over a
+mandatory declared lookback (:class:`~qmf.venue.events.ReconciliationReadback`) whose
+verdict is one of :class:`~qmf.venue.events.ReconciliationVerdict`'s four members —
+reconciled, drift, unknown, or out-of-lookback (the fourth so "I cannot see that far back"
+is never read as "the position closed") — gating the command pipe only; and a
+close_position, close_all, or amend_protection whose subject is observed terminal at or
+after the submit stamp resolves rejected-by-venue (superseded-by-terminal-subject) — a named
+outcome, never UNKNOWN — while an absent or already-terminal subject resolves without
+submission (:func:`~qmf.venue.events.resolve_subject_terminal`) (FR-024, CT-20, AR-47,
+SCN-0005; DEC-0137, DEC-0138, DEC-0140, DEC-0148, DEC-0150, DEC-0158).
 """
 
 from __future__ import annotations
@@ -119,6 +143,31 @@ from qmf.venue.connection import (
     PipeState,
     venue_command_stream,
     venue_writer_id,
+)
+from qmf.venue.events import (
+    EventRecorder,
+    InboundVenueEvent,
+    MultiRoomWrite,
+    MultiRoomWriteResult,
+    ObservationJournalEvent,
+    ObservationKind,
+    OrderState,
+    OrderStateProjection,
+    OutOfSequenceEdge,
+    PartialWriteRecovery,
+    Reconciliation,
+    ReconciliationReadback,
+    ReconciliationVerdict,
+    SubjectResolution,
+    SubjectTerminalOutcome,
+    TransactionBoundary,
+    VenueNativeIdentity,
+    WriteRoom,
+    detect_out_of_sequence,
+    fold_order_state,
+    is_legal_transition,
+    observation_journal_event_type,
+    resolve_subject_terminal,
 )
 from qmf.venue.observation import (
     MeasuredFact,
@@ -179,14 +228,24 @@ __all__ = [
     "ErrorMap",
     "ErrorMapResolution",
     "ErrorMapRow",
+    "EventRecorder",
     "FieldMarking",
     "Finding",
     "FindingsNote",
     "HealthReport",
+    "InboundVenueEvent",
     "JournalEvent",
     "MeasuredFact",
+    "MultiRoomWrite",
+    "MultiRoomWriteResult",
+    "ObservationJournalEvent",
+    "ObservationKind",
     "OrderParameters",
+    "OrderState",
+    "OrderStateProjection",
     "OrderType",
+    "OutOfSequenceEdge",
+    "PartialWriteRecovery",
     "PipeState",
     "ProbeCheck",
     "ProbeReport",
@@ -195,7 +254,12 @@ __all__ = [
     "ProtectionAmendment",
     "ProtectionSide",
     "ProtoArtifact",
+    "Reconciliation",
+    "ReconciliationReadback",
+    "ReconciliationVerdict",
     "SpotSample",
+    "SubjectResolution",
+    "SubjectTerminalOutcome",
     "SubmissionOutcome",
     "SubmissionOutcomeClass",
     "SubmissionResult",
@@ -204,21 +268,29 @@ __all__ = [
     "Tick",
     "TickHistorySample",
     "TimeInForce",
+    "TransactionBoundary",
     "Trendbar",
     "TrendbarSample",
     "UnknownTrigger",
     "UpstreamAssumption",
     "VenueEvidenceClass",
+    "VenueNativeIdentity",
     "VenueObservationProfile",
+    "WriteRoom",
     "__version__",
     "assess_tag_change",
     "command_id_mapping_is_injective_total",
     "compile_descriptor_set",
     "derive_child_identity",
     "descriptor_set_digest",
+    "detect_out_of_sequence",
+    "fold_order_state",
+    "is_legal_transition",
     "is_success",
     "journal_event_type",
     "meet_outcomes",
+    "observation_journal_event_type",
+    "resolve_subject_terminal",
     "venue_command_stream",
     "venue_writer_id",
 ]
