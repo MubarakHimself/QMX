@@ -22,6 +22,7 @@ __all__ = [
     "coerce_enum",
     "invalid",
     "policy",
+    "stale",
     "type_name",
     "unavailable",
     "unsupported",
@@ -105,3 +106,9 @@ def unavailable(field: str, reason: str, **extra: object) -> TypedRefusal:
     """An ``unavailable dependency`` refusal — a required peer version node is
     absent from the graph, never fabricated (DEC-0144)."""
     return _build(RefusalCategory.UNAVAILABLE_DEPENDENCY, field, reason, **extra)
+
+
+def stale(field: str, reason: str, **extra: object) -> TypedRefusal:
+    """A ``stale evidence`` refusal — a later same-seat intent before the closing
+    exit record is persisted and journaled (CT-29; DEC-0155)."""
+    return _build(RefusalCategory.STALE_EVIDENCE, field, reason, **extra)

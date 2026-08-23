@@ -157,6 +157,27 @@ risk-monotonic intents (FR-028, FR-032; CT-23; DEC-0147, DEC-0177, DEC-0185):
   (:func:`~qmf.risk.door.check_exit_logic_mode_available`), with forward-compatible
   parsing (:func:`~qmf.risk.door.parse_inbound_intent`) that keeps format-1 artifacts
   readable forever and never breaks on an unknown optional field.
+
+Story 10.7 lands CT-29 exit records, close reasons, whole-trade attribution, and the
+bench fold (FR-032; CT-29; DEC-0155, DEC-0147):
+
+* :mod:`qmf.risk.exit_record` — exactly one immutable
+  :class:`~qmf.risk.exit_record.ExitRecord` per virtual (Book) position close carrying
+  frozen ``original_risk_distance`` / ``original_risk_amount``, fill references,
+  ``realized_pnl``, identity-bearing :class:`~qmf.risk.exit_record.CostComponent` set,
+  a single-sourced :meth:`~qmf.risk.exit_record.ExitRecord.realized_r` (derived display
+  never a second division), the :class:`~qmf.risk.exit_record.CloseReason` taxonomy
+  (``kill_line_flat`` minted apart from ``protection_forced_flat``) with mechanism and
+  :class:`~qmf.risk.exit_record.CloseOutcome` as separate fields, closing authority plus
+  arbitration/venue reference, and account-binding role; whole-trade attribution
+  (:func:`~qmf.risk.exit_record.attribute_whole_trade`,
+  :func:`~qmf.risk.exit_record.partition_by_close_reason`); the read-time bench fold
+  (:func:`~qmf.risk.exit_record.fold_bench`,
+  :func:`~qmf.risk.exit_record.classify_bench_disposition`) over the
+  :class:`~qmf.risk.exit_record.ExitRecordStream` bounded by the binding epoch;
+  recording-precedes-interpretation
+  (:func:`~qmf.risk.exit_record.check_recording_precedes_interpretation`); and the V1
+  move-to-breakeven ratchet (:func:`~qmf.risk.exit_record.check_move_to_breakeven_ratchet`).
 """
 
 from __future__ import annotations
@@ -283,6 +304,31 @@ from qmf.risk.door import (
     reject_inbound_requested_r,
     reject_risk_monotonic_violation,
 )
+from qmf.risk.exit_record import (
+    CLOSE_REASON_EVIDENCE_MAPPING,
+    CT29_CONTRACT_FORMAT_VERSION,
+    QUALIFYING_LOSS_THRESHOLD_VARIABLE,
+    VENUE_AUTHORED_CLOSE_REASONS,
+    AttributionReport,
+    BenchDisposition,
+    BenchFoldResult,
+    CloseOutcome,
+    CloseReason,
+    ClosingAuthority,
+    CostComponent,
+    ExitRecord,
+    ExitRecordStream,
+    ExitResultLabel,
+    TradeAttribution,
+    attribute_whole_trade,
+    check_move_to_breakeven_ratchet,
+    check_recording_precedes_interpretation,
+    classify_bench_disposition,
+    fold_bench,
+    mint_exit_record,
+    partition_by_close_reason,
+    realized_r_of,
+)
 from qmf.risk.grammar import (
     AdmissionImpact,
     AuthorityGrade,
@@ -376,9 +422,11 @@ __all__ = [
     "BOOK_LIMIT_UNIT_KINDS",
     "BOOK_SECTIONS",
     "BREAKEVEN",
+    "CLOSE_REASON_EVIDENCE_MAPPING",
     "CT23_ACTIVE_FORMAT_VERSION",
     "CT23_ADVISORY_STOP_FORMAT_VERSION",
     "CT23_KNOWN_FORMAT_VERSIONS",
+    "CT29_CONTRACT_FORMAT_VERSION",
     "EXIT_LOGIC_MODE_REGISTRY",
     "FORBIDDEN_ADMISSION_GATES",
     "FORM_0006",
@@ -388,10 +436,12 @@ __all__ = [
     "LOSS_RUNWAY_PRODUCER",
     "MONEY_RULES_UNIT_KINDS",
     "PAPER_ACCOUNT_ROLES",
+    "QUALIFYING_LOSS_THRESHOLD_VARIABLE",
     "SEAT_LOSS_RUN_ALLOWANCE_VARIABLE",
     "SEAT_R_CEILING_CONSTRAINT",
     "STATE_CARRY_COUNTERS",
     "V1_NUMERAIRE",
+    "VENUE_AUTHORED_CLOSE_REASONS",
     "ActiveControl",
     "AdmissionBar",
     "AdmissionImpact",
@@ -400,8 +450,11 @@ __all__ = [
     "AdmissionRequirement",
     "AdmittedBinding",
     "AdmittedEntry",
+    "AttributionReport",
     "AuthorityGrade",
     "Band",
+    "BenchDisposition",
+    "BenchFoldResult",
     "BinOp",
     "BindingLineageEdgeKind",
     "BindingState",
@@ -420,6 +473,9 @@ __all__ = [
     "CapabilityCheckResult",
     "CitedEvidence",
     "ClearingCause",
+    "CloseOutcome",
+    "CloseReason",
+    "ClosingAuthority",
     "Comparison",
     "ComparisonOp",
     "ComparisonRule",
@@ -428,6 +484,7 @@ __all__ = [
     "ControlActionKind",
     "ControlRankRow",
     "ControlRankTable",
+    "CostComponent",
     "CurrentPointer",
     "Direction",
     "EntryIntent",
@@ -440,6 +497,9 @@ __all__ = [
     "ExitLogicMode",
     "ExitLogicModule",
     "ExitLogicRef",
+    "ExitRecord",
+    "ExitRecordStream",
+    "ExitResultLabel",
     "FormulaOp",
     "FormulaSpec",
     "IntentFamily",
@@ -479,6 +539,7 @@ __all__ = [
     "Threshold",
     "TieDisposition",
     "TightenProtectiveStop",
+    "TradeAttribution",
     "TreasuryBoundaryKind",
     "TriggerDisposition",
     "TriggerKind",
@@ -493,6 +554,7 @@ __all__ = [
     "admit_entry_intent",
     "admit_entry_r_faces",
     "assemble_admission_page",
+    "attribute_whole_trade",
     "authorize_return_to_live",
     "average_r_multiple",
     "bar_is_blank",
@@ -503,15 +565,18 @@ __all__ = [
     "check_exit_logic_mode_available",
     "check_formula",
     "check_live_binding_admissible",
+    "check_move_to_breakeven_ratchet",
     "check_no_paper_role_gates_live",
     "check_no_reopen",
     "check_no_scale_in",
     "check_no_size_increase",
     "check_rank_table_non_contradiction",
+    "check_recording_precedes_interpretation",
     "check_seat_r_ceiling",
     "check_stop_not_widened",
     "check_target_within_envelope",
     "check_worked_examples",
+    "classify_bench_disposition",
     "derive_full_loss_price_at_door",
     "derive_original_risk_distance",
     "derive_unit_kind",
@@ -519,11 +584,15 @@ __all__ = [
     "evaluate_bar",
     "evaluate_exit_intent",
     "evaluate_requirement",
+    "fold_bench",
     "is_paper_role",
+    "mint_exit_record",
     "mint_return_to_live_transition",
     "money_to_r",
     "parse_inbound_intent",
+    "partition_by_close_reason",
     "r_to_money",
+    "realized_r_of",
     "recompute_worked_example",
     "reconcile_loss_floor",
     "refuse_no_full_loss_price",
