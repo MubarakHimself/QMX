@@ -134,3 +134,77 @@ written for someone who was not in the design room.
 - **Notification tier:** gate failure (the Tier-1 conformance tests read red).
 - **Product-user affordance:** not user-facing; it is a canonical-arithmetic-integrity
   invariant the factory gate enforces before any wrapper reaches evidence.
+
+### FR-6: Forward-fill or interpolation across the evaluation instant (CT-16, FM-1)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** `align_to_instant` aligns a bulk series to an evaluation instant. Only
+  as-of alignment — the last present value whose knowable-at is at or before the instant —
+  is legal for governed evidence. A `forward-fill` or `interpolate` request is refused
+  before any value is read, because both would draw on data known only *after* the
+  instant (look-ahead across the evaluation instant). The `AlignmentMode` enum names the
+  two illegal modes precisely so the refusal is nameable and testable; they are never
+  usable values.
+- **Auto-recovery / retry:** none automatic; retryability is `no` — the request is a
+  policy violation, not a transient condition. The operation RETURNS the `policy
+  rejection` `TypedRefusal` whose `context` names the requested mode. Nothing is raised.
+- **Visible degraded state:** none. No value is produced; no state changes.
+- **Notification tier:** silent-log. A look-ahead alignment request is a wiring mistake
+  surfaced as a value, not an operational alarm.
+- **Product-user affordance:** governed evidence forbids look-ahead across the evaluation
+  instant. Align as-of (the last value known at or before the instant); if a later value
+  is genuinely wanted, evaluate at a later instant. The refusal's `context` says which
+  mode was refused.
+
+### FR-7: A calendar-open gap under a refuse missing-value policy (CT-16, FM-1)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** during `compute_batch`, a position the market-hours calendar marks
+  closed is `absent_by_schedule` (never a gap), but a calendar-open position with no data
+  follows the configuration's declared missing-value policy. Under `mark-gap` the output
+  position is a `gap`; under `refuse` the whole batch is refused rather than silent-filled.
+  The layout analysis detects the gap position and refuses immediately.
+- **Auto-recovery / retry:** none automatic; retryability is `no`. The operation RETURNS
+  the `policy rejection` `TypedRefusal` naming the `missing_value_policy` field and the
+  offending position. Nothing is raised, and no value is ever fabricated for the gap.
+- **Visible degraded state:** none. No output series is produced; no state changes.
+- **Notification tier:** silent-log. The refusal is a value the composition root inspects.
+- **Product-user affordance:** the input has a calendar-open gap and the configuration
+  declared a refuse policy. Either supply the missing observation, or declare a `mark-gap`
+  policy so the gap is presence-mapped rather than refused — never silently filled.
+
+### FR-8: Warm-up below the reference lookback (CT-16, warm-up discipline)
+
+- **Failure class:** `invalid input` (a CT-04 refusal category).
+- **Detection:** `compute_batch` resolves the reference's lookback from the kernel output
+  (the leading-undefined count) and refuses if the configuration's `warm_up` is below it.
+  Warm-up is an integer count of completed input observations at least the reference's
+  lookback; a marked not-ready value must cover every undefined leading position, so a
+  warm-up shorter than the lookback is a contract error.
+- **Auto-recovery / retry:** none automatic; retryability is `no`. The operation RETURNS
+  the `invalid input` `TypedRefusal` naming the `warm_up` field, the declared warm-up, and
+  the reference lookback. Nothing is raised.
+- **Visible degraded state:** none. No output series is produced; no state changes.
+- **Notification tier:** silent-log. A too-short warm-up is a configuration mistake
+  surfaced as a value, not an operational alarm.
+- **Product-user affordance:** raise the configuration's warm-up to at least the
+  reference's lookback (the refusal's `context` names both) and recompute.
+
+### FR-9: Provisional samples reaching governed evidence (CT-16, DEC-0126)
+
+- **Failure class:** `policy rejection` (a CT-04 refusal category).
+- **Detection:** an in-progress emission policy (or a provisional contributing input)
+  marks output positions `provisional`, and the result's evidence class becomes
+  `provisional`. `require_governed` refuses any result whose evidence class is provisional
+  or that carries a provisional output position — provisional samples never enter governed
+  evidence.
+- **Auto-recovery / retry:** none automatic; retryability is `no`. The guard RETURNS the
+  `policy rejection` `TypedRefusal` naming the evidence class or the offending channel.
+  Nothing is raised, and no provisional value is admitted.
+- **Visible degraded state:** none. The confirmed label is simply not returned for
+  routing into the governed-evidence store.
+- **Notification tier:** silent-log. The refusal is a value the composition root inspects
+  before it routes a result into governed evidence.
+- **Product-user affordance:** compute with a bar-closed emission policy (which yields a
+  confirmed result) before routing into governed evidence; a provisional/in-progress
+  result is for live display, never for governed evidence.
