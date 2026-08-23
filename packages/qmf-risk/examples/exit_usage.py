@@ -56,44 +56,44 @@ def _require(condition: bool, message: str) -> None:
 
 def _fp(seed: str) -> Fingerprint:
     result = fingerprint({"seed": seed})
-    assert is_ok(result), f"fingerprint failed for {seed!r}"
+    _require(is_ok(result), f"fingerprint failed for {seed!r}")
     return result.value
 
 
 def _instant(ns: int) -> Instant:
     result = Instant.try_create(ns)
-    assert is_ok(result), "instant mint failed"
+    _require(is_ok(result), "instant mint failed")
     return result.value
 
 
 def _money(value: int) -> Money:
     result = Money.try_create(value, "USD", 2)
-    assert is_ok(result), "money mint failed"
+    _require(is_ok(result), "money mint failed")
     return result.value
 
 
 def _delta(value: int) -> PriceDelta:
     instrument = Instrument(venue=VenueId(value="ctrader"), symbol="EURUSD")
     result = PriceDelta.try_create(value, instrument, 5)
-    assert is_ok(result), "price-delta mint failed"
+    _require(is_ok(result), "price-delta mint failed")
     return result.value
 
 
 def _r(numerator: int, denominator: int = 1) -> ExactRational:
     result = ExactRational.try_create(numerator, denominator, UnitKind.R_MULTIPLE)
-    assert is_ok(result), "r-multiple mint failed"
+    _require(is_ok(result), "r-multiple mint failed")
     return result.value
 
 
 def _label() -> ExitResultLabel:
     result = ExitResultLabel.try_create(AccountRole.LIVE, World.LIVE)
-    assert is_ok(result), "result-label mint failed"
+    _require(is_ok(result), "result-label mint failed")
     return result.value
 
 
 def _cost(name: str, amount: int) -> CostComponent:
     result = CostComponent.try_create(name, _money(amount), "broker")
-    assert is_ok(result), "cost-component mint failed"
+    _require(is_ok(result), "cost-component mint failed")
     return result.value
 
 
@@ -188,15 +188,15 @@ def main() -> None:
             recorded_at=_instant(ns),
             costs=costs,
         )
-        assert is_ok(minted), f"exit mint failed for {seed}"
+        _require(is_ok(minted), f"exit mint failed for {seed}")
         fp = stream.mint(minted.value)
-        assert is_ok(fp), f"stream mint failed for {seed}"
-        assert is_ok(stream.mark_persisted(fp.value)), "persist failed"
-        assert is_ok(stream.mark_journaled(fp.value)), "journal failed"
+        _require(is_ok(fp), f"stream mint failed for {seed}")
+        _require(is_ok(stream.mark_persisted(fp.value)), "persist failed")
+        _require(is_ok(stream.mark_journaled(fp.value)), "journal failed")
         records.append(minted.value)
 
     ql1_r = records[2].realized_r()
-    assert is_ok(ql1_r), "realized_r derivation failed"
+    _require(is_ok(ql1_r), "realized_r derivation failed")
     print(
         f"single-sourced realized_r for protective-stop full loss: "
         f"{ql1_r.value.as_fraction()} (expected -51/50)"
@@ -204,13 +204,13 @@ def main() -> None:
     _require(ql1_r.value.as_fraction() == Fraction(-102, 100), "realized_r mismatch")
 
     attributed = attribute_whole_trade(records[3])
-    assert is_ok(attributed), "attribution failed"
+    _require(is_ok(attributed), "attribution failed")
     print(
         f"whole-trade attribution credits opening bot={attributed.value.opening_bot_id} "
         f"close_reason={attributed.value.close_reason.value}"
     )
     partitioned = partition_by_close_reason(tuple(records))
-    assert is_ok(partitioned), "partition failed"
+    _require(is_ok(partitioned), "partition failed")
     print(
         "reports partition by close reason: "
         + ", ".join(f"{k}={len(v)}" for k, v in sorted(partitioned.value.items()))
@@ -218,7 +218,7 @@ def main() -> None:
 
     dispositions: list[BenchDisposition] = []
     for raw in (classify_bench_disposition(r, q=q) for r in records):
-        assert is_ok(raw), "disposition classify failed"
+        _require(is_ok(raw), "disposition classify failed")
         dispositions.append(raw.value)
     print("bench dispositions: " + ", ".join(d.value for d in dispositions))
     _require(
@@ -230,7 +230,7 @@ def main() -> None:
     )
 
     folded = fold_bench(tuple(records), binding_epoch=epoch, q=q, threshold=threshold)
-    assert is_ok(folded), "bench fold failed"
+    _require(is_ok(folded), "bench fold failed")
     print(
         f"bench fold: qualifying_loss_count={folded.value.qualifying_loss_count} "
         f"threshold={threshold} crossed={folded.value.threshold_crossed}"
@@ -248,13 +248,13 @@ def main() -> None:
         authority=ClosingAuthority.BOOK_POLICY,
         recorded_at=_instant(5),
     )
-    assert is_ok(pending), "pending mint failed"
+    _require(is_ok(pending), "pending mint failed")
     pending_fp = stream.mint(pending.value)
-    assert is_ok(pending_fp), "pending stream mint failed"
+    _require(is_ok(pending_fp), "pending stream mint failed")
     stale = stream.check_seat_may_mint_intent(
         closed_virtual_position_ref=pending.value.virtual_position_ref
     )
-    assert is_refusal(stale)
+    _require(is_refusal(stale), "expected refusal for unrecorded close")
     _require(stale.category is RefusalCategory.STALE_EVIDENCE, "expected stale")
     print(f"recording precedes interpretation: refused ({stale.category.value})")
 
@@ -262,16 +262,18 @@ def main() -> None:
         original_risk_distance=_delta(50),
         proposed_risk_distance=_delta(0),
     )
-    assert is_ok(ratchet), "breakeven ratchet should accept zero offset"
+    _require(is_ok(ratchet), "breakeven ratchet should accept zero offset")
     widen = check_move_to_breakeven_ratchet(
         original_risk_distance=_delta(50),
         proposed_risk_distance=_delta(60),
     )
-    assert is_refusal(widen), "widen must refuse"
+    _require(is_refusal(widen), "widen must refuse")
     print(
         f"move-to-breakeven ratchet: zero-offset ok; widen refused "
         f"({widen.category.value}); R stays frozen so -1R keeps meaning a full original loss"
     )
+    distinct = CloseReason.KILL_LINE_FLAT is not CloseReason.PROTECTION_FORCED_FLAT
+    print(f"kill_line_flat != protection_forced_flat: {distinct}")
     print(
         "kill_line_flat and protection_forced_flat are distinct taxonomy members: "
         f"{CloseReason.KILL_LINE_FLAT.value} / {CloseReason.PROTECTION_FORCED_FLAT.value}"
