@@ -36,6 +36,26 @@ arithmetic is canonical (``PACKAGE``). :func:`resolve_canonical_arithmetic` enfo
 mandatory wrapping — a reference-owned formula requires the verified reference — and no
 TA-Lib object crosses any public boundary (FM-5) (DEC-0127, DEC-0134).
 
+Landed (Story 7.4): **streaming mode, the tier-2 equality law, and restore-equivalence.**
+:class:`StreamingIndicator` is the one named stateful class in the concurrency stance —
+exactly one feeder (**one WriterId holder**) and unlimited readers — that exposes
+:meth:`~StreamingIndicator.health`, tags every output with the input sequence number
+that produced it (minted by a ``qmf-core`` :class:`~qmf.core.WriterSequencer`), and scales
+by distinct configuration, not by consumer. Its numbers are **equal to batch by
+construction**: each update recomputes through the identical
+:class:`~qmf.indicators.batch.BatchKernel` over the accumulated observations, so there is
+no second arithmetic that could drift. :func:`assert_mode_equality` runs the tier-2
+equality law under a per-configuration integer-ULP :class:`ModeEqualityComparator`
+(default 0) over canonical inputs = (series, exact parameters, cold initial state), with
+the seeding rule (:data:`SEEDING_RULE`) and leading-undefined-prefix-to-not-ready mapping
+(:data:`LEADING_UNDEFINED_MAPPING`) declared; cross-OS/cross-build agreement is never this
+gate. A :class:`StreamingSnapshot` is a serialized contract with its own
+:data:`SNAPSHOT_FORMAT_VERSION` scoped to a declared ``(OS, arithmetic-reference build)``
+:class:`SnapshotScope`: restore-then-N-updates equals cold-warm-then-the-same-N-updates,
+a result from restored state carries the snapshot fingerprint as an input fingerprint, and
+restoring across a different tuple is an ``unavailable dependency`` refusal (FM-7)
+(DEC-0126, DEC-0113, DEC-0103, DEC-0106).
+
 Default-deny holds: this package imports **only** ``qmf.core`` — every ``fp1``
 fingerprint is computed there; the ``ta-lib`` reference is a third-party runtime
 dependency kept behind the package-neutral surface — and nothing imports
@@ -94,13 +114,35 @@ from qmf.indicators.series import (
     presence_code,
     presence_from_code,
 )
+from qmf.indicators.streaming import (
+    CROSS_TUPLE_IS_A_REGISTERED_ARTIFACT,
+    DEFAULT_MODE_EQUALITY_ULPS,
+    LEADING_UNDEFINED_MAPPING,
+    SEEDING_RULE,
+    SNAPSHOT_FORMAT_VERSION,
+    ChannelSample,
+    ModeEqualityComparator,
+    SnapshotScope,
+    StreamingHealth,
+    StreamingIndicator,
+    StreamingObservation,
+    StreamingSample,
+    StreamingSnapshot,
+    assert_mode_equality,
+    series_equal_within_ulps,
+)
 
 __all__ = [
     "CANONICAL_OWNERS",
     "CONTRACT_FORMAT_VERSION",
+    "CROSS_TUPLE_IS_A_REGISTERED_ARTIFACT",
     "DEFAULT_ANALYTIC_SCALE",
+    "DEFAULT_MODE_EQUALITY_ULPS",
     "IDENTITY_ELEMENTS",
+    "LEADING_UNDEFINED_MAPPING",
     "OPTIONAL_IDENTITY_ELEMENTS",
+    "SEEDING_RULE",
+    "SNAPSHOT_FORMAT_VERSION",
     "AlignmentMode",
     "AlignmentPolicy",
     "ArithmeticReference",
@@ -108,6 +150,7 @@ __all__ = [
     "BatchKernel",
     "BatchResult",
     "ChannelKind",
+    "ChannelSample",
     "ConfiguredIndicator",
     "DeclaredBudget",
     "EmissionPolicy",
@@ -118,16 +161,24 @@ __all__ = [
     "InputSeries",
     "KernelOutput",
     "MissingValuePolicy",
+    "ModeEqualityComparator",
     "OutputArity",
     "OutputChannel",
     "PresenceState",
     "QuoteSide",
     "ReferenceKernel",
     "SeriesInput",
+    "SnapshotScope",
+    "StreamingHealth",
+    "StreamingIndicator",
+    "StreamingObservation",
+    "StreamingSample",
+    "StreamingSnapshot",
     "SupportedMode",
     "SupportsFp1Identity",
     "__version__",
     "align_to_instant",
+    "assert_mode_equality",
     "canonical_owner",
     "compute_batch",
     "ownership_conformance_defects",
@@ -137,6 +188,7 @@ __all__ = [
     "reference_status",
     "require_governed",
     "resolve_canonical_arithmetic",
+    "series_equal_within_ulps",
 ]
 
 # Roster SemVer, in lockstep across the seven roster packages (0.x until the

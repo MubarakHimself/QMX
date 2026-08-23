@@ -208,3 +208,28 @@ written for someone who was not in the design room.
 - **Product-user affordance:** compute with a bar-closed emission policy (which yields a
   confirmed result) before routing into governed evidence; a provisional/in-progress
   result is for live display, never for governed evidence.
+
+### FR-10: A snapshot restored on a different (OS, arithmetic-reference build) tuple (CT-16, FM-7)
+
+- **Failure class:** `unavailable dependency` (a CT-04 refusal category).
+- **Detection:** a `StreamingSnapshot` is a serialized contract with its own format
+  version (`SNAPSHOT_FORMAT_VERSION`) scoped to a declared `(OS, arithmetic-reference
+  build)` tuple (`SnapshotScope`). `StreamingIndicator.restore` takes the *current* scope
+  (injected by the composition root, never read ambiently) and compares it to the
+  snapshot's scope before resuming any state; a differing OS or a differing
+  arithmetic-reference build fails the check. The reference's floating-point arithmetic —
+  and therefore the resumed streaming state — is only attestable within one tuple, so a
+  result from restored state must never attest arithmetic that was not the arithmetic used.
+- **Auto-recovery / retry:** none automatic; retryability is `no` — a cross-tuple mismatch
+  is a provisioning condition a retry cannot fix. `restore` RETURNS an `unavailable
+  dependency` `TypedRefusal` naming the `scope` field and both the snapshot and current
+  scope tuples. Nothing is raised, and no state is resumed.
+- **Visible degraded state:** none. No streaming instance is produced; the snapshot is
+  untouched and remains restorable on its own tuple.
+- **Notification tier:** silent-log. The refusal is a value the composition root inspects
+  before it resumes a stream.
+- **Product-user affordance:** resume the snapshot on the same OS and pinned
+  arithmetic-reference build it was produced on; a cross-tuple resume is deliberately
+  refused rather than silently producing drifted numbers. A same-process/same-build
+  equality is the gate — cross-OS or cross-build agreement is a separate registered
+  comparison artifact, never a resume path.
