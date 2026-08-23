@@ -51,3 +51,12 @@ def test_logic_usage_example_runs_clean() -> None:
     assert "two sandboxes one Bot fp1: True" in completed.stdout
     assert "one-character change mints new Bot fp1: True" in completed.stdout
     assert "unresolvable logic at Layer 1: unavailable dependency" in completed.stdout
+
+
+def test_footprint_usage_example_runs_clean() -> None:
+    completed = _run_example("footprint_usage.py")
+    assert completed.returncode == 0, completed.stderr
+    assert "footprint authoring ok" in completed.stdout
+    assert "omitted AD-22 field at Layer 1: invalid input" in completed.stdout
+    assert "transitive-union complete: True" in completed.stdout
+    assert "derived warm-up observations: 20" in completed.stdout
