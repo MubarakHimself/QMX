@@ -79,6 +79,28 @@ artifact (FM-8), and :func:`~qmf.indicators.catalog.graduate` is the only door f
 plain-Python research into governed evidence, requiring a lineage edge back to the originating
 research artifact (L33) (DEC-0126, DEC-0127, DEC-0128, DEC-0111, DEC-0133, DEC-0100).
 
+Landed (Story 7.6): **the first wrapper set of TA-Lib-backed configured indicators and the
+FM-4 arithmetic-upgrade comparison suite.** :data:`~qmf.indicators.wrappers.WRAPPER_SET` is
+the first set of concrete CT-16 configured indicators — the reference-owned, single-input,
+period-taking formulas the batch bridge computes end to end (``sma``, ``ema``, ``wma``,
+``rsi``, ``mom``, ``roc``) — each a :class:`~qmf.indicators.wrappers.WrapperSpec` wrapping
+the reference formula (re-implementing arithmetic the reference owns is a contract defect,
+FM-5, which :func:`~qmf.indicators.wrappers.wrapper_set_conformance_defects` catches), with
+a mechanically stated capability term and **no trading-school name** in any rule or
+vocabulary (DEC-0132). :func:`~qmf.indicators.wrappers.configure_wrapper` assembles a full
+:class:`ConfiguredIndicator` from an injected period, input set, calendar requirements, and
+arithmetic-reference configuration, declaring **both modes** so the tier-2 equality law
+binds and setting **warm-up to at least the reference's lookback**
+(:func:`~qmf.indicators.wrappers.reference_lookback`) — the minimum legal value by default,
+never below it. :func:`~qmf.indicators.comparison.compare_reference_outputs` is the FM-4
+comparison suite: it compares a candidate reference's output to the current one over
+identical canonical inputs and, on any change, returns a
+:class:`~qmf.indicators.comparison.ComparisonReport` carrying a
+:class:`~qmf.indicators.comparison.ContractFormatMint` — never a silent accept — that mints
+the **per-configured-indicator** contract format version (``previous + 1``) with recorded
+before/after ``fp1`` evidence, while the CT-16 protocol format version stays unchanged
+(never a protocol-wide bump) (DEC-0127, DEC-0030, DEC-0103).
+
 Default-deny holds: this package imports **only** ``qmf.core`` — every ``fp1``
 fingerprint is computed there; the ``ta-lib`` reference is a third-party runtime
 dependency kept behind the package-neutral surface — and nothing imports
@@ -140,6 +162,12 @@ from qmf.indicators.catalog import (
     require_extension_identity,
     stamp_extension_identity,
 )
+from qmf.indicators.comparison import (
+    ComparisonReport,
+    ContractFormatMint,
+    OutputChangeVerdict,
+    compare_reference_outputs,
+)
 from qmf.indicators.configured_indicator import (
     CONTRACT_FORMAT_VERSION,
     IDENTITY_ELEMENTS,
@@ -192,6 +220,15 @@ from qmf.indicators.streaming import (
     assert_mode_equality,
     series_equal_within_ulps,
 )
+from qmf.indicators.wrappers import (
+    WRAPPER_FORMULAS,
+    WRAPPER_SET,
+    WrapperSpec,
+    configure_wrapper,
+    reference_lookback,
+    wrapper_set_conformance_defects,
+    wrapper_spec,
+)
 
 __all__ = [
     "CANONICAL_OWNERS",
@@ -208,6 +245,8 @@ __all__ = [
     "PERMILLE",
     "SEEDING_RULE",
     "SNAPSHOT_FORMAT_VERSION",
+    "WRAPPER_FORMULAS",
+    "WRAPPER_SET",
     "AlignmentMode",
     "AlignmentPolicy",
     "ArithmeticReference",
@@ -221,11 +260,13 @@ __all__ = [
     "Catalog",
     "ChannelKind",
     "ChannelSample",
+    "ComparisonReport",
     "ConceptCheck",
     "ConceptExpression",
     "ConceptWalk",
     "ConfiguredIndicator",
     "ConformanceReport",
+    "ContractFormatMint",
     "DeclaredBudget",
     "EmissionPolicy",
     "EmissionTiming",
@@ -240,6 +281,7 @@ __all__ = [
     "ModeEqualityComparator",
     "NoOpTickMeasurement",
     "OutputArity",
+    "OutputChangeVerdict",
     "OutputChannel",
     "PresenceState",
     "QuoteSide",
@@ -258,13 +300,16 @@ __all__ = [
     "StreamingSnapshot",
     "SupportedMode",
     "SupportsFp1Identity",
+    "WrapperSpec",
     "__version__",
     "align_to_instant",
     "assert_mode_equality",
     "canonical_owner",
     "check_expressible",
+    "compare_reference_outputs",
     "compare_to_baseline",
     "compute_batch",
+    "configure_wrapper",
     "evaluate_light_claim",
     "graduate",
     "guard_synchronous_entry",
@@ -272,6 +317,7 @@ __all__ = [
     "presence_code",
     "presence_from_code",
     "reference_grounded_defects",
+    "reference_lookback",
     "reference_status",
     "regression_gate",
     "require_extension_identity",
@@ -280,6 +326,8 @@ __all__ = [
     "run_conformance",
     "series_equal_within_ulps",
     "stamp_extension_identity",
+    "wrapper_set_conformance_defects",
+    "wrapper_spec",
 ]
 
 # Roster SemVer, in lockstep across the seven roster packages (0.x until the

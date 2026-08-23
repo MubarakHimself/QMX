@@ -74,6 +74,34 @@ is the bridge that wraps the pinned reference where it owns a formula — descal
 the analytic reference and rescaling its result to a scaled integer under an
 explicit half-even rounding mode, so no binary float crosses the engine or persists.
 
-The streaming mode, the tier-2 equality law, the concrete wrapper set, and the full
-conformance harness arrive in later stories. Build, lint, type-check, and test it
-through the workspace `poe` tasks — never in isolation.
+Story 7.4 landed **streaming mode, the tier-2 equality law, and restore-equivalence**
+(`streaming.py`): `StreamingIndicator` is the one named stateful class (one `WriterId`
+holder, unlimited readers) whose numbers are **equal to batch by construction** — each
+update recomputes through the identical `BatchKernel` over the accumulated observations;
+`assert_mode_equality` runs the equality law under a per-configuration integer-ULP
+comparator (default 0), and a versioned `StreamingSnapshot` scoped to a declared `(OS,
+arithmetic-reference build)` tuple gives restore-then-N equals cold-warm-then-N, with a
+cross-tuple restore refused (FM-7). Story 7.5 landed **the conformance harness, the
+light/heavy benchmark budgets, and the one named catalog surface** (`conformance.py`,
+`benchmark.py`, `budget.py`, `catalog.py`).
+
+Story 7.6 landed **the first wrapper set of TA-Lib-backed configured indicators and the
+FM-4 arithmetic-upgrade comparison suite**. `WRAPPER_SET` (`wrappers.py`) is the first set
+of concrete CT-16 configured indicators — the reference-owned, single-input,
+period-taking formulas the batch bridge computes end to end (`sma`, `ema`, `wma`, `rsi`,
+`mom`, `roc`), each a `WrapperSpec` that wraps the reference formula (re-implementing the
+reference's arithmetic is a contract defect, FM-5, caught by
+`wrapper_set_conformance_defects`) with a mechanically stated capability term and **no
+trading-school name** in any rule or vocabulary. `configure_wrapper` assembles a full
+`ConfiguredIndicator` from an injected period, input set, calendar requirements, and
+arithmetic-reference configuration, declaring **both modes** (so the equality law binds)
+and setting **warm-up to at least the reference's lookback** (`reference_lookback`) — the
+minimum by default, never below it. `compare_reference_outputs` (`comparison.py`) is the
+FM-4 comparison suite: it compares a candidate reference's output to the current one over
+identical canonical inputs and, on any change, returns a `ComparisonReport` carrying a
+`ContractFormatMint` — never a silent accept — that mints the **per-configured-indicator**
+contract format version (`previous + 1`) with recorded before/after `fp1` evidence, while
+the CT-16 protocol format version stays unchanged (never a protocol-wide bump).
+
+Build, lint, type-check, and test it through the workspace `poe` tasks — never in
+isolation.

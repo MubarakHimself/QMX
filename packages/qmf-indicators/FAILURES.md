@@ -233,3 +233,34 @@ written for someone who was not in the design room.
   refused rather than silently producing drifted numbers. A same-process/same-build
   equality is the gate — cross-OS or cross-build agreement is a separate registered
   comparison artifact, never a resume path.
+
+### FR-11: A reference upgrade changes output for identical canonical inputs (CT-16, FM-4)
+
+- **Failure class:** contract event (caught by the comparison suite before the upgrade
+  lands, not a runtime refusal); a per-configured-indicator contract-format-version mint.
+- **Detection:** an upgrade to the canonical arithmetic reference is gated. Before it
+  lands, `compare_reference_outputs` (`comparison.py`) computes each affected configured
+  indicator's output under the current pinned reference (the *before* result) and under the
+  candidate reference (the *after* result) over **identical canonical inputs**, and compares
+  them channel by channel under the per-configuration integer-ULP comparator (default 0,
+  exact equality — the same comparator the equality law uses). The two results must name the
+  same producer identity and the same input fingerprints — that is what "identical canonical
+  inputs" means; a mismatch is refused, because a comparison over different inputs proves
+  nothing. Any channel that differs is a caught output change.
+- **Auto-recovery / retry:** none, and none is wanted — this is a deliberate gate. A changed
+  verdict **always** carries a `ContractFormatMint` (never a silent accept): it records the
+  previous and the next **per-configured-indicator** contract format version (`previous + 1`),
+  the changed channels, and the `fp1` fingerprint of every channel's output on both sides —
+  the recorded before/after evidence. The CT-16 **protocol** format version is reported
+  unchanged: an arithmetic upgrade mints per configured indicator, never a protocol-wide bump.
+  An unchanged verdict carries no mint, so an output-preserving upgrade may land freely.
+- **Visible degraded state:** none. No numbers change silently; the mint is the visible,
+  recorded decision that the arithmetic moved.
+- **Notification tier:** gate decision. The `ComparisonReport` is the artifact the upgrade
+  gate reads before deciding to land the reference upgrade and mint the affected
+  configurations' contract format versions.
+- **Product-user affordance:** not a runtime path for an end user; it is the
+  arithmetic-provenance discipline that keeps a fingerprint from ever attesting arithmetic it
+  did not produce. When the reference changes a configured indicator's output, the
+  configuration's contract format version mints with before/after evidence, so downstream
+  identity records the change rather than absorbing it invisibly.
