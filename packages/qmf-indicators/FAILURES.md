@@ -75,3 +75,62 @@ written for someone who was not in the design room.
   assembling a configured indicator at the composition root supplied a bad part. The
   refusal's `context` says which field (and index or name) was wrong and what is allowed;
   fix the call and retry.
+
+### FR-4: The canonical arithmetic reference is unavailable or mismatched (CT-16, FM-2)
+
+- **Failure class:** `unavailable dependency` (a CT-04 refusal category).
+- **Detection:** importing `qmf.indicators` asserts the reference-configuration record of
+  `registry:canonical_indicator_reference` (TA-Lib C 0.7.1 + Python wrapper 0.7.1). The
+  `_reference` module resolves the installed reference — importing the pinned wrapper
+  lazily and by name, then reading its wrapper version, C-library version, and
+  process-global compatibility mode **without mutating anything** — and asserts three
+  things: the reference is importable; the resolved artifacts equal the pin
+  (`verify_artifact_pin`); and the reference's process-global configuration equals the
+  reference-configuration record (`verify_reference_configuration`). A missing reference,
+  a resolved version differing from the pin (the runtime-checkable form of "the resolved
+  artifacts differ from the lockfile pin"), or a process-global configuration differing
+  from the record each fails the assertion. A fingerprint must never attest arithmetic
+  that was not the arithmetic used.
+- **Auto-recovery / retry:** none automatic; retryability is `no` — a missing,
+  mis-versioned, or mis-configured reference is a provisioning/wiring condition a retry
+  cannot fix. The assertion RETURNS an `unavailable dependency` `TypedRefusal` (reachable
+  through `reference_status()`), never raised — importing the package on a machine without
+  the pinned artifact stays safe, and a reference-owned formula then refuses through
+  `resolve_canonical_arithmetic` rather than falling back to re-implemented arithmetic.
+- **Visible degraded state:** the package is not a usable canonical-arithmetic provider;
+  `reference_status()` carries the refusal and `reference_ready` is `false`. No
+  process-global state changes — the package never mutates the reference's configuration.
+- **Notification tier:** silent-log at import; the refusal is a value a composition root
+  inspects, not an operational alarm.
+- **Product-user affordance:** the pinned reference must be installed and configured as
+  the record declares. The refusal's `context` names the offending field and the
+  pinned-versus-resolved values (or the missing/differing configuration field); provision
+  `ta-lib==0.7.1` (its wheel bundles the C library on the tier-1 OSes) and retry.
+
+### FR-5: A vendor object crosses CT-16, or a reference formula is re-implemented (CT-16, FM-5)
+
+- **Failure class:** contract defect (caught by the conformance tests, not a runtime
+  refusal).
+- **Detection:** two invariants. First, **package neutrality** — no TA-Lib or other
+  vendor object appears in any public signature or output; the raw reference module
+  handle stays private to `_reference` and the resolved identity is projected into the
+  package-neutral `ArithmeticReference`, so the public surface returns only qmf-core /
+  stdlib values and CT-04 refusals. Second, **one canonical owner per formula** — where
+  the reference implements a formula, wrapping it is mandatory and canonical, and
+  re-implementing it is a defect. `ownership_conformance_defects` (structural) flags a
+  package-owned formula that names a reference function, and `reference_grounded_defects`
+  (verified against the live reference) flags a package-owned formula whose name the
+  reference actually implements, or a reference-owned formula naming a function the
+  reference lacks. The Tier-1 tests assert the shipped `CANONICAL_OWNERS` registry is
+  conformant on both and that a synthetic re-implementation is caught.
+- **Auto-recovery / retry:** none — these are build-time gates, not runtime paths. A
+  neutrality breach is fixed by keeping the vendor object private; a re-implementation is
+  fixed by declaring the formula reference-owned and wrapping it (or, for a formula the
+  reference genuinely lacks, keeping it package-owned).
+- **Visible degraded state:** none in production, because the gates block the defect from
+  shipping. Were a re-implementation to escape, two governed producers could publish
+  divergent arithmetic for one formula — the exact drift the wrap-not-reimplement law
+  exists to prevent.
+- **Notification tier:** gate failure (the Tier-1 conformance tests read red).
+- **Product-user affordance:** not user-facing; it is a canonical-arithmetic-integrity
+  invariant the factory gate enforces before any wrapper reaches evidence.

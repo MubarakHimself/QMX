@@ -24,6 +24,29 @@ kind, quote side, and — for a derived input — the upstream fingerprint), the
 time bound, and light-claim `DeclaredBudget`. Two configurations differing in any
 one element receive distinct fingerprints, that `fp1` is the only dedup key, and
 an element missing from the fingerprint is a contract defect (`IDENTITY_ELEMENTS`).
-The two-mode compute protocol, the canonical-arithmetic wrappers, and the
-conformance harness arrive in later stories. Build, lint, type-check, and test it
-through the workspace `poe` tasks — never in isolation.
+
+Story 7.2 landed **TA-Lib canonical arithmetic wrapping with the
+reference-configuration record asserted at import**. The pinned canonical arithmetic
+reference is `registry:canonical_indicator_reference` — TA-Lib C library 0.7.1 +
+Python wrapper 0.7.1 — declared as `ta-lib==0.7.1` in this package's `pyproject.toml`
+and provisioned into the gate environment through the root `indicators-talib`
+dependency group (the same workspace-member pattern as `store-engines` /
+`calendar-tzdata` / `venue-proto`); the wheel filename + hash live in `uv.lock`.
+**Importing the package asserts the reference-configuration record**: it resolves the
+installed reference and, if the resolved artifacts differ from the pin or the
+reference's process-global configuration differs from the record, the assertion yields
+an `unavailable dependency` refusal (reachable through `reference_status()`), so a
+fingerprint never attests arithmetic that was not used (FM-2). The package **never
+mutates** the reference's process-global configuration — it only reads
+`get_compatibility()` and never calls a setter. Ownership is law (`CANONICAL_OWNERS`,
+`FormulaOwnership`): where the reference implements a formula, wrapping it is mandatory
+and it is canonical (`REFERENCE`); where it does not — volume-weighted,
+session-anchored, QMX-original — this package's own arithmetic is canonical
+(`PACKAGE`). `resolve_canonical_arithmetic` enforces mandatory wrapping (a
+reference-owned formula requires the verified reference), the conformance checks flag
+re-implementing a reference-owned formula as a contract defect (FM-5), and no TA-Lib
+object crosses any public boundary.
+
+The two-mode compute protocol, the concrete wrapper set, and the full conformance
+harness arrive in later stories. Build, lint, type-check, and test it through the
+workspace `poe` tasks — never in isolation.
