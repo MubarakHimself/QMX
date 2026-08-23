@@ -20,14 +20,42 @@ Two configurations differing in any one element receive distinct fingerprints, t
 ``fp1`` is the only dedup key, and an element missing from the fingerprint is a contract
 defect (:data:`IDENTITY_ELEMENTS`) (DEC-0126, DEC-0127, DEC-0128, DEC-0105, DEC-0108).
 
+Landed (Story 7.2): **TA-Lib canonical arithmetic wrapping with the
+reference-configuration record asserted at import.** The pinned canonical arithmetic
+reference is ``registry:canonical_indicator_reference`` — TA-Lib C library 0.7.1 +
+Python wrapper 0.7.1 — pinned as lockfile-resolved artifacts and asserted at import:
+importing this package resolves the installed reference and, if the resolved artifacts
+differ from the pin or its process-global configuration differs from the
+reference-configuration record, the assertion yields an ``unavailable dependency``
+refusal (reachable through :func:`reference_status`), so a fingerprint never attests
+arithmetic that was not used (FM-2). The package never mutates the reference's
+process-global configuration. Ownership is law: where the reference implements a
+formula, wrapping it is mandatory and it is canonical (:data:`CANONICAL_OWNERS`,
+:class:`FormulaOwnership` ``REFERENCE``); where it does not, this package's own
+arithmetic is canonical (``PACKAGE``). :func:`resolve_canonical_arithmetic` enforces
+mandatory wrapping — a reference-owned formula requires the verified reference — and no
+TA-Lib object crosses any public boundary (FM-5) (DEC-0127, DEC-0134).
+
 Default-deny holds: this package imports **only** ``qmf.core`` — every ``fp1``
-fingerprint is computed there — and nothing imports ``qmf-indicators``; a configuration
-is assembled by the application at the composition root (DEC-0120). Public value types
-are frozen dataclasses and the public seam is a :class:`typing.Protocol` (DEC-0101).
+fingerprint is computed there; the ``ta-lib`` reference is a third-party runtime
+dependency kept behind the package-neutral surface — and nothing imports
+``qmf-indicators``; a configuration is assembled by the application at the composition
+root (DEC-0120). Public value types are frozen dataclasses and the public seam is a
+:class:`typing.Protocol` (DEC-0101).
 """
 
 from __future__ import annotations
 
+from qmf.indicators.arithmetic import (
+    CANONICAL_OWNERS,
+    FormulaOwner,
+    FormulaOwnership,
+    canonical_owner,
+    ownership_conformance_defects,
+    reference_grounded_defects,
+    reference_status,
+    resolve_canonical_arithmetic,
+)
 from qmf.indicators.configured_indicator import (
     CONTRACT_FORMAT_VERSION,
     IDENTITY_ELEMENTS,
@@ -49,6 +77,7 @@ from qmf.indicators.configured_indicator import (
 )
 
 __all__ = [
+    "CANONICAL_OWNERS",
     "CONTRACT_FORMAT_VERSION",
     "IDENTITY_ELEMENTS",
     "OPTIONAL_IDENTITY_ELEMENTS",
@@ -59,6 +88,8 @@ __all__ = [
     "DeclaredBudget",
     "EmissionPolicy",
     "EmissionTiming",
+    "FormulaOwner",
+    "FormulaOwnership",
     "MissingValuePolicy",
     "OutputArity",
     "OutputChannel",
@@ -67,6 +98,11 @@ __all__ = [
     "SupportedMode",
     "SupportsFp1Identity",
     "__version__",
+    "canonical_owner",
+    "ownership_conformance_defects",
+    "reference_grounded_defects",
+    "reference_status",
+    "resolve_canonical_arithmetic",
 ]
 
 # Roster SemVer, in lockstep across the seven roster packages (0.x until the

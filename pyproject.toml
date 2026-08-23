@@ -72,7 +72,15 @@ dependencies = ["pydantic", "python-dotenv", "pyyaml", "rich"]
 # release IN-HOUSE) imports at test time under `poe test`. Kept out of `dev` so the
 # SSSF factory-gate contract stays byte-stable; protobuf stays declared only in
 # qmf-venue and never leaks into another package.
-default-groups = ["dev", "store-engines", "calendar-tzdata", "venue-proto"]
+# `indicators-talib` follows the SAME pattern for qmf-indicators (Story 7.2;
+# DEC-0127): its pinned `ta-lib==0.7.1` canonical arithmetic reference is declared
+# only in the indicators' own pyproject, and installing the workspace member pulls
+# that pin (which ships a wheel-bundled C library on this tier-1 OS) into the gate
+# environment so `qmf.indicators` can assert the reference-configuration record at
+# import under `poe test`. Kept out of `dev` so the SSSF factory-gate contract stays
+# byte-stable; ta-lib stays declared only in qmf-indicators and never leaks into
+# another package.
+default-groups = ["dev", "store-engines", "calendar-tzdata", "venue-proto", "indicators-talib"]
 
 [tool.uv.workspace]
 # The QMF distribution units. Seven roster packages (SemVer lockstep) under
@@ -91,6 +99,10 @@ qmf-calendar-forex = { workspace = true }
 # protobuf runtime lands in the gate environment (Story 8.2; DEC-0141). The
 # protobuf library itself stays declared only in qmf-venue's own pyproject.
 qmf-venue = { workspace = true }
+# The qmf-indicators workspace member, referenced by indicators-talib below so its
+# pinned ta-lib canonical arithmetic reference lands in the gate environment (Story
+# 7.2; DEC-0127). The ta-lib library itself stays declared only in qmf-indicators.
+qmf-indicators = { workspace = true }
 
 [dependency-groups]
 # THE GATE'S CONTRACT — plus the QMF canonical toolchain, one environment for
@@ -137,6 +149,14 @@ calendar-tzdata = ["qmf-calendar-forex"]
 # so the SSSF factory-gate contract stays byte-stable, and named here so a reader
 # sees exactly why the workspace installs the venue member (Story 8.2; DEC-0141).
 venue-proto = ["qmf-venue"]
+
+# The indicators' pinned canonical arithmetic reference, provisioned by default.
+# Installs the qmf-indicators workspace member so `ta-lib==0.7.1` is present for the
+# import-time reference-configuration assertion `qmf.indicators` performs under
+# `poe test`. Kept out of `dev` so the SSSF factory-gate contract stays byte-stable,
+# and named here so a reader sees exactly why the workspace installs the indicators
+# member (Story 7.2; DEC-0127).
+indicators-talib = ["qmf-indicators"]
 
 # skylos is SEPARATE from `dev`, and not because it is optional - because it
 # does not install everywhere. It depends on tree-sitter-dart-orchard, which
