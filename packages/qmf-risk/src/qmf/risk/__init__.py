@@ -53,10 +53,91 @@ full-loss-price law (FR-028; CT-22, CT-23; DEC-0154):
   ``seat_r_ceiling ≤ seat_loss_run_allowance`` value bound
   (:func:`~qmf.risk.sizing.check_seat_r_ceiling`), and the one-floor law
   (:func:`~qmf.risk.sizing.reconcile_loss_floor`).
+
+Story 10.3 lands three-layer admission, the admission bar, and blank-blocks-live
+money (FR-027, FR-035; CT-22, CT-27; DEC-0146):
+
+* :mod:`qmf.risk.admission_bar` — the admission-bar requirement grammar
+  (:class:`~qmf.risk.admission_bar.AdmissionRequirement`: an opaque ``measure_identity``,
+  a mandatory unit, a :class:`~qmf.risk.admission_bar.Comparison`, a threshold
+  discriminated union :class:`~qmf.risk.admission_bar.RuledThreshold` |
+  :class:`~qmf.risk.grammar.NotYetRuled` with the key always present, and
+  :class:`~qmf.risk.admission_bar.EvidenceRequirements`), the
+  :class:`~qmf.risk.admission_bar.AdmissionBar` set with **no composite score**
+  (:func:`~qmf.risk.admission_bar.reject_bar_aggregate`,
+  :func:`~qmf.risk.admission_bar.evaluate_bar` returning a per-requirement verdict),
+  blank-blocks-live (:func:`~qmf.risk.admission_bar.check_live_binding_admissible`),
+  no-paper-role-gates-live (:func:`~qmf.risk.admission_bar.check_no_paper_role_gates_live`),
+  and the declared float→exact comparison rule
+  (:class:`~qmf.risk.admission_bar.ComparisonRule`,
+  :func:`~qmf.risk.admission_bar.evaluate_requirement`);
+* :mod:`qmf.risk.control_rank` — the BMS-declared
+  :class:`~qmf.risk.control_rank.ControlRankTable` and its total-order/uniqueness law
+  (:func:`~qmf.risk.control_rank.check_control_rank_uniqueness`: two control-action
+  kinds sharing a rank is ``invalid input``);
+* :mod:`qmf.risk.admission` — the three ordered layers
+  (:data:`~qmf.risk.admission.ADMISSION_LAYERS`,
+  :func:`~qmf.risk.admission.run_layer1_linters`,
+  :func:`~qmf.risk.admission.run_layer2_shakedown`,
+  :func:`~qmf.risk.admission.assemble_admission_page`,
+  :func:`~qmf.risk.admission.sign_admission`, :func:`~qmf.risk.admission.admit`) with
+  no trial period, probation window, or paper-performance gate
+  (:func:`~qmf.risk.admission.reject_forbidden_admission_gate`), and the worked-example
+  recompute over the cited-producer seam (:class:`~qmf.risk.admission.ProducerContract`,
+  :func:`~qmf.risk.admission.check_worked_examples`).
 """
 
 from __future__ import annotations
 
+from qmf.risk.admission import (
+    ADMISSION_LAYERS,
+    FORBIDDEN_ADMISSION_GATES,
+    LOSS_RUNWAY_PRODUCER,
+    AdmissionLayer,
+    AdmissionPage,
+    AdmittedBinding,
+    CallableProducer,
+    Layer1Result,
+    Layer2Result,
+    OperatorSignature,
+    ProducerContract,
+    admit,
+    assemble_admission_page,
+    check_worked_examples,
+    recompute_worked_example,
+    reject_forbidden_admission_gate,
+    run_layer1_linters,
+    run_layer2_shakedown,
+    sign_admission,
+    sizing_producer,
+)
+from qmf.risk.admission_bar import (
+    PAPER_ACCOUNT_ROLES,
+    AdmissionBar,
+    AdmissionRequirement,
+    Band,
+    Comparison,
+    ComparisonRule,
+    EvidenceRequirements,
+    PendingSlot,
+    RequirementVerdict,
+    RuledThreshold,
+    Threshold,
+    TieDisposition,
+    bar_is_blank,
+    check_live_binding_admissible,
+    check_no_paper_role_gates_live,
+    evaluate_bar,
+    evaluate_requirement,
+    is_paper_role,
+    reject_bar_aggregate,
+)
+from qmf.risk.control_rank import (
+    ControlActionKind,
+    ControlRankRow,
+    ControlRankTable,
+    check_control_rank_uniqueness,
+)
 from qmf.risk.dimensional import (
     FORM_0006,
     LADDER_FORMULAS,
@@ -128,6 +209,7 @@ from qmf.risk.versioning import (
 )
 
 __all__ = [
+    "ADMISSION_LAYERS",
     "BENCH_THRESHOLD_VARIABLE",
     "BMS_CONTRACT_FORMAT_VERSION",
     "BMS_SECTIONS",
@@ -135,51 +217,93 @@ __all__ = [
     "BOOK_LIMIT_UNIT_KINDS",
     "BOOK_SECTIONS",
     "BREAKEVEN",
+    "FORBIDDEN_ADMISSION_GATES",
     "FORM_0006",
     "FULL_ORIGINAL_LOSS",
     "LADDER_FORMULAS",
     "LEASH_B_SPLIT_UNIT_KINDS",
+    "LOSS_RUNWAY_PRODUCER",
     "MONEY_RULES_UNIT_KINDS",
+    "PAPER_ACCOUNT_ROLES",
     "SEAT_LOSS_RUN_ALLOWANCE_VARIABLE",
     "SEAT_R_CEILING_CONSTRAINT",
     "V1_NUMERAIRE",
+    "AdmissionBar",
     "AdmissionImpact",
+    "AdmissionLayer",
+    "AdmissionPage",
+    "AdmissionRequirement",
+    "AdmittedBinding",
     "AuthorityGrade",
+    "Band",
     "BinOp",
     "BmsDefinition",
     "BookDefinition",
+    "CallableProducer",
+    "Comparison",
     "ComparisonOp",
+    "ComparisonRule",
     "ConstraintSpec",
+    "ControlActionKind",
+    "ControlRankRow",
+    "ControlRankTable",
     "CurrentPointer",
     "Direction",
+    "EvidenceRequirements",
     "FormulaOp",
     "FormulaSpec",
+    "Layer1Result",
+    "Layer2Result",
     "NotYetRuled",
+    "OperatorSignature",
+    "PendingSlot",
+    "ProducerContract",
     "RFaces",
     "Ref",
+    "RequirementVerdict",
+    "RuledThreshold",
     "SourceLayer",
     "TemplateSection",
     "TemplateVariable",
     "TemplateVersionGraph",
+    "Threshold",
+    "TieDisposition",
     "UiEditability",
     "VariableDiff",
     "VariableEvidence",
     "VersionEdgeKind",
     "WorkedExample",
     "__version__",
+    "admit",
     "admit_entry_r_faces",
+    "assemble_admission_page",
     "average_r_multiple",
+    "bar_is_blank",
     "check_b_split",
     "check_constraint",
+    "check_control_rank_uniqueness",
     "check_formula",
+    "check_live_binding_admissible",
+    "check_no_paper_role_gates_live",
     "check_no_scale_in",
     "check_seat_r_ceiling",
+    "check_worked_examples",
     "derive_original_risk_distance",
     "derive_unit_kind",
     "diff_variable_maps",
+    "evaluate_bar",
+    "evaluate_requirement",
+    "is_paper_role",
     "money_to_r",
     "r_to_money",
+    "recompute_worked_example",
     "reconcile_loss_floor",
+    "reject_bar_aggregate",
+    "reject_forbidden_admission_gate",
+    "run_layer1_linters",
+    "run_layer2_shakedown",
+    "sign_admission",
+    "sizing_producer",
     "validate_accounting_currency",
     "validate_book_limit",
     "validate_money_rules",

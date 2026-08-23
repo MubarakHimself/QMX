@@ -22,9 +22,20 @@ __all__ = [
     "coerce_enum",
     "invalid",
     "policy",
+    "type_name",
     "unavailable",
     "unsupported",
 ]
+
+
+def type_name(value: object) -> str:
+    """The runtime type name of ``value`` — a stable label for a refusal context.
+
+    Takes ``object`` so a caller may pass an already-narrowed union without the type
+    name becoming partially unknown; the returned string is the concrete class name.
+    """
+    return type(value).__name__
+
 
 _EnumT = TypeVar("_EnumT", bound=StrEnum)
 
