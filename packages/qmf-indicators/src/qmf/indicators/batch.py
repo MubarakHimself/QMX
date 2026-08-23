@@ -631,6 +631,7 @@ def compute_batch(
     kernel: object,
     world: object,
     evidence_class: object = None,
+    require_batch_mode: bool = True,
 ) -> Result[BatchResult]:
     """Compute a configured indicator over whole input series in batch mode (CT-16).
 
@@ -641,12 +642,19 @@ def compute_batch(
     index-aligned (equal length). Warm-up must be at least the reference's lookback.
     Schedule, missing-value, warm-up, knowable-at, and provisional-evidence laws are all
     enforced (see the module docstring). Every failure is a returned CT-04 refusal.
+
+    ``require_batch_mode`` gates the public batch entry point on the batch-mode
+    declaration and is ``True`` for every direct caller. Streaming mode reuses this same
+    numeric engine internally — the equality-by-construction guarantee — over its
+    accumulated observations, and a streaming-only configuration is conformant (CT-16); it
+    passes ``require_batch_mode=False`` so the shared arithmetic is not gated on a
+    public-batch declaration it deliberately does not make.
     """
     if not isinstance(configuration, ConfiguredIndicator):
         return _invalid(
             "configuration", "a ConfiguredIndicator is required", given=repr(configuration)
         )
-    if SupportedMode.BATCH not in configuration.supported_modes:
+    if require_batch_mode and SupportedMode.BATCH not in configuration.supported_modes:
         return _unsupported(
             "supported_modes",
             "the configuration does not declare batch mode",
