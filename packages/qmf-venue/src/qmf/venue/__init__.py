@@ -48,6 +48,26 @@ fail-closed default — transient venue failure, retryable = no, outcome = UNKNO
 alarm — and a verified daily boundary anchors a venue-scoped market-hours calendar for
 venue-native BarSpec (FR-022, CT-18, AR-45, AR-46, SC-09; DEC-0135, DEC-0137, DEC-0138,
 DEC-0141).
+
+Story 8.5 adds the five typed command kinds under the four-outcome law
+(:mod:`qmf.venue.commands`): :class:`~qmf.venue.commands.Command` carries exactly one of
+``place_order``, ``cancel_order``, ``close_position``, ``close_all``, and
+``amend_protection``, typed per kind on qmf-core nouns with no free-form payload (a
+fractional or partial close is an unsupported-capability refusal); every well-formed
+submission resolves through :class:`~qmf.venue.commands.CommandOutcomeResolver` to exactly
+one of :class:`~qmf.venue.commands.SubmissionOutcome`'s four members — accepted-by-venue,
+rejected-by-venue, denied-locally, or UNKNOWN — with denied-locally an outcome (never a
+refusal) and UNKNOWN a state (never an error), each minting a
+:class:`~qmf.venue.commands.CommandObservation` and a :class:`~qmf.venue.commands.JournalEvent`;
+command identity is the record's fp1, and where the CT-18 client-id mapping is not
+injective-and-total a durable :class:`~qmf.venue.commands.CommandIdBinding` persists through
+the injected sink before submission with idempotent re-presentation and alarmed collision
+(:class:`~qmf.venue.commands.CommandIdBindingRegistry`); ``amend_protection`` is
+risk-non-increasing per protection side (:class:`~qmf.venue.commands.ProtectionAmendment`);
+and a compound command's outcome is the meet of its children — any child UNKNOWN makes the
+parent UNKNOWN, any non-success makes it partially-executed, never a success
+(:class:`~qmf.venue.commands.CompoundCommand`, :func:`~qmf.venue.commands.meet_outcomes`)
+(FR-023, CT-19, CT-20, AR-44, AR-48; DEC-0137, DEC-0138, DEC-0140, DEC-0148).
 """
 
 from __future__ import annotations
@@ -63,6 +83,32 @@ from qmf.venue.capabilities import (
     ErrorMapRow,
     FieldMarking,
     SubmissionOutcomeClass,
+)
+from qmf.venue.commands import (
+    FOUR_OUTCOME_LAW,
+    BindingOutcome,
+    Command,
+    CommandIdBinding,
+    CommandIdBindingRegistry,
+    CommandKind,
+    CommandObservation,
+    CommandOutcomeResolver,
+    CompoundChild,
+    CompoundCommand,
+    JournalEvent,
+    OrderParameters,
+    OrderType,
+    ProtectionAmendment,
+    ProtectionSide,
+    SubmissionOutcome,
+    SubmissionResult,
+    TimeInForce,
+    UnknownTrigger,
+    command_id_mapping_is_injective_total,
+    derive_child_identity,
+    is_success,
+    journal_event_type,
+    meet_outcomes,
 )
 from qmf.venue.connection import (
     AccountBinding,
@@ -107,9 +153,11 @@ from qmf.venue.proto import (
 )
 
 __all__ = [
+    "FOUR_OUTCOME_LAW",
     "SPOTWARE_PROTO_PACKAGE",
     "AccountBinding",
     "AccountMoneyRecord",
+    "BindingOutcome",
     "BlockCause",
     "CapabilityDeclaration",
     "CapabilityDiscovery",
@@ -117,8 +165,16 @@ __all__ = [
     "CapabilityFieldName",
     "CapabilityProbe",
     "CloseScope",
+    "Command",
+    "CommandIdBinding",
+    "CommandIdBindingRegistry",
+    "CommandKind",
+    "CommandObservation",
+    "CommandOutcomeResolver",
     "CommandPipeStatus",
     "CompiledProto",
+    "CompoundChild",
+    "CompoundCommand",
     "ConnectionManager",
     "ErrorMap",
     "ErrorMapResolution",
@@ -127,28 +183,42 @@ __all__ = [
     "Finding",
     "FindingsNote",
     "HealthReport",
+    "JournalEvent",
     "MeasuredFact",
+    "OrderParameters",
+    "OrderType",
     "PipeState",
     "ProbeCheck",
     "ProbeReport",
     "ProbeTransport",
     "ProbeVerdict",
+    "ProtectionAmendment",
+    "ProtectionSide",
     "ProtoArtifact",
     "SpotSample",
+    "SubmissionOutcome",
     "SubmissionOutcomeClass",
+    "SubmissionResult",
     "SymbolMetadataRecord",
     "TagChangeAssessment",
     "Tick",
     "TickHistorySample",
+    "TimeInForce",
     "Trendbar",
     "TrendbarSample",
+    "UnknownTrigger",
     "UpstreamAssumption",
     "VenueEvidenceClass",
     "VenueObservationProfile",
     "__version__",
     "assess_tag_change",
+    "command_id_mapping_is_injective_total",
     "compile_descriptor_set",
+    "derive_child_identity",
     "descriptor_set_digest",
+    "is_success",
+    "journal_event_type",
+    "meet_outcomes",
     "venue_command_stream",
     "venue_writer_id",
 ]
