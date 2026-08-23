@@ -16,6 +16,7 @@ _SRC = _QML_ROOT / "src" / "qml"
 _HOMES = (
     "declaration",
     "families",
+    "logic",
     "footprint",
     "protocol",
     "conformance",

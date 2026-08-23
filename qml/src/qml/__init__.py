@@ -34,6 +34,14 @@ from qml.families import (
     resolve_family_at_layer1,
 )
 from qml.footprint import ProducerBindingForm, parse_binding_form
+from qml.logic import (
+    LOGIC_REFERENCE_CLASS,
+    LogicIdentity,
+    fingerprint_source_manifest,
+    mint_logic_identity,
+    normalize_source_manifest,
+    resolve_logic_at_layer1,
+)
 from qml.protocol import (
     PROTOCOL_FORMAT_VERSION,
     BotCallback,
@@ -49,6 +57,7 @@ __all__ = [
     "FAMILY_KEYED_SURFACES",
     "FORBIDDEN_AUTHORITY_FIELDS",
     "KIND_STRATEGY_FAMILY",
+    "LOGIC_REFERENCE_CLASS",
     "PROTOCOL_FORMAT_VERSION",
     "REGISTRY_ENVELOPE_FORMAT_VERSION",
     "STRATEGY_FAMILY_KIND_FORMAT_VERSION",
@@ -59,16 +68,21 @@ __all__ = [
     "BotIntent",
     "ConformanceTicket",
     "FamilyKeyedSurface",
+    "LogicIdentity",
     "ProducerBindingForm",
     "ReadSurface",
     "StrategyFamilyId",
     "StrategyFamilyRecord",
     "__version__",
     "evaluate_ticket",
+    "fingerprint_source_manifest",
+    "mint_logic_identity",
     "mint_strategy_family",
+    "normalize_source_manifest",
     "parse_binding_form",
     "permitted_exit_kinds",
     "resolve_family_at_layer1",
+    "resolve_logic_at_layer1",
 ]
 
 # Display-only provenance — never part of fp1 identity (DEC-0180).

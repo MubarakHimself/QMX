@@ -42,3 +42,12 @@ def test_family_usage_example_runs_clean() -> None:
     assert "family mint ok" in completed.stdout
     assert "two sandboxes deduplicate: True" in completed.stdout
     assert "unresolvable family at Layer 1: unavailable dependency" in completed.stdout
+
+
+def test_logic_usage_example_runs_clean() -> None:
+    completed = _run_example("logic_usage.py")
+    assert completed.returncode == 0, completed.stderr
+    assert "logic identity ok" in completed.stdout
+    assert "two sandboxes one Bot fp1: True" in completed.stdout
+    assert "one-character change mints new Bot fp1: True" in completed.stdout
+    assert "unresolvable logic at Layer 1: unavailable dependency" in completed.stdout

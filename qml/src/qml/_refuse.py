@@ -44,5 +44,5 @@ def unsupported(field: str, reason: str, **extra: object) -> TypedRefusal:
 
 
 def unavailable(field: str, reason: str, **extra: object) -> TypedRefusal:
-    """An ``unavailable dependency`` refusal — a cited family record is missing."""
+    """An ``unavailable dependency`` refusal — a cited family or logic artifact is missing."""
     return _build(RefusalCategory.UNAVAILABLE_DEPENDENCY, field, reason, **extra)
