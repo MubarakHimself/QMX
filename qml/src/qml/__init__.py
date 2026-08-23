@@ -22,7 +22,17 @@ from qml.declaration import (
     AuthoredArtifact,
     AuthoredKind,
 )
-from qml.families import StrategyFamilyId
+from qml.families import (
+    FAMILY_KEYED_SURFACES,
+    FORBIDDEN_AUTHORITY_FIELDS,
+    KIND_STRATEGY_FAMILY,
+    STRATEGY_FAMILY_KIND_FORMAT_VERSION,
+    FamilyKeyedSurface,
+    StrategyFamilyId,
+    StrategyFamilyRecord,
+    mint_strategy_family,
+    resolve_family_at_layer1,
+)
 from qml.footprint import ProducerBindingForm, parse_binding_form
 from qml.protocol import (
     PROTOCOL_FORMAT_VERSION,
@@ -36,21 +46,29 @@ from qml.protocol import (
 __all__ = [
     "CONFORMANCE_FORMAT_VERSION",
     "DENIAL_SET",
+    "FAMILY_KEYED_SURFACES",
+    "FORBIDDEN_AUTHORITY_FIELDS",
+    "KIND_STRATEGY_FAMILY",
     "PROTOCOL_FORMAT_VERSION",
     "REGISTRY_ENVELOPE_FORMAT_VERSION",
+    "STRATEGY_FAMILY_KIND_FORMAT_VERSION",
     "AuthoredArtifact",
     "AuthoredKind",
     "BotCallback",
     "BotFactory",
     "BotIntent",
     "ConformanceTicket",
+    "FamilyKeyedSurface",
     "ProducerBindingForm",
     "ReadSurface",
     "StrategyFamilyId",
+    "StrategyFamilyRecord",
     "__version__",
     "evaluate_ticket",
+    "mint_strategy_family",
     "parse_binding_form",
     "permitted_exit_kinds",
+    "resolve_family_at_layer1",
 ]
 
 # Display-only provenance — never part of fp1 identity (DEC-0180).
