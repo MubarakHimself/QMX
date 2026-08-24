@@ -8,13 +8,14 @@ is ever injected.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass, replace
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final, cast
 
 from qmf.core.chrono import Clock, Instant
 from qmf.core.exact import ExactRational
+from qmf.core.fingerprint import Fingerprint
 from qmf.core.refusal import Ok, Result, TypedRefusal, is_refusal
 
 from qml._refuse import invalid
@@ -29,6 +30,13 @@ from qml.protocol.evidence import (
     declared_evidence_keys,
 )
 from qml.protocol.intents import BotIntent, accept_intents
+from qml.protocol.state import (
+    BotStateScope,
+    BotStateSnapshot,
+    capture_bot_state,
+    coerce_state_bound,
+    refuse_scope_mismatch,
+)
 
 if TYPE_CHECKING:
     from qml.declaration.bot import BotDefinition
@@ -39,6 +47,7 @@ __all__ = [
     "HostedBot",
     "construct_bot",
     "resolve_assignment",
+    "restore_bot",
 ]
 
 _EMPTY: Final[Mapping[str, object]] = MappingProxyType({})
@@ -207,8 +216,16 @@ def construct_bot(
     assignment: object,
     read_surfaces: object,
     protocol_format_version: object = PROTOCOL_FORMAT_VERSION,
+    state_scope: object = None,
+    state_bound: object = None,
 ) -> Result[HostedBot]:
-    """Construct the host-driven callback from declaration, assignment, and surfaces."""
+    """Construct the host-driven callback from declaration, assignment, and surfaces.
+
+    ``state_scope`` and ``state_bound`` are optional at construct so a host that
+    never snapshots need not inject them. Capture refuses if either is absent —
+    bot state is bounded and declared, never unbounded, and the OS is never read
+    ambiently (DEC-0177).
+    """
     version = coerce_protocol_format_version(protocol_format_version)
     if is_refusal(version):
         return version
@@ -225,6 +242,12 @@ def construct_bot(
     if is_refusal(surfaces):
         return surfaces
     definition = bot.value
+    scope = _coerce_state_scope(state_scope, definition, version.value)
+    if is_refusal(scope):
+        return scope
+    bound = _coerce_optional_bound(state_bound)
+    if is_refusal(bound):
+        return bound
     callback = _invoke_factory(
         factory,
         declaration=definition,
@@ -242,8 +265,53 @@ def construct_bot(
             _logic=callback.value,
             _declared_keys=keys.value,
             _permitted_exits=tuple(definition.permitted_exit_intents),
+            state_scope=scope.value,
+            state_bound=bound.value,
         )
     )
+
+
+def restore_bot(
+    snapshot: object,
+    factory: object,
+    *,
+    declaration: object,
+    assignment: object,
+    read_surfaces: object,
+    current_scope: object,
+    protocol_format_version: object = PROTOCOL_FORMAT_VERSION,
+) -> Result[HostedBot]:
+    """Resume a hosted bot from a snapshot on an identical scope tuple (AR-67).
+
+    Any differing tuple component is an ``unavailable dependency`` refusal —
+    never best-effort across OS, logic identity, protocol format version, or
+    arithmetic-reference build. The restored-state fingerprint is recorded so
+    hosts can place it on downstream labels.
+    """
+    captured = BotStateSnapshot.from_mapping(snapshot)
+    if is_refusal(captured):
+        return captured
+    scope = BotStateScope.try_from_mapping(current_scope)
+    if is_refusal(scope):
+        return scope
+    matched = refuse_scope_mismatch(captured.value.scope, scope.value)
+    if is_refusal(matched):
+        return matched
+    hosted = construct_bot(
+        factory,
+        declaration=declaration,
+        assignment=assignment,
+        read_surfaces=read_surfaces,
+        protocol_format_version=protocol_format_version,
+        state_scope=scope.value,
+        state_bound=captured.value.state_bound,
+    )
+    if is_refusal(hosted):
+        return hosted
+    restored_fp = captured.value.fingerprint()
+    if is_refusal(restored_fp):  # pragma: no cover - snapshot content is canonical
+        return restored_fp
+    return hosted.value.with_restored_payload(captured.value.payload, restored_fp.value)
 
 
 def _as_bot_definition(value: object) -> Result[BotDefinition]:
@@ -339,6 +407,69 @@ def _coerce_surfaces(value: object, declared: frozenset[str]) -> Result[Mapping[
     return Ok(MappingProxyType(resolved))
 
 
+def _coerce_optional_bound(value: object) -> Result[int | None]:
+    if value is None:
+        return Ok(None)
+    bound = coerce_state_bound(value)
+    if is_refusal(bound):
+        return bound
+    return Ok(bound.value)
+
+
+def _coerce_state_scope(
+    value: object,
+    definition: BotDefinition,
+    protocol_format_version: int,
+) -> Result[BotStateScope | None]:
+    if value is None:
+        return Ok(None)
+    scope = BotStateScope.try_from_mapping(value)
+    if is_refusal(scope):
+        return scope
+    if scope.value.protocol_format_version != protocol_format_version:
+        return invalid(
+            "state_scope",
+            "the injected scope's protocol format version must match the hosted protocol",
+            given=scope.value.protocol_format_version,
+            protocol_format_version=protocol_format_version,
+        )
+    if scope.value.logic_identity != definition.logic_reference:
+        return invalid(
+            "state_scope",
+            "the injected scope's logic identity must match the declaration's "
+            "logic reference (distribution + version + source-manifest fingerprint)",
+        )
+    return Ok(scope.value)
+
+
+def _export_logic_state(logic: object) -> Result[object]:
+    export = getattr(logic, "export_state", None)
+    if not callable(export):
+        return Ok({})
+    raw = export()
+    if isinstance(raw, TypedRefusal):
+        return raw
+    return Ok(_unwrap_ok(raw))
+
+
+def _import_logic_state(logic: object, payload: Mapping[str, object]) -> Result[None]:
+    importer = getattr(logic, "import_state", None)
+    if not callable(importer):
+        if payload:
+            return invalid(
+                "payload",
+                "a callback that does not declare import_state cannot restore non-empty bot state",
+            )
+        return Ok(None)
+    frozen = MappingProxyType(dict(payload))
+    raw = importer(frozen)
+    if isinstance(raw, TypedRefusal):
+        return raw
+    if isinstance(raw, Ok):
+        return Ok(None)
+    return Ok(None)
+
+
 @dataclass(frozen=True, slots=True)
 class HostedBot:
     """Host-facing callback: driven per evaluation instant (DEC-0177).
@@ -355,6 +486,9 @@ class HostedBot:
     _logic: object
     _declared_keys: frozenset[str]
     _permitted_exits: tuple[str, ...]
+    state_scope: BotStateScope | None = None
+    state_bound: int | None = None
+    restored_from: Fingerprint | None = None
 
     def on_instant(self, instant: object, /) -> Result[tuple[BotIntent, ...]]:
         """Host drive: evaluation instant in, zero-or-more CT-23 intents out."""
@@ -380,6 +514,45 @@ class HostedBot:
             permitted_exit_intents=self._permitted_exits,
             protocol_format_version=self.protocol_format_version,
         )
+
+    def snapshot(self) -> Result[BotStateSnapshot]:
+        """Serialize bounded declared state scoped to the injected tuple (AR-67)."""
+        if self.state_scope is None:
+            return invalid(
+                "state_scope",
+                "snapshot/restore is scoped to an injected (OS, logic identity + "
+                "source-manifest fingerprint, protocol format version, "
+                "arithmetic-reference build) tuple; the OS is never read ambiently",
+            )
+        payload = _export_logic_state(self._logic)
+        if is_refusal(payload):
+            return payload
+        return capture_bot_state(
+            scope=self.state_scope,
+            state_bound=self.state_bound,
+            payload=payload.value,
+        )
+
+    def restored_state_fingerprints(self) -> tuple[Fingerprint, ...]:
+        """Restored-state fingerprint for downstream labels; empty when cold."""
+        if self.restored_from is None:
+            return ()
+        return (self.restored_from,)
+
+    def label_input_fingerprints(
+        self, extra: Sequence[Fingerprint] = ()
+    ) -> tuple[Fingerprint, ...]:
+        """Input fingerprints a host stamps onto a result label (restored-state first)."""
+        return self.restored_state_fingerprints() + tuple(extra)
+
+    def with_restored_payload(
+        self, payload: Mapping[str, object], restored_from: Fingerprint
+    ) -> Result[HostedBot]:
+        """Load captured payload into the callback and stamp the restored-state fingerprint."""
+        loaded = _import_logic_state(self._logic, payload)
+        if is_refusal(loaded):
+            return loaded
+        return Ok(replace(self, restored_from=restored_from))
 
 
 @dataclass(frozen=True, slots=True)

@@ -103,9 +103,12 @@ from qml.protocol import (
     PROTOCOL_DENIAL_SET,
     PROTOCOL_FORMAT_VERSION,
     PROTOCOL_LADDER,
+    STATE_SNAPSHOT_FORMAT_VERSION,
     BotCallback,
     BotFactory,
     BotIntent,
+    BotStateScope,
+    BotStateSnapshot,
     FootprintEvidence,
     FunctionFactory,
     HostedBot,
@@ -114,8 +117,10 @@ from qml.protocol import (
     ReadSurface,
     accept_intents,
     construct_bot,
+    mint_state_scope,
     permitted_exit_kinds,
     protocol_contract_identity,
+    restore_bot,
 )
 
 __all__ = [
@@ -141,6 +146,7 @@ __all__ = [
     "PROTOCOL_FORMAT_VERSION",
     "PROTOCOL_LADDER",
     "REGISTRY_ENVELOPE_FORMAT_VERSION",
+    "STATE_SNAPSHOT_FORMAT_VERSION",
     "STRATEGY_FAMILY_KIND_FORMAT_VERSION",
     "AuthoredArtifact",
     "AuthoredKind",
@@ -148,6 +154,8 @@ __all__ = [
     "BotDefinition",
     "BotFactory",
     "BotIntent",
+    "BotStateScope",
+    "BotStateSnapshot",
     "BotVersionGraph",
     "CompletenessReport",
     "Confluence",
@@ -197,6 +205,7 @@ __all__ = [
     "mint_footprint",
     "mint_logic_identity",
     "mint_producer_template",
+    "mint_state_scope",
     "mint_strategy_family",
     "normalize_source_manifest",
     "parse_binding_form",
@@ -214,6 +223,7 @@ __all__ = [
     "resolve_family_at_layer1",
     "resolve_logic_at_layer1",
     "resolve_template",
+    "restore_bot",
 ]
 
 # Display-only provenance — never part of fp1 identity (DEC-0180).

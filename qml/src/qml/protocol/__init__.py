@@ -43,12 +43,24 @@ from qml.protocol.factory import (
     HostedBot,
     construct_bot,
     resolve_assignment,
+    restore_bot,
 )
 from qml.protocol.intents import (
     BOOK_SIDE_FIELDS,
     VENUE_COMMAND_FIELDS,
     accept_intents,
     intent_identity,
+)
+from qml.protocol.state import (
+    SCOPE_COMPONENTS,
+    STATE_SNAPSHOT_CLASS,
+    STATE_SNAPSHOT_FORMAT_VERSION,
+    BotStateScope,
+    BotStateSnapshot,
+    assert_declared_state_bound,
+    capture_bot_state,
+    coerce_state_bound,
+    mint_state_scope,
 )
 
 __all__ = [
@@ -59,10 +71,15 @@ __all__ = [
     "PROTOCOL_FORMAT_VERSION",
     "PROTOCOL_KNOWN_FORMAT_VERSIONS",
     "PROTOCOL_LADDER",
+    "SCOPE_COMPONENTS",
+    "STATE_SNAPSHOT_CLASS",
+    "STATE_SNAPSHOT_FORMAT_VERSION",
     "VENUE_COMMAND_FIELDS",
     "BotCallback",
     "BotFactory",
     "BotIntent",
+    "BotStateScope",
+    "BotStateSnapshot",
     "FootprintEvidence",
     "FunctionFactory",
     "HostedBot",
@@ -73,14 +90,19 @@ __all__ = [
     "SeriesSample",
     "StructureFold",
     "accept_intents",
+    "assert_declared_state_bound",
+    "capture_bot_state",
     "coerce_protocol_format_version",
+    "coerce_state_bound",
     "collect_evidence",
     "construct_bot",
     "declared_evidence_keys",
     "intent_identity",
+    "mint_state_scope",
     "permitted_exit_kinds",
     "protocol_contract_identity",
     "resolve_assignment",
+    "restore_bot",
 ]
 
 BotIntent: TypeAlias = EntryIntent | ExitIntent

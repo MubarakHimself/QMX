@@ -85,6 +85,20 @@ def test_protocol_usage_example_runs_clean() -> None:
     assert "protocol usage ok" in completed.stdout
 
 
+def test_state_usage_example_runs_clean() -> None:
+    completed = _run_example("state_usage.py")
+    assert completed.returncode == 0, completed.stderr
+    assert "snapshot format version: 1" in completed.stdout
+    assert "identical-tuple round-trip equivalent: True" in completed.stdout
+    assert "restored-state fingerprint enters labels: True" in completed.stdout
+    assert "cross-OS restore: unavailable dependency" in completed.stdout
+    assert "cross-logic restore: unavailable dependency" in completed.stdout
+    assert "cross-protocol restore: unavailable dependency" in completed.stdout
+    assert "cross-arithmetic-reference restore: unavailable dependency" in completed.stdout
+    assert "exceeded state bound: policy rejection" in completed.stdout
+    assert "state usage ok" in completed.stdout
+
+
 def test_bot_definition_usage_example_runs_clean() -> None:
     completed = _run_example("bot_definition_usage.py")
     assert completed.returncode == 0, completed.stderr
