@@ -95,8 +95,14 @@ def test_frontier_clock_is_qmf_core_clock() -> None:
         "new-intents-rest",
     )
     assert qmb.SAME_SLICE_NEW_INTENT_FILL is False
+    assert qmb.COMPLETED_BOUNDARY_ONLY is True
+    assert qmb.FORMING_BAR_ACTIONABLE is False
+    assert qmb.FORMING_BAR_VISIBLE is False
+    assert qmb.LOOKAHEAD_PREVENTION_INDEPENDENT_OF_GAP_0048 is True
     assert api.run is qmb.run
     assert api.run_slice is qmb.run_slice
+    assert api.act_on_bar is qmb.act_on_bar
+    assert api.consume_same_slice is qmb.consume_same_slice
 
 
 def test_authorized_intent_is_the_ct23_door_types() -> None:

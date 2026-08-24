@@ -4,7 +4,9 @@ Per slice the sub-phases run in :data:`SUBPHASES` order. Changing that order is
 identity-bearing. Within a phase, instruments process in the stream-set
 declaration order from the resolved run-config. A new intent minted in
 sub-phase 5 is never eligible to fill against this slice's path — it rests for
-a later slice. ``run`` is a pure function: it writes no log and no ledger.
+a later slice. Higher-BarSpec bars derive from the finest declared base stream
+and emit only on a completed boundary; a forming bar is never visible or
+actionable. ``run`` is a pure function: it writes no log and no ledger.
 """
 
 from __future__ import annotations
@@ -20,6 +22,19 @@ from qmf.core.refusal import Ok, Result, is_refusal
 
 from qmb._refuse import clean_token, invalid
 from qmb.config.compiler import ResolvedRunConfig
+from qmb.runloop.bars import (
+    COMPLETED_BOUNDARY_ONLY,
+    COMPLETENESS_COMPLETED,
+    COMPLETENESS_FORMING,
+    FORMING_BAR_ACTIONABLE,
+    FORMING_BAR_VISIBLE,
+    LOOKAHEAD_PREVENTION_INDEPENDENT_OF_GAP_0048,
+    DerivedBar,
+    FormingBarState,
+    SameSliceConsumption,
+    SeriesSample,
+    consume_stream_plans,
+)
 from qmb.runloop.frontier import (
     CLOCK_DOES_NOT_CHOOSE_WORLD,
     FrontierClock,
@@ -85,6 +100,14 @@ def loop_identity() -> dict[str, object]:
         "same_slice_new_intent_fill": SAME_SLICE_NEW_INTENT_FILL,
         "instrument_order": _INSTRUMENT_ORDER,
         "closed_data_only": True,
+        "completed_boundary_only": COMPLETED_BOUNDARY_ONLY,
+        "forming_bar_actionable": FORMING_BAR_ACTIONABLE,
+        "forming_bar_visible": FORMING_BAR_VISIBLE,
+        "higher_barspec_from_finest_base": True,
+        "same_series_bars_and_fills": True,
+        "lookahead_prevention_independent_of_gap_0048": (
+            LOOKAHEAD_PREVENTION_INDEPENDENT_OF_GAP_0048
+        ),
     }
 
 
@@ -226,10 +249,16 @@ class SliceObservation:
     instant: Instant
     closed: bool = True
 
+    @property
+    def completeness(self) -> str:
+        """Inspectable completeness. Forming is ``closed=False`` (B-2)."""
+        return COMPLETENESS_COMPLETED if self.closed else COMPLETENESS_FORMING
+
     def fp1_identity(self) -> dict[str, object]:
         """Canonical identity. Package SemVer never enters."""
         return {
             "closed": self.closed,
+            "completeness": self.completeness,
             "instant_ns": self.instant.value_ns,
             "stream_id": self.stream_id,
         }
@@ -383,6 +412,10 @@ class SliceOutcome:
     minted: tuple[str, ...]
     ineligible: tuple[str, ...]
     resting: tuple[RestingIntent, ...]
+    emitted_bars: tuple[DerivedBar, ...] = ()
+    forming: tuple[FormingBarState, ...] = ()
+    fill_path: tuple[SeriesSample, ...] = ()
+    series_fp1: tuple[str, ...] = ()
 
     def subphase_order(self) -> tuple[str, ...]:
         """Sub-phase names in the order they ran."""
@@ -390,7 +423,7 @@ class SliceOutcome:
 
     def fp1_identity(self) -> dict[str, object]:
         """Canonical identity. Package SemVer never enters."""
-        return {
+        content: dict[str, object] = {
             "filled": list(self.filled),
             "frontier_ns": self.frontier.value_ns,
             "ineligible": list(self.ineligible),
@@ -398,6 +431,15 @@ class SliceOutcome:
             "resting": [item.fp1_identity() for item in self.resting],
             "trace": [item.fp1_identity() for item in self.trace],
         }
+        if self.emitted_bars:
+            content["emitted_bars"] = [item.fp1_identity() for item in self.emitted_bars]
+        if self.forming:
+            content["forming"] = [item.fp1_identity() for item in self.forming]
+        if self.fill_path:
+            content["fill_path"] = [item.fp1_identity() for item in self.fill_path]
+        if self.series_fp1:
+            content["series_fp1"] = list(self.series_fp1)
+        return content
 
 
 @dataclass(frozen=True, slots=True)
@@ -415,6 +457,12 @@ class LoopOutcome:
         return MappingProxyType(
             {
                 "closed_data_only": True,
+                "completed_boundary_only": COMPLETED_BOUNDARY_ONLY,
+                "forming_bar_actionable": FORMING_BAR_ACTIONABLE,
+                "forming_bar_visible": FORMING_BAR_VISIBLE,
+                "lookahead_prevention_independent_of_gap_0048": (
+                    LOOKAHEAD_PREVENTION_INDEPENDENT_OF_GAP_0048
+                ),
                 "loop_kind": LOOP_KIND,
                 "same_slice_new_intent_fill": SAME_SLICE_NEW_INTENT_FILL,
                 "slice_count": len(self.slices),
@@ -532,13 +580,17 @@ def run_slice(
     clock: object = None,
     handler: object = None,
     resting: object = (),
+    series: object = None,
+    bar_plan: object = None,
 ) -> Result[SliceOutcome]:
     """Process one event slice through the pinned :data:`SUBPHASES` order (B-2).
 
     Resting intents present at slice start may fill in sub-phase 3. Intents
     minted in sub-phase 5 are recorded as ineligible for this slice's path and
-    rest for a later slice. Domain failure is a typed refusal, returned never
-    raised. Pure: no log, no ledger write.
+    rest for a later slice. When ``series`` and ``bar_plan`` are supplied,
+    higher-BarSpec bars derive from the finest base stream in sub-phase 1 and
+    emit only on a completed boundary. Domain failure is a typed refusal,
+    returned never raised. Pure: no log, no ledger write.
     """
     declared = StreamSet.try_create(stream_set)
     if is_refusal(declared):
@@ -569,6 +621,14 @@ def run_slice(
     )
     if is_refusal(pulled):
         return pulled
+    derived = _derive_if_requested(
+        series=series,
+        bar_plan=bar_plan,
+        frontier=pulled.value,
+        stream_ids=declared.value.stream_ids,
+    )
+    if is_refusal(derived):
+        return derived
     acc = _Acc(
         frontier=pulled.value,
         remaining=list(intents.value),
@@ -578,6 +638,7 @@ def run_slice(
         observations=observations,
         stream_ids=declared.value.stream_ids,
         handler=ports.value,
+        consumptions=derived.value,
     )
     for name in SUBPHASES:
         stepped = _run_one_phase(name, acc)
@@ -585,6 +646,10 @@ def run_slice(
             return stepped
         acc = stepped.value
     minted_ids = tuple(item.intent_id for item in acc.minted)
+    emitted = tuple(bar for item in acc.consumptions for bar in item.emitted)
+    forming = tuple(state for item in acc.consumptions for state in item.forming)
+    fill_path = tuple(sample for item in acc.consumptions for sample in item.fill_path)
+    series_fp1 = tuple(item.series_fp1 for item in acc.consumptions)
     return Ok(
         SliceOutcome(
             frontier=acc.frontier,
@@ -593,6 +658,10 @@ def run_slice(
             minted=minted_ids,
             ineligible=minted_ids,
             resting=tuple(acc.remaining + acc.minted),
+            emitted_bars=emitted,
+            forming=forming,
+            fill_path=fill_path,
+            series_fp1=series_fp1,
         )
     )
 
@@ -605,12 +674,16 @@ def run(
     clock: object = None,
     handler: object = None,
     initial_resting: object = (),
+    series: object = None,
+    bar_plan: object = None,
 ) -> Result[LoopOutcome]:
     """PURE event-slice loop (B-2, B-4).
 
     Consumes time-ordered event slices and the stream-set declaration order
     (from the resolved run-config when ``config`` is supplied). Returns slice
-    outcomes plus a self-assessment. Writes no log and no ledger.
+    outcomes plus a self-assessment. Writes no log and no ledger. The same
+    underlying series is replayed as-of each frontier so later prints cannot
+    complete an earlier bar.
     """
     declared = _resolve_stream_set(stream_set=stream_set, config=config)
     if is_refusal(declared):
@@ -643,6 +716,8 @@ def run(
             clock=clock,
             handler=ports.value,
             resting=resting,
+            series=series,
+            bar_plan=bar_plan,
         )
         if is_refusal(outcome):
             return outcome
@@ -671,6 +746,7 @@ class _Acc:
     observations: Mapping[str, SliceObservation | None]
     stream_ids: tuple[str, ...]
     handler: SliceHandler
+    consumptions: tuple[SameSliceConsumption, ...]
 
 
 def _run_one_phase(name: str, acc: _Acc) -> Result[_Acc]:
@@ -698,12 +774,20 @@ def _run_one_phase(name: str, acc: _Acc) -> Result[_Acc]:
 
 def _phase_frontier_advance(acc: _Acc) -> Result[_Acc]:
     actions: list[str] = []
+    derived = {item.stream_id: item for item in acc.consumptions}
     for stream_id in acc.stream_ids:
         observation = acc.observations[stream_id]
         updated = acc.handler.update_stream(stream_id, observation, acc.frontier)
         if is_refusal(updated):
             return updated
         actions.append(f"empty:{stream_id}" if observation is None else f"update:{stream_id}")
+        consumption = derived.get(stream_id)
+        if consumption is None:
+            continue
+        if consumption.emitted:
+            actions.append(f"emit-completed:{stream_id}")
+        if consumption.forming:
+            actions.append(f"hold-forming:{stream_id}")
     acc.traces.append(_trace("frontier-advance", acc.stream_ids, actions))
     return Ok(acc)
 
@@ -796,6 +880,30 @@ def _phase_new_intents_rest(acc: _Acc) -> Result[_Acc]:
         actions.append(f"rest:{intent.intent_id}")
     acc.traces.append(_trace("new-intents-rest", acc.stream_ids, actions))
     return Ok(acc)
+
+
+def _derive_if_requested(
+    *,
+    series: object,
+    bar_plan: object,
+    frontier: Instant,
+    stream_ids: tuple[str, ...],
+) -> Result[tuple[SameSliceConsumption, ...]]:
+    """Sub-phase 1: fold higher BarSpecs from the finest base when declared."""
+    if series is None and bar_plan is None:
+        return Ok(())
+    if series is None or bar_plan is None:
+        return invalid(
+            "bar_plan",
+            "completed-boundary derivation needs both the underlying series "
+            "and the declared BarSpec plan so bars and fills cannot diverge",
+        )
+    return consume_stream_plans(
+        plans=bar_plan,
+        series=series,
+        frontier=frontier,
+        stream_ids=stream_ids,
+    )
 
 
 def _trace(name: str, instrument_order: tuple[str, ...], actions: Sequence[str]) -> SubphaseTrace:

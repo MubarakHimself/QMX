@@ -76,6 +76,22 @@ def test_registryread_usage_example_runs_clean() -> None:
     assert "name@latest refused" in completed.stdout
 
 
+def test_completed_boundary_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "completed_boundary_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "higher BarSpec derived from finest base" in completed.stdout
+    assert "forming bar not visible" in completed.stdout
+    assert "same-slice bars and fills share one series" in completed.stdout
+    assert "regardless of GAP-0048" in completed.stdout
+    assert "completed-boundary derivation ok" in completed.stdout
+
+
 def test_event_slice_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "event_slice_usage.py")],

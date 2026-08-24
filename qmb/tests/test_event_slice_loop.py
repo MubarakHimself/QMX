@@ -126,6 +126,12 @@ def test_subphases_are_the_pinned_identity_bearing_strings() -> None:
     assert identity["same_slice_new_intent_fill"] is False
     assert identity["instrument_order"] == "stream-set-declaration"
     assert identity["closed_data_only"] is True
+    assert identity["completed_boundary_only"] is True
+    assert identity["forming_bar_actionable"] is False
+    assert identity["forming_bar_visible"] is False
+    assert identity["higher_barspec_from_finest_base"] is True
+    assert identity["same_series_bars_and_fills"] is True
+    assert identity["lookahead_prevention_independent_of_gap_0048"] is True
 
 
 def test_changing_subphase_order_is_identity_bearing() -> None:
@@ -458,8 +464,10 @@ def test_public_exports_and_door_parity() -> None:
     assert api.run_slice is qmb.run_slice
     assert api.SUBPHASES is qmb.SUBPHASES
     assert api.fingerprint_loop is qmb.fingerprint_loop
+    assert api.act_on_bar is qmb.act_on_bar
     assert "run" in qmb.__all__
     assert "run_slice" in qmb.__all__
     assert "StreamSet" in qmb.__all__
+    assert "act_on_bar" in qmb.__all__
     first = _ok(run(slices=((_obs("eurusd"),),), stream_set=("eurusd",)))
     assert first.slices[0].subphase_order() == SUBPHASES
