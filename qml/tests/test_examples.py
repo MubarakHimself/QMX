@@ -71,6 +71,20 @@ def test_confluence_usage_example_runs_clean() -> None:
     assert "order-significance changes fingerprint: True" in completed.stdout
 
 
+def test_protocol_usage_example_runs_clean() -> None:
+    completed = _run_example("protocol_usage.py")
+    assert completed.returncode == 0, completed.stderr
+    assert "protocol format version: 1" in completed.stdout
+    assert "ladder is qml-ad5, not CT-numbered: True" in completed.stdout
+    assert "factory constructed: True" in completed.stdout
+    assert "zero intents on empty evidence: True" in completed.stdout
+    assert "advisory stop is advisory: True" in completed.stdout
+    assert "inbound requested_r is invalid input" in completed.stdout
+    assert "venue command rejected: unsupported capability" in completed.stdout
+    assert "replay identical intents: True" in completed.stdout
+    assert "protocol usage ok" in completed.stdout
+
+
 def test_bot_definition_usage_example_runs_clean() -> None:
     completed = _run_example("bot_definition_usage.py")
     assert completed.returncode == 0, completed.stderr
