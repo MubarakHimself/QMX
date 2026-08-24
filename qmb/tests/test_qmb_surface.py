@@ -172,6 +172,15 @@ def test_frontier_clock_is_qmf_core_clock() -> None:
     assert api.mint_aborted_line is qmb.mint_aborted_line
     assert qmb.ledger_identity()["writer_scope"] == ("machine", "role", "worker-slot")
     assert qmb.orchestrator_identity()["ledger_writes"] == "orchestrator"
+    assert api.LogSink is qmb.LogSink
+    assert api.OperationalRecord is qmb.OperationalRecord
+    assert api.propagate_correlation is qmb.propagate_correlation
+    assert api.read_run_log is qmb.read_run_log
+    assert qmb.LOG_IS_EVIDENCE is False
+    assert qmb.CORRELATION_ID_EXCLUDED_FROM_FP1 is True
+    assert qmb.orchestrator_identity()["log_writes"] == "orchestrator"
+    assert qmb.orchestrator_identity()["log_is_evidence"] is False
+    assert qmb.orchestrator_identity()["evidence_bearing_formats"] == ("raw archive", "journal")
 
 
 def test_authorized_intent_is_the_ct23_door_types() -> None:

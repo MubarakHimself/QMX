@@ -4,7 +4,9 @@ Failure-register entries for `qmb`, per the workspace convention
 (`conventions/failure-register.md`, NFR-11). Story 15.3 delivers orchestrator
 cancel tokens and declared per-run limits whose breach is a typed `aborted`
 refusal (AR-51, B-5, FM-6). Story 15.4 delivers the one-ledger-line law over
-WriterId-scoped JSONL fragments (AR-51, AR-53, B-4).
+WriterId-scoped JSONL fragments (AR-51, AR-53, B-4). Story 15.5 delivers
+per-run AD-14 operational logs streamed by the orchestrator (B-4, AR-35,
+CT-11).
 
 ### FR-1: Cancel or per-run limit breach aborts one OS process
 
@@ -110,3 +112,23 @@ WriterId-scoped JSONL fragments (AR-51, AR-53, B-4).
 - **Product-user affordance:** cancelling or blowing a limit still leaves a
   ledger row that says the run aborted and why. It is not a pass, not a fail,
   and not missing. Direct library `run()` in research still writes no ledger.
+
+### FR-7: A crashed run's operational log must not leave its room
+
+- **Failure class:** operational (AD-14); not CT-11 evidence.
+- **Detection:** the orchestrator injects a one-writer log sink into the run
+  directory (`run.log`) at spawn. The isolated worker streams JSONL records
+  with `correlation_id`. Abort or crash appends a terminal operational record
+  in that same file after the child is reaped.
+- **Auto-recovery / retry:** none. The partial log is the diagnostic. A new
+  run is a new directory and a new `correlation_id`.
+- **Visible degraded state:** that run's directory holds a partial
+  operational log. Sibling run directories and WriterId-scoped ledger
+  fragments are not opened. `is_evidence` stays false; artifacts still cite
+  only the raw archive and the journal (CT-11).
+- **Notification tier:** operator-visible file in the run directory (tail-able
+  JSONL, UTC ISO-8601 `Z` timestamps). Typed abort refusals carry
+  `operational_log_is_evidence=false`.
+- **Product-user affordance:** you can tail this run while it lives. If it
+  dies, the leftover log is only in that run's folder. It is not a scoreboard
+  row and not evidence. The other runs and the ledger are intact.

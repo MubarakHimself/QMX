@@ -38,6 +38,19 @@ from qmb.orchestrator.governor import (
     GovernedRequest,
     ResourceGovernor,
 )
+from qmb.orchestrator.log import (
+    EVENT_RUN_ABORTED,
+    EVENT_RUN_COMPLETED,
+    EVENT_RUN_CRASHED,
+    EVENT_RUN_REFUSED,
+    EVENT_RUN_STARTED,
+    LOG_FILENAME,
+    LOG_IS_EVIDENCE,
+    LogSink,
+    append_run_log,
+    inject_run_log,
+    mint_correlation_id,
+)
 from qmb.orchestrator.watch import (
     WATCH_POLL_S,
     ProcessLimitProbe,
@@ -124,6 +137,8 @@ class LiveSpawn:
     limits: RunLimits
     started_monotonic_ns: int
     probe: LimitProbe | None = None
+    correlation_id: str | None = None
+    log_path: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -332,12 +347,15 @@ def start_run(
             given=type(exc).__name__,
             run_id=config.fingerprint.value,
         )
+    correlation = mint_correlation_id()
     payload = {
         "class": _PAYLOAD_CLASS,
         "run_id": config.fingerprint.value,
         "config": _encode_config(config),
         "slices": encoded_slices.value,
         "limits": _encode_limits(bound_limits.value),
+        "correlation_id": correlation,
+        "log_name": LOG_FILENAME,
     }
     try:
         _write_json(directory / PAYLOAD_NAME, payload)
@@ -349,6 +367,14 @@ def start_run(
             given=type(exc).__name__,
             run_id=config.fingerprint.value,
         )
+    injected = inject_run_log(
+        directory,
+        run_id=config.fingerprint,
+        correlation_id=correlation,
+    )
+    if is_refusal(injected):
+        _cleanup_unstarted(directory)
+        return injected
     try:
         process = subprocess.Popen(
             [sys.executable, "-B", "-m", WORKER_MODULE, str(directory)],
@@ -378,6 +404,8 @@ def start_run(
             limits=bound_limits.value,
             started_monotonic_ns=started_ns,
             probe=meter.value,
+            correlation_id=correlation,
+            log_path=str(injected.value),
         )
     )
 
@@ -406,7 +434,14 @@ def abort_run(live: object, *, cause: object = CAUSE_CANCEL) -> TypedRefusal:
         observed = _probe_for(live).memory_bytes()
         if not is_refusal(observed):
             extra["observed_bytes"] = observed.value
+    extra["operational_log_is_evidence"] = LOG_IS_EVIDENCE
     kill_owned_process(live.process)
+    _append_spawn_log(
+        live,
+        event=EVENT_RUN_ABORTED,
+        message="orchestrator aborted this OS process; partial log stays in this run room",
+        fields={"cause": abort_cause, "pid": live.pid},
+    )
     return refuse_aborted_process(
         cause=abort_cause,
         run_id=live.run_id.value,
@@ -450,6 +485,12 @@ def collect_run(live: object) -> Result[IsolatedRun]:
         except OSError:
             stderr = ""
     if process.returncode not in (0, None) and not (Path(live.output_dir) / RESULT_NAME).is_file():
+        _append_spawn_log(
+            live,
+            event=EVENT_RUN_CRASHED,
+            message="isolated worker exited without a result file; partial log stays in-room",
+            fields={"returncode": process.returncode},
+        )
         return unavailable(
             "spawn_process",
             "the isolated run process exited without a result file",
@@ -480,34 +521,64 @@ def _run_worker(output_dir: Path) -> int:
     if is_refusal(decoded):
         return _write_envelope(output_dir, _refusal_envelope(decoded))
     config, slices, limits = decoded.value
+    correlation = _payload_correlation(loaded.value)
+    if is_refusal(correlation):
+        return _write_envelope(output_dir, _refusal_envelope(correlation))
+    sink = LogSink.try_create(
+        output_dir / LOG_FILENAME,
+        run_id=config.fingerprint,
+        correlation_id=correlation.value,
+        append=True,
+    )
+    if is_refusal(sink):
+        return _write_envelope(output_dir, _refusal_envelope(sink))
+    log = sink.value
     try:
-        _write_json(
-            output_dir / WRITER_NAME,
-            {
-                "run_id": config.fingerprint.value,
-                "pid": os.getpid(),
-                "output_dir": str(output_dir.resolve()),
-            },
+        started = log.emit(
+            EVENT_RUN_STARTED,
+            "isolated worker driving pure run(); operational log is not evidence",
         )
-    except OSError:
-        return 1
-    probe: ProcessLimitProbe | None = None
-    if limits.bounded:
-        probe = ProcessLimitProbe.for_current_process()
-    outcome = run(slices=slices, config=config, limits=limits, probe=probe)
-    if is_refusal(outcome):
-        return _write_envelope(output_dir, _refusal_envelope(outcome))
-    stamped = outcome.value.ct32_fingerprint()
-    envelope: dict[str, object] = {
-        "ok": True,
-        "run_id": config.fingerprint.value,
-        "worker_pid": os.getpid(),
-        "output_dir": str(output_dir.resolve()),
-        "outcome": outcome.value.fp1_identity(),
-    }
-    if not is_refusal(stamped):
-        envelope["ct32_fingerprint"] = stamped.value.value
-    return _write_envelope(output_dir, envelope)
+        if is_refusal(started):
+            return _write_envelope(output_dir, _refusal_envelope(started))
+        try:
+            _write_json(
+                output_dir / WRITER_NAME,
+                {
+                    "run_id": config.fingerprint.value,
+                    "pid": os.getpid(),
+                    "output_dir": str(output_dir.resolve()),
+                },
+            )
+        except OSError:
+            return 1
+        probe: ProcessLimitProbe | None = None
+        if limits.bounded:
+            probe = ProcessLimitProbe.for_current_process()
+        outcome = run(slices=slices, config=config, limits=limits, probe=probe)
+        if is_refusal(outcome):
+            log.emit(
+                EVENT_RUN_REFUSED,
+                "pure run() returned a typed refusal; operational log is not evidence",
+                fields={"category": outcome.category.value},
+            )
+            return _write_envelope(output_dir, _refusal_envelope(outcome))
+        stamped = outcome.value.ct32_fingerprint()
+        envelope: dict[str, object] = {
+            "ok": True,
+            "run_id": config.fingerprint.value,
+            "worker_pid": os.getpid(),
+            "output_dir": str(output_dir.resolve()),
+            "outcome": outcome.value.fp1_identity(),
+        }
+        if not is_refusal(stamped):
+            envelope["ct32_fingerprint"] = stamped.value.value
+        log.emit(
+            EVENT_RUN_COMPLETED,
+            "pure run() returned; operational log is not evidence",
+        )
+        return _write_envelope(output_dir, envelope)
+    finally:
+        log.close()
 
 
 def _isolated_from_envelope(
@@ -1200,13 +1271,51 @@ def _typed_refusal_from_envelope(envelope: Mapping[str, object]) -> TypedRefusal
 
 
 def _cleanup_unstarted(directory: Path) -> None:
-    payload = directory / PAYLOAD_NAME
-    if payload.is_file():
-        payload.unlink()
+    for name in (PAYLOAD_NAME, LOG_FILENAME):
+        path = directory / name
+        if path.is_file():
+            path.unlink()
     try:
         directory.rmdir()
     except OSError:
         return
+
+
+def _payload_correlation(raw: Mapping[str, object]) -> Result[str]:
+    token = raw.get("correlation_id")
+    if not isinstance(token, str) or token.strip() == "":
+        return invalid(
+            "correlation_id",
+            "the orchestrator injects a correlation_id on the per-run operational log",
+            given=repr(raw.get("correlation_id")),
+        )
+    log_name = raw.get("log_name", LOG_FILENAME)
+    if log_name != LOG_FILENAME:
+        return policy(
+            "log_name",
+            "the injected log sink streams into the per-run log file in the run directory",
+            given=repr(log_name),
+        )
+    return Ok(token)
+
+
+def _append_spawn_log(
+    live: LiveSpawn,
+    *,
+    event: str,
+    message: str,
+    fields: Mapping[str, object] | None = None,
+) -> None:
+    if live.correlation_id is None or live.log_path is None:
+        return
+    append_run_log(
+        live.output_dir,
+        run_id=live.run_id,
+        correlation_id=live.correlation_id,
+        event=event,
+        message=message,
+        fields=fields,
+    )
 
 
 def _reap_live(live: Sequence[LiveSpawn]) -> None:

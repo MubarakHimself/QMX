@@ -247,6 +247,23 @@ def test_governor_usage_example_runs_clean() -> None:
     assert "governor ok" in completed.stdout
 
 
+def test_orchestrator_log_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "orchestrator_log_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "orchestrator owns the injected log sink" in completed.stdout
+    assert "AD-14 operational logs only, never evidence" in completed.stdout
+    assert "correlation_id excluded from fp1 identity" in completed.stdout
+    assert "crashed run leaves a partial log in its own room" in completed.stdout
+    assert "never corrupts sibling or the ledger" in completed.stdout
+    assert "orchestrator log ok" in completed.stdout
+
+
 def test_orchestrator_ledger_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "orchestrator_ledger_usage.py")],
