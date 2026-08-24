@@ -16,11 +16,14 @@ from qml.conformance import (
     DENIAL_SET,
     LAYER1_CHECKS,
     LAYER2_CHECKS,
+    PREDICTION_CHECKS,
     ConformanceTicket,
     GoldenSlice,
     Layer1Verdict,
     Layer2Observations,
     Layer2Verdict,
+    PredictionBindingContext,
+    PredictionVerdict,
     ScanFinding,
     ScanReport,
     ast_scan_rules_identity,
@@ -29,8 +32,10 @@ from qml.conformance import (
     evaluate_ticket,
     generate_golden_slice,
     lint_declaration,
+    lint_prediction,
     run_layer2_suite,
     scan_logic_source,
+    stream_set_required_capabilities,
 )
 from qml.declaration import (
     BOT_DEFINITION_KIND_FORMAT_VERSION,
@@ -158,6 +163,7 @@ __all__ = [
     "LOGIC_REFERENCE_CLASS",
     "PARAMETER_TYPES",
     "PERMITTED_EXIT_INTENT_VOCABULARY",
+    "PREDICTION_CHECKS",
     "PROTOCOL_CONTRACT_CLASS",
     "PROTOCOL_DENIAL_SET",
     "PROTOCOL_FORMAT_VERSION",
@@ -197,6 +203,8 @@ __all__ = [
     "MappingReadSurface",
     "ParameterSpec",
     "ParameterType",
+    "PredictionBindingContext",
+    "PredictionVerdict",
     "PresenceState",
     "ProducerBinding",
     "ProducerBindingForm",
@@ -228,6 +236,7 @@ __all__ = [
     "install_bot_definition_kind",
     "install_confluence_kind",
     "lint_declaration",
+    "lint_prediction",
     "mint_bot_definition",
     "mint_confluence",
     "mint_footprint",
@@ -254,6 +263,7 @@ __all__ = [
     "restore_bot",
     "run_layer2_suite",
     "scan_logic_source",
+    "stream_set_required_capabilities",
 ]
 
 # Display-only provenance — never part of fp1 identity (DEC-0180).

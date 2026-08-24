@@ -37,6 +37,13 @@ from qml.conformance.layer2 import (
     evaluate_layer2,
     run_layer2_suite,
 )
+from qml.conformance.prediction import (
+    PREDICTION_CHECKS,
+    PredictionBindingContext,
+    PredictionVerdict,
+    lint_prediction,
+    stream_set_required_capabilities,
+)
 from qml.conformance.scan import (
     AST_SCAN_RULES_CLASS,
     DENIED_CALL_SUFFIXES,
@@ -72,11 +79,14 @@ __all__ = [
     "INTENT_KIND_ENTRY",
     "LAYER1_CHECKS",
     "LAYER2_CHECKS",
+    "PREDICTION_CHECKS",
     "ConformanceTicket",
     "GoldenSlice",
     "Layer1Verdict",
     "Layer2Observations",
     "Layer2Verdict",
+    "PredictionBindingContext",
+    "PredictionVerdict",
     "ScanFinding",
     "ScanReport",
     "ast_scan_rules_identity",
@@ -89,9 +99,11 @@ __all__ = [
     "intent_kind",
     "intent_trace_kinds",
     "lint_declaration",
+    "lint_prediction",
     "read_surfaces_for_slice",
     "run_layer2_suite",
     "scan_logic_source",
+    "stream_set_required_capabilities",
     "traces_equal",
 ]
 

@@ -16,6 +16,7 @@ __all__ = [
     "CONFORMANCE_LADDER",
     "DENIAL_SET",
     "LAYER2_CHECKS",
+    "PREDICTION_CHECKS",
     "conformance_contract_identity",
 ]
 
@@ -37,6 +38,15 @@ LAYER2_CHECKS: Final[tuple[str, ...]] = (
     "state_bound_restore_equivalent",
 )
 
+# Pinned prediction-linter checks (addable never redefined). Run statically on
+# demand and at seat time against the CT-28 binding context (DEC-0178).
+PREDICTION_CHECKS: Final[tuple[str, ...]] = (
+    "footprint_satisfies_requirements",
+    "exit_intent_subset",
+    "family_resolves_exit_policy",
+    "stream_set_within_venue_capabilities",
+)
+
 
 def conformance_contract_identity() -> dict[str, object]:
     """Canonical identity of the conformance contract. No CT number, no package SemVer."""
@@ -46,4 +56,5 @@ def conformance_contract_identity() -> dict[str, object]:
         "ladder": CONFORMANCE_LADDER,
         "denial_set": sorted(DENIAL_SET),
         "layer2_checks": list(LAYER2_CHECKS),
+        "prediction_checks": list(PREDICTION_CHECKS),
     }

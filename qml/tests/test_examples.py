@@ -144,6 +144,23 @@ def test_layer2_usage_example_runs_clean() -> None:
     assert "layer2 conformance ok" in completed.stdout
 
 
+def test_prediction_usage_example_runs_clean() -> None:
+    completed = _run_example("prediction_usage.py")
+    assert completed.returncode == 0, completed.stderr
+    assert (
+        "prediction checks: footprint_satisfies_requirements,exit_intent_subset,"
+        "family_resolves_exit_policy,stream_set_within_venue_capabilities" in completed.stdout
+    )
+    assert "threshold gaps: GAP-0048,GAP-0049" in completed.stdout
+    assert "entry-only vs zero-exit Book: True" in completed.stdout
+    assert "unresolved family: policy rejection" in completed.stdout
+    assert "stream set exceeds venue: unsupported capability" in completed.stdout
+    assert "blank passes registration: True" in completed.stdout
+    assert "blank blocks live: policy rejection" in completed.stdout
+    assert "ruled footprint miss: policy rejection" in completed.stdout
+    assert "prediction linter ok" in completed.stdout
+
+
 def test_layer1_usage_example_runs_clean() -> None:
     completed = _run_example("layer1_usage.py")
     assert completed.returncode == 0, completed.stderr
