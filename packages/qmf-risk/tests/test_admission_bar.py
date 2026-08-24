@@ -191,11 +191,53 @@ def test_evidence_requirements_builds_and_flags_format2_fields() -> None:
         {"CT-32": 1},
         registered_conformant_bot_cite=True,
         canonical_assignment_evidence=True,
+        contract_format_version=2,
     )
     assert is_ok(result)
     assert result.value.registered_conformant_bot_cite is True
     assert result.value.canonical_assignment_evidence is True
     assert result.value.required_producer_contract_format_versions["CT-32"] == 1
+    identity = result.value.fp1_identity()
+    assert identity["registered_conformant_bot_cite"] is True
+    assert identity["canonical_assignment_evidence"] is True
+
+
+def test_format_1_evidence_identity_omits_format2_fields() -> None:
+    result = EvidenceRequirements.try_create(
+        World.LIVE,
+        AccountRole.LIVE,
+        Duration(value_ns=1_000),
+        {},
+        contract_format_version=1,
+    )
+    assert is_ok(result)
+    identity = result.value.fp1_identity()
+    assert "registered_conformant_bot_cite" not in identity
+    assert "canonical_assignment_evidence" not in identity
+
+
+def test_format_1_evidence_cannot_carry_format2_flags() -> None:
+    dur = Duration(value_ns=1)
+    assert is_refusal(
+        EvidenceRequirements.try_create(
+            World.LIVE,
+            AccountRole.LIVE,
+            dur,
+            {},
+            registered_conformant_bot_cite=True,
+            contract_format_version=1,
+        )
+    )
+    assert is_refusal(
+        EvidenceRequirements.try_create(
+            World.LIVE,
+            AccountRole.LIVE,
+            dur,
+            {},
+            canonical_assignment_evidence=True,
+            contract_format_version=1,
+        )
+    )
 
 
 def test_evidence_requirements_names_paper_role() -> None:
@@ -223,6 +265,16 @@ def test_evidence_requirements_refusals() -> None:
     assert is_refusal(
         EvidenceRequirements.try_create(
             World.LIVE, AccountRole.LIVE, dur, {}, canonical_assignment_evidence="yes"
+        )
+    )
+    assert is_refusal(
+        EvidenceRequirements.try_create(
+            World.LIVE, AccountRole.LIVE, dur, {}, contract_format_version=99
+        )
+    )
+    assert is_refusal(
+        EvidenceRequirements.try_create(
+            World.LIVE, AccountRole.LIVE, dur, {}, contract_format_version=True
         )
     )
 

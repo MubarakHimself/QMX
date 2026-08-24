@@ -21,6 +21,8 @@ from qmf.risk.templates import (
     BMS_CONTRACT_FORMAT_VERSION,
     BMS_SECTIONS,
     BOOK_CONTRACT_FORMAT_VERSION,
+    BOOK_FORMAT_VERSION_1,
+    BOOK_KNOWN_FORMAT_VERSIONS,
     BOOK_SECTIONS,
     BmsDefinition,
     BookDefinition,
@@ -67,6 +69,8 @@ def test_bms_declares_its_named_sections() -> None:
 
 def test_contract_format_versions() -> None:
     assert BOOK_CONTRACT_FORMAT_VERSION == 2
+    assert BOOK_FORMAT_VERSION_1 == 1
+    assert frozenset({1, 2}) == BOOK_KNOWN_FORMAT_VERSIONS
     assert BMS_CONTRACT_FORMAT_VERSION == 1
 
 
@@ -94,6 +98,36 @@ def test_book_definition_refuses_unknown_format_version() -> None:
     result = BookDefinition.try_create(99, "USD", {"money_rules": _money_rules(800_000)})
     assert is_refusal(result)
     assert result.context["field"] == "contract_format_version"
+
+
+def test_pre_mint_format_1_book_stays_readable() -> None:
+    result = BookDefinition.try_create(
+        BOOK_FORMAT_VERSION_1, "USD", {"money_rules": _money_rules(800_000)}
+    )
+    assert is_ok(result)
+    assert result.value.contract_format_version == BOOK_FORMAT_VERSION_1
+
+
+def test_format_1_reader_refuses_format_2_book() -> None:
+    result = BookDefinition.try_create(
+        BOOK_CONTRACT_FORMAT_VERSION,
+        "USD",
+        {"money_rules": _money_rules(800_000)},
+        reader_format_version=BOOK_FORMAT_VERSION_1,
+    )
+    assert is_refusal(result)
+    assert result.context["field"] == "contract_format_version"
+
+
+def test_format_2_reader_accepts_format_1_book() -> None:
+    result = BookDefinition.try_create(
+        BOOK_FORMAT_VERSION_1,
+        "USD",
+        {"money_rules": _money_rules(800_000)},
+        reader_format_version=BOOK_CONTRACT_FORMAT_VERSION,
+    )
+    assert is_ok(result)
+    assert result.value.contract_format_version == BOOK_FORMAT_VERSION_1
 
 
 def test_book_definition_refuses_boolean_format_version() -> None:
@@ -248,6 +282,10 @@ def test_public_surface_is_re_exported() -> None:
         "BookDefinition",
         "BmsDefinition",
         "TemplateVersionGraph",
+        "CT22_FORMAT_2_MIGRATION",
+        "CT23_FORMAT_2_MIGRATION",
+        "ExitPolicy",
+        "FootprintRequirements",
     ):
         assert name in qmf.risk.__all__
         assert hasattr(qmf.risk, name)

@@ -10,8 +10,10 @@ semantics land in later stories.
 
 Identity and versioning (AD-5, AD-10; DEC-0144, DEC-0158):
 
-* a definition carries its own ``contract_format_version``; an unknown version is
-  an ``unsupported capability`` refusal, never a best-effort read;
+* a definition carries its own ``contract_format_version``; CT-22 understands
+  format 1 and format 2 (DEC-0181) so pre-mint format-1 Books stay readable
+  forever, while an unknown version — or a format-1 reader confronting format 2 —
+  is an ``unsupported capability`` refusal, never a best-effort read;
 * **unknown sections under a known format version are ignored** — they never enter
   identity, so a future section a reader does not recognise cannot fork meaning;
 * a Book definition declares ``accounting_currency`` (USD in V1; a non-USD value is
@@ -36,7 +38,7 @@ from types import MappingProxyType
 from typing import Final, cast
 
 from qmf.core import Fingerprint, Ok, Result, TypedRefusal, fingerprint, is_refusal
-from qmf.risk._common import invalid, unsupported
+from qmf.risk._common import coerce_contract_format_version, invalid, unsupported
 from qmf.risk.grammar import TemplateSection, TemplateVariable
 from qmf.risk.numeraire import validate_accounting_currency
 
@@ -44,15 +46,22 @@ __all__ = [
     "BMS_CONTRACT_FORMAT_VERSION",
     "BMS_SECTIONS",
     "BOOK_CONTRACT_FORMAT_VERSION",
+    "BOOK_FORMAT_VERSION_1",
+    "BOOK_KNOWN_FORMAT_VERSIONS",
     "BOOK_SECTIONS",
     "BmsDefinition",
     "BookDefinition",
 ]
 
-# CT-22 sits at contract format version 2 (the AD-5 QML mint, DEC-0181); CT-27 is
-# at its first minted format version 1 (AD-29/30/32). Each contract owns its own
-# format version.
+# CT-22 sits at contract format version 2 (the AD-5 QML mint, DEC-0181). Format 1
+# is the pre-mint first version and stays readable forever; this build understands
+# both. Pinning format 2 alone and refusing format 1 is a defect (Story 11.7).
+# CT-27 remains at its first minted format version 1 (AD-29/30/32).
+BOOK_FORMAT_VERSION_1: Final[int] = 1
 BOOK_CONTRACT_FORMAT_VERSION: Final[int] = 2
+BOOK_KNOWN_FORMAT_VERSIONS: Final[frozenset[int]] = frozenset(
+    {BOOK_FORMAT_VERSION_1, BOOK_CONTRACT_FORMAT_VERSION}
+)
 BMS_CONTRACT_FORMAT_VERSION: Final[int] = 1
 
 # The ten declared Book sections, canonically named (CT-22; DEC-0144). Unknown
@@ -169,26 +178,29 @@ class BookDefinition:
 
     @classmethod
     def try_create(
-        cls, contract_format_version: object, accounting_currency: object, sections: object
+        cls,
+        contract_format_version: object,
+        accounting_currency: object,
+        sections: object,
+        *,
+        reader_format_version: object = BOOK_CONTRACT_FORMAT_VERSION,
     ) -> Result[BookDefinition]:
         """Validate and build a :class:`BookDefinition`, returning value-or-refusal.
 
-        Refuses an unknown ``contract_format_version`` (``unsupported capability``),
-        a missing or non-USD ``accounting_currency`` (``invalid input`` /
-        ``policy rejection`` via the numeraire law), and ill-typed sections. Unknown
-        section names are ignored, not refused.
+        This build understands format 1 and format 2 (DEC-0181). A format-2 reader
+        (the default) accepts pre-mint format-1 Books unchanged. A format-1 reader
+        (``reader_format_version=1``) confronting a format-2 artifact refuses
+        ``unsupported capability``, never a best-effort read. An unknown version is
+        likewise ``unsupported capability``. Unknown section names are ignored, not
+        refused.
         """
-        version = _coerce_format_version(
-            "contract_format_version", contract_format_version, BOOK_CONTRACT_FORMAT_VERSION
+        version = coerce_contract_format_version(
+            contract_format_version,
+            known=BOOK_KNOWN_FORMAT_VERSIONS,
+            reader_format_version=reader_format_version,
         )
-        if version is None:
-            return unsupported(
-                "contract_format_version",
-                "a Book definition's contract format version is not one this build "
-                "understands; an unknown version is never best-effort read",
-                given=repr(contract_format_version),
-                understood=BOOK_CONTRACT_FORMAT_VERSION,
-            )
+        if isinstance(version, TypedRefusal):
+            return version
         currency = validate_accounting_currency(accounting_currency)
         if is_refusal(currency):
             return currency

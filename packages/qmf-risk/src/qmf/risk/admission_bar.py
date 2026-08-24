@@ -83,7 +83,7 @@ from qmf.core import (
 from qmf.core import (
     TypedRefusal as _TypedRefusal,
 )
-from qmf.risk._common import clean_str, coerce_enum, invalid, policy, type_name
+from qmf.risk._common import clean_str, coerce_enum, invalid, policy, type_name, unsupported
 from qmf.risk.grammar import NotYetRuled
 
 __all__ = [
@@ -111,6 +111,13 @@ __all__ = [
 # This module's own contract format version stamped into fp1 identity content; its
 # meaning never mutates — an incompatible change mints the next version (L15).
 _ADMISSION_BAR_FORMAT_VERSION = 1
+
+# CT-22 contract format versions this evidence surface understands (Story 11.7).
+_EVIDENCE_FORMAT_1: Final[int] = 1
+_EVIDENCE_FORMAT_2: Final[int] = 2
+_EVIDENCE_KNOWN_FORMAT_VERSIONS: Final[frozenset[int]] = frozenset(
+    {_EVIDENCE_FORMAT_1, _EVIDENCE_FORMAT_2}
+)
 
 # The documented maximum target scale a float->exact comparison crossing accepts,
 # mirroring the money-path MAX_SCALE (CT-01; DEC-0105) so ``10**scale`` stays a cheap
@@ -376,6 +383,7 @@ class EvidenceRequirements:
     required_producer_contract_format_versions: Mapping[str, int]
     registered_conformant_bot_cite: bool = False
     canonical_assignment_evidence: bool = False
+    contract_format_version: int = _EVIDENCE_FORMAT_2
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -393,13 +401,16 @@ class EvidenceRequirements:
         required_producer_contract_format_versions: object,
         registered_conformant_bot_cite: object = False,
         canonical_assignment_evidence: object = False,
+        contract_format_version: object = _EVIDENCE_FORMAT_2,
     ) -> _Result[EvidenceRequirements]:
         """Validate and build :class:`EvidenceRequirements`, value-or-refusal.
 
         The world and account role each name a member of their set; the minimum
         evidence window is a :class:`~qmf.core.Duration`; the required producer
         contract format versions are a mapping of ``contract_id -> int`` (a bool is
-        not a version); the two format-2 bot-side flags are bools.
+        not a version). The two bot-side flags exist **only** at CT-22 format 2
+        (DEC-0181): asserting them at format 1 is ``invalid input`` so they cannot
+        land as a silent AD-30 field addition a format-1 parser would ignore.
         """
         resolved_world = coerce_enum(World, world)
         if resolved_world is None:
@@ -426,6 +437,18 @@ class EvidenceRequirements:
         versions = _coerce_producer_versions(required_producer_contract_format_versions)
         if isinstance(versions, _TypedRefusal):
             return versions
+        if (
+            isinstance(contract_format_version, bool)
+            or not isinstance(contract_format_version, int)
+            or contract_format_version not in _EVIDENCE_KNOWN_FORMAT_VERSIONS
+        ):
+            return unsupported(
+                "contract_format_version",
+                "an evidence_requirements contract format version this build does not "
+                "understand; an unknown version is never best-effort read",
+                given=repr(contract_format_version),
+                understood=sorted(_EVIDENCE_KNOWN_FORMAT_VERSIONS),
+            )
         if not isinstance(registered_conformant_bot_cite, bool):
             return invalid(
                 "registered_conformant_bot_cite",
@@ -438,6 +461,17 @@ class EvidenceRequirements:
                 "the canonical-assignment-evidence flag is a bool (format-2 field)",
                 given=repr(canonical_assignment_evidence),
             )
+        if contract_format_version < _EVIDENCE_FORMAT_2 and (
+            registered_conformant_bot_cite or canonical_assignment_evidence
+        ):
+            return invalid(
+                "evidence_requirements",
+                "registered_conformant_bot_cite and canonical_assignment_evidence land only "
+                "through the CT-22 format-2 mint; a format-1 evidence_requirements cannot "
+                "carry them — a silent field addition would let a format-1 parser ignore "
+                "them and admit the evidence they exist to refuse",
+                contract_format_version=contract_format_version,
+            )
         return _Ok(
             cls(
                 world=resolved_world,
@@ -446,6 +480,7 @@ class EvidenceRequirements:
                 required_producer_contract_format_versions=versions,
                 registered_conformant_bot_cite=registered_conformant_bot_cite,
                 canonical_assignment_evidence=canonical_assignment_evidence,
+                contract_format_version=contract_format_version,
             )
         )
 
@@ -455,8 +490,13 @@ class EvidenceRequirements:
         return self.account_role in PAPER_ACCOUNT_ROLES
 
     def fp1_identity(self) -> dict[str, object]:
-        """The pinned canonical ``fp1`` identity content for these requirements."""
-        return {
+        """The pinned canonical ``fp1`` identity content for these requirements.
+
+        Format-1 identity **omits** the two bot-side fields so they cannot leak
+        into a format-1 parser as ignored unknown keys (DEC-0178, DEC-0181).
+        Format-2 identity includes them as declared values (even when false).
+        """
+        content: dict[str, object] = {
             "class": "evidence-requirements",
             "world": self.world.value,
             "account_role": self.account_role.value,
@@ -464,10 +504,13 @@ class EvidenceRequirements:
             "required_producer_contract_format_versions": dict(
                 self.required_producer_contract_format_versions
             ),
-            "registered_conformant_bot_cite": self.registered_conformant_bot_cite,
-            "canonical_assignment_evidence": self.canonical_assignment_evidence,
             "format_version": _ADMISSION_BAR_FORMAT_VERSION,
         }
+        if self.contract_format_version >= _EVIDENCE_FORMAT_2:
+            content["contract_format_version"] = self.contract_format_version
+            content["registered_conformant_bot_cite"] = self.registered_conformant_bot_cite
+            content["canonical_assignment_evidence"] = self.canonical_assignment_evidence
+        return content
 
 
 def _coerce_producer_versions(value: object) -> Mapping[str, int] | _TypedRefusal:

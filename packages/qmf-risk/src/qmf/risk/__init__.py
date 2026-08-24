@@ -152,11 +152,31 @@ risk-monotonic intents (FR-028, FR-032; CT-23; DEC-0147, DEC-0177, DEC-0185):
   :func:`~qmf.risk.door.check_no_reopen`, :func:`~qmf.risk.door.check_no_size_increase`);
   and the ExitLogicRef mode registry (:data:`~qmf.risk.door.EXIT_LOGIC_MODE_REGISTRY`,
   :data:`~qmf.risk.door.ADOPT_BOT_ADVISORY_STOP_MODE`) whose adopt-the-bot's-advisory-stop
-  mode is an ``unavailable dependency`` refusal while CT-23 sits at
-  :data:`~qmf.risk.door.CT23_ACTIVE_FORMAT_VERSION` (format 1)
+  mode is an ``unavailable dependency`` refusal while the reader sits at format 1
   (:func:`~qmf.risk.door.check_exit_logic_mode_available`), with forward-compatible
   parsing (:func:`~qmf.risk.door.parse_inbound_intent`) that keeps format-1 artifacts
   readable forever and never breaks on an unknown optional field.
+
+Story 11.7 mints CT-22 and CT-23 to contract format version 2 — qmf-risk-owned
+shapes with QML-authored semantics and mandatory AD-5 migration notes
+(DEC-0181, DEC-0182):
+
+* :mod:`qmf.risk.migrations` — the locked mint notes
+  (:data:`~qmf.risk.migrations.CT22_FORMAT_2_MIGRATION`,
+  :data:`~qmf.risk.migrations.CT23_FORMAT_2_MIGRATION`);
+* :mod:`qmf.risk.admission_bar` — ``evidence_requirements`` gains
+  ``registered_conformant_bot_cite`` and ``canonical_assignment_evidence`` **only**
+  at format 2 (never a silent format-1 field addition);
+* :mod:`qmf.risk.exit_policy` — one explicit optional catch-all default entry
+  (:class:`~qmf.risk.exit_policy.ExitPolicy`,
+  :func:`~qmf.risk.exit_policy.resolve_exit_policy_entry`);
+* :mod:`qmf.risk.footprint_requirements` — the requirement-set shape filling the
+  reserved pending(GAP-0047) slot
+  (:class:`~qmf.risk.footprint_requirements.FootprintRequirements`);
+* :mod:`qmf.risk.door` — OPTIONAL ``entry.advisory_stop_proposal`` (Price or
+  PriceDelta), format-2 readers accepting format-1 intents unchanged, a format-1
+  reader refusing format 2 as ``unsupported capability``. Thresholds behind the
+  new admission-bar fields stay GAP-0048/GAP-0049.
 
 Story 10.7 lands CT-29 exit records, close reasons, whole-trade attribution, and the
 bench fold (FR-032; CT-29; DEC-0155, DEC-0147):
@@ -430,6 +450,7 @@ from qmf.risk.door import (
     ADOPT_BOT_ADVISORY_STOP_MODE_ID,
     CT23_ACTIVE_FORMAT_VERSION,
     CT23_ADVISORY_STOP_FORMAT_VERSION,
+    CT23_FORMAT_VERSION_1,
     CT23_KNOWN_FORMAT_VERSIONS,
     EXIT_LOGIC_MODE_REGISTRY,
     AdmittedEntry,
@@ -461,6 +482,14 @@ from qmf.risk.door import (
     reject_inbound_requested_r,
     reject_risk_monotonic_violation,
 )
+from qmf.risk.exit_policy import (
+    EXIT_POLICY_CATCH_ALL_FORMAT_VERSION,
+    ExitPolicy,
+    ExitPolicyResolution,
+    ProtectiveStopAttachment,
+    ResolvedExitPolicyEntry,
+    resolve_exit_policy_entry,
+)
 from qmf.risk.exit_record import (
     CLOSE_REASON_EVIDENCE_MAPPING,
     CT29_CONTRACT_FORMAT_VERSION,
@@ -485,6 +514,14 @@ from qmf.risk.exit_record import (
     mint_exit_record,
     partition_by_close_reason,
     realized_r_of,
+)
+from qmf.risk.footprint_requirements import (
+    FOOTPRINT_REQUIREMENTS_CONTRACT_FORMAT_VERSION,
+    FORMAT_1_FOOTPRINT_REQUIREMENTS_PENDING,
+    FootprintFieldKind,
+    FootprintRequirement,
+    FootprintRequirements,
+    check_footprint_requirements_live_binding,
 )
 from qmf.risk.grammar import (
     AdmissionImpact,
@@ -527,6 +564,12 @@ from qmf.risk.journal import (
     reject_book_identity_in_venue_payload,
     reject_cross_role_silent_union,
     reject_entity_as_writer,
+)
+from qmf.risk.migrations import (
+    CT22_FORMAT_2_MIGRATION,
+    CT23_FORMAT_2_MIGRATION,
+    THRESHOLD_GAPS_BEHIND_NEW_ADMISSION_BAR_FIELDS,
+    FormatMigrationNote,
 )
 from qmf.risk.numeraire import (
     BOOK_LIMIT_UNIT_KINDS,
@@ -608,6 +651,8 @@ from qmf.risk.templates import (
     BMS_CONTRACT_FORMAT_VERSION,
     BMS_SECTIONS,
     BOOK_CONTRACT_FORMAT_VERSION,
+    BOOK_FORMAT_VERSION_1,
+    BOOK_KNOWN_FORMAT_VERSIONS,
     BOOK_SECTIONS,
     BmsDefinition,
     BookDefinition,
@@ -630,13 +675,18 @@ __all__ = [
     "BMS_CONTRACT_FORMAT_VERSION",
     "BMS_SECTIONS",
     "BOOK_CONTRACT_FORMAT_VERSION",
+    "BOOK_FORMAT_VERSION_1",
+    "BOOK_KNOWN_FORMAT_VERSIONS",
     "BOOK_LIMIT_UNIT_KINDS",
     "BOOK_SECTIONS",
     "BREAKEVEN",
     "CLOSE_REASON_EVIDENCE_MAPPING",
     "COMPOSING_KIND_PAIRS",
+    "CT22_FORMAT_2_MIGRATION",
     "CT23_ACTIVE_FORMAT_VERSION",
     "CT23_ADVISORY_STOP_FORMAT_VERSION",
+    "CT23_FORMAT_2_MIGRATION",
+    "CT23_FORMAT_VERSION_1",
     "CT23_KNOWN_FORMAT_VERSIONS",
     "CT25_COMMAND_FINGERPRINT_JOIN_VERSION",
     "CT25_CONTRACT_FORMAT_VERSION",
@@ -648,10 +698,13 @@ __all__ = [
     "CT32_CONTRACT_FORMAT_VERSION",
     "DAILY_DEAD_ZONE_WIDTH_VARIABLE",
     "EXIT_LOGIC_MODE_REGISTRY",
+    "EXIT_POLICY_CATCH_ALL_FORMAT_VERSION",
     "FLATTEN_AUTHORITIES",
+    "FOOTPRINT_REQUIREMENTS_CONTRACT_FORMAT_VERSION",
     "FORBIDDEN_ADMISSION_GATES",
     "FORBIDDEN_COMPOSITE_EXPRESSIONS",
     "FORBIDDEN_MEASURE_ACTS",
+    "FORMAT_1_FOOTPRINT_REQUIREMENTS_PENDING",
     "FORM_0006",
     "FULL_ORIGINAL_LOSS",
     "LADDER_FORMULAS",
@@ -676,6 +729,7 @@ __all__ = [
     "SESSION_HANDOVER_BUFFER_ANCHOR_VARIABLE",
     "SESSION_HANDOVER_BUFFER_WIDTH_VARIABLE",
     "STATE_CARRY_COUNTERS",
+    "THRESHOLD_GAPS_BEHIND_NEW_ADMISSION_BAR_FIELDS",
     "V1_NUMERAIRE",
     "VENUE_AUTHORED_CLOSE_REASONS",
     "VENUE_AUTHORED_EVENT_TYPES",
@@ -757,11 +811,17 @@ __all__ = [
     "ExitLogicMode",
     "ExitLogicModule",
     "ExitLogicRef",
+    "ExitPolicy",
+    "ExitPolicyResolution",
     "ExitRecord",
     "ExitRecordStream",
     "ExitResultLabel",
     "FailClosedCause",
     "FeedQuadruple",
+    "FootprintFieldKind",
+    "FootprintRequirement",
+    "FootprintRequirements",
+    "FormatMigrationNote",
     "FormulaOp",
     "FormulaSpec",
     "IntentFamily",
@@ -789,12 +849,14 @@ __all__ = [
     "ProducerContract",
     "ProjectedJournalRow",
     "ProposedWindowAct",
+    "ProtectiveStopAttachment",
     "PublishAct",
     "RFaces",
     "ReasonCode",
     "ReconciliationVerdict",
     "Ref",
     "RequirementVerdict",
+    "ResolvedExitPolicyEntry",
     "ResolvedInstrumentScope",
     "ResultPeriod",
     "ReturnMechanism",
@@ -866,6 +928,7 @@ __all__ = [
     "check_exit_logic_mode_available",
     "check_exit_preservation",
     "check_flatten_authority",
+    "check_footprint_requirements_live_binding",
     "check_formula",
     "check_live_binding_admissible",
     "check_move_to_breakeven_ratchet",
@@ -944,6 +1007,7 @@ __all__ = [
     "require_baseline_for_decay",
     "reset_paper_epoch",
     "resolve_execution_target",
+    "resolve_exit_policy_entry",
     "resolve_instrument_scope",
     "resolve_subject_scope",
     "run_layer1_linters",

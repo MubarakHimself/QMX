@@ -19,6 +19,7 @@ from qmf.core import RefusalCategory, Retryability, TypedRefusal
 
 __all__ = [
     "clean_str",
+    "coerce_contract_format_version",
     "coerce_enum",
     "invalid",
     "policy",
@@ -56,6 +57,47 @@ def coerce_enum(enum_cls: type[_EnumT], value: object) -> _EnumT | None:
         except ValueError:
             return None
     return None
+
+
+def coerce_contract_format_version(
+    value: object,
+    *,
+    known: frozenset[int],
+    reader_format_version: object,
+    field: str = "contract_format_version",
+) -> int | TypedRefusal:
+    """Resolve a declared contract format version against a reader's understood set.
+
+    A bool is not a version. An unknown version, or a version newer than the reader
+    (a format-1 reader confronting a format-2 artifact), is ``unsupported
+    capability`` — never a best-effort read (AD-5; DEC-0181, DEC-0182). Versions the
+    reader understands, including pre-mint format 1 after a format-2 mint, pass.
+    """
+    if isinstance(reader_format_version, bool) or not isinstance(reader_format_version, int):
+        return invalid(
+            "reader_format_version",
+            "a contract-format reader version is an integer",
+            given=repr(reader_format_version),
+        )
+    if isinstance(value, bool) or not isinstance(value, int) or value not in known:
+        return unsupported(
+            field,
+            "a contract format version this build does not understand; an unknown version is "
+            "never best-effort read, and format-1 artifacts stay readable forever",
+            given=repr(value),
+            understood=sorted(known),
+            reader_format_version=reader_format_version,
+        )
+    if value > reader_format_version:
+        return unsupported(
+            field,
+            "a format-1 reader confronting a format-2 artifact refuses unsupported capability, "
+            "never a best-effort read; pre-mint format-1 artifacts stay readable forever",
+            given=repr(value),
+            understood=sorted(version for version in known if version <= reader_format_version),
+            reader_format_version=reader_format_version,
+        )
+    return value
 
 
 def clean_str(value: object) -> str | None:

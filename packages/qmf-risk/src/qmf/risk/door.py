@@ -10,14 +10,17 @@ is why **a bot may never size**: ``requested_r`` is Book-resolved and an inbound
 
 * **Entry intent** (:class:`EntryIntent`) — the inbound proposal carries the
   instrument, the direction, an advisory :attr:`~EntryIntent.proposed_r`, a typed
-  :class:`ReasonCode`, the :class:`~qmf.risk.paper.ExecutionTarget`, and its cited
-  evidence slots (:class:`CitedEvidence`); it carries **no** ``requested_r`` and
-  **no** bot-supplied full-loss price (AC2; CT-23 format 1). The **declared full-loss
-  price is derived at the Book door** (:func:`derive_full_loss_price_at_door`) by the
-  Book's per-family :class:`ExitLogicRef` consuming the intent's cited evidence, and
-  is stamped onto the :class:`AdmittedEntry` exactly as ``requested_r`` is Book-resolved
-  — single-sited, **no Book module is ever injected into bot logic** (DEC-0147,
-  DEC-0177, DEC-0182).
+  :class:`ReasonCode`, the :class:`~qmf.risk.paper.ExecutionTarget`, its cited
+  evidence slots (:class:`CitedEvidence`), and — from contract format version 2 —
+  an OPTIONAL :attr:`~EntryIntent.advisory_stop_proposal` (a :class:`~qmf.core.Price`
+  or :class:`~qmf.core.PriceDelta` bound, advisory exactly as ``proposed_r`` is).
+  It carries **no** ``requested_r`` and **no** bot-supplied full-loss price (AC2).
+  The **declared full-loss price is derived at the Book door**
+  (:func:`derive_full_loss_price_at_door`) by the Book's per-family
+  :class:`ExitLogicRef` consuming the advisory proposal and the intent's cited
+  evidence, and is stamped onto the :class:`AdmittedEntry` exactly as
+  ``requested_r`` is Book-resolved — single-sited, **no Book module is ever
+  injected into bot logic** (DEC-0147, DEC-0177, DEC-0182).
 * **Exit intent** (:class:`ExitIntent`) — risk-monotonic by construction: the only V1
   kinds are :attr:`ExitKind.CLOSE_FULL` and :attr:`ExitKind.TIGHTEN_PROTECTIVE_STOP`,
   each with a typed :class:`ReasonCode`; ``close_partial`` is an ``unsupported
@@ -33,14 +36,19 @@ is why **a bot may never size**: ``requested_r`` is Book-resolved and an inbound
   carries its own exit/stop methodology may declare the adopt-the-bot's-advisory-stop
   module mode (:data:`ADOPT_BOT_ADVISORY_STOP_MODE`), whose input contract is the CT-23
   **format-2** ``entry.advisory_stop_proposal`` field (minted by the QML increment,
-  Story 11.7, per SC-05). Invoking that mode while CT-23 sits at
-  :data:`CT23_ACTIVE_FORMAT_VERSION` (format 1) is an ``unavailable dependency`` refusal
-  (:func:`check_exit_logic_mode_available`) — ``requested_r`` stays Book-resolved and
-  the frozen R faces stay frozen in every mode (AC5; DEC-0177, DEC-0185).
-* **Forward compatibility** (AD-5) — a format-1 artifact stays readable forever and an
-  unknown optional field never breaks a format-1 consumer (:func:`parse_inbound_intent`
-  ignores unknown optional fields under a known format version), while an unknown
-  contract format version is an ``unsupported capability`` refusal (AC6; CT-22, CT-23).
+  Story 11.7, per SC-05). Invoking that mode while the door's reader sits at
+  format 1 is an ``unavailable dependency`` refusal
+  (:func:`check_exit_logic_mode_available`); at the active format 2 the mode
+  consumes :attr:`EntryIntent.advisory_stop_proposal`. ``requested_r`` stays
+  Book-resolved and the frozen R faces stay frozen in every mode (AC5; DEC-0177,
+  DEC-0185).
+* **Forward compatibility** (AD-5) — a format-1 artifact stays readable forever
+  (format-2 readers accept format-1 intents unchanged because
+  ``advisory_stop_proposal`` is optional). An unknown optional field never breaks
+  a format-1 consumer (:func:`parse_inbound_intent` ignores unknown optional
+  fields under a known format version). A format-1 reader confronting a format-2
+  artifact, or an unknown contract format version, is an ``unsupported
+  capability`` refusal (AC6; CT-22, CT-23).
 
 qmf-risk imports **only** ``qmf-core`` (default-deny, L30/DEC-0120) and sibling
 ``qmf.risk`` modules; nothing imports ``qmf.risk``. Ratified ``defined-unwired``
@@ -76,6 +84,7 @@ from qmf.core import (
 )
 from qmf.risk._common import (
     clean_str,
+    coerce_contract_format_version,
     coerce_enum,
     invalid,
     policy,
@@ -91,6 +100,7 @@ __all__ = [
     "ADOPT_BOT_ADVISORY_STOP_MODE_ID",
     "CT23_ACTIVE_FORMAT_VERSION",
     "CT23_ADVISORY_STOP_FORMAT_VERSION",
+    "CT23_FORMAT_VERSION_1",
     "CT23_KNOWN_FORMAT_VERSIONS",
     "EXIT_LOGIC_MODE_REGISTRY",
     "AdmittedEntry",
@@ -128,14 +138,17 @@ __all__ = [
 # meaning never mutates — an incompatible change mints the next version (L15).
 _DOOR_FORMAT_VERSION = 1
 
-# CT-23 sits at contract format version 1 in this build (AD-33, the first mint,
-# DEC-0147). Contract format version 2 — the OPTIONAL ``entry.advisory_stop_proposal``
-# field (DEC-0177, DEC-0182) — is minted by the QML increment (Story 11.7, SC-05); this
-# build is a format-1 consumer, so a format-2-only capability is an unavailable
-# dependency here and a format-1 artifact stays readable forever (AD-5; AC5, AC6).
-CT23_ACTIVE_FORMAT_VERSION: Final[int] = 1
+# CT-23 sits at contract format version 2 after the QML increment mint (Story 11.7,
+# DEC-0182). Format 1 is the pre-mint first version (AD-33, DEC-0147) and stays
+# readable forever; this build understands both. Format 2 adds the OPTIONAL
+# ``entry.advisory_stop_proposal`` field (DEC-0177). A format-1 reader confronting
+# a format-2 artifact refuses ``unsupported capability``.
+CT23_FORMAT_VERSION_1: Final[int] = 1
+CT23_ACTIVE_FORMAT_VERSION: Final[int] = 2
 CT23_ADVISORY_STOP_FORMAT_VERSION: Final[int] = 2
-CT23_KNOWN_FORMAT_VERSIONS: Final[frozenset[int]] = frozenset({CT23_ACTIVE_FORMAT_VERSION})
+CT23_KNOWN_FORMAT_VERSIONS: Final[frozenset[int]] = frozenset(
+    {CT23_FORMAT_VERSION_1, CT23_ACTIVE_FORMAT_VERSION}
+)
 
 # The wire field a bot may never carry inbound — the bot does not size (AC1).
 _REQUESTED_R_FIELD: Final[str] = "requested_r"
@@ -432,8 +445,8 @@ class ExitLogicMode:
 # "adopt the bot's advisory stop proposal (CT-23) as-is, validated against the Book's
 # risk rules", so a bot that carries its own exit/stop methodology is honored rather
 # than overridden. Its input contract is the CT-23 FORMAT-2 entry.advisory_stop_proposal
-# field, minted by the QML increment (Story 11.7, SC-05); at the active format 1 the
-# field does not exist, so invoking the mode is an unavailable-dependency refusal.
+# field, minted by the QML increment (Story 11.7, SC-05). Invoking the mode while the
+# door's reader sits at format 1 is an unavailable-dependency refusal.
 ADOPT_BOT_ADVISORY_STOP_MODE_ID: Final[str] = "adopt_bot_advisory_stop"
 ADOPT_BOT_ADVISORY_STOP_MODE: Final[ExitLogicMode] = ExitLogicMode(
     mode_id=ADOPT_BOT_ADVISORY_STOP_MODE_ID,
@@ -495,10 +508,10 @@ def check_exit_logic_mode_available(
     Returns the registered :class:`ExitLogicMode` when the door's active
     ``ct23_format_version`` meets the mode's requirement; ``Ok(None)`` when ``module_id``
     names no registered mode (a generic format-1 module, no special gating). A registered
-    mode whose ``required_ct23_format_version`` exceeds the active version — the
-    adopt-the-bot's-advisory-stop mode while CT-23 sits at format 1 — is an ``unavailable
-    dependency`` refusal, because the CT-23 field it consumes is not yet minted (DEC-0177,
-    DEC-0182).
+    mode whose ``required_ct23_format_version`` exceeds the reader's version — the
+    adopt-the-bot's-advisory-stop mode while the reader sits at format 1 — is an
+    ``unavailable dependency`` refusal, because the CT-23 field it consumes is not
+    visible to that reader (DEC-0177, DEC-0182).
     """
     token = clean_str(module_id)
     if token is None:
@@ -549,10 +562,13 @@ class EntryIntent:
 
     Carries the ``instrument``, the ``direction``, an advisory :attr:`proposed_r` (optional
     — never the sized value), a typed :class:`ReasonCode`, the
-    :class:`~qmf.risk.paper.ExecutionTarget`, and its cited evidence slots. It carries **no**
-    ``requested_r`` (the bot may not size — AC1) and **no** bot-supplied full-loss price: the
-    Book derives the declared full-loss price at the door from the cited evidence via the
-    per-family :class:`ExitLogicRef` (DEC-0147, DEC-0154, DEC-0177).
+    :class:`~qmf.risk.paper.ExecutionTarget`, its cited evidence slots, and — from
+    contract format version 2 — an OPTIONAL :attr:`advisory_stop_proposal` (a
+    :class:`~qmf.core.Price` or :class:`~qmf.core.PriceDelta` bound, advisory exactly
+    as ``proposed_r`` is). It carries **no** ``requested_r`` (the bot may not size —
+    AC1) and **no** bot-supplied full-loss price: the Book derives the declared
+    full-loss price at the door from the advisory proposal and cited evidence via
+    the per-family :class:`ExitLogicRef` (DEC-0147, DEC-0154, DEC-0177, DEC-0182).
     """
 
     instrument: Instrument
@@ -561,6 +577,7 @@ class EntryIntent:
     execution_target: ExecutionTarget
     proposed_r: ExactRational | None = None
     cited_evidence: CitedEvidence | None = None
+    advisory_stop_proposal: Price | PriceDelta | None = None
 
     @classmethod
     def try_create(
@@ -572,6 +589,7 @@ class EntryIntent:
         *,
         proposed_r: object = None,
         cited_evidence: object = None,
+        advisory_stop_proposal: object = None,
     ) -> Result[EntryIntent]:
         """Validate and build an :class:`EntryIntent`, value-or-refusal."""
         if not isinstance(instrument, Instrument):
@@ -615,6 +633,11 @@ class EntryIntent:
                     given=repr(cited_evidence),
                 )
             resolved_evidence = cited_evidence
+        resolved_stop = _require_advisory_stop_proposal(
+            advisory_stop_proposal, instrument=instrument
+        )
+        if isinstance(resolved_stop, TypedRefusal):
+            return resolved_stop
         return _Ok(
             cls(
                 instrument=instrument,
@@ -623,6 +646,7 @@ class EntryIntent:
                 execution_target=execution_target,
                 proposed_r=resolved_r,
                 cited_evidence=resolved_evidence,
+                advisory_stop_proposal=resolved_stop,
             )
         )
 
@@ -641,7 +665,41 @@ class EntryIntent:
             content["proposed_r"] = self.proposed_r.fp1_identity()
         if self.cited_evidence is not None:
             content["cited_evidence"] = self.cited_evidence.fp1_identity()
+        if self.advisory_stop_proposal is not None:
+            content["advisory_stop_proposal"] = self.advisory_stop_proposal.fp1_identity()
         return content
+
+
+def _require_advisory_stop_proposal(
+    value: object, *, instrument: Instrument
+) -> Price | PriceDelta | TypedRefusal | None:
+    """Resolve the format-2 advisory stop proposal, or ``None`` when absent."""
+    if value is None:
+        return None
+    if isinstance(value, Price):
+        if value.instrument != instrument:
+            return invalid(
+                "advisory_stop_proposal",
+                "the advisory stop proposal Price belongs to the entry instrument",
+                entry=repr(instrument),
+                given=repr(value.instrument),
+            )
+        return value
+    if isinstance(value, PriceDelta):
+        if value.instrument != instrument:
+            return invalid(
+                "advisory_stop_proposal",
+                "the advisory stop proposal PriceDelta belongs to the entry instrument",
+                entry=repr(instrument),
+                given=repr(value.instrument),
+            )
+        return value
+    return invalid(
+        "advisory_stop_proposal",
+        "the advisory stop proposal is a Price(instrument) or a PriceDelta(instrument) bound, "
+        "advisory exactly as proposed_r is",
+        given=repr(value),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -884,13 +942,15 @@ def parse_inbound_intent(
 
     * an inbound ``requested_r`` is an ``invalid input`` refusal — the bot may not size
       (AC1; :func:`reject_inbound_requested_r`);
-    * a declared ``contract_format_version`` this build does not understand is an
-      ``unsupported capability`` refusal (an unknown version is never best-effort read),
-      while an absent one assumes the door's active version (AC6);
+    * a declared ``contract_format_version`` this reader does not understand is an
+      ``unsupported capability`` refusal (an unknown version, or a format-1 reader
+      confronting format 2, is never best-effort read). An absent stamp is treated as
+      format 1 so pre-mint intents stay readable forever (AC6);
     * **an unknown optional field never breaks a format-1 consumer** — unrecognized keys
-      under a known format version are ignored, so a format-2 field (e.g. a future
-      ``advisory_stop_proposal``) on a format-1 artifact is dropped, never a refusal
-      (AD-5; AC6);
+      under a known format version are ignored. Format 2 consumes
+      ``advisory_stop_proposal`` from the envelope when the artifact is stamped 2;
+      a format-1 artifact (unstamped or declared 1) drops that key so a format-2
+      reader accepts format-1 intents unchanged (AD-5; DEC-0182);
     * the ``intent_family`` discriminant selects exactly one already-typed family value
       (``entry`` -> :class:`EntryIntent`, ``exit`` -> :class:`ExitIntent`); both or
       neither is ``invalid input`` (AC1).
@@ -910,12 +970,16 @@ def parse_inbound_intent(
             given=repr(ct23_format_version),
         )
     declared_version = mapping.get("contract_format_version")
-    if declared_version is not None and (
-        isinstance(declared_version, bool)
-        or not isinstance(declared_version, int)
-        or declared_version not in CT23_KNOWN_FORMAT_VERSIONS
-    ):
-        return _unsupported_version(declared_version)
+    artifact_version: int = CT23_FORMAT_VERSION_1
+    if declared_version is not None:
+        resolved_declared = coerce_contract_format_version(
+            declared_version,
+            known=CT23_KNOWN_FORMAT_VERSIONS,
+            reader_format_version=ct23_format_version,
+        )
+        if isinstance(resolved_declared, TypedRefusal):
+            return resolved_declared
+        artifact_version = resolved_declared
     guard = reject_inbound_requested_r(mapping)
     if is_refusal(guard):
         return guard
@@ -936,9 +1000,17 @@ def parse_inbound_intent(
                 "an entry-family request carries a typed EntryIntent under the 'entry' key",
                 given=repr(entry),
             )
-        # Unknown optional fields (an 'exit' key would contradict the family, a future
-        # format-2 field, or any other unrecognized key) are ignored under this known
-        # format version — an unknown optional field never breaks a format-1 consumer.
+        # Format-2 envelope may carry advisory_stop_proposal; format-1 artifacts
+        # (unstamped or declared 1) ignore that key so a format-2 reader accepts
+        # format-1 intents unchanged (DEC-0182). Other unknown optional fields
+        # are ignored under a known format version.
+        if artifact_version >= CT23_ADVISORY_STOP_FORMAT_VERSION:
+            envelope_stop = mapping.get("advisory_stop_proposal")
+            if envelope_stop is not None:
+                rebuilt = _with_advisory_stop(entry, envelope_stop)
+                if isinstance(rebuilt, TypedRefusal):
+                    return rebuilt
+                entry = rebuilt.value
         return RiskEvaluationRequest.try_create(entry=entry)
     exit_intent = mapping.get("exit")
     if not isinstance(exit_intent, ExitIntent):
@@ -950,14 +1022,16 @@ def parse_inbound_intent(
     return RiskEvaluationRequest.try_create(exit=exit_intent)
 
 
-def _unsupported_version(declared_version: object) -> TypedRefusal:
-    """The ``unsupported capability`` refusal for an unknown CT-23 contract format version."""
-    return unsupported(
-        "contract_format_version",
-        "a CT-23 contract format version this build does not understand; an unknown version is "
-        "never best-effort read, and format-1 artifacts stay readable forever",
-        given=repr(declared_version),
-        understood=sorted(CT23_KNOWN_FORMAT_VERSIONS),
+def _with_advisory_stop(entry: EntryIntent, proposal: object) -> Result[EntryIntent]:
+    """Rebuild an :class:`EntryIntent` carrying a format-2 advisory stop proposal."""
+    return EntryIntent.try_create(
+        entry.instrument,
+        entry.direction,
+        entry.reason_code,
+        entry.execution_target,
+        proposed_r=entry.proposed_r,
+        cited_evidence=entry.cited_evidence,
+        advisory_stop_proposal=proposal,
     )
 
 
@@ -972,18 +1046,20 @@ def derive_full_loss_price_at_door(
     direction: object,
     cited_evidence: object = None,
     ct23_format_version: object = CT23_ACTIVE_FORMAT_VERSION,
+    advisory_stop_proposal: object = None,
 ) -> Result[Price]:
     """Derive the declared full-loss price at the Book door via the per-family ExitLogicRef (AC2).
 
     The Book executes its own per-family :class:`ExitLogicRef` — never a Book module injected
-    into bot logic — consuming the intent's cited evidence to derive the declared full-loss
-    price (DEC-0147, DEC-0177). The steps:
+    into bot logic — consuming the advisory stop proposal and the intent's cited evidence
+    to derive the declared full-loss price (DEC-0147, DEC-0177, DEC-0182). The steps:
 
     1. **gate the mode** on its required CT-23 format version — the adopt-the-bot's-advisory-stop
-       mode while CT-23 sits at format 1 is an ``unavailable dependency`` refusal (AC5);
-    2. **execute the module seam** (:class:`ExitLogicModule`), which returns a resolved
-       full-loss :class:`~qmf.core.Price` or a refusal;
-    3. **enforce the loss-side invariant** — the derived price must sit on the loss side of
+       mode while the reader sits at format 1 is an ``unavailable dependency`` refusal (AC5);
+    2. **if the mode is adopt-the-bot's-advisory-stop**, resolve
+       ``advisory_stop_proposal`` (a Price or a PriceDelta bound) to a loss-side Price;
+    3. **otherwise execute the module seam** (:class:`ExitLogicModule`);
+    4. **enforce the loss-side invariant** — the derived price must sit on the loss side of
        ``entry_price`` for the ``direction`` (via
        :func:`~qmf.risk.r_faces.derive_original_risk_distance`), else it is not a planned loss
        point and is refused (no price, no admission — AC2).
@@ -1029,12 +1105,19 @@ def derive_full_loss_price_at_door(
     )
     if is_refusal(availability):
         return availability
-    derived = module.derive_full_loss_price(
-        entry_price=entry_price, direction=resolved_direction, cited_evidence=evidence
-    )
-    if is_refusal(derived):
-        return derived
-    price = derived.value
+    if availability.value is ADOPT_BOT_ADVISORY_STOP_MODE:
+        derived_price = _price_from_advisory_stop(
+            entry_price=entry_price,
+            direction=resolved_direction,
+            proposal=advisory_stop_proposal,
+        )
+    else:
+        derived_price = module.derive_full_loss_price(
+            entry_price=entry_price, direction=resolved_direction, cited_evidence=evidence
+        )
+    if is_refusal(derived_price):
+        return derived_price
+    price = derived_price.value
     # The derived price must be a genuine loss point (loss side of entry for the direction);
     # otherwise no original_risk_distance resolves and there is no admission (AC2; DEC-0154).
     distance = derive_original_risk_distance(entry_price, price, resolved_direction)
@@ -1043,17 +1126,55 @@ def derive_full_loss_price_at_door(
     return _Ok(price)
 
 
+def _price_from_advisory_stop(
+    *, entry_price: Price, direction: Direction, proposal: object
+) -> Result[Price]:
+    """Resolve a format-2 advisory stop proposal to a declared full-loss Price."""
+    if proposal is None:
+        return refuse_no_full_loss_price(mode=ADOPT_BOT_ADVISORY_STOP_MODE_ID)
+    if isinstance(proposal, Price):
+        if proposal.instrument != entry_price.instrument:
+            return invalid(
+                "advisory_stop_proposal",
+                "the advisory stop proposal Price belongs to the entry instrument",
+                entry=repr(entry_price.instrument),
+                given=repr(proposal.instrument),
+            )
+        return _Ok(proposal)
+    if isinstance(proposal, PriceDelta):
+        if proposal.instrument != entry_price.instrument:
+            return invalid(
+                "advisory_stop_proposal",
+                "the advisory stop proposal PriceDelta belongs to the entry instrument",
+                entry=repr(entry_price.instrument),
+                given=repr(proposal.instrument),
+            )
+        if direction is Direction.LONG:
+            negated = PriceDelta.try_create(-proposal.value, proposal.instrument, proposal.scale)
+            if is_refusal(negated):
+                return negated
+            return entry_price.add(negated.value)
+        return entry_price.add(proposal)
+    return invalid(
+        "advisory_stop_proposal",
+        "the advisory stop proposal is a Price(instrument) or a PriceDelta(instrument) bound",
+        given=repr(proposal),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class AdmittedEntry:
     """A Book-admitted entry — the Book-resolved, single-sited, frozen result (AC2; DEC-0147).
 
     Carries the bot's advisory declaration (``instrument``, ``direction``, advisory
-    ``proposed_r``, ``reason_code``, ``execution_target``, cited evidence) plus the two
-    values the **Book** resolves and stamps at the door: the ``declared_full_loss_price``
-    (derived by the per-family ExitLogicRef from the cited evidence) and the Book-resolved
-    ``requested_r``, together with the derived ``original_risk_distance``. Both Book-stamped
-    values are minted **once** here and this value is immutable — **R stays frozen in every
-    mode** and ``requested_r`` is never bot-supplied (DEC-0147, DEC-0154, DEC-0177).
+    ``proposed_r``, optional format-2 ``advisory_stop_proposal``, ``reason_code``,
+    ``execution_target``, cited evidence) plus the two values the **Book** resolves
+    and stamps at the door: the ``declared_full_loss_price`` (derived by the
+    per-family ExitLogicRef from the advisory proposal and cited evidence) and the
+    Book-resolved ``requested_r``, together with the derived ``original_risk_distance``.
+    Both Book-stamped values are minted **once** here and this value is immutable —
+    **R stays frozen in every mode** and ``requested_r`` is never bot-supplied
+    (DEC-0147, DEC-0154, DEC-0177, DEC-0182).
     """
 
     instrument: Instrument
@@ -1065,6 +1186,7 @@ class AdmittedEntry:
     requested_r: ExactRational
     proposed_r: ExactRational | None = None
     cited_evidence: CitedEvidence | None = None
+    advisory_stop_proposal: Price | PriceDelta | None = None
 
     def fp1_identity(self) -> dict[str, object]:
         """The pinned canonical ``fp1`` identity content — enters the command record's identity."""
@@ -1083,6 +1205,8 @@ class AdmittedEntry:
             content["proposed_r"] = self.proposed_r.fp1_identity()
         if self.cited_evidence is not None:
             content["cited_evidence"] = self.cited_evidence.fp1_identity()
+        if self.advisory_stop_proposal is not None:
+            content["advisory_stop_proposal"] = self.advisory_stop_proposal.fp1_identity()
         return content
 
 
@@ -1106,8 +1230,8 @@ def admit_entry_intent(
       Book computed, never a bot-supplied value (the bot may not size — AC1);
     * **derives the declared full-loss price at the door** via the per-family
       :class:`ExitLogicRef` (:func:`derive_full_loss_price_at_door`), gating the
-      adopt-the-bot's-advisory-stop mode to an ``unavailable dependency`` refusal while CT-23
-      sits at format 1 (AC5);
+      adopt-the-bot's-advisory-stop mode to an ``unavailable dependency`` refusal while
+      the reader sits at format 1 (AC5);
     * stamps the derived price and the Book-resolved ``requested_r`` onto a frozen
       :class:`AdmittedEntry`, single-sited and minted once (R stays frozen in every mode).
 
@@ -1141,6 +1265,7 @@ def admit_entry_intent(
         direction=intent.direction,
         cited_evidence=intent.cited_evidence,
         ct23_format_version=ct23_format_version,
+        advisory_stop_proposal=intent.advisory_stop_proposal,
     )
     if is_refusal(price):
         return price
@@ -1158,6 +1283,7 @@ def admit_entry_intent(
             requested_r=book_resolved_requested_r,
             proposed_r=intent.proposed_r,
             cited_evidence=intent.cited_evidence,
+            advisory_stop_proposal=intent.advisory_stop_proposal,
         )
     )
 

@@ -42,6 +42,7 @@ from qmf.risk.door import (
     ADOPT_BOT_ADVISORY_STOP_MODE_ID,
     CT23_ACTIVE_FORMAT_VERSION,
     CT23_ADVISORY_STOP_FORMAT_VERSION,
+    CT23_FORMAT_VERSION_1,
     CT23_KNOWN_FORMAT_VERSIONS,
     EXIT_LOGIC_MODE_REGISTRY,
     AdmittedEntry,
@@ -154,7 +155,11 @@ def _cited_evidence() -> CitedEvidence:
     return result.value
 
 
-def _entry_intent(*, proposed_r: ExactRational | None = None) -> EntryIntent:
+def _entry_intent(
+    *,
+    proposed_r: ExactRational | None = None,
+    advisory_stop_proposal: Price | PriceDelta | None = None,
+) -> EntryIntent:
     result = EntryIntent.try_create(
         _instrument(),
         Direction.LONG,
@@ -162,6 +167,7 @@ def _entry_intent(*, proposed_r: ExactRational | None = None) -> EntryIntent:
         _execution_target(),
         proposed_r=proposed_r,
         cited_evidence=_cited_evidence(),
+        advisory_stop_proposal=advisory_stop_proposal,
     )
     assert is_ok(result)
     return result.value
@@ -761,8 +767,9 @@ def test_adopt_bot_advisory_stop_mode_is_registered_with_format_2_input() -> Non
     assert mode.required_ct23_format_version == CT23_ADVISORY_STOP_FORMAT_VERSION == 2
 
 
-def test_ct23_active_format_version_is_one() -> None:
-    assert CT23_ACTIVE_FORMAT_VERSION == 1
+def test_ct23_active_format_version_is_two() -> None:
+    assert CT23_ACTIVE_FORMAT_VERSION == 2
+    assert CT23_FORMAT_VERSION_1 == 1
 
 
 def test_adopt_mode_is_unavailable_dependency_at_format_1() -> None:
@@ -800,14 +807,16 @@ def test_admit_with_adopt_mode_at_format_1_is_unavailable_dependency() -> None:
         exit_logic_ref=_exit_logic_ref(ADOPT_BOT_ADVISORY_STOP_MODE_ID),
         module=_OffsetStopModule(),
         book_resolved_requested_r=_r(2),
+        ct23_format_version=CT23_FORMAT_VERSION_1,
     )
     assert is_refusal(result)
     assert result.category is RefusalCategory.UNAVAILABLE_DEPENDENCY
 
 
 def test_admit_with_adopt_mode_at_format_2_derives_the_price() -> None:
+    stop = _price(104500)
     result = admit_entry_intent(
-        intent=_entry_intent(),
+        intent=_entry_intent(advisory_stop_proposal=stop),
         entry_price=_price(105000),
         exit_logic_ref=_exit_logic_ref(ADOPT_BOT_ADVISORY_STOP_MODE_ID),
         module=_OffsetStopModule(),
@@ -817,6 +826,8 @@ def test_admit_with_adopt_mode_at_format_2_derives_the_price() -> None:
     assert is_ok(result)
     # requested_r stays Book-resolved in every mode.
     assert result.value.requested_r == _r(2)
+    assert result.value.declared_full_loss_price == stop
+    assert result.value.advisory_stop_proposal == stop
 
 
 def test_admitted_entry_r_stays_frozen_in_every_mode() -> None:
@@ -843,8 +854,8 @@ def test_refuse_no_full_loss_price_is_invalid_input() -> None:
 # --- AC6: forward compatibility (AD-5) ---------------------------------------
 
 
-def test_ct23_known_format_versions_is_exactly_one() -> None:
-    assert frozenset({1}) == CT23_KNOWN_FORMAT_VERSIONS
+def test_ct23_known_format_versions_is_one_and_two() -> None:
+    assert frozenset({1, 2}) == CT23_KNOWN_FORMAT_VERSIONS
 
 
 def test_parse_format_1_entry_artifact_stays_readable() -> None:
@@ -866,20 +877,187 @@ def test_parse_ignores_unknown_optional_field_never_breaks_format_1_consumer() -
     raw = {
         "intent_family": "entry",
         "entry": _entry_intent(),
-        # a future format-2 field on a format-1 artifact — ignored, never a refusal.
+        # format-2 field on a format-1 (unstamped) artifact — ignored, never a refusal.
         "advisory_stop_proposal": _price(104000),
         "some_future_field": "whatever",
+        "contract_format_version": 1,
     }
     result = parse_inbound_intent(raw)
     assert is_ok(result)
     assert result.value.entry is not None
+    assert result.value.entry.advisory_stop_proposal is None
 
 
 def test_parse_unknown_contract_format_version_is_unsupported_capability() -> None:
-    raw = {"intent_family": "entry", "entry": _entry_intent(), "contract_format_version": 2}
+    raw = {"intent_family": "entry", "entry": _entry_intent(), "contract_format_version": 99}
     result = parse_inbound_intent(raw)
     assert is_refusal(result)
     assert result.category is RefusalCategory.UNSUPPORTED_CAPABILITY
+
+
+def test_parse_format_2_artifact_is_readable() -> None:
+    raw = {"intent_family": "entry", "entry": _entry_intent(), "contract_format_version": 2}
+    result = parse_inbound_intent(raw)
+    assert is_ok(result)
+
+
+def test_format_1_reader_refuses_format_2_intent() -> None:
+    raw = {"intent_family": "entry", "entry": _entry_intent(), "contract_format_version": 2}
+    result = parse_inbound_intent(raw, ct23_format_version=CT23_FORMAT_VERSION_1)
+    assert is_refusal(result)
+    assert result.category is RefusalCategory.UNSUPPORTED_CAPABILITY
+
+
+def test_format_2_reader_accepts_format_1_intent_unchanged() -> None:
+    raw = {"intent_family": "entry", "entry": _entry_intent(), "contract_format_version": 1}
+    result = parse_inbound_intent(raw, ct23_format_version=CT23_ACTIVE_FORMAT_VERSION)
+    assert is_ok(result)
+    assert result.value.entry is not None
+    assert result.value.entry.advisory_stop_proposal is None
+
+
+def test_advisory_stop_must_match_entry_instrument() -> None:
+    other = Price.try_create(104000, _other_instrument(), 5)
+    assert is_ok(other)
+    assert is_refusal(
+        EntryIntent.try_create(
+            _instrument(),
+            Direction.LONG,
+            _reason(),
+            _execution_target(),
+            advisory_stop_proposal=other.value,
+        )
+    )
+    other_delta = PriceDelta.try_create(500, _other_instrument(), 5)
+    assert is_ok(other_delta)
+    assert is_refusal(
+        EntryIntent.try_create(
+            _instrument(),
+            Direction.LONG,
+            _reason(),
+            _execution_target(),
+            advisory_stop_proposal=other_delta.value,
+        )
+    )
+
+
+def test_adopt_mode_short_adds_delta_on_the_loss_side() -> None:
+    intent = EntryIntent.try_create(
+        _instrument(),
+        Direction.SHORT,
+        _reason(),
+        _execution_target(),
+        cited_evidence=_cited_evidence(),
+        advisory_stop_proposal=_delta(500),
+    )
+    assert is_ok(intent)
+    result = admit_entry_intent(
+        intent=intent.value,
+        entry_price=_price(105000),
+        exit_logic_ref=_exit_logic_ref(ADOPT_BOT_ADVISORY_STOP_MODE_ID),
+        module=_OffsetStopModule(),
+        book_resolved_requested_r=_r(2),
+    )
+    assert is_ok(result)
+    assert result.value.declared_full_loss_price.value == 105500
+
+
+def test_parse_format_2_bad_advisory_stop_is_invalid() -> None:
+    raw = {
+        "intent_family": "entry",
+        "entry": _entry_intent(),
+        "contract_format_version": 2,
+        "advisory_stop_proposal": "nope",
+    }
+    result = parse_inbound_intent(raw)
+    assert is_refusal(result)
+
+
+def test_entry_intent_accepts_price_or_delta_advisory_stop() -> None:
+    price_stop = _entry_intent(advisory_stop_proposal=_price(104000))
+    assert price_stop.advisory_stop_proposal == _price(104000)
+    delta_stop = _entry_intent(advisory_stop_proposal=_delta(500))
+    assert isinstance(delta_stop.advisory_stop_proposal, PriceDelta)
+    assert is_refusal(
+        EntryIntent.try_create(
+            _instrument(),
+            Direction.LONG,
+            _reason(),
+            _execution_target(),
+            advisory_stop_proposal="not-a-price",
+        )
+    )
+
+
+def test_adopt_mode_price_delta_bound_derives_loss_side_price() -> None:
+    result = admit_entry_intent(
+        intent=_entry_intent(advisory_stop_proposal=_delta(500)),
+        entry_price=_price(105000),
+        exit_logic_ref=_exit_logic_ref(ADOPT_BOT_ADVISORY_STOP_MODE_ID),
+        module=_OffsetStopModule(),
+        book_resolved_requested_r=_r(2),
+    )
+    assert is_ok(result)
+    # long: entry - delta
+    assert result.value.declared_full_loss_price.value == 104500
+
+
+def test_derive_adopt_mode_rejects_mismatched_proposal_instrument() -> None:
+    other = Price.try_create(104000, _other_instrument(), 5)
+    assert is_ok(other)
+    result = derive_full_loss_price_at_door(
+        exit_logic_ref=_exit_logic_ref(ADOPT_BOT_ADVISORY_STOP_MODE_ID),
+        module=_OffsetStopModule(),
+        entry_price=_price(105000),
+        direction=Direction.LONG,
+        advisory_stop_proposal=other.value,
+    )
+    assert is_refusal(result)
+    other_delta = PriceDelta.try_create(500, _other_instrument(), 5)
+    assert is_ok(other_delta)
+    result_delta = derive_full_loss_price_at_door(
+        exit_logic_ref=_exit_logic_ref(ADOPT_BOT_ADVISORY_STOP_MODE_ID),
+        module=_OffsetStopModule(),
+        entry_price=_price(105000),
+        direction=Direction.LONG,
+        advisory_stop_proposal=other_delta.value,
+    )
+    assert is_refusal(result_delta)
+    assert is_refusal(
+        derive_full_loss_price_at_door(
+            exit_logic_ref=_exit_logic_ref(ADOPT_BOT_ADVISORY_STOP_MODE_ID),
+            module=_OffsetStopModule(),
+            entry_price=_price(105000),
+            direction=Direction.LONG,
+            advisory_stop_proposal="nope",
+        )
+    )
+
+
+def test_adopt_mode_without_proposal_is_no_full_loss_price() -> None:
+    result = admit_entry_intent(
+        intent=_entry_intent(),
+        entry_price=_price(105000),
+        exit_logic_ref=_exit_logic_ref(ADOPT_BOT_ADVISORY_STOP_MODE_ID),
+        module=_OffsetStopModule(),
+        book_resolved_requested_r=_r(2),
+    )
+    assert is_refusal(result)
+    assert result.category is RefusalCategory.INVALID_INPUT
+
+
+def test_parse_format_2_attaches_advisory_stop_proposal() -> None:
+    stop = _price(104000)
+    raw = {
+        "intent_family": "entry",
+        "entry": _entry_intent(),
+        "contract_format_version": 2,
+        "advisory_stop_proposal": stop,
+    }
+    result = parse_inbound_intent(raw)
+    assert is_ok(result)
+    assert result.value.entry is not None
+    assert result.value.entry.advisory_stop_proposal == stop
 
 
 def test_parse_rejects_inbound_requested_r() -> None:
