@@ -2,16 +2,48 @@
 
 Inbound execution is a CT-23 Book-resolved intent (or a typed refusal). Ports
 execute an authorized intent, never a bot-sized order, and never a venue
-command (DEC-0164).
+command (DEC-0164). Fill/slippage/cost ``typing.Protocol`` seams are pinned
+here; Epic 17 implements adapters.
 """
 
 from __future__ import annotations
 
-from typing import Final, TypeAlias
-
-from qmf.risk.door import EntryIntent, ExitIntent
-from qmf.risk.exit_record import ExitRecord
-
+from qmb.execution.ports import (
+    CLAIMS_EDGE,
+    COMPOSITION_ORDER,
+    COMPOSITION_VERSION,
+    FILL_DECISIONS,
+    FINANCING_IS_ORDER_FILL,
+    GAP_0048_OPEN,
+    PORT_ROLES,
+    SPENDS_SPLIT_BUDGET,
+    TAINT_IS_IDENTITY,
+    TAINT_OPTIMISTIC,
+    AuthorizedIntent,
+    CostedFill,
+    CostPort,
+    ExecutionPorts,
+    Fill,
+    FillDecision,
+    Filled,
+    FillKind,
+    FillPort,
+    FinancingPort,
+    NoFill,
+    PartialFill,
+    SlicePath,
+    SlippagePort,
+    apply_execution_ports,
+    classify_fill_quantity,
+    derive_world_from_provenance,
+    execute_authorized,
+    fingerprint_ports,
+    ports_identity,
+    record_virtual_close,
+    refuse_optimistic_edge_claim,
+    refuse_store_synthetic_governed_evidence,
+    require_authorized_intent,
+)
 from qmb.execution.risk import (
     admit_open,
     evaluate_exit,
@@ -20,33 +52,42 @@ from qmb.execution.risk import (
 )
 
 __all__ = [
+    "CLAIMS_EDGE",
+    "COMPOSITION_ORDER",
+    "COMPOSITION_VERSION",
+    "FILL_DECISIONS",
+    "FINANCING_IS_ORDER_FILL",
+    "GAP_0048_OPEN",
     "PORT_ROLES",
+    "SPENDS_SPLIT_BUDGET",
+    "TAINT_IS_IDENTITY",
+    "TAINT_OPTIMISTIC",
     "AuthorizedIntent",
+    "CostPort",
+    "CostedFill",
+    "ExecutionPorts",
+    "Fill",
+    "FillDecision",
+    "FillKind",
+    "FillPort",
+    "Filled",
+    "FinancingPort",
+    "NoFill",
+    "PartialFill",
+    "SlicePath",
+    "SlippagePort",
     "admit_open",
+    "apply_execution_ports",
+    "classify_fill_quantity",
+    "derive_world_from_provenance",
     "evaluate_exit",
+    "execute_authorized",
+    "fingerprint_ports",
     "mint_replay_exit",
     "ports_identity",
+    "record_virtual_close",
+    "refuse_optimistic_edge_claim",
+    "refuse_store_synthetic_governed_evidence",
+    "require_authorized_intent",
     "require_full_loss_before_open",
 ]
-
-AuthorizedIntent: TypeAlias = EntryIntent | ExitIntent
-
-PORT_ROLES: Final[tuple[str, ...]] = (
-    "fill",
-    "slippage",
-    "cost",
-    "financing",
-)
-
-
-def ports_identity() -> dict[str, object]:
-    """Identity-bearing execution-port fields. Package SemVer is omitted."""
-    return {
-        "port_roles": PORT_ROLES,
-        "authorized_intent": (
-            f"{EntryIntent.__module__}.{EntryIntent.__qualname__}",
-            f"{ExitIntent.__module__}.{ExitIntent.__qualname__}",
-        ),
-        "exit_record": f"{ExitRecord.__module__}.{ExitRecord.__qualname__}",
-        "full_loss_before_open": True,
-    }
