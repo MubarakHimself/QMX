@@ -130,11 +130,13 @@ from qmb.optimize import (
     sampler_identity,
 )
 from qmb.orchestrator import (
+    ABORT_KILLS_SIBLINGS,
     CPU_BUDGET_KEY,
     DAEMON,
     DECISION_ADMITTED,
     DECISION_QUEUED,
     DOCKER,
+    ENFORCEMENT,
     IMPURE_OWNER,
     MEMORY_BUDGET_KEY,
     ON_FULL_ENQUEUE,
@@ -152,8 +154,10 @@ from qmb.orchestrator import (
     GovernorBudgets,
     IsolatedRun,
     LiveSpawn,
+    ProcessLimitProbe,
     ResourceGovernor,
     SpawnJob,
+    abort_run,
     collect_run,
     governor_identity,
     orchestrator_identity,
@@ -284,6 +288,7 @@ from qmb.runloop import (
 )
 
 __all__ = [
+    "ABORT_KILLS_SIBLINGS",
     "ACCOUNT_ROLE_KEY",
     "ASSIGNMENT_IS_CANONICAL_KEY",
     "ASSIGNMENT_KEY",
@@ -325,6 +330,7 @@ __all__ = [
     "DISPLAY_FIELDS",
     "DOCKER",
     "EMBARGO_KEY",
+    "ENFORCEMENT",
     "FILL_DECISIONS",
     "FINANCING_IS_ORDER_FILL",
     "FOLD_RATED",
@@ -435,6 +441,7 @@ __all__ = [
     "PartialFill",
     "PassiveHub",
     "PerformanceResult",
+    "ProcessLimitProbe",
     "ProgressObserver",
     "ProgressSink",
     "ReadableBarSet",
@@ -467,6 +474,7 @@ __all__ = [
     "VirtualLedger",
     "WarmupProgress",
     "__version__",
+    "abort_run",
     "act_on_bar",
     "admit_open",
     "advance_frontier",

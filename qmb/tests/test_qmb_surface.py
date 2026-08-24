@@ -140,10 +140,15 @@ def test_frontier_clock_is_qmf_core_clock() -> None:
     assert api.spawn_run is qmb.spawn_run
     assert api.start_run is qmb.start_run
     assert api.collect_run is qmb.collect_run
+    assert api.abort_run is qmb.abort_run
+    assert api.ProcessLimitProbe is qmb.ProcessLimitProbe
     assert api.spawn_concurrent is qmb.spawn_concurrent
     assert api.spawn_governed is qmb.spawn_governed
     assert api.ResourceGovernor is qmb.ResourceGovernor
     assert qmb.SPAWN_MODEL == "process-per-run"
+    assert qmb.ABORT_KILLS_SIBLINGS is False
+    assert qmb.orchestrator_identity()["time_limit_key"] == qmb.TIME_LIMIT_KEY
+    assert qmb.orchestrator_identity()["memory_limit_key"] == qmb.MEMORY_LIMIT_KEY
     assert qmb.PROCESS_MANAGEMENT == "stdlib.subprocess"
     assert qmb.CPU_BUDGET_KEY == "qmb_governor_cpu_budget"
     assert qmb.MEMORY_BUDGET_KEY == "qmb_governor_memory_budget"

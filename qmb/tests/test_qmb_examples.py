@@ -247,6 +247,23 @@ def test_governor_usage_example_runs_clean() -> None:
     assert "governor ok" in completed.stdout
 
 
+def test_orchestrator_abort_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "orchestrator_abort_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "declared per-run limits qmb_run_time_limit and qmb_run_memory_limit" in completed.stdout
+    assert "every submitted run carries a cancel token and declared limits" in completed.stdout
+    assert "limit breach or cancel is typed aborted with context" in completed.stdout
+    assert "aborting one process does not touch siblings" in completed.stdout
+    assert "no partial governed result" in completed.stdout
+    assert "orchestrator abort ok" in completed.stdout
+
+
 def test_orchestrator_spawn_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "orchestrator_spawn_usage.py")],

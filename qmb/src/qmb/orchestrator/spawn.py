@@ -2,7 +2,10 @@
 
 The library's ``run()`` stays pure. This module is the impure owner of stdlib
 process management: each run is a separate OS process writing only into a
-directory named by the run id. Concurrent runs never share a writer.
+directory named by the run id. Concurrent runs never share a writer. Every
+submitted run carries a cancel token and declared per-run limits
+(``qmb_run_time_limit``, ``qmb_run_memory_limit``); the orchestrator detects
+breach or cancel and kills that OS process without touching siblings.
 """
 
 from __future__ import annotations
@@ -35,7 +38,27 @@ from qmb.orchestrator.governor import (
     GovernedRequest,
     ResourceGovernor,
 )
+from qmb.orchestrator.watch import (
+    WATCH_POLL_S,
+    ProcessLimitProbe,
+    check_process_abort,
+    is_aborted_refusal,
+    kill_owned_process,
+    monotonic_ns,
+    refuse_aborted_process,
+)
 from qmb.runloop.loop import STREAM_SET_KEY, EventSlice, SliceObservation, run
+from qmb.runloop.observe import (
+    CAUSE_CANCEL,
+    CAUSE_MEMORY_LIMIT,
+    CAUSE_TIME_LIMIT,
+    MEMORY_LIMIT_KEY,
+    TIME_LIMIT_KEY,
+    CancelToken,
+    LimitProbe,
+    RunLimits,
+    limits_from_config,
+)
 
 __all__ = [
     "DAEMON",
@@ -48,7 +71,9 @@ __all__ = [
     "WRITER_NAME",
     "IsolatedRun",
     "LiveSpawn",
+    "ProcessLimitProbe",
     "SpawnJob",
+    "abort_run",
     "collect_run",
     "run_directory_name",
     "spawn_concurrent",
@@ -76,12 +101,15 @@ class SpawnJob:
 
     ``projected_peak_memory`` is the governor's per-run reservation (bytes).
     ``cpu_cost`` is the CPU-slot reservation (default one slot per run).
+    Every job carries a cancel token and declared per-run limits (B-5).
     """
 
     config: ResolvedRunConfig
     slices: object
     projected_peak_memory: int | None = None
     cpu_cost: int = 1
+    cancel: CancelToken | None = None
+    limits: RunLimits | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -92,6 +120,10 @@ class LiveSpawn:
     output_dir: str
     pid: int
     process: subprocess.Popen[str]
+    cancel: CancelToken
+    limits: RunLimits
+    started_monotonic_ns: int
+    probe: LimitProbe | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -126,9 +158,19 @@ def spawn_run(
     config: object,
     slices: object,
     output_root: object,
+    cancel: object = None,
+    limits: object = None,
+    probe: object = None,
 ) -> Result[IsolatedRun]:
     """Spawn one OS process, drive pure ``run()``, and collect the isolated result."""
-    started = start_run(config=config, slices=slices, output_root=output_root)
+    started = start_run(
+        config=config,
+        slices=slices,
+        output_root=output_root,
+        cancel=cancel,
+        limits=limits,
+        probe=probe,
+    )
     if is_refusal(started):
         return started
     return collect_run(started.value)
@@ -216,19 +258,18 @@ def spawn_concurrent(jobs: object, *, output_root: object) -> Result[tuple[Isola
         seen.add(token)
     live: list[LiveSpawn] = []
     for job in items:
-        started = start_run(config=job.config, slices=job.slices, output_root=output_root)
+        started = start_run(
+            config=job.config,
+            slices=job.slices,
+            output_root=output_root,
+            cancel=job.cancel,
+            limits=job.limits,
+        )
         if is_refusal(started):
             _reap_live(live)
             return started
         live.append(started.value)
-    collected: list[IsolatedRun] = []
-    for item in live:
-        done = collect_run(item)
-        if is_refusal(done):
-            _reap_live(live[len(collected) + 1 :])
-            return done
-        collected.append(done.value)
-    return Ok(tuple(collected))
+    return _collect_all(items, {item.run_id.value: item for item in live})
 
 
 def start_run(
@@ -236,6 +277,9 @@ def start_run(
     config: object,
     slices: object,
     output_root: object,
+    cancel: object = None,
+    limits: object = None,
+    probe: object = None,
 ) -> Result[LiveSpawn]:
     """Create the isolated directory and start the child OS process (B-5)."""
     if not isinstance(config, ResolvedRunConfig):
@@ -244,6 +288,15 @@ def start_run(
             "the orchestrator drives the library run() over a resolved run-config",
             given=repr(type(config).__name__),
         )
+    token = _as_cancel_token(cancel)
+    if is_refusal(token):
+        return token
+    bound_limits = _resolve_spawn_limits(config, limits)
+    if is_refusal(bound_limits):
+        return bound_limits
+    meter = _as_parent_probe(probe)
+    if is_refusal(meter):
+        return meter
     encoded_slices = _encode_slices(slices)
     if is_refusal(encoded_slices):
         return encoded_slices
@@ -253,6 +306,14 @@ def start_run(
     named = run_directory_name(config.fingerprint)
     if is_refusal(named):
         return named
+    if token.value.is_cancelled:
+        return refuse_aborted_process(
+            cause=token.value.cause,
+            run_id=config.fingerprint.value,
+            output_dir="",
+            pid=0,
+            extra={"killed_os_process": False},
+        )
     directory = (root.value / named.value).resolve()
     try:
         directory.mkdir(parents=False, exist_ok=False)
@@ -276,6 +337,7 @@ def start_run(
         "run_id": config.fingerprint.value,
         "config": _encode_config(config),
         "slices": encoded_slices.value,
+        "limits": _encode_limits(bound_limits.value),
     }
     try:
         _write_json(directory / PAYLOAD_NAME, payload)
@@ -305,18 +367,57 @@ def start_run(
             given=type(exc).__name__,
             run_id=config.fingerprint.value,
         )
+    started_ns = monotonic_ns()
     return Ok(
         LiveSpawn(
             run_id=config.fingerprint,
             output_dir=str(directory),
             pid=process.pid,
             process=process,
+            cancel=token.value,
+            limits=bound_limits.value,
+            started_monotonic_ns=started_ns,
+            probe=meter.value,
         )
     )
 
 
+def abort_run(live: object, *, cause: object = CAUSE_CANCEL) -> TypedRefusal:
+    """Kill this live OS process and return a typed ``aborted`` refusal (B-5).
+
+    Sibling processes are not signalled. Output stays in this run's directory.
+    No governed IsolatedRun is returned.
+    """
+    if not isinstance(live, LiveSpawn):
+        return invalid(
+            "live",
+            "abort_run kills a LiveSpawn started by start_run",
+            given=repr(type(live).__name__),
+        )
+    abort_cause = cause if isinstance(cause, str) and cause.strip() != "" else CAUSE_CANCEL
+    extra: dict[str, object] = {}
+    if abort_cause == CAUSE_TIME_LIMIT and live.limits.time_limit is not None:
+        extra["time_limit_ns"] = live.limits.time_limit.value_ns
+        elapsed = _probe_for(live).elapsed()
+        if not is_refusal(elapsed):
+            extra["elapsed_ns"] = elapsed.value.value_ns
+    if abort_cause == CAUSE_MEMORY_LIMIT and live.limits.memory_limit_bytes is not None:
+        extra["memory_limit_bytes"] = live.limits.memory_limit_bytes
+        observed = _probe_for(live).memory_bytes()
+        if not is_refusal(observed):
+            extra["observed_bytes"] = observed.value
+    kill_owned_process(live.process)
+    return refuse_aborted_process(
+        cause=abort_cause,
+        run_id=live.run_id.value,
+        output_dir=live.output_dir,
+        pid=live.pid,
+        extra=extra,
+    )
+
+
 def collect_run(live: object) -> Result[IsolatedRun]:
-    """Wait for a live process and read the isolated result file."""
+    """Wait for a live process, aborting on cancel or limit breach, then read."""
     if not isinstance(live, LiveSpawn):
         return invalid(
             "live",
@@ -324,11 +425,30 @@ def collect_run(live: object) -> Result[IsolatedRun]:
             given=repr(type(live).__name__),
         )
     process = live.process
+    while process.poll() is None:
+        checked = check_process_abort(
+            cancel=live.cancel,
+            limits=live.limits,
+            probe=_probe_for(live),
+        )
+        if is_refusal(checked):
+            if is_aborted_refusal(checked):
+                cause = checked.context.get("cause", CAUSE_CANCEL)
+                token = cause if isinstance(cause, str) else CAUSE_CANCEL
+                return abort_run(live, cause=token)
+            return checked
+        try:
+            process.wait(timeout=_watch_timeout(live))
+        except subprocess.TimeoutExpired:
+            continue
     stderr = ""
-    if process.returncode is None:
-        _stdout, captured_err = process.communicate()
-        del _stdout
-        stderr = captured_err or ""
+    if process.returncode is not None:
+        try:
+            _stdout, captured_err = process.communicate()
+            del _stdout
+            stderr = captured_err or ""
+        except OSError:
+            stderr = ""
     if process.returncode not in (0, None) and not (Path(live.output_dir) / RESULT_NAME).is_file():
         return unavailable(
             "spawn_process",
@@ -359,7 +479,7 @@ def _run_worker(output_dir: Path) -> int:
     decoded = _decode_payload(loaded.value)
     if is_refusal(decoded):
         return _write_envelope(output_dir, _refusal_envelope(decoded))
-    config, slices = decoded.value
+    config, slices, limits = decoded.value
     try:
         _write_json(
             output_dir / WRITER_NAME,
@@ -371,7 +491,10 @@ def _run_worker(output_dir: Path) -> int:
         )
     except OSError:
         return 1
-    outcome = run(slices=slices, config=config)
+    probe: ProcessLimitProbe | None = None
+    if limits.bounded:
+        probe = ProcessLimitProbe.for_current_process()
+    outcome = run(slices=slices, config=config, limits=limits, probe=probe)
     if is_refusal(outcome):
         return _write_envelope(output_dir, _refusal_envelope(outcome))
     stamped = outcome.value.ct32_fingerprint()
@@ -457,6 +580,8 @@ def _coerce_jobs(jobs: object) -> Result[tuple[SpawnJob, ...]]:
             jobs.slices,
             jobs.projected_peak_memory,
             jobs.cpu_cost,
+            jobs.cancel,
+            jobs.limits,
         )
         if is_refusal(bound):
             return bound
@@ -490,6 +615,8 @@ def _coerce_job(raw: object) -> Result[SpawnJob]:
             raw.slices,
             raw.projected_peak_memory,
             raw.cpu_cost,
+            raw.cancel,
+            raw.limits,
         )
     if not isinstance(raw, Mapping):
         return invalid(
@@ -503,6 +630,8 @@ def _coerce_job(raw: object) -> Result[SpawnJob]:
         mapping.get("slices"),
         mapping.get("projected_peak_memory"),
         mapping.get("cpu_cost", 1),
+        mapping.get("cancel"),
+        mapping.get("limits"),
     )
 
 
@@ -511,6 +640,8 @@ def _bind_job(
     slices: object,
     projected_peak_memory: object = None,
     cpu_cost: object = 1,
+    cancel: object = None,
+    limits: object = None,
 ) -> Result[SpawnJob]:
     if not isinstance(config, ResolvedRunConfig):
         return invalid(
@@ -532,12 +663,25 @@ def _bind_job(
     parsed_cost = _positive_int("cpu_cost", cpu_cost)
     if is_refusal(parsed_cost):
         return parsed_cost
+    token = _as_cancel_token(cancel)
+    if is_refusal(token):
+        return token
+    bound_limits: RunLimits | None
+    if limits is None:
+        bound_limits = None
+    else:
+        parsed_limits = RunLimits.try_create(limits)
+        if is_refusal(parsed_limits):
+            return parsed_limits
+        bound_limits = parsed_limits.value
     return Ok(
         SpawnJob(
             config=config,
             slices=slices,
             projected_peak_memory=peak,
             cpu_cost=parsed_cost.value,
+            cancel=token.value if cancel is not None else None,
+            limits=bound_limits,
         )
     )
 
@@ -550,21 +694,30 @@ def _drain_governed(
     by_id = {job.config.fingerprint.value: job for job in items}
     live: dict[str, LiveSpawn] = {}
     collected: dict[str, IsolatedRun] = {}
+    aborted: TypedRefusal | None = None
     for request in governor.running:
         started = _start_job(by_id[request.run_id.value], output_root, live)
         if is_refusal(started):
             return started
     while live:
-        finished = _wait_any(tuple(live.values()))
-        token = finished.run_id.value
-        done = collect_run(finished)
+        token, done = _collect_next(live)
+        del live[token]
         if is_refusal(done):
-            del live[token]
+            if is_aborted_refusal(done):
+                aborted = aborted or done
+                admitted = governor.release(token)
+                if is_refusal(admitted):
+                    _reap_live(tuple(live.values()))
+                    return admitted
+                for admission in admitted.value:
+                    started = _start_job(by_id[admission.run_id.value], output_root, live)
+                    if is_refusal(started):
+                        return started
+                continue
             _reap_live(tuple(live.values()))
             return done
         collected[token] = done.value
-        del live[token]
-        admitted = governor.release(finished.run_id)
+        admitted = governor.release(token)
         if is_refusal(admitted):
             _reap_live(tuple(live.values()))
             return admitted
@@ -572,8 +725,57 @@ def _drain_governed(
             started = _start_job(by_id[admission.run_id.value], output_root, live)
             if is_refusal(started):
                 return started
+    if aborted is not None:
+        return aborted
     order = [job.config.fingerprint.value for job in items]
     return Ok(tuple(collected[token] for token in order))
+
+
+def _collect_all(
+    items: tuple[SpawnJob, ...],
+    live: dict[str, LiveSpawn],
+) -> Result[tuple[IsolatedRun, ...]]:
+    collected: dict[str, IsolatedRun] = {}
+    aborted: TypedRefusal | None = None
+    remaining = dict(live)
+    while remaining:
+        token, done = _collect_next(remaining)
+        del remaining[token]
+        if is_refusal(done):
+            if is_aborted_refusal(done):
+                aborted = aborted or done
+                continue
+            _reap_live(tuple(remaining.values()))
+            return done
+        collected[token] = done.value
+    if aborted is not None:
+        return aborted
+    order = [job.config.fingerprint.value for job in items]
+    return Ok(tuple(collected[token] for token in order))
+
+
+def _collect_next(live: dict[str, LiveSpawn]) -> tuple[str, Result[IsolatedRun]]:
+    while live:
+        for token, item in live.items():
+            if item.process.poll() is not None:
+                return token, collect_run(item)
+            checked = check_process_abort(
+                cancel=item.cancel,
+                limits=item.limits,
+                probe=_probe_for(item),
+            )
+            if is_refusal(checked) and is_aborted_refusal(checked):
+                cause = checked.context.get("cause", CAUSE_CANCEL)
+                token_cause = cause if isinstance(cause, str) else CAUSE_CANCEL
+                return token, abort_run(item, cause=token_cause)
+            if is_refusal(checked):
+                return token, checked
+        first = next(iter(live.values()))
+        try:
+            first.process.wait(timeout=WATCH_POLL_S)
+        except subprocess.TimeoutExpired:
+            continue
+    raise RuntimeError("orchestrator watched no live run")
 
 
 def _start_job(
@@ -581,24 +783,18 @@ def _start_job(
     output_root: object,
     live: dict[str, LiveSpawn],
 ) -> Result[None]:
-    started = start_run(config=job.config, slices=job.slices, output_root=output_root)
+    started = start_run(
+        config=job.config,
+        slices=job.slices,
+        output_root=output_root,
+        cancel=job.cancel,
+        limits=job.limits,
+    )
     if is_refusal(started):
         _reap_live(tuple(live.values()))
         return started
     live[job.config.fingerprint.value] = started.value
     return Ok(None)
-
-
-def _wait_any(live: Sequence[LiveSpawn]) -> LiveSpawn:
-    items = tuple(live)
-    if not items:
-        raise RuntimeError("governor drain waited on no live run")
-    for item in items:
-        if item.process.poll() is not None:
-            return item
-    first = items[0]
-    first.process.wait()
-    return first
 
 
 def _request_for_job(job: SpawnJob, default_peak: object) -> Result[GovernedRequest]:
@@ -662,7 +858,7 @@ def _encode_slices(slices: object) -> Result[list[list[dict[str, object]]]]:
 
 def _decode_payload(
     raw: object,
-) -> Result[tuple[ResolvedRunConfig, tuple[tuple[SliceObservation, ...], ...]]]:
+) -> Result[tuple[ResolvedRunConfig, tuple[tuple[SliceObservation, ...], ...], RunLimits]]:
     if not isinstance(raw, Mapping):
         return invalid(
             "payload",
@@ -682,7 +878,10 @@ def _decode_payload(
     slices = _decode_slices(mapping.get("slices"))
     if is_refusal(slices):
         return slices
-    return Ok((config.value, slices.value))
+    limits = _decode_limits(mapping.get("limits"), config.value)
+    if is_refusal(limits):
+        return limits
+    return Ok((config.value, slices.value, limits.value))
 
 
 def _decode_config(raw: object) -> Result[ResolvedRunConfig]:
@@ -1012,10 +1211,106 @@ def _cleanup_unstarted(directory: Path) -> None:
 
 def _reap_live(live: Sequence[LiveSpawn]) -> None:
     for item in live:
-        process = item.process
-        if process.returncode is None:
-            process.kill()
-        try:
-            process.communicate()
-        except OSError:
-            continue
+        kill_owned_process(item.process)
+
+
+def _as_cancel_token(value: object) -> Result[CancelToken]:
+    if value is None:
+        return Ok(CancelToken())
+    if isinstance(value, CancelToken):
+        return Ok(value)
+    return invalid(
+        "cancel",
+        "every submitted run carries a CancelToken; the orchestrator observes it "
+        "and kills that OS process on signal (B-5)",
+        given=repr(type(value).__name__),
+    )
+
+
+def _resolve_spawn_limits(config: ResolvedRunConfig, limits: object) -> Result[RunLimits]:
+    extracted = limits_from_config(config)
+    if is_refusal(extracted):
+        return extracted
+    from_config = extracted.value
+    if limits is None:
+        return Ok(from_config if from_config is not None else RunLimits())
+    parsed = RunLimits.try_create(limits)
+    if is_refusal(parsed):
+        return parsed
+    if from_config is not None and parsed.value != from_config:
+        return invalid(
+            "limits",
+            "caller limits must match the resolved run-config per-run time and memory bounds (B-5)",
+            config=from_config.fp1_identity(),
+            given=parsed.value.fp1_identity(),
+            time_limit_key=TIME_LIMIT_KEY,
+            memory_limit_key=MEMORY_LIMIT_KEY,
+        )
+    return Ok(parsed.value)
+
+
+def _as_parent_probe(value: object) -> Result[LimitProbe | None]:
+    if value is None:
+        return Ok(None)
+    if isinstance(value, LimitProbe):
+        return Ok(value)
+    return invalid(
+        "probe",
+        "the orchestrator parent LimitProbe is injected, or a ProcessLimitProbe "
+        "is constructed over the child pid (AR-16, B-5)",
+        given=repr(type(value).__name__),
+    )
+
+
+def _probe_for(live: LiveSpawn) -> LimitProbe:
+    if live.probe is not None:
+        return live.probe
+    return ProcessLimitProbe.for_pid(live.pid, started_ns=live.started_monotonic_ns)
+
+
+def _watch_timeout(live: LiveSpawn) -> float:
+    if live.limits.time_limit is None:
+        return WATCH_POLL_S
+    elapsed = _probe_for(live).elapsed()
+    if is_refusal(elapsed):
+        return WATCH_POLL_S
+    remaining_ns = live.limits.time_limit.value_ns - elapsed.value.value_ns
+    if remaining_ns <= 0:
+        return 0.0
+    remaining_s = remaining_ns / 1_000_000_000
+    if remaining_s < WATCH_POLL_S:
+        return remaining_s
+    return WATCH_POLL_S
+
+
+def _encode_limits(limits: RunLimits) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "time_limit_key": TIME_LIMIT_KEY,
+        "memory_limit_key": MEMORY_LIMIT_KEY,
+    }
+    if limits.time_limit is not None:
+        payload["time_limit_ns"] = limits.time_limit.value_ns
+    if limits.memory_limit_bytes is not None:
+        payload["memory_limit_bytes"] = limits.memory_limit_bytes
+    return payload
+
+
+def _decode_limits(raw: object, config: ResolvedRunConfig) -> Result[RunLimits]:
+    if raw is None:
+        extracted = limits_from_config(config)
+        if is_refusal(extracted):
+            return extracted
+        return Ok(extracted.value if extracted.value is not None else RunLimits())
+    if not isinstance(raw, Mapping):
+        return invalid(
+            "limits",
+            "the isolated payload carries declared per-run limits as a mapping",
+            given=repr(type(raw).__name__),
+            time_limit_key=TIME_LIMIT_KEY,
+            memory_limit_key=MEMORY_LIMIT_KEY,
+        )
+    mapping = cast("Mapping[str, object]", raw)
+    return RunLimits.try_create(
+        mapping.get("time_limit_ns"),
+        mapping.get("memory_limit_bytes"),
+    )
