@@ -228,6 +228,25 @@ def test_ql7_host_usage_example_runs_clean() -> None:
     assert "ql7 host ok" in completed.stdout
 
 
+def test_governor_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "governor_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "min(cpu budget, memory budget)" in completed.stdout
+    assert "enqueue-on-full" in completed.stdout
+    assert "typed refusal when projected peak exceeds the declared budget" in completed.stdout
+    assert "finish then admit next" in completed.stdout
+    assert (
+        "12-14 concurrent is a motivating reference, never a validated budget" in completed.stdout
+    )
+    assert "governor ok" in completed.stdout
+
+
 def test_orchestrator_spawn_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "orchestrator_spawn_usage.py")],

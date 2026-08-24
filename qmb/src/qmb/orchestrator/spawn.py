@@ -30,6 +30,11 @@ from qmf.core.refusal import (
 
 from qmb._refuse import invalid, policy, unavailable
 from qmb.config.compiler import ResolvedRunConfig
+from qmb.orchestrator.governor import (
+    ON_FULL_ENQUEUE,
+    GovernedRequest,
+    ResourceGovernor,
+)
 from qmb.runloop.loop import STREAM_SET_KEY, EventSlice, SliceObservation, run
 
 __all__ = [
@@ -47,6 +52,7 @@ __all__ = [
     "collect_run",
     "run_directory_name",
     "spawn_concurrent",
+    "spawn_governed",
     "spawn_run",
     "start_run",
     "worker_main",
@@ -66,10 +72,16 @@ _PAYLOAD_CLASS: Final[str] = "qmb-orchestrator-payload-v1"
 
 @dataclass(frozen=True, slots=True)
 class SpawnJob:
-    """One resolved run-config plus the event slices the child feeds ``run()``."""
+    """One resolved run-config plus the event slices the child feeds ``run()``.
+
+    ``projected_peak_memory`` is the governor's per-run reservation (bytes).
+    ``cpu_cost`` is the CPU-slot reservation (default one slot per run).
+    """
 
     config: ResolvedRunConfig
     slices: object
+    projected_peak_memory: int | None = None
+    cpu_cost: int = 1
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,6 +132,64 @@ def spawn_run(
     if is_refusal(started):
         return started
     return collect_run(started.value)
+
+
+def spawn_governed(
+    jobs: object,
+    *,
+    output_root: object,
+    cpu_budget: object = None,
+    memory_budget: object = None,
+    budgets: object = None,
+    on_full: object = ON_FULL_ENQUEUE,
+    projected_peak_memory: object = None,
+) -> Result[tuple[IsolatedRun, ...]]:
+    """Spawn under the resource governor: admit by min(cpu, memory), enqueue-on-full.
+
+    A run whose projected peak exceeds the declared total budget is a typed
+    refusal. A run that exceeds only remaining budget enqueues until a running
+    run finishes, then the next queued run is admitted (B-5, FM-6).
+    """
+    parsed = _coerce_jobs(jobs)
+    if is_refusal(parsed):
+        return parsed
+    items = parsed.value
+    if not items:
+        return invalid(
+            "jobs",
+            "spawn_governed starts one or more isolated runs under the governor",
+        )
+    seen: set[str] = set()
+    for job in items:
+        token = job.config.fingerprint.value
+        if token in seen:
+            return policy(
+                "run_id",
+                "two concurrent runs never share a writer for any file or stream; "
+                "the isolated output directory is named by the run id",
+                run_id=token,
+            )
+        seen.add(token)
+    governor = ResourceGovernor.try_create(
+        cpu_budget,
+        memory_budget,
+        budgets=budgets,
+        on_full=on_full,
+    )
+    if is_refusal(governor):
+        return governor
+    requests: list[GovernedRequest] = []
+    for job in items:
+        request = _request_for_job(job, projected_peak_memory)
+        if is_refusal(request):
+            return request
+        requests.append(request.value)
+    bound = governor.value
+    for request in requests:
+        submitted = bound.submit(request)
+        if is_refusal(submitted):
+            return submitted
+    return _drain_governed(items, bound, output_root)
 
 
 def spawn_concurrent(jobs: object, *, output_root: object) -> Result[tuple[IsolatedRun, ...]]:
@@ -382,7 +452,12 @@ def _isolated_from_envelope(
 
 def _coerce_jobs(jobs: object) -> Result[tuple[SpawnJob, ...]]:
     if isinstance(jobs, SpawnJob):
-        bound = _bind_job(jobs.config, jobs.slices)
+        bound = _bind_job(
+            jobs.config,
+            jobs.slices,
+            jobs.projected_peak_memory,
+            jobs.cpu_cost,
+        )
         if is_refusal(bound):
             return bound
         return Ok((bound.value,))
@@ -410,7 +485,12 @@ def _coerce_jobs(jobs: object) -> Result[tuple[SpawnJob, ...]]:
 
 def _coerce_job(raw: object) -> Result[SpawnJob]:
     if isinstance(raw, SpawnJob):
-        return _bind_job(raw.config, raw.slices)
+        return _bind_job(
+            raw.config,
+            raw.slices,
+            raw.projected_peak_memory,
+            raw.cpu_cost,
+        )
     if not isinstance(raw, Mapping):
         return invalid(
             "jobs",
@@ -418,10 +498,20 @@ def _coerce_job(raw: object) -> Result[SpawnJob]:
             given=repr(type(raw).__name__),
         )
     mapping = cast("Mapping[str, object]", raw)
-    return _bind_job(mapping.get("config"), mapping.get("slices"))
+    return _bind_job(
+        mapping.get("config"),
+        mapping.get("slices"),
+        mapping.get("projected_peak_memory"),
+        mapping.get("cpu_cost", 1),
+    )
 
 
-def _bind_job(config: object, slices: object) -> Result[SpawnJob]:
+def _bind_job(
+    config: object,
+    slices: object,
+    projected_peak_memory: object = None,
+    cpu_cost: object = 1,
+) -> Result[SpawnJob]:
     if not isinstance(config, ResolvedRunConfig):
         return invalid(
             "config",
@@ -431,7 +521,101 @@ def _bind_job(config: object, slices: object) -> Result[SpawnJob]:
     encoded = _encode_slices(slices)
     if is_refusal(encoded):
         return encoded
-    return Ok(SpawnJob(config=config, slices=slices))
+    peak: int | None
+    if projected_peak_memory is None:
+        peak = None
+    else:
+        parsed_peak = _positive_int("projected_peak_memory", projected_peak_memory)
+        if is_refusal(parsed_peak):
+            return parsed_peak
+        peak = parsed_peak.value
+    parsed_cost = _positive_int("cpu_cost", cpu_cost)
+    if is_refusal(parsed_cost):
+        return parsed_cost
+    return Ok(
+        SpawnJob(
+            config=config,
+            slices=slices,
+            projected_peak_memory=peak,
+            cpu_cost=parsed_cost.value,
+        )
+    )
+
+
+def _drain_governed(
+    items: tuple[SpawnJob, ...],
+    governor: ResourceGovernor,
+    output_root: object,
+) -> Result[tuple[IsolatedRun, ...]]:
+    by_id = {job.config.fingerprint.value: job for job in items}
+    live: dict[str, LiveSpawn] = {}
+    collected: dict[str, IsolatedRun] = {}
+    for request in governor.running:
+        started = _start_job(by_id[request.run_id.value], output_root, live)
+        if is_refusal(started):
+            return started
+    while live:
+        finished = _wait_any(tuple(live.values()))
+        token = finished.run_id.value
+        done = collect_run(finished)
+        if is_refusal(done):
+            del live[token]
+            _reap_live(tuple(live.values()))
+            return done
+        collected[token] = done.value
+        del live[token]
+        admitted = governor.release(finished.run_id)
+        if is_refusal(admitted):
+            _reap_live(tuple(live.values()))
+            return admitted
+        for admission in admitted.value:
+            started = _start_job(by_id[admission.run_id.value], output_root, live)
+            if is_refusal(started):
+                return started
+    order = [job.config.fingerprint.value for job in items]
+    return Ok(tuple(collected[token] for token in order))
+
+
+def _start_job(
+    job: SpawnJob,
+    output_root: object,
+    live: dict[str, LiveSpawn],
+) -> Result[None]:
+    started = start_run(config=job.config, slices=job.slices, output_root=output_root)
+    if is_refusal(started):
+        _reap_live(tuple(live.values()))
+        return started
+    live[job.config.fingerprint.value] = started.value
+    return Ok(None)
+
+
+def _wait_any(live: Sequence[LiveSpawn]) -> LiveSpawn:
+    items = tuple(live)
+    if not items:
+        raise RuntimeError("governor drain waited on no live run")
+    for item in items:
+        if item.process.poll() is not None:
+            return item
+    first = items[0]
+    first.process.wait()
+    return first
+
+
+def _request_for_job(job: SpawnJob, default_peak: object) -> Result[GovernedRequest]:
+    peak: object = job.projected_peak_memory
+    if peak is None:
+        peak = default_peak
+    return GovernedRequest.try_create(job.config.fingerprint, peak, job.cpu_cost)
+
+
+def _positive_int(field: str, value: object) -> Result[int]:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        return invalid(
+            field,
+            "a governor quantity is a positive integer declared by the caller",
+            given=repr(value),
+        )
+    return Ok(value)
 
 
 def _encode_config(config: ResolvedRunConfig) -> dict[str, object]:

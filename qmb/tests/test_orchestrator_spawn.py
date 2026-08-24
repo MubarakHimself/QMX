@@ -92,7 +92,10 @@ def test_identity_names_stdlib_process_per_run_without_ray_docker_or_daemon() ->
     assert api.start_run is qmb.start_run
     assert api.collect_run is qmb.collect_run
     assert api.spawn_concurrent is qmb.spawn_concurrent
+    assert api.spawn_governed is qmb.spawn_governed
     assert api.IsolatedRun is qmb.IsolatedRun
+    assert api.ResourceGovernor is qmb.ResourceGovernor
+    assert qmb.orchestrator_identity()["cpu_budget_key"] == qmb.CPU_BUDGET_KEY
 
 
 def test_runloop_stays_pure_and_orchestrator_owns_subprocess() -> None:
