@@ -8,11 +8,33 @@ root and the ledger key, computed only by qmf-core ``fp1`` (DEC-0160).
 
 from __future__ import annotations
 
-from typing import Final
-
-from qmf.core.fingerprint import Fingerprint, fingerprint
-from qmf.core.refusal import Result
-
+from qmb.config.compiler import (
+    CITE_FIELDS,
+    CLOCK_REPLAY,
+    CLOCK_SIMULATED,
+    DISPLAY_FIELDS,
+    IDENTITY_FIELDS,
+    LAYER_PRECEDENCE,
+    OPTIONAL_IDENTITY_FIELDS,
+    PROVENANCE_PROCEDURE_EPHEMERAL,
+    PROVENANCE_RECORDED,
+    PROVENANCE_SYNTHETIC_TAINTED,
+    RUN_CONFIG_ARTIFACT_NAME,
+    RUN_CONFIG_CLASS,
+    RUN_CONFIG_FORMAT_VERSION,
+    RUN_CONFIG_FORMAT_VERSION_1,
+    RUN_CONFIG_KNOWN_FORMAT_VERSIONS,
+    SANCTIONED_OVERLAP_KEYS,
+    ResolvedRunConfig,
+    artifact_relative_path,
+    compile_run_config,
+    fingerprint_layers,
+    layers_identity,
+    ledger_key,
+    merge_book_bms_keys,
+    run_config_identity,
+    run_id_root,
+)
 from qmb.config.fragments import (
     BMS_NAMESPACES,
     BMS_RECORD_KIND,
@@ -38,38 +60,42 @@ __all__ = [
     "BMS_RECORD_KIND",
     "BOOK_NAMESPACES",
     "BOOK_RECORD_KIND",
+    "CITE_FIELDS",
+    "CLOCK_REPLAY",
+    "CLOCK_SIMULATED",
     "CONFIG_FRAGMENT_CLASS",
+    "DISPLAY_FIELDS",
     "FRAGMENT_FORMAT_VERSION",
     "FRAGMENT_FORMAT_VERSION_1",
     "FRAGMENT_KNOWN_FORMAT_VERSIONS",
     "FRAGMENT_LINEAGE_EDGE_TYPE",
+    "IDENTITY_FIELDS",
     "LAYER_PRECEDENCE",
+    "OPTIONAL_IDENTITY_FIELDS",
+    "PROVENANCE_PROCEDURE_EPHEMERAL",
+    "PROVENANCE_RECORDED",
+    "PROVENANCE_SYNTHETIC_TAINTED",
+    "RUN_CONFIG_ARTIFACT_NAME",
+    "RUN_CONFIG_CLASS",
+    "RUN_CONFIG_FORMAT_VERSION",
+    "RUN_CONFIG_FORMAT_VERSION_1",
+    "RUN_CONFIG_KNOWN_FORMAT_VERSIONS",
+    "SANCTIONED_OVERLAP_KEYS",
     "SOURCE_BMS",
     "SOURCE_BOOK",
     "SOURCE_PRESET",
     "ConfigFragment",
+    "ResolvedRunConfig",
+    "artifact_relative_path",
+    "compile_run_config",
     "fingerprint_layers",
     "fragment_identity",
     "layers_identity",
+    "ledger_key",
     "materialize_bms_fragment",
     "materialize_book_fragment",
     "materialize_condition_preset",
+    "merge_book_bms_keys",
+    "run_config_identity",
+    "run_id_root",
 ]
-
-LAYER_PRECEDENCE: Final[tuple[str, ...]] = (
-    "invocation-flags",
-    "run-spec",
-    "bms-fragment",
-    "book-fragment",
-    "workspace-defaults",
-)
-
-
-def layers_identity() -> dict[str, object]:
-    """Identity-bearing compiler fields. Package SemVer is omitted."""
-    return {"layer_precedence": LAYER_PRECEDENCE}
-
-
-def fingerprint_layers() -> Result[Fingerprint]:
-    """``fp1`` over the layering identity, computed only by qmf-core."""
-    return fingerprint(layers_identity())

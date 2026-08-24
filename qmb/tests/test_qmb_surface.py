@@ -42,6 +42,7 @@ def test_seed_identities_exclude_semver() -> None:
         qmb.ledger_identity(),
         qmb.orchestrator_identity(),
         qmb.fragment_identity(),
+        qmb.run_config_identity(),
     )
     for payload in payloads:
         assert qmb.__version__ not in payload.values()

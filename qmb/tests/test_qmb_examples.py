@@ -12,6 +12,22 @@ _REPO = _QMB_ROOT.parent
 _EXAMPLE = _QMB_ROOT / "examples" / "import_usage.py"
 
 
+def test_run_config_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "run_config_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "resolved run-config ok" in completed.stdout
+    assert "byte-identical" in completed.stdout
+    assert "never name@version" in completed.stdout
+    assert "invalid input" in completed.stdout
+    assert "BMS outranks Book" in completed.stdout
+
+
 def test_config_fragments_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "config_fragments_usage.py")],
