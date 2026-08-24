@@ -1,0 +1,1012 @@
+"""ONE event-slice loop with six pinned identity-bearing sub-phases (B-2).
+
+Per slice the sub-phases run in :data:`SUBPHASES` order. Changing that order is
+identity-bearing. Within a phase, instruments process in the stream-set
+declaration order from the resolved run-config. A new intent minted in
+sub-phase 5 is never eligible to fill against this slice's path — it rests for
+a later slice. ``run`` is a pure function: it writes no log and no ledger.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+from types import MappingProxyType
+from typing import Final, Protocol, cast, runtime_checkable
+
+from qmf.core.chrono import Clock, Instant
+from qmf.core.fingerprint import Fingerprint, fingerprint
+from qmf.core.refusal import Ok, Result, is_refusal
+
+from qmb._refuse import clean_token, invalid
+from qmb.config.compiler import ResolvedRunConfig
+from qmb.runloop.frontier import (
+    CLOCK_DOES_NOT_CHOOSE_WORLD,
+    FrontierClock,
+    StreamNextEmit,
+    advance_frontier,
+)
+
+__all__ = [
+    "LOOP_KIND",
+    "SAME_SLICE_NEW_INTENT_FILL",
+    "STREAM_ROLE_DATA_ONLY",
+    "STREAM_ROLE_TRADING",
+    "STREAM_SET_KEY",
+    "SUBPHASES",
+    "DeclaredStream",
+    "EventSlice",
+    "LoopOutcome",
+    "RestingIntent",
+    "SilentSliceHandler",
+    "SliceHandler",
+    "SliceObservation",
+    "SliceOutcome",
+    "StreamSet",
+    "SubphaseTrace",
+    "fingerprint_loop",
+    "frontier_clock_name",
+    "loop_identity",
+    "run",
+    "run_slice",
+    "stream_set_from_config",
+]
+
+LOOP_KIND: Final[str] = "event-slice"
+SUBPHASES: Final[tuple[str, ...]] = (
+    "frontier-advance",
+    "scheduled-position-events",
+    "resting-orders",
+    "closed-data-indicators-structure",
+    "strategy-callbacks",
+    "new-intents-rest",
+)
+SAME_SLICE_NEW_INTENT_FILL: Final[bool] = False
+STREAM_SET_KEY: Final[str] = "stream_set"
+STREAM_ROLE_TRADING: Final[str] = "trading"
+STREAM_ROLE_DATA_ONLY: Final[str] = "data-only"
+_LEGAL_ROLES: Final[frozenset[str]] = frozenset({STREAM_ROLE_TRADING, STREAM_ROLE_DATA_ONLY})
+_INSTRUMENT_ORDER: Final[str] = "stream-set-declaration"
+
+
+def frontier_clock_name() -> str:
+    """Qualified name of the injected frontier clock protocol (AD-8)."""
+    return f"{Clock.__module__}.{Clock.__qualname__}"
+
+
+def loop_identity() -> dict[str, object]:
+    """Identity-bearing loop fields. Package SemVer is omitted."""
+    return {
+        "loop_kind": LOOP_KIND,
+        "frontier_clock": frontier_clock_name(),
+        "subphases": SUBPHASES,
+        "clock_chooses_world": False,
+        "clock_does_not_choose_world": CLOCK_DOES_NOT_CHOOSE_WORLD,
+        "same_slice_new_intent_fill": SAME_SLICE_NEW_INTENT_FILL,
+        "instrument_order": _INSTRUMENT_ORDER,
+        "closed_data_only": True,
+    }
+
+
+def fingerprint_loop() -> Result[Fingerprint]:
+    """``fp1`` over :func:`loop_identity`. Permuting :data:`SUBPHASES` changes it."""
+    return fingerprint(loop_identity())
+
+
+@dataclass(frozen=True, slots=True)
+class DeclaredStream:
+    """One stream-set member. Declaration order is identity (B-12)."""
+
+    stream_id: str
+    instrument_id: str
+    role: str = STREAM_ROLE_TRADING
+
+    def fp1_identity(self) -> dict[str, object]:
+        """Canonical identity. Package SemVer never enters."""
+        return {
+            "instrument_id": self.instrument_id,
+            "role": self.role,
+            "stream_id": self.stream_id,
+        }
+
+    @classmethod
+    def try_create(
+        cls,
+        stream_id: object,
+        instrument_id: object = None,
+        role: object = STREAM_ROLE_TRADING,
+    ) -> Result[DeclaredStream]:
+        """Validate and build one declared stream."""
+        token = clean_token(stream_id)
+        if token is None:
+            return invalid(
+                "stream_id",
+                "a declared stream names a non-empty stream id",
+                given=repr(stream_id),
+            )
+        instrument = token if instrument_id is None else clean_token(instrument_id)
+        if instrument is None:
+            return invalid(
+                "instrument_id",
+                "a declared stream names a non-empty instrument id",
+                given=repr(instrument_id),
+            )
+        role_token = clean_token(role)
+        if role_token is None or role_token not in _LEGAL_ROLES:
+            return invalid(
+                "role",
+                "a declared stream role is trading or data-only",
+                given=repr(role),
+                allowed=sorted(_LEGAL_ROLES),
+            )
+        return Ok(cls(stream_id=token, instrument_id=instrument, role=role_token))
+
+
+@dataclass(frozen=True, slots=True)
+class StreamSet:
+    """Ordered stream-set declaration. Order is identity content (B-2, B-12)."""
+
+    streams: tuple[DeclaredStream, ...]
+
+    @property
+    def stream_ids(self) -> tuple[str, ...]:
+        """Declaration-order stream ids — the per-phase instrument order."""
+        return tuple(item.stream_id for item in self.streams)
+
+    def fp1_identity(self) -> dict[str, object]:
+        """Canonical identity. Declaration order is significant."""
+        return {
+            "class": "stream-set",
+            "streams": [item.fp1_identity() for item in self.streams],
+        }
+
+    @classmethod
+    def try_create(cls, streams: object) -> Result[StreamSet]:
+        """Validate an ordered stream-set declaration."""
+        if isinstance(streams, StreamSet):
+            return Ok(streams)
+        if isinstance(streams, (str, bytes)) or not isinstance(streams, Sequence):
+            return invalid(
+                "stream_set",
+                "a stream set is a sequence of declared streams; declaration "
+                "order is identity content of the resolved run-config (B-12)",
+                given=repr(type(streams).__name__),
+            )
+        parsed: list[DeclaredStream] = []
+        seen: set[str] = set()
+        for index, raw in enumerate(cast("Sequence[object]", streams)):
+            member = _coerce_declared_stream(raw)
+            if is_refusal(member):
+                return member
+            stream_id = member.value.stream_id
+            if stream_id in seen:
+                return invalid(
+                    "stream_set",
+                    "stream-set declaration order names each stream id once",
+                    index=index,
+                    stream_id=stream_id,
+                )
+            seen.add(stream_id)
+            parsed.append(member.value)
+        if not parsed:
+            return invalid(
+                "stream_set",
+                "a run declares one or more streams; an empty stream set cannot "
+                "drive an event slice (B-12)",
+            )
+        return Ok(cls(streams=tuple(parsed)))
+
+
+def stream_set_from_config(config: object) -> Result[StreamSet]:
+    """Read declaration-order stream set from the resolved run-config (B-12)."""
+    if not isinstance(config, ResolvedRunConfig):
+        return invalid(
+            "config",
+            "instrument order is the stream-set declaration on a resolved run-config",
+            given=repr(type(config).__name__),
+        )
+    raw = config.keys.get(STREAM_SET_KEY)
+    if raw is None:
+        return invalid(
+            STREAM_SET_KEY,
+            "the resolved run-config declares its stream set; declaration order "
+            "is identity content (B-2, B-12)",
+        )
+    return StreamSet.try_create(raw)
+
+
+@dataclass(frozen=True, slots=True)
+class SliceObservation:
+    """One stream's observation at a slice instant.
+
+    ``closed=False`` is forming: indicators and structure never see it (B-2).
+    """
+
+    stream_id: str
+    instant: Instant
+    closed: bool = True
+
+    def fp1_identity(self) -> dict[str, object]:
+        """Canonical identity. Package SemVer never enters."""
+        return {
+            "closed": self.closed,
+            "instant_ns": self.instant.value_ns,
+            "stream_id": self.stream_id,
+        }
+
+    @classmethod
+    def try_create(
+        cls,
+        stream_id: object,
+        instant: object,
+        closed: object = True,
+    ) -> Result[SliceObservation]:
+        """Validate one slice observation."""
+        token = clean_token(stream_id)
+        if token is None:
+            return invalid(
+                "stream_id",
+                "a slice observation names a non-empty stream id",
+                given=repr(stream_id),
+            )
+        if not isinstance(instant, Instant):
+            return invalid(
+                "instant",
+                "a slice observation carries an Instant",
+                given=repr(type(instant).__name__),
+            )
+        if not isinstance(closed, bool):
+            return invalid(
+                "closed",
+                "observation completeness is a bool; forming is closed=False (B-2)",
+                given=repr(closed),
+            )
+        return Ok(cls(stream_id=token, instant=instant, closed=closed))
+
+
+@dataclass(frozen=True, slots=True)
+class EventSlice:
+    """Time-ordered observations that share one frontier instant."""
+
+    observations: tuple[SliceObservation, ...]
+
+    def fp1_identity(self) -> dict[str, object]:
+        """Canonical identity. Package SemVer never enters."""
+        return {
+            "class": "event-slice",
+            "observations": [item.fp1_identity() for item in self.observations],
+        }
+
+    @classmethod
+    def try_create(cls, observations: object) -> Result[EventSlice]:
+        """Validate one event slice. Mixed instants are refused."""
+        if isinstance(observations, EventSlice):
+            return Ok(observations)
+        if isinstance(observations, (str, bytes)) or not isinstance(observations, Sequence):
+            return invalid(
+                "event_slice",
+                "an event slice is a sequence of stream observations at one Instant",
+                given=repr(type(observations).__name__),
+            )
+        parsed: list[SliceObservation] = []
+        seen: set[str] = set()
+        instant_ns: int | None = None
+        for index, raw in enumerate(cast("Sequence[object]", observations)):
+            item = _coerce_observation(raw)
+            if is_refusal(item):
+                return item
+            obs = item.value
+            if obs.stream_id in seen:
+                return invalid(
+                    "event_slice",
+                    "a slice names each stream id once",
+                    index=index,
+                    stream_id=obs.stream_id,
+                )
+            if instant_ns is None:
+                instant_ns = obs.instant.value_ns
+            elif obs.instant.value_ns != instant_ns:
+                return invalid(
+                    "event_slice",
+                    "every observation in one event slice shares one Instant; "
+                    "mixed instants are separate slices",
+                    index=index,
+                    instant_ns=obs.instant.value_ns,
+                    slice_instant_ns=instant_ns,
+                )
+            seen.add(obs.stream_id)
+            parsed.append(obs)
+        if not parsed:
+            return invalid(
+                "event_slice",
+                "an event slice carries at least one stream observation so the "
+                "frontier can advance",
+            )
+        return Ok(cls(observations=tuple(parsed)))
+
+
+@dataclass(frozen=True, slots=True)
+class RestingIntent:
+    """An intent token that rests until a later slice may fill it (B-2)."""
+
+    intent_id: str
+    stream_id: str
+
+    def fp1_identity(self) -> dict[str, object]:
+        """Canonical identity. Package SemVer never enters."""
+        return {"intent_id": self.intent_id, "stream_id": self.stream_id}
+
+    @classmethod
+    def try_create(cls, intent_id: object, stream_id: object) -> Result[RestingIntent]:
+        """Validate one resting intent token."""
+        iid = clean_token(intent_id)
+        if iid is None:
+            return invalid(
+                "intent_id",
+                "a resting intent names a non-empty intent id",
+                given=repr(intent_id),
+            )
+        sid = clean_token(stream_id)
+        if sid is None:
+            return invalid(
+                "stream_id",
+                "a resting intent names a non-empty stream id",
+                given=repr(stream_id),
+            )
+        return Ok(cls(intent_id=iid, stream_id=sid))
+
+
+@dataclass(frozen=True, slots=True)
+class SubphaseTrace:
+    """One sub-phase of one slice. Instrument order is stream-set declaration."""
+
+    subphase: str
+    instrument_order: tuple[str, ...]
+    actions: tuple[str, ...]
+
+    def fp1_identity(self) -> dict[str, object]:
+        """Canonical identity. Package SemVer never enters."""
+        return {
+            "actions": list(self.actions),
+            "instrument_order": list(self.instrument_order),
+            "subphase": self.subphase,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class SliceOutcome:
+    """Pure result of processing one event slice through :data:`SUBPHASES`."""
+
+    frontier: Instant
+    trace: tuple[SubphaseTrace, ...]
+    filled: tuple[str, ...]
+    minted: tuple[str, ...]
+    ineligible: tuple[str, ...]
+    resting: tuple[RestingIntent, ...]
+
+    def subphase_order(self) -> tuple[str, ...]:
+        """Sub-phase names in the order they ran."""
+        return tuple(step.subphase for step in self.trace)
+
+    def fp1_identity(self) -> dict[str, object]:
+        """Canonical identity. Package SemVer never enters."""
+        return {
+            "filled": list(self.filled),
+            "frontier_ns": self.frontier.value_ns,
+            "ineligible": list(self.ineligible),
+            "minted": list(self.minted),
+            "resting": [item.fp1_identity() for item in self.resting],
+            "trace": [item.fp1_identity() for item in self.trace],
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LoopOutcome:
+    """Pure result of the event-slice loop. Not a ledger line and not CT-32."""
+
+    slices: tuple[SliceOutcome, ...]
+    resting: tuple[RestingIntent, ...]
+    filled: tuple[str, ...]
+    stream_order: tuple[str, ...]
+
+    @property
+    def self_assessment(self) -> Mapping[str, object]:
+        """Returned with the outcome; never written to a log or ledger (B-4)."""
+        return MappingProxyType(
+            {
+                "closed_data_only": True,
+                "loop_kind": LOOP_KIND,
+                "same_slice_new_intent_fill": SAME_SLICE_NEW_INTENT_FILL,
+                "slice_count": len(self.slices),
+                "subphases": list(SUBPHASES),
+                "terminal": "complete",
+            }
+        )
+
+    def fp1_identity(self) -> dict[str, object]:
+        """Canonical identity. Package SemVer never enters."""
+        return {
+            "class": "event-slice-loop-outcome",
+            "filled": list(self.filled),
+            "resting": [item.fp1_identity() for item in self.resting],
+            "slice_count": len(self.slices),
+            "slices": [item.fp1_identity() for item in self.slices],
+            "stream_order": list(self.stream_order),
+            "subphases": list(SUBPHASES),
+        }
+
+
+@runtime_checkable
+class SliceHandler(Protocol):
+    """Injected per-slice ports. Later stories bind financing, fill, and CT-16/17."""
+
+    def update_stream(
+        self,
+        stream_id: str,
+        observation: SliceObservation | None,
+        frontier: Instant,
+    ) -> Result[None]:  # pragma: no cover - protocol seam
+        """Sub-phase 1 stream update after frontier advance."""
+        ...
+
+    def scheduled_position_event(
+        self,
+        stream_id: str,
+        frontier: Instant,
+    ) -> Result[None]:  # pragma: no cover - protocol seam
+        """Sub-phase 2 financing / scheduled position-level events."""
+        ...
+
+    def execute_resting(
+        self,
+        intent: RestingIntent,
+        observation: SliceObservation | None,
+        frontier: Instant,
+    ) -> Result[bool]:  # pragma: no cover - protocol seam
+        """Sub-phase 3: ``True`` fills the eligible resting intent against this path."""
+        ...
+
+    def update_closed_data(
+        self,
+        stream_id: str,
+        observation: SliceObservation,
+        frontier: Instant,
+    ) -> Result[None]:  # pragma: no cover - protocol seam
+        """Sub-phase 4: indicators/structure on closed data only."""
+        ...
+
+    def mint_intents(
+        self,
+        stream_id: str,
+        frontier: Instant,
+    ) -> Result[object]:  # pragma: no cover - protocol seam
+        """Sub-phase 5: strategy callbacks return zero-or-more resting intent tokens."""
+        ...
+
+
+@dataclass(frozen=True, slots=True)
+class SilentSliceHandler:
+    """Default ports: no financing side effects, no fills, no minted intents."""
+
+    def update_stream(
+        self,
+        stream_id: str,
+        observation: SliceObservation | None,
+        frontier: Instant,
+    ) -> Result[None]:
+        del stream_id, observation, frontier
+        return Ok(None)
+
+    def scheduled_position_event(self, stream_id: str, frontier: Instant) -> Result[None]:
+        del stream_id, frontier
+        return Ok(None)
+
+    def execute_resting(
+        self,
+        intent: RestingIntent,
+        observation: SliceObservation | None,
+        frontier: Instant,
+    ) -> Result[bool]:
+        del intent, observation, frontier
+        return Ok(False)
+
+    def update_closed_data(
+        self,
+        stream_id: str,
+        observation: SliceObservation,
+        frontier: Instant,
+    ) -> Result[None]:
+        del stream_id, observation, frontier
+        return Ok(None)
+
+    def mint_intents(self, stream_id: str, frontier: Instant) -> Result[object]:
+        del stream_id, frontier
+        return Ok(())
+
+
+def run_slice(
+    event_slice: object,
+    *,
+    stream_set: object,
+    current_frontier: object = None,
+    clock: object = None,
+    handler: object = None,
+    resting: object = (),
+) -> Result[SliceOutcome]:
+    """Process one event slice through the pinned :data:`SUBPHASES` order (B-2).
+
+    Resting intents present at slice start may fill in sub-phase 3. Intents
+    minted in sub-phase 5 are recorded as ineligible for this slice's path and
+    rest for a later slice. Domain failure is a typed refusal, returned never
+    raised. Pure: no log, no ledger write.
+    """
+    declared = StreamSet.try_create(stream_set)
+    if is_refusal(declared):
+        return declared
+    slice_ = EventSlice.try_create(event_slice)
+    if is_refusal(slice_):
+        return slice_
+    bound = _bind_observations(declared.value, slice_.value)
+    if is_refusal(bound):
+        return bound
+    observations = bound.value
+    intents = _as_resting_tuple(resting, declared.value)
+    if is_refusal(intents):
+        return intents
+    ports = _as_handler(handler)
+    if is_refusal(ports):
+        return ports
+    if current_frontier is not None and not isinstance(current_frontier, Instant):
+        return invalid(
+            "current_frontier",
+            "the current frontier is an Instant or None",
+            given=repr(type(current_frontier).__name__),
+        )
+    pulled = _pull_frontier(
+        clock=clock,
+        current=current_frontier,
+        observations=slice_.value.observations,
+    )
+    if is_refusal(pulled):
+        return pulled
+    acc = _Acc(
+        frontier=pulled.value,
+        remaining=list(intents.value),
+        filled=[],
+        minted=[],
+        traces=[],
+        observations=observations,
+        stream_ids=declared.value.stream_ids,
+        handler=ports.value,
+    )
+    for name in SUBPHASES:
+        stepped = _run_one_phase(name, acc)
+        if is_refusal(stepped):
+            return stepped
+        acc = stepped.value
+    minted_ids = tuple(item.intent_id for item in acc.minted)
+    return Ok(
+        SliceOutcome(
+            frontier=acc.frontier,
+            trace=tuple(acc.traces),
+            filled=tuple(acc.filled),
+            minted=minted_ids,
+            ineligible=minted_ids,
+            resting=tuple(acc.remaining + acc.minted),
+        )
+    )
+
+
+def run(
+    *,
+    slices: object,
+    stream_set: object = None,
+    config: object = None,
+    clock: object = None,
+    handler: object = None,
+    initial_resting: object = (),
+) -> Result[LoopOutcome]:
+    """PURE event-slice loop (B-2, B-4).
+
+    Consumes time-ordered event slices and the stream-set declaration order
+    (from the resolved run-config when ``config`` is supplied). Returns slice
+    outcomes plus a self-assessment. Writes no log and no ledger.
+    """
+    declared = _resolve_stream_set(stream_set=stream_set, config=config)
+    if is_refusal(declared):
+        return declared
+    events = _as_slice_sequence(slices)
+    if is_refusal(events):
+        return events
+    ports = _as_handler(handler)
+    if is_refusal(ports):
+        return ports
+    if clock is not None and not isinstance(clock, FrontierClock):
+        return invalid(
+            "clock",
+            "the loop advances an injected FrontierClock, or the pure "
+            "advance_frontier pull when clock is omitted (B-2)",
+            given=repr(type(clock).__name__),
+        )
+    resting_tokens = _as_resting_tuple(initial_resting, declared.value)
+    if is_refusal(resting_tokens):
+        return resting_tokens
+    current: Instant | None = None if clock is None else clock.current
+    resting = resting_tokens.value
+    outcomes: list[SliceOutcome] = []
+    filled: list[str] = []
+    for event in events.value:
+        outcome = run_slice(
+            event,
+            stream_set=declared.value,
+            current_frontier=current,
+            clock=clock,
+            handler=ports.value,
+            resting=resting,
+        )
+        if is_refusal(outcome):
+            return outcome
+        done = outcome.value
+        outcomes.append(done)
+        current = done.frontier
+        resting = done.resting
+        filled.extend(done.filled)
+    return Ok(
+        LoopOutcome(
+            slices=tuple(outcomes),
+            resting=resting,
+            filled=tuple(filled),
+            stream_order=declared.value.stream_ids,
+        )
+    )
+
+
+@dataclass(slots=True)
+class _Acc:
+    frontier: Instant
+    remaining: list[RestingIntent]
+    filled: list[str]
+    minted: list[RestingIntent]
+    traces: list[SubphaseTrace]
+    observations: Mapping[str, SliceObservation | None]
+    stream_ids: tuple[str, ...]
+    handler: SliceHandler
+
+
+def _run_one_phase(name: str, acc: _Acc) -> Result[_Acc]:
+    """Dispatch one pinned sub-phase. Unknown names refuse closed (AR-57)."""
+    if name == "frontier-advance":
+        return _phase_frontier_advance(acc)
+    if name == "scheduled-position-events":
+        return _phase_scheduled(acc)
+    if name == "resting-orders":
+        return _phase_resting_orders(acc)
+    if name == "closed-data-indicators-structure":
+        return _phase_closed_data(acc)
+    if name == "strategy-callbacks":
+        return _phase_strategy(acc)
+    if name == "new-intents-rest":
+        return _phase_new_intents_rest(acc)
+    return invalid(
+        "subphases",
+        "every SUBPHASES entry must have a runner; changing the pinned order "
+        "is identity-bearing (AR-57, B-2)",
+        given=name,
+        pinned=list(SUBPHASES),
+    )
+
+
+def _phase_frontier_advance(acc: _Acc) -> Result[_Acc]:
+    actions: list[str] = []
+    for stream_id in acc.stream_ids:
+        observation = acc.observations[stream_id]
+        updated = acc.handler.update_stream(stream_id, observation, acc.frontier)
+        if is_refusal(updated):
+            return updated
+        actions.append(f"empty:{stream_id}" if observation is None else f"update:{stream_id}")
+    acc.traces.append(_trace("frontier-advance", acc.stream_ids, actions))
+    return Ok(acc)
+
+
+def _phase_scheduled(acc: _Acc) -> Result[_Acc]:
+    actions: list[str] = []
+    for stream_id in acc.stream_ids:
+        scheduled = acc.handler.scheduled_position_event(stream_id, acc.frontier)
+        if is_refusal(scheduled):
+            return scheduled
+        actions.append(f"scheduled:{stream_id}")
+    acc.traces.append(_trace("scheduled-position-events", acc.stream_ids, actions))
+    return Ok(acc)
+
+
+def _phase_resting_orders(acc: _Acc) -> Result[_Acc]:
+    actions: list[str] = []
+    kept: list[RestingIntent] = []
+    for stream_id in acc.stream_ids:
+        observation = acc.observations[stream_id]
+        for intent in [item for item in acc.remaining if item.stream_id == stream_id]:
+            filled = acc.handler.execute_resting(intent, observation, acc.frontier)
+            if is_refusal(filled):
+                return filled
+            if filled.value:
+                acc.filled.append(intent.intent_id)
+                actions.append(f"fill:{intent.intent_id}")
+            else:
+                kept.append(intent)
+                actions.append(f"no-fill:{intent.intent_id}")
+    acc.remaining = kept
+    acc.traces.append(_trace("resting-orders", acc.stream_ids, actions))
+    return Ok(acc)
+
+
+def _phase_closed_data(acc: _Acc) -> Result[_Acc]:
+    actions: list[str] = []
+    for stream_id in acc.stream_ids:
+        observation = acc.observations[stream_id]
+        if observation is None:
+            actions.append(f"empty:{stream_id}")
+            continue
+        if not observation.closed:
+            actions.append(f"skip-forming:{stream_id}")
+            continue
+        updated = acc.handler.update_closed_data(stream_id, observation, acc.frontier)
+        if is_refusal(updated):
+            return updated
+        actions.append(f"closed:{stream_id}")
+    acc.traces.append(_trace("closed-data-indicators-structure", acc.stream_ids, actions))
+    return Ok(acc)
+
+
+def _phase_strategy(acc: _Acc) -> Result[_Acc]:
+    actions: list[str] = []
+    known = {item.intent_id for item in acc.remaining}
+    known.update(acc.filled)
+    known.update(item.intent_id for item in acc.minted)
+    for stream_id in acc.stream_ids:
+        minted = acc.handler.mint_intents(stream_id, acc.frontier)
+        if is_refusal(minted):
+            return minted
+        tokens = _as_resting_tuple(minted.value, None)
+        if is_refusal(tokens):
+            return tokens
+        for intent in tokens.value:
+            if intent.intent_id in known:
+                return invalid(
+                    "intent_id",
+                    "a minted intent id must be unique in the run's resting set",
+                    intent_id=intent.intent_id,
+                )
+            if intent.stream_id not in acc.stream_ids:
+                return invalid(
+                    "stream_id",
+                    "a minted intent names a stream in the declared stream set",
+                    stream_id=intent.stream_id,
+                    declared=list(acc.stream_ids),
+                )
+            known.add(intent.intent_id)
+            acc.minted.append(intent)
+            actions.append(f"mint:{intent.intent_id}")
+    acc.traces.append(_trace("strategy-callbacks", acc.stream_ids, actions))
+    return Ok(acc)
+
+
+def _phase_new_intents_rest(acc: _Acc) -> Result[_Acc]:
+    actions: list[str] = []
+    for intent in acc.minted:
+        actions.append(f"rest:{intent.intent_id}")
+    acc.traces.append(_trace("new-intents-rest", acc.stream_ids, actions))
+    return Ok(acc)
+
+
+def _trace(name: str, instrument_order: tuple[str, ...], actions: Sequence[str]) -> SubphaseTrace:
+    return SubphaseTrace(
+        subphase=name,
+        instrument_order=instrument_order,
+        actions=tuple(actions),
+    )
+
+
+def _pull_frontier(
+    *,
+    clock: object,
+    current: Instant | None,
+    observations: Sequence[SliceObservation],
+) -> Result[Instant]:
+    cursors = tuple(
+        StreamNextEmit(stream_id=item.stream_id, next_emit=item.instant) for item in observations
+    )
+    if clock is None:
+        return advance_frontier(current, cursors)
+    if not isinstance(clock, FrontierClock):
+        return invalid(
+            "clock",
+            "the loop advances an injected FrontierClock, or the pure "
+            "advance_frontier pull when clock is omitted (B-2)",
+            given=repr(type(clock).__name__),
+        )
+    return clock.advance(cursors)
+
+
+def _bind_observations(
+    stream_set: StreamSet,
+    event_slice: EventSlice,
+) -> Result[Mapping[str, SliceObservation | None]]:
+    bound: dict[str, SliceObservation | None] = {}
+    for sid in stream_set.stream_ids:
+        bound[sid] = None
+    for obs in event_slice.observations:
+        if obs.stream_id not in bound:
+            return invalid(
+                "stream_id",
+                "a slice observation must name a stream in the declared stream set",
+                stream_id=obs.stream_id,
+                declared=list(stream_set.stream_ids),
+            )
+        bound[obs.stream_id] = obs
+    return Ok(MappingProxyType(bound))
+
+
+def _resolve_stream_set(*, stream_set: object, config: object) -> Result[StreamSet]:
+    from_config: StreamSet | None = None
+    if config is not None:
+        extracted = stream_set_from_config(config)
+        if is_refusal(extracted):
+            return extracted
+        from_config = extracted.value
+    if stream_set is None:
+        if from_config is None:
+            return invalid(
+                "stream_set",
+                "the loop needs the stream-set declaration order from the "
+                "resolved run-config (B-2, B-12)",
+            )
+        return Ok(from_config)
+    provided = StreamSet.try_create(stream_set)
+    if is_refusal(provided):
+        return provided
+    if from_config is not None and provided.value.stream_ids != from_config.stream_ids:
+        return invalid(
+            "stream_set",
+            "caller stream_set must match the resolved run-config declaration "
+            "order; the config order is identity (B-12)",
+            config=list(from_config.stream_ids),
+            given=list(provided.value.stream_ids),
+        )
+    return Ok(from_config if from_config is not None else provided.value)
+
+
+def _as_handler(handler: object) -> Result[SliceHandler]:
+    if handler is None:
+        return Ok(SilentSliceHandler())
+    if not isinstance(handler, SliceHandler):
+        return invalid(
+            "handler",
+            "a slice handler provides update_stream, scheduled_position_event, "
+            "execute_resting, update_closed_data, and mint_intents",
+            given=repr(type(handler).__name__),
+        )
+    return Ok(handler)
+
+
+def _as_slice_sequence(slices: object) -> Result[tuple[EventSlice, ...]]:
+    if isinstance(slices, (str, bytes)) or not isinstance(slices, Sequence):
+        return invalid(
+            "slices",
+            "run consumes a sequence of event slices",
+            given=repr(type(slices).__name__),
+        )
+    parsed: list[EventSlice] = []
+    for index, raw in enumerate(cast("Sequence[object]", slices)):
+        item = EventSlice.try_create(raw)
+        if is_refusal(item):
+            return invalid(
+                "slices",
+                "each run entry is one event slice",
+                index=index,
+                cause=dict(item.context),
+            )
+        parsed.append(item.value)
+    if not parsed:
+        return invalid("slices", "the event-slice loop consumes one or more slices")
+    return Ok(tuple(parsed))
+
+
+def _as_resting_tuple(
+    value: object,
+    stream_set: StreamSet | None,
+) -> Result[tuple[RestingIntent, ...]]:
+    if value is None:
+        return Ok(())
+    if isinstance(value, RestingIntent):
+        items: tuple[RestingIntent, ...] = (value,)
+    elif isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
+        return invalid(
+            "resting",
+            "resting intents are a sequence of intent tokens",
+            given=repr(type(value).__name__),
+        )
+    else:
+        parsed: list[RestingIntent] = []
+        seen: set[str] = set()
+        for index, raw in enumerate(cast("Sequence[object]", value)):
+            item = _coerce_resting(raw)
+            if is_refusal(item):
+                return invalid(
+                    "resting",
+                    "each resting entry is an intent token",
+                    index=index,
+                    cause=dict(item.context),
+                )
+            if item.value.intent_id in seen:
+                return invalid(
+                    "intent_id",
+                    "resting intent ids are unique",
+                    intent_id=item.value.intent_id,
+                    index=index,
+                )
+            seen.add(item.value.intent_id)
+            parsed.append(item.value)
+        items = tuple(parsed)
+    if stream_set is None:
+        return Ok(items)
+    declared = set(stream_set.stream_ids)
+    unknown = [item.stream_id for item in items if item.stream_id not in declared]
+    if unknown:
+        return invalid(
+            "stream_id",
+            "a resting intent names a stream in the declared stream set",
+            stream_id=unknown[0],
+            declared=list(stream_set.stream_ids),
+        )
+    ordered: list[RestingIntent] = []
+    for stream_id in stream_set.stream_ids:
+        ordered.extend(item for item in items if item.stream_id == stream_id)
+    return Ok(tuple(ordered))
+
+
+def _coerce_declared_stream(raw: object) -> Result[DeclaredStream]:
+    if isinstance(raw, DeclaredStream):
+        return Ok(raw)
+    if isinstance(raw, str):
+        return DeclaredStream.try_create(raw)
+    if isinstance(raw, Mapping):
+        mapping = cast("Mapping[str, object]", raw)
+        stream_id = mapping.get("stream_id", mapping.get("id"))
+        instrument = mapping.get("instrument_id", mapping.get("instrument", stream_id))
+        role = mapping.get("role", STREAM_ROLE_TRADING)
+        return DeclaredStream.try_create(stream_id, instrument, role)
+    return invalid(
+        "stream_set",
+        "each stream-set entry is a stream id, a DeclaredStream, or a mapping",
+        given=repr(type(raw).__name__),
+    )
+
+
+def _coerce_observation(raw: object) -> Result[SliceObservation]:
+    if isinstance(raw, SliceObservation):
+        return Ok(raw)
+    if not isinstance(raw, Mapping):
+        return invalid(
+            "observation",
+            "a slice observation is a SliceObservation or a mapping",
+            given=repr(type(raw).__name__),
+        )
+    mapping = cast("Mapping[str, object]", raw)
+    return SliceObservation.try_create(
+        mapping.get("stream_id"),
+        mapping.get("instant"),
+        mapping.get("closed", True),
+    )
+
+
+def _coerce_resting(raw: object) -> Result[RestingIntent]:
+    if isinstance(raw, RestingIntent):
+        return Ok(raw)
+    if not isinstance(raw, Mapping):
+        return invalid(
+            "resting",
+            "a resting intent is a RestingIntent or a mapping with intent_id and stream_id",
+            given=repr(type(raw).__name__),
+        )
+    mapping = cast("Mapping[str, object]", raw)
+    return RestingIntent.try_create(mapping.get("intent_id"), mapping.get("stream_id"))

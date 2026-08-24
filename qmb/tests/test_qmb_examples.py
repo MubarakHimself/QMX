@@ -76,6 +76,22 @@ def test_registryread_usage_example_runs_clean() -> None:
     assert "name@latest refused" in completed.stdout
 
 
+def test_event_slice_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "event_slice_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "pinned sub-phase order is identity-bearing" in completed.stdout
+    assert "never fill against this slice's path" in completed.stdout
+    assert "forming bar skipped" in completed.stdout
+    assert "run is pure" in completed.stdout
+    assert "event-slice loop ok" in completed.stdout
+
+
 def test_frontier_clock_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "frontier_clock_usage.py")],

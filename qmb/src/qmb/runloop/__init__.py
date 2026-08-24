@@ -2,14 +2,11 @@
 
 Time advances only through an injected frontier clock that IS qmf-core's AD-8
 ``Clock`` protocol. The loop is never forked: backtest, replay, and live differ
-only by which clock and adapters the run-config binds (DEC-0169).
+only by which clock and adapters the run-config binds (DEC-0169). Per slice the
+six sub-phases in :data:`SUBPHASES` run in pinned identity-bearing order.
 """
 
 from __future__ import annotations
-
-from typing import Final
-
-from qmf.core.chrono import Clock
 
 from qmb.runloop.frontier import (
     CLOCK_DOES_NOT_CHOOSE_WORLD,
@@ -22,45 +19,61 @@ from qmb.runloop.frontier import (
     read_frontier,
     script_replay_clock,
 )
+from qmb.runloop.loop import (
+    LOOP_KIND,
+    SAME_SLICE_NEW_INTENT_FILL,
+    STREAM_ROLE_DATA_ONLY,
+    STREAM_ROLE_TRADING,
+    STREAM_SET_KEY,
+    SUBPHASES,
+    DeclaredStream,
+    EventSlice,
+    LoopOutcome,
+    RestingIntent,
+    SilentSliceHandler,
+    SliceHandler,
+    SliceObservation,
+    SliceOutcome,
+    StreamSet,
+    SubphaseTrace,
+    fingerprint_loop,
+    frontier_clock_name,
+    loop_identity,
+    run,
+    run_slice,
+    stream_set_from_config,
+)
 
 __all__ = [
     "CLOCK_DOES_NOT_CHOOSE_WORLD",
     "LOOP_KIND",
+    "SAME_SLICE_NEW_INTENT_FILL",
+    "STREAM_ROLE_DATA_ONLY",
+    "STREAM_ROLE_TRADING",
+    "STREAM_SET_KEY",
     "SUBPHASES",
+    "DeclaredStream",
+    "EventSlice",
     "FrontierClock",
+    "LoopOutcome",
     "NextEmitStream",
+    "RestingIntent",
+    "SilentSliceHandler",
+    "SliceHandler",
+    "SliceObservation",
+    "SliceOutcome",
     "StreamNextEmit",
+    "StreamSet",
+    "SubphaseTrace",
     "advance_frontier",
     "as_wall_replay_instant",
+    "fingerprint_loop",
     "frontier_clock_name",
     "loop_identity",
     "min_next_emit",
     "read_frontier",
+    "run",
+    "run_slice",
     "script_replay_clock",
+    "stream_set_from_config",
 ]
-
-LOOP_KIND: Final[str] = "event-slice"
-SUBPHASES: Final[tuple[str, ...]] = (
-    "frontier-advance",
-    "scheduled-position-events",
-    "resting-orders",
-    "closed-data-indicators-structure",
-    "strategy-callbacks",
-    "new-intents-rest",
-)
-
-
-def frontier_clock_name() -> str:
-    """Qualified name of the injected frontier clock protocol (AD-8)."""
-    return f"{Clock.__module__}.{Clock.__qualname__}"
-
-
-def loop_identity() -> dict[str, object]:
-    """Identity-bearing loop fields. Package SemVer is omitted."""
-    return {
-        "loop_kind": LOOP_KIND,
-        "frontier_clock": frontier_clock_name(),
-        "subphases": SUBPHASES,
-        "clock_chooses_world": False,
-        "clock_does_not_choose_world": CLOCK_DOES_NOT_CHOOSE_WORLD,
-    }

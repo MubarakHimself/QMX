@@ -86,7 +86,17 @@ def test_registry_state_is_an_as_of_set() -> None:
 def test_frontier_clock_is_qmf_core_clock() -> None:
     assert qmb.frontier_clock_name() == "qmf.core.chrono.Clock"
     assert qmb.LOOP_KIND == "event-slice"
-    assert len(qmb.SUBPHASES) == 6
+    assert qmb.SUBPHASES == (
+        "frontier-advance",
+        "scheduled-position-events",
+        "resting-orders",
+        "closed-data-indicators-structure",
+        "strategy-callbacks",
+        "new-intents-rest",
+    )
+    assert qmb.SAME_SLICE_NEW_INTENT_FILL is False
+    assert api.run is qmb.run
+    assert api.run_slice is qmb.run_slice
 
 
 def test_authorized_intent_is_the_ct23_door_types() -> None:
