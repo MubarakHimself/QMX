@@ -112,6 +112,22 @@ def test_execution_ports_usage_example_runs_clean() -> None:
     assert "execution ports ok" in completed.stdout
 
 
+def test_golden_slice_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "golden_slice_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "two identical runs share one CT-32 fingerprint" in completed.stdout
+    assert "re-run under resolved config reproduces; mismatch is typed refusal" in completed.stdout
+    assert "concurrency is scheduling only" in completed.stdout
+    assert "no HTML/charts in the fingerprint" in completed.stdout
+    assert "golden-slice determinism ok" in completed.stdout
+
+
 def test_cancel_observe_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "cancel_observe_usage.py")],

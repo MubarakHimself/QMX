@@ -10,22 +10,30 @@ actionable. Warm-up is in-loop with trading locked for the split-manifest
 embargo observation count; acting during warm-up is a typed policy rejection.
 Cancel and time/memory limits are cooperative at slice boundaries and return
 a typed ``aborted`` refusal — never a partial governed result. ``run`` is a
-pure function: it writes no log and no ledger.
+pure function: it writes no log and no ledger. A completed run under a
+resolved run-config mints a CT-32 fingerprint witness (no HTML, no charts).
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from types import MappingProxyType
 from typing import Final, Protocol, cast, runtime_checkable
 
 from qmf.core.chrono import Clock, Duration, Instant, Interval
 from qmf.core.fingerprint import Fingerprint, fingerprint
 from qmf.core.refusal import Ok, Result, is_refusal
+from qmf.risk.performance import PerformanceResult
 
 from qmb._refuse import clean_token, invalid
 from qmb.config.compiler import ResolvedRunConfig
+from qmb.results.ct32 import (
+    CONCURRENCY_IS_SCHEDULING_ONLY,
+    RESULT_CONTRACT,
+    mint_run_performance_result,
+    require_reproduced_fingerprint,
+)
 from qmb.runloop.bars import (
     COMPLETED_BOUNDARY_ONLY,
     COMPLETENESS_COMPLETED,
@@ -92,6 +100,7 @@ __all__ = [
     "fingerprint_loop",
     "frontier_clock_name",
     "loop_identity",
+    "reproduce_run",
     "run",
     "run_slice",
     "stream_set_from_config",
@@ -144,7 +153,9 @@ def loop_identity() -> dict[str, object]:
         "warmup_mechanism": WARMUP_MECHANISM,
         "warmup_unit": WARMUP_UNIT,
         "cancel_at": CANCEL_AT,
+        "concurrency_is_scheduling_only": CONCURRENCY_IS_SCHEDULING_ONLY,
         "partial_governed_result_on_abort": PARTIAL_GOVERNED_RESULT_ON_ABORT,
+        "pure_run_independent_of_siblings": True,
     }
 
 
@@ -486,7 +497,13 @@ class SliceOutcome:
 
 @dataclass(frozen=True, slots=True)
 class LoopOutcome:
-    """Pure result of the event-slice loop. Not a ledger line and not CT-32."""
+    """Pure result of the event-slice loop. Not a ledger line.
+
+    A completed run under a resolved run-config carries the CT-32
+    ``performance_result`` used as the fingerprint witness. The loop-outcome
+    ``fp1`` does not fold that artifact in (the CT-32 cites it as an input).
+    Abort never emits a partial governed result.
+    """
 
     slices: tuple[SliceOutcome, ...]
     resting: tuple[RestingIntent, ...]
@@ -495,6 +512,7 @@ class LoopOutcome:
     warmup: WarmupProgress
     evidence_range: Interval
     data_points_processed: int = 0
+    performance_result: PerformanceResult | None = None
 
     @property
     def is_warming_up(self) -> bool:
@@ -504,34 +522,50 @@ class LoopOutcome:
     @property
     def self_assessment(self) -> Mapping[str, object]:
         """Returned with the outcome; never written to a log or ledger (B-4)."""
-        return MappingProxyType(
-            {
-                "cancel_at": CANCEL_AT,
-                "closed_data_only": True,
-                "completed_boundary_only": COMPLETED_BOUNDARY_ONLY,
-                "data_points_processed": self.data_points_processed,
-                "evidence_covers_warmup": False,
-                "forming_bar_actionable": FORMING_BAR_ACTIONABLE,
-                "forming_bar_visible": FORMING_BAR_VISIBLE,
-                "is_warming_up": self.is_warming_up,
-                "lookahead_prevention_independent_of_gap_0048": (
-                    LOOKAHEAD_PREVENTION_INDEPENDENT_OF_GAP_0048
-                ),
-                "loop_kind": LOOP_KIND,
-                "partial_governed_result_on_abort": PARTIAL_GOVERNED_RESULT_ON_ABORT,
-                "preseed_is_warmup": PRESEED_IS_WARMUP,
-                "same_slice_new_intent_fill": SAME_SLICE_NEW_INTENT_FILL,
-                "slice_count": len(self.slices),
-                "subphases": list(SUBPHASES),
-                "terminal": TERMINAL_COMPLETE,
-                "warmup_adds_second_window": WARMUP_ADDS_SECOND_WINDOW,
-                "warmup_mechanism": WARMUP_MECHANISM,
-                "warmup_unit": WARMUP_UNIT,
-            }
-        )
+        payload: dict[str, object] = {
+            "cancel_at": CANCEL_AT,
+            "closed_data_only": True,
+            "completed_boundary_only": COMPLETED_BOUNDARY_ONLY,
+            "concurrency_is_scheduling_only": CONCURRENCY_IS_SCHEDULING_ONLY,
+            "data_points_processed": self.data_points_processed,
+            "evidence_covers_warmup": False,
+            "forming_bar_actionable": FORMING_BAR_ACTIONABLE,
+            "forming_bar_visible": FORMING_BAR_VISIBLE,
+            "is_warming_up": self.is_warming_up,
+            "lookahead_prevention_independent_of_gap_0048": (
+                LOOKAHEAD_PREVENTION_INDEPENDENT_OF_GAP_0048
+            ),
+            "loop_kind": LOOP_KIND,
+            "partial_governed_result_on_abort": PARTIAL_GOVERNED_RESULT_ON_ABORT,
+            "preseed_is_warmup": PRESEED_IS_WARMUP,
+            "same_slice_new_intent_fill": SAME_SLICE_NEW_INTENT_FILL,
+            "slice_count": len(self.slices),
+            "subphases": list(SUBPHASES),
+            "terminal": TERMINAL_COMPLETE,
+            "warmup_adds_second_window": WARMUP_ADDS_SECOND_WINDOW,
+            "warmup_mechanism": WARMUP_MECHANISM,
+            "warmup_unit": WARMUP_UNIT,
+        }
+        if self.performance_result is not None:
+            stamped = self.performance_result.fingerprint()
+            payload["result_contract"] = RESULT_CONTRACT
+            if not is_refusal(stamped):
+                payload["ct32_fingerprint"] = stamped.value.value
+        return MappingProxyType(payload)
+
+    def ct32_fingerprint(self) -> Result[Fingerprint]:
+        """The CT-32 ``fp1`` when this outcome minted a governed result."""
+        if self.performance_result is None:
+            return invalid(
+                "performance_result",
+                "CT-32 is minted when run() completes under a resolved run-config; "
+                "an aborted or config-less loop emits no governed result",
+                result_contract=RESULT_CONTRACT,
+            )
+        return self.performance_result.fingerprint()
 
     def fp1_identity(self) -> dict[str, object]:
-        """Canonical identity. Package SemVer never enters."""
+        """Canonical loop-outcome identity. The CT-32 artifact is not folded in."""
         return {
             "class": "event-slice-loop-outcome",
             "data_points_processed": self.data_points_processed,
@@ -768,7 +802,9 @@ def run(
     refusal — never a partial governed result. Progress (data-points-processed
     and ``is_warming_up``) is published to the caller-owned observer. Writes no
     log and no ledger. The same underlying series is replayed as-of each
-    frontier so later prints cannot complete an earlier bar.
+    frontier so later prints cannot complete an earlier bar. A resolved
+    run-config mints a CT-32 fingerprint witness; concurrency is scheduling
+    only and does not enter identity.
     """
     declared = _resolve_stream_set(stream_set=stream_set, config=config)
     if is_refusal(declared):
@@ -872,17 +908,113 @@ def run(
     )
     if is_refusal(spanned):
         return spanned
-    return Ok(
-        LoopOutcome(
-            slices=tuple(outcomes),
-            resting=resting,
-            filled=tuple(filled),
-            stream_order=declared.value.stream_ids,
-            warmup=warmup,
-            evidence_range=spanned.value,
-            data_points_processed=data_points,
-        )
+    outcome = LoopOutcome(
+        slices=tuple(outcomes),
+        resting=resting,
+        filled=tuple(filled),
+        stream_order=declared.value.stream_ids,
+        warmup=warmup,
+        evidence_range=spanned.value,
+        data_points_processed=data_points,
     )
+    if not isinstance(config, ResolvedRunConfig):
+        return Ok(outcome)
+    minted = mint_run_performance_result(
+        config,
+        evidence_range=outcome.evidence_range,
+        stream_order=outcome.stream_order,
+        slice_count=len(outcome.slices),
+        filled_count=len(outcome.filled),
+        resting_count=len(outcome.resting),
+        data_points_processed=outcome.data_points_processed,
+        outcome_identity=outcome.fp1_identity(),
+    )
+    if is_refusal(minted):
+        return minted
+    return Ok(replace(outcome, performance_result=minted.value))
+
+
+def reproduce_run(
+    *,
+    run_id: object,
+    config: object,
+    expected_fingerprint: object,
+    slices: object,
+    stream_set: object = None,
+    clock: object = None,
+    handler: object = None,
+    initial_resting: object = (),
+    series: object = None,
+    bar_plan: object = None,
+    embargo: object = None,
+    cancel: object = None,
+    observer: object = None,
+    limits: object = None,
+    probe: object = None,
+) -> Result[PerformanceResult]:
+    """Re-run ``run_id`` under its resolved config and require the CT-32 fingerprint.
+
+    The run id IS the resolved-config fingerprint (B-3). A completed re-run
+    that does not reproduce ``expected_fingerprint`` is a typed ``policy
+    rejection`` (FM-11). Abort still returns the aborted refusal and never a
+    partial governed result. Pure: no log, no ledger.
+    """
+    if not isinstance(config, ResolvedRunConfig):
+        return invalid(
+            "config",
+            "reproduction re-runs under a resolved run-config; the config "
+            "fingerprint is the run-id root (B-3, FM-11)",
+            given=repr(type(config).__name__),
+        )
+    if not isinstance(run_id, Fingerprint):
+        return invalid(
+            "run_id",
+            "the run id is the resolved-config fingerprint",
+            given=repr(type(run_id).__name__),
+        )
+    if run_id != config.fingerprint:
+        return invalid(
+            "run_id",
+            "the run id is the resolved-config fingerprint; reproducing under a "
+            "different config is a caller mistake, not a fingerprint mismatch",
+            config_fingerprint=config.fingerprint.value,
+            run_id=run_id.value,
+        )
+    outcome = run(
+        slices=slices,
+        stream_set=stream_set,
+        config=config,
+        clock=clock,
+        handler=handler,
+        initial_resting=initial_resting,
+        series=series,
+        bar_plan=bar_plan,
+        embargo=embargo,
+        cancel=cancel,
+        observer=observer,
+        limits=limits,
+        probe=probe,
+    )
+    if is_refusal(outcome):
+        return outcome
+    stamped = outcome.value.ct32_fingerprint()
+    if is_refusal(stamped):
+        return stamped
+    matched = require_reproduced_fingerprint(
+        expected_fingerprint,
+        stamped.value,
+        run_id=run_id,
+    )
+    if is_refusal(matched):
+        return matched
+    result = outcome.value.performance_result
+    if result is None:
+        return invalid(
+            "performance_result",
+            "a reproduced run under a resolved config must mint a CT-32 artifact",
+            result_contract=RESULT_CONTRACT,
+        )
+    return Ok(result)
 
 
 @dataclass(slots=True)

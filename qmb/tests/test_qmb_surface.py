@@ -120,6 +120,14 @@ def test_frontier_clock_is_qmf_core_clock() -> None:
     assert api.ScriptedLimitProbe is qmb.ScriptedLimitProbe
     assert api.check_slice_boundary is qmb.check_slice_boundary
     assert api.refuse_aborted is qmb.refuse_aborted
+    assert qmb.RESULT_CONTRACT == "CT-32"
+    assert qmb.CHART_SERIES_IN_IDENTITY is False
+    assert qmb.HTML_PAYLOAD is False
+    assert qmb.CONCURRENCY_IS_SCHEDULING_ONLY is True
+    assert api.reproduce_run is qmb.reproduce_run
+    assert api.mint_run_performance_result is qmb.mint_run_performance_result
+    assert api.require_reproduced_fingerprint is qmb.require_reproduced_fingerprint
+    assert api.PerformanceResult is qmb.PerformanceResult
 
 
 def test_authorized_intent_is_the_ct23_door_types() -> None:
