@@ -37,6 +37,7 @@ __all__ = [
     "LAYER2_CHECKS",
     "Layer2Observations",
     "Layer2Verdict",
+    "collect_layer2_observations",
     "evaluate_layer2",
     "run_layer2_suite",
 ]
@@ -267,7 +268,7 @@ def evaluate_layer2(observations: object) -> Result[Layer2Verdict]:
     )
 
 
-def run_layer2_suite(
+def collect_layer2_observations(
     *,
     declaration: object,
     factory: object,
@@ -275,12 +276,13 @@ def run_layer2_suite(
     assignment: object = None,
     state_scope: object,
     state_bound: object,
-) -> Result[Layer2Verdict]:
-    """In-process Layer-2 suite. Spawns no process; feeds the pure verdict.
+) -> Result[Layer2Observations]:
+    """In-process Layer-2 observations. Spawns no process; hosts may isolate this.
 
-    Asserts: logic loads in isolation; a golden slice run twice yields identical
-    intents; only permitted intent kinds are emitted; the declared state bound
-    holds with a snapshot/restore round-trip equivalent. No Book is injected.
+    Hosts that spawn a process run this collector in the child and feed the
+    returned observations to :func:`evaluate_layer2` in the parent, so the
+    verdict stays QML-owned. No Book is injected. Capability starvation is
+    the injected read-surfaces-only path.
     """
     bot = _admit_declaration(declaration)
     if is_refusal(bot):
@@ -302,7 +304,7 @@ def run_layer2_suite(
     if is_refusal(slice_fp):
         return _journal(slice_fp)
     if scan.value.findings:
-        return evaluate_layer2(
+        return Ok(
             _observations(
                 loaded_in_isolation=True,
                 book_present=False,
@@ -326,7 +328,7 @@ def run_layer2_suite(
         state_bound=state_bound,
     )
     if is_refusal(first_bot):
-        return evaluate_layer2(
+        return Ok(
             _observations(
                 loaded_in_isolation=False,
                 book_present=False,
@@ -343,7 +345,7 @@ def run_layer2_suite(
         )
     first_run = drive_golden_slice(first_bot.value, slice_.value)
     if is_refusal(first_run):
-        return _drive_refusal_verdict(
+        return _drive_refusal_observations(
             first_run,
             scan=scan.value,
             slice_fp=slice_fp.value,
@@ -359,7 +361,7 @@ def run_layer2_suite(
         state_bound=state_bound,
     )
     if is_refusal(second_bot):
-        return evaluate_layer2(
+        return Ok(
             _observations(
                 loaded_in_isolation=False,
                 book_present=False,
@@ -376,7 +378,7 @@ def run_layer2_suite(
         )
     second_run = drive_golden_slice(second_bot.value, slice_.value)
     if is_refusal(second_run):
-        return _drive_refusal_verdict(
+        return _drive_refusal_observations(
             second_run,
             scan=scan.value,
             slice_fp=slice_fp.value,
@@ -408,7 +410,7 @@ def run_layer2_suite(
                 state_bound_holds = field != "payload"
     else:
         restore_equivalent = bound_and_restore.value
-    return evaluate_layer2(
+    return Ok(
         _observations(
             loaded_in_isolation=True,
             book_present=False,
@@ -425,7 +427,35 @@ def run_layer2_suite(
     )
 
 
-def _drive_refusal_verdict(
+def run_layer2_suite(
+    *,
+    declaration: object,
+    factory: object,
+    source_tree: object,
+    assignment: object = None,
+    state_scope: object,
+    state_bound: object,
+) -> Result[Layer2Verdict]:
+    """In-process Layer-2 suite. Spawns no process; feeds the pure verdict.
+
+    Asserts: logic loads in isolation; a golden slice run twice yields identical
+    intents; only permitted intent kinds are emitted; the declared state bound
+    holds with a snapshot/restore round-trip equivalent. No Book is injected.
+    """
+    observed = collect_layer2_observations(
+        declaration=declaration,
+        factory=factory,
+        source_tree=source_tree,
+        assignment=assignment,
+        state_scope=state_scope,
+        state_bound=state_bound,
+    )
+    if is_refusal(observed):
+        return observed
+    return evaluate_layer2(observed.value)
+
+
+def _drive_refusal_observations(
     refusal: TypedRefusal,
     *,
     scan: ScanReport,
@@ -433,7 +463,7 @@ def _drive_refusal_verdict(
     decl_fp: Fingerprint,
     permitted: tuple[str, ...],
     first_run: tuple[tuple[dict[str, object], ...], ...] = (),
-) -> Result[Layer2Verdict]:
+) -> Result[Layer2Observations]:
     check = drive_error_kind(refusal)
     given = refusal.context.get("given")
     emitted: tuple[str, ...] = ()
@@ -448,7 +478,7 @@ def _drive_refusal_verdict(
                 given=repr(given),
                 permitted=("entry", *permitted),
             )
-        return evaluate_layer2(
+        return Ok(
             _observations(
                 loaded_in_isolation=True,
                 book_present=False,
@@ -463,12 +493,11 @@ def _drive_refusal_verdict(
                 restore_equivalent=True,
             )
         )
-    wrapped = _fail(
+    return _fail(
         check,
         "a golden slice run that cannot emit intents is a Layer-2 conformance failure",
         cause=dict(refusal.context),
     )
-    return wrapped
 
 
 def _observations(

@@ -70,6 +70,10 @@ def test_declared_dependencies_are_qmf_core_registry_risk_only() -> None:
 def test_source_never_imports_banned_modules() -> None:
     violations: list[str] = []
     for path in sorted(_SRC.rglob("*.py")):
+        # Host-owned runner is impure by law (DEC-0178): stdlib process
+        # management lives there, never in the pure library surface.
+        if "host" in path.relative_to(_SRC).parts:
+            continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
             names: list[str] = []

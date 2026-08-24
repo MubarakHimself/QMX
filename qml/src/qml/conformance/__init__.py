@@ -33,6 +33,7 @@ from qml.conformance.layer1 import LAYER1_CHECKS, Layer1Verdict, lint_declaratio
 from qml.conformance.layer2 import (
     Layer2Observations,
     Layer2Verdict,
+    collect_layer2_observations,
     evaluate_layer2,
     run_layer2_suite,
 )
@@ -79,6 +80,7 @@ __all__ = [
     "ScanFinding",
     "ScanReport",
     "ast_scan_rules_identity",
+    "collect_layer2_observations",
     "conformance_contract_identity",
     "drive_golden_slice",
     "evaluate_layer2",
