@@ -6,7 +6,9 @@ declaration order from the resolved run-config. A new intent minted in
 sub-phase 5 is never eligible to fill against this slice's path — it rests for
 a later slice. Higher-BarSpec bars derive from the finest declared base stream
 and emit only on a completed boundary; a forming bar is never visible or
-actionable. ``run`` is a pure function: it writes no log and no ledger.
+actionable. Warm-up is in-loop with trading locked for the split-manifest
+embargo observation count; acting during warm-up is a typed policy rejection.
+``run`` is a pure function: it writes no log and no ledger.
 """
 
 from __future__ import annotations
@@ -16,7 +18,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final, Protocol, cast, runtime_checkable
 
-from qmf.core.chrono import Clock, Instant
+from qmf.core.chrono import Clock, Instant, Interval
 from qmf.core.fingerprint import Fingerprint, fingerprint
 from qmf.core.refusal import Ok, Result, is_refusal
 
@@ -40,6 +42,18 @@ from qmb.runloop.frontier import (
     FrontierClock,
     StreamNextEmit,
     advance_frontier,
+)
+from qmb.runloop.warmup import (
+    EMBARGO_KEY,
+    PRESEED_IS_WARMUP,
+    WARMUP_ADDS_SECOND_WINDOW,
+    WARMUP_MECHANISM,
+    WARMUP_UNIT,
+    SplitEmbargo,
+    WarmupProgress,
+    embargo_from_config,
+    guard_trading,
+    trading_evidence_range,
 )
 
 __all__ = [
@@ -108,6 +122,11 @@ def loop_identity() -> dict[str, object]:
         "lookahead_prevention_independent_of_gap_0048": (
             LOOKAHEAD_PREVENTION_INDEPENDENT_OF_GAP_0048
         ),
+        "preseed_is_warmup": PRESEED_IS_WARMUP,
+        "trading_locked_during_warmup": True,
+        "warmup_adds_second_window": WARMUP_ADDS_SECOND_WINDOW,
+        "warmup_mechanism": WARMUP_MECHANISM,
+        "warmup_unit": WARMUP_UNIT,
     }
 
 
@@ -416,6 +435,8 @@ class SliceOutcome:
     forming: tuple[FormingBarState, ...] = ()
     fill_path: tuple[SeriesSample, ...] = ()
     series_fp1: tuple[str, ...] = ()
+    is_warming_up: bool = False
+    warmup: WarmupProgress | None = None
 
     def subphase_order(self) -> tuple[str, ...]:
         """Sub-phase names in the order they ran."""
@@ -427,6 +448,7 @@ class SliceOutcome:
             "filled": list(self.filled),
             "frontier_ns": self.frontier.value_ns,
             "ineligible": list(self.ineligible),
+            "is_warming_up": self.is_warming_up,
             "minted": list(self.minted),
             "resting": [item.fp1_identity() for item in self.resting],
             "trace": [item.fp1_identity() for item in self.trace],
@@ -439,6 +461,8 @@ class SliceOutcome:
             content["fill_path"] = [item.fp1_identity() for item in self.fill_path]
         if self.series_fp1:
             content["series_fp1"] = list(self.series_fp1)
+        if self.warmup is not None:
+            content["warmup"] = self.warmup.fp1_identity()
         return content
 
 
@@ -450,6 +474,13 @@ class LoopOutcome:
     resting: tuple[RestingIntent, ...]
     filled: tuple[str, ...]
     stream_order: tuple[str, ...]
+    warmup: WarmupProgress
+    evidence_range: Interval
+
+    @property
+    def is_warming_up(self) -> bool:
+        """True when the run ended still inside the embargo (trading locked)."""
+        return self.warmup.is_warming_up
 
     @property
     def self_assessment(self) -> Mapping[str, object]:
@@ -458,16 +489,22 @@ class LoopOutcome:
             {
                 "closed_data_only": True,
                 "completed_boundary_only": COMPLETED_BOUNDARY_ONLY,
+                "evidence_covers_warmup": False,
                 "forming_bar_actionable": FORMING_BAR_ACTIONABLE,
                 "forming_bar_visible": FORMING_BAR_VISIBLE,
+                "is_warming_up": self.is_warming_up,
                 "lookahead_prevention_independent_of_gap_0048": (
                     LOOKAHEAD_PREVENTION_INDEPENDENT_OF_GAP_0048
                 ),
                 "loop_kind": LOOP_KIND,
+                "preseed_is_warmup": PRESEED_IS_WARMUP,
                 "same_slice_new_intent_fill": SAME_SLICE_NEW_INTENT_FILL,
                 "slice_count": len(self.slices),
                 "subphases": list(SUBPHASES),
                 "terminal": "complete",
+                "warmup_adds_second_window": WARMUP_ADDS_SECOND_WINDOW,
+                "warmup_mechanism": WARMUP_MECHANISM,
+                "warmup_unit": WARMUP_UNIT,
             }
         )
 
@@ -475,12 +512,15 @@ class LoopOutcome:
         """Canonical identity. Package SemVer never enters."""
         return {
             "class": "event-slice-loop-outcome",
+            "evidence_range": self.evidence_range.fp1_identity(),
             "filled": list(self.filled),
+            "is_warming_up": self.is_warming_up,
             "resting": [item.fp1_identity() for item in self.resting],
             "slice_count": len(self.slices),
             "slices": [item.fp1_identity() for item in self.slices],
             "stream_order": list(self.stream_order),
             "subphases": list(SUBPHASES),
+            "warmup": self.warmup.fp1_identity(),
         }
 
 
@@ -582,6 +622,8 @@ def run_slice(
     resting: object = (),
     series: object = None,
     bar_plan: object = None,
+    embargo: object = None,
+    warmup: object = None,
 ) -> Result[SliceOutcome]:
     """Process one event slice through the pinned :data:`SUBPHASES` order (B-2).
 
@@ -589,8 +631,9 @@ def run_slice(
     minted in sub-phase 5 are recorded as ineligible for this slice's path and
     rest for a later slice. When ``series`` and ``bar_plan`` are supplied,
     higher-BarSpec bars derive from the finest base stream in sub-phase 1 and
-    emit only on a completed boundary. Domain failure is a typed refusal,
-    returned never raised. Pure: no log, no ledger write.
+    emit only on a completed boundary. Warm-up uses this same loop with trading
+    locked for the split-manifest embargo observation count. Domain failure is
+    a typed refusal, returned never raised. Pure: no log, no ledger write.
     """
     declared = StreamSet.try_create(stream_set)
     if is_refusal(declared):
@@ -629,6 +672,9 @@ def run_slice(
     )
     if is_refusal(derived):
         return derived
+    progress = _resolve_warmup(embargo=embargo, warmup=warmup, config=None)
+    if is_refusal(progress):
+        return progress
     acc = _Acc(
         frontier=pulled.value,
         remaining=list(intents.value),
@@ -639,12 +685,17 @@ def run_slice(
         stream_ids=declared.value.stream_ids,
         handler=ports.value,
         consumptions=derived.value,
+        warmup=progress.value,
+        slice_warming=progress.value.is_warming_up,
     )
     for name in SUBPHASES:
         stepped = _run_one_phase(name, acc)
         if is_refusal(stepped):
             return stepped
         acc = stepped.value
+    advanced = acc.warmup.advance(_closed_observation_count(acc.observations))
+    if is_refusal(advanced):
+        return advanced
     minted_ids = tuple(item.intent_id for item in acc.minted)
     emitted = tuple(bar for item in acc.consumptions for bar in item.emitted)
     forming = tuple(state for item in acc.consumptions for state in item.forming)
@@ -662,6 +713,8 @@ def run_slice(
             forming=forming,
             fill_path=fill_path,
             series_fp1=series_fp1,
+            is_warming_up=acc.slice_warming,
+            warmup=advanced.value,
         )
     )
 
@@ -676,12 +729,15 @@ def run(
     initial_resting: object = (),
     series: object = None,
     bar_plan: object = None,
+    embargo: object = None,
 ) -> Result[LoopOutcome]:
     """PURE event-slice loop (B-2, B-4).
 
     Consumes time-ordered event slices and the stream-set declaration order
-    (from the resolved run-config when ``config`` is supplied). Returns slice
-    outcomes plus a self-assessment. Writes no log and no ledger. The same
+    (from the resolved run-config when ``config`` is supplied). Warm-up is the
+    same loop with trading locked for the split-manifest embargo observation
+    count. Returns slice outcomes plus a self-assessment whose evidence range
+    is the trading interval only. Writes no log and no ledger. The same
     underlying series is replayed as-of each frontier so later prints cannot
     complete an earlier bar.
     """
@@ -704,10 +760,14 @@ def run(
     resting_tokens = _as_resting_tuple(initial_resting, declared.value)
     if is_refusal(resting_tokens):
         return resting_tokens
+    progress = _resolve_warmup(embargo=embargo, warmup=None, config=config)
+    if is_refusal(progress):
+        return progress
     current: Instant | None = None if clock is None else clock.current
     resting = resting_tokens.value
     outcomes: list[SliceOutcome] = []
     filled: list[str] = []
+    warmup = progress.value
     for event in events.value:
         outcome = run_slice(
             event,
@@ -718,6 +778,7 @@ def run(
             resting=resting,
             series=series,
             bar_plan=bar_plan,
+            warmup=warmup,
         )
         if is_refusal(outcome):
             return outcome
@@ -726,12 +787,22 @@ def run(
         current = done.frontier
         resting = done.resting
         filled.extend(done.filled)
+        if done.warmup is not None:
+            warmup = done.warmup
+    spanned = trading_evidence_range(
+        tuple(item.frontier for item in outcomes if not item.is_warming_up),
+        empty_at=outcomes[-1].frontier,
+    )
+    if is_refusal(spanned):
+        return spanned
     return Ok(
         LoopOutcome(
             slices=tuple(outcomes),
             resting=resting,
             filled=tuple(filled),
             stream_order=declared.value.stream_ids,
+            warmup=warmup,
+            evidence_range=spanned.value,
         )
     )
 
@@ -747,6 +818,8 @@ class _Acc:
     stream_ids: tuple[str, ...]
     handler: SliceHandler
     consumptions: tuple[SameSliceConsumption, ...]
+    warmup: WarmupProgress
+    slice_warming: bool
 
 
 def _run_one_phase(name: str, acc: _Acc) -> Result[_Acc]:
@@ -813,6 +886,9 @@ def _phase_resting_orders(acc: _Acc) -> Result[_Acc]:
             if is_refusal(filled):
                 return filled
             if filled.value:
+                locked = guard_trading(is_warming_up=acc.slice_warming, action="fill")
+                if is_refusal(locked):
+                    return locked
                 acc.filled.append(intent.intent_id)
                 actions.append(f"fill:{intent.intent_id}")
             else:
@@ -853,6 +929,10 @@ def _phase_strategy(acc: _Acc) -> Result[_Acc]:
         tokens = _as_resting_tuple(minted.value, None)
         if is_refusal(tokens):
             return tokens
+        if tokens.value:
+            locked = guard_trading(is_warming_up=acc.slice_warming, action="mint")
+            if is_refusal(locked):
+                return locked
         for intent in tokens.value:
             if intent.intent_id in known:
                 return invalid(
@@ -981,6 +1061,62 @@ def _resolve_stream_set(*, stream_set: object, config: object) -> Result[StreamS
             given=list(provided.value.stream_ids),
         )
     return Ok(from_config if from_config is not None else provided.value)
+
+
+def _closed_observation_count(observations: Mapping[str, SliceObservation | None]) -> int:
+    """One completed event slice counts as one observation; forming-only is 0."""
+    for observation in observations.values():
+        if observation is not None and observation.closed:
+            return 1
+    return 0
+
+
+def _resolve_warmup(
+    *,
+    embargo: object,
+    warmup: object,
+    config: object,
+) -> Result[WarmupProgress]:
+    """Resolve in-loop warm-up from progress, embargo, or the resolved config."""
+    if warmup is not None:
+        if not isinstance(warmup, WarmupProgress):
+            return invalid(
+                "warmup",
+                "in-loop warm-up progress is a WarmupProgress; pre-seeding is not warm-up",
+                given=repr(type(warmup).__name__),
+            )
+        if embargo is not None:
+            bound = SplitEmbargo.try_create(embargo)
+            if is_refusal(bound):
+                return bound
+            if bound.value.observation_count != warmup.embargo.observation_count:
+                return invalid(
+                    EMBARGO_KEY,
+                    "caller embargo must match the in-loop warm-up progress",
+                    given=bound.value.observation_count,
+                    progress=warmup.embargo.observation_count,
+                )
+        return Ok(warmup)
+    from_config: SplitEmbargo | None = None
+    if config is not None:
+        extracted = embargo_from_config(config)
+        if is_refusal(extracted):
+            return extracted
+        from_config = extracted.value
+    if embargo is None:
+        bound = from_config if from_config is not None else SplitEmbargo(observation_count=0)
+        return WarmupProgress.try_create(bound)
+    parsed = SplitEmbargo.try_create(embargo)
+    if is_refusal(parsed):
+        return parsed
+    if from_config is not None and from_config.observation_count != parsed.value.observation_count:
+        return invalid(
+            EMBARGO_KEY,
+            "caller embargo must match the resolved run-config split-manifest embargo",
+            config=from_config.observation_count,
+            given=parsed.value.observation_count,
+        )
+    return WarmupProgress.try_create(parsed.value)
 
 
 def _as_handler(handler: object) -> Result[SliceHandler]:

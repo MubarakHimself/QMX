@@ -353,8 +353,7 @@ class FrontierClock:
         """The current wall/replay Instant (AD-8); raise if not yet advanced."""
         if self._current is None:
             raise LookupError(
-                "frontier clock has no current Instant; advance from stream "
-                "next-emit cursors first"
+                "frontier clock has no current Instant; advance from stream next-emit cursors first"
             )
         return self._current
 

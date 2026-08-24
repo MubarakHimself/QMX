@@ -92,6 +92,23 @@ def test_completed_boundary_usage_example_runs_clean() -> None:
     assert "completed-boundary derivation ok" in completed.stdout
 
 
+def test_warmup_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "warmup_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "same event-slice loop during warm-up; trading locked" in completed.stdout
+    assert "acting during warm-up is policy rejection" in completed.stdout
+    assert "never a Duration" in completed.stdout
+    assert "pre-seeding buffers is not warm-up" in completed.stdout
+    assert "evidence range is the trading interval only" in completed.stdout
+    assert "in-loop warm-up ok" in completed.stdout
+
+
 def test_event_slice_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "event_slice_usage.py")],

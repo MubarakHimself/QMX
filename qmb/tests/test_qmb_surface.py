@@ -103,6 +103,13 @@ def test_frontier_clock_is_qmf_core_clock() -> None:
     assert api.run_slice is qmb.run_slice
     assert api.act_on_bar is qmb.act_on_bar
     assert api.consume_same_slice is qmb.consume_same_slice
+    assert qmb.WARMUP_MECHANISM == "in-loop-locked"
+    assert qmb.WARMUP_UNIT == "observation-count"
+    assert qmb.WARMUP_ADDS_SECOND_WINDOW is False
+    assert qmb.PRESEED_IS_WARMUP is False
+    assert api.WARMUP_MECHANISM is qmb.WARMUP_MECHANISM
+    assert api.preseed_indicator_buffers is qmb.preseed_indicator_buffers
+    assert api.SplitEmbargo is qmb.SplitEmbargo
 
 
 def test_authorized_intent_is_the_ct23_door_types() -> None:

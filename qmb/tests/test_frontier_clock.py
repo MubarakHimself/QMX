@@ -87,9 +87,7 @@ def test_injected_clock_is_used_including_data_driven_clock() -> None:
     assert read_frontier(scripted).value_ns == 10
     assert read_frontier(scripted).value_ns == 20
 
-    frontier = _ok(
-        FrontierClock.try_create(boot_epoch_id="boot-2", clock_binding=CLOCK_REPLAY)
-    )
+    frontier = _ok(FrontierClock.try_create(boot_epoch_id="boot-2", clock_binding=CLOCK_REPLAY))
     first = _ok(frontier.advance((_stream("a", _NS + 5), _stream("b", _NS + 9))))
     assert read_frontier(frontier).value_ns == first.value_ns == _NS + 5
 
