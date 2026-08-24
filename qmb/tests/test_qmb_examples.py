@@ -12,6 +12,22 @@ _REPO = _QMB_ROOT.parent
 _EXAMPLE = _QMB_ROOT / "examples" / "import_usage.py"
 
 
+def test_config_fragments_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "config_fragments_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "config fragments ok" in completed.stdout
+    assert "DISJOINT" in completed.stdout
+    assert "not a registry kind" in completed.stdout
+    assert "stress-spread is a config fragment" in completed.stdout
+    assert "stays readable" in completed.stdout
+
+
 def test_registryread_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "registryread_usage.py")],

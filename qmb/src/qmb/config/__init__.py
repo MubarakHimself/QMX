@@ -13,10 +13,47 @@ from typing import Final
 from qmf.core.fingerprint import Fingerprint, fingerprint
 from qmf.core.refusal import Result
 
+from qmb.config.fragments import (
+    BMS_NAMESPACES,
+    BMS_RECORD_KIND,
+    BOOK_NAMESPACES,
+    BOOK_RECORD_KIND,
+    CONFIG_FRAGMENT_CLASS,
+    FRAGMENT_FORMAT_VERSION,
+    FRAGMENT_FORMAT_VERSION_1,
+    FRAGMENT_KNOWN_FORMAT_VERSIONS,
+    FRAGMENT_LINEAGE_EDGE_TYPE,
+    SOURCE_BMS,
+    SOURCE_BOOK,
+    SOURCE_PRESET,
+    ConfigFragment,
+    fragment_identity,
+    materialize_bms_fragment,
+    materialize_book_fragment,
+    materialize_condition_preset,
+)
+
 __all__ = [
+    "BMS_NAMESPACES",
+    "BMS_RECORD_KIND",
+    "BOOK_NAMESPACES",
+    "BOOK_RECORD_KIND",
+    "CONFIG_FRAGMENT_CLASS",
+    "FRAGMENT_FORMAT_VERSION",
+    "FRAGMENT_FORMAT_VERSION_1",
+    "FRAGMENT_KNOWN_FORMAT_VERSIONS",
+    "FRAGMENT_LINEAGE_EDGE_TYPE",
     "LAYER_PRECEDENCE",
+    "SOURCE_BMS",
+    "SOURCE_BOOK",
+    "SOURCE_PRESET",
+    "ConfigFragment",
     "fingerprint_layers",
+    "fragment_identity",
     "layers_identity",
+    "materialize_bms_fragment",
+    "materialize_book_fragment",
+    "materialize_condition_preset",
 ]
 
 LAYER_PRECEDENCE: Final[tuple[str, ...]] = (
