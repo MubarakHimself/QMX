@@ -76,6 +76,23 @@ def test_registryread_usage_example_runs_clean() -> None:
     assert "name@latest refused" in completed.stdout
 
 
+def test_frontier_clock_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "frontier_clock_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "injected Clock read via read_frontier" in completed.stdout
+    assert "min next-emit pull" in completed.stdout
+    assert "rewind refused" in completed.stdout
+    assert "GAP-0048" in completed.stdout
+    assert "frontier clock ok" in completed.stdout
+    assert "does not choose world" in completed.stdout
+
+
 def pythonpath() -> str:
     return os.pathsep.join(
         [

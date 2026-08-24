@@ -93,7 +93,21 @@ from qmb.registryread import (
 )
 from qmb.results import RESULT_CONTRACT, result_identity
 from qmb.robustness import PROCEDURES, ladder_identity
-from qmb.runloop import LOOP_KIND, SUBPHASES, frontier_clock_name, loop_identity
+from qmb.runloop import (
+    CLOCK_DOES_NOT_CHOOSE_WORLD,
+    LOOP_KIND,
+    SUBPHASES,
+    FrontierClock,
+    NextEmitStream,
+    StreamNextEmit,
+    advance_frontier,
+    as_wall_replay_instant,
+    frontier_clock_name,
+    loop_identity,
+    min_next_emit,
+    read_frontier,
+    script_replay_clock,
+)
 
 __all__ = [
     "AS_OF_FORMAT_VERSION",
@@ -105,6 +119,7 @@ __all__ = [
     "CITE_FIELDS",
     "CLI_PIN_KEY",
     "CLI_PROG",
+    "CLOCK_DOES_NOT_CHOOSE_WORLD",
     "CLOCK_REPLAY",
     "CLOCK_SIMULATED",
     "CONFIG_FRAGMENT_CLASS",
@@ -151,17 +166,22 @@ __all__ = [
     "AsOfSet",
     "ConfigFragment",
     "DatedPointer",
+    "FrontierClock",
+    "NextEmitStream",
     "PassiveHub",
     "RegistryFragment",
     "RegistryReadPort",
     "ReplayBinding",
     "ResolvedRef",
     "ResolvedRunConfig",
+    "StreamNextEmit",
     "SupersedesRef",
     "VirtualLedger",
     "__version__",
     "admit_open",
+    "advance_frontier",
     "artifact_relative_path",
+    "as_wall_replay_instant",
     "backend_display_versions",
     "check_incomparable_to_live",
     "coerce_starting_capital",
@@ -181,11 +201,13 @@ __all__ = [
     "materialize_book_fragment",
     "materialize_condition_preset",
     "merge_book_bms_keys",
+    "min_next_emit",
     "mint_replay_binding",
     "mint_replay_exit",
     "orchestrator_identity",
     "port_home",
     "ports_identity",
+    "read_frontier",
     "read_port_identity",
     "require_full_loss_before_open",
     "resolve_starting_capital",
@@ -193,4 +215,5 @@ __all__ = [
     "run_config_identity",
     "run_id_root",
     "sampler_identity",
+    "script_replay_clock",
 ]
