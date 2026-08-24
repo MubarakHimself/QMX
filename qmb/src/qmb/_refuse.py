@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 
-__all__ = ["clean_token", "invalid", "policy", "unavailable", "unsupported"]
+__all__ = ["clean_token", "invalid", "policy", "stale", "unavailable", "unsupported"]
 
 
 def clean_token(value: object) -> str | None:
@@ -46,3 +46,12 @@ def unsupported(field: str, reason: str, **extra: object) -> TypedRefusal:
 def unavailable(field: str, reason: str, **extra: object) -> TypedRefusal:
     """An ``unavailable dependency`` refusal — a cited backend or fragment is missing."""
     return _build(RefusalCategory.UNAVAILABLE_DEPENDENCY, field, reason, **extra)
+
+
+def stale(field: str, reason: str, **extra: object) -> TypedRefusal:
+    """An AD-11 ``stale evidence`` refusal — a superseded registry ref (B-15, FM-7).
+
+    Returned, never raised. Severity is the caller's ``registry:qmb_stale_evidence_severity``
+    token carried in ``context`` — that row is UI-editable and has no spine value.
+    """
+    return _build(RefusalCategory.STALE_EVIDENCE, field, reason, **extra)

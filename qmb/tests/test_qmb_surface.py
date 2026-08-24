@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import get_args
 
 from qmb._backends import VENUE_PACKAGE
-from qmb._refuse import clean_token, invalid, policy, unavailable, unsupported
+from qmb._refuse import clean_token, invalid, policy, stale, unavailable, unsupported
 from qmb.doors import api
 from qmb.doors.cli import main
 from qmb.doors.mcp import main as mcp_main
@@ -75,6 +75,10 @@ def test_backends_are_the_six_qmf_packages_never_venue() -> None:
 def test_registry_state_is_an_as_of_set() -> None:
     assert qmb.STATE_KIND == "as-of set"
     assert qmb.read_port_identity()["state_kind"] == "as-of set"
+    assert qmb.HUB_KIND == "passive-storage"
+    assert qmb.read_port_identity()["hub"] == "passive-storage"
+    assert qmb.STALE_EVIDENCE_SEVERITY_KEY == "qmb_stale_evidence_severity"
+    assert api.RegistryReadPort is qmb.RegistryReadPort
 
 
 def test_frontier_clock_is_qmf_core_clock() -> None:
@@ -109,6 +113,9 @@ def test_refuse_helpers_return_typed_refusals() -> None:
     assert policy("field", "reason").category is RefusalCategory.POLICY_REJECTION
     assert unsupported("field", "reason").category is RefusalCategory.UNSUPPORTED_CAPABILITY
     assert unavailable("field", "reason").category is RefusalCategory.UNAVAILABLE_DEPENDENCY
+    refused = stale("field", "reason", severity="workspace-declared")
+    assert refused.category is RefusalCategory.STALE_EVIDENCE
+    assert refused.context["severity"] == "workspace-declared"
 
 
 def test_venue_package_is_named_and_excluded() -> None:

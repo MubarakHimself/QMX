@@ -2,29 +2,45 @@
 
 Registry state reaches a machine as an immutable, fingerprinted as-of set of
 records and fragments. Doors enumerate through this port; the compiler
-resolves through it. No door-side or second cache exists (DEC-0165).
+resolves through it. No door-side or second cache exists (DEC-0165). The
+hub is dumb passive storage — never the dead DEC-0084 central service.
 """
 
 from __future__ import annotations
 
-from typing import Final
+from qmb.registryread.as_of import (
+    AS_OF_FORMAT_VERSION,
+    FRAGMENT_CLASS,
+    POINTER_CLASS,
+    STATE_KIND,
+    AsOfSet,
+    DatedPointer,
+    RegistryFragment,
+    SupersedesRef,
+)
+from qmb.registryread.hub import HUB_KIND, PassiveHub
+from qmb.registryread.port import (
+    STALE_EVIDENCE_SEVERITY_KEY,
+    RegistryReadPort,
+    ResolvedRef,
+    port_home,
+    read_port_identity,
+)
 
-from qmf.registry import KindRegistry
-
-__all__ = ["STATE_KIND", "port_home", "read_port_identity"]
-
-STATE_KIND: Final[str] = "as-of set"
-
-
-def port_home() -> str:
-    """The registry types this port reads; one port, no second cache."""
-    return f"{KindRegistry.__module__}.{KindRegistry.__qualname__}"
-
-
-def read_port_identity() -> dict[str, object]:
-    """Identity-bearing registry-read fields. Package SemVer is omitted."""
-    return {
-        "state_kind": STATE_KIND,
-        "port": "library-owned",
-        "reads": port_home(),
-    }
+__all__ = [
+    "AS_OF_FORMAT_VERSION",
+    "FRAGMENT_CLASS",
+    "HUB_KIND",
+    "POINTER_CLASS",
+    "STALE_EVIDENCE_SEVERITY_KEY",
+    "STATE_KIND",
+    "AsOfSet",
+    "DatedPointer",
+    "PassiveHub",
+    "RegistryFragment",
+    "RegistryReadPort",
+    "ResolvedRef",
+    "SupersedesRef",
+    "port_home",
+    "read_port_identity",
+]

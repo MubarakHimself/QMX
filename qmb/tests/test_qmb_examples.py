@@ -12,8 +12,23 @@ _REPO = _QMB_ROOT.parent
 _EXAMPLE = _QMB_ROOT / "examples" / "import_usage.py"
 
 
-def test_import_usage_example_runs_clean() -> None:
-    pythonpath = os.pathsep.join(
+def test_registryread_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "registryread_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "registry-read port ok" in completed.stdout
+    assert "name@version refused: invalid input" in completed.stdout
+    assert "stale evidence" in completed.stdout
+    assert "name@latest refused" in completed.stdout
+
+
+def pythonpath() -> str:
+    return os.pathsep.join(
         [
             str(_QMB_ROOT / "src"),
             str(_REPO / "packages" / "qmf-core" / "src"),
@@ -24,11 +39,14 @@ def test_import_usage_example_runs_clean() -> None:
             str(_REPO / "packages" / "qmf-risk" / "src"),
         ]
     )
+
+
+def test_import_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_EXAMPLE)],
         capture_output=True,
         text=True,
-        env={**os.environ, "PYTHONPATH": pythonpath},
+        env={**os.environ, "PYTHONPATH": pythonpath()},
         check=False,
     )
     assert completed.returncode == 0, completed.stderr

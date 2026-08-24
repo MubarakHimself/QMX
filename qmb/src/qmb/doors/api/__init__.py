@@ -15,16 +15,32 @@ from qmb.execution import PORT_ROLES, ports_identity
 from qmb.ledger import RUN_ROLES, ledger_identity
 from qmb.optimize import SAMPLER_JOBS, SAMPLER_PIN_KEY, sampler_identity
 from qmb.orchestrator import IMPURE_OWNER, SPAWN_MODEL, orchestrator_identity
-from qmb.registryread import STATE_KIND, read_port_identity
+from qmb.registryread import (
+    AS_OF_FORMAT_VERSION,
+    HUB_KIND,
+    STALE_EVIDENCE_SEVERITY_KEY,
+    STATE_KIND,
+    AsOfSet,
+    DatedPointer,
+    PassiveHub,
+    RegistryFragment,
+    RegistryReadPort,
+    ResolvedRef,
+    SupersedesRef,
+    port_home,
+    read_port_identity,
+)
 from qmb.results import RESULT_CONTRACT, result_identity
 from qmb.robustness import PROCEDURES, ladder_identity
 from qmb.runloop import LOOP_KIND, SUBPHASES, frontier_clock_name, loop_identity
 
 __all__ = [
+    "AS_OF_FORMAT_VERSION",
     "BACKEND_PACKAGES",
     "CLI_PIN_KEY",
     "CLI_PROG",
     "DATA_COMMANDS",
+    "HUB_KIND",
     "IMPURE_OWNER",
     "LAYER_PRECEDENCE",
     "LOOP_KIND",
@@ -36,8 +52,16 @@ __all__ = [
     "SAMPLER_JOBS",
     "SAMPLER_PIN_KEY",
     "SPAWN_MODEL",
+    "STALE_EVIDENCE_SEVERITY_KEY",
     "STATE_KIND",
     "SUBPHASES",
+    "AsOfSet",
+    "DatedPointer",
+    "PassiveHub",
+    "RegistryFragment",
+    "RegistryReadPort",
+    "ResolvedRef",
+    "SupersedesRef",
     "__version__",
     "backend_display_versions",
     "data_front_identity",
@@ -49,6 +73,7 @@ __all__ = [
     "ledger_identity",
     "loop_identity",
     "orchestrator_identity",
+    "port_home",
     "ports_identity",
     "read_port_identity",
     "result_identity",
