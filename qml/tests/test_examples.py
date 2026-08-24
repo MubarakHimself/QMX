@@ -179,6 +179,23 @@ def test_registration_usage_example_runs_clean() -> None:
     assert "registration gate ok" in completed.stdout
 
 
+def test_conformant_bot_usage_example_runs_clean() -> None:
+    completed = _run_example("conformant_bot_usage.py")
+    assert completed.returncode == 0, completed.stderr
+    assert "declaration is complete: True" in completed.stdout
+    assert "layer 1 and layer 2 pass: True" in completed.stdout
+    assert "bot kind minted: True" in completed.stdout
+    assert "advisory stop on entry: True" in completed.stdout
+    assert "emitted kinds: entry" in completed.stdout
+    assert "golden-slice deterministic: True" in completed.stdout
+    assert "consumes only declared footprint: True" in completed.stdout
+    assert "sizes: False" in completed.stdout
+    assert "reads a clock: False" in completed.stdout
+    assert "performs I/O: False" in completed.stdout
+    assert "exit-logic field: False" in completed.stdout
+    assert "conformant bot ok" in completed.stdout
+
+
 def test_layer1_usage_example_runs_clean() -> None:
     completed = _run_example("layer1_usage.py")
     assert completed.returncode == 0, completed.stderr
