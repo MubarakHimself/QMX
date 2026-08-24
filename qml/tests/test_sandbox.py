@@ -180,7 +180,10 @@ def test_runner_uses_stdlib_subprocess_and_not_os_confinement() -> None:
                 imported.update(alias.name.split(".")[0] for alias in node.names)
             elif isinstance(node, ast.ImportFrom) and node.module:
                 imported.add(node.module.split(".")[0])
+            elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+                assert node.func.id not in {"exec", "eval"}
     assert "subprocess" in imported
+    assert "importlib" in imported or "runpy" in imported
     assert "ctypes" not in imported
     assert "win32api" not in imported
     assert "prctl" not in imported
@@ -258,6 +261,49 @@ def test_source_factory_spec_isolated_run_passes() -> None:
     verdict = _ok(_sandbox(declaration, factory_spec={"kind": "source", "source": _FACTORY_SOURCE}))
     assert isinstance(verdict, Layer2Verdict)
     assert verdict.fp1_identity()["class"] == "qml-layer2-verdict"
+
+
+def test_load_factory_source_binds_factory() -> None:
+    factory = _ok(
+        host_runner.load_factory(
+            host_runner.FactorySpec(kind=host_runner.FACTORY_KIND_SOURCE, source=_FACTORY_SOURCE)
+        )
+    )
+    assert factory is not None
+
+
+def test_load_factory_syntax_error_is_invalid() -> None:
+    refused = host_runner.load_factory(
+        host_runner.FactorySpec(kind=host_runner.FACTORY_KIND_SOURCE, source="def (\n")
+    )
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.INVALID_INPUT
+    assert refused.context["field"] == "factory_spec"
+    assert refused.context["layer"] == 2
+    assert refused.context["lineno"] == 1
+
+
+def test_load_factory_missing_binding_is_invalid() -> None:
+    refused = host_runner.load_factory(
+        host_runner.FactorySpec(kind=host_runner.FACTORY_KIND_SOURCE, source="value = 1\n")
+    )
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.INVALID_INPUT
+    assert refused.context["field"] == "factory_spec"
+    assert "lineno" not in refused.context
+
+
+def test_load_factory_runtime_error_is_invalid() -> None:
+    refused = host_runner.load_factory(
+        host_runner.FactorySpec(
+            kind=host_runner.FACTORY_KIND_SOURCE,
+            source="raise RuntimeError('nope')\n",
+        )
+    )
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.INVALID_INPUT
+    assert refused.context["field"] == "factory_spec"
+    assert refused.context["given"] == "RuntimeError"
 
 
 def test_two_sandbox_hosts_mint_one_verdict() -> None:

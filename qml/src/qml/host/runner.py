@@ -18,14 +18,18 @@ The runner owns only spawning and isolation. Observations feed
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import subprocess
 import sys
+import tempfile
+import uuid
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Final, TextIO, cast
+from types import ModuleType
+from typing import Final, TextIO, cast
 
 from qmf.core.fingerprint import Fingerprint
 from qmf.core.refusal import (
@@ -208,7 +212,7 @@ def load_factory(spec: FactorySpec) -> Result[object]:
     if spec.kind == FACTORY_KIND_SILENT:
         return Ok(FunctionFactory(logic=_silent_logic))
     try:
-        compiled = compile(spec.source, "<qml-host-factory>", "exec")
+        module = _load_source_factory_module(spec.source)
     except SyntaxError as exc:
         return invalid(
             "factory_spec",
@@ -216,9 +220,6 @@ def load_factory(spec: FactorySpec) -> Result[object]:
             lineno=exc.lineno,
             layer=_LAYER,
         )
-    namespace: dict[str, Any] = {}
-    try:
-        exec(compiled, namespace)
     except Exception as exc:
         return invalid(
             "factory_spec",
@@ -226,7 +227,7 @@ def load_factory(spec: FactorySpec) -> Result[object]:
             given=type(exc).__name__,
             layer=_LAYER,
         )
-    factory = namespace.get("factory")
+    factory = getattr(module, "factory", None)
     if factory is None:
         return invalid(
             "factory_spec",
@@ -234,6 +235,25 @@ def load_factory(spec: FactorySpec) -> Result[object]:
             layer=_LAYER,
         )
     return Ok(factory)
+
+
+def _load_source_factory_module(source: str) -> ModuleType:
+    """Import operator-authored factory source from a generated module file."""
+    module_name = f"_qml_host_factory_{uuid.uuid4().hex}"
+    with tempfile.TemporaryDirectory(prefix="qml_host_factory_", ignore_cleanup_errors=True) as tmp:
+        path = os.path.join(tmp, "factory.py")
+        with open(path, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(source)
+        spec = importlib.util.spec_from_file_location(module_name, path)
+        if spec is None or spec.loader is None:
+            raise ImportError("factory source could not be loaded as a module")
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        try:
+            spec.loader.exec_module(module)
+        finally:
+            sys.modules.pop(module_name, None)
+        return module
 
 
 def worker_main(stdin: TextIO | None = None, stdout: TextIO | None = None) -> int:

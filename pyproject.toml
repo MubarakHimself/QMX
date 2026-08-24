@@ -271,10 +271,9 @@ ignore = [
 "packages/*/examples/*" = ["S101"]
 "extensions/*/examples/*" = ["S101"]
 "qml/examples/*" = ["S101"]
-# Host-owned sandbox runner: stdlib process management (B-5) plus exec of
-# operator-authored factory source in the isolated child. Dynamically-evasive
+# Host-owned sandbox runner: stdlib process management (B-5). Dynamically-evasive
 # bots are out of V1 scope; this is not a restricted interpreter.
-"qml/src/qml/host/*" = ["S102", "S404"]
+"qml/src/qml/host/*" = ["S404"]
 
 [tool.pyright]
 # Strict, workspace-wide over the QMF code (AR-11). adws is mypy's job, not
