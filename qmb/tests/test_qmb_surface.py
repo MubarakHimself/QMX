@@ -128,6 +128,15 @@ def test_frontier_clock_is_qmf_core_clock() -> None:
     assert api.mint_run_performance_result is qmb.mint_run_performance_result
     assert api.require_reproduced_fingerprint is qmb.require_reproduced_fingerprint
     assert api.PerformanceResult is qmb.PerformanceResult
+    assert api.construct_conformant_bot is qmb.construct_conformant_bot
+    assert api.drive_instant is qmb.drive_instant
+    assert api.ConformantSliceHandler is qmb.ConformantSliceHandler
+    assert api.FunctionFactory is qmb.FunctionFactory
+    assert api.HostedBot is qmb.HostedBot
+    assert api.fold_canonical_assignment is qmb.fold_canonical_assignment
+    assert api.parameter_space_from_bot is qmb.parameter_space_from_bot
+    assert not hasattr(qmb, "run_sandbox")
+    assert "run_sandbox" not in qmb.__all__
 
 
 def test_authorized_intent_is_the_ct23_door_types() -> None:

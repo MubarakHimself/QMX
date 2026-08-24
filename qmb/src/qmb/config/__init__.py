@@ -9,6 +9,8 @@ root and the ledger key, computed only by qmf-core ``fp1`` (DEC-0160).
 from __future__ import annotations
 
 from qmb.config.compiler import (
+    ASSIGNMENT_IS_CANONICAL_KEY,
+    ASSIGNMENT_KEY,
     CITE_FIELDS,
     CLOCK_REPLAY,
     CLOCK_SIMULATED,
@@ -19,6 +21,7 @@ from qmb.config.compiler import (
     PROVENANCE_PROCEDURE_EPHEMERAL,
     PROVENANCE_RECORDED,
     PROVENANCE_SYNTHETIC_TAINTED,
+    RESOLVED_PRODUCERS_KEY,
     RUN_CONFIG_ARTIFACT_NAME,
     RUN_CONFIG_CLASS,
     RUN_CONFIG_FORMAT_VERSION,
@@ -55,6 +58,11 @@ from qmb.config.fragments import (
     materialize_book_fragment,
     materialize_condition_preset,
 )
+from qmb.config.qml_compile import (
+    Ct33CompileExtension,
+    apply_ct33_compiler_extensions,
+    ct33_from_record,
+)
 from qmb.config.replay import (
     FOLD_RATED,
     FOLD_UNRATED,
@@ -69,6 +77,8 @@ from qmb.config.replay import (
 )
 
 __all__ = [
+    "ASSIGNMENT_IS_CANONICAL_KEY",
+    "ASSIGNMENT_KEY",
     "BMS_NAMESPACES",
     "BMS_RECORD_KIND",
     "BOOK_NAMESPACES",
@@ -91,6 +101,7 @@ __all__ = [
     "PROVENANCE_RECORDED",
     "PROVENANCE_SYNTHETIC_TAINTED",
     "REPLAY_BINDING_CLASS",
+    "RESOLVED_PRODUCERS_KEY",
     "RUN_CONFIG_ARTIFACT_NAME",
     "RUN_CONFIG_CLASS",
     "RUN_CONFIG_FORMAT_VERSION",
@@ -103,13 +114,16 @@ __all__ = [
     "STARTING_CAPITAL_KEY",
     "VIRTUAL_LEDGER_CLASS",
     "ConfigFragment",
+    "Ct33CompileExtension",
     "ReplayBinding",
     "ResolvedRunConfig",
     "VirtualLedger",
+    "apply_ct33_compiler_extensions",
     "artifact_relative_path",
     "check_incomparable_to_live",
     "coerce_starting_capital",
     "compile_run_config",
+    "ct33_from_record",
     "fingerprint_layers",
     "fragment_identity",
     "layers_identity",

@@ -26,6 +26,7 @@ import workspace_meta
 from workspace_meta import (
     EDGE_MODULES,
     EXPECTED_APPLICATION_DEPS,
+    EXPECTED_APPLICATION_PEERS,
     EXPECTED_APPLICATION_THIRD_PARTY,
     EXPECTED_ROSTER_DEPS,
     ROSTER_PACKAGES,
@@ -142,7 +143,7 @@ def test_qmb_is_application_layer_not_roster() -> None:
     assert VENUE_EDGE not in member.roster_dependencies
     assert (
         set(member.dependencies) - member.roster_dependencies
-        == EXPECTED_APPLICATION_THIRD_PARTY["qmb"]
+        == EXPECTED_APPLICATION_THIRD_PARTY["qmb"] | EXPECTED_APPLICATION_PEERS["qmb"]
     )
 
 
@@ -157,6 +158,7 @@ def test_qmb_imports_six_backends_and_not_qmf_venue() -> None:
     assert any(name == "qmf.indicators" or name.startswith("qmf.indicators.") for name in imported)
     assert any(name == "qmf.structure" or name.startswith("qmf.structure.") for name in imported)
     assert any(name == "qmf.risk" or name.startswith("qmf.risk.") for name in imported)
+    assert any(name == "qml" or name.startswith("qml.") for name in imported)
     assert not any(name == "qmf.venue" or name.startswith("qmf.venue.") for name in imported)
 
 

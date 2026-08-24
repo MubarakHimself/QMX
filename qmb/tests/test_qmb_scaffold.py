@@ -71,6 +71,7 @@ def test_one_wheel_declares_cli_script_and_pins() -> None:
     assert project["scripts"] == {"qmb": "qmb.doors.cli:main"}
     deps = tuple(project["dependencies"])
     assert deps[:6] == _QMF_BACKENDS
+    assert "qml" in deps
     assert "click==8.4.2" in deps
     assert "optuna==4.9.0" in deps
     assert "qmf-venue" not in deps

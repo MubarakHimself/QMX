@@ -1254,6 +1254,7 @@ dependencies = [
     { name = "qmf-registry" },
     { name = "qmf-risk" },
     { name = "qmf-structure" },
+    { name = "qml" },
 ]
 
 [package.metadata]
@@ -1266,6 +1267,7 @@ requires-dist = [
     { name = "qmf-registry", editable = "packages/qmf-registry" },
     { name = "qmf-risk", editable = "packages/qmf-risk" },
     { name = "qmf-structure", editable = "packages/qmf-structure" },
+    { name = "qml", editable = "qml" },
 ]
 
 [[package]]

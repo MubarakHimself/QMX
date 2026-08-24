@@ -75,6 +75,13 @@ EXPECTED_APPLICATION_DEPS: dict[str, frozenset[str]] = {
     ),
 }
 
+# Application-layer workspace peers (not roster, not third-party). qmb hosts
+# CT-33 bots through the QL-7 adapter and may import qml (Story 14.8).
+EXPECTED_APPLICATION_PEERS: dict[str, frozenset[str]] = {
+    "qml": frozenset(),
+    "qmb": frozenset({"qml"}),
+}
+
 # Third-party runtime deps for application members (workspace qmf-* dropped).
 EXPECTED_APPLICATION_THIRD_PARTY: dict[str, frozenset[str]] = {
     "qml": frozenset(),

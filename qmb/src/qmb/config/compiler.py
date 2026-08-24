@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final, cast
 
-from qmf.core.exact import Money
+from qmf.core.exact import ExactRational, Money
 from qmf.core.fingerprint import Fingerprint, World, canonical_bytes, fingerprint
 from qmf.core.identity import VenueId
 from qmf.core.refusal import Ok, Result, TypedRefusal, is_ok, is_refusal
@@ -30,6 +30,12 @@ from qmb.config.fragments import (
     SOURCE_PRESET,
     ConfigFragment,
 )
+from qmb.config.qml_compile import (
+    ASSIGNMENT_IS_CANONICAL_KEY,
+    ASSIGNMENT_KEY,
+    RESOLVED_PRODUCERS_KEY,
+    apply_ct33_compiler_extensions,
+)
 from qmb.config.replay import (
     FOLD_RATED,
     STARTING_CAPITAL_KEY,
@@ -37,9 +43,11 @@ from qmb.config.replay import (
     mint_replay_binding,
     resolve_starting_capital,
 )
-from qmb.registryread import RegistryReadPort
+from qmb.registryread import RegistryReadPort, ResolvedRef
 
 __all__ = [
+    "ASSIGNMENT_IS_CANONICAL_KEY",
+    "ASSIGNMENT_KEY",
     "CITE_FIELDS",
     "CLOCK_REPLAY",
     "CLOCK_SIMULATED",
@@ -50,6 +58,7 @@ __all__ = [
     "PROVENANCE_PROCEDURE_EPHEMERAL",
     "PROVENANCE_RECORDED",
     "PROVENANCE_SYNTHETIC_TAINTED",
+    "RESOLVED_PRODUCERS_KEY",
     "RUN_CONFIG_ARTIFACT_NAME",
     "RUN_CONFIG_CLASS",
     "RUN_CONFIG_FORMAT_VERSION",
@@ -232,6 +241,19 @@ class ResolvedRunConfig:
     def seed_overridden(self) -> bool:
         """True when an invocation flag overrode the seed (FM-12)."""
         return self.replay_binding is not None and self.replay_binding.seed_overridden
+
+    @property
+    def assignment_is_canonical(self) -> bool | None:
+        """DEC-0183 stamp: True iff resolved values equal the CT-33 defaults.
+
+        ``None`` when the cited bot is ungoverned (no CT-33) — the B-4 fold
+        treats a missing stamp as ``not-yet-ruled`` for canonical-assignment
+        evidence. Computed from this artifact; no CT-33 re-read is required.
+        """
+        value = self.keys.get(ASSIGNMENT_IS_CANONICAL_KEY)
+        if isinstance(value, bool):
+            return value
+        return None
 
     @property
     def fold_rating(self) -> str:
@@ -553,6 +575,21 @@ def compile_run_config(
             "flag overrides starting_capital; it is never caller-declared (FM-12)",
             given=repr(acc.get("seed_overridden")),
         )
+    if ASSIGNMENT_IS_CANONICAL_KEY in acc:
+        return invalid(
+            ASSIGNMENT_IS_CANONICAL_KEY,
+            "assignment_is_canonical is stamped from the resolved assignment "
+            "versus the cited CT-33 canonical assignment; it is never "
+            "caller-declared (DEC-0183)",
+            given=repr(acc.get(ASSIGNMENT_IS_CANONICAL_KEY)),
+        )
+    if RESOLVED_PRODUCERS_KEY in acc:
+        return invalid(
+            RESOLVED_PRODUCERS_KEY,
+            "resolved_producers is the compiler's producer-template resolution "
+            "output; it is never caller-declared (DEC-0183)",
+            given=repr(acc.get(RESOLVED_PRODUCERS_KEY)),
+        )
     seed = resolve_starting_capital(
         invocation_flags=flags.value,
         run_spec=spec.value,
@@ -569,10 +606,24 @@ def compile_run_config(
         return account
     keys = {key: value for key, value in acc.items() if key not in _SPECIAL_KEYS}
     keys[STARTING_CAPITAL_KEY] = capital.fp1_identity()
+    qml_ext = apply_ct33_compiler_extensions(
+        bot.value.record,
+        run_spec=spec.value,
+        invocation_flags=flags.value,
+    )
+    if is_refusal(qml_ext):
+        return qml_ext
+    if qml_ext.value is not None:
+        for name in qml_ext.value.assignment:
+            keys.pop(name, None)
+        keys.pop(ASSIGNMENT_KEY, None)
+        keys[ASSIGNMENT_KEY] = dict(qml_ext.value.assignment)
+        keys[ASSIGNMENT_IS_CANONICAL_KEY] = qml_ext.value.assignment_is_canonical
+        keys[RESOLVED_PRODUCERS_KEY] = list(qml_ext.value.resolved_producers)
     replay = mint_replay_binding(
         book_fp1=book.value.source_fp1,
         bms_fp1=bms.value.source_fp1,
-        bot_fp1=bot.value,
+        bot_fp1=bot.value.fingerprint,
         starting_capital=capital,
         seed_overridden=seed_overridden,
         venue_id=venue.value,
@@ -588,7 +639,7 @@ def compile_run_config(
         format_version=RUN_CONFIG_FORMAT_VERSION,
         book_fp1=book.value.source_fp1,
         bms_fp1=bms.value.source_fp1,
-        bot_fp1=bot.value,
+        bot_fp1=bot.value.fingerprint,
         book_fragment_fp1=book.value.fingerprint,
         bms_fragment_fp1=bms.value.fingerprint,
         keys=keys,
@@ -762,15 +813,12 @@ def _derive_world(clock: str, provenance: str) -> Result[World]:
     )
 
 
-def _resolve_cite(port: RegistryReadPort, field: str, value: object) -> Result[Fingerprint]:
+def _resolve_cite(port: RegistryReadPort, field: str, value: object) -> Result[ResolvedRef]:
     """Resolve a citation through the one registry-read port to an fp1."""
     parsed = _parse_cite(value, field)
     if is_refusal(parsed):
         return parsed
-    looked = port.resolve(parsed.value)
-    if is_refusal(looked):
-        return looked
-    return Ok(looked.value.fingerprint)
+    return port.resolve(parsed.value)
 
 
 def _parse_cite(value: object, field: str) -> Result[Fingerprint | str]:
@@ -1048,6 +1096,8 @@ def _plain(value: object) -> object:
     if isinstance(value, World):
         return value.value
     if isinstance(value, Money):
+        return value.fp1_identity()
+    if isinstance(value, ExactRational):
         return value.fp1_identity()
     if isinstance(value, VenueId):
         return value.value

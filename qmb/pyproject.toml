@@ -12,6 +12,7 @@ dependencies = [
     "qmf-indicators",
     "qmf-structure",
     "qmf-risk",
+    "qml",
     "click==8.4.2",
     "optuna==4.9.0",
 ]
@@ -34,3 +35,4 @@ qmf-data = { workspace = true }
 qmf-indicators = { workspace = true }
 qmf-structure = { workspace = true }
 qmf-risk = { workspace = true }
+qml = { workspace = true }

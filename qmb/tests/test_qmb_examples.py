@@ -198,6 +198,7 @@ def pythonpath() -> str:
     return os.pathsep.join(
         [
             str(_QMB_ROOT / "src"),
+            str(_REPO / "qml" / "src"),
             str(_REPO / "packages" / "qmf-core" / "src"),
             str(_REPO / "packages" / "qmf-registry" / "src"),
             str(_REPO / "packages" / "qmf-data" / "src"),
@@ -206,6 +207,25 @@ def pythonpath() -> str:
             str(_REPO / "packages" / "qmf-risk" / "src"),
         ]
     )
+
+
+def test_ql7_host_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "ql7_host_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "factory constructed via construct_bot / FunctionFactory / HostedBot" in completed.stdout
+    assert "declared-footprint evidence only" in completed.stdout
+    assert "assignment_is_canonical True" in completed.stdout
+    assert "producer template resolved to one configured-producer fingerprint" in completed.stdout
+    assert "run-spec override" in completed.stdout
+    assert "passed through unchanged" in completed.stdout
+    assert "needs no QL-7 adapter" in completed.stdout
+    assert "ql7 host ok" in completed.stdout
 
 
 def test_import_usage_example_runs_clean() -> None:

@@ -9,6 +9,8 @@ from __future__ import annotations
 from qmb._backends import BACKEND_PACKAGES, backend_display_versions
 from qmb._display import __version__, identity_payload
 from qmb.config import (
+    ASSIGNMENT_IS_CANONICAL_KEY,
+    ASSIGNMENT_KEY,
     BMS_NAMESPACES,
     BMS_RECORD_KIND,
     BOOK_NAMESPACES,
@@ -31,6 +33,7 @@ from qmb.config import (
     PROVENANCE_RECORDED,
     PROVENANCE_SYNTHETIC_TAINTED,
     REPLAY_BINDING_CLASS,
+    RESOLVED_PRODUCERS_KEY,
     RUN_CONFIG_ARTIFACT_NAME,
     RUN_CONFIG_CLASS,
     RUN_CONFIG_FORMAT_VERSION,
@@ -43,13 +46,16 @@ from qmb.config import (
     STARTING_CAPITAL_KEY,
     VIRTUAL_LEDGER_CLASS,
     ConfigFragment,
+    Ct33CompileExtension,
     ReplayBinding,
     ResolvedRunConfig,
     VirtualLedger,
+    apply_ct33_compiler_extensions,
     artifact_relative_path,
     check_incomparable_to_live,
     coerce_starting_capital,
     compile_run_config,
+    ct33_from_record,
     fingerprint_layers,
     fragment_identity,
     layers_identity,
@@ -102,8 +108,27 @@ from qmb.execution import (
     require_authorized_intent,
     require_full_loss_before_open,
 )
-from qmb.ledger import RUN_ROLES, ledger_identity
-from qmb.optimize import SAMPLER_JOBS, SAMPLER_PIN_KEY, sampler_identity
+from qmb.host.adapter import (
+    ConformantSliceHandler,
+    FunctionFactory,
+    HostedBot,
+    construct_conformant_bot,
+    drive_instant,
+)
+from qmb.ledger import (
+    CANONICAL_ASSIGNMENT_CANONICAL,
+    CANONICAL_ASSIGNMENT_MISS,
+    CANONICAL_ASSIGNMENT_NOT_YET_RULED,
+    RUN_ROLES,
+    fold_canonical_assignment,
+    ledger_identity,
+)
+from qmb.optimize import (
+    SAMPLER_JOBS,
+    SAMPLER_PIN_KEY,
+    parameter_space_from_bot,
+    sampler_identity,
+)
 from qmb.orchestrator import IMPURE_OWNER, SPAWN_MODEL, orchestrator_identity
 from qmb.registryread import (
     AS_OF_FORMAT_VERSION,
@@ -227,6 +252,8 @@ from qmb.runloop import (
 
 __all__ = [
     "ACCOUNT_ROLE_KEY",
+    "ASSIGNMENT_IS_CANONICAL_KEY",
+    "ASSIGNMENT_KEY",
     "AS_OF_FORMAT_VERSION",
     "BACKEND_PACKAGES",
     "BARSPEC_KINDS",
@@ -236,6 +263,9 @@ __all__ = [
     "BOOK_RECORD_KIND",
     "CALENDAR_KEY",
     "CANCEL_AT",
+    "CANONICAL_ASSIGNMENT_CANONICAL",
+    "CANONICAL_ASSIGNMENT_MISS",
+    "CANONICAL_ASSIGNMENT_NOT_YET_RULED",
     "CAUSE_CANCEL",
     "CAUSE_MEMORY_LIMIT",
     "CAUSE_TIME_LIMIT",
@@ -291,6 +321,7 @@ __all__ = [
     "QMB_REPLAY_CALENDAR_RULE_SET_VERSION",
     "QMB_REPLAY_CALENDAR_TZDATA",
     "REPLAY_BINDING_CLASS",
+    "RESOLVED_PRODUCERS_KEY",
     "RESULT_CONTRACT",
     "RUN_CONFIG_ARTIFACT_NAME",
     "RUN_CONFIG_CLASS",
@@ -326,8 +357,10 @@ __all__ = [
     "AsOfSet",
     "CancelToken",
     "ConfigFragment",
+    "ConformantSliceHandler",
     "CostPort",
     "CostedFill",
+    "Ct33CompileExtension",
     "DatedPointer",
     "DeclaredBarSpec",
     "DeclaredStream",
@@ -340,6 +373,8 @@ __all__ = [
     "FinancingPort",
     "FormingBarState",
     "FrontierClock",
+    "FunctionFactory",
+    "HostedBot",
     "LimitProbe",
     "LoopOutcome",
     "NextEmitStream",
@@ -380,6 +415,7 @@ __all__ = [
     "act_on_bar",
     "admit_open",
     "advance_frontier",
+    "apply_ct33_compiler_extensions",
     "apply_execution_ports",
     "artifact_relative_path",
     "as_wall_replay_instant",
@@ -389,10 +425,13 @@ __all__ = [
     "classify_fill_quantity",
     "coerce_starting_capital",
     "compile_run_config",
+    "construct_conformant_bot",
     "consume_same_slice",
     "consume_stream_plans",
+    "ct33_from_record",
     "data_front_identity",
     "derive_world_from_provenance",
+    "drive_instant",
     "embargo_from_config",
     "evaluate_exit",
     "execute_authorized",
@@ -400,6 +439,7 @@ __all__ = [
     "fingerprint_layers",
     "fingerprint_loop",
     "fingerprint_ports",
+    "fold_canonical_assignment",
     "fragment_identity",
     "frontier_clock_name",
     "guard_trading",
@@ -419,6 +459,7 @@ __all__ = [
     "mint_replay_exit",
     "mint_run_performance_result",
     "orchestrator_identity",
+    "parameter_space_from_bot",
     "port_home",
     "ports_identity",
     "preseed_indicator_buffers",
