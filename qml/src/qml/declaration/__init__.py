@@ -17,6 +17,19 @@ from qmf.core.refusal import Ok, Result
 from qmf.registry.records import CONTRACT_FORMAT_VERSION as REGISTRY_ENVELOPE_FORMAT_VERSION
 
 from qml._refuse import invalid, unsupported
+from qml.declaration.bot import (
+    BOT_DEFINITION_KIND_FORMAT_VERSION,
+    FORBIDDEN_BOT_FIELDS,
+    KIND_BOT_DEFINITION,
+    PERMITTED_EXIT_INTENT_VOCABULARY,
+    BotDefinition,
+    ConfluenceCite,
+    bot_definition_kind_contract,
+    install_bot_definition_kind,
+    mint_bot_definition,
+    promote_tuned_assignment,
+    register_bot_definition,
+)
 from qml.declaration.confluence import (
     CONFLUENCE_KIND_FORMAT_VERSION,
     FORBIDDEN_CONDITION_FIELDS,
@@ -34,24 +47,63 @@ from qml.declaration.confluence import (
     register_confluence,
     resolve_confluence_at_layer1,
 )
+from qml.declaration.parameters import (
+    CONSTRAINT_OPS,
+    PARAMETER_TYPES,
+    HardConstraintFilter,
+    ParameterSpec,
+    ParameterType,
+    UiFlag,
+    parse_parameter_type,
+    parse_ui_flag,
+)
+from qml.declaration.versioning import (
+    BotVersionGraph,
+    CurrentPointer,
+    branches_from_edge,
+    continues_performance_edge,
+)
 
 __all__ = [
+    "BOT_DEFINITION_KIND_FORMAT_VERSION",
     "CONFLUENCE_KIND_FORMAT_VERSION",
+    "CONSTRAINT_OPS",
+    "FORBIDDEN_BOT_FIELDS",
     "FORBIDDEN_CONDITION_FIELDS",
+    "KIND_BOT_DEFINITION",
     "KIND_CONFLUENCE",
     "LEG_ROLES",
+    "PARAMETER_TYPES",
+    "PERMITTED_EXIT_INTENT_VOCABULARY",
     "REGISTRY_ENVELOPE_FORMAT_VERSION",
     "AuthoredArtifact",
     "AuthoredKind",
+    "BotDefinition",
+    "BotVersionGraph",
     "Confluence",
+    "ConfluenceCite",
     "ConfluenceLeg",
     "ConfluenceOrdering",
+    "CurrentPointer",
+    "HardConstraintFilter",
     "LegRole",
+    "ParameterSpec",
+    "ParameterType",
+    "UiFlag",
+    "bot_definition_kind_contract",
+    "branches_from_edge",
     "confluence_kind_contract",
+    "continues_performance_edge",
+    "install_bot_definition_kind",
     "install_confluence_kind",
+    "mint_bot_definition",
     "mint_confluence",
     "parse_leg_role",
     "parse_ordering",
+    "parse_parameter_type",
+    "parse_ui_flag",
+    "promote_tuned_assignment",
+    "register_bot_definition",
     "register_confluence",
     "resolve_confluence_at_layer1",
 ]

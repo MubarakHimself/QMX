@@ -69,3 +69,15 @@ def test_confluence_usage_example_runs_clean() -> None:
     assert "two sandboxes reuse one confluence: True" in completed.stdout
     assert "unresolvable producer at Layer 1: unavailable dependency" in completed.stdout
     assert "order-significance changes fingerprint: True" in completed.stdout
+
+
+def test_bot_definition_usage_example_runs_clean() -> None:
+    completed = _run_example("bot_definition_usage.py")
+    assert completed.returncode == 0, completed.stderr
+    assert "bot definition authoring ok" in completed.stdout
+    assert "identity excludes AD-16 header: True" in completed.stdout
+    assert "canonical assignment is derived: True" in completed.stdout
+    assert "zero family ids is invalid input: invalid input" in completed.stdout
+    assert "entry-only bot is legal: True" in completed.stdout
+    assert "two sandboxes one Bot fp1: True" in completed.stdout
+    assert "changed default mints new Bot: True" in completed.stdout
