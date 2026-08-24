@@ -51,6 +51,7 @@ from qmb.orchestrator.log import (
     inject_run_log,
     mint_correlation_id,
 )
+from qmb.orchestrator.paths import read_contained_bytes, write_bytes_exclusive_no_follow
 from qmb.orchestrator.watch import (
     WATCH_POLL_S,
     ProcessLimitProbe,
@@ -357,16 +358,12 @@ def start_run(
         "correlation_id": correlation,
         "log_name": LOG_FILENAME,
     }
-    try:
-        _write_json(directory / PAYLOAD_NAME, payload)
-    except OSError as exc:
+    written = _write_json(
+        directory / PAYLOAD_NAME, payload, contain_within=directory, field="payload"
+    )
+    if is_refusal(written):
         _cleanup_unstarted(directory)
-        return unavailable(
-            "payload",
-            "the orchestrator could not write the isolated run payload",
-            given=type(exc).__name__,
-            run_id=config.fingerprint.value,
-        )
+        return written
     injected = inject_run_log(
         directory,
         run_id=config.fingerprint,
@@ -499,7 +496,8 @@ def collect_run(live: object) -> Result[IsolatedRun]:
             run_id=live.run_id.value,
             output_dir=live.output_dir,
         )
-    envelope = _read_json(Path(live.output_dir) / RESULT_NAME)
+    output_dir = Path(live.output_dir)
+    envelope = _read_json(output_dir / RESULT_NAME, contain_within=output_dir, field="result")
     if is_refusal(envelope):
         return envelope
     return _isolated_from_envelope(live, envelope.value)
@@ -514,24 +512,25 @@ def worker_main(argv: Sequence[str] | None = None) -> int:
 
 
 def _run_worker(output_dir: Path) -> int:
-    loaded = _read_json(output_dir / PAYLOAD_NAME)
+    root = output_dir.resolve()
+    loaded = _read_json(root / PAYLOAD_NAME, contain_within=root, field="payload")
     if is_refusal(loaded):
-        return _write_envelope(output_dir, _refusal_envelope(loaded))
+        return _write_envelope(root, _refusal_envelope(loaded))
     decoded = _decode_payload(loaded.value)
     if is_refusal(decoded):
-        return _write_envelope(output_dir, _refusal_envelope(decoded))
+        return _write_envelope(root, _refusal_envelope(decoded))
     config, slices, limits = decoded.value
     correlation = _payload_correlation(loaded.value)
     if is_refusal(correlation):
-        return _write_envelope(output_dir, _refusal_envelope(correlation))
+        return _write_envelope(root, _refusal_envelope(correlation))
     sink = LogSink.try_create(
-        output_dir / LOG_FILENAME,
+        root / LOG_FILENAME,
         run_id=config.fingerprint,
         correlation_id=correlation.value,
         append=True,
     )
     if is_refusal(sink):
-        return _write_envelope(output_dir, _refusal_envelope(sink))
+        return _write_envelope(root, _refusal_envelope(sink))
     log = sink.value
     try:
         started = log.emit(
@@ -539,17 +538,18 @@ def _run_worker(output_dir: Path) -> int:
             "isolated worker driving pure run(); operational log is not evidence",
         )
         if is_refusal(started):
-            return _write_envelope(output_dir, _refusal_envelope(started))
-        try:
-            _write_json(
-                output_dir / WRITER_NAME,
-                {
-                    "run_id": config.fingerprint.value,
-                    "pid": os.getpid(),
-                    "output_dir": str(output_dir.resolve()),
-                },
-            )
-        except OSError:
+            return _write_envelope(root, _refusal_envelope(started))
+        written = _write_json(
+            root / WRITER_NAME,
+            {
+                "run_id": config.fingerprint.value,
+                "pid": os.getpid(),
+                "output_dir": str(root),
+            },
+            contain_within=root,
+            field="writer",
+        )
+        if is_refusal(written):
             return 1
         probe: ProcessLimitProbe | None = None
         if limits.bounded:
@@ -561,13 +561,13 @@ def _run_worker(output_dir: Path) -> int:
                 "pure run() returned a typed refusal; operational log is not evidence",
                 fields={"category": outcome.category.value},
             )
-            return _write_envelope(output_dir, _refusal_envelope(outcome))
+            return _write_envelope(root, _refusal_envelope(outcome))
         stamped = outcome.value.ct32_fingerprint()
         envelope: dict[str, object] = {
             "ok": True,
             "run_id": config.fingerprint.value,
             "worker_pid": os.getpid(),
-            "output_dir": str(output_dir.resolve()),
+            "output_dir": str(root),
             "outcome": outcome.value.fp1_identity(),
         }
         if not is_refusal(stamped):
@@ -576,7 +576,7 @@ def _run_worker(output_dir: Path) -> int:
             EVENT_RUN_COMPLETED,
             "pure run() returned; operational log is not evidence",
         )
-        return _write_envelope(output_dir, envelope)
+        return _write_envelope(root, envelope)
     finally:
         log.close()
 
@@ -1190,43 +1190,47 @@ def _jsonable(value: object) -> object:
     return str(value)
 
 
-def _write_json(path: Path, payload: Mapping[str, object]) -> None:
-    path.write_text(
-        json.dumps(dict(payload), ensure_ascii=False),
-        encoding="utf-8",
-        newline="\n",
-    )
+def _write_json(
+    path: Path,
+    payload: Mapping[str, object],
+    *,
+    contain_within: Path,
+    field: str,
+) -> Result[None]:
+    data = json.dumps(dict(payload), ensure_ascii=False).encode("utf-8")
+    return write_bytes_exclusive_no_follow(path, data, contain_within=contain_within, field=field)
 
 
 def _write_envelope(output_dir: Path, payload: Mapping[str, object]) -> int:
-    try:
-        _write_json(output_dir / RESULT_NAME, payload)
-    except OSError:
+    written = _write_json(
+        output_dir / RESULT_NAME, payload, contain_within=output_dir, field="result"
+    )
+    if is_refusal(written):
         return 1
     return 0
 
 
-def _read_json(path: Path) -> Result[dict[str, object]]:
-    try:
-        raw = path.read_text(encoding="utf-8")
-    except OSError as exc:
+def _read_json(path: Path, *, contain_within: Path, field: str) -> Result[dict[str, object]]:
+    if not path.is_symlink() and not path.is_file():
         return unavailable(
-            "result",
+            field,
             "the isolated run did not write its result file",
-            given=type(exc).__name__,
             path=str(path),
         )
+    loaded = read_contained_bytes(path, contain_within=contain_within, field=field)
+    if is_refusal(loaded):
+        return loaded
     try:
-        parsed: object = json.loads(raw)
-    except json.JSONDecodeError:
+        parsed: object = json.loads(loaded.value.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
         return unavailable(
-            "result",
+            field,
             "the isolated run result is JSON",
             path=str(path),
         )
     if not isinstance(parsed, dict):
         return unavailable(
-            "result",
+            field,
             "the isolated run result is a mapping",
             given=type(parsed).__name__,
         )

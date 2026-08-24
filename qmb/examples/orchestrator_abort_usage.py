@@ -30,6 +30,7 @@ from qmb.orchestrator import (
     orchestrator_identity,
     start_run,
 )
+from qmb.orchestrator.paths import read_contained_text
 from qmb.orchestrator.watch import monotonic_ns
 from qmb.runloop import (
     CAUSE_CANCEL,
@@ -142,7 +143,11 @@ def submitted_run_carries_token_and_limits(output_root: Path) -> None:
         assert live.limits.time_limit is not None
         assert live.limits.time_limit.value_ns == 25
         assert live.limits.memory_limit_bytes == 32
-        payload = (Path(live.output_dir) / qmb.PAYLOAD_NAME).read_text(encoding="utf-8")
+        output_dir = Path(live.output_dir)
+        payload = _unwrap(
+            read_contained_text(output_dir / qmb.PAYLOAD_NAME, contain_within=output_dir),
+            "payload",
+        )
         assert TIME_LIMIT_KEY in payload
         assert MEMORY_LIMIT_KEY in payload
     finally:

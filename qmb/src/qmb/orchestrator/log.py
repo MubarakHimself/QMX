@@ -23,9 +23,10 @@ from typing import BinaryIO, Final, cast
 
 from qmf.core.chrono import Instant, render_utc_iso8601
 from qmf.core.fingerprint import Fingerprint
-from qmf.core.refusal import Ok, Result, is_refusal
+from qmf.core.refusal import Ok, Result, TypedRefusal, is_refusal
 
 from qmb._refuse import clean_token, invalid, policy, storage, unavailable
+from qmb.orchestrator.paths import MAX_JSONL_BYTES, open_write_handle, read_contained_bytes
 
 __all__ = [
     "CORRELATION_ID_EXCLUDED_FROM_FP1",
@@ -207,15 +208,15 @@ def read_run_log(output_dir: object) -> Result[tuple[OperationalRecord, ...]]:
     target = _as_log_file(output_dir)
     if is_refusal(target):
         return target
-    try:
-        raw = target.value.read_bytes()
-    except OSError as exc:
-        return unavailable(
-            "log_path",
-            "the per-run operational log could not be read",
-            given=type(exc).__name__,
-            path=str(target.value),
-        )
+    loaded = read_contained_bytes(
+        target.value,
+        contain_within=target.value.parent,
+        max_bytes=MAX_JSONL_BYTES,
+        field="log_path",
+    )
+    if is_refusal(loaded):
+        return loaded
+    raw = loaded.value
     records: list[OperationalRecord] = []
     for line in raw.split(b"\n"):
         if line == b"":
@@ -400,31 +401,35 @@ class LogSink:
         correlation = _as_correlation_id(correlation_id)
         if is_refusal(correlation):
             return correlation
-        mode = "ab" if append else "xb"
-        try:
-            handle = target.value.open(mode)
-        except FileExistsError:
-            return policy(
-                "log_path",
-                "two writers never share the per-run operational log; the log "
-                "file in this run directory is already present",
-                path=str(target.value),
-                run_id=run_token.value,
-            )
-        except OSError as exc:
-            return storage(
-                "log_path",
-                "the orchestrator could not open the per-run operational log",
-                given=type(exc).__name__,
-                path=str(target.value),
-                run_id=run_token.value,
+        opened = open_write_handle(
+            target.value,
+            contain_within=target.value.parent,
+            append=append,
+            field="log_path",
+        )
+        if is_refusal(opened):
+            if not append and opened.context.get("given") == "FileExistsError":
+                return policy(
+                    "log_path",
+                    "two writers never share the per-run operational log; the log "
+                    "file in this run directory is already present",
+                    path=str(target.value),
+                    run_id=run_token.value,
+                )
+            extra = dict(opened.context)
+            extra["run_id"] = run_token.value
+            return TypedRefusal(
+                category=opened.category,
+                retryability=opened.retryability,
+                context=extra,
+                after_condition_descriptor=opened.after_condition_descriptor,
             )
         return Ok(
             cls(
                 target.value,
                 run_id=run_token.value,
                 correlation_id=correlation.value,
-                handle=handle,
+                handle=opened.value,
             )
         )
 

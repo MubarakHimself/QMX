@@ -38,6 +38,7 @@ from qmb.orchestrator import (
     orchestrator_identity,
     start_run,
 )
+from qmb.orchestrator.paths import MAX_JSONL_BYTES, read_contained_bytes
 from qmb.orchestrator.watch import monotonic_ns
 from qmb.runloop import STREAM_SET_KEY, CancelToken, SilentSliceHandler, SliceObservation, run
 from qmf.core.chrono import Instant
@@ -131,7 +132,10 @@ def completed_run_is_one_confirmation_line(output_root: Path, ledger_root: Path)
         fragment_path(sink.root, writer, world=World.REPLAY, role=qmb.ROLE_CONFIRMATION),
         "path",
     )
-    raw = path.read_bytes()
+    raw = _unwrap(
+        read_contained_bytes(path, contain_within=path.parent, max_bytes=MAX_JSONL_BYTES),
+        "fragment",
+    )
     assert raw.endswith(b"\n")
     assert _unwrap(canonical_bytes(line.fp1_identity()), "canonical") == raw[:-1]
     bar = _unwrap(qmb.read_book_bar(sink.root, world=World.REPLAY), "book-bar")

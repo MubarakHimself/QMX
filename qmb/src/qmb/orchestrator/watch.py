@@ -25,6 +25,7 @@ from qmf.core.chrono import Duration
 from qmf.core.refusal import Ok, Result, TypedRefusal, is_refusal
 
 from qmb._refuse import policy, unavailable
+from qmb.orchestrator.paths import MAX_PROC_STATUS_BYTES, read_contained_text
 from qmb.runloop.observe import (
     MEMORY_LIMIT_KEY,
     PARTIAL_GOVERNED_RESULT_ON_ABORT,
@@ -309,16 +310,23 @@ def _windows_peak_working_set(pid: int) -> Result[int]:
 
 
 def _linux_vmhwm(status: Path, pid: int) -> Result[int]:
-    try:
-        text = status.read_text(encoding="utf-8")
-    except OSError as exc:
-        return unavailable(
-            "memory_bytes",
-            "the orchestrator could not read /proc status for the child peak memory",
-            given=type(exc).__name__,
-            pid=pid,
-            memory_limit_key=MEMORY_LIMIT_KEY,
+    loaded = read_contained_text(
+        status,
+        contain_within=status.parent,
+        max_bytes=MAX_PROC_STATUS_BYTES,
+        field="memory_bytes",
+    )
+    if is_refusal(loaded):
+        extra = dict(loaded.context)
+        extra["pid"] = pid
+        extra["memory_limit_key"] = MEMORY_LIMIT_KEY
+        return TypedRefusal(
+            category=loaded.category,
+            retryability=loaded.retryability,
+            context=extra,
+            after_condition_descriptor=loaded.after_condition_descriptor,
         )
+    text = loaded.value
     for line in text.splitlines():
         if line.startswith("VmHWM:") or line.startswith("VmRSS:"):
             parts = line.split()

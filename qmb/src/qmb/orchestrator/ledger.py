@@ -30,6 +30,11 @@ from qmb.ledger.line import (
     mint_aborted_line,
     mint_completed_line,
 )
+from qmb.orchestrator.paths import (
+    MAX_JSONL_BYTES,
+    append_bytes_no_follow,
+    read_contained_bytes,
+)
 from qmb.orchestrator.spawn import IsolatedRun, LiveSpawn, collect_run
 
 __all__ = [
@@ -256,7 +261,7 @@ class LedgerSink:
         )
         if is_refusal(path):
             return path
-        existing = _scan_fragment(path.value)
+        existing = _scan_fragment(path.value, contain_within=self._root)
         if is_refusal(existing):
             return existing
         for prior in existing.value:
@@ -283,10 +288,6 @@ class LedgerSink:
             )
         try:
             path.value.parent.mkdir(parents=True, exist_ok=True)
-            with path.value.open("ab") as handle:
-                handle.write(canonical.value + b"\n")
-                handle.flush()
-                os.fsync(handle.fileno())
         except OSError as exc:
             return storage(
                 "ledger",
@@ -294,6 +295,21 @@ class LedgerSink:
                 given=type(exc).__name__,
                 path=str(path.value),
                 run_id=parsed.run_id.value,
+            )
+        appended = append_bytes_no_follow(
+            path.value,
+            canonical.value + b"\n",
+            contain_within=self._root,
+            field="ledger",
+        )
+        if is_refusal(appended):
+            extra = dict(appended.context)
+            extra["run_id"] = parsed.run_id.value
+            return TypedRefusal(
+                category=appended.category,
+                retryability=appended.retryability,
+                context=extra,
+                after_condition_descriptor=appended.after_condition_descriptor,
             )
         self._written.add(parsed.run_id.value)
         return Ok(parsed)
@@ -439,31 +455,25 @@ def _load_namespace(directory: Path) -> Result[tuple[LedgerLine, ...]]:
             path=str(directory),
         )
     for path in fragments:
-        scanned = _scan_fragment(path)
+        scanned = _scan_fragment(path, contain_within=directory)
         if is_refusal(scanned):
             return scanned
         lines.extend(scanned.value)
     return Ok(tuple(lines))
 
 
-def _scan_fragment(path: Path) -> Result[tuple[LedgerLine, ...]]:
+def _scan_fragment(
+    path: Path, *, contain_within: Path | None = None
+) -> Result[tuple[LedgerLine, ...]]:
     if not path.exists():
         return Ok(())
-    if path.is_symlink() or not path.is_file():
-        return storage(
-            "ledger",
-            "refusing to read a ledger fragment that is not a regular file",
-            path=str(path),
-        )
-    try:
-        raw = path.read_bytes()
-    except OSError as exc:
-        return storage(
-            "ledger",
-            "the merge view could not read a WriterId-scoped JSONL fragment",
-            given=type(exc).__name__,
-            path=str(path),
-        )
+    root = contain_within if contain_within is not None else path.parent
+    loaded = read_contained_bytes(
+        path, contain_within=root, max_bytes=MAX_JSONL_BYTES, field="ledger"
+    )
+    if is_refusal(loaded):
+        return loaded
+    raw = loaded.value
     if not raw:
         return Ok(())
     chunks = raw.split(b"\n")
