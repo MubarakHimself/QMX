@@ -228,6 +228,23 @@ def test_ql7_host_usage_example_runs_clean() -> None:
     assert "ql7 host ok" in completed.stdout
 
 
+def test_orchestrator_spawn_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "orchestrator_spawn_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "process-per-run via stdlib subprocess" in completed.stdout
+    assert "isolated output directory named by the run id" in completed.stdout
+    assert "no Ray, no required Docker, no daemon" in completed.stdout
+    assert "one-writer-per-stream" in completed.stdout
+    assert "run is pure" in completed.stdout
+    assert "process-per-run ok" in completed.stdout
+
+
 def test_import_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_EXAMPLE)],

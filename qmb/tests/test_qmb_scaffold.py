@@ -95,6 +95,7 @@ def test_source_never_imports_banned_modules() -> None:
     violations: list[str] = []
     for path in sorted(_SRC.rglob("*.py")):
         relative = path.relative_to(_SRC)
+        in_orchestrator = relative.parts[:1] == ("orchestrator",)
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
             names: list[str] = []
@@ -107,13 +108,16 @@ def test_source_never_imports_banned_modules() -> None:
                 and isinstance(node.func, ast.Name)
                 and node.func.id == "open"
             ):
-                violations.append(f"{path}: open()")
+                if not in_orchestrator:
+                    violations.append(f"{path}: open()")
                 continue
             for name in names:
                 banned = name in _BANNED_IMPORTS or any(
                     name.startswith(banned + ".") for banned in _BANNED_IMPORTS
                 )
                 if banned:
+                    if in_orchestrator and (name == "subprocess" or name.startswith("subprocess.")):
+                        continue
                     violations.append(f"{path}: imports {name}")
                 if (name == "click" or name.startswith("click.")) and relative.parts[:2] != (
                     "doors",

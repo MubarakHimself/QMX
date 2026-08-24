@@ -137,6 +137,16 @@ def test_frontier_clock_is_qmf_core_clock() -> None:
     assert api.parameter_space_from_bot is qmb.parameter_space_from_bot
     assert not hasattr(qmb, "run_sandbox")
     assert "run_sandbox" not in qmb.__all__
+    assert api.spawn_run is qmb.spawn_run
+    assert api.start_run is qmb.start_run
+    assert api.collect_run is qmb.collect_run
+    assert api.spawn_concurrent is qmb.spawn_concurrent
+    assert qmb.SPAWN_MODEL == "process-per-run"
+    assert qmb.PROCESS_MANAGEMENT == "stdlib.subprocess"
+    assert qmb.orchestrator_identity()["ray"] == "absent"
+    assert qmb.orchestrator_identity()["docker"] == "not-required"
+    assert qmb.orchestrator_identity()["daemon"] == "not-required"
+    assert qmb.orchestrator_identity()["one_writer_per_stream"] is True
 
 
 def test_authorized_intent_is_the_ct23_door_types() -> None:

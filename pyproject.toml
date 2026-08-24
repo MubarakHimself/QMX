@@ -290,6 +290,8 @@ ignore = [
 # Host-owned sandbox runner: stdlib process management (B-5). Dynamically-evasive
 # bots are out of V1 scope; this is not a restricted interpreter.
 "qml/src/qml/host/*" = ["S404"]
+# QMB orchestrator is the one impure owner of stdlib process-per-run spawn (B-5).
+"qmb/src/qmb/orchestrator/*" = ["S404"]
 
 [tool.pyright]
 # Strict, workspace-wide over the QMF code (AR-11). adws is mypy's job, not
