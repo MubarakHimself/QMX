@@ -14,12 +14,16 @@ from typing import Final
 from qmf.core.refusal import Ok, Result
 
 from qml._refuse import invalid, policy
+from qml.conformance.layer1 import LAYER1_CHECKS, Layer1Verdict, lint_declaration
 
 __all__ = [
     "CONFORMANCE_FORMAT_VERSION",
     "DENIAL_SET",
+    "LAYER1_CHECKS",
     "ConformanceTicket",
+    "Layer1Verdict",
     "evaluate_ticket",
+    "lint_declaration",
 ]
 
 CONFORMANCE_FORMAT_VERSION: Final[int] = 1

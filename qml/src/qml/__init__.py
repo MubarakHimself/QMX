@@ -14,8 +14,11 @@ from __future__ import annotations
 from qml.conformance import (
     CONFORMANCE_FORMAT_VERSION,
     DENIAL_SET,
+    LAYER1_CHECKS,
     ConformanceTicket,
+    Layer1Verdict,
     evaluate_ticket,
+    lint_declaration,
 )
 from qml.declaration import (
     BOT_DEFINITION_KIND_FORMAT_VERSION,
@@ -137,6 +140,7 @@ __all__ = [
     "KIND_BOT_DEFINITION",
     "KIND_CONFLUENCE",
     "KIND_STRATEGY_FAMILY",
+    "LAYER1_CHECKS",
     "LEG_ROLES",
     "LOGIC_REFERENCE_CLASS",
     "PARAMETER_TYPES",
@@ -171,6 +175,7 @@ __all__ = [
     "HardConstraintFilter",
     "Horizon",
     "HostedBot",
+    "Layer1Verdict",
     "LegRole",
     "LogicIdentity",
     "MappingReadSurface",
@@ -200,6 +205,7 @@ __all__ = [
     "fingerprint_source_manifest",
     "install_bot_definition_kind",
     "install_confluence_kind",
+    "lint_declaration",
     "mint_bot_definition",
     "mint_confluence",
     "mint_footprint",
