@@ -9,28 +9,89 @@ Conformance gates evidence citation and Book seats, never tunnel entry.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final
 
 from qmf.core.refusal import Ok, Result
 
 from qml._refuse import invalid, policy
+from qml.conformance.contract import (
+    CONFORMANCE_CONTRACT_CLASS,
+    CONFORMANCE_FORMAT_VERSION,
+    CONFORMANCE_KNOWN_FORMAT_VERSIONS,
+    CONFORMANCE_LADDER,
+    DENIAL_SET,
+    LAYER2_CHECKS,
+    conformance_contract_identity,
+)
+from qml.conformance.harness import (
+    INTENT_KIND_ENTRY,
+    drive_golden_slice,
+    intent_kind,
+    intent_trace_kinds,
+    traces_equal,
+)
 from qml.conformance.layer1 import LAYER1_CHECKS, Layer1Verdict, lint_declaration
+from qml.conformance.layer2 import (
+    Layer2Observations,
+    Layer2Verdict,
+    evaluate_layer2,
+    run_layer2_suite,
+)
+from qml.conformance.scan import (
+    AST_SCAN_RULES_CLASS,
+    DENIED_CALL_SUFFIXES,
+    DENIED_IMPORTS,
+    DENIED_NAME_CALLS,
+    ScanFinding,
+    ScanReport,
+    ast_scan_rules_identity,
+    scan_logic_source,
+)
+from qml.conformance.slice import (
+    GOLDEN_SLICE_CLASS,
+    GOLDEN_SLICE_INSTANT_COUNT,
+    GOLDEN_SLICE_ORIGIN_NS,
+    GoldenSlice,
+    generate_golden_slice,
+    read_surfaces_for_slice,
+)
 
 __all__ = [
+    "AST_SCAN_RULES_CLASS",
+    "CONFORMANCE_CONTRACT_CLASS",
     "CONFORMANCE_FORMAT_VERSION",
+    "CONFORMANCE_KNOWN_FORMAT_VERSIONS",
+    "CONFORMANCE_LADDER",
     "DENIAL_SET",
+    "DENIED_CALL_SUFFIXES",
+    "DENIED_IMPORTS",
+    "DENIED_NAME_CALLS",
+    "GOLDEN_SLICE_CLASS",
+    "GOLDEN_SLICE_INSTANT_COUNT",
+    "GOLDEN_SLICE_ORIGIN_NS",
+    "INTENT_KIND_ENTRY",
     "LAYER1_CHECKS",
+    "LAYER2_CHECKS",
     "ConformanceTicket",
+    "GoldenSlice",
     "Layer1Verdict",
+    "Layer2Observations",
+    "Layer2Verdict",
+    "ScanFinding",
+    "ScanReport",
+    "ast_scan_rules_identity",
+    "conformance_contract_identity",
+    "drive_golden_slice",
+    "evaluate_layer2",
     "evaluate_ticket",
+    "generate_golden_slice",
+    "intent_kind",
+    "intent_trace_kinds",
     "lint_declaration",
+    "read_surfaces_for_slice",
+    "run_layer2_suite",
+    "scan_logic_source",
+    "traces_equal",
 ]
-
-CONFORMANCE_FORMAT_VERSION: Final[int] = 1
-
-# Capabilities a conformant bot may never exercise. Enforced later by AST/import
-# scan and capability starvation; named here so the denial set is library-owned.
-DENIAL_SET: Final[frozenset[str]] = frozenset({"clock", "io", "network", "undeclared_randomness"})
 
 
 @dataclass(frozen=True, slots=True)

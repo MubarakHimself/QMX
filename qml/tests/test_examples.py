@@ -111,6 +111,21 @@ def test_bot_definition_usage_example_runs_clean() -> None:
     assert "changed default mints new Bot: True" in completed.stdout
 
 
+def test_layer2_usage_example_runs_clean() -> None:
+    completed = _run_example("layer2_usage.py")
+    assert completed.returncode == 0, completed.stderr
+    assert "layer 2 format version: 1" in completed.stdout
+    assert "denial set: clock,io,network,undeclared_randomness" in completed.stdout
+    assert "golden slice is identity-bearing: True" in completed.stdout
+    assert "logic loads in isolation: True" in completed.stdout
+    assert "two hosts identical verdict: True" in completed.stdout
+    assert "no Book present: True" in completed.stdout
+    assert "differing intents is layer-2 failure: policy rejection" in completed.stdout
+    assert "non-permitted kind is layer-2 failure: policy rejection" in completed.stdout
+    assert "clock import is layer-2 failure: policy rejection" in completed.stdout
+    assert "layer2 conformance ok" in completed.stdout
+
+
 def test_layer1_usage_example_runs_clean() -> None:
     completed = _run_example("layer1_usage.py")
     assert completed.returncode == 0, completed.stderr

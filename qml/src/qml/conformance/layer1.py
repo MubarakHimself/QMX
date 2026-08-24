@@ -17,6 +17,7 @@ from qmf.core.refusal import Ok, Result, TypedRefusal, is_ok, is_refusal
 from qmf.registry import RegistrationRecord
 
 from qml._refuse import clean_token, invalid, unavailable, unsupported
+from qml.conformance.contract import CONFORMANCE_FORMAT_VERSION
 from qml.declaration import (
     BOT_DEFINITION_KIND_FORMAT_VERSION,
     KIND_CONFLUENCE,
@@ -83,8 +84,6 @@ class Layer1Verdict:
 
     def fp1_identity(self) -> dict[str, object]:
         """Canonical identity of the Layer-1 proof. Package SemVer never enters."""
-        from qml.conformance import CONFORMANCE_FORMAT_VERSION  # noqa: PLC0415
-
         return {
             "class": "qml-layer1-verdict",
             "contract_format_version": CONFORMANCE_FORMAT_VERSION,
