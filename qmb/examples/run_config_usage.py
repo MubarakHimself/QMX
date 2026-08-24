@@ -58,6 +58,14 @@ T = TypeVar("T")
 
 _CREATED_NS = 1_700_000_000_000_000_000
 _SEVERITY = "workspace-declared"
+_SEED = Money(value=1_000_000, currency="USD", scale=2)
+_DEFAULTS = {
+    "account_id": "acct-replay",
+    "clock": CLOCK_REPLAY,
+    "data_provenance": PROVENANCE_RECORDED,
+    "fill": "default-fill",
+    "venue_id": "venue-replay",
+}
 
 
 def _unwrap(result: Result[T], what: str) -> T:
@@ -201,13 +209,9 @@ def main() -> None:
             port,
             book_fragment=book_fragment,
             bms_fragment=bms_fragment,
-            run_spec={"bot": "mean-reversion", "horizon": 5},
+            run_spec={"bot": "mean-reversion", "horizon": 5, "starting_capital": _SEED},
             invocation_flags={"fill": "flag-fill"},
-            workspace_defaults={
-                "clock": CLOCK_REPLAY,
-                "data_provenance": PROVENANCE_RECORDED,
-                "fill": "default-fill",
-            },
+            workspace_defaults=_DEFAULTS,
         ),
         "resolved run-config",
     )
@@ -216,13 +220,9 @@ def main() -> None:
             port,
             book_fragment=book_fragment,
             bms_fragment=bms_fragment,
-            run_spec={"bot": "mean-reversion", "horizon": 5},
+            run_spec={"bot": "mean-reversion", "horizon": 5, "starting_capital": _SEED},
             invocation_flags={"fill": "flag-fill"},
-            workspace_defaults={
-                "clock": CLOCK_REPLAY,
-                "data_provenance": PROVENANCE_RECORDED,
-                "fill": "default-fill",
-            },
+            workspace_defaults=_DEFAULTS,
         ),
         "second compile",
     )
@@ -242,7 +242,7 @@ def main() -> None:
         book_fragment=book_fragment,
         bms_fragment=bms_fragment,
         run_spec={"bot": "mean-reversion@1"},
-        workspace_defaults={"clock": CLOCK_REPLAY, "data_provenance": PROVENANCE_RECORDED},
+        workspace_defaults=_DEFAULTS,
     )
     assert is_refusal(named)
     assert named.category is RefusalCategory.INVALID_INPUT
@@ -271,13 +271,9 @@ def main() -> None:
             port,
             book_fragment=book_fragment,
             bms_fragment=bms_fragment,
-            run_spec={"bot": "mean-reversion", "horizon": 5},
+            run_spec={"bot": "mean-reversion", "horizon": 5, "starting_capital": _SEED},
             invocation_flags={"fill": "flag-fill"},
-            workspace_defaults={
-                "clock": CLOCK_REPLAY,
-                "data_provenance": PROVENANCE_RECORDED,
-                "fill": "default-fill",
-            },
+            workspace_defaults=_DEFAULTS,
         ),
         "api door compile",
     )

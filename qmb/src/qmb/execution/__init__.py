@@ -10,8 +10,24 @@ from __future__ import annotations
 from typing import Final, TypeAlias
 
 from qmf.risk.door import EntryIntent, ExitIntent
+from qmf.risk.exit_record import ExitRecord
 
-__all__ = ["PORT_ROLES", "AuthorizedIntent", "ports_identity"]
+from qmb.execution.risk import (
+    admit_open,
+    evaluate_exit,
+    mint_replay_exit,
+    require_full_loss_before_open,
+)
+
+__all__ = [
+    "PORT_ROLES",
+    "AuthorizedIntent",
+    "admit_open",
+    "evaluate_exit",
+    "mint_replay_exit",
+    "ports_identity",
+    "require_full_loss_before_open",
+]
 
 AuthorizedIntent: TypeAlias = EntryIntent | ExitIntent
 
@@ -31,4 +47,6 @@ def ports_identity() -> dict[str, object]:
             f"{EntryIntent.__module__}.{EntryIntent.__qualname__}",
             f"{ExitIntent.__module__}.{ExitIntent.__qualname__}",
         ),
+        "exit_record": f"{ExitRecord.__module__}.{ExitRecord.__qualname__}",
+        "full_loss_before_open": True,
     }

@@ -18,7 +18,9 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final, cast
 
+from qmf.core.exact import Money
 from qmf.core.fingerprint import Fingerprint, World, canonical_bytes, fingerprint
+from qmf.core.identity import VenueId
 from qmf.core.refusal import Ok, Result, TypedRefusal, is_ok, is_refusal
 
 from qmb._refuse import clean_token, invalid, unsupported
@@ -27,6 +29,13 @@ from qmb.config.fragments import (
     SOURCE_BOOK,
     SOURCE_PRESET,
     ConfigFragment,
+)
+from qmb.config.replay import (
+    FOLD_RATED,
+    STARTING_CAPITAL_KEY,
+    ReplayBinding,
+    mint_replay_binding,
+    resolve_starting_capital,
 )
 from qmb.registryread import RegistryReadPort
 
@@ -47,6 +56,7 @@ __all__ = [
     "RUN_CONFIG_FORMAT_VERSION_1",
     "RUN_CONFIG_KNOWN_FORMAT_VERSIONS",
     "SANCTIONED_OVERLAP_KEYS",
+    "STARTING_CAPITAL_KEY",
     "ResolvedRunConfig",
     "artifact_relative_path",
     "compile_run_config",
@@ -199,6 +209,7 @@ class ResolvedRunConfig:
     binding_fp1: Fingerprint | None = None
     condition_preset_fp1: tuple[Fingerprint, ...] = ()
     display: Mapping[str, object] = _EMPTY_DISPLAY
+    replay_binding: ReplayBinding | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "keys", _freeze_mapping(self.keys))
@@ -209,6 +220,25 @@ class ResolvedRunConfig:
     def run_id(self) -> Fingerprint:
         """The run-id root — this artifact's fingerprint."""
         return self.fingerprint
+
+    @property
+    def starting_capital(self) -> Money | None:
+        """The virtual-ledger seed, when this artifact minted a replay binding."""
+        if self.replay_binding is not None:
+            return self.replay_binding.starting_capital
+        return None
+
+    @property
+    def seed_overridden(self) -> bool:
+        """True when an invocation flag overrode the seed (FM-12)."""
+        return self.replay_binding is not None and self.replay_binding.seed_overridden
+
+    @property
+    def fold_rating(self) -> str:
+        """``unrated`` when the seed was flag-overridden, else ``rated``."""
+        if self.replay_binding is not None:
+            return self.replay_binding.fold_rating
+        return FOLD_RATED
 
     def fp1_identity(self) -> dict[str, object]:
         """The parts that ARE this run-config's identity. Display is omitted."""
@@ -432,8 +462,9 @@ def compile_run_config(
 ) -> Result[ResolvedRunConfig]:
     """Compile exactly one resolved run-config from the fixed-precedence layers.
 
-    The compiler resolves bot and binding citations through the one
-    library-owned registry-read port. Invocation may have used a human alias;
+    The compiler resolves bot citations through the one library-owned
+    registry-read port and mints exactly one ``world = replay`` CT-28 binding
+    seeded from ``starting_capital``. Invocation may have used a human alias;
     the artifact cites ``fp1``. Domain failure is a CT-04 value, returned never
     raised.
     """
@@ -508,18 +539,51 @@ def compile_run_config(
     bot = _resolve_cite(resolved_port.value, "bot", bot_ref)
     if is_refusal(bot):
         return bot
-    binding: Fingerprint | None = None
     if "binding" in acc:
-        bound = _resolve_cite(resolved_port.value, "binding", acc["binding"])
-        if is_refusal(bound):
-            return bound
-        binding = bound.value
+        return invalid(
+            "binding",
+            "every run mints exactly one world=replay binding; a caller may not "
+            "cite a live or prior binding as the run's binding (B-3, DEC-0160)",
+            given=repr(acc.get("binding")),
+        )
+    if "seed_overridden" in acc:
+        return invalid(
+            "seed_overridden",
+            "seed_overridden is stamped on the minted binding when an invocation "
+            "flag overrides starting_capital; it is never caller-declared (FM-12)",
+            given=repr(acc.get("seed_overridden")),
+        )
+    seed = resolve_starting_capital(
+        invocation_flags=flags.value,
+        run_spec=spec.value,
+        book_fragment_keys=book.value.keys,
+    )
+    if is_refusal(seed):
+        return seed
+    capital, seed_overridden = seed.value
+    venue = _require_venue(acc)
+    if is_refusal(venue):
+        return venue
+    account = _require_account(acc)
+    if is_refusal(account):
+        return account
     keys = {key: value for key, value in acc.items() if key not in _SPECIAL_KEYS}
+    keys[STARTING_CAPITAL_KEY] = capital.fp1_identity()
+    replay = mint_replay_binding(
+        book_fp1=book.value.source_fp1,
+        bms_fp1=bms.value.source_fp1,
+        bot_fp1=bot.value,
+        starting_capital=capital,
+        seed_overridden=seed_overridden,
+        venue_id=venue.value,
+        account_id=account.value,
+        clock=clock,
+        data_provenance=provenance,
+        keys=keys,
+    )
+    if is_refusal(replay):
+        return replay
     display = _display_aliases(acc, bot_alias=_alias_if_not_fp1(bot_ref))
-    if "binding" in acc:
-        binding_alias = _alias_if_not_fp1(acc["binding"])
-        if binding_alias is not None:
-            display["binding_alias"] = binding_alias
     return _finish(
         format_version=RUN_CONFIG_FORMAT_VERSION,
         book_fp1=book.value.source_fp1,
@@ -531,9 +595,10 @@ def compile_run_config(
         clock=clock,
         data_provenance=provenance,
         world=world.value,
-        binding_fp1=binding,
+        binding_fp1=replay.value.fingerprint,
         condition_preset_fp1=tuple(preset_fps),
         display=display,
+        replay_binding=replay.value,
     )
 
 
@@ -627,6 +692,7 @@ def _finish(
     binding_fp1: Fingerprint | None,
     condition_preset_fp1: tuple[Fingerprint, ...],
     display: Mapping[str, object],
+    replay_binding: ReplayBinding | None = None,
 ) -> Result[ResolvedRunConfig]:
     """Fingerprint identity content and freeze the resolved artifact."""
     identity = _identity_content(
@@ -666,6 +732,7 @@ def _finish(
             binding_fp1=binding_fp1,
             condition_preset_fp1=condition_preset_fp1,
             display=display,
+            replay_binding=replay_binding,
         )
     )
 
@@ -980,6 +1047,10 @@ def _plain(value: object) -> object:
         return value.value
     if isinstance(value, World):
         return value.value
+    if isinstance(value, Money):
+        return value.fp1_identity()
+    if isinstance(value, VenueId):
+        return value.value
     if isinstance(value, Mapping):
         nested = cast("Mapping[str, object]", value)
         out: dict[str, object] = {}
@@ -994,6 +1065,45 @@ def _plain(value: object) -> object:
         sequence = cast("Sequence[object]", value)
         return [_plain(item) for item in sequence]
     return value
+
+
+def _require_venue(merged: Mapping[str, object]) -> Result[VenueId]:
+    """VenueId for the CT-28 tuple, from the resolved layers."""
+    if "venue_id" not in merged:
+        return invalid(
+            "venue_id",
+            "the replay binding tuple names a VenueId; declare it on the run spec "
+            "or workspace defaults",
+        )
+    value = merged["venue_id"]
+    if isinstance(value, VenueId):
+        return Ok(value)
+    token = clean_token(value)
+    if token is None:
+        return invalid(
+            "venue_id",
+            "the replay binding tuple names a VenueId",
+            given=repr(value),
+        )
+    return VenueId.try_create(token)
+
+
+def _require_account(merged: Mapping[str, object]) -> Result[str]:
+    """Account id for the CT-28 tuple, from the resolved layers."""
+    if "account_id" not in merged:
+        return invalid(
+            "account_id",
+            "the replay binding tuple names an account id; declare it on the run "
+            "spec or workspace defaults",
+        )
+    token = clean_token(merged["account_id"])
+    if token is None:
+        return invalid(
+            "account_id",
+            "the replay binding tuple names an account id",
+            given=repr(merged["account_id"]),
+        )
+    return Ok(token)
 
 
 def _freeze_mapping(value: Mapping[str, object]) -> Mapping[str, object]:

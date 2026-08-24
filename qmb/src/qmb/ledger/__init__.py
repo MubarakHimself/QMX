@@ -11,7 +11,9 @@ from typing import Final
 
 from qmf.core.chrono import WriterId
 
-__all__ = ["RUN_ROLES", "ledger_identity"]
+from qmb.config.replay import FOLD_RATED, FOLD_UNRATED
+
+__all__ = ["FOLD_RATED", "FOLD_UNRATED", "RUN_ROLES", "ledger_identity"]
 
 RUN_ROLES: Final[tuple[str, ...]] = (
     "confirmation",
@@ -24,7 +26,8 @@ RUN_ROLES: Final[tuple[str, ...]] = (
 def ledger_identity() -> dict[str, object]:
     """Identity-bearing ledger fields. Package SemVer is omitted."""
     return {
+        "fold_ratings": (FOLD_RATED, FOLD_UNRATED),
+        "fragment_kind": "jsonl",
         "run_roles": RUN_ROLES,
         "writer": f"{WriterId.__module__}.{WriterId.__qualname__}",
-        "fragment_kind": "jsonl",
     }

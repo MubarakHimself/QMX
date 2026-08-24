@@ -12,6 +12,23 @@ _REPO = _QMB_ROOT.parent
 _EXAMPLE = _QMB_ROOT / "examples" / "import_usage.py"
 
 
+def test_replay_binding_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "replay_binding_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "replay binding ok" in completed.stdout
+    assert "world=replay binding" in completed.stdout
+    assert "seed_overridden" in completed.stdout
+    assert "incomparable" in completed.stdout
+    assert "full-loss price" in completed.stdout
+    assert "CT-29" in completed.stdout
+
+
 def test_run_config_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "run_config_usage.py")],

@@ -13,6 +13,7 @@ from qmb.config import (
     CLOCK_SIMULATED,
     CONFIG_FRAGMENT_CLASS,
     DISPLAY_FIELDS,
+    FOLD_RATED,
     FRAGMENT_FORMAT_VERSION,
     IDENTITY_FIELDS,
     LAYER_PRECEDENCE,
@@ -27,6 +28,7 @@ from qmb.config import (
     RUN_CONFIG_KNOWN_FORMAT_VERSIONS,
     SANCTIONED_OVERLAP_KEYS,
     SOURCE_BOOK,
+    STARTING_CAPITAL_KEY,
     ConfigFragment,
     ResolvedRunConfig,
     artifact_relative_path,
@@ -60,6 +62,7 @@ T = TypeVar("T")
 
 _CREATED_NS = 1_700_000_000_000_000_000
 _SEVERITY = "workspace-declared"
+_SEED = Money(value=1_000_000, currency="USD", scale=2)
 
 
 def _ok(result: Result[T]) -> T:
@@ -149,10 +152,6 @@ def _bot_record() -> RegistrationRecord:
     return _record("bot-definition", {"class": "bot-definition", "alias": "mean-reversion"})
 
 
-def _binding_record() -> RegistrationRecord:
-    return _record("book-binding", {"class": "book-binding", "world": "replay"})
-
-
 def _port(
     records: tuple[RegistrationRecord, ...],
     *,
@@ -182,9 +181,11 @@ def _fragments() -> tuple[ConfigFragment, ConfigFragment, RegistryReadPort, Regi
 
 def _defaults() -> dict[str, object]:
     return {
+        "account_id": "acct-replay",
         "clock": CLOCK_REPLAY,
         "data_provenance": PROVENANCE_RECORDED,
         "fill": "default-fill",
+        "venue_id": "venue-replay",
     }
 
 
@@ -200,11 +201,16 @@ def _compile(
     bot: RegistrationRecord | None = None,
 ) -> Result[ResolvedRunConfig]:
     materialized_book, materialized_bms, materialized_port, materialized_bot = _fragments()
-    spec: dict[str, object] = {"bot": (bot or materialized_bot).stable_id}
+    spec: dict[str, object] = {
+        "bot": (bot or materialized_bot).stable_id,
+        STARTING_CAPITAL_KEY: _SEED,
+    }
     if run_spec is not None:
         spec.update(run_spec)
         if "bot" not in run_spec:
             spec["bot"] = (bot or materialized_bot).stable_id
+        if STARTING_CAPITAL_KEY not in run_spec:
+            spec[STARTING_CAPITAL_KEY] = _SEED
     return compile_run_config(
         port or materialized_port,
         book_fragment=book_fragment or materialized_book,
@@ -253,7 +259,7 @@ def test_compile_produces_one_read_only_fingerprinted_artifact() -> None:
             port,
             book_fragment=book,
             bms_fragment=bms,
-            run_spec={"bot": "mean-reversion", "parameter": 3},
+            run_spec={"bot": "mean-reversion", "parameter": 3, STARTING_CAPITAL_KEY: _SEED},
             workspace_defaults=_defaults(),
         )
     )
@@ -266,7 +272,11 @@ def test_compile_produces_one_read_only_fingerprinted_artifact() -> None:
     assert compiled.bot_fp1 == bot.stable_id
     assert compiled.book_fragment_fp1 == book.fingerprint
     assert compiled.bms_fragment_fp1 == bms.fingerprint
-    assert compiled.binding_fp1 is None
+    assert compiled.binding_fp1 is not None
+    assert compiled.binding_fp1.value.startswith("fp1:sha256:")
+    assert compiled.replay_binding is not None
+    assert compiled.replay_binding.world is World.REPLAY
+    assert compiled.fold_rating == FOLD_RATED
     assert compiled.keys["parameter"] == 3
     assert compiled.keys["fill"] == "default-fill"
     assert "bot" not in compiled.keys
@@ -299,7 +309,7 @@ def test_alias_and_fp1_bot_cites_fingerprint_identically() -> None:
             port,
             book_fragment=book,
             bms_fragment=bms,
-            run_spec={"bot": "mean-reversion"},
+            run_spec={"bot": "mean-reversion", STARTING_CAPITAL_KEY: _SEED},
             workspace_defaults=_defaults(),
         )
     )
@@ -308,7 +318,7 @@ def test_alias_and_fp1_bot_cites_fingerprint_identically() -> None:
             port,
             book_fragment=book,
             bms_fragment=bms,
-            run_spec={"bot": bot.stable_id},
+            run_spec={"bot": bot.stable_id, STARTING_CAPITAL_KEY: _SEED},
             workspace_defaults=_defaults(),
         )
     )
@@ -386,12 +396,20 @@ def test_name_at_version_cite_is_invalid_input() -> None:
 def test_cites_are_fp1_never_name_at_version() -> None:
     compiled = _ok(_compile(run_spec={"bot": "mean-reversion"}))
     identity = compiled.fp1_identity()
-    for field in ("book_fp1", "bms_fp1", "bot_fp1", "book_fragment_fp1", "bms_fragment_fp1"):
+    for field in (
+        "book_fp1",
+        "bms_fp1",
+        "bot_fp1",
+        "book_fragment_fp1",
+        "bms_fragment_fp1",
+        "binding_fp1",
+    ):
         value = identity[field]
         assert isinstance(value, str)
         assert value.startswith("fp1:sha256:")
         assert "@" not in value
     assert compiled.book_fp1.value.startswith("fp1:sha256:")
+    assert compiled.binding_fp1 is not None
 
 
 def test_fingerprint_is_run_id_root_and_ledger_key() -> None:
@@ -434,6 +452,7 @@ def test_provenance_derived_world_and_caller_declared_world_refused() -> None:
     replay = _ok(
         _compile(
             workspace_defaults={
+                **_defaults(),
                 "clock": CLOCK_REPLAY,
                 "data_provenance": PROVENANCE_PROCEDURE_EPHEMERAL,
             }
@@ -443,6 +462,7 @@ def test_provenance_derived_world_and_caller_declared_world_refused() -> None:
     simulated = _ok(
         _compile(
             workspace_defaults={
+                **_defaults(),
                 "clock": CLOCK_SIMULATED,
                 "data_provenance": PROVENANCE_SYNTHETIC_TAINTED,
             }
@@ -455,35 +475,11 @@ def test_provenance_derived_world_and_caller_declared_world_refused() -> None:
     assert declared.context["field"] == "world"
 
 
-def test_binding_cite_resolves_to_fp1() -> None:
-    book_def = _book()
-    bms_def = _bms()
-    book_record = _record("book-definition", book_def)
-    bms_record = _record("bms-definition", bms_def)
-    bot = _bot_record()
-    binding = _binding_record()
-    port = _port(
-        (book_record, bms_record, bot, binding),
-        pointers=(
-            _ok(DatedPointer.try_create("mean-reversion", bot.stable_id, _instant())),
-            _ok(DatedPointer.try_create("replay-bind", binding.stable_id, _instant())),
-            _ok(DatedPointer.try_create("scalping", book_record.stable_id, _instant())),
-        ),
-    )
-    book_fragment = _ok(materialize_book_fragment(port, book_record.stable_id, _writer()))
-    bms_fragment = _ok(materialize_bms_fragment(port, bms_record.stable_id, _writer()))
-    compiled = _ok(
-        compile_run_config(
-            port,
-            book_fragment=book_fragment,
-            bms_fragment=bms_fragment,
-            run_spec={"bot": "mean-reversion", "binding": "replay-bind"},
-            workspace_defaults=_defaults(),
-        )
-    )
-    assert compiled.binding_fp1 == binding.stable_id
-    assert compiled.fp1_identity()["binding_fp1"] == binding.stable_id.value
-    assert compiled.display["binding_alias"] == "replay-bind"
+def test_caller_supplied_binding_cite_is_refused() -> None:
+    refused = _compile(run_spec={"bot": "mean-reversion", "binding": "replay-bind"})
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.INVALID_INPUT
+    assert refused.context["field"] == "binding"
 
 
 def test_condition_preset_merges_after_fragments_before_run_spec() -> None:
@@ -502,7 +498,11 @@ def test_condition_preset_merges_after_fragments_before_run_spec() -> None:
             port,
             book_fragment=book,
             bms_fragment=bms,
-            run_spec={"bot": bot.stable_id, "spread-schedule": {"name": "override"}},
+            run_spec={
+                "bot": bot.stable_id,
+                STARTING_CAPITAL_KEY: _SEED,
+                "spread-schedule": {"name": "override"},
+            },
             workspace_defaults=_defaults(),
             condition_presets=(preset,),
         )
@@ -584,7 +584,7 @@ def test_compile_passthrough_port_refusals_and_bad_args() -> None:
             "port",
             book_fragment=book,
             bms_fragment=bms,
-            run_spec={"bot": "mean-reversion"},
+            run_spec={"bot": "mean-reversion", STARTING_CAPITAL_KEY: _SEED},
         )
     )
     assert is_refusal(
@@ -592,7 +592,7 @@ def test_compile_passthrough_port_refusals_and_bad_args() -> None:
             port,
             book_fragment=bms,
             bms_fragment=bms,
-            run_spec={"bot": "mean-reversion"},
+            run_spec={"bot": "mean-reversion", STARTING_CAPITAL_KEY: _SEED},
             workspace_defaults=_defaults(),
         )
     )
@@ -610,7 +610,7 @@ def test_compile_passthrough_port_refusals_and_bad_args() -> None:
             port,
             book_fragment=book,
             bms_fragment=bms,
-            run_spec={"bot": "mean-reversion"},
+            run_spec={"bot": "mean-reversion", STARTING_CAPITAL_KEY: _SEED},
             condition_presets=book,
             workspace_defaults=_defaults(),
         )
@@ -645,7 +645,7 @@ def test_doors_compute_the_same_fingerprint() -> None:
     kwargs = {
         "book_fragment": book,
         "bms_fragment": bms,
-        "run_spec": {"bot": bot.stable_id, "horizon": 8},
+        "run_spec": {"bot": bot.stable_id, "horizon": 8, STARTING_CAPITAL_KEY: _SEED},
         "workspace_defaults": _defaults(),
     }
     library = _ok(qmb.compile_run_config(port, **kwargs))
