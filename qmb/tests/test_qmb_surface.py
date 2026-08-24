@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import get_args
 
 from qmb._backends import VENUE_PACKAGE
-from qmb._refuse import clean_token, invalid, policy, stale, unavailable, unsupported
+from qmb._refuse import clean_token, invalid, policy, stale, storage, unavailable, unsupported
 from qmb.doors import api
 from qmb.doors.cli import main
 from qmb.doors.mcp import main as mcp_main
@@ -160,6 +160,18 @@ def test_frontier_clock_is_qmf_core_clock() -> None:
     assert qmb.orchestrator_identity()["sandbox_concurrent_motivating_reference"] == (
         "not-a-validated-budget"
     )
+    assert qmb.ONE_LINE_PER_RUN is True
+    assert qmb.STORES_VERDICT is False
+    assert qmb.BOOK_BAR_READ_ROLE == "confirmation"
+    assert qmb.PROVENANCE_SANDBOX == "sandbox"
+    assert api.finish_run is qmb.finish_run
+    assert api.LedgerSink is qmb.LedgerSink
+    assert api.read_book_bar is qmb.read_book_bar
+    assert api.read_merge_view is qmb.read_merge_view
+    assert api.mint_completed_line is qmb.mint_completed_line
+    assert api.mint_aborted_line is qmb.mint_aborted_line
+    assert qmb.ledger_identity()["writer_scope"] == ("machine", "role", "worker-slot")
+    assert qmb.orchestrator_identity()["ledger_writes"] == "orchestrator"
 
 
 def test_authorized_intent_is_the_ct23_door_types() -> None:
@@ -191,6 +203,7 @@ def test_refuse_helpers_return_typed_refusals() -> None:
     refused = stale("field", "reason", severity="workspace-declared")
     assert refused.category is RefusalCategory.STALE_EVIDENCE
     assert refused.context["severity"] == "workspace-declared"
+    assert storage("ledger", "disk full").category is RefusalCategory.STORAGE_FAILURE
 
 
 def test_venue_package_is_named_and_excluded() -> None:

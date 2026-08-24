@@ -3,7 +3,8 @@
 Failure-register entries for `qmb`, per the workspace convention
 (`conventions/failure-register.md`, NFR-11). Story 15.3 delivers orchestrator
 cancel tokens and declared per-run limits whose breach is a typed `aborted`
-refusal (AR-51, B-5, FM-6).
+refusal (AR-51, B-5, FM-6). Story 15.4 delivers the one-ledger-line law over
+WriterId-scoped JSONL fragments (AR-51, AR-53, B-4).
 
 ### FR-1: Cancel or per-run limit breach aborts one OS process
 
@@ -55,3 +56,57 @@ refusal (AR-51, B-5, FM-6).
   (`writes_ledger=false`, `writes_log=false`).
 - **Product-user affordance:** an aborted run is not a half-score. Do not
   quote a CT-32 fingerprint from it. The leftovers are that run's room only.
+  When the orchestrator `finish_run` path observes the abort, it also appends
+  the `aborted` ledger line with refusal context (story 15.4). Direct
+  `abort_run` without a ledger sink still writes no line — governed evidence
+  enters only through the orchestrator ledger sink.
+
+### FR-4: A second ledger line for the same run is refused
+
+- **Failure class:** `policy rejection` (CT-04), alarm.
+- **Detection:** `LedgerSink.append` scans the WriterId-scoped fragment for the
+  run id. Byte-identical re-presentation is an idempotent accept (one line
+  remains). Differing bytes under the same run id are a collision.
+- **Auto-recovery / retry:** none. The first committed line is the line. Do not
+  overwrite. A new run is a new resolved-config fingerprint.
+- **Visible degraded state:** the fragment still has exactly one line for that
+  run. The merge view does not fork.
+- **Notification tier:** operator-visible typed refusal (`alarm=True`).
+- **Product-user affordance:** this run already has a scoreboard row. Starting
+  it again under the same resolved config does not add a second row. Change
+  the config if you want another run.
+
+### FR-5: Append-with-fsync of a ledger fragment fails
+
+- **Failure class:** `storage failure` (CT-04).
+- **Detection:** `os.fsync` / write / mkdir on the WriterId-scoped JSONL
+  fragment raises `OSError`. The orchestrator returns the failure; it never
+  reports a successful ledger write.
+- **Auto-recovery / retry:** none automatic. The line is not committed (no LF
+  + fsync). A torn tail without LF is skipped on read, never treated as a
+  line.
+- **Visible degraded state:** that run has no governed ledger line yet. The
+  isolated run directory is untouched. Sibling slots keep their own files.
+- **Notification tier:** operator-visible typed refusal.
+- **Product-user affordance:** the run may have finished in its own directory,
+  but it is not on the scoreboard because the ledger disk write failed. Free
+  space / permissions, then re-run (a new occurrence) or retry `finish_run`
+  only if the first line never landed.
+
+### FR-6: An aborted orchestrated run must not be silently absent from the ledger
+
+- **Failure class:** `policy rejection` for the run; the ledger write is
+  required.
+- **Detection:** `finish_run` collects the live process. Any refusal (cancel,
+  time/memory limit, dead child) mints `role=aborted` with refusal context
+  and appends it before returning.
+- **Auto-recovery / retry:** none for that run. The aborted line is the
+  record. Re-running is a new process.
+- **Visible degraded state:** Book-bar reads (`role=confirmation`) do not see
+  the aborted line. The aborted merge view does. No CT-32 fingerprint is
+  stored on the aborted line.
+- **Notification tier:** operator-visible typed refusal with
+  `writes_ledger=true` and `aborted_line_absent=false`.
+- **Product-user affordance:** cancelling or blowing a limit still leaves a
+  ledger row that says the run aborted and why. It is not a pass, not a fail,
+  and not missing. Direct library `run()` in research still writes no ledger.

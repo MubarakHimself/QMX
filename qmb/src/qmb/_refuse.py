@@ -8,7 +8,15 @@ from __future__ import annotations
 
 from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 
-__all__ = ["clean_token", "invalid", "policy", "stale", "unavailable", "unsupported"]
+__all__ = [
+    "clean_token",
+    "invalid",
+    "policy",
+    "stale",
+    "storage",
+    "unavailable",
+    "unsupported",
+]
 
 
 def clean_token(value: object) -> str | None:
@@ -46,6 +54,11 @@ def unsupported(field: str, reason: str, **extra: object) -> TypedRefusal:
 def unavailable(field: str, reason: str, **extra: object) -> TypedRefusal:
     """An ``unavailable dependency`` refusal — a cited backend or fragment is missing."""
     return _build(RefusalCategory.UNAVAILABLE_DEPENDENCY, field, reason, **extra)
+
+
+def storage(field: str, reason: str, **extra: object) -> TypedRefusal:
+    """A ``storage failure`` refusal — an append/fsync of governed evidence failed."""
+    return _build(RefusalCategory.STORAGE_FAILURE, field, reason, **extra)
 
 
 def stale(field: str, reason: str, **extra: object) -> TypedRefusal:

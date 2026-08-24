@@ -247,6 +247,23 @@ def test_governor_usage_example_runs_clean() -> None:
     assert "governor ok" in completed.stdout
 
 
+def test_orchestrator_ledger_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "orchestrator_ledger_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "one ledger line per run" in completed.stdout
+    assert "completed run appends one confirmation line" in completed.stdout
+    assert "aborted line carries refusal context" in completed.stdout
+    assert "direct library run() produces no governed evidence" in completed.stdout
+    assert "WriterId-scoped fragments" in completed.stdout
+    assert "orchestrator ledger ok" in completed.stdout
+
+
 def test_orchestrator_abort_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "orchestrator_abort_usage.py")],

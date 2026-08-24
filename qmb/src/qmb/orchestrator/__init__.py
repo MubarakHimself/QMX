@@ -25,6 +25,18 @@ from qmb.orchestrator.governor import (
     ResourceGovernor,
     governor_identity,
 )
+from qmb.orchestrator.ledger import (
+    FACTORY_SANDBOX_ENV,
+    FRAGMENT_FILENAME,
+    LedgerSink,
+    finish_run,
+    fragment_path,
+    is_factory_sandbox,
+    mint_writer_id,
+    read_book_bar,
+    read_merge_view,
+    writer_slot_token,
+)
 from qmb.orchestrator.spawn import (
     DAEMON,
     DOCKER,
@@ -65,6 +77,8 @@ __all__ = [
     "DECISION_QUEUED",
     "DOCKER",
     "ENFORCEMENT",
+    "FACTORY_SANDBOX_ENV",
+    "FRAGMENT_FILENAME",
     "IMPURE_OWNER",
     "MEMORY_BUDGET_KEY",
     "ONE_WRITER_PER_STREAM",
@@ -81,20 +95,28 @@ __all__ = [
     "GovernedRequest",
     "GovernorBudgets",
     "IsolatedRun",
+    "LedgerSink",
     "LiveSpawn",
     "ProcessLimitProbe",
     "ResourceGovernor",
     "SpawnJob",
     "abort_run",
     "collect_run",
+    "finish_run",
+    "fragment_path",
     "governor_identity",
+    "is_factory_sandbox",
+    "mint_writer_id",
     "orchestrator_identity",
+    "read_book_bar",
+    "read_merge_view",
     "run_directory_name",
     "spawn_concurrent",
     "spawn_governed",
     "spawn_run",
     "start_run",
     "worker_main",
+    "writer_slot_token",
 ]
 
 IMPURE_OWNER: Final[str] = "orchestrator"
@@ -118,6 +140,9 @@ def orchestrator_identity() -> dict[str, object]:
         "memory_limit_key": MEMORY_LIMIT_KEY,
         "partial_governed_result_on_abort": PARTIAL_GOVERNED_RESULT_ON_ABORT,
         "cancel_token": True,
+        "ledger_writes": IMPURE_OWNER,
+        "ledger_fragment": FRAGMENT_FILENAME,
+        "factory_sandbox_env": FACTORY_SANDBOX_ENV,
     }
     identity.update(governor_identity())
     return identity
