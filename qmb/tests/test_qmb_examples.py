@@ -112,6 +112,22 @@ def test_execution_ports_usage_example_runs_clean() -> None:
     assert "execution ports ok" in completed.stdout
 
 
+def test_cancel_observe_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "cancel_observe_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "cooperative cancel at a slice boundary" in completed.stdout
+    assert "progress data-points-processed and is_warming_up while running" in completed.stdout
+    assert "time/memory limit breach is typed aborted, not a hang" in completed.stdout
+    assert "no partial governed result" in completed.stdout
+    assert "cancel and observe ok" in completed.stdout
+
+
 def test_warmup_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "warmup_usage.py")],

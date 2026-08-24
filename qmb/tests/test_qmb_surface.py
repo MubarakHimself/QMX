@@ -110,6 +110,16 @@ def test_frontier_clock_is_qmf_core_clock() -> None:
     assert api.WARMUP_MECHANISM is qmb.WARMUP_MECHANISM
     assert api.preseed_indicator_buffers is qmb.preseed_indicator_buffers
     assert api.SplitEmbargo is qmb.SplitEmbargo
+    assert qmb.CANCEL_AT == "slice-boundary"
+    assert qmb.TERMINAL_ABORTED == "aborted"
+    assert qmb.PARTIAL_GOVERNED_RESULT_ON_ABORT is False
+    assert qmb.TIME_LIMIT_KEY == "qmb_run_time_limit"
+    assert qmb.MEMORY_LIMIT_KEY == "qmb_run_memory_limit"
+    assert api.CancelToken is qmb.CancelToken
+    assert api.ProgressSink is qmb.ProgressSink
+    assert api.ScriptedLimitProbe is qmb.ScriptedLimitProbe
+    assert api.check_slice_boundary is qmb.check_slice_boundary
+    assert api.refuse_aborted is qmb.refuse_aborted
 
 
 def test_authorized_intent_is_the_ct23_door_types() -> None:

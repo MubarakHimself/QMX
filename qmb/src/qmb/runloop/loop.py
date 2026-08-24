@@ -8,7 +8,9 @@ a later slice. Higher-BarSpec bars derive from the finest declared base stream
 and emit only on a completed boundary; a forming bar is never visible or
 actionable. Warm-up is in-loop with trading locked for the split-manifest
 embargo observation count; acting during warm-up is a typed policy rejection.
-``run`` is a pure function: it writes no log and no ledger.
+Cancel and time/memory limits are cooperative at slice boundaries and return
+a typed ``aborted`` refusal — never a partial governed result. ``run`` is a
+pure function: it writes no log and no ledger.
 """
 
 from __future__ import annotations
@@ -18,7 +20,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final, Protocol, cast, runtime_checkable
 
-from qmf.core.chrono import Clock, Instant, Interval
+from qmf.core.chrono import Clock, Duration, Instant, Interval
 from qmf.core.fingerprint import Fingerprint, fingerprint
 from qmf.core.refusal import Ok, Result, is_refusal
 
@@ -42,6 +44,20 @@ from qmb.runloop.frontier import (
     FrontierClock,
     StreamNextEmit,
     advance_frontier,
+)
+from qmb.runloop.observe import (
+    CANCEL_AT,
+    MEMORY_LIMIT_KEY,
+    PARTIAL_GOVERNED_RESULT_ON_ABORT,
+    TERMINAL_COMPLETE,
+    TIME_LIMIT_KEY,
+    CancelToken,
+    LimitProbe,
+    ProgressObserver,
+    RunLimits,
+    RunProgress,
+    check_slice_boundary,
+    limits_from_config,
 )
 from qmb.runloop.warmup import (
     EMBARGO_KEY,
@@ -127,6 +143,8 @@ def loop_identity() -> dict[str, object]:
         "warmup_adds_second_window": WARMUP_ADDS_SECOND_WINDOW,
         "warmup_mechanism": WARMUP_MECHANISM,
         "warmup_unit": WARMUP_UNIT,
+        "cancel_at": CANCEL_AT,
+        "partial_governed_result_on_abort": PARTIAL_GOVERNED_RESULT_ON_ABORT,
     }
 
 
@@ -476,6 +494,7 @@ class LoopOutcome:
     stream_order: tuple[str, ...]
     warmup: WarmupProgress
     evidence_range: Interval
+    data_points_processed: int = 0
 
     @property
     def is_warming_up(self) -> bool:
@@ -487,8 +506,10 @@ class LoopOutcome:
         """Returned with the outcome; never written to a log or ledger (B-4)."""
         return MappingProxyType(
             {
+                "cancel_at": CANCEL_AT,
                 "closed_data_only": True,
                 "completed_boundary_only": COMPLETED_BOUNDARY_ONLY,
+                "data_points_processed": self.data_points_processed,
                 "evidence_covers_warmup": False,
                 "forming_bar_actionable": FORMING_BAR_ACTIONABLE,
                 "forming_bar_visible": FORMING_BAR_VISIBLE,
@@ -497,11 +518,12 @@ class LoopOutcome:
                     LOOKAHEAD_PREVENTION_INDEPENDENT_OF_GAP_0048
                 ),
                 "loop_kind": LOOP_KIND,
+                "partial_governed_result_on_abort": PARTIAL_GOVERNED_RESULT_ON_ABORT,
                 "preseed_is_warmup": PRESEED_IS_WARMUP,
                 "same_slice_new_intent_fill": SAME_SLICE_NEW_INTENT_FILL,
                 "slice_count": len(self.slices),
                 "subphases": list(SUBPHASES),
-                "terminal": "complete",
+                "terminal": TERMINAL_COMPLETE,
                 "warmup_adds_second_window": WARMUP_ADDS_SECOND_WINDOW,
                 "warmup_mechanism": WARMUP_MECHANISM,
                 "warmup_unit": WARMUP_UNIT,
@@ -512,6 +534,7 @@ class LoopOutcome:
         """Canonical identity. Package SemVer never enters."""
         return {
             "class": "event-slice-loop-outcome",
+            "data_points_processed": self.data_points_processed,
             "evidence_range": self.evidence_range.fp1_identity(),
             "filled": list(self.filled),
             "is_warming_up": self.is_warming_up,
@@ -730,16 +753,22 @@ def run(
     series: object = None,
     bar_plan: object = None,
     embargo: object = None,
+    cancel: object = None,
+    observer: object = None,
+    limits: object = None,
+    probe: object = None,
 ) -> Result[LoopOutcome]:
-    """PURE event-slice loop (B-2, B-4).
+    """PURE event-slice loop (B-2, B-4, B-5).
 
     Consumes time-ordered event slices and the stream-set declaration order
     (from the resolved run-config when ``config`` is supplied). Warm-up is the
     same loop with trading locked for the split-manifest embargo observation
-    count. Returns slice outcomes plus a self-assessment whose evidence range
-    is the trading interval only. Writes no log and no ledger. The same
-    underlying series is replayed as-of each frontier so later prints cannot
-    complete an earlier bar.
+    count. A signalled cancel token, or an in-loop time/memory limit breach,
+    stops the loop at the next slice boundary and returns a typed ``aborted``
+    refusal — never a partial governed result. Progress (data-points-processed
+    and ``is_warming_up``) is published to the caller-owned observer. Writes no
+    log and no ledger. The same underlying series is replayed as-of each
+    frontier so later prints cannot complete an earlier bar.
     """
     declared = _resolve_stream_set(stream_set=stream_set, config=config)
     if is_refusal(declared):
@@ -763,12 +792,46 @@ def run(
     progress = _resolve_warmup(embargo=embargo, warmup=None, config=config)
     if is_refusal(progress):
         return progress
+    token = _as_cancel_token(cancel)
+    if is_refusal(token):
+        return token
+    sink = _as_observer(observer)
+    if is_refusal(sink):
+        return sink
+    bound_limits = _resolve_limits(limits=limits, config=config)
+    if is_refusal(bound_limits):
+        return bound_limits
+    meter = _as_probe(probe, bound_limits.value)
+    if is_refusal(meter):
+        return meter
     current: Instant | None = None if clock is None else clock.current
     resting = resting_tokens.value
     outcomes: list[SliceOutcome] = []
     filled: list[str] = []
     warmup = progress.value
+    data_points = 0
+    published = _progress_at(
+        data_points_processed=0,
+        slices_completed=0,
+        is_warming_up=warmup.is_warming_up,
+        frontier=None,
+        elapsed=None,
+    )
+    if is_refusal(published):
+        return published
+    watching = published.value
+    noted = _publish(sink.value, watching)
+    if is_refusal(noted):
+        return noted
     for event in events.value:
+        boundary = check_slice_boundary(
+            cancel=token.value,
+            limits=bound_limits.value,
+            probe=meter.value,
+            progress=watching,
+        )
+        if is_refusal(boundary):
+            return boundary
         outcome = run_slice(
             event,
             stream_set=declared.value,
@@ -789,6 +852,20 @@ def run(
         filled.extend(done.filled)
         if done.warmup is not None:
             warmup = done.warmup
+        data_points += len(event.observations)
+        published = _progress_at(
+            data_points_processed=data_points,
+            slices_completed=len(outcomes),
+            is_warming_up=warmup.is_warming_up,
+            frontier=done.frontier,
+            elapsed=boundary.value,
+        )
+        if is_refusal(published):
+            return published
+        watching = published.value
+        noted = _publish(sink.value, watching)
+        if is_refusal(noted):
+            return noted
     spanned = trading_evidence_range(
         tuple(item.frontier for item in outcomes if not item.is_warming_up),
         empty_at=outcomes[-1].frontier,
@@ -803,6 +880,7 @@ def run(
             stream_order=declared.value.stream_ids,
             warmup=warmup,
             evidence_range=spanned.value,
+            data_points_processed=data_points,
         )
     )
 
@@ -1130,6 +1208,102 @@ def _as_handler(handler: object) -> Result[SliceHandler]:
             given=repr(type(handler).__name__),
         )
     return Ok(handler)
+
+
+def _as_cancel_token(cancel: object) -> Result[CancelToken | None]:
+    if cancel is None:
+        return Ok(None)
+    if not isinstance(cancel, CancelToken):
+        return invalid(
+            "cancel",
+            "cooperative cancel is a CancelToken inspected at slice boundaries; "
+            "not a thread event (B-4, AD-15)",
+            given=repr(type(cancel).__name__),
+            cancel_at=CANCEL_AT,
+        )
+    return Ok(cancel)
+
+
+def _as_observer(observer: object) -> Result[ProgressObserver | None]:
+    if observer is None:
+        return Ok(None)
+    if not isinstance(observer, ProgressObserver):
+        return invalid(
+            "observer",
+            "in-loop observation is a ProgressObserver updated at slice "
+            "boundaries with data-points-processed and is_warming_up (FR-037)",
+            given=repr(type(observer).__name__),
+        )
+    return Ok(observer)
+
+
+def _as_probe(probe: object, limits: RunLimits) -> Result[LimitProbe | None]:
+    if probe is None:
+        if limits.bounded:
+            return invalid(
+                "probe",
+                "in-loop time or memory limit detection needs an injected "
+                "LimitProbe; the library never reads the system clock or a "
+                "process meter (AR-16, AD-15, B-5)",
+                time_limit_key=TIME_LIMIT_KEY,
+                memory_limit_key=MEMORY_LIMIT_KEY,
+            )
+        return Ok(None)
+    if not isinstance(probe, LimitProbe):
+        return invalid(
+            "probe",
+            "a LimitProbe supplies monotonic elapsed Duration and a memory byte "
+            "count; the library never reads the system clock (AR-16, B-5)",
+            given=repr(type(probe).__name__),
+        )
+    return Ok(probe)
+
+
+def _resolve_limits(*, limits: object, config: object) -> Result[RunLimits]:
+    from_config: RunLimits | None = None
+    if config is not None:
+        extracted = limits_from_config(config)
+        if is_refusal(extracted):
+            return extracted
+        from_config = extracted.value
+    if limits is None:
+        return Ok(from_config if from_config is not None else RunLimits())
+    parsed = RunLimits.try_create(limits)
+    if is_refusal(parsed):
+        return parsed
+    if from_config is not None and parsed.value != from_config:
+        return invalid(
+            "limits",
+            "caller limits must match the resolved run-config per-run time and memory bounds (B-5)",
+            config=from_config.fp1_identity(),
+            given=parsed.value.fp1_identity(),
+            time_limit_key=TIME_LIMIT_KEY,
+            memory_limit_key=MEMORY_LIMIT_KEY,
+        )
+    return Ok(parsed.value)
+
+
+def _progress_at(
+    *,
+    data_points_processed: int,
+    slices_completed: int,
+    is_warming_up: bool,
+    frontier: Instant | None,
+    elapsed: Duration | None,
+) -> Result[RunProgress]:
+    return RunProgress.try_create(
+        data_points_processed,
+        slices_completed,
+        is_warming_up,
+        frontier,
+        elapsed,
+    )
+
+
+def _publish(observer: ProgressObserver | None, progress: RunProgress) -> Result[None]:
+    if observer is None:
+        return Ok(None)
+    return observer.observe(progress)
 
 
 def _as_slice_sequence(slices: object) -> Result[tuple[EventSlice, ...]]:
