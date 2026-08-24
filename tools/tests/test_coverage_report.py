@@ -93,6 +93,18 @@ def test_application_root_qml_is_its_own_package() -> None:
     assert any("qml" in v and "per-package floor" in v for v in violations)
 
 
+def test_application_root_qmb_is_its_own_package() -> None:
+    report = _report(
+        {
+            "qmb/src/qmb/__init__.py": _file(7, 10, 0, 0),
+            "packages/qmf-core/src/qmf/core/exact.py": _file(10, 10, 8, 8),
+            "packages/qmf-core/src/qmf/core/chrono.py": _file(10, 10, 8, 8),
+        }
+    )
+    violations = cov.evaluate(report)
+    assert any("qmb" in v and "per-package floor" in v for v in violations)
+
+
 # --- contract-module full-branch rule ---------------------------------------
 
 

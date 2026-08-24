@@ -80,14 +80,16 @@ dependencies = ["pydantic", "python-dotenv", "pyyaml", "rich"]
 # import under `poe test`. Kept out of `dev` so the SSSF factory-gate contract stays
 # byte-stable; ta-lib stays declared only in qmf-indicators and never leaks into
 # another package.
-default-groups = ["dev", "store-engines", "calendar-tzdata", "venue-proto", "indicators-talib", "qml-lib"]
+default-groups = ["dev", "store-engines", "calendar-tzdata", "venue-proto", "indicators-talib", "qml-lib", "qmb-lib"]
 
 [tool.uv.workspace]
 # The QMF distribution units. Seven roster packages (SemVer lockstep) under
 # packages/, off-roster extensions (own SemVer ladders) under extensions/, and
 # application-layer products (own SemVer, display-only) at the repo root — qml
-# is the bot-authoring library (Story 11.1; DEC-0180), never a roster package.
-members = ["packages/*", "extensions/*", "qml"]
+# is the bot-authoring library (Story 11.1; DEC-0180); qmb is the
+# experimentation/backtesting library plus CLI (Story 13.1; DEC-0167). Neither
+# is a roster package.
+members = ["packages/*", "extensions/*", "qml", "qmb"]
 
 [tool.uv.sources]
 # The qmf-data workspace member, referenced by the store-engines group below so
@@ -109,6 +111,10 @@ qmf-indicators = { workspace = true }
 # resolves in the gate environment (Story 11.1; DEC-0180). qml declares no
 # third-party runtime dependency of its own.
 qml = { workspace = true }
+# The qmb application-layer member, referenced by qmb-lib below so `import qmb`
+# and the `qmb` CLI resolve in the gate environment (Story 13.1; DEC-0167).
+# click and optuna are declared only in qmb's own pyproject.
+qmb = { workspace = true }
 
 [dependency-groups]
 # THE GATE'S CONTRACT — plus the QMF canonical toolchain, one environment for
@@ -171,6 +177,13 @@ indicators-talib = ["qmf-indicators"]
 # byte-stable.
 qml-lib = ["qml"]
 
+# The qmb experimentation/backtesting library plus CLI, provisioned by default.
+# Installs the qmb workspace member so `import qmb` and the `qmb` console script
+# resolve under `poe test` / `poe types`. click==8.4.2 and optuna==4.9.0 are
+# declared only in qmb's own pyproject (Story 13.1; DEC-0168). Kept out of `dev`
+# so the SSSF factory-gate contract stays byte-stable.
+qmb-lib = ["qmb"]
+
 # skylos is SEPARATE from `dev`, and not because it is optional - because it
 # does not install everywhere. It depends on tree-sitter-dart-orchard, which
 # publishes an sdist only and needs an MSVC toolchain to build on Windows; one
@@ -181,8 +194,8 @@ scan = ["skylos"]
 
 [tool.pytest.ini_options]
 # SSSF contract: a bare `pytest` (and the gate's `pytest -q adws/tests`) targets
-# the factory suite. `poe test` passes `packages extensions qml` explicitly, which
-# overrides this default and collects the QMF package suites and qml instead.
+# the factory suite. `poe test` passes `packages extensions qml qmb` explicitly,
+# which overrides this default and collects the QMF package suites plus qml/qmb.
 testpaths = ["adws/tests"]
 # QMF package sources on the import path, so `qmf.*` resolves from src/ without
 # an install at Tier 1 (additive; adws/tests never import qmf and are unaffected).
@@ -196,6 +209,7 @@ pythonpath = [
     "packages/qmf-risk/src",
     "extensions/qmf-calendar-forex/src",
     "qml/src",
+    "qmb/src",
     # Workspace tools (the tier-1 static scanners) import as top-level modules so
     # `poe test-tools` can measure their coverage (Story 1.7).
     "tools",
@@ -265,12 +279,14 @@ ignore = [
 "packages/*/tests/*" = ["S101", "S105", "S106", "S107", "PLC0415"]
 "extensions/*/tests/*" = ["S101", "S105", "S106", "S107", "PLC0415"]
 "qml/tests/*" = ["S101", "S105", "S106", "S107", "PLC0415"]
+"qmb/tests/*" = ["S101", "S105", "S106", "S107", "PLC0415"]
 "tools/tests/*" = ["S101", "S105", "S106", "S107", "PLC0415"]
 # Example scripts use `assert` as a teaching/verification device (like a doctest —
 # it shows the reader the expected result); they carry no other carve-out.
 "packages/*/examples/*" = ["S101"]
 "extensions/*/examples/*" = ["S101"]
 "qml/examples/*" = ["S101"]
+"qmb/examples/*" = ["S101"]
 # Host-owned sandbox runner: stdlib process management (B-5). Dynamically-evasive
 # bots are out of V1 scope; this is not a restricted interpreter.
 "qml/src/qml/host/*" = ["S404"]
@@ -278,7 +294,7 @@ ignore = [
 [tool.pyright]
 # Strict, workspace-wide over the QMF code (AR-11). adws is mypy's job, not
 # pyright's, so it is not included here.
-include = ["packages", "extensions", "qml", "tools"]
+include = ["packages", "extensions", "qml", "qmb", "tools"]
 # The deliberately-broken money-path fixtures are scanner input data, not code to
 # type-check (Story 1.7); the rest preserves pyright's default exclusions.
 exclude = ["**/node_modules", "**/__pycache__", "**/.*", "tools/tests/fixtures"]
@@ -292,6 +308,7 @@ extraPaths = [
     "packages/qmf-risk/src",
     "extensions/qmf-calendar-forex/src",
     "qml/src",
+    "qmb/src",
     # Workspace tools import as top-level modules (see pytest pythonpath above).
     "tools",
 ]
@@ -413,12 +430,12 @@ max_quality = 1000000
 [tool.poe.tasks]
 # The canonical QMF commands (AR-11), byte-identical on every machine. ruff /
 # ruff-format / pyright / pytest target the shipped workspace (packages/,
-# extensions/, qml/, tools/); the SSSF gate independently covers adws.
-fmt = "ruff format packages extensions qml tools"
-fmt-check = "ruff format --check packages extensions qml tools"
-lint = "ruff check packages extensions qml tools"
+# extensions/, qml/, qmb/, tools/); the SSSF gate independently covers adws.
+fmt = "ruff format packages extensions qml qmb tools"
+fmt-check = "ruff format --check packages extensions qml qmb tools"
+lint = "ruff check packages extensions qml qmb tools"
 types = "pyright"
-test = "pytest packages extensions qml --cov=qmf --cov=qml --cov-branch --cov-report=term-missing --cov-report=json:coverage.json --cov-fail-under=80"
+test = "pytest packages extensions qml qmb --cov=qmf --cov=qml --cov=qmb --cov-branch --cov-report=term-missing --cov-report=json:coverage.json --cov-fail-under=80"
 # Mechanical per-package + contract-module enforcement on top of the aggregate floor
 # above: reads the coverage.json `test` writes and fails the gate if any package drops
 # below 80% or exact.py/chrono.py drop below 100% branch (AR-20; M1).

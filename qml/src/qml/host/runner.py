@@ -239,7 +239,7 @@ def load_factory(spec: FactorySpec) -> Result[object]:
 
 def _load_source_factory_module(source: str) -> ModuleType:
     """Import operator-authored factory source from a generated module file."""
-    module_name = f"_qml_host_factory_{uuid.uuid4().hex}"
+    module_name = f"_qml_host_factory_{uuid.uuid4().hex}"  # ambient-scan: allow
     with tempfile.TemporaryDirectory(prefix="qml_host_factory_", ignore_cleanup_errors=True) as tmp:
         path = os.path.join(tmp, "factory.py")
         with open(path, "w", encoding="utf-8", newline="\n") as handle:

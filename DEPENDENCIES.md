@@ -29,6 +29,11 @@ means adding its row here first.
   on its **own SemVer ladder as display-only provenance** (never identity). It
   adds **no new runtime dependency** beyond `qmf-core`, `qmf-registry`, and
   `qmf-risk`. (DEC-0180)
+- **`qmb`** is an application-layer product outside the seven-package roster,
+  on its **own SemVer ladder as display-only provenance** (never identity). It
+  is one wheel — the pure library plus the `qmb` CLI — consuming the six
+  backend `qmf-*` packages in lockstep and never `qmf-venue`. It pins
+  `click==8.4.2` and `optuna==4.9.0`. (DEC-0159, DEC-0167, DEC-0168)
 - CPython **3.14** is pinned across every package (`.python-version`,
   per-package `requires-python`). (AR-04; DEC-0099)
 
@@ -40,6 +45,8 @@ means adding its row here first.
 | pyarrow | `==25.0.1` | Apache-2.0 | `qmf-data` (roster) | The **Parquet** store engine for the CT-11 columnar time-series raw archive; embedded, no database server. Declared only in `packages/qmf-data/pyproject.toml`; never crosses a boundary signature. (Story 3.1; AR-30, DEC-0117) |
 | duckdb | `==1.5.5` | MIT | `qmf-data` (roster) | The **DuckDB** store engine for CT-11 rebuildable analytics views only (never evidence-bearing); embedded, no database server. Declared only in `packages/qmf-data/pyproject.toml`; never crosses a boundary signature. (Story 3.1; AR-30, DEC-0117) |
 | protobuf | `==7.36.0` | BSD-3-Clause | `qmf-venue` (roster) | The Protobuf **runtime** for the venue transport. qmf-venue owns its own transport: the Spotware `openapi-proto-messages` release (integer tag **91**, `registry:venue_protocol_artifact`) is compiled **in-house** from its proto message definitions (data, not code) via `google.protobuf`, and **zero Spotware code runs** — the OpenApiPy SDK is reference-only (its pinned Twisted reactor is platform-imposing → rejected below). Declared only in `packages/qmf-venue/pyproject.toml`; never crosses a boundary signature and never leaks a compiled message into `qmf-core`. (Story 8.2; AR-43, DEC-0141) |
+| click | `==8.4.2` | BSD-3-Clause | `qmb` (off-roster app) | The `qmb` CLI door. Declared only in `qmb/pyproject.toml`; a major bump is a contract-versioning event (`registry:qmb_cli_pin`). (Story 13.1; DEC-0168) |
+| optuna | `==4.9.0` | MIT | `qmb` (off-roster app) | The default TPE-class sampler adapter. Declared only in `qmb/pyproject.toml`; adapters run `n_jobs=1` (fan-out is the orchestrator's); a major bump is a contract-versioning event (`registry:qmb_sampler_pin`). (Story 13.1; DEC-0168, DEC-0161) |
 
 `qmf-data` is the first roster package to declare runtime outside-dependencies —
 `pyarrow` and `duckdb`, the CT-11/CT-09 store engines (Parquet + DuckDB; SQLite and
@@ -100,5 +107,3 @@ flip it to a live section when a story first needs it.
 | numpy | BSD-3-Clause | outer packages only | 2.5.2 pin (never in `qmf-core`). |
 | pandas | BSD-3-Clause | outer packages only | 3.0.5 pin (young major; ecosystem lag watched). |
 | TA-Lib (C + Python wrapper) | BSD-3-Clause | `qmf-indicators` | Canonical arithmetic reference, 0.7.1 + 0.7.1. (DEC-0127) |
-| click | BSD-3-Clause | QMB (off-roster app) | `qmb` CLI door, 8.4.2. (DEC-0168) |
-| optuna | MIT | QMB (off-roster app) | Default sampler adapter, 4.9.0; a major bump is a contract-versioning event. (DEC-0168) |

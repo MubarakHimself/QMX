@@ -55,13 +55,30 @@ EDGE_MODULES: frozenset[str] = frozenset({"qmf-venue", "qmf-risk"})
 VENUE_EDGE: str = "qmf-venue"
 
 # Application-layer products live at the repo root (not packages/, not
-# extensions/). A missing directory is skipped so qmb can land later.
+# extensions/). A missing directory is skipped so a later product can land.
 APPLICATION_ROOTS: tuple[str, ...] = ("qml", "qmb")
 
 # Expected workspace deps for application members. qml consumes qmf-core,
-# qmf-registry, and qmf-risk only (Story 11.1; DEC-0171).
+# qmf-registry, and qmf-risk only (Story 11.1; DEC-0171). qmb consumes the six
+# backend qmf packages and never qmf-venue (Story 13.1; DEC-0169).
 EXPECTED_APPLICATION_DEPS: dict[str, frozenset[str]] = {
     "qml": frozenset({"qmf-core", "qmf-registry", "qmf-risk"}),
+    "qmb": frozenset(
+        {
+            "qmf-core",
+            "qmf-registry",
+            "qmf-data",
+            "qmf-indicators",
+            "qmf-structure",
+            "qmf-risk",
+        }
+    ),
+}
+
+# Third-party runtime deps for application members (workspace qmf-* dropped).
+EXPECTED_APPLICATION_THIRD_PARTY: dict[str, frozenset[str]] = {
+    "qml": frozenset(),
+    "qmb": frozenset({"click", "optuna"}),
 }
 
 # The expected roster dependency map (workspace deps only). qmf-core depends on
