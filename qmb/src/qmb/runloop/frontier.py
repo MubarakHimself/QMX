@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Final, Protocol, runtime_checkable
+from typing import Final, Protocol, cast, runtime_checkable
 
 from qmf.core.chrono import Clock, DataDrivenClock, Instant, MonotonicReading
 from qmf.core.refusal import Ok, Result, is_refusal
@@ -87,7 +87,7 @@ class StreamNextEmit:
         return Ok(cls(stream_id=token, next_emit=next_emit))
 
 
-def min_next_emit(streams: Sequence[NextEmitStream]) -> Result[Instant]:
+def min_next_emit(streams: object) -> Result[Instant]:
     """Pure: the minimum next-emit Instant across all non-exhausted streams.
 
     Deterministic: equal Instants compare by ``value_ns``; stream declaration
@@ -102,7 +102,7 @@ def min_next_emit(streams: Sequence[NextEmitStream]) -> Result[Instant]:
             given=repr(streams),
         )
     candidates: list[Instant] = []
-    for index, stream in enumerate(streams):
+    for index, stream in enumerate(cast("Sequence[object]", streams)):
         if not isinstance(stream, NextEmitStream):
             return invalid(
                 "streams",
@@ -113,13 +113,6 @@ def min_next_emit(streams: Sequence[NextEmitStream]) -> Result[Instant]:
         nxt = stream.next_emit
         if nxt is None:
             continue
-        if not isinstance(nxt, Instant):
-            return invalid(
-                "next_emit",
-                "a stream next-emit is an Instant or None",
-                stream_id=stream.stream_id,
-                given=repr(nxt),
-            )
         candidates.append(nxt)
     if not candidates:
         return unsupported(
@@ -134,8 +127,8 @@ def min_next_emit(streams: Sequence[NextEmitStream]) -> Result[Instant]:
 
 
 def advance_frontier(
-    current: Instant | None,
-    streams: Sequence[NextEmitStream],
+    current: object,
+    streams: object,
 ) -> Result[Instant]:
     """Pure replay advance: pull to min next-emit; never rewind (B-2, FR-037).
 
@@ -212,7 +205,7 @@ def as_wall_replay_instant(
     return Ok(candidate)
 
 
-def read_frontier(clock: Clock) -> Instant:
+def read_frontier(clock: object) -> Instant:
     """Read the current wall Instant from the injected frontier ``Clock``.
 
     The only approved time read below the composition root (AR-16). Callers
@@ -277,8 +270,8 @@ class FrontierClock:
         *,
         boot_epoch_id: object,
         clock_binding: object = CLOCK_REPLAY,
-        initial: Instant | None = None,
-        monotonic_ns: Sequence[int] = (),
+        initial: object = None,
+        monotonic_ns: object = (),
     ) -> Result[FrontierClock]:
         """Validate and build a frontier ``Clock``, returning value-or-refusal."""
         boot = clean_token(boot_epoch_id)
@@ -303,8 +296,14 @@ class FrontierClock:
                 "an initial frontier is an Instant or None",
                 given=repr(initial),
             )
+        if not isinstance(monotonic_ns, Sequence) or isinstance(monotonic_ns, (str, bytes)):
+            return invalid(
+                "monotonic_ns",
+                "monotonic script entries are a sequence of int nanosecond readings",
+                given=repr(monotonic_ns),
+            )
         mono: list[int] = []
-        for index, value in enumerate(monotonic_ns):
+        for index, value in enumerate(cast("Sequence[object]", monotonic_ns)):
             if isinstance(value, bool) or not isinstance(value, int):
                 return invalid(
                     "monotonic_ns",
