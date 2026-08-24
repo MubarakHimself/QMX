@@ -161,6 +161,24 @@ def test_prediction_usage_example_runs_clean() -> None:
     assert "prediction linter ok" in completed.stdout
 
 
+def test_registration_usage_example_runs_clean() -> None:
+    completed = _run_example("registration_usage.py")
+    assert completed.returncode == 0, completed.stderr
+    assert "layer 1 and layer 2 pass: True" in completed.stdout
+    assert "qml returns fingerprintable content: True" in completed.stdout
+    assert "host stamps WriterId: True" in completed.stdout
+    assert "layer 1 fail is policy rejection: policy rejection" in completed.stdout
+    assert "layer 2 fail is policy rejection: policy rejection" in completed.stdout
+    assert "no probation: True" in completed.stdout
+    assert "governed evidence cite: True" in completed.stdout
+    assert "seat cite: True" in completed.stdout
+    assert "ungoverned tunnel open: True" in completed.stdout
+    assert "ungoverned cannot be cited: policy rejection" in completed.stdout
+    assert "graduation lineage: promoted-from" in completed.stdout
+    assert "complexity is not a gate: True" in completed.stdout
+    assert "registration gate ok" in completed.stdout
+
+
 def test_layer1_usage_example_runs_clean() -> None:
     completed = _run_example("layer1_usage.py")
     assert completed.returncode == 0, completed.stderr
