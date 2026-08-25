@@ -188,8 +188,9 @@ def main() -> None:
         ),
         "aon",
     )
-    assert all(isinstance(item, NoFill) for item in missed)
-    assert missed[0].reason == NOFILL_ALL_OR_NONE_LEG_FAILED
+    for item in missed:
+        assert isinstance(item, NoFill)
+        assert item.reason == NOFILL_ALL_OR_NONE_LEG_FAILED
     print("all-or-none any-leg-fail is NoFill")
 
     partial = _unwrap(
@@ -277,7 +278,11 @@ def main() -> None:
         "high",
     )
     ranked = _unwrap(rank_resting_on_path((high, low), path), "rank")
-    assert [item.intent_id for item in ranked] == ["low", "high"]
+    ranked_ids: list[str] = []
+    for item in ranked:
+        assert isinstance(item, RestingIntent)
+        ranked_ids.append(item.intent_id)
+    assert ranked_ids == ["low", "high"]
     print("deterministic path-split sequencing")
     assert SAME_SLICE_NEW_INTENT_FILL is False
     print("new intents rest for a later slice")

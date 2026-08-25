@@ -181,7 +181,13 @@ def _order(
     )
 
 
-def _cross(order: FillOrder, path: SlicePath, *, basis: str = FILL_BASIS_WORST_CASE, span=None):
+def _cross(
+    order: FillOrder,
+    path: SlicePath,
+    *,
+    basis: str = FILL_BASIS_WORST_CASE,
+    span: Duration | None = None,
+) -> Result[Fill | NoFill | PartialFill]:
     return cross_declared_path(
         _entry(order.side),
         path,
@@ -265,8 +271,9 @@ def test_all_or_none_any_leg_fail_nofills_group() -> None:
     bad = FillLeg.try_create(intent, _order(OrderType.LIMIT, limit=1_08000, intent_id="b"))
     group = _ok(fill_all_or_none((_ok(good), _ok(bad)), path))
     assert len(group) == 2
-    assert all(isinstance(item, NoFill) for item in group)
-    assert all(item.reason == NOFILL_ALL_OR_NONE_LEG_FAILED for item in group)
+    for item in group:
+        assert isinstance(item, NoFill)
+        assert item.reason == NOFILL_ALL_OR_NONE_LEG_FAILED
     both = _ok(
         fill_all_or_none(
             (
@@ -401,13 +408,23 @@ def test_intra_slice_path_split_is_deterministic() -> None:
         )
     )
     ranked = _ok(rank_resting_on_path((high_stop, low_limit), path))
-    assert [item.intent_id for item in ranked] == ["low", "high"]
-    first = _ok(_cross(low_limit.order, path))
+    ranked_ids: list[str] = []
+    for item in ranked:
+        assert isinstance(item, RestingIntent)
+        ranked_ids.append(item.intent_id)
+    assert ranked_ids == ["low", "high"]
+    ranked_order = low_limit.order
+    assert isinstance(ranked_order, FillOrder)
+    first = _ok(_cross(ranked_order, path))
     assert isinstance(first, Fill)
     remaining = _ok(split_path_at(path, first.pre_slip_price))
     assert remaining.prints[0].as_fraction() == first.pre_slip_price.as_fraction()
     again = _ok(rank_resting_on_path((high_stop, low_limit), path))
-    assert [item.intent_id for item in again] == ["low", "high"]
+    again_ids: list[str] = []
+    for item in again:
+        assert isinstance(item, RestingIntent)
+        again_ids.append(item.intent_id)
+    assert again_ids == ["low", "high"]
 
 
 def test_new_intents_rest_and_subphase_3_fill_handler() -> None:
@@ -509,6 +526,7 @@ def test_slippage_maps_or_vetoes_skips_passive_limits() -> None:
     assert limit_fill.passive is True
     skipped = _ok(ConstantPercentSlippageAdapter(calibration=percent).apply(limit_fill, path))
     assert isinstance(skipped, Fill)
+    assert skipped.post_slip_price is not None
     assert skipped.post_slip_price.as_fraction() == limit_fill.pre_slip_price.as_fraction()
     forced = _ok(
         ConstantPercentSlippageAdapter(calibration=percent, apply_to_passive_limits=True).apply(
