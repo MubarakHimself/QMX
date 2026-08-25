@@ -17,7 +17,11 @@ door-side cache, never a live service query. Story 16.5 delivers the
 tier-2 door-parity contract test: identical function surface and
 semantics across the shipped CLI and Python API doors, with per-transport
 refusal rendering (CLI nonzero + stderr JSON; Python refusal union
-verbatim).
+verbatim). Story 16.6 scaffolds the MCP door as an unshipped sibling
+over the same library: localhost-bound, never stacked over HTTP,
+invocation is a typed ``unsupported capability`` refusal, and
+``error.data`` is pinned to carry the refusal union verbatim when the
+door later ships. CLI v1 does not wait on it.
 
 ### FR-1: Cancel or per-run limit breach aborts one OS process
 
@@ -248,3 +252,22 @@ verbatim).
   (or the reverse), that is a bug — do not document it as a CLI-only
   feature. Put the capability in the library once and wrap it on every
   shipped door.
+
+### FR-13: MCP door invocation before CLI v1 ships it
+
+- **Failure class:** `unsupported capability` (CT-04).
+- **Detection:** `qmb.doors.mcp.main` / `serve` return the typed refusal
+  immediately. `is_shipped()` is False. The door is not a console script
+  and is not in the V1 door-set.
+- **Auto-recovery / retry:** none. The door ships after CLI v1 (SC-08).
+  Retrying the same invocation does not start a server. Use the `qmb` CLI
+  or the Python API door.
+- **Visible degraded state:** no MCP listener binds. No HTTP stack is
+  imported. CLI and Python API keep serving the catalog. When a refusal
+  is later rendered on this door, JSON-RPC `error.data` is the same
+  category / context / retryability union the CLI writes to stderr.
+- **Notification tier:** caller-visible typed refusal (return value).
+- **Product-user affordance:** MCP is not a V1 product face. Run `qmb`
+  (the CLI) or `import qmb`. A future MCP door will wrap the same library
+  on 127.0.0.1, never over HTTP, and will put the refusal JSON in
+  `error.data` rather than swallowing it as InternalError.

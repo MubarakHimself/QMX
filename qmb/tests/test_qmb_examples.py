@@ -349,6 +349,23 @@ def test_api_door_usage_example_runs_clean() -> None:
     assert "qmb Python API door ok" in completed.stdout
 
 
+def test_mcp_door_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "mcp_door_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "sibling wrapper over the same library; post-CLI-v1, not shipped" in completed.stdout
+    assert "invocation is typed unsupported-capability refusal" in completed.stdout
+    assert "localhost-bound by default; never stacked over HTTP" in completed.stdout
+    assert "error.data carries the refusal union verbatim" in completed.stdout
+    assert "CLI v1 ships first; MCP does not gate it" in completed.stdout
+    assert "qmb MCP door scaffold ok" in completed.stdout
+
+
 def test_door_parity_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "door_parity_usage.py")],
