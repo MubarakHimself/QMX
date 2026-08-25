@@ -10,10 +10,8 @@ workspace lockstep; never ``qmf-venue``.
 
 from __future__ import annotations
 
-from typing import Final
-
 from qmb._backends import BACKEND_PACKAGES, backend_display_versions
-from qmb._display import __version__, identity_payload
+from qmb._display import STRUCTURAL_SEED, __version__, identity_payload
 from qmb.config import (
     ASSIGNMENT_IS_CANONICAL_KEY,
     ASSIGNMENT_KEY,
@@ -344,22 +342,6 @@ from qmb.runloop import (
     script_replay_clock,
     stream_set_from_config,
     trading_evidence_range,
-)
-
-STRUCTURAL_SEED: Final[tuple[str, ...]] = (
-    "runloop",
-    "config",
-    "registryread",
-    "execution",
-    "data",
-    "optimize",
-    "robustness",
-    "results",
-    "ledger",
-    "orchestrator",
-    "doors/cli",
-    "doors/api",
-    "doors/mcp",
 )
 
 __all__ = [

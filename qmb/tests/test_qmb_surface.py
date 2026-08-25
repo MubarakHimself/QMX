@@ -199,6 +199,8 @@ def test_api_door_matches_library_surface() -> None:
     assert api.BACKEND_PACKAGES == qmb.BACKEND_PACKAGES
     assert api.identity_payload() == qmb.identity_payload()
     assert api.STATE_KIND == qmb.STATE_KIND
+    assert api.STRUCTURAL_SEED is qmb.STRUCTURAL_SEED
+    assert api.fingerprint_layers is qmb.fingerprint_layers
 
 
 def test_refuse_helpers_return_typed_refusals() -> None:

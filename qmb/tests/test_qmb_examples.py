@@ -332,6 +332,23 @@ def test_cli_refusal_usage_example_runs_clean() -> None:
     assert "qmb CLI refusal rendering ok" in completed.stdout
 
 
+def test_api_door_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "api_door_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "importable from uv-added qmb as qmb.doors.api" in completed.stdout
+    assert "thin re-export: api.run is qmb.run" in completed.stdout
+    assert "refusal returned verbatim, not raised" in completed.stdout
+    assert "UI backend consumes this in-process; never HTTP" in completed.stdout
+    assert "direct library run() produces no governed evidence" in completed.stdout
+    assert "qmb Python API door ok" in completed.stdout
+
+
 def test_cli_tree_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "cli_tree_usage.py")],

@@ -8,7 +8,10 @@ WriterId-scoped JSONL fragments (AR-51, AR-53, B-4). Story 15.5 delivers
 per-run AD-14 operational logs streamed by the orchestrator (B-4, AR-35,
 CT-11). Story 16.2 delivers CLI refusal rendering: a typed refusal is
 RETURNED by the library and rendered by the door as a nonzero exit plus
-machine-readable stderr JSON (AR-58, CT-04).
+machine-readable stderr JSON (AR-58, CT-04). Story 16.3 delivers the Python
+API door as a thin in-process re-export: refusals return verbatim, never
+raised, and a direct library call writes no governed evidence (B-1, B-4,
+AR-58).
 
 ### FR-1: Cancel or per-run limit breach aborts one OS process
 
@@ -172,3 +175,20 @@ machine-readable stderr JSON (AR-58, CT-04).
   stderr — `category` says what kind of miss, `context` names the facts,
   `retryability` says whether a retry can work. Do not parse prose. A
   crash (programmer error) is still an exception, not this JSON.
+
+### FR-10: Python API door returns a typed refusal verbatim
+
+- **Failure class:** the library's CT-04 category, unchanged. The door does
+  not mint a second category and does not render JSON.
+- **Detection:** a library function invoked through `qmb.doors.api` returns
+  `Ok[T] | TypedRefusal`. `is_refusal` is true; nothing is raised.
+- **Auto-recovery / retry:** none at the door. Retryability is a field on
+  the refusal. The door does not retry, prompt, wrap, or swallow.
+- **Visible degraded state:** the caller holds the same refusal object the
+  library produced. No ledger line is written. No HTTP response exists —
+  this door is in-process only.
+- **Notification tier:** caller-visible return value (notebooks, UI backend).
+- **Product-user affordance:** the call did not succeed. Inspect `category`,
+  `context`, and `retryability` on the returned object. Do not catch it as
+  an exception — a crash (programmer error) is still an exception, not a
+  refusal. Direct `run()` in research still produces no governed evidence.

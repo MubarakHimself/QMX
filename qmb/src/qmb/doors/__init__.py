@@ -2,7 +2,8 @@
 
 Every capability exists once, in the library, as a pure function. Doors carry
 only adaptation logic. The ``qmb`` CLI is the product face; the Python API
-exposes the same surface; the MCP door is scaffolded and ships after CLI v1.
+exposes the same surface in-process (never HTTP); the MCP door is scaffolded
+and ships after CLI v1.
 """
 
 from __future__ import annotations

@@ -1,13 +1,18 @@
 """Thin Python API door — the same pure-function surface as ``import qmb`` (B-1).
 
 In-process re-export for the UI backend and for research. No second cache,
-no run-id of its own (DEC-0159).
+no run-id of its own, never stacked over HTTP (DEC-0159). Direct calls
+return values and produce no governed evidence (B-4). Refusals are the
+library union, returned verbatim (AR-58). Importable from ``uv add qmb``
+(B-13).
 """
 
 from __future__ import annotations
 
+from typing import Final
+
 from qmb._backends import BACKEND_PACKAGES, backend_display_versions
-from qmb._display import __version__, identity_payload
+from qmb._display import STRUCTURAL_SEED, __version__, identity_payload
 from qmb.config import (
     ASSIGNMENT_IS_CANONICAL_KEY,
     ASSIGNMENT_KEY,
@@ -340,6 +345,30 @@ from qmb.runloop import (
     trading_evidence_range,
 )
 
+IN_PROCESS: Final[bool] = True
+STACKED_OVER_HTTP: Final[bool] = False
+WRITES_GOVERNED_EVIDENCE: Final[bool] = False
+HOLDS_CACHE: Final[bool] = False
+COMPUTES_RUN_ID: Final[bool] = False
+CHANNEL: Final[str] = "uv add qmb"
+CONSUMER: Final[str] = "ui-backend"
+TRANSPORT: Final[str] = "in-process"
+
+
+def api_door_identity() -> dict[str, object]:
+    """Identity-bearing Python-door fields (B-1, B-4, B-13). SemVer excluded."""
+    return {
+        "channel": CHANNEL,
+        "computes_run_id": COMPUTES_RUN_ID,
+        "consumer": CONSUMER,
+        "holds_cache": HOLDS_CACHE,
+        "in_process": IN_PROCESS,
+        "stacked_over_http": STACKED_OVER_HTTP,
+        "transport": TRANSPORT,
+        "writes_governed_evidence": WRITES_GOVERNED_EVIDENCE,
+    }
+
+
 __all__ = [
     "ABORT_KILLS_SIBLINGS",
     "ACCOUNT_ROLE_KEY",
@@ -361,6 +390,7 @@ __all__ = [
     "CAUSE_CANCEL",
     "CAUSE_MEMORY_LIMIT",
     "CAUSE_TIME_LIMIT",
+    "CHANNEL",
     "CHART_SERIES_IN_IDENTITY",
     "CITE_FIELDS",
     "CLAIMS_EDGE",
@@ -374,8 +404,10 @@ __all__ = [
     "COMPLETENESS_FORMING",
     "COMPOSITION_ORDER",
     "COMPOSITION_VERSION",
+    "COMPUTES_RUN_ID",
     "CONCURRENCY_IS_SCHEDULING_ONLY",
     "CONFIG_FRAGMENT_CLASS",
+    "CONSUMER",
     "CORRELATION_ID_EXCLUDED_FROM_FP1",
     "CPU_BUDGET_KEY",
     "DAEMON",
@@ -406,10 +438,12 @@ __all__ = [
     "FRAGMENT_KNOWN_FORMAT_VERSIONS",
     "FRAGMENT_LINEAGE_EDGE_TYPE",
     "GAP_0048_OPEN",
+    "HOLDS_CACHE",
     "HTML_PAYLOAD",
     "HUB_KIND",
     "IDENTITY_FIELDS",
     "IMPURE_OWNER",
+    "IN_PROCESS",
     "LAYER_PRECEDENCE",
     "LEDGER_FORMAT_VERSION",
     "LEDGER_FORMAT_VERSION_1",
@@ -469,6 +503,7 @@ __all__ = [
     "SOURCE_PRESET",
     "SPAWN_MODEL",
     "SPENDS_SPLIT_BUDGET",
+    "STACKED_OVER_HTTP",
     "STALE_EVIDENCE_SEVERITY_KEY",
     "STARTING_CAPITAL_KEY",
     "STATE_KIND",
@@ -476,6 +511,7 @@ __all__ = [
     "STREAM_ROLE_DATA_ONLY",
     "STREAM_ROLE_TRADING",
     "STREAM_SET_KEY",
+    "STRUCTURAL_SEED",
     "SUBPHASES",
     "TAINT_IS_IDENTITY",
     "TAINT_OPTIMISTIC",
@@ -484,11 +520,13 @@ __all__ = [
     "TIMESTAMP_ENCODING",
     "TIMESTAMP_EXCLUDED_FROM_FP1",
     "TIME_LIMIT_KEY",
+    "TRANSPORT",
     "VIRTUAL_LEDGER_CLASS",
     "WARMUP_ADDS_SECOND_WINDOW",
     "WARMUP_MECHANISM",
     "WARMUP_UNIT",
     "WRITER_NAME",
+    "WRITES_GOVERNED_EVIDENCE",
     "Admission",
     "AsOfSet",
     "CancelToken",
@@ -564,6 +602,7 @@ __all__ = [
     "act_on_bar",
     "admit_open",
     "advance_frontier",
+    "api_door_identity",
     "append_run_log",
     "apply_ct33_compiler_extensions",
     "apply_execution_ports",
