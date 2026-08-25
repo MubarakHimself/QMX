@@ -349,6 +349,23 @@ def test_api_door_usage_example_runs_clean() -> None:
     assert "qmb Python API door ok" in completed.stdout
 
 
+def test_door_parity_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "door_parity_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "CLI and Python API share the catalog:" in completed.stdout
+    assert "shipped doors: cli, api; MCP not in the door-set" in completed.stdout
+    assert "a capability on one door missing from the other fails" in completed.stdout
+    assert "CLI: nonzero exit + stderr JSON" in completed.stdout
+    assert "Python: refusal union verbatim" in completed.stdout
+    assert "qmb door parity ok" in completed.stdout
+
+
 def test_cli_autocomplete_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "cli_autocomplete_usage.py")],

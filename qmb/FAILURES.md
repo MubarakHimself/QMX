@@ -13,7 +13,11 @@ API door as a thin in-process re-export: refusals return verbatim, never
 raised, and a direct library call writes no governed evidence (B-1, B-4,
 AR-58). Story 16.4 delivers registry-enumeration autocomplete through the
 one B-15 registry-read port: click native ``shell_complete``, never a
-door-side cache, never a live service query.
+door-side cache, never a live service query. Story 16.5 delivers the
+tier-2 door-parity contract test: identical function surface and
+semantics across the shipped CLI and Python API doors, with per-transport
+refusal rendering (CLI nonzero + stderr JSON; Python refusal union
+verbatim).
 
 ### FR-1: Cancel or per-run limit breach aborts one OS process
 
@@ -220,3 +224,27 @@ door-side cache, never a live service query.
   network miss. Point the CLI at the registry-read port (the same one the
   compiler uses). When a new Book shows up, it arrived as a newer as-of
   set — create nothing locally to "refresh" the CLI.
+
+### FR-12: A capability exists on one shipped door but not the other
+
+- **Failure class:** factory-gate contract failure (B-1 door parity), not a
+  new CT-04 category. The underlying library refusal, when one exists, is
+  unchanged and still rendered per transport (FR-9, FR-10).
+- **Detection:** the tier-2 door-parity catalog (`qmb.doors.CAPABILITY_LIBRARY`)
+  is compared to the CLI command tree and to the Python API door's names.
+  `capability_gaps` reports `extra_cli`, `missing_cli`, or `missing_api`.
+  Any non-empty tuple fails `poe test` / `poe check-integration`.
+- **Auto-recovery / retry:** none. Add the capability to both shipped doors
+  (CLI command + the same library function on `qmb.doors.api`) and to the
+  catalog, or remove the one-door-only surface. MCP is not in the door-set
+  until it ships.
+- **Visible degraded state:** the work unit does not land. Existing doors
+  keep serving the catalogued capabilities. No second cache, no second
+  run-id, and no swallowed refusal is introduced to "paper over" the drift.
+- **Notification tier:** factory-visible pytest failure on the parity
+  contract test.
+- **Product-user affordance:** agents and the operator must see the same
+  function surface. If `qmb` gained a command the Python API cannot call
+  (or the reverse), that is a bug — do not document it as a CLI-only
+  feature. Put the capability in the library once and wrap it on every
+  shipped door.
