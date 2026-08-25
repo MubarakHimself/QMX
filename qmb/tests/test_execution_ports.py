@@ -330,7 +330,7 @@ def test_ports_are_separate_typing_protocols() -> None:
     assert identity["claims_edge"] is False
     assert identity["spends_split_budget"] is False
     assert identity["gap_0048_open"] is True
-    assert identity["adapters_deferred_to"] == "epic-17"
+    assert identity["adapter_binding"] == "resolved-run-config"
     assert identity["financing_is_order_fill"] is False
 
 

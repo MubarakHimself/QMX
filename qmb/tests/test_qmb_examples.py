@@ -92,6 +92,29 @@ def test_completed_boundary_usage_example_runs_clean() -> None:
     assert "completed-boundary derivation ok" in completed.stdout
 
 
+def test_execution_composition_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "execution_composition_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "bound from resolved run-config" in completed.stdout
+    assert "fill → slippage → cost" in completed.stdout
+    assert "never a bot-sized order" in completed.stdout
+    assert "full-loss price required before open" in completed.stdout
+    assert "risk-reducing exit admitted without new full-loss" in completed.stdout
+    assert "fidelity identity is adapter-id + composition-version + taint" in completed.stdout
+    assert "optimistic taint" in completed.stdout
+    assert "lowest fidelity of bound adapters" in completed.stdout
+    assert "mixed-fidelity Book-bar comparison refused" in completed.stdout
+    assert "world=simulated refused" in completed.stdout
+    assert "replay-on-synthetic is invalid input" in completed.stdout
+    assert "execution composition ok" in completed.stdout
+
+
 def test_execution_ports_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "execution_ports_usage.py")],

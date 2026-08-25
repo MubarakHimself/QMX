@@ -271,3 +271,71 @@ door later ships. CLI v1 does not wait on it.
   (the CLI) or `import qmb`. A future MCP door will wrap the same library
   on 127.0.0.1, never over HTTP, and will put the refusal JSON in
   `error.data` rather than swallowing it as InternalError.
+
+### FR-14: Execution binds only from the resolved run-config
+
+- **Failure class:** `invalid input` (CT-04).
+- **Detection:** `bind_execution_ports` requires a `ResolvedRunConfig` naming
+  `fill_adapter`, `slippage_adapter`, `cost_adapter`, and
+  `financing_schedule`. A raw mapping, a port object stuffed in a key, or an
+  adapter-id outside the closed catalog is refused. There is no ambient
+  discovery.
+- **Auto-recovery / retry:** none. Name catalog adapter-ids on the resolved
+  run-config and bind again.
+- **Visible degraded state:** no ports execute. No fill is stamped.
+- **Notification tier:** operator-visible typed refusal (`field` is the
+  missing or unknown key, `known` lists the catalog).
+- **Product-user affordance:** execution modeling is assembled from the
+  wind-tunnel config, not from whatever adapter happens to be importable.
+  Put `declared-path` / `zero` / `zero` plus a financing-schedule reference
+  on the resolved run-config.
+
+### FR-15: Bot-sized orders and opens without a full-loss price
+
+- **Failure class:** `invalid input` (CT-04).
+- **Detection:** `BoundExecution.execute` requires a CT-23 `EntryIntent` or
+  `ExitIntent`. A raw bot-sized order is refused before any port runs. An
+  entry without an AD-40 full-loss price is refused before the fill port
+  is invoked. A risk-reducing CT-23 exit is admitted without a new
+  full-loss price.
+- **Auto-recovery / retry:** none. Mint an authorized intent through the
+  Book door; derive the full-loss price at that door.
+- **Visible degraded state:** no fill, slippage, or cost runs.
+- **Notification tier:** operator-visible typed refusal (`field=intent` or
+  the full-loss refusal from CT-23).
+- **Product-user affordance:** the bot does not size. Opens need a
+  Book-resolved full-loss price. Closing or tightening does not require a
+  new one.
+
+### FR-16: Mixed-fidelity Book-bar comparison without override
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `compare_book_bar_fidelity` fingerprints the two
+  `RunFidelity` labels. Differing labels without `override=True` refuse
+  (LABEL-3). Ordinal ranks are not invented; a deferred taxonomy artifact
+  is consumed when the caller already holds one (SC-07).
+- **Auto-recovery / retry:** none automatic. Pass `override=True` only when
+  the operator explicitly wants the mixed comparison.
+- **Visible degraded state:** the two Book-bar results stay uncompared.
+- **Notification tier:** operator-visible typed refusal (`field=fidelity`).
+- **Product-user affordance:** do not rank a quote-real Book against an
+  optimistic-tainted one unless you say so. Until GAP-0048 every fill is
+  optimistic-tainted and cannot claim edge or spend split budget.
+
+### FR-17: world=simulated or replay-on-synthetic at composition
+
+- **Failure class:** `policy rejection` for `world=simulated`; `invalid
+  input` for a replay clock bound to synthetic-tainted data (CT-04).
+- **Detection:** `bind_execution_ports` checks clock and provenance before
+  looking up adapters. Store-persisted synthetic data is
+  `world=simulated` and a policy rejection for governed evidence until
+  GAP-0048. Replay-on-synthetic is invalid input because B-7 wins.
+- **Auto-recovery / retry:** none. Use recorded or procedure-ephemeral
+  provenance with a replay clock for governed replay.
+- **Visible degraded state:** no port-set is bound. Optimistic-tainted
+  runs still cannot claim edge or spend split budget.
+- **Notification tier:** operator-visible typed refusal (`field=world` or
+  `field=clock`, `gap=GAP-0048`).
+- **Product-user affordance:** generated store data is infrastructure
+  stress only. It is not a backtest and it is not edge. A replay clock
+  cannot be pointed at synthetic-tainted rooms.

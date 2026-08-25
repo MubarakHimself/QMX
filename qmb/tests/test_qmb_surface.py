@@ -35,6 +35,7 @@ def test_seed_identities_exclude_semver() -> None:
         qmb.layers_identity(),
         qmb.read_port_identity(),
         qmb.ports_identity(),
+        qmb.composition_identity(),
         qmb.data_front_identity(),
         qmb.sampler_identity(),
         qmb.ladder_identity(),

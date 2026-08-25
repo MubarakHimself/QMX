@@ -2,12 +2,13 @@
 
 Inbound execution is a CT-23 Book-resolved authorized intent or a typed
 refusal — never a bot-sized order. Fill, slippage, and cost are SEPARATE
-``typing.Protocol`` ports; Epic 17 implements adapters. Fill decides
-``Fill | NoFill | PartialFill`` with partial quantities first-class. Every
-fill carries an ``optimistic`` taint until GAP-0048. Store-persisted
-synthetic data derives ``world=simulated`` and is a ``policy rejection`` for
-governed evidence. Financing is a scheduled position-level cash event, never
-an order fill. Nothing here imports ``qmf-venue``.
+``typing.Protocol`` ports; Story 17.1 binds adapters from the resolved
+run-config. Fill decides ``Fill | NoFill | PartialFill`` with partial
+quantities first-class. Every fill carries an ``optimistic`` taint until
+GAP-0048. Store-persisted synthetic data derives ``world=simulated`` and is
+a ``policy rejection`` for governed evidence. Financing is a scheduled
+position-level cash event, never an order fill. Nothing here imports
+``qmf-venue``.
 """
 
 from __future__ import annotations
@@ -91,7 +92,7 @@ GAP_0048_OPEN: Final[bool] = True
 CLAIMS_EDGE: Final[bool] = False
 SPENDS_SPLIT_BUDGET: Final[bool] = False
 FINANCING_IS_ORDER_FILL: Final[bool] = False
-_ADAPTERS_DEFERRED_TO: Final[str] = "epic-17"
+_ADAPTER_BINDING: Final[str] = "resolved-run-config"
 _LEGAL_PROVENANCE: Final[frozenset[str]] = frozenset(
     {
         PROVENANCE_RECORDED,
@@ -119,7 +120,7 @@ FILL_DECISIONS: Final[tuple[str, ...]] = (
 def ports_identity() -> dict[str, object]:
     """Identity-bearing execution-port fields. Package SemVer is omitted."""
     return {
-        "adapters_deferred_to": _ADAPTERS_DEFERRED_TO,
+        "adapter_binding": _ADAPTER_BINDING,
         "authorized_intent": (
             f"{EntryIntent.__module__}.{EntryIntent.__qualname__}",
             f"{ExitIntent.__module__}.{ExitIntent.__qualname__}",
@@ -275,7 +276,7 @@ class SlicePath:
     """Declared intra-slice path the fill port crosses (B-6).
 
     Same (possibly gap-fixed) series the slice's bars consume — never a future
-    or a divergent series. Adapters (Epic 17) decide the crossing.
+    or a divergent series. Adapters decide the crossing.
     """
 
     stream_id: str
@@ -549,7 +550,7 @@ FillDecision: TypeAlias = Fill | NoFill | PartialFill
 class CostedFill:
     """A post-slip fill with itemized exact-integer cash charges (B-6).
 
-    Each partial carries its own pro-rated fee — adapters (Epic 17) itemize;
+    Each partial carries its own pro-rated fee — adapters itemize;
     this type makes that per-fill cost set first-class.
     """
 
@@ -599,7 +600,7 @@ def classify_fill_quantity(
     """Cap by position size and lot step; classify Fill, PartialFill, or NoFill.
 
     Partial quantities are first-class. A zero after the lot-step snap is
-    ``NoFill``. Adapters (Epic 17) produce the raw filled count; this pins the
+    ``NoFill``. Adapters produce the raw filled count; this pins the
     composition invariant.
     """
     wanted = _require_quantity(requested, "requested_quantity")
@@ -690,7 +691,7 @@ def classify_fill_quantity(
 
 @runtime_checkable
 class FillPort(Protocol):
-    """Pinned fill seam. Epic 17 implements adapters (B-6, AR-56)."""
+    """Pinned fill seam. Adapters bind from the resolved run-config (B-6, AR-56)."""
 
     def decide(
         self,
@@ -759,11 +760,11 @@ class ExecutionPorts:
         cost: object,
         financing: object,
     ) -> Result[ExecutionPorts]:
-        """Bind SEPARATE Protocol ports. Adapters are Epic 17."""
+        """Bind SEPARATE Protocol ports. Adapters bind from the resolved run-config."""
         if not isinstance(fill, FillPort):
             return invalid(
                 "fill",
-                "fill is a pinned FillPort Protocol seam; Epic 17 implements adapters",
+                "fill is a pinned FillPort Protocol seam; adapters bind from the resolved run-config",
                 given=repr(type(fill).__name__),
             )
         if not isinstance(slippage, SlippagePort):

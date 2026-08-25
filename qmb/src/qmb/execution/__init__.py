@@ -2,12 +2,46 @@
 
 Inbound execution is a CT-23 Book-resolved intent (or a typed refusal). Ports
 execute an authorized intent, never a bot-sized order, and never a venue
-command (DEC-0164). Fill/slippage/cost ``typing.Protocol`` seams are pinned
-here; Epic 17 implements adapters.
+command (DEC-0164). Adapters bind only from the resolved run-config.
 """
 
 from __future__ import annotations
 
+from qmb.execution.adapters import (
+    AMBIENT_DISCOVERY,
+    COST_ADAPTER_CATALOG,
+    COST_ADAPTER_ZERO,
+    FILL_ADAPTER_CATALOG,
+    FILL_ADAPTER_DECLARED_PATH,
+    FINANCING_ADAPTER_SCHEDULED,
+    SLIPPAGE_ADAPTER_CATALOG,
+    SLIPPAGE_ADAPTER_ZERO,
+    DeclaredPathFillAdapter,
+    FinancingScheduler,
+    ZeroCostAdapter,
+    ZeroSlippageAdapter,
+)
+from qmb.execution.binder import (
+    BOUND_FROM_RESOLVED_CONFIG,
+    COST_ADAPTER_KEY,
+    FILL_ADAPTER_KEY,
+    FINANCING_SCHEDULE_KEY,
+    SLIPPAGE_ADAPTER_KEY,
+    BoundExecution,
+    bind_execution_ports,
+    composition_identity,
+    fingerprint_composition,
+)
+from qmb.execution.fidelity import (
+    FIDELITY_TAXONOMY_DEFERRED_TO,
+    FidelityIdentity,
+    FidelityTaxonomy,
+    RunFidelity,
+    compare_book_bar_fidelity,
+    compute_run_fidelity,
+    lowest_fidelity,
+    stamp_fidelity,
+)
 from qmb.execution.ports import (
     CLAIMS_EDGE,
     COMPOSITION_ORDER,
@@ -52,37 +86,65 @@ from qmb.execution.risk import (
 )
 
 __all__ = [
+    "AMBIENT_DISCOVERY",
+    "BOUND_FROM_RESOLVED_CONFIG",
     "CLAIMS_EDGE",
     "COMPOSITION_ORDER",
     "COMPOSITION_VERSION",
+    "COST_ADAPTER_CATALOG",
+    "COST_ADAPTER_KEY",
+    "COST_ADAPTER_ZERO",
+    "FIDELITY_TAXONOMY_DEFERRED_TO",
+    "FILL_ADAPTER_CATALOG",
+    "FILL_ADAPTER_DECLARED_PATH",
+    "FILL_ADAPTER_KEY",
     "FILL_DECISIONS",
+    "FINANCING_ADAPTER_SCHEDULED",
     "FINANCING_IS_ORDER_FILL",
+    "FINANCING_SCHEDULE_KEY",
     "GAP_0048_OPEN",
     "PORT_ROLES",
+    "SLIPPAGE_ADAPTER_CATALOG",
+    "SLIPPAGE_ADAPTER_KEY",
+    "SLIPPAGE_ADAPTER_ZERO",
     "SPENDS_SPLIT_BUDGET",
     "TAINT_IS_IDENTITY",
     "TAINT_OPTIMISTIC",
     "AuthorizedIntent",
+    "BoundExecution",
     "CostPort",
     "CostedFill",
+    "DeclaredPathFillAdapter",
     "ExecutionPorts",
+    "FidelityIdentity",
+    "FidelityTaxonomy",
     "Fill",
     "FillDecision",
     "FillKind",
     "FillPort",
     "Filled",
     "FinancingPort",
+    "FinancingScheduler",
     "NoFill",
     "PartialFill",
+    "RunFidelity",
     "SlicePath",
     "SlippagePort",
+    "ZeroCostAdapter",
+    "ZeroSlippageAdapter",
     "admit_open",
     "apply_execution_ports",
+    "bind_execution_ports",
     "classify_fill_quantity",
+    "compare_book_bar_fidelity",
+    "composition_identity",
+    "compute_run_fidelity",
     "derive_world_from_provenance",
     "evaluate_exit",
     "execute_authorized",
+    "fingerprint_composition",
     "fingerprint_ports",
+    "lowest_fidelity",
     "mint_replay_exit",
     "ports_identity",
     "record_virtual_close",
@@ -90,4 +152,5 @@ __all__ = [
     "refuse_store_synthetic_governed_evidence",
     "require_authorized_intent",
     "require_full_loss_before_open",
+    "stamp_fidelity",
 ]
