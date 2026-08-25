@@ -341,6 +341,8 @@ def test_ct32_label_declares_spread_calibration_fingerprint() -> None:
             handler=SilentSliceHandler(),
         )
     )
+    assert labelled.performance_result is not None
+    assert baseline.performance_result is not None
     inputs = labelled.performance_result.result_label.input_fingerprints
     assert cal.fingerprint in inputs
     assert cal.fingerprint not in baseline.performance_result.result_label.input_fingerprints

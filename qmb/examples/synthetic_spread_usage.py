@@ -219,6 +219,7 @@ def main() -> None:
         ),
         "run",
     )
+    assert outcome.performance_result is not None
     assert cal.fingerprint in outcome.performance_result.result_label.input_fingerprints
     print("CT-32 label declares the spread calibration fingerprint")
     print("synthetic spread ok")
