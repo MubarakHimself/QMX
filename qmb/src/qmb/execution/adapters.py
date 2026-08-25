@@ -4,8 +4,8 @@ Fill, slippage, and cost are SEPARATE adapters. Calibration *content* (spread
 tables, slip parameters, commission rates, swap points) stays deferred to
 GAP-0048 — these adapters invent no numbers. The ``zero`` slippage and cost
 shapes are the named catalog entries from SLIP-2 / FEE-2, never a silent default.
-The financing scheduler is bound from a schedule reference and refuses to apply
-a swap until that artifact's content exists (FEE-4).
+The financing scheduler is bound from a schedule reference plus an optional
+swap-table calibration (FEE-4).
 """
 
 from __future__ import annotations
@@ -15,10 +15,8 @@ from types import MappingProxyType
 from typing import Final
 
 from qmf.core.chrono import Duration
-from qmf.core.exact import Money
 from qmf.core.refusal import Ok, Result, is_refusal
 
-from qmb._refuse import unavailable
 from qmb.execution.cost import (
     COST_ADAPTER_CATALOG,
     COST_ADAPTER_NOTIONAL_MINIMUM,
@@ -38,6 +36,11 @@ from qmb.execution.fill import (
     FILL_BASES,
     FILL_BASIS_WORST_CASE,
     cross_declared_path,
+)
+from qmb.execution.financing import (
+    FINANCING_ADAPTER_SCHEDULED,
+    FINANCING_CALIBRATION_KEY,
+    FinancingScheduler,
 )
 from qmb.execution.ports import (
     COMPOSITION_VERSION,
@@ -76,6 +79,7 @@ __all__ = [
     "FILL_ADAPTER_CATALOG",
     "FILL_ADAPTER_DECLARED_PATH",
     "FINANCING_ADAPTER_SCHEDULED",
+    "FINANCING_CALIBRATION_KEY",
     "SLIPPAGE_ADAPTER_CATALOG",
     "SLIPPAGE_ADAPTER_CONSTANT_PERCENT",
     "SLIPPAGE_ADAPTER_GAP_VOLATILITY",
@@ -98,7 +102,6 @@ __all__ = [
 
 AMBIENT_DISCOVERY: Final[bool] = False
 FILL_ADAPTER_DECLARED_PATH: Final[str] = "declared-path"
-FINANCING_ADAPTER_SCHEDULED: Final[str] = "scheduled"
 
 
 @dataclass(frozen=True, slots=True)
@@ -153,41 +156,6 @@ class DeclaredPathFillAdapter:
             order=order,
             fill_basis=basis,
             stale_price_span=span,
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class FinancingScheduler:
-    """Scheduled position-level cash event, never an order fill (B-6, FEE-4).
-
-    Bound from a financing-schedule reference. Calibration content (swap points,
-    triple-swap weekday, sign convention) is deferred to GAP-0048; applying a
-    swap without that artifact is a typed refusal, never a silent zero.
-    """
-
-    schedule_ref: str
-    adapter_id: str = FINANCING_ADAPTER_SCHEDULED
-    composition_version: int = COMPOSITION_VERSION
-    taint: str = TAINT_OPTIMISTIC
-
-    def fidelity(self) -> Result[FidelityIdentity]:
-        """Stamp adapter-id + composition-version + schedule ref + optimistic taint."""
-        return stamp_fidelity(
-            f"financing.{self.adapter_id}",
-            composition_version=self.composition_version,
-            calibration_ref=self.schedule_ref,
-        )
-
-    def schedule(self, *, stream_id: str, direction: object) -> Result[Money]:
-        """Refuse to invent swap content; never return a silent zero debit."""
-        del stream_id, direction
-        return unavailable(
-            "financing_schedule",
-            "swap/financing calibration content is deferred to GAP-0048; absence "
-            "never silently zeros (B-6, FEE-4, SC-07)",
-            schedule_ref=self.schedule_ref,
-            gap="GAP-0048",
-            financing_is_order_fill=False,
         )
 
 

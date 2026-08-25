@@ -39,6 +39,7 @@ def test_seed_identities_exclude_semver() -> None:
         qmb.fill_pipeline_identity(),
         qmb.slippage_identity(),
         qmb.cost_identity(),
+        qmb.financing_identity(),
         qmb.spread_identity(),
         qmb.data_front_identity(),
         qmb.sampler_identity(),

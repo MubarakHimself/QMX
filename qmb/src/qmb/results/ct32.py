@@ -34,6 +34,10 @@ from qmf.risk.performance import (
 
 from qmb._refuse import clean_token, invalid, policy
 from qmb.config.compiler import ResolvedRunConfig
+from qmb.execution.financing import (
+    FINANCING_CALIBRATION_KEY,
+    financing_calibration_fingerprint,
+)
 from qmb.execution.spread import SPREAD_CALIBRATION_KEY, spread_calibration_fingerprint
 
 __all__ = [
@@ -156,6 +160,12 @@ def mint_run_performance_result(
         if is_refusal(calibration_fp):
             return calibration_fp
         inputs.append(calibration_fp.value)
+    cited_financing = config.keys.get(FINANCING_CALIBRATION_KEY)
+    if cited_financing is not None:
+        financing_fp = financing_calibration_fingerprint(cited_financing)
+        if is_refusal(financing_fp):
+            return financing_fp
+        inputs.append(financing_fp.value)
     label = ResultLabel.try_create(
         producer.value,
         CT32_CONTRACT_FORMAT_VERSION,

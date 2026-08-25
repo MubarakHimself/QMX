@@ -28,7 +28,6 @@ from qmb.execution.adapters import (
     FINANCING_ADAPTER_SCHEDULED,
     SLIPPAGE_ADAPTER_CATALOG,
     DeclaredPathFillAdapter,
-    FinancingScheduler,
 )
 from qmb.execution.cost import COST_CALIBRATION_KEY, CommissionCalibration
 from qmb.execution.fidelity import FidelityIdentity, RunFidelity, compute_run_fidelity
@@ -37,6 +36,11 @@ from qmb.execution.fill import (
     FILL_BASIS_KEY,
     FILL_BASIS_WORST_CASE,
     STALE_PRICE_SPAN_KEY,
+)
+from qmb.execution.financing import (
+    FINANCING_CALIBRATION_KEY,
+    FinancingScheduler,
+    SwapCalibration,
 )
 from qmb.execution.ports import (
     COMPOSITION_ORDER,
@@ -207,7 +211,7 @@ def bind_execution_ports(config: object) -> Result[BoundExecution]:
     cost = _build_cost(cost_id.value, resolved.value)
     if is_refusal(cost):
         return cost
-    financing = FinancingScheduler(schedule_ref=schedule.value)
+    financing = _build_financing(schedule.value, resolved.value)
     ports = ExecutionPorts.try_create(fill.value, slippage.value, cost.value, financing)
     if is_refusal(ports):
         return ports
@@ -253,6 +257,12 @@ def _build_fill(adapter_id: str, config: ResolvedRunConfig) -> Result[object]:
     if cls is DeclaredPathFillAdapter:
         return Ok(DeclaredPathFillAdapter(fill_basis=token, stale_price_span=duration))
     return Ok(cls())
+
+
+def _build_financing(schedule_ref: str, config: ResolvedRunConfig) -> FinancingScheduler:
+    raw = config.keys.get(FINANCING_CALIBRATION_KEY)
+    calibration = raw if isinstance(raw, SwapCalibration) else None
+    return FinancingScheduler(schedule_ref=schedule_ref, calibration=calibration)
 
 
 def _build_cost(adapter_id: str, config: ResolvedRunConfig) -> Result[object]:

@@ -339,3 +339,23 @@ door later ships. CLI v1 does not wait on it.
 - **Product-user affordance:** generated store data is infrastructure
   stress only. It is not a backtest and it is not edge. A replay clock
   cannot be pointed at synthetic-tainted rooms.
+
+### FR-18: Missing swap table never silently zeros financing
+
+- **Failure class:** `unavailable dependency` (CT-04).
+- **Detection:** the financing scheduler requires a versioned per-broker swap
+  calibration at the accounting-rollover instant (sub-phase 2). Absence of
+  the artifact, or of the instrument x direction cell, is refused. The
+  rollover instant is answered by the bound broker market-hours calendar;
+  a hardcoded wall time is never used.
+- **Auto-recovery / retry:** none. Bind a fingerprinted swap-schedule
+  calibration on the resolved run-config and re-run.
+- **Visible degraded state:** no rollover cash event is journaled. Multi-day
+  carry is not silently free. Fill, slippage, and commission still itemize
+  on their own lines.
+- **Notification tier:** operator-visible typed refusal (`field` is
+  `financing_schedule` or `swap_table`, `gap=GAP-0048`).
+- **Product-user affordance:** overnight financing is a scheduled cash
+  event, never an order fill. Triple-swap weekday, multiplier, sign, and
+  weekend/holiday handling come from the broker artifact. Cost drag
+  decomposes fill P&L, slippage, commission, and financing.

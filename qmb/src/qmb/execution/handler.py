@@ -1,8 +1,8 @@
-"""Run-loop sub-phase 3 handler: fill then slippage against the declared path.
+"""Run-loop handler: sub-phase 2 financing plus sub-phase 3 fill/slippage.
 
-Resting intents present at slice start fill here. Intents minted in sub-phase 5
-are not eligible against this slice's path — they rest. Intra-slice order is
-the declared-path split (FILL-6). Optimistic taint is unchanged (SC-06).
+Scheduled financing is a position-level cash event at the accounting rollover
+(not an order fill). Resting intents present at slice start fill in sub-phase 3.
+Intents minted in sub-phase 5 rest. Optimistic taint is unchanged (SC-06).
 """
 
 from __future__ import annotations
@@ -11,12 +11,13 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, cast
 
-from qmf.core.chrono import Instant
+from qmf.core.chrono import Instant, WriterId
 from qmf.core.exact import Quantity
+from qmf.core.fingerprint import World
 from qmf.core.refusal import Ok, Result, is_refusal
 from qmf.risk.door import EntryIntent, ExitIntent
 
-from qmb._refuse import invalid
+from qmb._refuse import invalid, unavailable
 from qmb.execution.fill import (
     FILL_BASIS_WORST_CASE,
     FillOrder,
@@ -24,10 +25,17 @@ from qmb.execution.fill import (
     rank_resting_on_path,
     split_path_at,
 )
+from qmb.execution.financing import (
+    FINANCING_CONTENT_DEFERRED_TO,
+    FinancingCashEvent,
+    OpenPosition,
+    apply_financing_rollover,
+)
 from qmb.execution.ports import (
     TAINT_OPTIMISTIC,
     Fill,
     FillPort,
+    FinancingPort,
     NoFill,
     PartialFill,
     SlicePath,
@@ -42,9 +50,17 @@ def _empty_paths() -> dict[str, SlicePath]:
     return {}
 
 
+def _empty_positions() -> list[OpenPosition]:
+    return []
+
+
+def _empty_events() -> list[FinancingCashEvent]:
+    return []
+
+
 @dataclass(slots=True)
 class ExecutionSliceHandler:
-    """SliceHandler that runs fill → slippage in sub-phase 3 (B-2)."""
+    """SliceHandler: sub-phase 2 financing, then fill → slippage in sub-phase 3."""
 
     fill: FillPort
     slippage: SlippagePort
@@ -54,6 +70,13 @@ class ExecutionSliceHandler:
     stale_price_span: object = None
     paths: dict[str, SlicePath] = field(default_factory=_empty_paths)
     remaining_paths: dict[str, SlicePath] = field(default_factory=_empty_paths)
+    financing: FinancingPort | None = None
+    rollover_calendar: object | None = None
+    open_positions: list[OpenPosition] = field(default_factory=_empty_positions)
+    financing_writer: WriterId | None = None
+    financing_world: World = World.REPLAY
+    financing_sequence: int = 0
+    financing_events: list[FinancingCashEvent] = field(default_factory=_empty_events)
 
     def update_stream(
         self,
@@ -65,7 +88,37 @@ class ExecutionSliceHandler:
         return Ok(None)
 
     def scheduled_position_event(self, stream_id: str, frontier: Instant) -> Result[None]:
-        del stream_id, frontier
+        """Sub-phase 2: apply swap at the calendar's accounting-rollover instant."""
+        if self.financing is None:
+            return Ok(None)
+        if self.rollover_calendar is None:
+            return unavailable(
+                "calendar",
+                "the accounting-rollover instant comes from the bound broker "
+                "market-hours calendar, never a hardcoded wall time (AD-8, DEC-0135, FEE-4)",
+                stream_id=stream_id,
+                gap=FINANCING_CONTENT_DEFERRED_TO,
+            )
+        if self.financing_writer is None:
+            return invalid(
+                "writer",
+                "a CT-13 financing event is written under an AD-8 WriterId",
+                stream_id=stream_id,
+            )
+        applied = apply_financing_rollover(
+            self.financing,
+            tuple(self.open_positions),
+            frontier=frontier,
+            calendar=self.rollover_calendar,
+            writer=self.financing_writer,
+            world=self.financing_world,
+            start_sequence=self.financing_sequence,
+            stream_id=stream_id,
+        )
+        if is_refusal(applied):
+            return applied
+        self.financing_events.extend(applied.value.events)
+        self.financing_sequence += len(applied.value.events)
         return Ok(None)
 
     def update_closed_data(

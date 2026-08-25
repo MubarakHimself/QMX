@@ -160,6 +160,27 @@ def test_cost_port_usage_example_runs_clean() -> None:
     assert "cost port ok" in completed.stdout
 
 
+def test_financing_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "financing_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "financing is a scheduled cash event, not an order fill" in completed.stdout
+    assert "applied at the broker calendar rollover, not per slice" in completed.stdout
+    assert "triple-swap weekday and multiplier come from the artifact" in completed.stdout
+    assert "weekend/holiday handling comes from the artifact" in completed.stdout
+    assert "missing calibration is typed refusal, never silent zero" in completed.stdout
+    assert "distinct CT-13 journal event, not a fill" in completed.stdout
+    assert "cost drag decomposes fill P&L / slippage / commission / financing" in completed.stdout
+    assert "CT-32 label declares the financing calibration fingerprint" in completed.stdout
+    assert "optimistic taint; no edge claim until GAP-0048" in completed.stdout
+    assert "financing ok" in completed.stdout
+
+
 def test_execution_composition_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "execution_composition_usage.py")],
