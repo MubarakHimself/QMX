@@ -764,7 +764,8 @@ class ExecutionPorts:
         if not isinstance(fill, FillPort):
             return invalid(
                 "fill",
-                "fill is a pinned FillPort Protocol seam; adapters bind from the resolved run-config",
+                "fill is a pinned FillPort Protocol seam; adapters bind from the "
+                "resolved run-config",
                 given=repr(type(fill).__name__),
             )
         if not isinstance(slippage, SlippagePort):

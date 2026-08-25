@@ -33,6 +33,7 @@ from qmb.execution import (
     TAINT_IS_IDENTITY,
     TAINT_OPTIMISTIC,
     BoundExecution,
+    CostedFill,
     CostPort,
     DeclaredPathFillAdapter,
     FidelityIdentity,
@@ -436,6 +437,7 @@ def test_full_loss_required_before_open_exits_skip_it() -> None:
         book_resolved_requested_r=_ok(ExactRational.try_create(1, 1, UnitKind.R_MULTIPLE)),
     )
     assert is_ok(opened)
+    assert isinstance(opened.value, CostedFill)
     assert opened.value.fill.taint == TAINT_OPTIMISTIC
     closed = bound.execute(
         intent=_exit(),

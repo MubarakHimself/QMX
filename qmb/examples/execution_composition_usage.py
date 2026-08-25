@@ -40,6 +40,7 @@ from qmb.execution import (
     SLIPPAGE_ADAPTER_KEY,
     SLIPPAGE_ADAPTER_ZERO,
     TAINT_OPTIMISTIC,
+    CostedFill,
     SlicePath,
     bind_execution_ports,
     compare_book_bar_fidelity,
@@ -89,7 +90,7 @@ def _resolved(
     world: World | None = None,
     keys: dict[str, object] | None = None,
 ) -> qmb.ResolvedRunConfig:
-    payload = {
+    payload: dict[str, object] = {
         COST_ADAPTER_KEY: COST_ADAPTER_ZERO,
         FILL_ADAPTER_KEY: FILL_ADAPTER_DECLARED_PATH,
         FINANCING_SCHEDULE_KEY: "broker-swap-table",
@@ -204,6 +205,7 @@ def main() -> None:
         ),
         "open",
     )
+    assert isinstance(opened, CostedFill)
     assert opened.fill.taint == TAINT_OPTIMISTIC
     print("full-loss price required before open")
     _unwrap(
