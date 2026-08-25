@@ -138,6 +138,28 @@ def test_fill_pipeline_usage_example_runs_clean() -> None:
     assert "fill pipeline ok" in completed.stdout
 
 
+def test_cost_port_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "cost_port_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "exact-integer Money in its own currency" in completed.stdout
+    assert "no float on the money path" in completed.stdout
+    assert "each partial has its own pro-rated commission" in completed.stdout
+    assert "commission is a distinct line item" in completed.stdout
+    assert (
+        "zero | percent-of-notional | per-lot/per-1k-units | "
+        "notional-proportional-with-per-order-minimum"
+    ) in completed.stdout
+    assert "admission query matches fill-time charge" in completed.stdout
+    assert "missing calibration is typed refusal, never silent zero" in completed.stdout
+    assert "cost port ok" in completed.stdout
+
+
 def test_execution_composition_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "execution_composition_usage.py")],

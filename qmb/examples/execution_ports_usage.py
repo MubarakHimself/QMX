@@ -181,6 +181,10 @@ class _PassThroughSlip:
 
 
 class _ZeroCost:
+    def quote(self, fill: Fill | PartialFill) -> Result[Money]:
+        del fill
+        return Ok(Money(value=0, currency="USD", scale=2))
+
     def itemize(self, fill: Fill | PartialFill) -> Result[CostedFill]:
         return CostedFill.try_create(fill, ())
 

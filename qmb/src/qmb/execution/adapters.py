@@ -19,6 +19,20 @@ from qmf.core.exact import Money
 from qmf.core.refusal import Ok, Result, is_refusal
 
 from qmb._refuse import unavailable
+from qmb.execution.cost import (
+    COST_ADAPTER_CATALOG,
+    COST_ADAPTER_NOTIONAL_MINIMUM,
+    COST_ADAPTER_PER_LOT,
+    COST_ADAPTER_PERCENT_OF_NOTIONAL,
+    COST_ADAPTER_ZERO,
+    COST_CALIBRATION_KEY,
+    COST_MODELS,
+    CommissionCalibration,
+    NotionalProportionalMinimumCostAdapter,
+    PercentOfNotionalCostAdapter,
+    PerLotCostAdapter,
+    ZeroCostAdapter,
+)
 from qmb.execution.fidelity import FidelityIdentity, stamp_fidelity
 from qmb.execution.fill import (
     FILL_BASES,
@@ -29,8 +43,6 @@ from qmb.execution.ports import (
     COMPOSITION_VERSION,
     TAINT_OPTIMISTIC,
     AuthorizedIntent,
-    CostedFill,
-    CostPort,
     Fill,
     FillPort,
     NoFill,
@@ -55,7 +67,12 @@ from qmb.execution.slippage import (
 __all__ = [
     "AMBIENT_DISCOVERY",
     "COST_ADAPTER_CATALOG",
+    "COST_ADAPTER_NOTIONAL_MINIMUM",
+    "COST_ADAPTER_PERCENT_OF_NOTIONAL",
+    "COST_ADAPTER_PER_LOT",
     "COST_ADAPTER_ZERO",
+    "COST_CALIBRATION_KEY",
+    "COST_MODELS",
     "FILL_ADAPTER_CATALOG",
     "FILL_ADAPTER_DECLARED_PATH",
     "FINANCING_ADAPTER_SCHEDULED",
@@ -65,10 +82,14 @@ __all__ = [
     "SLIPPAGE_ADAPTER_SIZE_TIERED",
     "SLIPPAGE_ADAPTER_SPREAD_CROSSING",
     "SLIPPAGE_ADAPTER_ZERO",
+    "CommissionCalibration",
     "ConstantPercentSlippageAdapter",
     "DeclaredPathFillAdapter",
     "FinancingScheduler",
     "GapVolatilitySlippageAdapter",
+    "NotionalProportionalMinimumCostAdapter",
+    "PerLotCostAdapter",
+    "PercentOfNotionalCostAdapter",
     "SizeTieredSlippageAdapter",
     "SpreadCrossingSlippageAdapter",
     "ZeroCostAdapter",
@@ -77,7 +98,6 @@ __all__ = [
 
 AMBIENT_DISCOVERY: Final[bool] = False
 FILL_ADAPTER_DECLARED_PATH: Final[str] = "declared-path"
-COST_ADAPTER_ZERO: Final[str] = "zero"
 FINANCING_ADAPTER_SCHEDULED: Final[str] = "scheduled"
 
 
@@ -137,26 +157,6 @@ class DeclaredPathFillAdapter:
 
 
 @dataclass(frozen=True, slots=True)
-class ZeroCostAdapter:
-    """Named ``zero`` commission shape (FEE-2). No invented rate; no silent default."""
-
-    adapter_id: str = COST_ADAPTER_ZERO
-    composition_version: int = COMPOSITION_VERSION
-    taint: str = TAINT_OPTIMISTIC
-
-    def fidelity(self) -> Result[FidelityIdentity]:
-        """Stamp adapter-id + composition-version + optimistic taint."""
-        return stamp_fidelity(
-            f"cost.{self.adapter_id}",
-            composition_version=self.composition_version,
-        )
-
-    def itemize(self, fill: Fill | PartialFill) -> Result[CostedFill]:
-        """Itemize no commission lines — the named zero shape, not an absent model."""
-        return CostedFill.try_create(fill, ())
-
-
-@dataclass(frozen=True, slots=True)
 class FinancingScheduler:
     """Scheduled position-level cash event, never an order fill (B-6, FEE-4).
 
@@ -202,7 +202,4 @@ SLIPPAGE_ADAPTER_CATALOG: Final[MappingProxyType[str, type[SlippagePort]]] = Map
         SLIPPAGE_ADAPTER_GAP_VOLATILITY: GapVolatilitySlippageAdapter,
         SLIPPAGE_ADAPTER_SIZE_TIERED: SizeTieredSlippageAdapter,
     }
-)
-COST_ADAPTER_CATALOG: Final[MappingProxyType[str, type[CostPort]]] = MappingProxyType(
-    {COST_ADAPTER_ZERO: ZeroCostAdapter}
 )

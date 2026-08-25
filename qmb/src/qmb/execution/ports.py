@@ -931,13 +931,20 @@ class SlippagePort(Protocol):
 
 @runtime_checkable
 class CostPort(Protocol):
-    """Pinned cost seam. Itemizes exact-integer cash charges (B-6)."""
+    """Pinned cost seam. Itemizes exact-integer cash charges (B-6, FEE-1..FEE-3)."""
+
+    def quote(
+        self,
+        fill: Fill | PartialFill,
+    ) -> Result[Money]:  # pragma: no cover - protocol seam
+        """Admission query: exact-integer commission in its own currency (FEE-3)."""
+        ...
 
     def itemize(
         self,
         fill: Fill | PartialFill,
     ) -> Result[CostedFill]:  # pragma: no cover - protocol seam
-        """Itemize commission (and kin) on the post-slip fill; each partial is its own fee."""
+        """Itemize commission on the post-slip fill; each partial is its own fee."""
         ...
 
 
