@@ -315,6 +315,23 @@ def test_orchestrator_spawn_usage_example_runs_clean() -> None:
     assert "process-per-run ok" in completed.stdout
 
 
+def test_cli_refusal_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "cli_refusal_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "library RETURNED the refusal; door rendered stderr JSON" in completed.stdout
+    assert "nonzero exit + category/context/retryability" in completed.stdout
+    assert "successful run exits zero" in completed.stdout
+    assert "programmer error surfaces as an exception, not stderr JSON" in completed.stdout
+    assert "typed refusal was not raised" in completed.stdout
+    assert "qmb CLI refusal rendering ok" in completed.stdout
+
+
 def test_cli_tree_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "cli_tree_usage.py")],

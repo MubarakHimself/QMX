@@ -6,7 +6,9 @@ cancel tokens and declared per-run limits whose breach is a typed `aborted`
 refusal (AR-51, B-5, FM-6). Story 15.4 delivers the one-ledger-line law over
 WriterId-scoped JSONL fragments (AR-51, AR-53, B-4). Story 15.5 delivers
 per-run AD-14 operational logs streamed by the orchestrator (B-4, AR-35,
-CT-11).
+CT-11). Story 16.2 delivers CLI refusal rendering: a typed refusal is
+RETURNED by the library and rendered by the door as a nonzero exit plus
+machine-readable stderr JSON (AR-58, CT-04).
 
 ### FR-1: Cancel or per-run limit breach aborts one OS process
 
@@ -145,9 +147,28 @@ CT-11).
 - **Visible degraded state:** no run-config is compiled, no process is
   spawned, no ledger line is written. The command tree is otherwise intact.
 - **Notification tier:** operator-visible typed refusal (`command`,
-  `missing`, `required`).
+  `missing`, `required`) rendered by the CLI door as nonzero exit plus
+  stderr JSON (story 16.2).
 - **Product-user affordance:** this command cannot start because a required
   Book, BMS, bot, registry-read port, or output directory was not provided.
   Point it at those resources; the CLI will not guess. A successful
   backtest still takes its run id from the compiled config fingerprint —
   never from the door.
+
+### FR-9: CLI door renders a typed refusal as stderr JSON
+
+- **Failure class:** the library's CT-04 category, unchanged. The door does
+  not mint a second category.
+- **Detection:** `_transport` sees `is_refusal` on the library `Result` and
+  encodes `category`, `context`, and `retryability` (plus
+  `after_condition_descriptor` when retryability is `after-condition`).
+- **Auto-recovery / retry:** none at the door. Retryability is a field on
+  the JSON. The door does not retry, prompt, or swallow.
+- **Visible degraded state:** the process exits nonzero. stdout has no
+  success payload. stderr is one JSON object. The library function that
+  produced the refusal still RETURNED it — nothing was raised.
+- **Notification tier:** operator- and agent-visible stderr JSON.
+- **Product-user affordance:** the command did not run. Read the JSON on
+  stderr — `category` says what kind of miss, `context` names the facts,
+  `retryability` says whether a retry can work. Do not parse prose. A
+  crash (programmer error) is still an exception, not this JSON.

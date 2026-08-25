@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import json
 from importlib.metadata import version
 from pathlib import Path
 from typing import TypeVar, cast
@@ -513,8 +514,13 @@ def test_click_commands_return_typed_refusal_when_prereqs_absent() -> None:
     for args in cases:
         result = runner.invoke(main, list(args))
         assert result.exit_code != 0, args
-        text = result.output + (result.stderr or "")
-        assert "unavailable dependency" in text or "invalid input" in text
+        payload = json.loads(result.stderr)
+        assert payload["category"] in {
+            RefusalCategory.UNAVAILABLE_DEPENDENCY.value,
+            RefusalCategory.INVALID_INPUT.value,
+        }
+        assert payload["retryability"] in {"yes", "no", "after-condition"}
+        assert isinstance(payload["context"], dict)
 
 
 def test_click_catalog_and_config_show_succeed_without_resources() -> None:

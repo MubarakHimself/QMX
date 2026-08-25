@@ -17,6 +17,7 @@ from qmf.core.refusal import Result, is_ok, is_refusal
 from qmb._display import __version__
 from qmb.config import ResolvedRunConfig
 from qmb.doors import CLI_PROG
+from qmb.doors.cli.render import render_refusal
 from qmb.doors.cli.tree import (
     COMMAND_GROUPS,
     COMPUTES_RUN_ID,
@@ -57,6 +58,7 @@ __all__ = [
     "invoke_optimize_run",
     "invoke_optimize_space",
     "main",
+    "render_refusal",
     "require_prerequisites",
 ]
 
@@ -301,7 +303,7 @@ def _apply_run_spec(payload: dict[str, object], *, bot: str | None) -> None:
 
 def _transport(ctx: click.Context, result: Result[_T]) -> None:
     if is_refusal(result):
-        click.echo(str(result.category), err=True)
+        click.echo(render_refusal(result), err=True)
         ctx.exit(1)
     if is_ok(result):
         click.echo(_format_ok(result.value))
