@@ -132,3 +132,22 @@ CT-11).
 - **Product-user affordance:** you can tail this run while it lives. If it
   dies, the leftover log is only in that run's folder. It is not a scoreboard
   row and not evidence. The other runs and the ledger are intact.
+
+### FR-8: CLI command resources or config fragments are absent
+
+- **Failure class:** `unavailable dependency` (CT-04).
+- **Detection:** each `qmb` command declares its config/resource
+  prerequisites (`port`, Book/BMS fragments, run spec, slices, output root,
+  and kin). `require_prerequisites` returns before `compile_run_config` or
+  `spawn_run` run.
+- **Auto-recovery / retry:** none. Supply the missing resource and invoke
+  again. The door does not prompt, cache, or invent a default.
+- **Visible degraded state:** no run-config is compiled, no process is
+  spawned, no ledger line is written. The command tree is otherwise intact.
+- **Notification tier:** operator-visible typed refusal (`command`,
+  `missing`, `required`).
+- **Product-user affordance:** this command cannot start because a required
+  Book, BMS, bot, registry-read port, or output directory was not provided.
+  Point it at those resources; the CLI will not guess. A successful
+  backtest still takes its run id from the compiled config fingerprint —
+  never from the door.

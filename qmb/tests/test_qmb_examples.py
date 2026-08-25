@@ -315,6 +315,22 @@ def test_orchestrator_spawn_usage_example_runs_clean() -> None:
     assert "process-per-run ok" in completed.stdout
 
 
+def test_cli_tree_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "cli_tree_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "command tree groups:" in completed.stdout
+    assert "absent resources return typed refusal" in completed.stdout
+    assert "compiled via compile_run_config; submitted to qmb.orchestrator" in completed.stdout
+    assert "run-id is the compiler fingerprint; door computed none" in completed.stdout
+    assert "qmb CLI command tree ok" in completed.stdout
+
+
 def test_import_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_EXAMPLE)],
