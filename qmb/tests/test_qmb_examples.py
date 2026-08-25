@@ -92,6 +92,25 @@ def test_completed_boundary_usage_example_runs_clean() -> None:
     assert "completed-boundary derivation ok" in completed.stdout
 
 
+def test_synthetic_spread_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "synthetic_spread_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "trade-only bars use instrument x hour-UTC x session calibration" in completed.stdout
+    assert "equal buy/sell refused" in completed.stdout
+    assert "missing calibration is typed refusal, never zero spread" in completed.stdout
+    assert "real quotes take precedence" in completed.stdout
+    assert "quote-real ranks higher; ordinal taxonomy is not invented here" in completed.stdout
+    assert "non-live SQS door consumes modeled-spread series of exact Prices" in completed.stdout
+    assert "CT-32 label declares the spread calibration fingerprint" in completed.stdout
+    assert "synthetic spread ok" in completed.stdout
+
+
 def test_execution_composition_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "execution_composition_usage.py")],

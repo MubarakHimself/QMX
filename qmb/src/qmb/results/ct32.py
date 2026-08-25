@@ -34,6 +34,7 @@ from qmf.risk.performance import (
 
 from qmb._refuse import clean_token, invalid, policy
 from qmb.config.compiler import ResolvedRunConfig
+from qmb.execution.spread import SPREAD_CALIBRATION_KEY, spread_calibration_fingerprint
 
 __all__ = [
     "ACCOUNT_ROLE_KEY",
@@ -148,10 +149,17 @@ def mint_run_performance_result(
     outcome_fp = fingerprint(dict(cast("Mapping[str, object]", outcome_identity)))
     if is_refusal(outcome_fp):
         return outcome_fp
+    inputs: list[Fingerprint] = [config.fingerprint, outcome_fp.value]
+    cited = config.keys.get(SPREAD_CALIBRATION_KEY)
+    if cited is not None:
+        calibration_fp = spread_calibration_fingerprint(cited)
+        if is_refusal(calibration_fp):
+            return calibration_fp
+        inputs.append(calibration_fp.value)
     label = ResultLabel.try_create(
         producer.value,
         CT32_CONTRACT_FORMAT_VERSION,
-        (config.fingerprint, outcome_fp.value),
+        tuple(inputs),
         evidence_range,
         _REPLAY_EVIDENCE_CLASS,
         config.world,
