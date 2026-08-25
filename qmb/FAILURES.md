@@ -11,7 +11,9 @@ RETURNED by the library and rendered by the door as a nonzero exit plus
 machine-readable stderr JSON (AR-58, CT-04). Story 16.3 delivers the Python
 API door as a thin in-process re-export: refusals return verbatim, never
 raised, and a direct library call writes no governed evidence (B-1, B-4,
-AR-58).
+AR-58). Story 16.4 delivers registry-enumeration autocomplete through the
+one B-15 registry-read port: click native ``shell_complete``, never a
+door-side cache, never a live service query.
 
 ### FR-1: Cancel or per-run limit breach aborts one OS process
 
@@ -192,3 +194,29 @@ AR-58).
   `context`, and `retryability` on the returned object. Do not catch it as
   an exception — a crash (programmer error) is still an exception, not a
   refusal. Direct `run()` in research still produces no governed evidence.
+
+### FR-11: Autocomplete has no registry-read port
+
+- **Failure class:** silent empty candidate set (not a CT-04 refusal on the
+  completion channel). The library's `complete_registry` returns `()` when
+  `port` is missing or is not the B-15 `RegistryReadPort`.
+- **Detection:** click native `shell_complete` reads the injected port from
+  the CLI context and calls `complete_registry`. No port, a non-port value,
+  or a blank kind filter yields no candidates. The door does not query a
+  live registry and does not fall back to a cached alias list.
+- **Auto-recovery / retry:** none at the door. TAB again after the
+  composition root injects a port bound to the hub's current as-of set. A
+  newly created Book appears only as a fresher as-of set on that hub, never
+  as a cache refresh.
+- **Visible degraded state:** the shell offers no Book/BMS/bot aliases.
+  Commands still run. Resolution through the same port (when later injected)
+  remains the compiler's answer. A frozen sweep port offers explicit `fp1`
+  tokens, never aliases.
+- **Notification tier:** silent on the completion channel (empty
+  candidates). Domain refusal still RETURNED by `resolve` / `compile` when
+  those entry points run without a port.
+- **Product-user affordance:** TAB did not list Books because this CLI
+  process has no registry as-of set. That is not a stale cache and not a
+  network miss. Point the CLI at the registry-read port (the same one the
+  compiler uses). When a new Book shows up, it arrived as a newer as-of
+  set — create nothing locally to "refresh" the CLI.

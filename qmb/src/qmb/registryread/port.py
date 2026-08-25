@@ -28,6 +28,7 @@ from qmb.registryread.hub import HUB_KIND, PassiveHub
 
 __all__ = [
     "STALE_EVIDENCE_SEVERITY_KEY",
+    "RegistryCompletion",
     "RegistryReadPort",
     "ResolvedRef",
     "port_home",
@@ -78,6 +79,25 @@ class ResolvedRef:
     record: RegistrationRecord | None = None
     fragment: RegistryFragment | None = None
     alias: str | None = None
+
+    def cite(self) -> str:
+        """The only legal identity cite: ``fp1``, never ``name@version``."""
+        return self.fingerprint.value
+
+
+@dataclass(frozen=True, slots=True)
+class RegistryCompletion:
+    """One autocomplete candidate from the B-15 registry-read port.
+
+    ``value`` is what the shell inserts — a human alias, or an explicit
+    ``fp1`` after sweep admission. ``cite`` is the only legal identity.
+    """
+
+    value: str
+    fingerprint: Fingerprint
+    kind: str | None
+    registry_as_of: Instant
+    set_fingerprint: Fingerprint
 
     def cite(self) -> str:
         """The only legal identity cite: ``fp1``, never ``name@version``."""
@@ -160,9 +180,51 @@ class RegistryReadPort:
             return self
         return replace(self, frozen=True)
 
-    def enumerate_aliases(self) -> tuple[DatedPointer, ...]:
-        """Dated pointers in the bound as-of, sorted — door autocomplete (B-1, B-15)."""
-        return tuple(sorted(self.bound.pointers, key=lambda pointer: pointer.alias))
+    def enumerate_aliases(self, *, kind: object = None) -> tuple[DatedPointer, ...]:
+        """Dated pointers in the bound as-of, sorted — door autocomplete (B-1, B-15).
+
+        ``kind`` is an optional registry record kind (``book-definition``,
+        ``bms-definition``, ``bot-definition``). ``None`` enumerates every
+        dated pointer. A blank or non-token ``kind`` yields no pointers.
+        """
+        pointers = tuple(sorted(self.bound.pointers, key=lambda pointer: pointer.alias))
+        if kind is None:
+            return pointers
+        token = clean_token(kind)
+        if token is None:
+            return ()
+        return tuple(
+            pointer for pointer in pointers if _record_kind(self.bound, pointer.target) == token
+        )
+
+    def complete(
+        self,
+        incomplete: object = "",
+        *,
+        kind: object = None,
+    ) -> tuple[RegistryCompletion, ...]:
+        """Autocomplete candidates this port would also resolve (B-1, B-15).
+
+        The config compiler calls :meth:`resolve` on this same port. Candidates
+        are those refs ``resolve`` accepts, filtered by prefix and optional
+        record kind. A frozen sweep port no longer offers aliases — after
+        admission, fragments resolve by explicit fingerprint (SC-11).
+        """
+        if incomplete is None:
+            prefix = ""
+        elif isinstance(incomplete, str):
+            prefix = incomplete
+        else:
+            return ()
+        if kind is None:
+            token: str | None = None
+        else:
+            token = clean_token(kind)
+            if token is None:
+                return ()
+        if self.frozen:
+            return self._complete_fingerprints(prefix, token)
+        return self._complete_aliases(prefix, token)
 
     def resolve(self, ref: object) -> Result[ResolvedRef]:
         """Resolve ``ref`` through this port, returning the record/fragment or a refusal.
@@ -261,6 +323,84 @@ class RegistryReadPort:
             fresher_registry_as_of=fresher.registry_as_of.value_ns,
             fresher_set_fingerprint=fresher.fingerprint.value,
         )
+
+    def _complete_aliases(
+        self,
+        prefix: str,
+        kind: str | None,
+    ) -> tuple[RegistryCompletion, ...]:
+        """Offer aliases ``resolve`` accepts under the bound as-of."""
+        out: list[RegistryCompletion] = []
+        for pointer in self.enumerate_aliases(kind=kind):
+            if prefix and not pointer.alias.startswith(prefix):
+                continue
+            resolved = self.resolve(pointer.alias)
+            if is_refusal(resolved):
+                continue
+            out.append(
+                _completion(
+                    pointer.alias,
+                    resolved.value.fingerprint,
+                    _record_kind(self.bound, resolved.value.fingerprint),
+                    self.bound,
+                )
+            )
+        return tuple(out)
+
+    def _complete_fingerprints(
+        self,
+        prefix: str,
+        kind: str | None,
+    ) -> tuple[RegistryCompletion, ...]:
+        """After admission, offer explicit ``fp1`` tokens ``resolve`` accepts."""
+        candidates: list[tuple[str, Fingerprint, str | None]] = []
+        for record in self.bound.records:
+            rec_kind = record.kind
+            if kind is not None and rec_kind != kind:
+                continue
+            candidates.append((record.stable_id.value, record.stable_id, rec_kind))
+        for fragment in self.bound.fragments:
+            rec_kind = _record_kind(self.bound, fragment.source_fp1)
+            if kind is not None and rec_kind != kind:
+                continue
+            candidates.append((fragment.fingerprint.value, fragment.fingerprint, rec_kind))
+        out: list[RegistryCompletion] = []
+        for value, fingerprint, rec_kind in sorted(candidates, key=lambda item: item[0]):
+            if prefix and not value.startswith(prefix):
+                continue
+            resolved = self.resolve(fingerprint)
+            if is_refusal(resolved):
+                continue
+            out.append(_completion(value, fingerprint, rec_kind, self.bound))
+        return tuple(out)
+
+
+def _completion(
+    value: str,
+    fingerprint: Fingerprint,
+    kind: str | None,
+    bound: AsOfSet,
+) -> RegistryCompletion:
+    """Stamp a candidate with the bound as-of identity."""
+    return RegistryCompletion(
+        value=value,
+        fingerprint=fingerprint,
+        kind=kind,
+        registry_as_of=bound.registry_as_of,
+        set_fingerprint=bound.fingerprint,
+    )
+
+
+def _record_kind(bound: AsOfSet, fingerprint: Fingerprint) -> str | None:
+    """Record kind for a pointer target, walking a fragment to its source."""
+    member = bound.get(fingerprint)
+    if isinstance(member, RegistrationRecord):
+        return member.kind
+    if isinstance(member, RegistryFragment):
+        source = bound.get(member.source_fp1)
+        if isinstance(source, RegistrationRecord):
+            return source.kind
+    return None
 
 
 def _resolve_bound(hub: PassiveHub, bound: object) -> Result[AsOfSet]:

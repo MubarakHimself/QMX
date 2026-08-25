@@ -1,17 +1,20 @@
 """Thin ``qmb`` CLI door (B-1).
 
-Adaptation only: parsing, transport, and refusal rendering. The door holds no
-cache and computes no run-id of its own (DEC-0159, DEC-0160). Click is pinned
-by ``registry:qmb_cli_pin``; the pin value lives in the registry and the
-distribution manifest, never restated here.
+Adaptation only: parsing, transport, refusal rendering, and registry
+enumeration for autocomplete through the B-15 port. The door holds no
+cache and computes no run-id of its own (DEC-0159, DEC-0160, DEC-0165).
+Autocomplete uses click's native ``shell_complete`` — no bespoke completion
+machinery. Click is pinned by ``registry:qmb_cli_pin``; the pin value lives
+in the registry and the distribution manifest, never restated here.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import TypeVar, cast
 
 import click
+from click.shell_completion import CompletionItem
 from qmf.core.refusal import Result, is_ok, is_refusal
 
 from qmb._display import __version__
@@ -19,6 +22,11 @@ from qmb.config import ResolvedRunConfig
 from qmb.doors import CLI_PROG
 from qmb.doors.cli.render import render_refusal
 from qmb.doors.cli.tree import (
+    AUTOCOMPLETE,
+    AUTOCOMPLETE_PORT,
+    BMS_RECORD_KIND,
+    BOOK_RECORD_KIND,
+    BOT_RECORD_KIND,
     COMMAND_GROUPS,
     COMPUTES_RUN_ID,
     HOLDS_CACHE,
@@ -27,6 +35,7 @@ from qmb.doors.cli.tree import (
     cli_tree_identity,
     command_prerequisites,
     command_tree,
+    complete_registry,
     invoke_backtest,
     invoke_config_compile,
     invoke_config_show,
@@ -37,10 +46,16 @@ from qmb.doors.cli.tree import (
     invoke_optimize_space,
     require_prerequisites,
 )
+from qmb.registryread import RegistryReadPort
 
 _T = TypeVar("_T")
 
 __all__ = [
+    "AUTOCOMPLETE",
+    "AUTOCOMPLETE_PORT",
+    "BMS_RECORD_KIND",
+    "BOOK_RECORD_KIND",
+    "BOT_RECORD_KIND",
     "COMMAND_GROUPS",
     "COMPUTES_RUN_ID",
     "HOLDS_CACHE",
@@ -49,6 +64,7 @@ __all__ = [
     "cli_tree_identity",
     "command_prerequisites",
     "command_tree",
+    "complete_registry",
     "invoke_backtest",
     "invoke_config_compile",
     "invoke_config_show",
@@ -63,6 +79,9 @@ __all__ = [
 ]
 
 
+_ShellComplete = Callable[[click.Context, click.Parameter, str], list[CompletionItem[str]]]
+
+
 class _TunnelGroup(click.Group):
     """``qmb backtest <bot>`` is the ``run`` subcommand (SCN-0012)."""
 
@@ -74,6 +93,33 @@ class _TunnelGroup(click.Group):
         if args and args[0] not in self.commands and not args[0].startswith("-"):
             args.insert(0, "run")
         return super().resolve_command(ctx, args)
+
+
+def _port_from_obj(obj: object) -> object:
+    """The injected B-15 port, or ``None`` — never a door-side cache."""
+    if isinstance(obj, RegistryReadPort):
+        return obj
+    if isinstance(obj, Mapping):
+        body = cast("Mapping[str, object]", obj)
+        return body.get("port")
+    return None
+
+
+def _shell_complete_kind(kind: str) -> _ShellComplete:
+    """Click-native ``shell_complete`` callback over the one registry-read port."""
+
+    def _complete(
+        ctx: click.Context,
+        param: click.Parameter,
+        incomplete: str,
+        *,
+        _kind: str = kind,
+    ) -> list[CompletionItem[str]]:
+        _ = param
+        items = complete_registry(_port_from_obj(ctx.find_root().obj), incomplete, kind=_kind)
+        return [CompletionItem(item.value, help=item.cite()) for item in items]
+
+    return _complete
 
 
 @click.group(name=CLI_PROG)
@@ -96,9 +142,24 @@ def backtest_group() -> None:
 
 
 @backtest_group.command("run")
-@click.argument("bot", required=False, default=None)
-@click.option("--book", default=None, help="Human Book alias; the artifact cites fp1.")
-@click.option("--bms", default=None, help="Human BMS alias; the artifact cites fp1.")
+@click.argument(
+    "bot",
+    required=False,
+    default=None,
+    shell_complete=_shell_complete_kind(BOT_RECORD_KIND),
+)
+@click.option(
+    "--book",
+    default=None,
+    help="Human Book alias; the artifact cites fp1.",
+    shell_complete=_shell_complete_kind(BOOK_RECORD_KIND),
+)
+@click.option(
+    "--bms",
+    default=None,
+    help="Human BMS alias; the artifact cites fp1.",
+    shell_complete=_shell_complete_kind(BMS_RECORD_KIND),
+)
 @click.option("--output-root", default=None, help="Isolated run output root.")
 @click.pass_context
 def backtest_run(
@@ -175,7 +236,12 @@ def optimize_group() -> None:
 
 
 @optimize_group.command("run")
-@click.argument("bot", required=False, default=None)
+@click.argument(
+    "bot",
+    required=False,
+    default=None,
+    shell_complete=_shell_complete_kind(BOT_RECORD_KIND),
+)
 @click.option("--output-root", default=None)
 @click.pass_context
 def optimize_run(ctx: click.Context, bot: str | None, output_root: str | None) -> None:

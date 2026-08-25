@@ -21,6 +21,7 @@ from qmb.registryread.as_of import (
 from qmb.registryread.hub import HUB_KIND, PassiveHub
 from qmb.registryread.port import (
     STALE_EVIDENCE_SEVERITY_KEY,
+    RegistryCompletion,
     RegistryReadPort,
     ResolvedRef,
     port_home,
@@ -37,6 +38,7 @@ __all__ = [
     "AsOfSet",
     "DatedPointer",
     "PassiveHub",
+    "RegistryCompletion",
     "RegistryFragment",
     "RegistryReadPort",
     "ResolvedRef",

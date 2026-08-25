@@ -16,14 +16,26 @@ from qmf.core.fingerprint import Fingerprint
 from qmf.core.refusal import Ok, Result, is_refusal
 
 from qmb._refuse import clean_token, invalid, unavailable
-from qmb.config import ResolvedRunConfig, compile_run_config, run_config_identity
+from qmb.config import (
+    BMS_RECORD_KIND,
+    BOOK_RECORD_KIND,
+    ResolvedRunConfig,
+    compile_run_config,
+    run_config_identity,
+)
 from qmb.data import DATA_COMMANDS, data_front_identity
 from qmb.doors import CLI_PIN_KEY, CLI_PROG
 from qmb.ledger import LedgerLine
 from qmb.optimize import parameter_space_from_bot
 from qmb.orchestrator import IsolatedRun, read_book_bar, read_merge_view, spawn_run
+from qmb.registryread import RegistryCompletion, RegistryReadPort
 
 __all__ = [
+    "AUTOCOMPLETE",
+    "AUTOCOMPLETE_PORT",
+    "BMS_RECORD_KIND",
+    "BOOK_RECORD_KIND",
+    "BOT_RECORD_KIND",
     "COMMAND_GROUPS",
     "COMPUTES_RUN_ID",
     "HOLDS_CACHE",
@@ -32,6 +44,7 @@ __all__ = [
     "cli_tree_identity",
     "command_prerequisites",
     "command_tree",
+    "complete_registry",
     "invoke_backtest",
     "invoke_config_compile",
     "invoke_config_show",
@@ -53,6 +66,9 @@ COMMAND_GROUPS: Final[tuple[str, ...]] = (
 COMPUTES_RUN_ID: Final[bool] = False
 HOLDS_CACHE: Final[bool] = False
 ORCHESTRATOR_ENTRY: Final[str] = "qmb.orchestrator.spawn_run"
+AUTOCOMPLETE: Final[str] = "click.shell_complete"
+AUTOCOMPLETE_PORT: Final[str] = "qmb.registryread"
+BOT_RECORD_KIND: Final[str] = "bot-definition"
 
 _COMMAND_TREE: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
     {
@@ -119,6 +135,8 @@ def cli_tree_identity() -> dict[str, object]:
     """Identity-bearing CLI-door fields. The click pin value is not restated."""
     return {
         "adaptation": ("parsing", "transport", "refusal-rendering", "autocomplete"),
+        "autocomplete": AUTOCOMPLETE,
+        "autocomplete_port": AUTOCOMPLETE_PORT,
         "computes_run_id": COMPUTES_RUN_ID,
         "groups": COMMAND_GROUPS,
         "holds_cache": HOLDS_CACHE,
@@ -126,6 +144,23 @@ def cli_tree_identity() -> dict[str, object]:
         "pin_key": CLI_PIN_KEY,
         "prog": CLI_PROG,
     }
+
+
+def complete_registry(
+    port: object,
+    incomplete: object = "",
+    *,
+    kind: object = None,
+) -> tuple[RegistryCompletion, ...]:
+    """Enumerate registry autocomplete through the one B-15 port.
+
+    A missing or non-port ``port`` yields no candidates — never a door-side
+    cache and never a live service query. The compiler's ``resolve`` on the
+    same port is the other consumer; they cannot disagree (DEC-0165).
+    """
+    if not isinstance(port, RegistryReadPort):
+        return ()
+    return port.complete(incomplete, kind=kind)
 
 
 def command_prerequisites(command: object) -> Result[tuple[str, ...]]:

@@ -349,6 +349,24 @@ def test_api_door_usage_example_runs_clean() -> None:
     assert "qmb Python API door ok" in completed.stdout
 
 
+def test_cli_autocomplete_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "cli_autocomplete_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "autocomplete enumerates through the one registry-read port" in completed.stdout
+    assert "same answers as resolve:" in completed.stdout
+    assert "new Book arrives as a fresher as-of set" in completed.stdout
+    assert "never a door cache refresh" in completed.stdout
+    assert "click native shell_complete" in completed.stdout
+    assert "missing port yields no candidates, not a live query" in completed.stdout
+    assert "qmb CLI registry autocomplete ok" in completed.stdout
+
+
 def test_cli_tree_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "cli_tree_usage.py")],
