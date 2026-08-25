@@ -111,6 +111,33 @@ def test_synthetic_spread_usage_example_runs_clean() -> None:
     assert "synthetic spread ok" in completed.stdout
 
 
+def test_fill_pipeline_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "fill_pipeline_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "dispatched per order type" in completed.stdout
+    assert "Fill | NoFill | PartialFill" in completed.stdout
+    assert "worst-case default" in completed.stdout
+    assert "optimistic-exact fill-basis" in completed.stdout
+    assert "optimistic taint" in completed.stdout
+    assert "all-or-none any-leg-fail is NoFill" in completed.stdout
+    assert "partial capped by position and lot step" in completed.stdout
+    assert "each partial has its own fee reference" in completed.stdout
+    assert "typed NoFill reasons" in completed.stdout
+    assert "gap fill at gapped price" in completed.stdout
+    assert "deterministic path-split sequencing" in completed.stdout
+    assert "new intents rest for a later slice" in completed.stdout
+    assert "wired into run-loop sub-phase 3" in completed.stdout
+    assert "slippage maps pre-slip to post-slip or vetoes" in completed.stdout
+    assert "passive limits skip slippage unless configured" in completed.stdout
+    assert "fill pipeline ok" in completed.stdout
+
+
 def test_execution_composition_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "execution_composition_usage.py")],

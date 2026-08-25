@@ -14,11 +14,17 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final
 
+from qmf.core.chrono import Duration
 from qmf.core.exact import Money
 from qmf.core.refusal import Ok, Result, is_refusal
 
 from qmb._refuse import unavailable
 from qmb.execution.fidelity import FidelityIdentity, stamp_fidelity
+from qmb.execution.fill import (
+    FILL_BASES,
+    FILL_BASIS_WORST_CASE,
+    cross_declared_path,
+)
 from qmb.execution.ports import (
     COMPOSITION_VERSION,
     TAINT_OPTIMISTIC,
@@ -33,6 +39,18 @@ from qmb.execution.ports import (
     SlippagePort,
     require_authorized_intent,
 )
+from qmb.execution.slippage import (
+    SLIPPAGE_ADAPTER_CONSTANT_PERCENT,
+    SLIPPAGE_ADAPTER_GAP_VOLATILITY,
+    SLIPPAGE_ADAPTER_SIZE_TIERED,
+    SLIPPAGE_ADAPTER_SPREAD_CROSSING,
+    SLIPPAGE_ADAPTER_ZERO,
+    ConstantPercentSlippageAdapter,
+    GapVolatilitySlippageAdapter,
+    SizeTieredSlippageAdapter,
+    SpreadCrossingSlippageAdapter,
+    ZeroSlippageAdapter,
+)
 
 __all__ = [
     "AMBIENT_DISCOVERY",
@@ -42,35 +60,48 @@ __all__ = [
     "FILL_ADAPTER_DECLARED_PATH",
     "FINANCING_ADAPTER_SCHEDULED",
     "SLIPPAGE_ADAPTER_CATALOG",
+    "SLIPPAGE_ADAPTER_CONSTANT_PERCENT",
+    "SLIPPAGE_ADAPTER_GAP_VOLATILITY",
+    "SLIPPAGE_ADAPTER_SIZE_TIERED",
+    "SLIPPAGE_ADAPTER_SPREAD_CROSSING",
     "SLIPPAGE_ADAPTER_ZERO",
+    "ConstantPercentSlippageAdapter",
     "DeclaredPathFillAdapter",
     "FinancingScheduler",
+    "GapVolatilitySlippageAdapter",
+    "SizeTieredSlippageAdapter",
+    "SpreadCrossingSlippageAdapter",
     "ZeroCostAdapter",
     "ZeroSlippageAdapter",
 ]
 
 AMBIENT_DISCOVERY: Final[bool] = False
 FILL_ADAPTER_DECLARED_PATH: Final[str] = "declared-path"
-SLIPPAGE_ADAPTER_ZERO: Final[str] = "zero"
 COST_ADAPTER_ZERO: Final[str] = "zero"
 FINANCING_ADAPTER_SCHEDULED: Final[str] = "scheduled"
 
 
 @dataclass(frozen=True, slots=True)
 class DeclaredPathFillAdapter:
-    """Fill adapter: requested quantity at the first declared-path print.
+    """Fill adapter: declared-path crossing dispatched per order type (FILL-2).
 
-    Honest declared-path crossing (order types, worst-case OHLC, gaps) is
-    Story 17.3. This adapter is the bindable V1 identity for that seam.
+    Default pricing is bar-worst-case. Optimistic-exact is a labeled fill-basis.
+    Both stay ``optimistic``-tainted until GAP-0048.
     """
 
     adapter_id: str = FILL_ADAPTER_DECLARED_PATH
     composition_version: int = COMPOSITION_VERSION
     taint: str = TAINT_OPTIMISTIC
+    fill_basis: str = FILL_BASIS_WORST_CASE
+    stale_price_span: Duration | None = None
 
     def fidelity(self) -> Result[FidelityIdentity]:
-        """Stamp adapter-id + composition-version + optimistic taint."""
-        return stamp_fidelity(self.adapter_id, composition_version=self.composition_version)
+        """Stamp adapter-id + composition-version + fill-basis + optimistic taint."""
+        return stamp_fidelity(
+            self.adapter_id,
+            composition_version=self.composition_version,
+            fill_basis=self.fill_basis,
+        )
 
     def decide(
         self,
@@ -78,64 +109,31 @@ class DeclaredPathFillAdapter:
         path: SlicePath,
         *,
         requested_quantity: object,
+        order: object = None,
+        fill_basis: object = None,
+        stale_price_span: object = None,
     ) -> Result[Fill | NoFill | PartialFill]:
-        """Fill the authorized intent; never a bot-sized order."""
+        """Fill the authorized intent by crossing the declared path."""
         authorized = require_authorized_intent(intent)
         if is_refusal(authorized):
             return authorized
-        if not path.prints:
+        if not path.prints and path.open is None:
             none = NoFill.try_create("empty-path")
             if is_refusal(none):
                 return none
             return Ok(none.value)
-        filled = Fill.try_create(requested_quantity, requested_quantity, path.prints[0])
-        if is_refusal(filled):
-            return filled
-        return Ok(filled.value)
-
-
-@dataclass(frozen=True, slots=True)
-class ZeroSlippageAdapter:
-    """Named ``zero`` slippage shape (SLIP-2). Post-slip equals pre-slip."""
-
-    adapter_id: str = SLIPPAGE_ADAPTER_ZERO
-    composition_version: int = COMPOSITION_VERSION
-    taint: str = TAINT_OPTIMISTIC
-
-    def fidelity(self) -> Result[FidelityIdentity]:
-        """Stamp adapter-id + composition-version + optimistic taint."""
-        return stamp_fidelity(
-            f"slippage.{self.adapter_id}",
-            composition_version=self.composition_version,
+        basis = self.fill_basis if fill_basis is None else fill_basis
+        span = self.stale_price_span if stale_price_span is None else stale_price_span
+        if basis not in FILL_BASES:
+            basis = self.fill_basis
+        return cross_declared_path(
+            authorized.value,
+            path,
+            requested_quantity=requested_quantity,
+            order=order,
+            fill_basis=basis,
+            stale_price_span=span,
         )
-
-    def apply(
-        self,
-        fill: Fill | PartialFill,
-        path: SlicePath,
-    ) -> Result[Fill | NoFill | PartialFill]:
-        """Map pre-slip to post-slip with no invented offset; never resize."""
-        del path
-        if isinstance(fill, Fill):
-            slipped = Fill.try_create(
-                fill.quantity,
-                fill.requested_quantity,
-                fill.pre_slip_price,
-                post_slip_price=fill.pre_slip_price,
-            )
-            if is_refusal(slipped):
-                return slipped
-            return Ok(slipped.value)
-        slipped_partial = PartialFill.try_create(
-            fill.quantity,
-            fill.requested_quantity,
-            fill.pre_slip_price,
-            remaining_quantity=fill.remaining_quantity,
-            post_slip_price=fill.pre_slip_price,
-        )
-        if is_refusal(slipped_partial):
-            return slipped_partial
-        return Ok(slipped_partial.value)
 
 
 @dataclass(frozen=True, slots=True)
@@ -197,7 +195,13 @@ FILL_ADAPTER_CATALOG: Final[MappingProxyType[str, type[FillPort]]] = MappingProx
     {FILL_ADAPTER_DECLARED_PATH: DeclaredPathFillAdapter}
 )
 SLIPPAGE_ADAPTER_CATALOG: Final[MappingProxyType[str, type[SlippagePort]]] = MappingProxyType(
-    {SLIPPAGE_ADAPTER_ZERO: ZeroSlippageAdapter}
+    {
+        SLIPPAGE_ADAPTER_ZERO: ZeroSlippageAdapter,
+        SLIPPAGE_ADAPTER_CONSTANT_PERCENT: ConstantPercentSlippageAdapter,
+        SLIPPAGE_ADAPTER_SPREAD_CROSSING: SpreadCrossingSlippageAdapter,
+        SLIPPAGE_ADAPTER_GAP_VOLATILITY: GapVolatilitySlippageAdapter,
+        SLIPPAGE_ADAPTER_SIZE_TIERED: SizeTieredSlippageAdapter,
+    }
 )
 COST_ADAPTER_CATALOG: Final[MappingProxyType[str, type[CostPort]]] = MappingProxyType(
     {COST_ADAPTER_ZERO: ZeroCostAdapter}

@@ -19,10 +19,11 @@ from enum import StrEnum
 from fractions import Fraction
 from typing import Final, Protocol, TypeAlias, cast, runtime_checkable
 
+from qmf.core.chrono import Instant
 from qmf.core.exact import Money, Price, Quantity
 from qmf.core.fingerprint import Fingerprint, World, fingerprint
 from qmf.core.refusal import Ok, Result, is_refusal
-from qmf.risk.door import EntryIntent, ExitIntent
+from qmf.risk.door import Direction, EntryIntent, ExitIntent
 from qmf.risk.exit_record import CostComponent, ExitRecord
 
 from qmb._refuse import clean_token, invalid, policy
@@ -43,6 +44,9 @@ __all__ = [
     "CLAIMS_EDGE",
     "COMPOSITION_ORDER",
     "COMPOSITION_VERSION",
+    "FILL_BASES",
+    "FILL_BASIS_OPTIMISTIC_EXACT",
+    "FILL_BASIS_WORST_CASE",
     "FILL_DECISIONS",
     "FINANCING_IS_ORDER_FILL",
     "GAP_0048_OPEN",
@@ -74,6 +78,7 @@ __all__ = [
     "refuse_optimistic_edge_claim",
     "refuse_store_synthetic_governed_evidence",
     "require_authorized_intent",
+    "restamp_filled",
 ]
 
 AuthorizedIntent: TypeAlias = EntryIntent | ExitIntent
@@ -92,7 +97,14 @@ GAP_0048_OPEN: Final[bool] = True
 CLAIMS_EDGE: Final[bool] = False
 SPENDS_SPLIT_BUDGET: Final[bool] = False
 FINANCING_IS_ORDER_FILL: Final[bool] = False
+FILL_BASIS_WORST_CASE: Final[str] = "worst-case"
+FILL_BASIS_OPTIMISTIC_EXACT: Final[str] = "optimistic-exact"
+FILL_BASES: Final[tuple[str, ...]] = (
+    FILL_BASIS_WORST_CASE,
+    FILL_BASIS_OPTIMISTIC_EXACT,
+)
 _ADAPTER_BINDING: Final[str] = "resolved-run-config"
+_LEGAL_FILL_BASIS: Final[frozenset[str]] = frozenset(FILL_BASES)
 _LEGAL_PROVENANCE: Final[frozenset[str]] = frozenset(
     {
         PROVENANCE_RECORDED,
@@ -129,6 +141,8 @@ def ports_identity() -> dict[str, object]:
         "composition_order": COMPOSITION_ORDER,
         "composition_version": COMPOSITION_VERSION,
         "exit_record": f"{ExitRecord.__module__}.{ExitRecord.__qualname__}",
+        "fill_bases": FILL_BASES,
+        "fill_basis_default": FILL_BASIS_WORST_CASE,
         "fill_decisions": FILL_DECISIONS,
         "financing_is_order_fill": FINANCING_IS_ORDER_FILL,
         "full_loss_before_open": True,
@@ -276,22 +290,78 @@ class SlicePath:
     """Declared intra-slice path the fill port crosses (B-6).
 
     Same (possibly gap-fixed) series the slice's bars consume — never a future
-    or a divergent series. Adapters decide the crossing.
+    or a divergent series. Adapters decide the crossing. Optional OHLC, bar
+    bounds, and quote sides are the FILL-3 market state the pipeline reads.
     """
 
     stream_id: str
     prints: tuple[Price, ...]
+    open: Price | None = None
+    high: Price | None = None
+    low: Price | None = None
+    close: Price | None = None
+    current: Price | None = None
+    prior_close: Price | None = None
+    bar_start: Instant | None = None
+    bar_end: Instant | None = None
+    session_open: bool = False
+    session_close: bool = False
+    market_closed: bool = False
+    bid: Price | None = None
+    ask: Price | None = None
 
     def fp1_identity(self) -> dict[str, object]:
         """Canonical identity. Package SemVer never enters."""
-        return {
+        content: dict[str, object] = {
             "class": "slice-path",
             "prints": [item.fp1_identity() for item in self.prints],
             "stream_id": self.stream_id,
         }
+        for name in (
+            "open",
+            "high",
+            "low",
+            "close",
+            "current",
+            "prior_close",
+            "bid",
+            "ask",
+        ):
+            value = getattr(self, name)
+            if isinstance(value, Price):
+                content[name] = value.fp1_identity()
+        if self.bar_start is not None:
+            content["bar_start_ns"] = self.bar_start.value_ns
+        if self.bar_end is not None:
+            content["bar_end_ns"] = self.bar_end.value_ns
+        if self.session_open:
+            content["session_open"] = True
+        if self.session_close:
+            content["session_close"] = True
+        if self.market_closed:
+            content["market_closed"] = True
+        return content
 
     @classmethod
-    def try_create(cls, stream_id: object, prints: object) -> Result[SlicePath]:
+    def try_create(
+        cls,
+        stream_id: object,
+        prints: object,
+        *,
+        open: object = None,
+        high: object = None,
+        low: object = None,
+        close: object = None,
+        current: object = None,
+        prior_close: object = None,
+        bar_start: object = None,
+        bar_end: object = None,
+        session_open: object = False,
+        session_close: object = False,
+        market_closed: object = False,
+        bid: object = None,
+        ask: object = None,
+    ) -> Result[SlicePath]:
         """Validate a declared intra-slice path."""
         token = clean_token(stream_id)
         if token is None:
@@ -300,25 +370,67 @@ class SlicePath:
                 "a slice path names a non-empty stream id",
                 given=repr(stream_id),
             )
-        if isinstance(prints, Price):
-            return Ok(cls(stream_id=token, prints=(prints,)))
-        if isinstance(prints, (str, bytes)) or not isinstance(prints, Sequence):
+        parsed_prints = _as_price_tuple(prints, "prints")
+        if is_refusal(parsed_prints):
+            return parsed_prints
+        levels: dict[str, Price | None] = {}
+        for name, raw in (
+            ("open", open),
+            ("high", high),
+            ("low", low),
+            ("close", close),
+            ("current", current),
+            ("prior_close", prior_close),
+            ("bid", bid),
+            ("ask", ask),
+        ):
+            parsed = _optional_price(raw, name)
+            if is_refusal(parsed):
+                return parsed
+            levels[name] = parsed.value
+        start = _optional_instant(bar_start, "bar_start")
+        if is_refusal(start):
+            return start
+        end = _optional_instant(bar_end, "bar_end")
+        if is_refusal(end):
+            return end
+        if not isinstance(session_open, bool):
             return invalid(
-                "prints",
-                "a slice path is a sequence of exact Prices the fill port may cross",
-                given=repr(type(prints).__name__),
+                "session_open",
+                "session_open is a bool; MOO fills only on the session-open bar",
+                given=repr(type(session_open).__name__),
             )
-        parsed: list[Price] = []
-        for index, raw in enumerate(cast("Sequence[object]", prints)):
-            if not isinstance(raw, Price):
-                return invalid(
-                    "prints",
-                    "each path print is an exact Price",
-                    index=index,
-                    given=repr(type(raw).__name__),
-                )
-            parsed.append(raw)
-        return Ok(cls(stream_id=token, prints=tuple(parsed)))
+        if not isinstance(session_close, bool):
+            return invalid(
+                "session_close",
+                "session_close is a bool; MOC fills only on the session-close bar",
+                given=repr(type(session_close).__name__),
+            )
+        if not isinstance(market_closed, bool):
+            return invalid(
+                "market_closed",
+                "market_closed is a bool; a closed market is a typed NoFill",
+                given=repr(type(market_closed).__name__),
+            )
+        return Ok(
+            cls(
+                stream_id=token,
+                prints=parsed_prints.value,
+                open=levels["open"],
+                high=levels["high"],
+                low=levels["low"],
+                close=levels["close"],
+                current=levels["current"],
+                prior_close=levels["prior_close"],
+                bar_start=start.value,
+                bar_end=end.value,
+                session_open=session_open,
+                session_close=session_close,
+                market_closed=market_closed,
+                bid=levels["bid"],
+                ask=levels["ask"],
+            )
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -359,11 +471,18 @@ class Fill:
     post_slip_price: Price | None = None
     kind: FillKind = FillKind.FILL
     taint: str = TAINT_OPTIMISTIC
+    fill_basis: str = FILL_BASIS_WORST_CASE
+    gap_fill: bool = False
+    fee_reference: str | None = None
+    order_type: str | None = None
+    side: Direction | None = None
+    passive: bool = False
 
     def fp1_identity(self) -> dict[str, object]:
         """Canonical identity. The taint field is omitted (DEC-0164)."""
         content: dict[str, object] = {
             "class": "fill",
+            "fill_basis": self.fill_basis,
             "kind": self.kind.value,
             "pre_slip_price": self.pre_slip_price.fp1_identity(),
             "quantity": self.quantity.fp1_identity(),
@@ -371,6 +490,16 @@ class Fill:
         }
         if self.post_slip_price is not None:
             content["post_slip_price"] = self.post_slip_price.fp1_identity()
+        if self.gap_fill:
+            content["gap_fill"] = True
+        if self.fee_reference is not None:
+            content["fee_reference"] = self.fee_reference
+        if self.order_type is not None:
+            content["order_type"] = self.order_type
+        if self.side is not None:
+            content["side"] = self.side.value
+        if self.passive:
+            content["passive"] = True
         return content
 
     @classmethod
@@ -382,6 +511,12 @@ class Fill:
         *,
         post_slip_price: object = None,
         taint: object = None,
+        fill_basis: object = None,
+        gap_fill: object = False,
+        fee_reference: object = None,
+        order_type: object = None,
+        side: object = None,
+        passive: object = False,
     ) -> Result[Fill]:
         """Validate a full fill. Partial quantities belong on :class:`PartialFill`."""
         qty = _require_quantity(quantity, "quantity")
@@ -422,6 +557,19 @@ class Fill:
         stamped = _require_optimistic_taint(taint)
         if is_refusal(stamped):
             return stamped
+        basis = _require_fill_basis(fill_basis)
+        if is_refusal(basis):
+            return basis
+        extras = _require_fill_extras(
+            gap_fill=gap_fill,
+            fee_reference=fee_reference,
+            order_type=order_type,
+            side=side,
+            passive=passive,
+        )
+        if is_refusal(extras):
+            return extras
+        gap, fee, typed, sided, rest = extras.value
         return Ok(
             cls(
                 quantity=qty.value,
@@ -429,6 +577,12 @@ class Fill:
                 pre_slip_price=price.value,
                 post_slip_price=slipped,
                 taint=stamped.value,
+                fill_basis=basis.value,
+                gap_fill=gap,
+                fee_reference=fee,
+                order_type=typed,
+                side=sided,
+                passive=rest,
             )
         )
 
@@ -444,11 +598,18 @@ class PartialFill:
     post_slip_price: Price | None = None
     kind: FillKind = FillKind.PARTIAL_FILL
     taint: str = TAINT_OPTIMISTIC
+    fill_basis: str = FILL_BASIS_WORST_CASE
+    gap_fill: bool = False
+    fee_reference: str | None = None
+    order_type: str | None = None
+    side: Direction | None = None
+    passive: bool = False
 
     def fp1_identity(self) -> dict[str, object]:
         """Canonical identity. The taint field is omitted (DEC-0164)."""
         content: dict[str, object] = {
             "class": "partial-fill",
+            "fill_basis": self.fill_basis,
             "kind": self.kind.value,
             "pre_slip_price": self.pre_slip_price.fp1_identity(),
             "quantity": self.quantity.fp1_identity(),
@@ -457,6 +618,16 @@ class PartialFill:
         }
         if self.post_slip_price is not None:
             content["post_slip_price"] = self.post_slip_price.fp1_identity()
+        if self.gap_fill:
+            content["gap_fill"] = True
+        if self.fee_reference is not None:
+            content["fee_reference"] = self.fee_reference
+        if self.order_type is not None:
+            content["order_type"] = self.order_type
+        if self.side is not None:
+            content["side"] = self.side.value
+        if self.passive:
+            content["passive"] = True
         return content
 
     @classmethod
@@ -469,6 +640,12 @@ class PartialFill:
         remaining_quantity: object = None,
         post_slip_price: object = None,
         taint: object = None,
+        fill_basis: object = None,
+        gap_fill: object = False,
+        fee_reference: object = None,
+        order_type: object = None,
+        side: object = None,
+        passive: object = False,
     ) -> Result[PartialFill]:
         """Validate a partial fill. Remaining is requested minus filled when omitted."""
         qty = _require_quantity(quantity, "quantity")
@@ -530,6 +707,19 @@ class PartialFill:
         stamped = _require_optimistic_taint(taint)
         if is_refusal(stamped):
             return stamped
+        basis = _require_fill_basis(fill_basis)
+        if is_refusal(basis):
+            return basis
+        extras = _require_fill_extras(
+            gap_fill=gap_fill,
+            fee_reference=fee_reference,
+            order_type=order_type,
+            side=side,
+            passive=passive,
+        )
+        if is_refusal(extras):
+            return extras
+        gap, fee, typed, sided, rest = extras.value
         return Ok(
             cls(
                 quantity=qty.value,
@@ -538,6 +728,12 @@ class PartialFill:
                 pre_slip_price=price.value,
                 post_slip_price=slipped,
                 taint=stamped.value,
+                fill_basis=basis.value,
+                gap_fill=gap,
+                fee_reference=fee,
+                order_type=typed,
+                side=sided,
+                passive=rest,
             )
         )
 
@@ -596,12 +792,18 @@ def classify_fill_quantity(
     lot_step: object,
     pre_slip_price: object,
     post_slip_price: object = None,
+    fill_basis: object = None,
+    gap_fill: object = False,
+    fee_reference: object = None,
+    order_type: object = None,
+    side: object = None,
+    passive: object = False,
 ) -> Result[Fill | NoFill | PartialFill]:
     """Cap by position size and lot step; classify Fill, PartialFill, or NoFill.
 
     Partial quantities are first-class. A zero after the lot-step snap is
     ``NoFill``. Adapters produce the raw filled count; this pins the
-    composition invariant.
+    composition invariant. Each partial keeps its own fee reference.
     """
     wanted = _require_quantity(requested, "requested_quantity")
     if is_refusal(wanted):
@@ -663,6 +865,14 @@ def classify_fill_quantity(
     snapped = _floor_to_step(ceiling, step.value)
     if is_refusal(snapped):
         return snapped
+    labels = {
+        "fill_basis": fill_basis,
+        "gap_fill": gap_fill,
+        "fee_reference": fee_reference,
+        "order_type": order_type,
+        "side": side,
+        "passive": passive,
+    }
     if snapped.value.as_fraction() <= 0:
         none = NoFill.try_create("lot-step-snap-to-zero")
         if is_refusal(none):
@@ -674,6 +884,7 @@ def classify_fill_quantity(
             wanted.value,
             price.value,
             post_slip_price=post_slip_price,
+            **labels,
         )
         if is_refusal(full):
             return full
@@ -683,6 +894,7 @@ def classify_fill_quantity(
         wanted.value,
         price.value,
         post_slip_price=post_slip_price,
+        **labels,
     )
     if is_refusal(partial):
         return partial
@@ -810,6 +1022,7 @@ def apply_execution_ports(
     requested_quantity: object,
     position_cap: object,
     lot_step: object,
+    order: object = None,
 ) -> Result[CostedFill | NoFill]:
     """Run fill → slippage → cost. Financing is not an order fill.
 
@@ -834,10 +1047,13 @@ def apply_execution_ports(
     step = _require_quantity(lot_step, "lot_step")
     if is_refusal(step):
         return step
+    decide_kwargs: dict[str, object] = {"requested_quantity": requested.value}
+    if order is not None:
+        decide_kwargs["order"] = order
     decided = bound.value.fill.decide(
         authorized.value,
         declared.value,
-        requested_quantity=requested.value,
+        **decide_kwargs,  # type: ignore[arg-type]
     )
     if is_refusal(decided):
         return decided
@@ -892,6 +1108,7 @@ def execute_authorized(
     exit_logic_ref: object = None,
     module: object = None,
     book_resolved_requested_r: object = None,
+    order: object = None,
 ) -> Result[CostedFill | NoFill]:
     """Authorize a CT-23 intent, then run the pinned ports (B-6, AR-56, CT-23).
 
@@ -930,6 +1147,7 @@ def execute_authorized(
         requested_quantity=requested_quantity,
         position_cap=position_cap,
         lot_step=lot_step,
+        order=order,
     )
 
 
@@ -1026,6 +1244,161 @@ def _require_price(value: object, field: str) -> Result[Price]:
         "a fill price is an exact Price, never a binary float",
         given=repr(type(value).__name__),
     )
+
+
+def _optional_price(value: object, field: str) -> Result[Price | None]:
+    if value is None:
+        return Ok(None)
+    parsed = _require_price(value, field)
+    if is_refusal(parsed):
+        return parsed
+    return Ok(parsed.value)
+
+
+def _optional_instant(value: object, field: str) -> Result[Instant | None]:
+    if value is None:
+        return Ok(None)
+    if isinstance(value, Instant):
+        return Ok(value)
+    return invalid(
+        field,
+        "bar bounds are Instants in UTC nanoseconds, never a wall-clock string",
+        given=repr(type(value).__name__),
+    )
+
+
+def _as_price_tuple(value: object, field: str) -> Result[tuple[Price, ...]]:
+    if isinstance(value, Price):
+        return Ok((value,))
+    if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
+        return invalid(
+            field,
+            "a slice path is a sequence of exact Prices the fill port may cross",
+            given=repr(type(value).__name__),
+        )
+    parsed: list[Price] = []
+    for index, raw in enumerate(cast("Sequence[object]", value)):
+        if not isinstance(raw, Price):
+            return invalid(
+                field,
+                "each path print is an exact Price",
+                index=index,
+                given=repr(type(raw).__name__),
+            )
+        parsed.append(raw)
+    return Ok(tuple(parsed))
+
+
+def _require_fill_basis(value: object) -> Result[str]:
+    if value is None:
+        return Ok(FILL_BASIS_WORST_CASE)
+    token = value if isinstance(value, str) else clean_token(value)
+    if token not in _LEGAL_FILL_BASIS:
+        return invalid(
+            "fill_basis",
+            "fill basis is worst-case or optimistic-exact; both stay optimistic-tainted "
+            "until GAP-0048 (FILL-4, SC-06)",
+            given=repr(value),
+            allowed=list(FILL_BASES),
+            gap="GAP-0048",
+        )
+    return Ok(token)
+
+
+def _require_fill_extras(
+    *,
+    gap_fill: object,
+    fee_reference: object,
+    order_type: object,
+    side: object,
+    passive: object,
+) -> Result[tuple[bool, str | None, str | None, Direction | None, bool]]:
+    if not isinstance(gap_fill, bool):
+        return invalid(
+            "gap_fill",
+            "gap_fill is a bool marker; gapped prices are never skipped (FILL-7)",
+            given=repr(type(gap_fill).__name__),
+        )
+    if not isinstance(passive, bool):
+        return invalid(
+            "passive",
+            "passive is a bool; slippage skips passive limits unless configured (SLIP-1)",
+            given=repr(type(passive).__name__),
+        )
+    fee: str | None = None
+    if fee_reference is not None:
+        token = clean_token(fee_reference)
+        if token is None:
+            return invalid(
+                "fee_reference",
+                "each partial carries its own non-empty fee reference (FILL-8, B-6)",
+                given=repr(fee_reference),
+            )
+        fee = token
+    typed: str | None = None
+    if order_type is not None:
+        token = clean_token(order_type)
+        if token is None:
+            return invalid(
+                "order_type",
+                "order type is a non-empty token when stamped on a fill",
+                given=repr(order_type),
+            )
+        typed = token
+    sided: Direction | None = None
+    if side is not None:
+        if not isinstance(side, Direction):
+            return invalid(
+                "side",
+                "fill side is Direction.LONG (buy) or Direction.SHORT (sell)",
+                given=repr(type(side).__name__),
+            )
+        sided = side
+    return Ok((gap_fill, fee, typed, sided, passive))
+
+
+def restamp_filled(
+    fill: Fill | PartialFill,
+    *,
+    post_slip_price: object,
+) -> Result[Fill | PartialFill]:
+    """Copy a fill's labels onto a new post-slip price. Never resizes."""
+    if isinstance(fill, Fill):
+        stamped = Fill.try_create(
+            fill.quantity,
+            fill.requested_quantity,
+            fill.pre_slip_price,
+            post_slip_price=post_slip_price,
+            taint=fill.taint,
+            fill_basis=fill.fill_basis,
+            gap_fill=fill.gap_fill,
+            fee_reference=fill.fee_reference,
+            order_type=fill.order_type,
+            side=fill.side,
+            passive=fill.passive,
+        )
+        if is_refusal(stamped):
+            return stamped
+        filled: Fill | PartialFill = stamped.value
+        return Ok(filled)
+    stamped_partial = PartialFill.try_create(
+        fill.quantity,
+        fill.requested_quantity,
+        fill.pre_slip_price,
+        remaining_quantity=fill.remaining_quantity,
+        post_slip_price=post_slip_price,
+        taint=fill.taint,
+        fill_basis=fill.fill_basis,
+        gap_fill=fill.gap_fill,
+        fee_reference=fill.fee_reference,
+        order_type=fill.order_type,
+        side=fill.side,
+        passive=fill.passive,
+    )
+    if is_refusal(stamped_partial):
+        return stamped_partial
+    filled_partial: Fill | PartialFill = stamped_partial.value
+    return Ok(filled_partial)
 
 
 def _as_cost_tuple(value: object) -> Result[tuple[CostComponent, ...]]:
@@ -1128,6 +1501,12 @@ def _classify_decision(
             lot_step=lot_step,
             pre_slip_price=decision.pre_slip_price,
             post_slip_price=decision.post_slip_price,
+            fill_basis=decision.fill_basis,
+            gap_fill=decision.gap_fill,
+            fee_reference=decision.fee_reference,
+            order_type=decision.order_type,
+            side=decision.side,
+            passive=decision.passive,
         )
     return invalid(
         "fill",

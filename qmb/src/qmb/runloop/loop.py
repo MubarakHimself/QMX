@@ -408,13 +408,26 @@ class RestingIntent:
 
     intent_id: str
     stream_id: str
+    order: object | None = None
+    authorized: object | None = None
 
     def fp1_identity(self) -> dict[str, object]:
         """Canonical identity. Package SemVer never enters."""
-        return {"intent_id": self.intent_id, "stream_id": self.stream_id}
+        content: dict[str, object] = {"intent_id": self.intent_id, "stream_id": self.stream_id}
+        identity = getattr(self.order, "fp1_identity", None)
+        if callable(identity):
+            content["order"] = identity()
+        return content
 
     @classmethod
-    def try_create(cls, intent_id: object, stream_id: object) -> Result[RestingIntent]:
+    def try_create(
+        cls,
+        intent_id: object,
+        stream_id: object,
+        *,
+        order: object = None,
+        authorized: object = None,
+    ) -> Result[RestingIntent]:
         """Validate one resting intent token."""
         iid = clean_token(intent_id)
         if iid is None:
@@ -430,7 +443,7 @@ class RestingIntent:
                 "a resting intent names a non-empty stream id",
                 given=repr(stream_id),
             )
-        return Ok(cls(intent_id=iid, stream_id=sid))
+        return Ok(cls(intent_id=iid, stream_id=sid, order=order, authorized=authorized))
 
 
 @dataclass(frozen=True, slots=True)
@@ -1091,7 +1104,11 @@ def _phase_resting_orders(acc: _Acc) -> Result[_Acc]:
     kept: list[RestingIntent] = []
     for stream_id in acc.stream_ids:
         observation = acc.observations[stream_id]
-        for intent in [item for item in acc.remaining if item.stream_id == stream_id]:
+        cohort = [item for item in acc.remaining if item.stream_id == stream_id]
+        ranked = _rank_resting_cohort(acc.handler, cohort, stream_id, observation, acc.frontier)
+        if is_refusal(ranked):
+            return ranked
+        for intent in ranked.value:
             filled = acc.handler.execute_resting(intent, observation, acc.frontier)
             if is_refusal(filled):
                 return filled
@@ -1107,6 +1124,30 @@ def _phase_resting_orders(acc: _Acc) -> Result[_Acc]:
     acc.remaining = kept
     acc.traces.append(_trace("resting-orders", acc.stream_ids, actions))
     return Ok(acc)
+
+
+def _rank_resting_cohort(
+    handler: SliceHandler,
+    cohort: list[RestingIntent],
+    stream_id: str,
+    observation: SliceObservation | None,
+    frontier: Instant,
+) -> Result[tuple[RestingIntent, ...]]:
+    """Optional FILL-6 ranking. Handlers without rank_resting keep declaration order."""
+    ranker = getattr(handler, "rank_resting", None)
+    if not callable(ranker):
+        return Ok(tuple(cohort))
+    ranked = cast("Result[object]", ranker(cohort, stream_id, observation, frontier))
+    if is_refusal(ranked):
+        return ranked
+    value = ranked.value
+    if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
+        return invalid(
+            "rank_resting",
+            "rank_resting returns the cohort in declared-path split order",
+            given=repr(type(value).__name__),
+        )
+    return Ok(tuple(cast("Sequence[RestingIntent]", value)))
 
 
 def _phase_closed_data(acc: _Acc) -> Result[_Acc]:
@@ -1559,4 +1600,9 @@ def _coerce_resting(raw: object) -> Result[RestingIntent]:
             given=repr(type(raw).__name__),
         )
     mapping = cast("Mapping[str, object]", raw)
-    return RestingIntent.try_create(mapping.get("intent_id"), mapping.get("stream_id"))
+    return RestingIntent.try_create(
+        mapping.get("intent_id"),
+        mapping.get("stream_id"),
+        order=mapping.get("order"),
+        authorized=mapping.get("authorized", mapping.get("intent")),
+    )

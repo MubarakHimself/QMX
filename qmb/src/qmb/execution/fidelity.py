@@ -45,6 +45,7 @@ class FidelityIdentity:
     composition_version: int
     taint: str = TAINT_OPTIMISTIC
     calibration_ref: str | None = None
+    fill_basis: str | None = None
 
     def fp1_identity(self) -> dict[str, object]:
         """Canonical identity. Taint is omitted; package SemVer never enters."""
@@ -55,6 +56,8 @@ class FidelityIdentity:
         }
         if self.calibration_ref is not None:
             content["calibration_ref"] = self.calibration_ref
+        if self.fill_basis is not None:
+            content["fill_basis"] = self.fill_basis
         return content
 
     @classmethod
@@ -65,6 +68,7 @@ class FidelityIdentity:
         composition_version: object = COMPOSITION_VERSION,
         taint: object = TAINT_OPTIMISTIC,
         calibration_ref: object = None,
+        fill_basis: object = None,
     ) -> Result[FidelityIdentity]:
         """Validate one adapter's fidelity identity."""
         token = clean_token(adapter_id)
@@ -100,12 +104,23 @@ class FidelityIdentity:
                     given=repr(calibration_ref),
                 )
             ref = parsed_ref
+        basis: str | None = None
+        if fill_basis is not None:
+            parsed_basis = clean_token(fill_basis)
+            if parsed_basis is None:
+                return invalid(
+                    "fill_basis",
+                    "fill basis is worst-case or optimistic-exact (FILL-4)",
+                    given=repr(fill_basis),
+                )
+            basis = parsed_basis
         return Ok(
             cls(
                 adapter_id=token,
                 composition_version=composition_version,
                 taint=stamped.value,
                 calibration_ref=ref,
+                fill_basis=basis,
             )
         )
 
@@ -194,6 +209,7 @@ def stamp_fidelity(
     composition_version: object = COMPOSITION_VERSION,
     taint: object = TAINT_OPTIMISTIC,
     calibration_ref: object = None,
+    fill_basis: object = None,
 ) -> Result[FidelityIdentity]:
     """Stamp one fill/adapter fidelity identity (B-6, SC-06)."""
     return FidelityIdentity.try_create(
@@ -201,6 +217,7 @@ def stamp_fidelity(
         composition_version=composition_version,
         taint=taint,
         calibration_ref=calibration_ref,
+        fill_basis=fill_basis,
     )
 
 

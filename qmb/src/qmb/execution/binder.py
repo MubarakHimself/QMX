@@ -9,8 +9,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Final, Protocol, runtime_checkable
+from typing import Any, Final, Protocol, cast, runtime_checkable
 
+from qmf.core.chrono import Duration
 from qmf.core.fingerprint import Fingerprint, World, fingerprint
 from qmf.core.refusal import Ok, Result, is_refusal
 
@@ -26,9 +27,16 @@ from qmb.execution.adapters import (
     FILL_ADAPTER_CATALOG,
     FINANCING_ADAPTER_SCHEDULED,
     SLIPPAGE_ADAPTER_CATALOG,
+    DeclaredPathFillAdapter,
     FinancingScheduler,
 )
 from qmb.execution.fidelity import FidelityIdentity, RunFidelity, compute_run_fidelity
+from qmb.execution.fill import (
+    FILL_BASES,
+    FILL_BASIS_KEY,
+    FILL_BASIS_WORST_CASE,
+    STALE_PRICE_SPAN_KEY,
+)
 from qmb.execution.ports import (
     COMPOSITION_ORDER,
     COMPOSITION_VERSION,
@@ -41,6 +49,13 @@ from qmb.execution.ports import (
     refuse_optimistic_edge_claim,
     refuse_store_synthetic_governed_evidence,
     require_authorized_intent,
+)
+from qmb.execution.slippage import (
+    SLIPPAGE_APPLY_TO_PASSIVE_KEY,
+    SLIPPAGE_CALIBRATION_KEY,
+    SLIPPAGE_SEED_KEY,
+    SlippageCalibration,
+    derive_slippage_seed,
 )
 
 __all__ = [
@@ -128,6 +143,7 @@ class BoundExecution:
         exit_logic_ref: object = None,
         module: object = None,
         book_resolved_requested_r: object = None,
+        order: object = None,
     ) -> Result[CostedFill | NoFill]:
         """CT-23 authorized intent only; full-loss before open; exits skip a new full-loss."""
         authorized = require_authorized_intent(intent)
@@ -149,6 +165,7 @@ class BoundExecution:
             exit_logic_ref=exit_logic_ref,
             module=module,
             book_resolved_requested_r=book_resolved_requested_r,
+            order=order,
         )
 
 
@@ -180,16 +197,20 @@ def bind_execution_ports(config: object) -> Result[BoundExecution]:
     schedule = _require_schedule_ref(resolved.value)
     if is_refusal(schedule):
         return schedule
-    fill = FILL_ADAPTER_CATALOG[fill_id.value]()
-    slippage = SLIPPAGE_ADAPTER_CATALOG[slip_id.value]()
+    fill = _build_fill(fill_id.value, resolved.value)
+    if is_refusal(fill):
+        return fill
+    slippage = _build_slippage(slip_id.value, resolved.value)
+    if is_refusal(slippage):
+        return slippage
     cost = COST_ADAPTER_CATALOG[cost_id.value]()
     financing = FinancingScheduler(schedule_ref=schedule.value)
-    ports = ExecutionPorts.try_create(fill, slippage, cost, financing)
+    ports = ExecutionPorts.try_create(fill.value, slippage.value, cost, financing)
     if is_refusal(ports):
         return ports
     identities = _stamp_bound(
-        fill=fill,
-        slippage=slippage,
+        fill=fill.value,
+        slippage=slippage.value,
         cost=cost,
         financing=financing,
     )
@@ -207,6 +228,48 @@ def bind_execution_ports(config: object) -> Result[BoundExecution]:
             slippage_adapter_id=slip_id.value,
             cost_adapter_id=cost_id.value,
             financing_schedule_ref=schedule.value,
+        )
+    )
+
+
+def _build_fill(adapter_id: str, config: ResolvedRunConfig) -> Result[object]:
+    cls = FILL_ADAPTER_CATALOG[adapter_id]
+    basis = config.keys.get(FILL_BASIS_KEY, FILL_BASIS_WORST_CASE)
+    token = basis if isinstance(basis, str) else clean_token(basis)
+    if token is None:
+        token = FILL_BASIS_WORST_CASE
+    if token not in FILL_BASES:
+        return invalid(
+            FILL_BASIS_KEY,
+            "fill basis is worst-case or optimistic-exact (FILL-4)",
+            given=token,
+            allowed=list(FILL_BASES),
+        )
+    span = config.keys.get(STALE_PRICE_SPAN_KEY)
+    duration = span if isinstance(span, Duration) else None
+    if cls is DeclaredPathFillAdapter:
+        return Ok(DeclaredPathFillAdapter(fill_basis=token, stale_price_span=duration))
+    return Ok(cls())
+
+
+def _build_slippage(adapter_id: str, config: ResolvedRunConfig) -> Result[object]:
+    raw = config.keys.get(SLIPPAGE_CALIBRATION_KEY)
+    calibration = raw if isinstance(raw, SlippageCalibration) else None
+    apply_passive = config.keys.get(SLIPPAGE_APPLY_TO_PASSIVE_KEY, False) is True
+    seed_raw = config.keys.get(SLIPPAGE_SEED_KEY)
+    seed: int | None = None
+    if isinstance(seed_raw, int) and not isinstance(seed_raw, bool):
+        seed = seed_raw
+    else:
+        derived = derive_slippage_seed(config.fingerprint)
+        if not is_refusal(derived):
+            seed = derived.value
+    factory = cast(Any, SLIPPAGE_ADAPTER_CATALOG[adapter_id])
+    return Ok(
+        factory(
+            calibration=calibration,
+            apply_to_passive_limits=apply_passive,
+            seed=seed,
         )
     )
 
