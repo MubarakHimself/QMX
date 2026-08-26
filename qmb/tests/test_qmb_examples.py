@@ -543,6 +543,46 @@ def test_optimize_space_usage_example_runs_clean() -> None:
     assert "study parameter space ok" in completed.stdout
 
 
+def test_optimize_objective_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "optimize_objective_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert (
+        "objective { net_profit, max } and one hard constraint validated at Study creation"
+        in completed.stdout
+    )
+    assert (
+        "direction outside min|max and an off-roster metric refused at creation, not at trial"
+        in completed.stdout
+    )
+    assert (
+        "winner set ranks role=trial lines; the constraint-violating trial is excluded but named"
+        in completed.stdout
+    )
+    assert (
+        "the winner keeps the optimistic taint, no edge claim, no bar verdict until GAP-0048"
+        in completed.stdout
+    )
+    assert (
+        "the min-trades gate is on by default; a blank floor excludes nothing, invents no number"
+        in completed.stdout
+    )
+    assert (
+        "a configured UI-editable floor excludes the degenerate low-trade fit as a named bound"
+        in completed.stdout
+    )
+    assert (
+        "an optional target_value stops the Study early with the partial winner set preserved"
+        in completed.stdout
+    )
+    assert "study objective and constraints ok" in completed.stdout
+
+
 def pythonpath() -> str:
     return os.pathsep.join(
         [
