@@ -118,10 +118,11 @@ def test_click_runtime_matches_pyproject_pin() -> None:
 def test_command_tree_exposes_platform_groups() -> None:
     tree = command_tree()
     assert tuple(tree) == COMMAND_GROUPS
-    assert COMMAND_GROUPS == ("backtest", "data", "optimize", "ledger", "config")
+    assert COMMAND_GROUPS == ("backtest", "data", "optimize", "sweep", "ledger", "config")
     assert tree["backtest"] == ("run",)
     assert tree["data"] == qmb.DATA_COMMANDS
     assert tree["optimize"] == ("run", "space")
+    assert tree["sweep"] == ("count",)
     assert tree["ledger"] == ("merge", "bar")
     assert tree["config"] == ("compile", "show")
     identity = cli_tree_identity()

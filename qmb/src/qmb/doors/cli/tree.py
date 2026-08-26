@@ -30,6 +30,7 @@ from qmb.ledger import LedgerLine
 from qmb.optimize import parameter_space_from_bot
 from qmb.orchestrator import IsolatedRun, read_book_bar, read_merge_view, spawn_run
 from qmb.registryread import RegistryCompletion, RegistryReadPort
+from qmb.sweep import preflight_run_count
 
 __all__ = [
     "AUTOCOMPLETE",
@@ -54,6 +55,7 @@ __all__ = [
     "invoke_ledger_merge",
     "invoke_optimize_run",
     "invoke_optimize_space",
+    "invoke_sweep_count",
     "require_prerequisites",
 ]
 
@@ -61,6 +63,7 @@ COMMAND_GROUPS: Final[tuple[str, ...]] = (
     "backtest",
     "data",
     "optimize",
+    "sweep",
     "ledger",
     "config",
 )
@@ -76,6 +79,7 @@ _COMMAND_TREE: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         "backtest": ("run",),
         "data": DATA_COMMANDS,
         "optimize": ("run", "space"),
+        "sweep": ("count",),
         "ledger": ("merge", "bar"),
         "config": ("compile", "show"),
     }
@@ -101,6 +105,7 @@ _COMMAND_PREREQS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         "data.generate": ("destination",),
         "optimize.run": ("declaration", *_BACKTEST_PREREQS),
         "optimize.space": ("declaration",),
+        "sweep.count": ("declaration",),
         "ledger.merge": ("root", "world", "role"),
         "ledger.bar": ("root", "world"),
         "config.compile": ("port", "book_fragment", "bms_fragment", "run_spec"),
@@ -371,6 +376,19 @@ def invoke_optimize_run(
         limits=limits,
         probe=probe,
     )
+
+
+def invoke_sweep_count(*, declaration: object = None) -> Result[int]:
+    """Pre-flight run count for a declared sweep — a pure inspection (B-12, B-4).
+
+    A thin wrapper over the one pure library function: the axes-to-count
+    computation lives in ``qmb.sweep.preflight_run_count`` and is never duplicated
+    here. ``declaration`` is a ``SweepDeclaration`` or the raw axis mapping.
+    """
+    checked = require_prerequisites("sweep.count", {"declaration": declaration})
+    if is_refusal(checked):
+        return checked
+    return preflight_run_count(declaration)
 
 
 def invoke_data(command: object, provided: object = None) -> Result[Mapping[str, object]]:

@@ -564,3 +564,43 @@ CT-32 fingerprint or return a typed refusal.
 - **Product-user affordance:** reading the report does not trade, promote,
   or bench. If you want an action, take it at the Book door as the
   operator.
+
+### FR-29: A sweep axis is empty
+
+- **Failure class:** `invalid input` (CT-04), field `instruments`,
+  `timeframes`, or `parameters` (with the offending `parameter` named).
+- **Detection:** `SweepDeclaration.try_create` / `expand_sweep` /
+  `preflight_run_count` reject a zero-length instrument axis, a zero-length
+  BarSpec axis, or any parameter whose value list is empty — before any
+  Cartesian expansion or pre-flight count runs (AD-11; spec R9).
+- **Auto-recovery / retry:** none. Declare at least one value on the named
+  axis and re-declare the sweep.
+- **Visible degraded state:** no run specs are produced, no count is
+  reported, no batch is admitted, no process is spawned, no ledger line is
+  written. Expansion is a pure inspection that never half-runs.
+- **Notification tier:** caller-visible typed refusal.
+- **Product-user affordance:** an empty axis is never a silent zero-combo
+  batch — a sweep with an empty instrument, timeframe, or parameter list is
+  refused by name. Add the missing value and re-run; nothing was spent.
+
+### FR-30: A swept parameter value is a bare binary float or a malformed conversion
+
+- **Failure class:** `invalid input` (CT-04), field `parameters` (with the
+  offending `parameter` and list `index` named).
+- **Detection:** `SweepDeclaration.try_create` normalizes every parameter
+  value. A bare binary float is refused outright; a money/rational value must
+  arrive through a named AD-7/AD-22 conversion mapping stating its `kind`,
+  `rounding` mode, and target `scale` (with `currency`/`unit_kind`). A
+  conversion whose `value` is not a float, that omits the rounding mode or
+  scale, or that the CT-01 `from_float` boundary itself refuses (NaN,
+  infinity, bad scale) is rejected (B-8; AR-15; FR-001; DEC-0105).
+- **Auto-recovery / retry:** none. Supply an exact integer/categorical/boolean,
+  an already-exact `Money`/`ExactRational`, or a well-formed conversion mapping,
+  then re-declare the sweep.
+- **Visible degraded state:** the declaration is not built; no run spec, count,
+  or batch results. A binary float never reaches a run spec's identity content.
+- **Notification tier:** caller-visible typed refusal.
+- **Product-user affordance:** money and rational sweep values must cross a
+  named rounding boundary before they enter a run — a raw decimal like `1.5`
+  is refused so two runs can never disagree on a rounded amount. Declare the
+  currency/unit, scale, and rounding, and re-run.

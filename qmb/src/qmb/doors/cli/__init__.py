@@ -45,6 +45,7 @@ from qmb.doors.cli.tree import (
     invoke_ledger_merge,
     invoke_optimize_run,
     invoke_optimize_space,
+    invoke_sweep_count,
     require_prerequisites,
 )
 from qmb.registryread import RegistryReadPort
@@ -74,6 +75,7 @@ __all__ = [
     "invoke_ledger_merge",
     "invoke_optimize_run",
     "invoke_optimize_space",
+    "invoke_sweep_count",
     "main",
     "render_refusal",
     "require_prerequisites",
@@ -550,6 +552,60 @@ def optimize_space(ctx: click.Context) -> None:
     _transport(ctx, invoke_optimize_space(declaration=payload.get("declaration")))
 
 
+@main.group("sweep")
+def sweep_group() -> None:
+    """Declare a permutation sweep and inspect its pre-flight run count (B-12)."""
+
+
+@sweep_group.command("count")
+@click.argument(
+    "bot",
+    required=False,
+    default=None,
+    shell_complete=_shell_complete_kind(BOT_RECORD_KIND),
+)
+@click.option(
+    "--book",
+    default=None,
+    help="Human Book alias; the sweep cites its context.",
+    shell_complete=_shell_complete_kind(BOOK_RECORD_KIND),
+)
+@click.option(
+    "--bms",
+    default=None,
+    help="Human BMS alias; the sweep cites its context.",
+    shell_complete=_shell_complete_kind(BMS_RECORD_KIND),
+)
+@click.option("--instrument", "instruments", multiple=True, help="Instrument axis; repeatable.")
+@click.option(
+    "--seconds",
+    "seconds",
+    multiple=True,
+    type=int,
+    help="Time-interval BarSpec axis in seconds; repeatable.",
+)
+@click.pass_context
+def sweep_count(
+    ctx: click.Context,
+    bot: str | None,
+    book: str | None,
+    bms: str | None,
+    instruments: tuple[str, ...],
+    seconds: tuple[int, ...],
+) -> None:
+    """Pre-flight run count for a declared sweep (pure inspection; spawns nothing)."""
+    payload = _payload(ctx)
+    declaration = _sweep_declaration(
+        payload,
+        bot=bot,
+        book=book,
+        bms=bms,
+        instruments=instruments,
+        seconds=seconds,
+    )
+    _transport(ctx, invoke_sweep_count(declaration=declaration))
+
+
 @main.group("ledger")
 def ledger_group() -> None:
     """WriterId-scoped ledger merge views; never a stored pass/fail (B-4)."""
@@ -639,6 +695,37 @@ def _apply_run_spec(payload: dict[str, object], *, bot: str | None) -> None:
     payload["run_spec"] = {"bot": bot}
 
 
+def _sweep_declaration(
+    payload: Mapping[str, object],
+    *,
+    bot: str | None,
+    book: str | None,
+    bms: str | None,
+    instruments: tuple[str, ...],
+    seconds: tuple[int, ...],
+) -> object:
+    """Assemble the raw axis mapping the pure library function expands (B-12).
+
+    A pre-assembled ``declaration`` on the invocation object wins; otherwise the
+    door folds the parsed options into the axis mapping. The door computes no run
+    count of its own — that lives once in ``qmb.sweep``.
+    """
+    existing = payload.get("declaration")
+    if existing is not None:
+        return existing
+    timeframes = payload.get("timeframes")
+    if timeframes is None and seconds:
+        timeframes = [{"kind": "time-interval", "seconds": value} for value in seconds]
+    return {
+        "bot": bot if bot is not None else payload.get("bot"),
+        "book": book if book is not None else payload.get("book"),
+        "bms": bms if bms is not None else payload.get("bms"),
+        "instruments": list(instruments) if instruments else payload.get("instruments"),
+        "timeframes": timeframes,
+        "parameters": payload.get("parameters"),
+    }
+
+
 def _transport(ctx: click.Context, result: Result[_T]) -> None:
     if is_refusal(result):
         click.echo(render_refusal(result), err=True)
@@ -648,6 +735,11 @@ def _transport(ctx: click.Context, result: Result[_T]) -> None:
 
 
 def _format_ok(value: object) -> str:
+    if isinstance(value, bool):
+        return str(value)
+    if isinstance(value, int):
+        # Sweep pre-flight run count and other scalar library results.
+        return str(value)
     if isinstance(value, BacktestSubmission):
         return value.run_id.value
     if isinstance(value, ResolvedRunConfig):

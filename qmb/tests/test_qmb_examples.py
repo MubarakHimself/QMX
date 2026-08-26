@@ -424,6 +424,24 @@ def test_frontier_clock_usage_example_runs_clean() -> None:
     assert "does not choose world" in completed.stdout
 
 
+def test_sweep_axes_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "sweep_axes_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "Cartesian product: 24 isolated run specs, declaration order" in completed.stdout
+    assert "pure inspection, spawns no process" in completed.stdout
+    assert "1x1x1 sweep" in completed.stdout
+    assert "never a silent zero-combo batch" in completed.stdout
+    assert "a binary float never enters identity" in completed.stdout
+    assert "thin wrapper over one pure library expansion function" in completed.stdout
+    assert "sweep axes ok" in completed.stdout
+
+
 def pythonpath() -> str:
     return os.pathsep.join(
         [

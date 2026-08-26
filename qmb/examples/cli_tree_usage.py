@@ -48,7 +48,7 @@ def _unwrap(result: Result[T], what: str) -> T:
 def tree_is_the_platform_surface() -> None:
     tree = command_tree()
     assert tuple(tree) == COMMAND_GROUPS
-    assert COMMAND_GROUPS == ("backtest", "data", "optimize", "ledger", "config")
+    assert COMMAND_GROUPS == ("backtest", "data", "optimize", "sweep", "ledger", "config")
     runner = CliRunner()
     helped = runner.invoke(cli_main, ["--help"])
     assert helped.exit_code == 0, helped.output
