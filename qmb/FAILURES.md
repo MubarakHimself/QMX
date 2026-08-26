@@ -718,3 +718,48 @@ CT-32 fingerprint or return a typed refusal.
 - **Product-user affordance:** running the grid faster on more cores never
   changes a single combination's numbers. The scoreboard is the same whether
   you ran it sequentially or all at once.
+
+### FR-36: A cost estimate before any per-trial runtime baseline is measured
+
+- **Failure class:** designed degraded state (no CT-04 category — a value-bearing
+  `Ok`, not a refusal); AD-13 measure-then-budget (NFR-04).
+- **Detection:** `qmb.optimize.estimate_study_cost` is handed no measured
+  per-trial runtime baseline (`per_trial_runtime=None`, or resolved to none from
+  the ledger). The projection `total x per-trial / concurrency` cannot be formed
+  without a measured figure.
+- **Auto-recovery / retry:** none automatic. Once a real trial has run and a
+  per-trial runtime baseline is measured, re-requesting the estimate yields a
+  `measured` projection.
+- **Visible degraded state:** the returned `CostEstimate.status` is
+  `not-yet-measured`; `projected_wall_ns` and `per_trial_runtime_ns` are absent
+  from the estimate's `fp1_identity` — no number is invented. The projected trial
+  count (from the explicit budget policy) is still reported.
+- **Notification tier:** operator-visible — the estimate says plainly it has no
+  measured baseline yet.
+- **Product-user affordance:** what failed — you asked what a Study will cost
+  before anything has run, so there is no measured per-trial time yet. Why — the
+  platform refuses to invent a runtime it has not measured. Can I retry — yes;
+  run (or resume) the Study far enough to measure one trial, then ask again and
+  the estimate fills in.
+
+### FR-37: A Study resume reads an inconsistent ledger history
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `qmb.optimize.plan_study_resume` folds the ledger-view trial
+  history against the declared generation batch size. It refuses when a completed
+  trial's ask index is `>= batch_size`, or when a trial sits in a generation
+  ahead of the first not-yet-complete generation (the barrier discipline forbids
+  conditioning on it).
+- **Auto-recovery / retry:** none automatic — the ledger read is inconsistent
+  with the declared Study shape and must be corrected, not retried.
+- **Visible degraded state:** the resume plan is not produced; the Study is not
+  resumed. Completed trials already in the ledger are untouched and still
+  readable.
+- **Notification tier:** operator-visible typed refusal naming the offending
+  generation/ask.
+- **Product-user affordance:** what failed — the saved trial history does not fit
+  the Study you asked to resume (a trial numbered past the generation size, or a
+  generation out of order). Why — resuming from it would either double-run work
+  or condition the sampler on a generation that never finished. Can I retry —
+  not as-is; the resume points at the wrong Study or a corrupted history. Confirm
+  the Study id/batch size match the ledger you are resuming from.

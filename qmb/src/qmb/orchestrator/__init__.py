@@ -88,6 +88,14 @@ from qmb.orchestrator.spawn import (
     start_run,
     worker_main,
 )
+from qmb.orchestrator.study import (
+    STUDY_STATE_RUNNING,
+    STUDY_STATE_STOPPED,
+    STUDY_STOP_OUTCOME_CLASS,
+    STUDY_STOP_OUTCOME_FORMAT_VERSION,
+    StudyStopOutcome,
+    stop_study,
+)
 from qmb.orchestrator.watch import (
     ABORT_KILLS_SIBLINGS,
     ENFORCEMENT,
@@ -132,6 +140,10 @@ __all__ = [
     "RESULT_NAME",
     "SANDBOX_CONCURRENT_MOTIVATING_REFERENCE",
     "SPAWN_MODEL",
+    "STUDY_STATE_RUNNING",
+    "STUDY_STATE_STOPPED",
+    "STUDY_STOP_OUTCOME_CLASS",
+    "STUDY_STOP_OUTCOME_FORMAT_VERSION",
     "TIMESTAMP_ENCODING",
     "TIMESTAMP_EXCLUDED_FROM_FP1",
     "WRITER_NAME",
@@ -147,6 +159,7 @@ __all__ = [
     "ProcessLimitProbe",
     "ResourceGovernor",
     "SpawnJob",
+    "StudyStopOutcome",
     "abort_run",
     "append_run_log",
     "collect_run",
@@ -170,6 +183,7 @@ __all__ = [
     "spawn_governed",
     "spawn_run",
     "start_run",
+    "stop_study",
     "structured_log_fp1_identity",
     "worker_main",
     "writer_slot_token",

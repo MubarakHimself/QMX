@@ -121,7 +121,7 @@ def test_command_tree_exposes_platform_groups() -> None:
     assert COMMAND_GROUPS == ("backtest", "data", "optimize", "sweep", "ledger", "config")
     assert tree["backtest"] == ("run",)
     assert tree["data"] == qmb.DATA_COMMANDS
-    assert tree["optimize"] == ("run", "space")
+    assert tree["optimize"] == ("run", "space", "estimate")
     assert tree["sweep"] == ("count",)
     assert tree["ledger"] == ("merge", "bar")
     assert tree["config"] == ("compile", "show")

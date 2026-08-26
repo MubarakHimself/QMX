@@ -40,6 +40,7 @@ CAPABILITY_LIBRARY: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         "data.generate": ("DATA_COMMANDS", "data_front_identity"),
         "optimize.run": ("compile_run_config", "spawn_run", "parameter_space_from_bot"),
         "optimize.space": ("parameter_space_from_bot",),
+        "optimize.estimate": ("estimate_study_cost",),
         "sweep.count": ("preflight_run_count",),
         "ledger.merge": ("read_merge_view",),
         "ledger.bar": ("read_book_bar",),

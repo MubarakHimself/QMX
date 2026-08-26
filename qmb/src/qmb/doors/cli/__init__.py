@@ -43,11 +43,13 @@ from qmb.doors.cli.tree import (
     invoke_data,
     invoke_ledger_bar,
     invoke_ledger_merge,
+    invoke_optimize_estimate,
     invoke_optimize_run,
     invoke_optimize_space,
     invoke_sweep_count,
     require_prerequisites,
 )
+from qmb.optimize import CostEstimate
 from qmb.registryread import RegistryReadPort
 
 _T = TypeVar("_T")
@@ -73,6 +75,7 @@ __all__ = [
     "invoke_data",
     "invoke_ledger_bar",
     "invoke_ledger_merge",
+    "invoke_optimize_estimate",
     "invoke_optimize_run",
     "invoke_optimize_space",
     "invoke_sweep_count",
@@ -552,6 +555,48 @@ def optimize_space(ctx: click.Context) -> None:
     _transport(ctx, invoke_optimize_space(declaration=payload.get("declaration")))
 
 
+@optimize_group.command("estimate")
+@click.option(
+    "--per-trial-runtime-ns",
+    default=None,
+    type=int,
+    help="Measured typical per-trial runtime (ns); omit while not yet measured.",
+)
+@click.option(
+    "--concurrency-cap",
+    default=None,
+    type=int,
+    help="Governor min(cpu, memory) parallelism bound; or pass cpu/memory budgets on obj.",
+)
+@click.pass_context
+def optimize_estimate(
+    ctx: click.Context,
+    per_trial_runtime_ns: int | None,
+    concurrency_cap: int | None,
+) -> None:
+    """Estimate a Study's cost before committing compute (pure; spawns nothing)."""
+    payload = _payload(ctx)
+    _transport(
+        ctx,
+        invoke_optimize_estimate(
+            budget=payload.get("budget"),
+            param_count=payload.get("param_count"),
+            declaration=payload.get("declaration"),
+            per_trial_runtime=(
+                per_trial_runtime_ns
+                if per_trial_runtime_ns is not None
+                else payload.get("per_trial_runtime")
+            ),
+            concurrency_cap=(
+                concurrency_cap if concurrency_cap is not None else payload.get("concurrency_cap")
+            ),
+            cpu_budget=payload.get("cpu_budget"),
+            memory_budget=payload.get("memory_budget"),
+            projected_peak_memory=payload.get("projected_peak_memory"),
+        ),
+    )
+
+
 @main.group("sweep")
 def sweep_group() -> None:
     """Declare a permutation sweep and inspect its pre-flight run count (B-12)."""
@@ -744,6 +789,9 @@ def _format_ok(value: object) -> str:
         return value.run_id.value
     if isinstance(value, ResolvedRunConfig):
         return value.fingerprint.value
+    if isinstance(value, CostEstimate):
+        # A pre-flight estimate is machine-readable JSON; it spawns no trial.
+        return json.dumps(_jsonable_payload(value.fp1_identity()), ensure_ascii=False)
     if isinstance(value, Mapping):
         mapping = cast("Mapping[str, object]", value)
         # Story 18.3/18.4: list/catalog/verify payloads are machine-readable JSON.

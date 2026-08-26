@@ -27,8 +27,14 @@ from qmb.data import DATA_COMMANDS, catalog, data_front_identity, gap_check, lis
 from qmb.data import download as run_download
 from qmb.doors import CLI_PIN_KEY, CLI_PROG
 from qmb.ledger import LedgerLine
-from qmb.optimize import parameter_space_from_bot
-from qmb.orchestrator import IsolatedRun, read_book_bar, read_merge_view, spawn_run
+from qmb.optimize import CostEstimate, estimate_study_cost, parameter_space_from_bot
+from qmb.orchestrator import (
+    GovernorBudgets,
+    IsolatedRun,
+    read_book_bar,
+    read_merge_view,
+    spawn_run,
+)
 from qmb.registryread import RegistryCompletion, RegistryReadPort
 from qmb.sweep import preflight_run_count
 
@@ -53,6 +59,7 @@ __all__ = [
     "invoke_data",
     "invoke_ledger_bar",
     "invoke_ledger_merge",
+    "invoke_optimize_estimate",
     "invoke_optimize_run",
     "invoke_optimize_space",
     "invoke_sweep_count",
@@ -78,7 +85,7 @@ _COMMAND_TREE: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
     {
         "backtest": ("run",),
         "data": DATA_COMMANDS,
-        "optimize": ("run", "space"),
+        "optimize": ("run", "space", "estimate"),
         "sweep": ("count",),
         "ledger": ("merge", "bar"),
         "config": ("compile", "show"),
@@ -105,6 +112,7 @@ _COMMAND_PREREQS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         "data.generate": ("destination",),
         "optimize.run": ("declaration", *_BACKTEST_PREREQS),
         "optimize.space": ("declaration",),
+        "optimize.estimate": ("budget",),
         "sweep.count": ("declaration",),
         "ledger.merge": ("root", "world", "role"),
         "ledger.bar": ("root", "world"),
@@ -327,6 +335,45 @@ def invoke_optimize_space(*, declaration: object = None) -> Result[object]:
     return Ok(space)
 
 
+def invoke_optimize_estimate(
+    *,
+    budget: object = None,
+    param_count: object = None,
+    declaration: object = None,
+    per_trial_runtime: object = None,
+    concurrency_cap: object = None,
+    cpu_budget: object = None,
+    memory_budget: object = None,
+    projected_peak_memory: object = None,
+) -> Result[CostEstimate]:
+    """Estimate a Study's cost through the CLI door, spawning nothing (AC3, OPT-24).
+
+    A thin wrapper over the one pure library function
+    ``qmb.optimize.estimate_study_cost``: the projection lives once in the library
+    and is never duplicated here. The parameter count may be given directly or
+    derived from a CT-33 ``declaration``; the governor concurrency cap may be given
+    directly or resolved from the ``cpu_budget``/``memory_budget`` (and optional
+    ``projected_peak_memory``) governor budgets. No trial is spawned.
+    """
+    checked = require_prerequisites("optimize.estimate", {"budget": budget})
+    if is_refusal(checked):
+        return checked
+    resolved_count = _resolve_param_count(param_count, declaration)
+    if is_refusal(resolved_count):
+        return resolved_count
+    cap = _resolve_concurrency_cap(
+        concurrency_cap, cpu_budget, memory_budget, projected_peak_memory
+    )
+    if is_refusal(cap):
+        return cap
+    return estimate_study_cost(
+        budget,
+        param_count=resolved_count.value,
+        per_trial_runtime=per_trial_runtime,
+        concurrency_cap=cap.value,
+    )
+
+
 def invoke_optimize_run(
     *,
     declaration: object = None,
@@ -484,6 +531,65 @@ def _present(value: object) -> bool:
     if value is None:
         return False
     return not (isinstance(value, str) and value.strip() == "")
+
+
+def _resolve_param_count(param_count: object, declaration: object) -> Result[object]:
+    """Resolve the parameter count for a scale-with-#params estimate (AC3).
+
+    An explicit ``param_count`` wins; otherwise it is derived from the CT-33
+    ``declaration``'s parameter space (read once through the library). ``None`` is
+    left for the pure estimator to require only when the budget scales with params.
+    """
+    if param_count is not None:
+        return Ok(param_count)
+    if declaration is None:
+        result: object = None
+        return Ok(result)
+    space = parameter_space_from_bot(declaration)
+    if is_refusal(space):
+        return space
+    derived: object = len(space.value)
+    return Ok(derived)
+
+
+def _resolve_concurrency_cap(
+    concurrency_cap: object,
+    cpu_budget: object,
+    memory_budget: object,
+    projected_peak_memory: object,
+) -> Result[object]:
+    """Resolve the governor concurrency cap the estimate divides by (AC3, B-5).
+
+    An explicit ``concurrency_cap`` wins; otherwise it is the governor's
+    ``min(cpu, memory)`` parallelism bound over the declared budgets. A bound of
+    zero — no run fits the declared budget — is a typed refusal, never a silent
+    divide.
+    """
+    if concurrency_cap is not None:
+        return Ok(concurrency_cap)
+    if cpu_budget is None and memory_budget is None:
+        return invalid(
+            "concurrency_cap",
+            "an estimate divides by the governor concurrency cap; pass concurrency_cap "
+            "directly, or the governor cpu/memory budgets to resolve min(cpu, memory)",
+        )
+    budgets = GovernorBudgets.try_create(cpu_budget, memory_budget)
+    if is_refusal(budgets):
+        return budgets
+    peak = projected_peak_memory if projected_peak_memory is not None else 1
+    bound = budgets.value.parallelism_bound(peak)
+    if is_refusal(bound):
+        return bound
+    if bound.value < 1:
+        return unavailable(
+            "concurrency_cap",
+            "the governor min(cpu, memory) parallelism bound is zero — no run fits the "
+            "declared budget, so no wall can be projected (B-5, FM-6)",
+            cpu_budget=cpu_budget,
+            memory_budget=memory_budget,
+        )
+    cap: object = bound.value
+    return Ok(cap)
 
 
 def _as_compiler(compiler: object) -> Result[_CompileFn]:

@@ -670,6 +670,24 @@ def test_optimize_sampler_usage_example_runs_clean() -> None:
     assert "optuna TPE-class sampler ok" in completed.stdout
 
 
+def test_optimize_resume_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "optimize_resume_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "study resume ok" in completed.stdout
+    assert "resumes from the last completed generation" in completed.stdout
+    assert "ledger is the sole source" in completed.stdout
+    assert "completed trials are not re-run" in completed.stdout
+    assert "not-yet-measured" in completed.stdout
+    assert "spawns no trial" in completed.stdout
+    assert "through the qmb CLI door" in completed.stdout
+
+
 def pythonpath() -> str:
     return os.pathsep.join(
         [
