@@ -490,6 +490,33 @@ def test_sweep_batch_usage_example_runs_clean() -> None:
     assert "sweep batch ok" in completed.stdout
 
 
+def test_sweep_rank_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "sweep_rank_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "ranked best to worst by net_profit over one sweep_id, one world, one role" in (
+        completed.stdout
+    )
+    assert "caller-supplied max_drawdown bound filtered the ordering; no threshold invented" in (
+        completed.stdout
+    )
+    assert "ranking makes no edge claim, no pass/fail verdict, and refuses every act" in (
+        completed.stdout
+    )
+    assert "refused and undefined combos land in the incomplete list, never a zero score" in (
+        completed.stdout
+    )
+    assert "same sweep, same objective: identical ranking regardless of input order" in (
+        completed.stdout
+    )
+    assert "sweep rank ok" in completed.stdout
+
+
 def pythonpath() -> str:
     return os.pathsep.join(
         [

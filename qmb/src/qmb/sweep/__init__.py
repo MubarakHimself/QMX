@@ -9,8 +9,12 @@ registry-read port and frozen for every combination (Story 20.2, B-15, SC-11);
 and batch execution: each combination runs as one isolated, fully-labelled OS
 process under the ``min(cpu, memory)`` governor and writes exactly one ledger
 line, where a single combo's refusal is that combo's outcome and never aborts
-the batch (Story 20.3, B-4, B-5, spec R10-R12). Cross-run ranking is a later
-read-time fold over these per-combo lines.
+the batch (Story 20.3, B-4, B-5, spec R10-R12). Cross-run ranking is a read-time
+fold over these per-combo lines: it orders a completed sweep's combinations by a
+declared objective ``measure_identity`` with optional metric-operator-value
+constraints, publishes never acts, and reports refused/incomplete combos
+separately — never re-running and never coercing a refusal to a zero score
+(Story 20.4, B-4, B-10, B-12, B-14, spec R11-R12).
 """
 
 from __future__ import annotations
@@ -62,6 +66,32 @@ from qmb.sweep.batch import (
     sweep_batch_identity,
     sweep_coordinates_of,
 )
+from qmb.sweep.rank import (
+    CONSTRAINT_OPERATORS,
+    INCOMPLETE_CONSTRAINT_MISSING,
+    INCOMPLETE_CONSTRAINT_UNDEFINED,
+    INCOMPLETE_OBJECTIVE_MISSING,
+    INCOMPLETE_OBJECTIVE_UNDEFINED,
+    INCOMPLETE_REASONS,
+    INCOMPLETE_REFUSED,
+    RANK_ADDS_COMPUTATION,
+    RANK_ASCENDING,
+    RANK_DESCENDING,
+    RANK_DIRECTIONS,
+    RANK_FORBIDDEN_ACTS,
+    RANK_MAKES_EDGE_CLAIM,
+    RANK_MAKES_PASS_FAIL_VERDICT,
+    RANK_PUBLISHES_NEVER_ACTS,
+    RANKING_CLASS,
+    RANKING_FORMAT_VERSION,
+    ConstraintFilter,
+    IncompleteCombo,
+    RankedCombo,
+    SweepRanking,
+    rank_sweep,
+    refuse_rank_act,
+    sweep_rank_identity,
+)
 
 __all__ = [
     "ADMISSION_FREEZES_AS_OF",
@@ -69,11 +99,28 @@ __all__ = [
     "ADMISSION_SINGLE_AS_OF",
     "BATCH_ABORTS_ON_COMBO_REFUSAL",
     "BATCH_ONE_LINE_PER_COMBO",
+    "CONSTRAINT_OPERATORS",
     "CONVERSION_KINDS",
+    "INCOMPLETE_CONSTRAINT_MISSING",
+    "INCOMPLETE_CONSTRAINT_UNDEFINED",
+    "INCOMPLETE_OBJECTIVE_MISSING",
+    "INCOMPLETE_OBJECTIVE_UNDEFINED",
+    "INCOMPLETE_REASONS",
+    "INCOMPLETE_REFUSED",
     "PREFLIGHT_ADMITS_BATCH",
     "PREFLIGHT_IS_PURE_INSPECTION",
     "PREFLIGHT_SPAWNS_PROCESS",
     "PREFLIGHT_WRITES_LEDGER_LINE",
+    "RANKING_CLASS",
+    "RANKING_FORMAT_VERSION",
+    "RANK_ADDS_COMPUTATION",
+    "RANK_ASCENDING",
+    "RANK_DESCENDING",
+    "RANK_DIRECTIONS",
+    "RANK_FORBIDDEN_ACTS",
+    "RANK_MAKES_EDGE_CLAIM",
+    "RANK_MAKES_PASS_FAIL_VERDICT",
+    "RANK_PUBLISHES_NEVER_ACTS",
     "REGISTRY_AS_OF_KEY",
     "STATUS_COMPLETED",
     "STATUS_REFUSED",
@@ -92,17 +139,24 @@ __all__ = [
     "VALUE_KIND_MONEY",
     "VALUE_KIND_RATIONAL",
     "AdmittedSweep",
+    "ConstraintFilter",
+    "IncompleteCombo",
+    "RankedCombo",
     "SweepBatchReport",
     "SweepComboOutcome",
     "SweepDeclaration",
     "SweepLabel",
+    "SweepRanking",
     "SweepRunSpec",
     "admit_sweep",
     "expand_sweep",
     "preflight_run_count",
+    "rank_sweep",
+    "refuse_rank_act",
     "run_sweep_batch",
     "sweep_admission_identity",
     "sweep_axes_identity",
     "sweep_batch_identity",
     "sweep_coordinates_of",
+    "sweep_rank_identity",
 ]
