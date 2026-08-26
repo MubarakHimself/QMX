@@ -28,7 +28,7 @@ from qmf.data.ingest import (
 from qmf.data.source_boundary import SourceObservationBoundary
 from qmf.data.store import EvidenceStore
 
-from qmb._refuse import clean_token, invalid, unavailable
+from qmb._refuse import clean_token, invalid, storage, unavailable
 from qmb.data.catalog import persist_coverage_windows
 from qmb.data.ports import (
     DOWNLOAD_SIDES,
@@ -258,7 +258,10 @@ def download(
     # CT-15 ingest owns CT-10 minting; durable intake keys make overlapping
     # re-runs idempotent across processes via (source, native id, revision).
     ingest = ExternalSourceIngest(_IngestBridge(port))
-    known_keys = _load_intake_keys(Path(request.destination))
+    loaded_keys = _load_intake_keys(Path(request.destination))
+    if is_refusal(loaded_keys):
+        return loaded_keys
+    known_keys = loaded_keys.value
 
     produced = 0
     idempotent = 0
@@ -306,7 +309,9 @@ def download(
                     return stored
                 admitted += 1
                 known_keys.add(key.value)
-                _append_intake_key(Path(request.destination), key.value)
+                appended = _append_intake_key(Path(request.destination), key.value)
+                if is_refusal(appended):
+                    return appended
             else:
                 idempotent += 1
                 known_keys.add(key.value)
@@ -515,13 +520,30 @@ def _as_world(value: object) -> Result[World]:
 _INTAKE_LEDGER: Final[str] = ".qmb_intake_keys.jsonl"
 
 
-def _load_intake_keys(destination: Path) -> set[IntakeKey]:
-    """Load durable CT-15 intake keys so overlapping re-runs stay idempotent."""
+def _load_intake_keys(destination: Path) -> Result[set[IntakeKey]]:
+    """Load durable CT-15 intake keys so overlapping re-runs stay idempotent.
+
+    A missing ledger is empty. A leaf symlink, non-regular file, oversize
+    file, or out-of-root realpath is a storage refusal, never a silent skip.
+    """
+    from qmb.orchestrator.paths import (  # noqa: PLC0415 — import-cycle with orchestrator
+        MAX_JSONL_BYTES,
+        read_contained_text,
+    )
+
     path = destination / _INTAKE_LEDGER
+    if not path.exists() and not path.is_symlink():
+        return Ok(set())
+    loaded = read_contained_text(
+        path,
+        contain_within=destination,
+        max_bytes=MAX_JSONL_BYTES,
+        field="intake_ledger",
+    )
+    if is_refusal(loaded):
+        return loaded
     keys: set[IntakeKey] = set()
-    if not path.is_file():
-        return keys
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in loaded.value.splitlines():
         token = line.strip()
         if token == "":
             continue
@@ -540,18 +562,34 @@ def _load_intake_keys(destination: Path) -> set[IntakeKey]:
         if is_refusal(built):
             continue
         keys.add(built.value)
-    return keys
+    return Ok(keys)
 
 
-def _append_intake_key(destination: Path, key: IntakeKey) -> None:
-    """Append one intake key after a successful CT-10 admit."""
-    destination.mkdir(parents=True, exist_ok=True)
+def _append_intake_key(destination: Path, key: IntakeKey) -> Result[None]:
+    """Append one intake key; refuse a symlink or out-of-root path."""
+    from qmb.orchestrator.paths import (  # noqa: PLC0415 — import-cycle with orchestrator
+        append_bytes_no_follow,
+    )
+
+    try:
+        destination.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        return storage(
+            "intake_ledger",
+            "could not create the intake-ledger destination directory",
+            given=type(exc).__name__,
+            path=str(destination),
+        )
     path = destination / _INTAKE_LEDGER
     row = {
         "source": key.source,
         "source_native_id": key.source_native_id,
         "revision": key.revision,
     }
-    with path.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(row, separators=(",", ":"), sort_keys=True))
-        handle.write("\n")
+    payload = json.dumps(row, separators=(",", ":"), sort_keys=True) + "\n"
+    return append_bytes_no_follow(
+        path,
+        payload.encode("utf-8"),
+        contain_within=destination,
+        field="intake_ledger",
+    )

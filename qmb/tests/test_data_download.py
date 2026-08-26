@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import lzma
 import struct
 import tempfile
@@ -9,6 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import TypeVar
 
+import pytest
 from click.testing import CliRunner
 from qmb.data import (
     CONVERSION_BOUNDARY,
@@ -42,10 +44,13 @@ from qmf.core import (
     is_refusal,
 )
 from qmf.core.exact import RoundingMode
-from qmf.data import DUKASCOPY_SOURCE, EvidenceStore
+from qmf.data import DUKASCOPY_SOURCE, EvidenceStore, IntakeKey
 from qmf.data.dukascopy import PERSONAL_USE_LICENSE, DukascopyHourKey
 
+download_mod = importlib.import_module("qmb.data.download")
+
 T = TypeVar("T")
+_INTAKE_LEDGER: str = download_mod._INTAKE_LEDGER  # pyright: ignore[reportPrivateUsage]
 
 _HOUR = datetime(2024, 1, 15, 10, tzinfo=timezone.utc)
 _HOUR_NS = int(_HOUR.timestamp() * 1_000_000_000)
@@ -301,3 +306,180 @@ def test_missing_adapter_is_unavailable() -> None:
         )
         assert is_refusal(refused)
         assert refused.category is RefusalCategory.UNAVAILABLE_DEPENDENCY
+
+
+def _try_symlink(link: Path, target: Path) -> None:
+    """Create a symlink or skip where the platform forbids it (Windows dev)."""
+    try:
+        link.symlink_to(target)
+    except (OSError, NotImplementedError):
+        pytest.skip("symlink creation is not permitted on this platform")
+
+
+def _intake_key(native: str = "EURUSD#1", revision: str = "r1") -> IntakeKey:
+    return _ok(IntakeKey.try_create("dukascopy", native, revision))
+
+
+def _load_intake_keys(destination: Path) -> Result[set[IntakeKey]]:
+    result: Result[set[IntakeKey]] = download_mod._load_intake_keys(  # pyright: ignore[reportPrivateUsage]
+        destination
+    )
+    return result
+
+
+def _append_intake_key(destination: Path, key: IntakeKey) -> Result[None]:
+    result: Result[None] = download_mod._append_intake_key(  # pyright: ignore[reportPrivateUsage]
+        destination, key
+    )
+    return result
+
+
+def test_intake_ledger_round_trip_and_missing_file(tmp_path: Path) -> None:
+    destination = tmp_path / "raw"
+    missing = _load_intake_keys(destination)
+    assert _ok(missing) == set()
+    key = _intake_key()
+    _ok(_append_intake_key(destination, key))
+    loaded = _ok(_load_intake_keys(destination))
+    assert loaded == {key}
+
+
+def test_intake_ledger_load_refuses_a_symlink(tmp_path: Path) -> None:
+    destination = tmp_path / "raw"
+    destination.mkdir()
+    outside = tmp_path / "outside.jsonl"
+    outside.write_text('{"source":"x","source_native_id":"y","revision":"r1"}\n', encoding="utf-8")
+    _try_symlink(destination / _INTAKE_LEDGER, outside)
+    refused = _load_intake_keys(destination)
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.STORAGE_FAILURE
+    assert "x" in outside.read_text(encoding="utf-8")
+
+
+def test_intake_ledger_append_refuses_a_symlink(tmp_path: Path) -> None:
+    destination = tmp_path / "raw"
+    destination.mkdir()
+    outside = tmp_path / "outside.jsonl"
+    outside.write_bytes(b"keep\n")
+    _try_symlink(destination / _INTAKE_LEDGER, outside)
+    refused = _append_intake_key(destination, _intake_key())
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.STORAGE_FAILURE
+    assert outside.read_bytes() == b"keep\n"
+
+
+def test_intake_ledger_load_refuses_an_out_of_root_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    destination = tmp_path / "raw"
+    destination.mkdir()
+    outside = tmp_path / "secret.jsonl"
+    outside.write_text('{"source":"x","source_native_id":"y","revision":"r1"}\n', encoding="utf-8")
+    monkeypatch.setattr(download_mod, "_INTAKE_LEDGER", "../secret.jsonl")
+    refused = _load_intake_keys(destination)
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.STORAGE_FAILURE
+    assert outside.read_text(encoding="utf-8").startswith('{"source":"x"')
+
+
+def test_intake_ledger_append_refuses_an_out_of_root_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    destination = tmp_path / "raw"
+    destination.mkdir()
+    outside = tmp_path / "secret.jsonl"
+    outside.write_bytes(b"keep\n")
+    monkeypatch.setattr(download_mod, "_INTAKE_LEDGER", "../secret.jsonl")
+    refused = _append_intake_key(destination, _intake_key())
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.STORAGE_FAILURE
+    assert outside.read_bytes() == b"keep\n"
+
+
+def test_intake_ledger_load_refuses_a_path_detected_as_a_symlink(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    destination = tmp_path / "raw"
+    destination.mkdir()
+    target = destination / _INTAKE_LEDGER
+    target.write_text("{}\n", encoding="utf-8")
+    real_is_symlink = Path.is_symlink
+
+    def detects_the_ledger_as_a_link(self: Path) -> bool:
+        return True if self == target else real_is_symlink(self)
+
+    monkeypatch.setattr(Path, "is_symlink", detects_the_ledger_as_a_link)
+    refused = _load_intake_keys(destination)
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.STORAGE_FAILURE
+
+
+def test_intake_ledger_append_refuses_a_path_detected_as_a_symlink(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    destination = tmp_path / "raw"
+    destination.mkdir()
+    target = destination / _INTAKE_LEDGER
+    real_is_symlink = Path.is_symlink
+
+    def detects_the_ledger_as_a_link(self: Path) -> bool:
+        return True if self == target else real_is_symlink(self)
+
+    monkeypatch.setattr(Path, "is_symlink", detects_the_ledger_as_a_link)
+    refused = _append_intake_key(destination, _intake_key())
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.STORAGE_FAILURE
+    assert not target.exists()
+
+
+def test_intake_ledger_load_refuses_a_non_regular_path(tmp_path: Path) -> None:
+    destination = tmp_path / "raw"
+    destination.mkdir()
+    (destination / _INTAKE_LEDGER).mkdir()
+    refused = _load_intake_keys(destination)
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.STORAGE_FAILURE
+
+
+def test_intake_ledger_append_refuses_a_non_regular_path(tmp_path: Path) -> None:
+    destination = tmp_path / "raw"
+    destination.mkdir()
+    (destination / _INTAKE_LEDGER).mkdir()
+    refused = _append_intake_key(destination, _intake_key())
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.STORAGE_FAILURE
+
+
+def test_intake_ledger_load_refuses_an_oversize_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    destination = tmp_path / "raw"
+    destination.mkdir()
+    path = destination / _INTAKE_LEDGER
+    path.write_bytes(b"x" * 32)
+    monkeypatch.setattr("qmb.orchestrator.paths.MAX_JSONL_BYTES", 8)
+    refused = _load_intake_keys(destination)
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.STORAGE_FAILURE
+    assert refused.context.get("max_bytes") == 8
+
+
+def test_download_refuses_a_non_regular_intake_ledger(tmp_path: Path) -> None:
+    (tmp_path / _INTAKE_LEDGER).mkdir()
+    path = "EURUSD/2024/00/15/10h_ticks.bi5"
+    transport = _FixtureTransport({path: _bi5((0, 110260, 110250))})
+    refused = download(_resources(tmp_path, transport))
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.STORAGE_FAILURE
+
+
+def test_download_refuses_a_symlinked_intake_ledger(tmp_path: Path) -> None:
+    outside = tmp_path / "outside.jsonl"
+    outside.write_bytes(b"keep\n")
+    _try_symlink(tmp_path / _INTAKE_LEDGER, outside)
+    path = "EURUSD/2024/00/15/10h_ticks.bi5"
+    transport = _FixtureTransport({path: _bi5((0, 110260, 110250))})
+    refused = download(_resources(tmp_path, transport))
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.STORAGE_FAILURE
+    assert outside.read_bytes() == b"keep\n"
