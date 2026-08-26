@@ -162,6 +162,7 @@ def test_spawn_run_is_a_separate_os_process_in_a_run_id_directory(
     assert isolated.run_id == config.fingerprint
     assert (directory / qmb.PAYLOAD_NAME).is_file()
     assert (directory / qmb.RESULT_NAME).is_file()
+    assert (directory / qmb.RESULTS_DIR_NAME / qmb.CT32_ARTIFACT_NAME).is_file()
     writer = json.loads((directory / qmb.WRITER_NAME).read_text(encoding="utf-8"))
     assert writer["pid"] == isolated.worker_pid
     assert writer["run_id"] == config.fingerprint.value

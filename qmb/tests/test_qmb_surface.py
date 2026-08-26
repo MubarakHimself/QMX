@@ -132,8 +132,12 @@ def test_frontier_clock_is_qmf_core_clock() -> None:
     assert qmb.CONCURRENCY_IS_SCHEDULING_ONLY is True
     assert api.reproduce_run is qmb.reproduce_run
     assert api.mint_run_performance_result is qmb.mint_run_performance_result
+    assert api.assemble_run_performance_result is qmb.assemble_run_performance_result
+    assert api.ct32_artifact_path is qmb.ct32_artifact_path
     assert api.require_reproduced_fingerprint is qmb.require_reproduced_fingerprint
     assert api.PerformanceResult is qmb.PerformanceResult
+    assert api.CT32_ARTIFACT_NAME == qmb.CT32_ARTIFACT_NAME
+    assert api.RESULTS_DIR_NAME == qmb.RESULTS_DIR_NAME
     assert api.construct_conformant_bot is qmb.construct_conformant_bot
     assert api.drive_instant is qmb.drive_instant
     assert api.ConformantSliceHandler is qmb.ConformantSliceHandler

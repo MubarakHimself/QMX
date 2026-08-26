@@ -61,6 +61,7 @@ from qmb.orchestrator.watch import (
     monotonic_ns,
     refuse_aborted_process,
 )
+from qmb.results.ct32 import assemble_run_performance_result
 from qmb.runloop.loop import STREAM_SET_KEY, EventSlice, SliceObservation, run
 from qmb.runloop.observe import (
     CAUSE_CANCEL,
@@ -562,16 +563,22 @@ def _run_worker(output_dir: Path) -> int:
                 fields={"category": outcome.category.value},
             )
             return _write_envelope(root, _refusal_envelope(outcome))
-        stamped = outcome.value.ct32_fingerprint()
+        assembled = assemble_run_performance_result(outcome.value, output_dir=root)
+        if is_refusal(assembled):
+            log.emit(
+                EVENT_RUN_REFUSED,
+                "CT-32 results assembly refused; operational log is not evidence",
+                fields={"category": assembled.category.value},
+            )
+            return _write_envelope(root, _refusal_envelope(assembled))
         envelope: dict[str, object] = {
             "ok": True,
             "run_id": config.fingerprint.value,
             "worker_pid": os.getpid(),
             "output_dir": str(root),
             "outcome": outcome.value.fp1_identity(),
+            "ct32_fingerprint": assembled.value.value,
         }
-        if not is_refusal(stamped):
-            envelope["ct32_fingerprint"] = stamped.value.value
         log.emit(
             EVENT_RUN_COMPLETED,
             "pure run() returned; operational log is not evidence",

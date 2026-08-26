@@ -240,6 +240,25 @@ def test_golden_slice_usage_example_runs_clean() -> None:
     assert "golden-slice determinism ok" in completed.stdout
 
 
+def test_ct32_artifact_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "ct32_artifact_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "exactly one CT-32 container written; fp1 label-derived via qmf-core" in completed.stdout
+    assert "AD-12 label plus registry_as_of, data/split, fidelity, RNG stamps" in completed.stdout
+    assert "world=replay from data-derived provenance; optimistic taint; no edge claim" in (
+        completed.stdout
+    )
+    assert "multi-role span is policy rejection; writes nothing" in completed.stdout
+    assert "no second report JSON" in completed.stdout
+    assert "canonical CT-32 artifact ok" in completed.stdout
+
+
 def test_cancel_observe_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "cancel_observe_usage.py")],

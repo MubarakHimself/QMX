@@ -113,6 +113,8 @@ def test_result_identity_excludes_charts_html_and_semver() -> None:
     assert payload["html_payload"] is False
     assert payload["concurrency_is_scheduling_only"] is True
     assert payload["measure_identities"] == list(MEASURE_IDENTITIES)
+    assert payload["claims_edge"] is False
+    assert payload["spends_split_budget"] is False
     assert qmb.__version__ not in payload.values()
     assert CHART_SERIES_IN_IDENTITY is False
     assert HTML_PAYLOAD is False
