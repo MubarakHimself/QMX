@@ -517,6 +517,32 @@ def test_sweep_rank_usage_example_runs_clean() -> None:
     assert "sweep rank ok" in completed.stdout
 
 
+def test_optimize_space_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "optimize_space_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "typed search space validated at Study creation: 5 parameters" in completed.stdout
+    assert "same space shares one fingerprint; it materializes as run-config identity content" in (
+        completed.stdout
+    )
+    assert "a step wider than max - min is invalid input naming the parameter, never clamped" in (
+        completed.stdout
+    )
+    assert "empty categorical options, or a default outside options, is invalid input" in (
+        completed.stdout
+    )
+    assert (
+        "money is exact-integer minor units; a binary float never enters the space's identity"
+        in (completed.stdout)
+    )
+    assert "study parameter space ok" in completed.stdout
+
+
 def pythonpath() -> str:
     return os.pathsep.join(
         [

@@ -18,11 +18,28 @@ from qmf.core.refusal import Ok, Result, is_refusal
 from qml.declaration.bot import BotDefinition
 from qml.declaration.parameters import ParameterSpec
 
+from qmb.optimize.space import (
+    STUDY_SPACE_CLASS,
+    STUDY_SPACE_FORMAT_VERSION,
+    STUDY_SPACE_KEY,
+    StudyParameterSpace,
+    coerce_study_space,
+    study_space_from_bot,
+    study_space_identity,
+)
+
 __all__ = [
     "SAMPLER_JOBS",
     "SAMPLER_PIN_KEY",
+    "STUDY_SPACE_CLASS",
+    "STUDY_SPACE_FORMAT_VERSION",
+    "STUDY_SPACE_KEY",
+    "StudyParameterSpace",
+    "coerce_study_space",
     "parameter_space_from_bot",
     "sampler_identity",
+    "study_space_from_bot",
+    "study_space_identity",
 ]
 
 SAMPLER_PIN_KEY: Final[str] = "qmb_sampler_pin"
