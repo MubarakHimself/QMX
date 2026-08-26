@@ -11,6 +11,7 @@ from typing import TypeVar, cast
 import qmb.results.render as render_mod
 from qmb.config import ResolvedRunConfig
 from qmb.doors import api
+from qmb.orchestrator.paths import MAX_BYTES, read_contained_text
 from qmb.results import (
     AGENTS_PARSE_HTML,
     CONCURRENCY_IS_SCHEDULING_ONLY,
@@ -65,6 +66,24 @@ _CONCURRENT_RUNS = 14
 def _ok(result: Result[T]) -> T:
     assert is_ok(result), result
     return result.value
+
+
+def _contained_child_dir(tmp_path: Path, leaf: str) -> Path:
+    """Create ``tmp_path / leaf`` after proving the child stays inside tmp_path."""
+    assert leaf and leaf not in {".", ".."}
+    assert "/" not in leaf and "\\" not in leaf and ".." not in leaf
+    root = tmp_path / leaf
+    tmp_real = tmp_path.resolve()
+    planned = root.resolve()
+    assert not root.is_symlink(), root
+    assert planned.is_relative_to(tmp_real), planned
+    root.mkdir()  # skylos: ignore[SKY-D215] contained child of pytest tmp_path
+    return root
+
+
+def _read_contained(path: Path, contain_within: Path) -> str:
+    """Read a regular in-root file, refusing a leaf symlink and an oversize payload."""
+    return _ok(read_contained_text(path, contain_within=contain_within, max_bytes=MAX_BYTES))
 
 
 def _instant(ns: int = _NS) -> Instant:
@@ -270,8 +289,8 @@ def test_concurrent_renders_use_isolated_dirs_and_no_shared_state(tmp_path: Path
         assert not isinstance(value, (dict, list, set)), name
 
     def _one(index: int) -> str:
-        root = tmp_path / f"run-{index}"
-        root.mkdir()
+        assert 0 <= index < _CONCURRENT_RUNS
+        root = _contained_child_dir(tmp_path, f"run-{index}")
         stamp_config = _config()
         payload = dict(stamp_config.keys)
         payload["marker"] = f"run-{index}"
@@ -292,11 +311,11 @@ def test_concurrent_renders_use_isolated_dirs_and_no_shared_state(tmp_path: Path
         outcome = _ok(run(slices=_slices(), config=bound, handler=SilentSliceHandler()))
         _ok(assemble_run_performance_result(outcome, output_dir=root))
         paths = _ok(write_run_renders(root))
-        html_text = paths.html.read_text(encoding="utf-8")
-        md_text = paths.markdown.read_text(encoding="utf-8")
         assert paths.html.parent == root / RESULTS_DIR_NAME
         assert paths.html.name == HTML_REPORT_NAME
         assert paths.markdown.name == MARKDOWN_REPORT_NAME
+        html_text = _read_contained(paths.html, tmp_path)
+        md_text = _read_contained(paths.markdown, tmp_path)
         assert (root / RESULTS_DIR_NAME / CT32_ARTIFACT_NAME).is_file()
         assert bound.fingerprint.value in html_text
         assert bound.fingerprint.value in md_text
@@ -307,8 +326,9 @@ def test_concurrent_renders_use_isolated_dirs_and_no_shared_state(tmp_path: Path
         marks = list(pool.map(_one, range(_CONCURRENT_RUNS)))
     assert len(set(marks)) == _CONCURRENT_RUNS
     for index, mark in enumerate(marks):
-        html_text = (tmp_path / f"run-{index}" / RESULTS_DIR_NAME / HTML_REPORT_NAME).read_text(
-            encoding="utf-8"
+        html_text = _read_contained(
+            tmp_path / f"run-{index}" / RESULTS_DIR_NAME / HTML_REPORT_NAME,
+            tmp_path,
         )
         assert mark in html_text
         for other in marks:
