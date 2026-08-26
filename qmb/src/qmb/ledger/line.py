@@ -610,6 +610,16 @@ def _as_measure_maps(
                 given=repr(type(item).__name__),
             )
         body = cast("Mapping[str, object]", item)
+        if body.get("class") == "undefined-measure":
+            if "refusal" not in body:
+                return invalid(
+                    "measures",
+                    "an undefined measure carries a typed refusal a reader can "
+                    "tell apart from zero",
+                    index=index,
+                )
+            measures.append(body)
+            continue
         if "unit_kind" not in body:
             return invalid(
                 "measures",

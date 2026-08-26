@@ -240,6 +240,36 @@ def test_golden_slice_usage_example_runs_clean() -> None:
     assert "golden-slice determinism ok" in completed.stdout
 
 
+def test_measure_set_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "measure_set_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert (
+        "ordered V1 core measure set; every computed quantity has a non-null AD-40 unit-kind"
+        in (completed.stdout)
+    )
+    assert (
+        "money measures are exact scaled integers; durations are int64 UTC-ns" in completed.stdout
+    )
+    assert "null unit-kind is invalid input, never defaulted" in completed.stdout
+    assert "profit factor with no losers is typed undefined, never a magic cap of 10" in (
+        completed.stdout
+    )
+    assert "Sharpe with <2 daily samples is insufficient-sample, never NaN coerced to 0" in (
+        completed.stdout
+    )
+    assert (
+        "no composite score/grade/tier; producing the set sizes, promotes, and benches nothing"
+        in (completed.stdout)
+    )
+    assert "V1 core measure set ok" in completed.stdout
+
+
 def test_ct32_artifact_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "ct32_artifact_usage.py")],

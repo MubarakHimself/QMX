@@ -126,8 +126,11 @@ def test_finished_run_appends_exactly_one_confirmation_line(tmp_path: Path) -> N
     assert "provenance" not in line.result_label
     assert line.measures
     for measure in line.measures:
-        assert "unit_kind" in measure
         assert "measure_identity" in measure
+        if measure.get("class") == "undefined-measure":
+            assert "refusal" in measure
+            continue
+        assert "unit_kind" in measure
     bar = _ok(qmb.book_bar_fingerprint(config))
     assert line.book_bar_fp1 == bar
 

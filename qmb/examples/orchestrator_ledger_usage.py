@@ -126,7 +126,10 @@ def completed_run_is_one_confirmation_line(output_root: Path, ledger_root: Path)
     assert line.role == qmb.ROLE_CONFIRMATION
     assert line.ct32_fingerprint == done.ct32_fingerprint
     assert "verdict" not in line.fp1_identity()
-    assert all("unit_kind" in measure for measure in line.measures)
+    assert all(
+        "unit_kind" in measure or measure.get("class") == "undefined-measure"
+        for measure in line.measures
+    )
     writer = _unwrap(sink.writer_id(qmb.ROLE_CONFIRMATION), "writer")
     path = _unwrap(
         fragment_path(sink.root, writer, world=World.REPLAY, role=qmb.ROLE_CONFIRMATION),

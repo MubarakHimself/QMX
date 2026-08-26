@@ -28,11 +28,10 @@ from qmb.runloop import (
     run,
 )
 from qmf.core.chrono import CalendarIdentity, Instant
-from qmf.core.exact import UnitKind
 from qmf.core.fingerprint import World, fingerprint
 from qmf.core.identity import AccountRole
 from qmf.core.refusal import RefusalCategory, Result, is_ok, is_refusal
-from qmf.risk.performance import PerformanceResult
+from qmf.risk.performance import PerformanceMeasure, PerformanceResult, UndefinedMeasure
 
 import qmb
 
@@ -141,7 +140,14 @@ def test_two_identical_runs_share_ct32_fingerprint() -> None:
     assert "chart" not in identity
     assert "html" not in identity
     assert [row.measure_identity for row in artifact.measure_set] == list(MEASURE_IDENTITIES)
-    assert all(row.quantity.unit_kind is UnitKind.COUNT for row in artifact.measure_set)
+    assert all(
+        isinstance(row, (PerformanceMeasure, UndefinedMeasure)) for row in artifact.measure_set
+    )
+    assert all(
+        row.quantity.unit_kind is not None
+        for row in artifact.measure_set
+        if isinstance(row, PerformanceMeasure)
+    )
     assert artifact.suppression_accounting == ()
     assert artifact.veto_accounting == ()
     assert artifact.account_binding_role is AccountRole.DEMO

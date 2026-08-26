@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Final, cast
 
 from qmf.core.chrono import CalendarIdentity, Instant, Interval
-from qmf.core.exact import ExactRational, UnitKind
+from qmf.core.exact import Money
 from qmf.core.fingerprint import (
     EvidenceClass,
     Fingerprint,
@@ -27,9 +27,9 @@ from qmf.core.fingerprint import (
 )
 from qmf.core.identity import AccountRole
 from qmf.core.refusal import Ok, Result, TypedRefusal, is_refusal
+from qmf.risk.numeraire import V1_NUMERAIRE
 from qmf.risk.performance import (
     CT32_CONTRACT_FORMAT_VERSION,
-    PerformanceMeasure,
     PerformanceResult,
     PopulationDeclaration,
     ResultPeriod,
@@ -38,6 +38,7 @@ from qmf.risk.performance import (
 
 from qmb._refuse import clean_token, invalid, policy, storage
 from qmb.config.compiler import ResolvedRunConfig
+from qmb.config.replay import STARTING_CAPITAL_KEY, coerce_starting_capital
 from qmb.execution.fidelity import FidelityIdentity, RunFidelity
 from qmb.execution.financing import (
     FINANCING_CALIBRATION_KEY,
@@ -51,6 +52,13 @@ from qmb.execution.ports import (
     refuse_optimistic_edge_claim,
 )
 from qmb.execution.spread import SPREAD_CALIBRATION_KEY, spread_calibration_fingerprint
+from qmb.results.measures import (
+    MEASURE_ARITHMETIC,
+    MEASURE_CONTRACT_FORMAT_VERSION,
+    MEASURE_IDENTITIES,
+    METRIC_CONTRACT_FORMAT_VERSIONS,
+    assemble_v1_measure_set,
+)
 
 __all__ = [
     "ACCOUNT_ROLE_KEY",
@@ -62,8 +70,10 @@ __all__ = [
     "DATA_FINGERPRINT_KEY",
     "FIDELITY_KEY",
     "HTML_PAYLOAD",
+    "MEASURE_ARITHMETIC",
     "MEASURE_CONTRACT_FORMAT_VERSION",
     "MEASURE_IDENTITIES",
+    "METRIC_CONTRACT_FORMAT_VERSIONS",
     "QMB_REPLAY_CALENDAR_RULE_SET",
     "QMB_REPLAY_CALENDAR_RULE_SET_VERSION",
     "QMB_REPLAY_CALENDAR_TZDATA",
@@ -83,13 +93,6 @@ RESULT_CONTRACT: Final[str] = "CT-32"
 CHART_SERIES_IN_IDENTITY: Final[bool] = False
 HTML_PAYLOAD: Final[bool] = False
 CONCURRENCY_IS_SCHEDULING_ONLY: Final[bool] = True
-MEASURE_CONTRACT_FORMAT_VERSION: Final[int] = 1
-MEASURE_IDENTITIES: Final[tuple[str, ...]] = (
-    "slice_count",
-    "data_points_processed",
-    "filled_count",
-    "resting_count",
-)
 ACCOUNT_ROLE_KEY: Final[str] = "account_role"
 CALENDAR_KEY: Final[str] = "calendar"
 REGISTRY_AS_OF_KEY: Final[str] = "registry_as_of"
@@ -119,7 +122,15 @@ def result_identity() -> dict[str, object]:
         "contract": RESULT_CONTRACT,
         "format_version": CT32_CONTRACT_FORMAT_VERSION,
         "html_payload": HTML_PAYLOAD,
+        "measure_arithmetic": dict(MEASURE_ARITHMETIC),
         "measure_identities": list(MEASURE_IDENTITIES),
+        "metric_contract_format_versions": [
+            {
+                "measure_identity": identity,
+                "version": METRIC_CONTRACT_FORMAT_VERSIONS[identity],
+            }
+            for identity in MEASURE_IDENTITIES
+        ],
         "spends_split_budget": SPENDS_SPLIT_BUDGET,
     }
 
@@ -134,6 +145,9 @@ def mint_run_performance_result(
     resting_count: object,
     data_points_processed: object,
     outcome_identity: object,
+    trades: object = (),
+    equity_curve: object = (),
+    starting_capital: object = None,
 ) -> Result[PerformanceResult]:
     """Mint the CT-32 artifact of one completed pure ``run()`` (B-10).
 
@@ -170,18 +184,15 @@ def mint_run_performance_result(
     instruments = _as_tokens("stream_order", stream_order)
     if is_refusal(instruments):
         return instruments
-    slices = _as_nonneg_int("slice_count", slice_count)
-    if is_refusal(slices):
-        return slices
-    points = _as_nonneg_int("data_points_processed", data_points_processed)
-    if is_refusal(points):
-        return points
-    filled = _as_nonneg_int("filled_count", filled_count)
-    if is_refusal(filled):
-        return filled
-    resting = _as_nonneg_int("resting_count", resting_count)
-    if is_refusal(resting):
-        return resting
+    for field, raw in (
+        ("slice_count", slice_count),
+        ("data_points_processed", data_points_processed),
+        ("filled_count", filled_count),
+        ("resting_count", resting_count),
+    ):
+        counted = _as_nonneg_int(field, raw)
+        if is_refusal(counted):
+            return counted
     role = _account_role(config)
     if is_refusal(role):
         return role
@@ -234,11 +245,14 @@ def mint_run_performance_result(
     period = ResultPeriod.try_create(evidence_range, calendar.value, evidence_range.end)
     if is_refusal(period):
         return period
-    measures = _measure_set(
-        slice_count=slices.value,
-        data_points_processed=points.value,
-        filled_count=filled.value,
-        resting_count=resting.value,
+    capital = _starting_capital(config, starting_capital)
+    if is_refusal(capital):
+        return capital
+    measures = assemble_v1_measure_set(
+        starting_capital=capital.value,
+        period=evidence_range,
+        trades=trades,
+        equity_curve=equity_curve,
     )
     if is_refusal(measures):
         return measures
@@ -444,33 +458,17 @@ def _calendar_from_config(config: ResolvedRunConfig) -> Result[CalendarIdentity]
     )
 
 
-def _measure_set(
-    *,
-    slice_count: int,
-    data_points_processed: int,
-    filled_count: int,
-    resting_count: int,
-) -> Result[tuple[PerformanceMeasure, ...]]:
-    counts: dict[str, int] = {
-        "slice_count": slice_count,
-        "data_points_processed": data_points_processed,
-        "filled_count": filled_count,
-        "resting_count": resting_count,
-    }
-    ordered: list[PerformanceMeasure] = []
-    for identity in MEASURE_IDENTITIES:
-        measure = _count_measure(identity, counts[identity])
-        if is_refusal(measure):
-            return measure
-        ordered.append(measure.value)
-    return Ok(tuple(ordered))
-
-
-def _count_measure(identity: str, count: int) -> Result[PerformanceMeasure]:
-    quantity = ExactRational.try_create(count, 1, UnitKind.COUNT)
-    if is_refusal(quantity):
-        return quantity
-    return PerformanceMeasure.try_create(identity, quantity.value, MEASURE_CONTRACT_FORMAT_VERSION)
+def _starting_capital(config: ResolvedRunConfig, explicit: object) -> Result[Money]:
+    if explicit is not None:
+        if isinstance(explicit, Money):
+            return Ok(explicit)
+        return coerce_starting_capital(explicit)
+    if config.replay_binding is not None:
+        return Ok(config.replay_binding.starting_capital)
+    raw = config.keys.get(STARTING_CAPITAL_KEY)
+    if raw is not None:
+        return coerce_starting_capital(raw)
+    return Money.try_create(0, V1_NUMERAIRE, 2)
 
 
 def _as_nonneg_int(field: str, value: object) -> Result[int]:

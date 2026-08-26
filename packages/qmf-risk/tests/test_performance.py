@@ -9,14 +9,17 @@ from qmf.core import (
     ExactRational,
     Instant,
     Interval,
+    Money,
     RefusalCategory,
     ResultLabel,
+    TypedRefusal,
     UnitKind,
     World,
     fingerprint,
     is_ok,
     is_refusal,
 )
+from qmf.core.refusal import Retryability
 from qmf.risk.binding import ContinuesPerformanceEdge
 from qmf.risk.control_action import AuthorityKind
 from qmf.risk.exit_record import BenchDisposition, BenchFoldResult
@@ -29,6 +32,7 @@ from qmf.risk.performance import (
     PublishAct,
     ResultPeriod,
     SuppressionCount,
+    UndefinedMeasure,
     VetoCount,
     check_publish_never_act,
     check_replay_never_gates_live,
@@ -165,6 +169,44 @@ def test_every_measure_requires_unit_kind_no_composite() -> None:
         assert refused.category is RefusalCategory.POLICY_REJECTION
     direct = reject_composite_expression("score")
     assert direct.category is RefusalCategory.POLICY_REJECTION
+    money = Money.try_create(100, "USD", 2)
+    assert is_ok(money)
+    paid = PerformanceMeasure.try_create("net_profit", money.value, 1)
+    assert is_ok(paid)
+    assert paid.value.quantity.unit_kind is UnitKind.MONEY
+
+
+def test_undefined_measure_is_distinct_from_zero() -> None:
+    zero = ExactRational.try_create(0, 1, UnitKind.DIMENSIONLESS_RATIO)
+    assert is_ok(zero)
+    computed = PerformanceMeasure.try_create("profit_factor", zero.value, 1)
+    assert is_ok(computed)
+    refusal = TypedRefusal(
+        category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+        retryability=Retryability.NO,
+        context={
+            "code": "undefined",
+            "field": "profit_factor",
+            "reason": "no losing trades",
+        },
+    )
+    slot = UndefinedMeasure.try_create("profit_factor", 1, refusal)
+    assert is_ok(slot)
+    assert slot.value.measure_identity == "profit_factor"
+    assert "quantity" not in slot.value.fp1_identity()
+    minted = mint_performance_result(
+        result_label=_label(),
+        account_binding_role=AccountRole.LIVE,
+        population=_population(),
+        period=_period(),
+        measure_set=(computed.value, slot.value),
+    )
+    assert is_ok(minted)
+    assert isinstance(minted.value.measure_set[0], PerformanceMeasure)
+    assert isinstance(minted.value.measure_set[1], UndefinedMeasure)
+    banned = UndefinedMeasure.try_create("composite-score", 1, refusal)
+    assert is_refusal(banned)
+    assert banned.category is RefusalCategory.POLICY_REJECTION
 
 
 def test_multi_role_result_is_policy_rejection() -> None:

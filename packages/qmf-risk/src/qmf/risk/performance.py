@@ -23,7 +23,7 @@ surface — no live binding or order is authorized here (DEC-0158).
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Final, cast
@@ -35,6 +35,7 @@ from qmf.core import (
     Fingerprint,
     Instant,
     Interval,
+    Money,
     Result,
     ResultLabel,
     TypedRefusal,
@@ -61,6 +62,7 @@ __all__ = [
     "PublishAct",
     "ResultPeriod",
     "SuppressionCount",
+    "UndefinedMeasure",
     "VetoCount",
     "check_publish_never_act",
     "check_replay_never_gates_live",
@@ -279,11 +281,13 @@ class PerformanceMeasure:
     """One ordered emitted measure with a mandatory unit-kind (DEC-0155, DEC-0154).
 
     Float discipline: identity is label-derived; no binary float enters identity.
-    The quantity is an :class:`~qmf.core.ExactRational` whose unit-kind is never null.
+    Money measures carry :class:`~qmf.core.Money` (exact scaled integers at the
+    declared currency scale). Ratios, counts, and durations carry
+    :class:`~qmf.core.ExactRational`. A null unit-kind is a refusal, never a default.
     """
 
     measure_identity: str
-    quantity: ExactRational
+    quantity: ExactRational | Money
     metric_contract_format_version: int
 
     @classmethod
@@ -305,11 +309,12 @@ class PerformanceMeasure:
         for forbidden in FORBIDDEN_COMPOSITE_EXPRESSIONS:
             if forbidden in lowered:
                 return reject_composite_expression(token)
-        if not isinstance(quantity, ExactRational):
+        if not isinstance(quantity, (ExactRational, Money)):
             return invalid(
                 "quantity",
-                "every emitted quantity is an ExactRational carrying a unit-kind from "
-                "the closed AD-40 vocabulary; a null unit-kind is a refusal, never a default",
+                "every emitted quantity is Money or ExactRational carrying a unit-kind "
+                "from the closed AD-40 vocabulary; a null unit-kind is a refusal, "
+                "never a default",
                 given=repr(quantity),
             )
         if (
@@ -338,6 +343,73 @@ class PerformanceMeasure:
             "quantity": self.quantity.fp1_identity(),
             "unit_kind": self.quantity.unit_kind.value,
             "metric_contract_format_version": self.metric_contract_format_version,
+            "format_version": CT32_CONTRACT_FORMAT_VERSION,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class UndefinedMeasure:
+    """An ordered measure-set slot whose arithmetic is undefined or under-sampled.
+
+    Distinct from a zero quantity: a reader branches on this type (and the
+    nested typed refusal), never on magnitude. Never a magic cap of 10 and
+    never NaN coerced to 0 (R-RPT-3, DEC-0155).
+    """
+
+    measure_identity: str
+    metric_contract_format_version: int
+    refusal: TypedRefusal
+
+    @classmethod
+    def try_create(
+        cls,
+        measure_identity: object,
+        metric_contract_format_version: object,
+        refusal: object,
+    ) -> Result[UndefinedMeasure]:
+        """Validate and build an :class:`UndefinedMeasure`, value-or-refusal."""
+        token = clean_str(measure_identity)
+        if token is None:
+            return invalid(
+                "measure_identity",
+                "every emitted measure declares a non-blank identity",
+                given=repr(measure_identity),
+            )
+        lowered = token.casefold()
+        for forbidden in FORBIDDEN_COMPOSITE_EXPRESSIONS:
+            if forbidden in lowered:
+                return reject_composite_expression(token)
+        if (
+            isinstance(metric_contract_format_version, bool)
+            or not isinstance(metric_contract_format_version, int)
+            or metric_contract_format_version < 1
+        ):
+            return invalid(
+                "metric_contract_format_version",
+                "each metric's arithmetic is pinned by a positive contract format version",
+                given=repr(metric_contract_format_version),
+            )
+        if not isinstance(refusal, TypedRefusal):
+            return invalid(
+                "refusal",
+                "an undefined measure carries a TypedRefusal a reader can tell apart from zero",
+                given=type_name(refusal),
+            )
+        return _Ok(
+            cls(
+                measure_identity=token,
+                metric_contract_format_version=metric_contract_format_version,
+                refusal=refusal,
+            )
+        )
+
+    def fp1_identity(self) -> dict[str, object]:
+        """The pinned canonical ``fp1`` identity content for this undefined slot."""
+        return {
+            "class": "undefined-measure",
+            "measure_identity": self.measure_identity,
+            "metric_contract_format_version": self.metric_contract_format_version,
+            "refusal": _refusal_identity(self.refusal),
             "format_version": CT32_CONTRACT_FORMAT_VERSION,
         }
 
@@ -437,7 +509,7 @@ class PerformanceResult:
     account_binding_role: AccountRole
     population: PopulationDeclaration
     period: ResultPeriod
-    measure_set: tuple[PerformanceMeasure, ...]
+    measure_set: tuple[PerformanceMeasure | UndefinedMeasure, ...]
     suppression_accounting: tuple[SuppressionCount, ...]
     veto_accounting: tuple[VetoCount, ...]
     baseline_pointer: Fingerprint | None
@@ -828,24 +900,51 @@ def _role_tuple(value: object) -> tuple[AccountRole, ...] | TypedRefusal:
     return tuple(out)
 
 
-def _measure_tuple(value: object) -> tuple[PerformanceMeasure, ...] | TypedRefusal:
+def _measure_tuple(
+    value: object,
+) -> tuple[PerformanceMeasure | UndefinedMeasure, ...] | TypedRefusal:
     if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
         return invalid(
             "measure_set",
-            "the measure set is an ordered sequence of PerformanceMeasure values",
+            "the measure set is an ordered sequence of PerformanceMeasure and "
+            "UndefinedMeasure values",
             given=type_name(value),
         )
-    out: list[PerformanceMeasure] = []
+    out: list[PerformanceMeasure | UndefinedMeasure] = []
     for index, item in enumerate(cast("Sequence[object]", value)):
-        if not isinstance(item, PerformanceMeasure):
+        if not isinstance(item, (PerformanceMeasure, UndefinedMeasure)):
             return invalid(
                 "measure_set",
-                "every emitted measure is a PerformanceMeasure with a unit-kind",
+                "every emitted measure is a PerformanceMeasure with a unit-kind or an "
+                "UndefinedMeasure typed refusal a reader can tell apart from zero",
                 index=index,
                 given=type_name(item),
             )
         out.append(item)
     return tuple(out)
+
+
+def _refusal_identity(refusal: TypedRefusal) -> dict[str, object]:
+    content: dict[str, object] = {
+        "category": refusal.category.value,
+        "retryability": refusal.retryability.value,
+        "context": _jsonish(refusal.context),
+    }
+    if refusal.after_condition_descriptor is not None:
+        content["after_condition_descriptor"] = refusal.after_condition_descriptor
+    return content
+
+
+def _jsonish(value: object) -> object:
+    if isinstance(value, Mapping):
+        mapping = cast("Mapping[object, object]", value)
+        return {str(key): _jsonish(item) for key, item in mapping.items()}
+    if isinstance(value, (list, tuple)):
+        sequence = cast("Sequence[object]", value)
+        return [_jsonish(item) for item in sequence]
+    if isinstance(value, StrEnum):
+        return value.value
+    return value
 
 
 def _suppression_tuple(value: object) -> tuple[SuppressionCount, ...] | TypedRefusal:

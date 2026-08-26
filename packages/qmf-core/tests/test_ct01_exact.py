@@ -546,6 +546,29 @@ def test_exact_rational_null_unit_kind_is_a_typed_refusal_never_a_default() -> N
     assert unknown_str.context["field"] == "unit_kind"
 
 
+def test_exact_rational_from_float_is_the_named_boundary() -> None:
+    result = ExactRational.from_float(
+        1.5, unit_kind=UnitKind.DIMENSIONLESS_RATIO, scale=2, rounding=RoundingMode.HALF_EVEN
+    )
+    assert is_ok(result)
+    assert result.value.numerator == 3
+    assert result.value.denominator == 2
+    assert result.value.unit_kind is UnitKind.DIMENSIONLESS_RATIO
+    nan = ExactRational.from_float(
+        float("nan"),
+        unit_kind=UnitKind.DIMENSIONLESS_RATIO,
+        scale=2,
+        rounding=RoundingMode.HALF_EVEN,
+    )
+    assert is_refusal(nan)
+    assert nan.context["field"] == "value"
+    null_kind = ExactRational.from_float(
+        1.25, unit_kind=None, scale=2, rounding=RoundingMode.HALF_EVEN
+    )
+    assert is_refusal(null_kind)
+    assert null_kind.context["field"] == "unit_kind"
+
+
 def test_value_factor_construction_and_refusals() -> None:
     instrument = _instrument()
     ok = ValueFactor.try_create(2, 4, instrument, "USD")

@@ -931,6 +931,25 @@ class ExactRational:
         reduced = Fraction(int_numerator, int_denominator)
         return Ok(cls(numerator=reduced.numerator, denominator=reduced.denominator, unit_kind=kind))
 
+    @classmethod
+    def from_float(
+        cls, value: object, *, unit_kind: object, scale: object, rounding: object
+    ) -> Result[ExactRational]:
+        """The named float→ExactRational conversion boundary (CT-01; DEC-0105).
+
+        A binary float becomes an exact rational only here, under the explicitly
+        stated ``rounding`` mode and decimal ``scale``. Identity stores the
+        reduced rational, never float bytes (AD-41). A null unit-kind is a typed
+        refusal, never a default. NaN and infinity cannot cross.
+        """
+        int_scale = _as_scale(scale)
+        if int_scale is None:
+            return _bad_scale(scale)
+        scaled = _coerce_float_to_scaled_int(value, scale, rounding)
+        if isinstance(scaled, TypedRefusal):
+            return scaled
+        return cls.try_create(scaled, 10**int_scale, unit_kind)
+
     def as_fraction(self) -> Fraction:
         """The exact rational magnitude ``numerator / denominator``."""
         return Fraction(self.numerator, self.denominator)
