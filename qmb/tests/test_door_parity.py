@@ -477,16 +477,14 @@ def test_epic_14_run_loop_semantics_are_on_the_api_door() -> None:
 
 
 def test_data_command_success_matches_library_front() -> None:
-    downloaded = _ok(invoke_data("download", {"destination": "archive"}))
     verified = _ok(invoke_data("verify", {"archive": "raw"}))
     generated = _ok(invoke_data("generate", {"destination": "synth"}))
-    assert downloaded["command"] == "download"
     assert verified["command"] == "verify"
     assert generated["command"] == "generate"
-    assert downloaded["commands"] == api.DATA_COMMANDS
+    incomplete = invoke_data("download", {"destination": "archive"})
+    assert is_refusal(incomplete)
     runner = CliRunner()
     for args, token in (
-        (["data", "download", "--destination", "archive"], "download"),
         (["data", "verify", "--archive", "raw"], "verify"),
         (["data", "generate", "--destination", "synth"], "generate"),
     ):
@@ -494,3 +492,5 @@ def test_data_command_success_matches_library_front() -> None:
         assert clicked.exit_code == 0, clicked.output
         assert clicked.stderr.strip() == ""
         assert token in clicked.stdout
+    refused = runner.invoke(main, ["data", "download", "--destination", "archive"])
+    assert refused.exit_code != 0

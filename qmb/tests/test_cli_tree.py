@@ -379,8 +379,9 @@ def test_data_commands_refuse_absent_resources_and_catalog_is_free() -> None:
     catalog = _ok(invoke_data("catalog"))
     assert catalog["command"] == "catalog"
     assert catalog["commands"] == qmb.DATA_COMMANDS
-    downloaded = _ok(invoke_data("download", {"destination": "archive"}))
-    assert downloaded["command"] == "download"
+    incomplete = invoke_data("download", {"destination": "archive"})
+    assert is_refusal(incomplete)
+    assert incomplete.category is RefusalCategory.UNAVAILABLE_DEPENDENCY
 
 
 def test_optimize_and_ledger_and_config_prerequisites() -> None:
@@ -537,8 +538,7 @@ def test_click_catalog_and_config_show_succeed_without_resources() -> None:
 def test_click_data_download_and_optimize_and_ledger_with_injected_resources() -> None:
     runner = CliRunner()
     downloaded = runner.invoke(main, ["data", "download", "--destination", "room"])
-    assert downloaded.exit_code == 0, downloaded.output
-    assert "download" in downloaded.output
+    assert downloaded.exit_code != 0, downloaded.output
     compiled = runner.invoke(
         main,
         ["config", "compile"],

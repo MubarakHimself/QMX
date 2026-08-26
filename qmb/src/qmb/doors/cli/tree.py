@@ -24,6 +24,7 @@ from qmb.config import (
     run_config_identity,
 )
 from qmb.data import DATA_COMMANDS, data_front_identity
+from qmb.data import download as run_download
 from qmb.doors import CLI_PIN_KEY, CLI_PROG
 from qmb.ledger import LedgerLine
 from qmb.optimize import parameter_space_from_bot
@@ -92,7 +93,7 @@ _BACKTEST_PREREQS: Final[tuple[str, ...]] = (
 _COMMAND_PREREQS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
     {
         "backtest.run": _BACKTEST_PREREQS,
-        "data.download": ("destination",),
+        "data.download": ("destination", "venue", "symbol", "start"),
         "data.verify": ("archive",),
         "data.catalog": (),
         "data.generate": ("destination",),
@@ -394,9 +395,16 @@ def invoke_data(command: object, provided: object = None) -> Result[Mapping[str,
     checked = require_prerequisites(f"data.{token}", resources)
     if is_refusal(checked):
         return checked
-    payload: dict[str, object] = {"command": token}
-    payload.update(data_front_identity())
-    return Ok(payload)
+    if token == "download":  # noqa: S105 — command name, not a secret
+        receipt = run_download(resources)
+        if is_refusal(receipt):
+            return receipt
+        payload: dict[str, object] = dict(receipt.value.as_mapping())
+        payload.update(data_front_identity())
+        return Ok(payload)
+    stub: dict[str, object] = {"command": token}
+    stub.update(data_front_identity())
+    return Ok(stub)
 
 
 def invoke_ledger_merge(

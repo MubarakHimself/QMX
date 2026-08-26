@@ -39,7 +39,7 @@ def library_returns_door_renders() -> None:
     encoded = json.loads(render_refusal(refused))
     assert encoded["category"] == "unavailable dependency"
     assert encoded["retryability"] == "no"
-    assert encoded["context"]["missing"] == ["destination"]
+    assert encoded["context"]["missing"] == ["destination", "venue", "symbol", "start"]
     runner = CliRunner()
     invoked = runner.invoke(main, ["data", "download"])
     assert invoked.exit_code != 0

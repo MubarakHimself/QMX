@@ -21,7 +21,9 @@ verbatim). Story 16.6 scaffolds the MCP door as an unshipped sibling
 over the same library: localhost-bound, never stacked over HTTP,
 invocation is a typed ``unsupported capability`` refusal, and
 ``error.data`` is pinned to carry the refusal union verbatim when the
-door later ships. CLI v1 does not wait on it.
+door later ships. CLI v1 does not wait on it. Story 18.1 delivers
+``qmb data download`` as a thin front over CT-10/CT-15 with Dukascopy
+adapter #1, typed provider refusals, and the runs-never-fetch policy.
 
 ### FR-1: Cancel or per-run limit breach aborts one OS process
 
@@ -359,3 +361,37 @@ door later ships. CLI v1 does not wait on it.
   event, never an order fill. Triple-swap weekday, multiplier, sign, and
   weekend/holiday handling come from the broker artifact. Cost drag
   decomposes fill P&L, slippage, commission, and financing.
+
+### FR-19: Provider error never silently partial-ingests
+
+- **Failure class:** `transient venue failure` (rate-limit) or
+  `unavailable dependency` (maintenance / geo-block / HTTP-451-class) —
+  CT-04 with retryability as the provider states.
+- **Detection:** the injected Dukascopy transport / provider adapter returns
+  a typed refusal from `fetch`; `qmb data download` propagates it unchanged
+  and admits no CT-10 observations for that call.
+- **Auto-recovery / retry:** category-dependent. Rate-limit carries
+  `retryability=yes` for the application to back off; geo-block /
+  entitlement miss is `no` until the operator changes posture.
+- **Visible degraded state:** the raw room is unchanged for the refused
+  window. No half-written bid/ask stream is catalogued as complete.
+- **Notification tier:** operator-visible typed refusal (signal, source,
+  retryability) on the supervising agent's channel.
+- **Product-user affordance:** a provider outage or geo-block stops the
+  download with a typed refusal. Re-run after the provider is reachable;
+  overlapping success is idempotent via the CT-15 intake key.
+
+### FR-20: Runs never fetch from a provider
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `refuse_run_provider_fetch` — any run loop / backtest /
+  sweep / optimize path that attempts a provider fetch.
+- **Auto-recovery / retry:** none. Acquire through `qmb data download`
+  once, then read qmf-data rooms only.
+- **Visible degraded state:** the run does not start a provider call. Prior
+  rooms remain readable.
+- **Notification tier:** operator-visible typed refusal
+  (`sole_fetch_surface=qmb data download`).
+- **Product-user affordance:** experimentation runs read the archive you
+  already downloaded. They never phone the provider. Use `qmb data
+  download` under your own entitlement when you need a new window.

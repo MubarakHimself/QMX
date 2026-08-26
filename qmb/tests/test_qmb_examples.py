@@ -427,6 +427,24 @@ def test_orchestrator_spawn_usage_example_runs_clean() -> None:
     assert "process-per-run ok" in completed.stdout
 
 
+def test_data_download_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "data_download_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "provider port:" in completed.stdout
+    assert "AD-22 conversion" in completed.stdout
+    assert "download-once CT-10" in completed.stdout
+    assert "idempotent re-run" in completed.stdout
+    assert "overwrite revision=" in completed.stdout
+    assert "run provider fetch is policy rejection" in completed.stdout
+    assert "qmb data download ok" in completed.stdout
+
+
 def test_cli_refusal_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "cli_refusal_usage.py")],

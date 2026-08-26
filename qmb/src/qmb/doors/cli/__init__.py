@@ -200,11 +200,75 @@ def data_group() -> None:
 
 
 @data_group.command("download")
-@click.option("--destination", default=None)
+@click.option("--destination", default=None, help="World-scoped raw-archive root.")
+@click.option("--venue", default=None, help="Venue token for the acquisition window.")
+@click.option(
+    "--symbol",
+    "symbols",
+    multiple=True,
+    help="Symbol(s); repeat or pass comma-separated.",
+)
+@click.option("--start", default=None, help="Window start (int64 UTC-ns or ISO-8601).")
+@click.option(
+    "--end",
+    default=None,
+    help="Window end (int64 UTC-ns or ISO-8601); defaults to end of today UTC.",
+)
+@click.option("--resolution", default=None, help="Resolution (Dukascopy #1: tick).")
+@click.option(
+    "--side",
+    default=None,
+    type=click.Choice(["bid", "ask", "both"], case_sensitive=False),
+    help="Quote side streams: bid, ask, or both.",
+)
+@click.option(
+    "--overwrite/--no-overwrite",
+    default=False,
+    help="Append a new CT-10 revision instead of idempotent r1 intake.",
+)
+@click.option("--license-tag", default=None, help="Per-window licence tag metadata.")
+@click.option("--world", default=None, help="World-scoped raw room (default: replay).")
 @click.pass_context
-def data_download(ctx: click.Context, destination: str | None) -> None:
+def data_download(
+    ctx: click.Context,
+    destination: str | None,
+    venue: str | None,
+    symbols: tuple[str, ...],
+    start: str | None,
+    end: str | None,
+    resolution: str | None,
+    side: str | None,
+    overwrite: bool,
+    license_tag: str | None,
+    world: str | None,
+) -> None:
     """Download-once into the immutable raw archive (B-11)."""
-    _transport(ctx, invoke_data("download", _payload(ctx, destination=destination)))
+    symbol: str | tuple[str, ...] | None
+    if len(symbols) == 0:
+        symbol = None
+    elif len(symbols) == 1:
+        symbol = symbols[0]
+    else:
+        symbol = symbols
+    _transport(
+        ctx,
+        invoke_data(
+            "download",
+            _payload(
+                ctx,
+                destination=destination,
+                venue=venue,
+                symbol=symbol,
+                start=start,
+                end=end,
+                resolution=resolution,
+                side=side,
+                overwrite=overwrite,
+                license_tag=license_tag,
+                world=world,
+            ),
+        ),
+    )
 
 
 @data_group.command("verify")
