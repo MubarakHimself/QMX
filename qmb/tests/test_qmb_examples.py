@@ -688,6 +688,31 @@ def test_optimize_resume_usage_example_runs_clean() -> None:
     assert "through the qmb CLI door" in completed.stdout
 
 
+def test_optimize_sensitivity_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "optimize_sensitivity_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "objective distribution summary over all completed role=trial lines" in completed.stdout
+    assert "per-parameter objective slices as chart series (data, never an image)" in (
+        completed.stdout
+    )
+    assert "good regions cluster the favourable-side trials" in completed.stdout
+    assert "isolated-spike when its good-region cluster is a singleton" in completed.stdout
+    assert "stability=isolated-spike cluster_size=1" in completed.stdout
+    assert "a winner inside a stable cluster is flagged distinctly" in completed.stdout
+    assert "stability=stable-cluster" in completed.stdout
+    assert "invents_threshold=False" in completed.stdout
+    assert "an SR*/search-quality pass/fail verdict is refused" in completed.stdout
+    assert "P&L inputs stay exact-integer" in completed.stdout
+    assert "no raw binary float ever appears in the report identity" in completed.stdout
+    assert "parameter-sensitivity report ok" in completed.stdout
+
+
 def pythonpath() -> str:
     return os.pathsep.join(
         [
