@@ -779,6 +779,50 @@ def test_trade_shuffle_usage_example_runs_clean() -> None:
     assert "trade shuffle ok" in completed.stdout
 
 
+def test_candle_perturbation_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "candle_perturbation_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert (
+        "moving-block bootstraps OHLC deltas onto the seed price; scenario 0 is the true "
+        "history; world stays replay" in completed.stdout
+    )
+    assert (
+        "every scenario rebuilds a valid strictly-positive OHLC series (high/low bounds enforced)"
+        in completed.stdout
+    )
+    assert (
+        "procedure-ephemeral -> world=replay robustness; persisting -> world=simulated policy "
+        "rejection; replay clock on synthetic-tainted persisted data -> invalid input"
+        in completed.stdout
+    )
+    assert (
+        "result records RNG family, seed rule, block length, scenario count, resampling "
+        "scheme, data window" in completed.stdout
+    )
+    assert "re-running the same inputs reproduces the result fingerprint bit-for-bit" in (
+        completed.stdout
+    )
+    assert (
+        "scenarios fan out under the min(cpu, memory) governor with enqueue-on-full; each is "
+        "role=replicate, never a bar verdict" in completed.stdout
+    )
+    assert (
+        "objective summarised across the alternate histories as chart series data, no verdict"
+        in completed.stdout
+    )
+    assert (
+        "claim class is robustness (alternate-history), never edge; cannot gate live money"
+        in completed.stdout
+    )
+    assert "candle perturbation ok" in completed.stdout
+
+
 def pythonpath() -> str:
     return os.pathsep.join(
         [
