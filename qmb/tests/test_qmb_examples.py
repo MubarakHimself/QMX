@@ -713,6 +713,32 @@ def test_optimize_sensitivity_usage_example_runs_clean() -> None:
     assert "parameter-sensitivity report ok" in completed.stdout
 
 
+def test_robustness_foundation_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "robustness_foundation_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert (
+        "each rung is a pure library function with a format-version-1 procedure contract"
+        in completed.stdout
+    )
+    assert "return-space stat lives in a bounded float carve-out" in completed.stdout
+    assert "money re-entry needs a declared rounding mode" in completed.stdout
+    assert "float-valued measure takes label-derived identity" in completed.stdout
+    assert "no float bits enter the fingerprint" in completed.stdout
+    assert "a one-tailed p-value as pure data; no pass/fail verdict, no invented alpha" in (
+        completed.stdout
+    )
+    assert "unset is invalid input, never a silently-applied default" in completed.stdout
+    assert "outputs claim robustness or infra-stress, never edge" in completed.stdout
+    assert "no output gates live money while GAP-0048 is open" in completed.stdout
+    assert "robustness foundation ok" in completed.stdout
+
+
 def pythonpath() -> str:
     return os.pathsep.join(
         [
