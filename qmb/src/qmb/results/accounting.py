@@ -330,13 +330,14 @@ def _as_one_event(
     if isinstance(value, JournalEvent):
         return Ok(value)
     if isinstance(value, Mapping):
-        rebuilt = JournalEvent.from_row(value)
+        mapping = cast("Mapping[str, object]", value)
+        rebuilt = JournalEvent.from_row(mapping)
         if is_refusal(rebuilt):
             return invalid(
                 "journal_events",
                 "suppression and veto tallies derive only from the run's CT-13 "
                 "journal streams, never a parallel bespoke log (R-RPT-8, B-4)",
-                given=repr(type(value).__name__),
+                given=repr(type(mapping).__name__),
                 **extra,
             )
         return rebuilt
