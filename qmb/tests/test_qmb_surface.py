@@ -128,6 +128,7 @@ def test_frontier_clock_is_qmf_core_clock() -> None:
     assert api.refuse_aborted is qmb.refuse_aborted
     assert qmb.RESULT_CONTRACT == "CT-32"
     assert qmb.CHART_SERIES_IN_IDENTITY is False
+    assert qmb.DISPLAY_DOWNSAMPLE_IN_IDENTITY is False
     assert qmb.HTML_PAYLOAD is False
     assert qmb.CONCURRENCY_IS_SCHEDULING_ONLY is True
     assert api.reproduce_run is qmb.reproduce_run

@@ -270,6 +270,33 @@ def test_measure_set_usage_example_runs_clean() -> None:
     assert "V1 core measure set ok" in completed.stdout
 
 
+def test_chart_series_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "chart_series_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "each chart is {name, unit_kind, points:[{t, v}]}; t is int64 UTC-ns" in completed.stdout
+    assert "no image, base64, PNG, color, style, or histogram bin in the data" in completed.stdout
+    assert "single-instrument unleveraged run omits holdings rather than faking them" in (
+        completed.stdout
+    )
+    assert "benchmark-relative series omitted with 'no benchmark declared'" in completed.stdout
+    assert (
+        "multi-instrument run reconstructs holdings/exposure/allocation from the position stream"
+        in (completed.stdout)
+    )
+    assert (
+        "display downsample is a derivative with declared sampler identity; AD-10-excluded"
+        in (completed.stdout)
+    )
+    assert "PNG/base64 is refused as canonical payload" in completed.stdout
+    assert "chart series as data ok" in completed.stdout
+
+
 def test_accounting_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "accounting_usage.py")],

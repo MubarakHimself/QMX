@@ -3,7 +3,8 @@
 Every run emits one canonical machine-readable result artifact, and that
 artifact IS a CT-32 performance-result. Package SemVer is display-only
 provenance on the occurrence record, never identity (DEC-0163, DEC-0167).
-Chart series and HTML are Epic 19 and are excluded from ``fp1``.
+Chart series (Story 19.4) and HTML are declared QMB extensions, AD-10-excluded
+from ``fp1``. Display downsample is a renderer derivative, never identity.
 """
 
 from __future__ import annotations
@@ -15,6 +16,28 @@ from qmf.risk.performance import (
     VetoCount,
 )
 
+from qmb.results.charts import (
+    BENCHMARK_KEY,
+    CHART_FORMAT_VERSION,
+    DISPLAY_SAMPLER_IDENTITY,
+    NO_BENCHMARK_DECLARED,
+    OMIT_NO_POSITION_STREAM,
+    OMIT_SINGLE_UNLEVERAGED,
+    TOP_WORST_PERIODS,
+    V1_CHART_SERIES_NAMES,
+    AnnualReturnCell,
+    ChartSeries,
+    ChartSet,
+    DisplayDownsample,
+    HistogramReadyArray,
+    HoldingMark,
+    MonthlyReturnCell,
+    OmittedSeries,
+    SeriesPoint,
+    WorstDrawdownPeriod,
+    assemble_v1_chart_set,
+    downsample_chart_series,
+)
 from qmb.results.ct32 import (
     ACCOUNT_ROLE_KEY,
     CALENDAR_KEY,
@@ -23,6 +46,7 @@ from qmb.results.ct32 import (
     CT32_ARTIFACT_NAME,
     CT32_ARTIFACT_RELATIVE_PATH,
     DATA_FINGERPRINT_KEY,
+    DISPLAY_DOWNSAMPLE_IN_IDENTITY,
     FIDELITY_KEY,
     HTML_PAYLOAD,
     MEASURE_ARITHMETIC,
@@ -65,7 +89,9 @@ from qmb.results.measures import (
 __all__ = [
     "ACCOUNT_ROLE_KEY",
     "ANNUALIZATION_PERIODS",
+    "BENCHMARK_KEY",
     "CALENDAR_KEY",
+    "CHART_FORMAT_VERSION",
     "CHART_SERIES_IN_IDENTITY",
     "CODE_INSUFFICIENT_SAMPLE",
     "CODE_UNDEFINED",
@@ -73,13 +99,18 @@ __all__ = [
     "CT32_ARTIFACT_NAME",
     "CT32_ARTIFACT_RELATIVE_PATH",
     "DATA_FINGERPRINT_KEY",
+    "DISPLAY_DOWNSAMPLE_IN_IDENTITY",
+    "DISPLAY_SAMPLER_IDENTITY",
     "FIDELITY_KEY",
     "HTML_PAYLOAD",
     "MEASURE_ARITHMETIC",
     "MEASURE_CONTRACT_FORMAT_VERSION",
     "MEASURE_IDENTITIES",
     "METRIC_CONTRACT_FORMAT_VERSIONS",
+    "NO_BENCHMARK_DECLARED",
     "NS_PER_DAY",
+    "OMIT_NO_POSITION_STREAM",
+    "OMIT_SINGLE_UNLEVERAGED",
     "QMB_REPLAY_CALENDAR_RULE_SET",
     "QMB_REPLAY_CALENDAR_RULE_SET_VERSION",
     "QMB_REPLAY_CALENDAR_TZDATA",
@@ -93,18 +124,32 @@ __all__ = [
     "SUPPRESSION_REASON_CLASSES",
     "TALLY_FIELD_GROUP",
     "TALLY_UNIT_KIND",
+    "TOP_WORST_PERIODS",
+    "V1_CHART_SERIES_NAMES",
     "VETO_DOOR_IDENTITIES",
+    "AnnualReturnCell",
+    "ChartSeries",
+    "ChartSet",
     "ClosedTrade",
+    "DisplayDownsample",
     "EquityPoint",
+    "HistogramReadyArray",
+    "HoldingMark",
+    "MonthlyReturnCell",
+    "OmittedSeries",
     "PerformanceResult",
+    "SeriesPoint",
     "SuppressionCount",
     "TradeSide",
     "UndefinedMeasure",
     "VetoCount",
+    "WorstDrawdownPeriod",
     "assemble_run_performance_result",
     "assemble_suppression_and_veto_accounting",
+    "assemble_v1_chart_set",
     "assemble_v1_measure_set",
     "ct32_artifact_path",
+    "downsample_chart_series",
     "emit_measure",
     "mint_run_performance_result",
     "require_reproduced_fingerprint",

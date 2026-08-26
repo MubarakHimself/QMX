@@ -3,8 +3,9 @@
 A completed pure ``run()`` return is assembled into exactly one CT-32
 container in the run output directory. That container IS the canonical
 artifact — no second report JSON. ``fp1`` is label-derived via qmf-core
-only; float bytes never enter identity. Chart series and HTML stay Epic 19
-and never enter ``fp1``. Re-running a run id under its resolved config must
+only; float bytes never enter identity. Chart series (including display
+downsample) and HTML are declared QMB extensions, AD-10-excluded from
+``fp1``. Re-running a run id under its resolved config must
 reproduce the fingerprint or return a typed refusal (FM-11, DEC-0163).
 """
 
@@ -75,6 +76,7 @@ __all__ = [
     "CT32_ARTIFACT_NAME",
     "CT32_ARTIFACT_RELATIVE_PATH",
     "DATA_FINGERPRINT_KEY",
+    "DISPLAY_DOWNSAMPLE_IN_IDENTITY",
     "FIDELITY_KEY",
     "HTML_PAYLOAD",
     "MEASURE_ARITHMETIC",
@@ -103,6 +105,7 @@ __all__ = [
 
 RESULT_CONTRACT: Final[str] = "CT-32"
 CHART_SERIES_IN_IDENTITY: Final[bool] = False
+DISPLAY_DOWNSAMPLE_IN_IDENTITY: Final[bool] = False
 HTML_PAYLOAD: Final[bool] = False
 CONCURRENCY_IS_SCHEDULING_ONLY: Final[bool] = True
 ACCOUNT_ROLE_KEY: Final[str] = "account_role"
@@ -132,6 +135,7 @@ def result_identity() -> dict[str, object]:
         "concurrency_is_scheduling_only": CONCURRENCY_IS_SCHEDULING_ONLY,
         "container": f"{PerformanceResult.__module__}.{PerformanceResult.__qualname__}",
         "contract": RESULT_CONTRACT,
+        "display_downsample_in_identity": DISPLAY_DOWNSAMPLE_IN_IDENTITY,
         "format_version": CT32_CONTRACT_FORMAT_VERSION,
         "html_payload": HTML_PAYLOAD,
         "measure_arithmetic": dict(MEASURE_ARITHMETIC),
