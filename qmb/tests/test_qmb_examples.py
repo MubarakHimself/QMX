@@ -739,6 +739,46 @@ def test_robustness_foundation_usage_example_runs_clean() -> None:
     assert "robustness foundation ok" in completed.stdout
 
 
+def test_trade_shuffle_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "trade_shuffle_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert (
+        "re-orders realised trades and re-accumulates equity in exact integer money; "
+        "world stays replay" in completed.stdout
+    )
+    assert "net profit is order-invariant; max drawdown is sequence-dependent" in completed.stdout
+    assert (
+        "scenario seed is base_seed + scenario_index; result records RNG family, base seed, "
+        "rule, count, data window" in completed.stdout
+    )
+    assert "re-running the same inputs reproduces the result fingerprint bit-for-bit" in (
+        completed.stdout
+    )
+    assert (
+        "distribution summary as chart series data, never images; direction-aware for drawdown "
+        "(lower is better)" in completed.stdout
+    )
+    assert "no pass/fail verdict; thresholds and the MC-1000 battery stay deferred" in (
+        completed.stdout
+    )
+    assert (
+        "scenario count is a UI-editable configurable with no ratified value; MC-1000 is not baked"
+        in completed.stdout
+    )
+    assert (
+        "scenarios fan out under the min(cpu, memory) governor with enqueue-on-full; each is "
+        "role=replicate, cancellable, never a bar verdict" in completed.stdout
+    )
+    assert "no synthetic market series is minted; procedure-ephemeral" in completed.stdout
+    assert "trade shuffle ok" in completed.stdout
+
+
 def pythonpath() -> str:
     return os.pathsep.join(
         [
