@@ -442,6 +442,32 @@ def test_sweep_axes_usage_example_runs_clean() -> None:
     assert "sweep axes ok" in completed.stdout
 
 
+def test_sweep_admit_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "sweep_admit_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "one registry as-of resolved at admission, frozen for every combination" in (
+        completed.stdout
+    )
+    assert "sweep label and every combo run label carry the identical frozen as-of" in (
+        completed.stdout
+    )
+    assert "two combos citing the same Book resolve the identical Book fp1" in completed.stdout
+    assert "after admission fragments resolve by explicit fp1, never name@latest" in (
+        completed.stdout
+    )
+    assert "a superseded reference at admission is an AD-11 stale-evidence refusal" in (
+        completed.stdout
+    )
+    assert "registry_as_of appears verbatim in every combo's CT-32 label set" in completed.stdout
+    assert "sweep admission ok" in completed.stdout
+
+
 def pythonpath() -> str:
     return os.pathsep.join(
         [

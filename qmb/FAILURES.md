@@ -604,3 +604,29 @@ CT-32 fingerprint or return a typed refusal.
   named rounding boundary before they enter a run — a raw decimal like `1.5`
   is refused so two runs can never disagree on a rounded amount. Declare the
   currency/unit, scale, and rounding, and re-run.
+
+### FR-31: A sweep's context references a record a fresher as-of shows superseded
+
+- **Failure class:** `stale evidence` (CT-04), field `ref`, at the configured
+  severity `registry:qmb_stale_evidence_severity` (carried in `severity` /
+  `severity_key`; there is no invented default).
+- **Detection:** `admit_sweep` resolves the sweep's bot/Book/BMS context ONCE
+  through the single library-owned registry-read port BEFORE it freezes the
+  batch as-of. If a fresher as-of set on the hub shows any context reference
+  superseded, the port returns an AD-11 stale-evidence refusal and admission
+  propagates it, rather than silently binding either the stale or the fresher
+  version (B-15; AR-55; FM-7; DEC-0165).
+- **Auto-recovery / retry:** none. Re-resolve the context against the current
+  as-of set and re-declare the sweep against the head record; never mutate the
+  ref in place.
+- **Visible degraded state:** no batch is admitted, no as-of is frozen, no
+  combination is expanded or compiled, no process is spawned, and no sweep or
+  run label is stamped. Admission is all-or-nothing at the context resolution.
+- **Notification tier:** caller-visible typed refusal carrying the superseded
+  `fingerprint`, the current head, and both as-of identities.
+- **Product-user affordance:** a sweep pins one registry as-of at admission so
+  no two combinations silently resolve different Book/BMS/bot versions. If a
+  Book/BMS/bot you named was superseded by a newer version, the sweep refuses
+  up front instead of guessing — point it at the current version and re-admit;
+  once admitted, a fresher version arriving mid-batch never changes a
+  combination.
