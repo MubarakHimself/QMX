@@ -1,10 +1,12 @@
 """Thin fronts over qmf-data contracts (B-11).
 
-Download, verify, catalog, and generate are fronts over the ratified data
+Download, verify, list/catalog, and generate are fronts over the ratified data
 contracts. Runs read qmf-data rooms; they never fetch from a provider.
 Every ingested window carries a license tag (DEC-0166). The ship-no-corpus
 licensing gate (Story 18.2) turns that tag into value-or-typed-refusal for
 governed-evidence use at read time and asserts the wheel ships no corpus.
+``data list`` rebuilds a DuckDB coverage view over Parquet rooms (Story 18.3);
+``catalog`` aliases ``list``.
 """
 
 from __future__ import annotations
@@ -13,6 +15,18 @@ from typing import Final
 
 from qmf.data import LicenseTag, SplitManifest
 
+from qmb.data.catalog import (
+    COVERAGE_KIND,
+    NOT_PRESENT,
+    PRESENT,
+    CoverageEntry,
+    CoverageReport,
+    catalog,
+    catalog_identity,
+    list_data,
+    persist_coverage_windows,
+    scan_coverage_rows,
+)
 from qmb.data.convert import (
     CONVERSION_BOUNDARY,
     CONVERSION_ROUNDING,
@@ -70,6 +84,7 @@ __all__ = [
     "CONVERSION_BOUNDARY",
     "CONVERSION_ROUNDING",
     "CORPUS_EXTENSIONS",
+    "COVERAGE_KIND",
     "DATA_COMMANDS",
     "DOWNLOAD_SIDES",
     "DUKASCOPY_BATCH_COUNT",
@@ -78,8 +93,12 @@ __all__ = [
     "DUKASCOPY_PROVIDER",
     "LICENSE_TAG_STATES",
     "NON_EVIDENCE_USES",
+    "NOT_PRESENT",
+    "PRESENT",
     "PROVIDER_ADAPTER_METHODS",
     "AuthorityKind",
+    "CoverageEntry",
+    "CoverageReport",
     "DownloadProgress",
     "DownloadReceipt",
     "DownloadRequest",
@@ -95,6 +114,8 @@ __all__ = [
     "admit_governed_evidence",
     "allow_non_evidence_use",
     "assert_distribution_has_no_corpus",
+    "catalog",
+    "catalog_identity",
     "conversion_identity",
     "data_front_identity",
     "distribution_corpus_bytes",
@@ -102,16 +123,20 @@ __all__ = [
     "entitlement_lineage_edge",
     "fingerprint_conversion",
     "licensing_gate_identity",
+    "list_data",
     "parse_download_request",
+    "persist_coverage_windows",
     "provider_price_to_exact",
     "refuse_run_provider_fetch",
     "resolve_end_ns",
     "resolve_license_tag",
+    "scan_coverage_rows",
 ]
 
 DATA_COMMANDS: Final[tuple[str, ...]] = (
     "download",
     "verify",
+    "list",
     "catalog",
     "generate",
 )
@@ -129,4 +154,5 @@ def data_front_identity() -> dict[str, object]:
         "dukascopy_provider": DUKASCOPY_PROVIDER,
     }
     identity.update(licensing_gate_identity())
+    identity.update(catalog_identity())
     return identity

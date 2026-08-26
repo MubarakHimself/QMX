@@ -379,6 +379,10 @@ def test_data_commands_refuse_absent_resources_and_catalog_is_free() -> None:
     catalog = _ok(invoke_data("catalog"))
     assert catalog["command"] == "catalog"
     assert catalog["commands"] == qmb.DATA_COMMANDS
+    assert catalog["entries"] == ()
+    listed = _ok(invoke_data("list"))
+    assert listed["command"] == "list"
+    assert listed["entries"] == ()
     incomplete = invoke_data("download", {"destination": "archive"})
     assert is_refusal(incomplete)
     assert incomplete.category is RefusalCategory.UNAVAILABLE_DEPENDENCY

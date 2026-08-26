@@ -29,6 +29,7 @@ from qmf.data.source_boundary import SourceObservationBoundary
 from qmf.data.store import EvidenceStore
 
 from qmb._refuse import clean_token, invalid, unavailable
+from qmb.data.catalog import persist_coverage_windows
 from qmb.data.ports import (
     DOWNLOAD_SIDES,
     DownloadProgress,
@@ -282,9 +283,7 @@ def download(
         if is_refusal(fetched):
             return fetched
         for record in fetched.value:
-            key = IntakeKey.try_create(
-                record.source, record.source_native_id, record.revision
-            )
+            key = IntakeKey.try_create(record.source, record.source_native_id, record.revision)
             if is_refusal(key):
                 return key
             if key.value in known_keys:
@@ -334,6 +333,28 @@ def download(
             window_meta["license_tag"] = last_window.license_tag.value
             window_meta["provenance"] = dict(last_window.provenance)
             window_meta["partition_key"] = last_window.partition.partition_key
+        # Coverage envelopes land in the Parquet raw archive so list/catalog can
+        # rebuild a DuckDB view over rooms (Story 18.3) — never a second store.
+        coverage_store = (
+            evidence if evidence is not None else EvidenceStore(Path(request.destination))
+        )
+        persisted = persist_coverage_windows(
+            coverage_store,
+            world=request.world,
+            venue=str(window_meta["venue"]),
+            symbol=symbol,
+            resolution=str(window_meta["resolution"]),
+            side=str(window_meta["side"]),
+            start_ns=int(cast("int", window_meta["start_ns"])),
+            end_ns=int(cast("int", window_meta["end_ns"])),
+            observation_count=len(fetched.value),
+            license_tag=str(window_meta["license_tag"]),
+            revision=str(window_meta["revision"]),
+            source=str(window_meta["source"]),
+            provenance=cast("Mapping[str, object]", window_meta["provenance"]),
+        )
+        if is_refusal(persisted):
+            return persisted
         windows.append(window_meta)
 
         percent = int(((index + 1) * 100) // total) if total else 100

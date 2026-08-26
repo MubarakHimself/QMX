@@ -463,6 +463,23 @@ def test_data_licensing_usage_example_runs_clean() -> None:
     assert "qmb data licensing gate ok" in completed.stdout
 
 
+def test_data_catalog_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "data_catalog_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "catalog identity:" in completed.stdout
+    assert "list both: bid=present ask=not present" in completed.stdout
+    assert "absent window: status=not present" in completed.stdout
+    assert "catalog aliases list:" in completed.stdout
+    assert "CLI and Python API share coverage:" in completed.stdout
+    assert "data catalog ok" in completed.stdout
+
+
 def test_cli_refusal_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "cli_refusal_usage.py")],

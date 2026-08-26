@@ -10,6 +10,7 @@ in the registry and the distribution manifest, never restated here.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable, Mapping, Sequence
 from typing import TypeVar, cast
 
@@ -196,7 +197,7 @@ def backtest_run(
 
 @main.group("data")
 def data_group() -> None:
-    """Thin fronts over qmf-data contracts (download, verify, catalog, generate)."""
+    """Thin fronts over qmf-data contracts (download, verify, list, catalog, generate)."""
 
 
 @data_group.command("download")
@@ -279,11 +280,96 @@ def data_verify(ctx: click.Context, archive: str | None) -> None:
     _transport(ctx, invoke_data("verify", _payload(ctx, archive=archive)))
 
 
-@data_group.command("catalog")
+@data_group.command("list")
+@click.option("--destination", default=None, help="World-scoped raw-archive root.")
+@click.option("--venue", default=None, help="Venue token to query.")
+@click.option("--symbol", default=None, help="Symbol token to query.")
+@click.option("--resolution", default=None, help="Resolution (default tick).")
+@click.option(
+    "--side",
+    default=None,
+    type=click.Choice(["bid", "ask", "both"], case_sensitive=False),
+    help="Quote side(s) to report; both emits bid and ask rows.",
+)
+@click.option("--start", default=None, help="Optional window start (int64 UTC-ns).")
+@click.option("--end", default=None, help="Optional window end (int64 UTC-ns).")
+@click.option("--world", default=None, help="World-scoped raw room (default: replay).")
 @click.pass_context
-def data_catalog(ctx: click.Context) -> None:
-    """Catalog the thin data-command fronts."""
-    _transport(ctx, invoke_data("catalog", _payload(ctx)))
+def data_list(
+    ctx: click.Context,
+    destination: str | None,
+    venue: str | None,
+    symbol: str | None,
+    resolution: str | None,
+    side: str | None,
+    start: str | None,
+    end: str | None,
+    world: str | None,
+) -> None:
+    """List coverage per (venue, symbol, resolution, side) over Parquet rooms."""
+    _transport(
+        ctx,
+        invoke_data(
+            "list",
+            _payload(
+                ctx,
+                destination=destination,
+                venue=venue,
+                symbol=symbol,
+                resolution=resolution,
+                side=side,
+                start=start,
+                end=end,
+                world=world,
+            ),
+        ),
+    )
+
+
+@data_group.command("catalog")
+@click.option("--destination", default=None, help="World-scoped raw-archive root.")
+@click.option("--venue", default=None, help="Venue token to query.")
+@click.option("--symbol", default=None, help="Symbol token to query.")
+@click.option("--resolution", default=None, help="Resolution (default tick).")
+@click.option(
+    "--side",
+    default=None,
+    type=click.Choice(["bid", "ask", "both"], case_sensitive=False),
+    help="Quote side(s) to report; both emits bid and ask rows.",
+)
+@click.option("--start", default=None, help="Optional window start (int64 UTC-ns).")
+@click.option("--end", default=None, help="Optional window end (int64 UTC-ns).")
+@click.option("--world", default=None, help="World-scoped raw room (default: replay).")
+@click.pass_context
+def data_catalog(
+    ctx: click.Context,
+    destination: str | None,
+    venue: str | None,
+    symbol: str | None,
+    resolution: str | None,
+    side: str | None,
+    start: str | None,
+    end: str | None,
+    world: str | None,
+) -> None:
+    """Alias of ``data list`` — same machine-readable coverage payload."""
+    _transport(
+        ctx,
+        invoke_data(
+            "catalog",
+            _payload(
+                ctx,
+                destination=destination,
+                venue=venue,
+                symbol=symbol,
+                resolution=resolution,
+                side=side,
+                start=start,
+                end=end,
+                world=world,
+            ),
+        ),
+    )
 
 
 @data_group.command("generate")
@@ -446,6 +532,9 @@ def _format_ok(value: object) -> str:
         return value.fingerprint.value
     if isinstance(value, Mapping):
         mapping = cast("Mapping[str, object]", value)
+        # Story 18.3: list/catalog coverage is machine-readable JSON on both doors.
+        if "entries" in mapping and mapping.get("command") in {"list", "catalog"}:
+            return json.dumps(_jsonable_payload(mapping), ensure_ascii=False)
         commands = mapping.get("commands")
         if isinstance(commands, Sequence) and not isinstance(commands, (str, bytes)):
             items = cast("Sequence[object]", commands)
@@ -459,3 +548,18 @@ def _format_ok(value: object) -> str:
     if isinstance(value, tuple):
         return str(len(cast("tuple[object, ...]", value)))
     return "ok"
+
+
+def _jsonable_payload(value: object) -> object:
+    """JSON-native mirror of a coverage / door payload."""
+    if value is None or isinstance(value, bool):
+        return value
+    if isinstance(value, (str, int)):
+        return value
+    if isinstance(value, Mapping):
+        mapping = cast("Mapping[object, object]", value)
+        return {str(key): _jsonable_payload(item) for key, item in mapping.items()}
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        sequence = cast("Sequence[object]", value)
+        return [_jsonable_payload(item) for item in sequence]
+    return str(value)

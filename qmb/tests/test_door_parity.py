@@ -217,6 +217,7 @@ def test_data_subcommands_are_the_library_data_commands() -> None:
     assert command_tree()["data"] == api.DATA_COMMANDS
     assert "download" in api.DATA_COMMANDS
     assert "verify" in api.DATA_COMMANDS
+    assert "list" in api.DATA_COMMANDS
     assert "catalog" in api.DATA_COMMANDS
     assert "generate" in api.DATA_COMMANDS
 
@@ -294,9 +295,18 @@ def test_config_show_and_data_catalog_payloads_match() -> None:
     catalog = _ok(invoke_data("catalog"))
     front = api.data_front_identity()
     assert catalog["commands"] == front["commands"] == api.DATA_COMMANDS
+    assert catalog["command"] == "catalog"
+    assert catalog["entries"] == ()
+    assert catalog["view"]["engine"] == "duckdb"
+    listed = _ok(invoke_data("list"))
+    assert listed["command"] == "list"
+    assert listed["entries"] == catalog["entries"]
     click_catalog = runner.invoke(main, ["data", "catalog"])
     assert click_catalog.exit_code == 0, click_catalog.output
     assert click_catalog.stderr.strip() == ""
+    rendered = json.loads(click_catalog.stdout)
+    assert rendered["command"] == "catalog"
+    assert rendered["entries"] == []
     for name in api.DATA_COMMANDS:
         assert name in click_catalog.stdout
 
