@@ -155,7 +155,7 @@ def main() -> None:
         )
         _require(again.verdict == passed.verdict, "same verdict")
         _require(again.counts.as_mapping() == passed.counts.as_mapping(), "same counts")
-        print("determinism: same window + config → same verdict")
+        print("determinism: same window + config -> same verdict")
 
     print("qmb data verify ok")
 

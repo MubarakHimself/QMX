@@ -143,7 +143,7 @@ def main() -> None:
             [g.as_mapping() for g in again.gaps] == [g.as_mapping() for g in report.gaps],
             "identical gap set",
         )
-        print("determinism: same window + calendar version → identical gap set")
+        print("determinism: same window + calendar version -> identical gap set")
 
         # Fill attempt refused until GAP-0048.
         filled = gap_check({**base, "fill": True})

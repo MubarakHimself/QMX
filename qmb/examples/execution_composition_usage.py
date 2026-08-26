@@ -158,7 +158,7 @@ def main() -> None:
     assert bound.fill_adapter_id == FILL_ADAPTER_DECLARED_PATH
     assert bound.ports.fill is not bound.ports.slippage
     print("bound from resolved run-config")
-    print("fill → slippage → cost")
+    print("fill -> slippage -> cost")
 
     class _BotSized:
         size = 1.0

@@ -191,7 +191,7 @@ def test_execution_composition_usage_example_runs_clean() -> None:
     )
     assert completed.returncode == 0, completed.stderr
     assert "bound from resolved run-config" in completed.stdout
-    assert "fill → slippage → cost" in completed.stdout
+    assert "fill -> slippage -> cost" in completed.stdout
     assert "never a bot-sized order" in completed.stdout
     assert "full-loss price required before open" in completed.stdout
     assert "risk-reducing exit admitted without new full-loss" in completed.stdout
