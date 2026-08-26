@@ -139,6 +139,10 @@ def test_mint_performance_result_with_accounting() -> None:
     assert minted.value.account_binding_role is AccountRole.LIVE
     assert minted.value.suppression_accounting[0].count == 2
     assert minted.value.veto_accounting[0].count == 3
+    assert minted.value.suppression_accounting[0].fp1_identity()["unit_kind"] == (
+        UnitKind.COUNT.value
+    )
+    assert minted.value.veto_accounting[0].fp1_identity()["unit_kind"] == UnitKind.COUNT.value
     assert minted.value.baseline_pointer == _fp("baseline")
     fp = minted.value.fingerprint()
     assert is_ok(fp)

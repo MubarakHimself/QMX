@@ -8,7 +8,12 @@ Chart series and HTML are Epic 19 and are excluded from ``fp1``.
 
 from __future__ import annotations
 
-from qmf.risk.performance import PerformanceResult, UndefinedMeasure
+from qmf.risk.performance import (
+    PerformanceResult,
+    SuppressionCount,
+    UndefinedMeasure,
+    VetoCount,
+)
 
 from qmb.results.ct32 import (
     ACCOUNT_ROLE_KEY,
@@ -32,7 +37,12 @@ from qmb.results.ct32 import (
     RESULTS_DIR_NAME,
     RNG_PROVENANCE_KEY,
     SPLIT_FINGERPRINT_KEY,
+    SUPPRESSION_REASON_CLASSES,
+    TALLY_FIELD_GROUP,
+    TALLY_UNIT_KIND,
+    VETO_DOOR_IDENTITIES,
     assemble_run_performance_result,
+    assemble_suppression_and_veto_accounting,
     ct32_artifact_path,
     mint_run_performance_result,
     require_reproduced_fingerprint,
@@ -80,12 +90,19 @@ __all__ = [
     "RESULT_CONTRACT",
     "RNG_PROVENANCE_KEY",
     "SPLIT_FINGERPRINT_KEY",
+    "SUPPRESSION_REASON_CLASSES",
+    "TALLY_FIELD_GROUP",
+    "TALLY_UNIT_KIND",
+    "VETO_DOOR_IDENTITIES",
     "ClosedTrade",
     "EquityPoint",
     "PerformanceResult",
+    "SuppressionCount",
     "TradeSide",
     "UndefinedMeasure",
+    "VetoCount",
     "assemble_run_performance_result",
+    "assemble_suppression_and_veto_accounting",
     "assemble_v1_measure_set",
     "ct32_artifact_path",
     "emit_measure",

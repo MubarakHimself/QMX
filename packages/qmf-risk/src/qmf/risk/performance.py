@@ -39,6 +39,7 @@ from qmf.core import (
     Result,
     ResultLabel,
     TypedRefusal,
+    UnitKind,
     World,
     fingerprint,
     is_refusal,
@@ -448,6 +449,9 @@ class SuppressionCount:
                 "suppression accounting is a typed non-negative count, never money",
                 given=repr(count),
             )
+        quantity = ExactRational.try_create(count, 1, UnitKind.COUNT)
+        if is_refusal(quantity):
+            return quantity
         return _Ok(cls(authority=resolved, reason_class=reason, count=count))
 
     def fp1_identity(self) -> dict[str, object]:
@@ -457,6 +461,7 @@ class SuppressionCount:
             "authority": self.authority.value,
             "reason_class": self.reason_class,
             "count": self.count,
+            "unit_kind": UnitKind.COUNT.value,
         }
 
 
@@ -483,6 +488,9 @@ class VetoCount:
                 "veto accounting is a typed non-negative count, never money",
                 given=repr(count),
             )
+        quantity = ExactRational.try_create(count, 1, UnitKind.COUNT)
+        if is_refusal(quantity):
+            return quantity
         return _Ok(cls(door_identity=door, count=count))
 
     def fp1_identity(self) -> dict[str, object]:
@@ -491,6 +499,7 @@ class VetoCount:
             "class": "veto-count",
             "door_identity": self.door_identity,
             "count": self.count,
+            "unit_kind": UnitKind.COUNT.value,
         }
 
 

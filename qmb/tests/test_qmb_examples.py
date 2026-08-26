@@ -270,6 +270,23 @@ def test_measure_set_usage_example_runs_clean() -> None:
     assert "V1 core measure set ok" in completed.stdout
 
 
+def test_accounting_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "accounting_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "quiet run keeps explicit zero counts; keys are never omitted" in completed.stdout
+    assert "tallies fold CT-13 journals; count unit-kind; distinct from measure_set" in (
+        completed.stdout
+    )
+    assert "unresolvable authority is typed refusal; parallel log is refused" in completed.stdout
+    assert "suppression and veto accounting ok" in completed.stdout
+
+
 def test_ct32_artifact_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "ct32_artifact_usage.py")],

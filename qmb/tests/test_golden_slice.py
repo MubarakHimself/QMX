@@ -148,8 +148,10 @@ def test_two_identical_runs_share_ct32_fingerprint() -> None:
         for row in artifact.measure_set
         if isinstance(row, PerformanceMeasure)
     )
-    assert artifact.suppression_accounting == ()
-    assert artifact.veto_accounting == ()
+    assert artifact.suppression_accounting
+    assert artifact.veto_accounting
+    assert all(row.count == 0 for row in artifact.suppression_accounting)
+    assert all(row.count == 0 for row in artifact.veto_accounting)
     assert artifact.account_binding_role is AccountRole.DEMO
     assert artifact.result_label.world is World.REPLAY
     assert first.self_assessment["result_contract"] == RESULT_CONTRACT

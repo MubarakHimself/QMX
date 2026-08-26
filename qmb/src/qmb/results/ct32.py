@@ -52,6 +52,13 @@ from qmb.execution.ports import (
     refuse_optimistic_edge_claim,
 )
 from qmb.execution.spread import SPREAD_CALIBRATION_KEY, spread_calibration_fingerprint
+from qmb.results.accounting import (
+    SUPPRESSION_REASON_CLASSES,
+    TALLY_FIELD_GROUP,
+    TALLY_UNIT_KIND,
+    VETO_DOOR_IDENTITIES,
+    assemble_suppression_and_veto_accounting,
+)
 from qmb.results.measures import (
     MEASURE_ARITHMETIC,
     MEASURE_CONTRACT_FORMAT_VERSION,
@@ -82,7 +89,12 @@ __all__ = [
     "RESULT_CONTRACT",
     "RNG_PROVENANCE_KEY",
     "SPLIT_FINGERPRINT_KEY",
+    "SUPPRESSION_REASON_CLASSES",
+    "TALLY_FIELD_GROUP",
+    "TALLY_UNIT_KIND",
+    "VETO_DOOR_IDENTITIES",
     "assemble_run_performance_result",
+    "assemble_suppression_and_veto_accounting",
     "ct32_artifact_path",
     "mint_run_performance_result",
     "require_reproduced_fingerprint",
@@ -132,6 +144,10 @@ def result_identity() -> dict[str, object]:
             for identity in MEASURE_IDENTITIES
         ],
         "spends_split_budget": SPENDS_SPLIT_BUDGET,
+        "suppression_reason_classes": list(SUPPRESSION_REASON_CLASSES),
+        "tally_field_group": TALLY_FIELD_GROUP,
+        "tally_unit_kind": TALLY_UNIT_KIND.value,
+        "veto_door_identities": list(VETO_DOOR_IDENTITIES),
     }
 
 
@@ -148,6 +164,7 @@ def mint_run_performance_result(
     trades: object = (),
     equity_curve: object = (),
     starting_capital: object = None,
+    journal_events: object = (),
 ) -> Result[PerformanceResult]:
     """Mint the CT-32 artifact of one completed pure ``run()`` (B-10).
 
@@ -256,14 +273,17 @@ def mint_run_performance_result(
     )
     if is_refusal(measures):
         return measures
+    tallies = assemble_suppression_and_veto_accounting(journal_events, world=config.world)
+    if is_refusal(tallies):
+        return tallies
     return mint_performance_result(
         result_label=label.value,
         account_binding_role=role.value,
         population=population.value,
         period=period.value,
         measure_set=measures.value,
-        suppression_accounting=(),
-        veto_accounting=(),
+        suppression_accounting=tallies.value[0],
+        veto_accounting=tallies.value[1],
     )
 
 

@@ -34,7 +34,9 @@ delivers ``qmb data verify`` window integrity: bid/ask presence,
 monotonic int64 UTC-ns timestamps, exact scaled-integer prices, a
 configurable unarmed-by-default edge guard, interior gaps reported
 never filled, and CT-13 data-quality journaling of the factual
-pass/fail verdict.
+pass/fail verdict. Story 19.3 folds suppression and veto tallies from
+the run's CT-13 journal streams into the CT-32 artifact; an unresolvable
+authority or reason is a typed refusal, never a dropped or bucketed event.
 
 ### FR-1: Cancel or per-run limit breach aborts one OS process
 
@@ -473,3 +475,24 @@ pass/fail verdict.
   calendar or fill attempts; successful runs emit the gap set as a value.
 - **Product-user affordance:** use the gap report to decide re-download
   targets. Closures need no repair; genuine open-session holes do.
+
+### FR-24: Unresolvable suppression or veto journal key
+
+- **Failure class:** `invalid input` (CT-04) for an unresolvable authority
+  or reason class, or a parallel bespoke log; `policy rejection` for a
+  cross-world journal event.
+- **Detection:** `assemble_suppression_and_veto_accounting` — a suppressed
+  decision or suppressed control-action whose issuing authority is not an
+  AD-36 `AuthorityKind`, whose reason class is blank/missing, or a
+  `refused-by-door` event whose refusing-door identity cannot be read.
+  A mapping that is not a CT-13 journal row is refused as a parallel log.
+- **Auto-recovery / retry:** none. Repair the journal event so authority,
+  reason, and door resolve, then re-assemble. Never drop the event and
+  never bucket it under `other`.
+- **Visible degraded state:** no CT-32 artifact is minted. Prior journal
+  streams remain readable.
+- **Notification tier:** operator-visible typed refusal (`field` names
+  the unresolvable key).
+- **Product-user affordance:** control-window and admission-door accounting
+  cannot be completed from a journal row that does not name who suppressed
+  or which door refused. Fix the event; do not invent a bucket.
