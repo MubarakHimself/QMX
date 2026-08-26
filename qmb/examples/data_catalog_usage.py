@@ -23,9 +23,10 @@ from __future__ import annotations
 import lzma
 import struct
 import tempfile
+from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TypeVar
+from typing import TypeVar, cast
 
 from qmb.data import (
     NOT_PRESENT,
@@ -148,10 +149,12 @@ def main() -> None:
         by_side = {entry.side: entry for entry in present.entries}
         _require(by_side["bid"].status == PRESENT, "bid present after bid-only download")
         _require(by_side["ask"].status == NOT_PRESENT, "ask absent when only bid downloaded")
-        _require(present.view_fingerprint is not None, "DuckDB view fingerprint stamped")
+        view_fp = present.view_fingerprint
+        _require(view_fp is not None, "DuckDB view fingerprint stamped")
+        assert view_fp is not None
         print(
             f"list both: bid={by_side['bid'].status} ask={by_side['ask'].status} "
-            f"view={present.view_engine} fp={present.view_fingerprint[:24]}..."
+            f"view={present.view_engine} fp={view_fp[:24]}..."
         )
 
         missing = _unwrap(
@@ -196,12 +199,14 @@ def main() -> None:
             ),
             "CLI/API door list",
         )
+        door_view = cast("Mapping[str, object]", door["view"])
+        door_entries = cast("Sequence[object]", door["entries"])
         _require(door["command"] == "list", "door command")
-        _require(door["view"]["engine"] == "duckdb", "door view engine")
-        _require(door["view"]["is_evidence_bearing"] is False, "door view never evidence")
+        _require(door_view["engine"] == "duckdb", "door view engine")
+        _require(door_view["is_evidence_bearing"] is False, "door view never evidence")
         print(
             f"CLI and Python API share coverage: command={door['command']} "
-            f"entries={len(door['entries'])} engine={door['view']['engine']}"
+            f"entries={len(door_entries)} engine={door_view['engine']}"
         )
 
     print("data catalog ok")

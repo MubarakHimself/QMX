@@ -294,10 +294,11 @@ def test_config_show_and_data_catalog_payloads_match() -> None:
     assert click_show.stdout.strip() == api.RUN_CONFIG_CLASS
     catalog = _ok(invoke_data("catalog"))
     front = api.data_front_identity()
+    catalog_view = cast("dict[str, object]", catalog["view"])
     assert catalog["commands"] == front["commands"] == api.DATA_COMMANDS
     assert catalog["command"] == "catalog"
     assert catalog["entries"] == ()
-    assert catalog["view"]["engine"] == "duckdb"
+    assert catalog_view["engine"] == "duckdb"
     listed = _ok(invoke_data("list"))
     assert listed["command"] == "list"
     assert listed["entries"] == catalog["entries"]

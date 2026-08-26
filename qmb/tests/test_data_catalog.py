@@ -6,6 +6,7 @@ import json
 import lzma
 import struct
 import tempfile
+from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TypeVar, cast
@@ -106,8 +107,9 @@ def test_catalog_identity_names_rebuildable_view() -> None:
     assert identity["catalog_aliases_list"] is True
     front = data_front_identity()
     assert front["coverage_kind"] == COVERAGE_KIND
-    assert "list" in front["commands"]
-    assert "catalog" in front["commands"]
+    front_commands = cast("tuple[str, ...]", front["commands"])
+    assert "list" in front_commands
+    assert "catalog" in front_commands
 
 
 def test_list_reports_present_bid_and_ask_with_duckdb_view() -> None:
@@ -223,11 +225,14 @@ def test_cli_and_api_door_parity_for_coverage_payload() -> None:
         }
         api_payload = _ok(invoke_data("list", query))
         catalog_payload = _ok(invoke_data("catalog", query))
+        api_view = cast("Mapping[str, object]", api_payload["view"])
+        api_entries = cast("Sequence[object]", api_payload["entries"])
+        catalog_entries = cast("Sequence[object]", catalog_payload["entries"])
         assert api_payload["command"] == "list"
         assert catalog_payload["command"] == "catalog"
         assert api_payload["entries"] == catalog_payload["entries"]
-        assert api_payload["view"]["engine"] == "duckdb"
-        assert api_payload["view"]["is_evidence_bearing"] is False
+        assert api_view["engine"] == "duckdb"
+        assert api_view["is_evidence_bearing"] is False
         assert api.list_data is list_data
         assert api.catalog is catalog
 
@@ -256,7 +261,7 @@ def test_cli_and_api_door_parity_for_coverage_payload() -> None:
         assert clicked.stderr.strip() == ""
         rendered = json.loads(clicked.stdout)
         assert rendered["command"] == "list"
-        assert rendered["entries"] == list(api_payload["entries"])
+        assert rendered["entries"] == list(api_entries)
         assert rendered["view"]["engine"] == "duckdb"
 
         click_catalog = runner.invoke(
@@ -282,7 +287,7 @@ def test_cli_and_api_door_parity_for_coverage_payload() -> None:
         assert click_catalog.exit_code == 0, click_catalog.output
         catalog_rendered = json.loads(click_catalog.stdout)
         assert catalog_rendered["command"] == "catalog"
-        assert catalog_rendered["entries"] == list(catalog_payload["entries"])
+        assert catalog_rendered["entries"] == list(catalog_entries)
 
 
 def test_free_catalog_without_rooms_stays_ok_with_empty_entries() -> None:
