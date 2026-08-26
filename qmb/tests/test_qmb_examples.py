@@ -583,6 +583,47 @@ def test_optimize_objective_usage_example_runs_clean() -> None:
     assert "study objective and constraints ok" in completed.stdout
 
 
+def test_optimize_splits_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "optimize_splits_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "objective on train, recorded-only on test: two runs share one parameter set" in (
+        completed.stdout
+    )
+    assert "only the training run computes the objective; the testing run cannot feed it" in (
+        completed.stdout
+    )
+    assert (
+        "both split-manifest fingerprints on the trial label; train/test are display aliases only"
+        in completed.stdout
+    )
+    assert "naming one fingerprint for both splits is invalid input; no out-of-sample content" in (
+        completed.stdout
+    )
+    assert (
+        "12-month seal, calendar-in-band, embargo and knowledge-time enforced at the boundary"
+        in completed.stdout
+    )
+    assert "the sealed holdout is excluded from default access" in completed.stdout
+    assert (
+        "every fill optimistic; the run spends no split budget and claims no edge until GAP-0048"
+        in completed.stdout
+    )
+    assert "world=simulated is a policy rejection; Studies run world=replay only in V1" in (
+        completed.stdout
+    )
+    assert (
+        "warm-up length is the embargo observation count, never a Duration; "
+        "evidence range is the trading interval only"
+    ) in completed.stdout
+    assert "train/test split discipline ok" in completed.stdout
+
+
 def pythonpath() -> str:
     return os.pathsep.join(
         [
