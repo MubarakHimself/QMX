@@ -270,6 +270,32 @@ def test_measure_set_usage_example_runs_clean() -> None:
     assert "V1 core measure set ok" in completed.stdout
 
 
+def test_downstream_reads_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "downstream_reads_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "HTML/markdown are token substitution of the stored CT-32; no new number" in (
+        completed.stdout
+    )
+    assert "headline shows world and account-binding role verbatim and unmissably" in (
+        completed.stdout
+    )
+    assert "interpretation skills read CT-32 and never parse HTML" in completed.stdout
+    assert "re-execute stored run id reproduces the CT-32 fingerprint or typed refusal" in (
+        completed.stdout
+    )
+    assert "concurrent runs write isolated output directories; no shared render state" in (
+        completed.stdout
+    )
+    assert "rendering, interpretation, and reproduction are publish-only" in completed.stdout
+    assert "pure downstream reads ok" in completed.stdout
+
+
 def test_chart_series_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "chart_series_usage.py")],
@@ -289,9 +315,8 @@ def test_chart_series_usage_example_runs_clean() -> None:
         "multi-instrument run reconstructs holdings/exposure/allocation from the position stream"
         in (completed.stdout)
     )
-    assert (
-        "display downsample is a derivative with declared sampler identity; AD-10-excluded"
-        in (completed.stdout)
+    assert "display downsample is a derivative with declared sampler identity; AD-10-excluded" in (
+        completed.stdout
     )
     assert "PNG/base64 is refused as canonical payload" in completed.stdout
     assert "chart series as data ok" in completed.stdout

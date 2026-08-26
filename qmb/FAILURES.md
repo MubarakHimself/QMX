@@ -37,6 +37,10 @@ never filled, and CT-13 data-quality journaling of the factual
 pass/fail verdict. Story 19.3 folds suppression and veto tallies from
 the run's CT-13 journal streams into the CT-32 artifact; an unresolvable
 authority or reason is a typed refusal, never a dropped or bucketed event.
+Story 19.5 delivers pure downstream reads of that stored artifact: HTML and
+markdown are token substitution only, interpretation skills refuse a
+rendering, and re-executing a stored run id must reproduce the stored
+CT-32 fingerprint or return a typed refusal.
 
 ### FR-1: Cancel or per-run limit breach aborts one OS process
 
@@ -496,3 +500,67 @@ authority or reason is a typed refusal, never a dropped or bucketed event.
 - **Product-user affordance:** control-window and admission-door accounting
   cannot be completed from a journal row that does not name who suppressed
   or which door refused. Fix the event; do not invent a bucket.
+
+### FR-25: Stored CT-32 fingerprint does not reproduce
+
+- **Failure class:** `policy rejection` (CT-04), field `ct32_fingerprint`.
+- **Detection:** `verify_stored_reproduction` re-executes the stored run id
+  under its resolved run-config and compares the recomputed CT-32 `fp1`
+  to the fingerprint of `results/ct-32.json`. `require_reproduced_fingerprint`
+  refuses on mismatch. A missing or unreadable stored artifact is a
+  `storage failure`.
+- **Auto-recovery / retry:** none. A mismatch is never silently tolerated.
+  Repair the inputs so the re-run matches the stored artifact, or replace
+  the stored file only by assembling a new isolated run.
+- **Visible degraded state:** the stored artifact is left in place. No
+  size, promotion, bench, bind, or mode change is performed.
+- **Notification tier:** operator-visible typed refusal (`actual` /
+  `expected` fingerprints and the run id).
+- **Product-user affordance:** re-running this run id did not reproduce
+  the stored CT-32 fingerprint. That is a bug in inputs or a tampered
+  artifact, not a rounding difference. Do not accept the new numbers.
+
+### FR-26: Interpretation handed a rendering instead of CT-32
+
+- **Failure class:** `policy rejection` (CT-04), field `artifact`.
+- **Detection:** `explain_run` / `compare_runs` / `flag_refusal_heavy`
+  (and `as_ct32_artifact`) refuse HTML or the markdown report
+  (`qmb-headline`, `<html`, `# world=`). Agents never parse HTML.
+- **Auto-recovery / retry:** none. Pass the stored `results/ct-32.json`
+  (or the run output directory that holds it), not `report.html`.
+- **Visible degraded state:** no findings are produced. The rendering
+  files remain display-only.
+- **Notification tier:** caller-visible typed refusal.
+- **Product-user affordance:** in-house skills read the machine-readable
+  CT-32 artifact. Paste the JSON (or the run directory), not the HTML
+  report.
+
+### FR-27: Headline world or account-binding role is missing
+
+- **Failure class:** `invalid input` (CT-04), field `world` or
+  `account_binding_role`.
+- **Detection:** `render_tokens` / `as_ct32_artifact` require the stored
+  labels verbatim. A renderer never invents `replay` or `demo`.
+- **Auto-recovery / retry:** none. Restore a well-formed CT-32 artifact
+  and re-render.
+- **Visible degraded state:** no HTML or markdown is written. The stored
+  artifact is not overwritten.
+- **Notification tier:** caller-visible typed refusal.
+- **Product-user affordance:** the report headline must show world and
+  account-binding role unmissably. If those fields are missing, the file
+  is not a CT-32 result — do not pretty-print it as live.
+
+### FR-28: Downstream read attempts to act on the result
+
+- **Failure class:** `policy rejection` (CT-04), field `act`.
+- **Detection:** `refuse_downstream_act` — size, allocate, promote, demote,
+  bench, bind, or change_mode. Rendering, interpretation, and reproduction
+  are publish-only (R-RPT-9, B-10).
+- **Auto-recovery / retry:** none. Acting belongs to the Book door (bench)
+  or the operator (promotion), never to a report or skill.
+- **Visible degraded state:** the CT-32 artifact and any HTML/markdown
+  stay as published evidence. No binding, mode, or size changes.
+- **Notification tier:** caller-visible typed refusal.
+- **Product-user affordance:** reading the report does not trade, promote,
+  or bench. If you want an action, take it at the Book door as the
+  operator.

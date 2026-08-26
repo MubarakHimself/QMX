@@ -66,6 +66,7 @@ from qmb.runloop.loop import (
     run,
     run_slice,
     stream_set_from_config,
+    verify_stored_reproduction,
 )
 from qmb.runloop.observe import (
     CANCEL_AT,
@@ -188,4 +189,5 @@ __all__ = [
     "script_replay_clock",
     "stream_set_from_config",
     "trading_evidence_range",
+    "verify_stored_reproduction",
 ]

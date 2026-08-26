@@ -49,6 +49,7 @@ def test_seed_identities_exclude_semver() -> None:
         qmb.orchestrator_identity(),
         qmb.fragment_identity(),
         qmb.run_config_identity(),
+        qmb.downstream_read_identity(),
     )
     for payload in payloads:
         assert qmb.__version__ not in payload.values()
@@ -136,6 +137,11 @@ def test_frontier_clock_is_qmf_core_clock() -> None:
     assert api.assemble_run_performance_result is qmb.assemble_run_performance_result
     assert api.ct32_artifact_path is qmb.ct32_artifact_path
     assert api.require_reproduced_fingerprint is qmb.require_reproduced_fingerprint
+    assert api.verify_stored_reproduction is qmb.verify_stored_reproduction
+    assert api.render_html is qmb.render_html
+    assert api.explain_run is qmb.explain_run
+    assert api.AGENTS_PARSE_HTML is qmb.AGENTS_PARSE_HTML
+    assert api.SHARED_MUTABLE_RENDER_STATE is False
     assert api.PerformanceResult is qmb.PerformanceResult
     assert api.CT32_ARTIFACT_NAME == qmb.CT32_ARTIFACT_NAME
     assert api.RESULTS_DIR_NAME == qmb.RESULTS_DIR_NAME

@@ -33,6 +33,7 @@ from qmb.results.ct32 import (
     RESULT_CONTRACT,
     mint_run_performance_result,
     require_reproduced_fingerprint,
+    stored_ct32_fingerprint,
 )
 from qmb.runloop.bars import (
     COMPLETED_BOUNDARY_ONLY,
@@ -104,6 +105,7 @@ __all__ = [
     "run",
     "run_slice",
     "stream_set_from_config",
+    "verify_stored_reproduction",
 ]
 
 LOOP_KIND: Final[str] = "event-slice"
@@ -1028,6 +1030,52 @@ def reproduce_run(
             result_contract=RESULT_CONTRACT,
         )
     return Ok(result)
+
+
+def verify_stored_reproduction(
+    *,
+    run_id: object,
+    config: object,
+    output_dir: object,
+    slices: object,
+    stream_set: object = None,
+    clock: object = None,
+    handler: object = None,
+    initial_resting: object = (),
+    series: object = None,
+    bar_plan: object = None,
+    embargo: object = None,
+    cancel: object = None,
+    observer: object = None,
+    limits: object = None,
+    probe: object = None,
+) -> Result[PerformanceResult]:
+    """Re-execute a stored run id and require the stored CT-32 fingerprint (NFR-03).
+
+    The expected fingerprint is the stored artifact's ``fp1``, not a caller-supplied
+    guess. A mismatch is a typed ``policy rejection`` and is never silently
+    tolerated (B-10, DEC-0163).
+    """
+    expected = stored_ct32_fingerprint(output_dir)
+    if is_refusal(expected):
+        return expected
+    return reproduce_run(
+        run_id=run_id,
+        config=config,
+        expected_fingerprint=expected.value,
+        slices=slices,
+        stream_set=stream_set,
+        clock=clock,
+        handler=handler,
+        initial_resting=initial_resting,
+        series=series,
+        bar_plan=bar_plan,
+        embargo=embargo,
+        cancel=cancel,
+        observer=observer,
+        limits=limits,
+        probe=probe,
+    )
 
 
 @dataclass(slots=True)

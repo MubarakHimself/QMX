@@ -11,6 +11,7 @@ reproduce the fingerprint or return a typed refusal (FM-11, DEC-0163).
 
 from __future__ import annotations
 
+import json
 import os
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -95,12 +96,16 @@ __all__ = [
     "TALLY_FIELD_GROUP",
     "TALLY_UNIT_KIND",
     "VETO_DOOR_IDENTITIES",
+    "as_ct32_artifact",
     "assemble_run_performance_result",
     "assemble_suppression_and_veto_accounting",
     "ct32_artifact_path",
+    "load_stored_ct32",
+    "looks_like_rendering",
     "mint_run_performance_result",
     "require_reproduced_fingerprint",
     "result_identity",
+    "stored_ct32_fingerprint",
 ]
 
 RESULT_CONTRACT: Final[str] = "CT-32"
@@ -121,6 +126,17 @@ CT32_ARTIFACT_RELATIVE_PATH: Final[str] = f"{RESULTS_DIR_NAME}/{CT32_ARTIFACT_NA
 QMB_REPLAY_CALENDAR_RULE_SET: Final[str] = "qmb-replay"
 QMB_REPLAY_CALENDAR_RULE_SET_VERSION: Final[str] = "v1"
 QMB_REPLAY_CALENDAR_TZDATA: Final[str] = "UTC"
+_CT32_CLASS: Final[str] = "performance-result"
+_REQUIRED_CT32_FIELDS: Final[tuple[str, ...]] = (
+    "account_binding_role",
+    "class",
+    "measure_set",
+    "period",
+    "population",
+    "result_label",
+    "suppression_accounting",
+    "veto_accounting",
+)
 _REPLAY_ACCOUNT_ROLE: Final[AccountRole] = AccountRole.DEMO
 _REPLAY_EVIDENCE_CLASS: Final[EvidenceClass] = EvidenceClass.PROVISIONAL
 _REGISTRY_AS_OF_CLASS: Final[str] = "registry-as-of"
@@ -388,6 +404,197 @@ def require_reproduced_fingerprint(
             **extra,
         )
     return Ok(actual)
+
+
+def looks_like_rendering(value: object) -> bool:
+    """True when *value* is HTML or the markdown report, not a CT-32 payload."""
+    text: str
+    raw = _as_bytes(value)
+    if raw is not None:
+        trimmed = raw.lstrip()
+        if trimmed.startswith(b"<") or b"qmb-headline" in trimmed:
+            return True
+        try:
+            text = trimmed.decode("utf-8")
+        except UnicodeDecodeError:
+            return False
+    elif isinstance(value, str):
+        text = value
+    else:
+        return False
+    stripped = text.lstrip()
+    head = stripped[:96].casefold()
+    return (
+        head.startswith("<!")
+        or head.startswith("<html")
+        or head.startswith("<header")
+        or "qmb-headline" in stripped
+        or stripped.startswith("# world=")
+    )
+
+
+def as_ct32_artifact(source: object) -> Result[dict[str, object]]:
+    """Load a stored CT-32 identity mapping from a result, JSON, or run directory.
+
+    A rendering (HTML/markdown) is a typed refusal — downstream reads consume
+    the artifact, never a report (R-RPT-22).
+    """
+    if looks_like_rendering(source):
+        return policy(
+            "artifact",
+            "HTML and markdown are renderings; downstream reads consume the "
+            "stored CT-32 artifact (R-RPT-21, R-RPT-22, B-10)",
+            given=repr(type(source).__name__),
+        )
+    if isinstance(source, PerformanceResult):
+        return _require_ct32_body(source.fp1_identity())
+    if isinstance(source, Mapping) and not isinstance(source, (str, bytes)):
+        return _require_ct32_body(dict(cast("Mapping[str, object]", source)))
+    raw = _as_bytes(source)
+    if raw is not None:
+        return _parse_ct32_bytes(raw)
+    if isinstance(source, str):
+        stripped = source.lstrip()
+        if stripped.startswith("{"):
+            return _parse_ct32_bytes(source.encode("utf-8"))
+        return load_stored_ct32(source)
+    return load_stored_ct32(source)
+
+
+def load_stored_ct32(output_dir: object) -> Result[dict[str, object]]:
+    """Read ``results/ct-32.json`` (or the file itself) as the stored identity."""
+    if isinstance(output_dir, Path) and output_dir.is_file():
+        target = output_dir
+        root = output_dir.parent
+    else:
+        path = ct32_artifact_path(output_dir)
+        if is_refusal(path):
+            return path
+        target = path.value
+        root_path = _as_output_path(output_dir)
+        if is_refusal(root_path):
+            return root_path
+        root = root_path.value
+    if target.is_symlink():
+        return storage(
+            "ct32_artifact",
+            "refusing to follow a symlink for the stored CT-32 artifact",
+            path=str(target),
+        )
+    try:
+        resolved = Path(os.path.realpath(target))
+        root_real = Path(os.path.realpath(root))
+    except OSError as exc:
+        return storage(
+            "ct32_artifact",
+            "could not resolve the stored CT-32 artifact path",
+            given=type(exc).__name__,
+            path=str(target),
+        )
+    if not resolved.is_relative_to(root_real):
+        return storage(
+            "ct32_artifact",
+            "refusing a stored CT-32 path that resolves outside the run output directory",
+            path=str(target),
+            root=str(root),
+        )
+    if not target.is_file():
+        return storage(
+            "ct32_artifact",
+            "the stored CT-32 artifact is missing from the run output directory",
+            path=str(target),
+        )
+    try:
+        data = target.read_bytes()
+    except OSError as exc:
+        return storage(
+            "ct32_artifact",
+            "could not read the stored CT-32 artifact",
+            given=type(exc).__name__,
+            path=str(target),
+        )
+    return _parse_ct32_bytes(data)
+
+
+def stored_ct32_fingerprint(output_dir: object) -> Result[Fingerprint]:
+    """``fp1`` of the stored CT-32 identity, via qmf-core only."""
+    body = as_ct32_artifact(output_dir)
+    if is_refusal(body):
+        return body
+    return fingerprint(body.value)
+
+
+def _as_bytes(value: object) -> bytes | None:
+    if isinstance(value, bytes):
+        return value
+    if isinstance(value, bytearray):
+        return bytes(value)
+    if isinstance(value, memoryview):
+        return value.tobytes()
+    return None
+
+
+def _parse_ct32_bytes(data: bytes) -> Result[dict[str, object]]:
+    if looks_like_rendering(data):
+        return policy(
+            "artifact",
+            "HTML and markdown are renderings; downstream reads consume the "
+            "stored CT-32 artifact (R-RPT-21, R-RPT-22, B-10)",
+        )
+    try:
+        parsed = json.loads(data.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        return invalid(
+            "ct32_artifact",
+            "the stored CT-32 artifact is canonical JSON of the identity mapping",
+            given=type(exc).__name__,
+        )
+    if not isinstance(parsed, dict):
+        return invalid(
+            "ct32_artifact",
+            "the stored CT-32 artifact is a JSON object (the identity mapping)",
+            given=repr(type(parsed).__name__),
+        )
+    return _require_ct32_body(cast("dict[str, object]", parsed))
+
+
+def _require_ct32_body(body: Mapping[str, object]) -> Result[dict[str, object]]:
+    missing = [field for field in _REQUIRED_CT32_FIELDS if field not in body]
+    if missing:
+        return invalid(
+            "ct32_artifact",
+            "a stored CT-32 artifact carries the container's required identity fields",
+            missing=missing,
+        )
+    if body.get("class") != _CT32_CLASS:
+        return invalid(
+            "ct32_artifact",
+            "a stored CT-32 artifact has class performance-result",
+            given=repr(body.get("class")),
+        )
+    label = body.get("result_label")
+    if not isinstance(label, Mapping):
+        return invalid(
+            "result_label",
+            "the stored AD-12 result_label is a mapping",
+            given=repr(type(label).__name__),
+        )
+    label_body = cast("Mapping[str, object]", label)
+    world = label_body.get("world")
+    if not isinstance(world, str) or world.strip() == "":
+        return invalid(
+            "world",
+            "the stored result_label carries world verbatim (live|replay|simulated)",
+            given=repr(world),
+        )
+    role = body.get("account_binding_role")
+    if not isinstance(role, str) or role.strip() == "":
+        return invalid(
+            "account_binding_role",
+            "the stored artifact carries the account-binding role verbatim",
+            given=repr(role),
+        )
+    return Ok(dict(body))
 
 
 def _binding_epoch(config: ResolvedRunConfig) -> Fingerprint:
