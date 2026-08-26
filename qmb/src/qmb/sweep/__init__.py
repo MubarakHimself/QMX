@@ -3,10 +3,14 @@
 A sweep runs the full Cartesian space as a batch of isolated, fully-labeled runs.
 Each combination is one isolated run of the same never-forked run loop with
 different variables — the batch merges nothing (DEC-0169). This package owns the
-pure axis-to-run-spec expansion and pre-flight run count (Story 20.1, B-12) plus
+pure axis-to-run-spec expansion and pre-flight run count (Story 20.1, B-12);
 batch admission: one registry as-of resolved through the single library-owned
-registry-read port and frozen for every combination (Story 20.2, B-15, SC-11).
-Per-combo ledger lines and cross-run ranking land in later stories of the epic.
+registry-read port and frozen for every combination (Story 20.2, B-15, SC-11);
+and batch execution: each combination runs as one isolated, fully-labelled OS
+process under the ``min(cpu, memory)`` governor and writes exactly one ledger
+line, where a single combo's refusal is that combo's outcome and never aborts
+the batch (Story 20.3, B-4, B-5, spec R10-R12). Cross-run ranking is a later
+read-time fold over these per-combo lines.
 """
 
 from __future__ import annotations
@@ -45,18 +49,37 @@ from qmb.sweep.axes import (
     preflight_run_count,
     sweep_axes_identity,
 )
+from qmb.sweep.batch import (
+    BATCH_ABORTS_ON_COMBO_REFUSAL,
+    BATCH_ONE_LINE_PER_COMBO,
+    STATUS_COMPLETED,
+    STATUS_REFUSED,
+    SWEEP_COORDINATES_CLASS,
+    SWEEP_COORDINATES_FORMAT_VERSION,
+    SweepBatchReport,
+    SweepComboOutcome,
+    run_sweep_batch,
+    sweep_batch_identity,
+    sweep_coordinates_of,
+)
 
 __all__ = [
     "ADMISSION_FREEZES_AS_OF",
     "ADMISSION_HAS_SECOND_CACHE",
     "ADMISSION_SINGLE_AS_OF",
+    "BATCH_ABORTS_ON_COMBO_REFUSAL",
+    "BATCH_ONE_LINE_PER_COMBO",
     "CONVERSION_KINDS",
     "PREFLIGHT_ADMITS_BATCH",
     "PREFLIGHT_IS_PURE_INSPECTION",
     "PREFLIGHT_SPAWNS_PROCESS",
     "PREFLIGHT_WRITES_LEDGER_LINE",
     "REGISTRY_AS_OF_KEY",
+    "STATUS_COMPLETED",
+    "STATUS_REFUSED",
     "SWEEP_AXES",
+    "SWEEP_COORDINATES_CLASS",
+    "SWEEP_COORDINATES_FORMAT_VERSION",
     "SWEEP_DECLARATION_CLASS",
     "SWEEP_FORMAT_VERSION",
     "SWEEP_LABEL_CLASS",
@@ -69,12 +92,17 @@ __all__ = [
     "VALUE_KIND_MONEY",
     "VALUE_KIND_RATIONAL",
     "AdmittedSweep",
+    "SweepBatchReport",
+    "SweepComboOutcome",
     "SweepDeclaration",
     "SweepLabel",
     "SweepRunSpec",
     "admit_sweep",
     "expand_sweep",
     "preflight_run_count",
+    "run_sweep_batch",
     "sweep_admission_identity",
     "sweep_axes_identity",
+    "sweep_batch_identity",
+    "sweep_coordinates_of",
 ]

@@ -90,6 +90,7 @@ __all__ = [
     "SpawnJob",
     "abort_run",
     "collect_run",
+    "next_ready_run",
     "run_directory_name",
     "spawn_concurrent",
     "spawn_governed",
@@ -447,6 +448,55 @@ def abort_run(live: object, *, cause: object = CAUSE_CANCEL) -> TypedRefusal:
         pid=live.pid,
         extra=extra,
     )
+
+
+def next_ready_run(live: object) -> Result[str]:
+    """Return the run id of the next live spawn ready to finish or needing abort.
+
+    Polls a non-empty ``run-id -> LiveSpawn`` mapping the way the concurrent
+    collector does: an exited process is ready at once, and a signalled cancel or
+    per-run time/memory breach is surfaced so a queued run is not held behind a
+    healthy long-running sibling. It never collects and writes no ledger — the
+    caller owns the one-line-per-run append (B-4). The run id is returned, never
+    raised.
+    """
+    if not isinstance(live, Mapping):
+        return invalid(
+            "live",
+            "next_ready_run watches a non-empty run-id -> LiveSpawn mapping",
+            given=repr(type(live).__name__),
+        )
+    items = cast("Mapping[str, object]", live)
+    if not items:
+        return invalid(
+            "live",
+            "next_ready_run watches a non-empty run-id -> LiveSpawn mapping",
+        )
+    for token, item in items.items():
+        if not isinstance(item, LiveSpawn):
+            return invalid(
+                "live",
+                "each watched value is a LiveSpawn started by start_run",
+                given=repr(type(item).__name__),
+                run_id=token,
+            )
+    watched = cast("Mapping[str, LiveSpawn]", live)
+    while True:
+        for token, item in watched.items():
+            if item.process.poll() is not None:
+                return Ok(token)
+            checked = check_process_abort(
+                cancel=item.cancel,
+                limits=item.limits,
+                probe=_probe_for(item),
+            )
+            if is_refusal(checked):
+                return Ok(token)
+        first = next(iter(watched.values()))
+        try:
+            first.process.wait(timeout=WATCH_POLL_S)
+        except subprocess.TimeoutExpired:
+            continue
 
 
 def collect_run(live: object) -> Result[IsolatedRun]:

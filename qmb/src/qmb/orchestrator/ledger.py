@@ -322,12 +322,15 @@ def finish_run(
     ledger: object,
     role: object = ROLE_CONFIRMATION,
     factory_sandbox: object = None,
+    sweep_coordinates: object = None,
 ) -> Result[IsolatedRun]:
     """Collect one spawned run and append exactly one ledger line (B-4).
 
     Completed runs ledger ``confirmation | trial | replicate``. Observed dead
     or cancelled processes ledger ``aborted`` with refusal context. Direct
-    library ``run()`` never calls this.
+    library ``run()`` never calls this. ``sweep_coordinates`` stamps the
+    ``{sweep_id, instrument, bar_spec, param_hash}`` onto both the completed and
+    the aborted line when this run is one combination of a sweep (spec R10, R11).
     """
     if not isinstance(live, LiveSpawn):
         return invalid(
@@ -357,16 +360,21 @@ def finish_run(
     sandbox = is_factory_sandbox(factory_sandbox)
     collected = collect_run(live)
     if is_refusal(collected):
-        return _append_aborted(ledger, config, collected, factory_sandbox=sandbox)
+        return _append_aborted(
+            ledger, config, collected, factory_sandbox=sandbox, sweep_coordinates=sweep_coordinates
+        )
     minted = mint_completed_line(
         config,
         outcome_identity=collected.value.outcome_identity,
         ct32_fingerprint=collected.value.ct32_fingerprint,
         role=role,
         factory_sandbox=sandbox,
+        sweep_coordinates=sweep_coordinates,
     )
     if is_refusal(minted):
-        return _append_aborted(ledger, config, minted, factory_sandbox=sandbox)
+        return _append_aborted(
+            ledger, config, minted, factory_sandbox=sandbox, sweep_coordinates=sweep_coordinates
+        )
     appended = ledger.append(minted.value)
     if is_refusal(appended):
         return appended
@@ -417,8 +425,11 @@ def _append_aborted(
     refusal: TypedRefusal,
     *,
     factory_sandbox: bool,
+    sweep_coordinates: object = None,
 ) -> TypedRefusal:
-    minted = mint_aborted_line(config, refusal, factory_sandbox=factory_sandbox)
+    minted = mint_aborted_line(
+        config, refusal, factory_sandbox=factory_sandbox, sweep_coordinates=sweep_coordinates
+    )
     if is_refusal(minted):
         return minted
     appended = ledger.append(minted.value)

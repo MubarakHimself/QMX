@@ -44,6 +44,7 @@ __all__ = [
     "book_bar_lines",
     "merge_ledger_lines",
     "mint_aborted_line",
+    "mint_aborted_line_for",
     "mint_completed_line",
 ]
 
@@ -108,6 +109,7 @@ class LedgerLine:
     measures: tuple[Mapping[str, object], ...]
     ct32_fingerprint: Fingerprint | None = None
     refusal: Mapping[str, object] | None = None
+    sweep_coordinates: Mapping[str, object] | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "result_label", MappingProxyType(dict(self.result_label)))
@@ -115,6 +117,10 @@ class LedgerLine:
         object.__setattr__(self, "measures", frozen_measures)
         if self.refusal is not None:
             object.__setattr__(self, "refusal", MappingProxyType(dict(self.refusal)))
+        if self.sweep_coordinates is not None:
+            object.__setattr__(
+                self, "sweep_coordinates", MappingProxyType(dict(self.sweep_coordinates))
+            )
 
     def fp1_identity(self) -> dict[str, object]:
         """Canonical identity content. Writer/occurrence and SemVer are omitted."""
@@ -132,6 +138,8 @@ class LedgerLine:
             content["ct32_fingerprint"] = self.ct32_fingerprint.value
         if self.refusal is not None:
             content["refusal"] = dict(self.refusal)
+        if self.sweep_coordinates is not None:
+            content["sweep_coordinates"] = dict(self.sweep_coordinates)
         return content
 
     @classmethod
@@ -195,6 +203,17 @@ class LedgerLine:
                     given=repr(type(raw_refusal).__name__),
                 )
             refusal = cast("Mapping[str, object]", raw_refusal)
+        coordinates: Mapping[str, object] | None = None
+        if "sweep_coordinates" in body:
+            raw_coordinates = body.get("sweep_coordinates")
+            if not isinstance(raw_coordinates, Mapping):
+                return invalid(
+                    "sweep_coordinates",
+                    "a sweep combo line carries {sweep_id, instrument, bar_spec, "
+                    "param_hash} as an object",
+                    given=repr(type(raw_coordinates).__name__),
+                )
+            coordinates = cast("Mapping[str, object]", raw_coordinates)
         banned = _verdict_keys(body)
         if banned:
             return policy(
@@ -212,6 +231,7 @@ class LedgerLine:
                 measures=measures.value,
                 ct32_fingerprint=ct32,
                 refusal=refusal,
+                sweep_coordinates=coordinates,
             )
         )
 
@@ -246,8 +266,14 @@ def mint_completed_line(
     ct32_fingerprint: object,
     role: object = ROLE_CONFIRMATION,
     factory_sandbox: object = False,
+    sweep_coordinates: object = None,
 ) -> Result[LedgerLine]:
-    """Mint the completed-run line. Role is never ``aborted``."""
+    """Mint the completed-run line. Role is never ``aborted``.
+
+    ``sweep_coordinates`` — when this run is one combination of a sweep — stamps
+    the ``{sweep_id, instrument, bar_spec, param_hash}`` a read-time fold groups
+    by; it is omitted for a standalone run (B-4; spec R10, R11).
+    """
     if not isinstance(config, ResolvedRunConfig):
         return invalid(
             "config",
@@ -295,6 +321,9 @@ def mint_completed_line(
     bar = book_bar_fingerprint(config)
     if is_refusal(bar):
         return bar
+    coordinates = _as_sweep_coordinates(sweep_coordinates)
+    if is_refusal(coordinates):
+        return coordinates
     label = _label_payload(artifact.value.result_label, factory_sandbox=factory_sandbox)
     measures = tuple(item.fp1_identity() for item in artifact.value.measure_set)
     return _build_line(
@@ -306,6 +335,7 @@ def mint_completed_line(
         measures=measures,
         ct32_fingerprint=stamped.value,
         refusal=None,
+        sweep_coordinates=coordinates.value,
     )
 
 
@@ -314,26 +344,70 @@ def mint_aborted_line(
     refusal: object,
     *,
     factory_sandbox: object = False,
+    sweep_coordinates: object = None,
 ) -> Result[LedgerLine]:
-    """Mint the aborted line with refusal context. Never silently absent."""
+    """Mint the aborted line with refusal context. Never silently absent.
+
+    The run id, world, and Book bar are read from the resolved run-config. A
+    combination whose run-config never compiled has no such artifact; the batch
+    driver mints its refused line through :func:`mint_aborted_line_for` instead.
+    """
     if not isinstance(config, ResolvedRunConfig):
         return invalid(
             "config",
             "an aborted ledger line cites the resolved run-config",
             given=repr(type(config).__name__),
         )
+    bar = book_bar_fingerprint(config)
+    if is_refusal(bar):
+        return bar
+    return mint_aborted_line_for(
+        run_id=config.fingerprint,
+        world=config.world,
+        book_bar_fp1=bar.value,
+        refusal=refusal,
+        factory_sandbox=factory_sandbox,
+        sweep_coordinates=sweep_coordinates,
+    )
+
+
+def mint_aborted_line_for(
+    *,
+    run_id: object,
+    world: object,
+    book_bar_fp1: object,
+    refusal: object,
+    factory_sandbox: object = False,
+    sweep_coordinates: object = None,
+) -> Result[LedgerLine]:
+    """Mint an aborted line from an explicit run id, world, and Book bar (B-4).
+
+    The config-bearing :func:`mint_aborted_line` is the usual door; this
+    lower-level minter records a combination whose refusal happened before a
+    resolved run-config existed (a combo that never compiled), keyed by the
+    combination's own ``fp1``. The line is never silently absent.
+    """
     if not isinstance(refusal, TypedRefusal):
         return invalid(
             "refusal",
             "an aborted ledger line carries a typed refusal as context",
             given=repr(type(refusal).__name__),
         )
-    namespace = governed_namespace(config.world)
+    parsed_run_id = _as_fingerprint(run_id, "run_id")
+    if is_refusal(parsed_run_id):
+        return parsed_run_id
+    parsed_world = _as_world(world)
+    if is_refusal(parsed_world):
+        return parsed_world
+    parsed_bar = _as_fingerprint(book_bar_fp1, "book_bar_fp1")
+    if is_refusal(parsed_bar):
+        return parsed_bar
+    coordinates = _as_sweep_coordinates(sweep_coordinates)
+    if is_refusal(coordinates):
+        return coordinates
+    namespace = governed_namespace(parsed_world.value)
     if is_refusal(namespace):
         return namespace
-    bar = book_bar_fingerprint(config)
-    if is_refusal(bar):
-        return bar
     producer = fingerprint(
         {
             "class": LEDGER_LINE_CLASS,
@@ -349,23 +423,24 @@ def mint_aborted_line(
     label = ResultLabel.try_create(
         producer.value,
         LEDGER_FORMAT_VERSION,
-        (config.fingerprint,),
+        (parsed_run_id.value,),
         span.value,
         EvidenceClass.PROVISIONAL,
-        config.world,
+        parsed_world.value,
     )
     if is_refusal(label):
         return label
     payload = _label_payload(label.value, factory_sandbox=factory_sandbox)
     return _build_line(
-        run_id=config.fingerprint,
+        run_id=parsed_run_id.value,
         role=ROLE_ABORTED,
-        world=config.world,
+        world=parsed_world.value,
         result_label=payload,
-        book_bar_fp1=bar.value,
+        book_bar_fp1=parsed_bar.value,
         measures=(),
         ct32_fingerprint=None,
         refusal=_refusal_payload(refusal),
+        sweep_coordinates=coordinates.value,
     )
 
 
@@ -446,6 +521,7 @@ def _build_line(
     measures: tuple[Mapping[str, object], ...],
     ct32_fingerprint: Fingerprint | None,
     refusal: Mapping[str, object] | None,
+    sweep_coordinates: Mapping[str, object] | None = None,
 ) -> Result[LedgerLine]:
     line = LedgerLine(
         run_id=run_id,
@@ -456,6 +532,7 @@ def _build_line(
         measures=measures,
         ct32_fingerprint=ct32_fingerprint,
         refusal=refusal,
+        sweep_coordinates=sweep_coordinates,
     )
     banned = _verdict_keys(line.fp1_identity())
     if banned:
@@ -465,6 +542,36 @@ def _build_line(
             keys=sorted(banned),
         )
     return Ok(line)
+
+
+def _as_sweep_coordinates(value: object) -> Result[Mapping[str, object] | None]:
+    """Validate the optional per-combo sweep coordinates carried on the line."""
+    if value is None:
+        return Ok(None)
+    if not isinstance(value, Mapping):
+        return invalid(
+            "sweep_coordinates",
+            "sweep coordinates are a {sweep_id, instrument, bar_spec, param_hash} object",
+            given=repr(type(value).__name__),
+        )
+    raw = cast("Mapping[object, object]", value)
+    out: dict[str, object] = {}
+    for key, item in raw.items():
+        if not isinstance(key, str) or key.strip() == "":
+            return invalid(
+                "sweep_coordinates",
+                "sweep-coordinate keys are non-empty strings",
+                given=repr(key),
+            )
+        out[key] = item
+    banned = _verdict_keys(out)
+    if banned:
+        return policy(
+            "sweep_coordinates",
+            "a ledger line stores raw unit-kinded measures, never a pass/fail verdict",
+            keys=sorted(banned),
+        )
+    return Ok(out)
 
 
 def _mint_ct32(

@@ -468,6 +468,28 @@ def test_sweep_admit_usage_example_runs_clean() -> None:
     assert "sweep admission ok" in completed.stdout
 
 
+def test_sweep_batch_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "sweep_batch_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert (
+        "each combo: one confirmation line carrying label, CT-32, measures, and coordinates"
+        in completed.stdout
+    )
+    assert "concurrency is scheduling only: same run ids and CT-32 fingerprints either way" in (
+        completed.stdout
+    )
+    assert "one combo's refusal is that combo's aborted line; the batch continued" in (
+        completed.stdout
+    )
+    assert "sweep batch ok" in completed.stdout
+
+
 def pythonpath() -> str:
     return os.pathsep.join(
         [

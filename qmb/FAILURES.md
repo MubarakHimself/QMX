@@ -630,3 +630,91 @@ CT-32 fingerprint or return a typed refusal.
   up front instead of guessing — point it at the current version and re-admit;
   once admitted, a fresher version arriving mid-batch never changes a
   combination.
+
+### FR-32: One combination's typed refusal must not abort the sweep batch
+
+- **Failure class:** `policy rejection` / `invalid input` for the one
+  combination (CT-04); the batch itself does not fail (`run_sweep_batch`
+  returns `Ok(SweepBatchReport)`).
+- **Detection:** `run_sweep_batch` drives each combination as one isolated
+  process under the `min(cpu, memory)` governor. A combination's refusal — a
+  stream-set violation (`DuplicatePositionStream` / `MixedSettlementAsset` /
+  a slice naming a stream outside the declared set), a governor `never-fits`,
+  a `start_run` miss, or an `aborted` time/memory breach — is caught for that
+  combo only; siblings and queued combinations proceed.
+- **Auto-recovery / retry:** none for the refused combo. Its aborted line is
+  the record; re-running is a new isolated process. Other combinations are
+  unaffected.
+- **Visible degraded state:** the refused combination has one `role=aborted`
+  ledger line with refusal context and sweep coordinates; it is absent from the
+  Book-bar (`role=confirmation`) read. The report's `refused_count` names how
+  many combinations refused.
+- **Notification tier:** operator-visible per-combo outcome on the report plus
+  the aborted ledger line; the batch result is success.
+- **Product-user affordance:** a large overnight sweep finishes even when some
+  combinations fail. A failed combination is not a pass, not a fail, and not
+  missing — it is a labelled aborted row you can read; the rest of the grid
+  still produced its evidence.
+
+### FR-33: A combination writes exactly one ledger line — never zero, never two
+
+- **Failure class:** `policy rejection` (CT-04), `storage failure` on a torn
+  append. A differing second line under one run id is an alarm collision
+  (AR-51, inherited from FR-4).
+- **Detection:** each combination's line is appended through the orchestrator
+  `finish_run` (completed or aborted) or, for a combination whose run-config
+  never compiled, `mint_aborted_line_for` keyed by the combination's own
+  `fp1`. A ledger append that could not fsync is a hard batch refusal — the
+  one-line-per-combo law cannot then be guaranteed — never a silent skip.
+- **Auto-recovery / retry:** none automatic. The first committed line is the
+  line. A failed ledger disk stops the batch with the storage refusal so no
+  combination is silently line-less.
+- **Visible degraded state:** on success every admitted combination has exactly
+  one line across the confirmation and aborted merge views; the report records
+  exactly one outcome per combination.
+- **Notification tier:** operator-visible typed refusal on a storage failure;
+  otherwise the per-combo lines and the report.
+- **Product-user affordance:** every combination you swept leaves exactly one
+  scoreboard row. If the ledger disk fails mid-batch the run stops loudly
+  rather than leaving a combination with no row.
+
+### FR-34: A combination that never compiled is still a labelled refused line
+
+- **Failure class:** `invalid input` (CT-04) for the one combination; batch
+  continues.
+- **Detection:** admission resolves the shared bot/Book/BMS context once, but a
+  per-combination compile can still refuse (e.g. a parameter value the cited
+  CT-33 bot rejects, or a replay-clock-on-synthetic `world` miss). The batch
+  records that combination through `mint_aborted_line_for` using the batch's
+  provenance-derived world and the combination's `fp1` as the run id, then
+  continues. If NO combination compiles, the miss is batch-wide (shared
+  context/settings) and the refusal is returned as the batch result.
+- **Auto-recovery / retry:** none for the refused combo. Fix the offending
+  parameter value or provenance and re-admit; other combinations are unaffected.
+- **Visible degraded state:** the un-compilable combination has one
+  `role=aborted` line with refusal context and its sweep coordinates; it has no
+  CT-32 fingerprint and never entered a process.
+- **Notification tier:** operator-visible per-combo aborted line and report
+  outcome.
+- **Product-user affordance:** a combination whose config the bot rejects is
+  recorded and skipped, not crashed over. The sweep still runs every valid
+  combination.
+
+### FR-35: Concurrency must not change a combination's result or CT-32 fingerprint
+
+- **Failure class:** would be a determinism bug (no CT-04 category); prevented
+  by construction.
+- **Detection:** the resolved run-config fingerprint is the run id and is
+  independent of batch membership and of how many combinations run at once;
+  the governor only bounds `min(cpu, memory)` parallelism with
+  enqueue-when-full. A combination run sequentially (cpu budget 1) and
+  concurrently (cpu budget N) produces the identical run id and CT-32
+  fingerprint, and the batch report has identical `fp1_identity`.
+- **Auto-recovery / retry:** not applicable; scheduling is not identity.
+- **Visible degraded state:** none — the same inputs yield the same evidence at
+  any concurrency; a `1×1×1` sweep is one run at unit scale (spec R13).
+- **Notification tier:** none; a mismatch would surface as a golden-slice /
+  reproduction refusal (FR-25), never as a silently different number.
+- **Product-user affordance:** running the grid faster on more cores never
+  changes a single combination's numbers. The scoreboard is the same whether
+  you ran it sequentially or all at once.

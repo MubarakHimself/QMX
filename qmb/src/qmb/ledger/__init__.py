@@ -33,6 +33,7 @@ from qmb.ledger.line import (
     book_bar_lines,
     merge_ledger_lines,
     mint_aborted_line,
+    mint_aborted_line_for,
     mint_completed_line,
 )
 
@@ -61,6 +62,7 @@ __all__ = [
     "ledger_identity",
     "merge_ledger_lines",
     "mint_aborted_line",
+    "mint_aborted_line_for",
     "mint_completed_line",
 ]
 
