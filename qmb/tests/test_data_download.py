@@ -7,6 +7,7 @@ import struct
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import TypeVar
 
 from click.testing import CliRunner
 from qmb.data import (
@@ -31,6 +32,7 @@ from qmb.doors.cli import invoke_data, main
 from qmf.core import (
     Instrument,
     RefusalCategory,
+    Result,
     Retryability,
     TypedRefusal,
     VenueId,
@@ -43,12 +45,14 @@ from qmf.core.exact import RoundingMode
 from qmf.data import DUKASCOPY_SOURCE, EvidenceStore
 from qmf.data.dukascopy import PERSONAL_USE_LICENSE, DukascopyHourKey
 
+T = TypeVar("T")
+
 _HOUR = datetime(2024, 1, 15, 10, tzinfo=timezone.utc)
 _HOUR_NS = int(_HOUR.timestamp() * 1_000_000_000)
 _END_NS = _HOUR_NS + 3_600 * 1_000_000_000
 
 
-def _ok(result):  # type: ignore[no-untyped-def]
+def _ok(result: Result[T]) -> T:
     assert is_ok(result), result
     return result.value
 

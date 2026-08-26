@@ -158,7 +158,7 @@ def main() -> None:
         print(f"overwrite revision={overwritten.revision} produced={overwritten.produced}")
 
     refused = refuse_run_provider_fetch(request="backtest.run")
-    _require(is_refusal(refused), "run provider fetch refused")
+    assert is_refusal(refused)
     _require(refused.category is RefusalCategory.POLICY_REJECTION, "policy rejection")
     print("run provider fetch is policy rejection — rooms only")
     print("qmb data download ok")
