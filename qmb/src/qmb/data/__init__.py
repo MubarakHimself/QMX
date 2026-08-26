@@ -6,7 +6,8 @@ Every ingested window carries a license tag (DEC-0166). The ship-no-corpus
 licensing gate (Story 18.2) turns that tag into value-or-typed-refusal for
 governed-evidence use at read time and asserts the wheel ships no corpus.
 ``data list`` rebuilds a DuckDB coverage view over Parquet rooms (Story 18.3);
-``catalog`` aliases ``list``.
+``catalog`` aliases ``list``. ``data verify`` checks window integrity without
+fabricating fills (Story 18.4).
 """
 
 from __future__ import annotations
@@ -77,6 +78,17 @@ from qmb.data.ports import (
     ProviderAdapter,
     ProviderFetchRequest,
 )
+from qmb.data.verify import (
+    INTEGRITY_KIND,
+    IntegrityCounts,
+    IntegrityDefect,
+    InteriorGap,
+    VerifyRequest,
+    VerifyVerdict,
+    parse_verify_request,
+    verify,
+    verify_identity,
+)
 
 __all__ = [
     "AUTHORITY_OPERATOR_RULING",
@@ -91,6 +103,7 @@ __all__ = [
     "DUKASCOPY_PERSONAL_USE_AUTHORITY",
     "DUKASCOPY_PERSONAL_USE_POLICY",
     "DUKASCOPY_PROVIDER",
+    "INTEGRITY_KIND",
     "LICENSE_TAG_STATES",
     "NON_EVIDENCE_USES",
     "NOT_PRESENT",
@@ -105,12 +118,17 @@ __all__ = [
     "DownloadSide",
     "DukascopyProviderAdapter",
     "GovernedEvidenceAdmission",
+    "IntegrityCounts",
+    "IntegrityDefect",
+    "InteriorGap",
     "NonEvidenceUse",
     "ProgressSink",
     "ProviderAdapter",
     "ProviderFetchRequest",
     "SourceWindowRef",
     "VenueLicensePolicy",
+    "VerifyRequest",
+    "VerifyVerdict",
     "admit_governed_evidence",
     "allow_non_evidence_use",
     "assert_distribution_has_no_corpus",
@@ -125,12 +143,15 @@ __all__ = [
     "licensing_gate_identity",
     "list_data",
     "parse_download_request",
+    "parse_verify_request",
     "persist_coverage_windows",
     "provider_price_to_exact",
     "refuse_run_provider_fetch",
     "resolve_end_ns",
     "resolve_license_tag",
     "scan_coverage_rows",
+    "verify",
+    "verify_identity",
 ]
 
 DATA_COMMANDS: Final[tuple[str, ...]] = (
@@ -155,4 +176,5 @@ def data_front_identity() -> dict[str, object]:
     }
     identity.update(licensing_gate_identity())
     identity.update(catalog_identity())
+    identity.update(verify_identity())
     return identity

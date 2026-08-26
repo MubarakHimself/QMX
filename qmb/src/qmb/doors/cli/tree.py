@@ -23,7 +23,7 @@ from qmb.config import (
     compile_run_config,
     run_config_identity,
 )
-from qmb.data import DATA_COMMANDS, catalog, data_front_identity, list_data
+from qmb.data import DATA_COMMANDS, catalog, data_front_identity, list_data, verify
 from qmb.data import download as run_download
 from qmb.doors import CLI_PIN_KEY, CLI_PROG
 from qmb.ledger import LedgerLine
@@ -94,7 +94,7 @@ _COMMAND_PREREQS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
     {
         "backtest.run": _BACKTEST_PREREQS,
         "data.download": ("destination", "venue", "symbol", "start"),
-        "data.verify": ("archive",),
+        "data.verify": ("archive", "venue", "symbol", "start", "end"),
         "data.list": (),
         "data.catalog": (),
         "data.generate": ("destination",),
@@ -403,6 +403,13 @@ def invoke_data(command: object, provided: object = None) -> Result[Mapping[str,
         payload: dict[str, object] = dict(receipt.value.as_mapping())
         payload.update(data_front_identity())
         return Ok(payload)
+    if token == "verify":  # noqa: S105 — command name, not a secret
+        integrity = verify(resources)
+        if is_refusal(integrity):
+            return integrity
+        verified: dict[str, object] = dict(integrity.value.as_mapping())
+        verified.update(data_front_identity())
+        return Ok(verified)
     if token == "list":  # noqa: S105 — command name, not a secret
         coverage = list_data(resources, command=token)
         if is_refusal(coverage):

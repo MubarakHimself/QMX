@@ -273,11 +273,66 @@ def data_download(
 
 
 @data_group.command("verify")
-@click.option("--archive", default=None)
+@click.option("--archive", default=None, help="World-scoped raw-archive root.")
+@click.option("--venue", default=None, help="Venue token for the window.")
+@click.option("--symbol", default=None, help="Symbol token for the window.")
+@click.option("--start", default=None, help="Window start (int64 UTC-ns or ISO-8601).")
+@click.option("--end", default=None, help="Window end (int64 UTC-ns or ISO-8601).")
+@click.option("--resolution", default=None, help="Resolution (default tick).")
+@click.option(
+    "--side",
+    default=None,
+    type=click.Choice(["bid", "ask", "both"], case_sensitive=False),
+    help="Requested quote side streams: bid, ask, or both.",
+)
+@click.option(
+    "--edge-tolerance-ns",
+    default=None,
+    help="Armed edge tolerance in UTC-ns; blank leaves the guard un-armed.",
+)
+@click.option(
+    "--expected-step-ns",
+    default=None,
+    help="Optional interior-gap step (UTC-ns); blank does not invent a threshold.",
+)
+@click.option("--world", default=None, help="World-scoped raw room (default: replay).")
+@click.option("--correlation-id", default=None, help="Propagated CT-13 linking annotation.")
 @click.pass_context
-def data_verify(ctx: click.Context, archive: str | None) -> None:
-    """Verify an ingested window's provenance and license tag."""
-    _transport(ctx, invoke_data("verify", _payload(ctx, archive=archive)))
+def data_verify(
+    ctx: click.Context,
+    archive: str | None,
+    venue: str | None,
+    symbol: str | None,
+    start: str | None,
+    end: str | None,
+    resolution: str | None,
+    side: str | None,
+    edge_tolerance_ns: str | None,
+    expected_step_ns: str | None,
+    world: str | None,
+    correlation_id: str | None,
+) -> None:
+    """Verify an acquired window's integrity (Story 18.4)."""
+    _transport(
+        ctx,
+        invoke_data(
+            "verify",
+            _payload(
+                ctx,
+                archive=archive,
+                venue=venue,
+                symbol=symbol,
+                start=start,
+                end=end,
+                resolution=resolution,
+                side=side,
+                edge_tolerance_ns=edge_tolerance_ns,
+                expected_step_ns=expected_step_ns,
+                world=world,
+                correlation_id=correlation_id,
+            ),
+        ),
+    )
 
 
 @data_group.command("list")
@@ -532,8 +587,10 @@ def _format_ok(value: object) -> str:
         return value.fingerprint.value
     if isinstance(value, Mapping):
         mapping = cast("Mapping[str, object]", value)
-        # Story 18.3: list/catalog coverage is machine-readable JSON on both doors.
+        # Story 18.3/18.4: list/catalog/verify payloads are machine-readable JSON.
         if "entries" in mapping and mapping.get("command") in {"list", "catalog"}:
+            return json.dumps(_jsonable_payload(mapping), ensure_ascii=False)
+        if mapping.get("command") == "verify" and "verdict" in mapping:
             return json.dumps(_jsonable_payload(mapping), ensure_ascii=False)
         commands = mapping.get("commands")
         if isinstance(commands, Sequence) and not isinstance(commands, (str, bytes)):

@@ -480,6 +480,24 @@ def test_data_catalog_usage_example_runs_clean() -> None:
     assert "data catalog ok" in completed.stdout
 
 
+def test_data_verify_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "data_verify_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "verify identity:" in completed.stdout
+    assert "pass counts=" in completed.stdout
+    assert "armed edge refusal" in completed.stdout
+    assert "float taint refused" in completed.stdout
+    assert "CT-13 data-quality events=" in completed.stdout
+    assert "determinism: same window + config" in completed.stdout
+    assert "qmb data verify ok" in completed.stdout
+
+
 def test_cli_refusal_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "cli_refusal_usage.py")],

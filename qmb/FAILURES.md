@@ -28,7 +28,13 @@ Story 18.2 delivers the ship-no-corpus licensing gate: a pure read-time
 check that turns each window's recorded licence tag into
 value-or-typed-refusal for governed-evidence use, carries granting
 authority into CT-07 lineage on pass, and asserts the wheel bundles
-zero corpus bytes.
+zero corpus bytes. Story 18.3 delivers ``qmb data list`` / ``catalog``
+as a rebuildable DuckDB coverage view over Parquet rooms. Story 18.4
+delivers ``qmb data verify`` window integrity: bid/ask presence,
+monotonic int64 UTC-ns timestamps, exact scaled-integer prices, a
+configurable unarmed-by-default edge guard, interior gaps reported
+never filled, and CT-13 data-quality journaling of the factual
+pass/fail verdict.
 
 ### FR-1: Cancel or per-run limit breach aborts one OS process
 
@@ -422,3 +428,25 @@ zero corpus bytes.
   work, but you cannot cite it as governed evidence until a usage right
   is recorded and a granting authority (policy or ruling) stamps it.
   QMB never ships a market-data corpus in the wheel.
+
+### FR-22: Window integrity defect on ``qmb data verify``
+
+- **Failure class:** `policy rejection` (CT-04) with
+  `signal=window-integrity-defect`.
+- **Detection:** `qmb data verify` — empty provider return, missing
+  requested side when `both` was asked, non-integer / float price taint,
+  non-monotonic timestamps, or edge offset beyond an *armed* edge
+  tolerance. Blank tolerance leaves the edge guard un-armed and reports
+  raw offsets only (no invented threshold).
+- **Auto-recovery / retry:** none. Re-acquire or repair the window; never
+  fabricate interior fill on the verify path (synthetic fill is
+  `world=simulated` / Epic 23).
+- **Visible degraded state:** the factual data-quality fail is journaled
+  as a CT-13 ``data quality`` event with the propagated
+  ``correlation_id``. Interior gaps are listed and never filled. No
+  silent pass.
+- **Notification tier:** operator-visible typed refusal carrying counts
+  and defect codes in context.
+- **Product-user affordance:** do not build on a truncated or corrupted
+  window. Re-download or choose a clean range; verify again over the
+  same immutable window to reproduce the same verdict.

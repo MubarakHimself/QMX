@@ -488,20 +488,18 @@ def test_epic_14_run_loop_semantics_are_on_the_api_door() -> None:
 
 
 def test_data_command_success_matches_library_front() -> None:
-    verified = _ok(invoke_data("verify", {"archive": "raw"}))
     generated = _ok(invoke_data("generate", {"destination": "synth"}))
-    assert verified["command"] == "verify"
     assert generated["command"] == "generate"
     incomplete = invoke_data("download", {"destination": "archive"})
     assert is_refusal(incomplete)
+    incomplete_verify = invoke_data("verify", {"archive": "raw"})
+    assert is_refusal(incomplete_verify)
     runner = CliRunner()
-    for args, token in (
-        (["data", "verify", "--archive", "raw"], "verify"),
-        (["data", "generate", "--destination", "synth"], "generate"),
-    ):
-        clicked = runner.invoke(main, args)
-        assert clicked.exit_code == 0, clicked.output
-        assert clicked.stderr.strip() == ""
-        assert token in clicked.stdout
+    clicked = runner.invoke(main, ["data", "generate", "--destination", "synth"])
+    assert clicked.exit_code == 0, clicked.output
+    assert clicked.stderr.strip() == ""
+    assert "generate" in clicked.stdout
     refused = runner.invoke(main, ["data", "download", "--destination", "archive"])
     assert refused.exit_code != 0
+    refused_verify = runner.invoke(main, ["data", "verify", "--archive", "raw"])
+    assert refused_verify.exit_code != 0
