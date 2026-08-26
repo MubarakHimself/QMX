@@ -1,13 +1,15 @@
 """Thin fronts over qmf-data contracts (B-11).
 
-Download, verify, list/catalog, and generate are fronts over the ratified data
-contracts. Runs read qmf-data rooms; they never fetch from a provider.
-Every ingested window carries a license tag (DEC-0166). The ship-no-corpus
-licensing gate (Story 18.2) turns that tag into value-or-typed-refusal for
-governed-evidence use at read time and asserts the wheel ships no corpus.
-``data list`` rebuilds a DuckDB coverage view over Parquet rooms (Story 18.3);
-``catalog`` aliases ``list``. ``data verify`` checks window integrity without
-fabricating fills (Story 18.4).
+Download, verify, gap-check, list/catalog, and generate are fronts over the
+ratified data contracts. Runs read qmf-data rooms; they never fetch from a
+provider. Every ingested window carries a license tag (DEC-0166). The
+ship-no-corpus licensing gate (Story 18.2) turns that tag into
+value-or-typed-refusal for governed-evidence use at read time and asserts the
+wheel ships no corpus. ``data list`` rebuilds a DuckDB coverage view over
+Parquet rooms (Story 18.3); ``catalog`` aliases ``list``. ``data verify``
+checks window integrity without fabricating fills (Story 18.4). ``data
+gap-check`` distinguishes calendar closure from genuine missing bars via the
+CT-02 market-hours calendar (Story 18.5).
 """
 
 from __future__ import annotations
@@ -46,6 +48,16 @@ from qmb.data.dukascopy import (
     DUKASCOPY_BATCH_COUNT,
     DUKASCOPY_PROVIDER,
     DukascopyProviderAdapter,
+)
+from qmb.data.gap_check import (
+    GAP_CHECK_KIND,
+    AlwaysOpenCalendar,
+    GapCheckReport,
+    GapCheckRequest,
+    ReportedGap,
+    gap_check,
+    gap_check_identity,
+    parse_gap_check_request,
 )
 from qmb.data.licensing import (
     AUTHORITY_OPERATOR_RULING,
@@ -103,12 +115,14 @@ __all__ = [
     "DUKASCOPY_PERSONAL_USE_AUTHORITY",
     "DUKASCOPY_PERSONAL_USE_POLICY",
     "DUKASCOPY_PROVIDER",
+    "GAP_CHECK_KIND",
     "INTEGRITY_KIND",
     "LICENSE_TAG_STATES",
     "NON_EVIDENCE_USES",
     "NOT_PRESENT",
     "PRESENT",
     "PROVIDER_ADAPTER_METHODS",
+    "AlwaysOpenCalendar",
     "AuthorityKind",
     "CoverageEntry",
     "CoverageReport",
@@ -117,6 +131,8 @@ __all__ = [
     "DownloadRequest",
     "DownloadSide",
     "DukascopyProviderAdapter",
+    "GapCheckReport",
+    "GapCheckRequest",
     "GovernedEvidenceAdmission",
     "IntegrityCounts",
     "IntegrityDefect",
@@ -125,6 +141,7 @@ __all__ = [
     "ProgressSink",
     "ProviderAdapter",
     "ProviderFetchRequest",
+    "ReportedGap",
     "SourceWindowRef",
     "VenueLicensePolicy",
     "VerifyRequest",
@@ -140,9 +157,12 @@ __all__ = [
     "download",
     "entitlement_lineage_edge",
     "fingerprint_conversion",
+    "gap_check",
+    "gap_check_identity",
     "licensing_gate_identity",
     "list_data",
     "parse_download_request",
+    "parse_gap_check_request",
     "parse_verify_request",
     "persist_coverage_windows",
     "provider_price_to_exact",
@@ -157,6 +177,7 @@ __all__ = [
 DATA_COMMANDS: Final[tuple[str, ...]] = (
     "download",
     "verify",
+    "gap-check",
     "list",
     "catalog",
     "generate",
@@ -177,4 +198,5 @@ def data_front_identity() -> dict[str, object]:
     identity.update(licensing_gate_identity())
     identity.update(catalog_identity())
     identity.update(verify_identity())
+    identity.update(gap_check_identity())
     return identity

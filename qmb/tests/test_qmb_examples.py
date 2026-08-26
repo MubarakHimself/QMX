@@ -498,6 +498,25 @@ def test_data_verify_usage_example_runs_clean() -> None:
     assert "qmb data verify ok" in completed.stdout
 
 
+def test_data_gap_check_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "data_gap_check_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "gap-check identity:" in completed.stdout
+    assert "open-session gaps=" in completed.stdout
+    assert "weekend closure:" in completed.stdout
+    assert "always-open gaps=" in completed.stdout
+    assert "determinism: same window + calendar version" in completed.stdout
+    assert "interior fill refused" in completed.stdout
+    assert "unresolvable calendar refused" in completed.stdout
+    assert "qmb data gap-check ok" in completed.stdout
+
+
 def test_cli_refusal_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "cli_refusal_usage.py")],

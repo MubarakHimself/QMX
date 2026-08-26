@@ -23,7 +23,7 @@ from qmb.config import (
     compile_run_config,
     run_config_identity,
 )
-from qmb.data import DATA_COMMANDS, catalog, data_front_identity, list_data, verify
+from qmb.data import DATA_COMMANDS, catalog, data_front_identity, gap_check, list_data, verify
 from qmb.data import download as run_download
 from qmb.doors import CLI_PIN_KEY, CLI_PROG
 from qmb.ledger import LedgerLine
@@ -95,6 +95,7 @@ _COMMAND_PREREQS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         "backtest.run": _BACKTEST_PREREQS,
         "data.download": ("destination", "venue", "symbol", "start"),
         "data.verify": ("archive", "venue", "symbol", "start", "end"),
+        "data.gap-check": ("archive", "venue", "symbol", "start", "end"),
         "data.list": (),
         "data.catalog": (),
         "data.generate": ("destination",),
@@ -378,7 +379,7 @@ def invoke_data(command: object, provided: object = None) -> Result[Mapping[str,
     if token is None or token not in DATA_COMMANDS:
         return invalid(
             "command",
-            "data commands are download, verify, list, catalog, generate",
+            "data commands are download, verify, gap-check, list, catalog, generate",
             given=repr(command),
             legal=list(DATA_COMMANDS),
         )
@@ -410,6 +411,13 @@ def invoke_data(command: object, provided: object = None) -> Result[Mapping[str,
         verified: dict[str, object] = dict(integrity.value.as_mapping())
         verified.update(data_front_identity())
         return Ok(verified)
+    if token == "gap-check":  # noqa: S105 — command name, not a secret
+        checked_gaps = gap_check(resources)
+        if is_refusal(checked_gaps):
+            return checked_gaps
+        gapped: dict[str, object] = dict(checked_gaps.value.as_mapping())
+        gapped.update(data_front_identity())
+        return Ok(gapped)
     if token == "list":  # noqa: S105 — command name, not a secret
         coverage = list_data(resources, command=token)
         if is_refusal(coverage):

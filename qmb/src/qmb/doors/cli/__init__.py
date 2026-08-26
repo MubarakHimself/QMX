@@ -197,7 +197,7 @@ def backtest_run(
 
 @main.group("data")
 def data_group() -> None:
-    """Thin fronts over qmf-data contracts (download, verify, list, catalog, generate)."""
+    """Thin fronts over qmf-data (download, verify, gap-check, list, catalog, generate)."""
 
 
 @data_group.command("download")
@@ -330,6 +330,73 @@ def data_verify(
                 expected_step_ns=expected_step_ns,
                 world=world,
                 correlation_id=correlation_id,
+            ),
+        ),
+    )
+
+
+@data_group.command("gap-check")
+@click.option("--archive", default=None, help="World-scoped raw-archive root.")
+@click.option("--venue", default=None, help="Venue token for the window.")
+@click.option("--symbol", default=None, help="Symbol token for the window.")
+@click.option("--start", default=None, help="Window start (int64 UTC-ns or ISO-8601).")
+@click.option("--end", default=None, help="Window end (int64 UTC-ns or ISO-8601).")
+@click.option("--resolution", default=None, help="Resolution (default tick).")
+@click.option(
+    "--side",
+    default=None,
+    type=click.Choice(["bid", "ask", "both"], case_sensitive=False),
+    help="Requested quote side streams: bid, ask, or both.",
+)
+@click.option(
+    "--bar-step-ns",
+    default=None,
+    help="Explicit expected bar step (UTC-ns); required, never invented.",
+)
+@click.option(
+    "--calendar-rule-set",
+    default=None,
+    help="CT-02 rule set (e.g. forex-17NY); FX venues default to qmf-calendar-forex.",
+)
+@click.option(
+    "--always-open/--no-always-open",
+    default=False,
+    help="Use an always-open CT-02 calendar (24/7); never the silent default.",
+)
+@click.option("--world", default=None, help="World-scoped raw room (default: replay).")
+@click.pass_context
+def data_gap_check(
+    ctx: click.Context,
+    archive: str | None,
+    venue: str | None,
+    symbol: str | None,
+    start: str | None,
+    end: str | None,
+    resolution: str | None,
+    side: str | None,
+    bar_step_ns: str | None,
+    calendar_rule_set: str | None,
+    always_open: bool,
+    world: str | None,
+) -> None:
+    """Calendar-aware gap detection (Story 18.5)."""
+    _transport(
+        ctx,
+        invoke_data(
+            "gap-check",
+            _payload(
+                ctx,
+                archive=archive,
+                venue=venue,
+                symbol=symbol,
+                start=start,
+                end=end,
+                resolution=resolution,
+                side=side,
+                bar_step_ns=bar_step_ns,
+                calendar_rule_set=calendar_rule_set,
+                always_open=always_open,
+                world=world,
             ),
         ),
     )

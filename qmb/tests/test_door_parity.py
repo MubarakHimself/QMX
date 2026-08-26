@@ -217,6 +217,7 @@ def test_data_subcommands_are_the_library_data_commands() -> None:
     assert command_tree()["data"] == api.DATA_COMMANDS
     assert "download" in api.DATA_COMMANDS
     assert "verify" in api.DATA_COMMANDS
+    assert "gap-check" in api.DATA_COMMANDS
     assert "list" in api.DATA_COMMANDS
     assert "catalog" in api.DATA_COMMANDS
     assert "generate" in api.DATA_COMMANDS

@@ -450,3 +450,26 @@ pass/fail verdict.
 - **Product-user affordance:** do not build on a truncated or corrupted
   window. Re-download or choose a clean range; verify again over the
   same immutable window to reproduce the same verdict.
+
+### FR-23: Calendar-aware gap on ``qmb data gap-check``
+
+- **Failure class:** `unavailable dependency` (CT-04) when the CT-02
+  market-hours calendar cannot be resolved; `policy rejection` when a
+  fill/fabricate request is attempted (`gap=GAP-0048`).
+- **Detection:** `qmb data gap-check` — resolves expected sessions from
+  the versioned trading calendar (qmf-calendar-forex for FX venues),
+  computes expected-bars-minus-present-bars inside open sessions, and
+  reports gaps as `(start, end, expected, present)`. Calendar-closed
+  absence (weekend/holiday/half-day/late-open) is closure, not a gap.
+  Always-open calendars treat every non-present interior interval as a
+  genuine gap. An unknown calendar is never guessed as always-open.
+- **Auto-recovery / retry:** none. Supply a resolvable CT-02 calendar or
+  an explicit always-open calendar for 24/7 venues; never write interior
+  fill on this path (synthetic fill is Epic 23 / `world=simulated`).
+- **Visible degraded state:** gaps are reported only; the calendar
+  version used is recorded so the same window + version reproduces the
+  same gap set.
+- **Notification tier:** operator-visible typed refusal for missing
+  calendar or fill attempts; successful runs emit the gap set as a value.
+- **Product-user affordance:** use the gap report to decide re-download
+  targets. Closures need no repair; genuine open-session holes do.

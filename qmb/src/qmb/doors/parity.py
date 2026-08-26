@@ -34,6 +34,7 @@ CAPABILITY_LIBRARY: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         "backtest.run": ("compile_run_config", "spawn_run", "run"),
         "data.download": ("DATA_COMMANDS", "data_front_identity"),
         "data.verify": ("DATA_COMMANDS", "data_front_identity", "verify"),
+        "data.gap-check": ("DATA_COMMANDS", "data_front_identity", "gap_check"),
         "data.list": ("DATA_COMMANDS", "data_front_identity", "list_data"),
         "data.catalog": ("DATA_COMMANDS", "data_front_identity", "list_data", "catalog"),
         "data.generate": ("DATA_COMMANDS", "data_front_identity"),
