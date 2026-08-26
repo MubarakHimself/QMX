@@ -118,6 +118,12 @@ def test_source_never_imports_banned_modules() -> None:
                 if banned:
                     if in_orchestrator and (name == "subprocess" or name.startswith("subprocess.")):
                         continue
+                    # optuna is the TPE-class sampler adapter's dependency and lives
+                    # only in the sampler module, pinned n_jobs=1 (DEC-0168, B-8).
+                    if relative.parts == ("optimize", "sampler.py") and (
+                        name == "optuna" or name.startswith("optuna.")
+                    ):
+                        continue
                     violations.append(f"{path}: imports {name}")
                 if (name == "click" or name.startswith("click.")) and relative.parts[:2] != (
                     "doors",

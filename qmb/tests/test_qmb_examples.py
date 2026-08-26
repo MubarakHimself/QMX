@@ -624,6 +624,52 @@ def test_optimize_splits_usage_example_runs_clean() -> None:
     assert "train/test split discipline ok" in completed.stdout
 
 
+def test_optimize_sampler_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "optimize_sampler_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert (
+        "pure sampler port: same (space, seed, priors, generation) proposes the identical batch"
+        in completed.stdout
+    )
+    assert (
+        "identical trials regardless of completion order: "
+        "a shuffled ledger view proposes the same batch"
+    ) in completed.stdout
+    assert "a second ask before the outstanding generation's tell is unsupported capability" in (
+        completed.stdout
+    )
+    assert (
+        "propose -> run -> barrier -> condition: "
+        "a partial tell is refused; a full generation advances"
+    ) in completed.stdout
+    assert (
+        "an internal float enters identity only through a named AD-7/AD-22 conversion; "
+        "the float never does"
+    ) in completed.stdout
+    assert (
+        "one registry as-of resolved through the B-15 port, frozen for every trial, "
+        "stamped into the study label"
+    ) in completed.stdout
+    assert "after admission, fragments resolve by explicit fingerprint, never name@latest" in (
+        completed.stdout
+    )
+    assert (
+        "every trial label carries sampler identity, seed, generator provenance, and study_fp"
+        in completed.stdout
+    )
+    assert (
+        "a future optuna major bump is a contract-versioning event, never a transparent update"
+        in completed.stdout
+    )
+    assert "optuna TPE-class sampler ok" in completed.stdout
+
+
 def pythonpath() -> str:
     return os.pathsep.join(
         [

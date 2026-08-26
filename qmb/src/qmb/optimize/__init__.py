@@ -12,8 +12,6 @@ Bot definition — B-8 reads it; QMB never keeps a second local copy
 
 from __future__ import annotations
 
-from typing import Final
-
 from qmf.core.refusal import Ok, Result, is_refusal
 from qml.declaration.bot import BotDefinition
 from qml.declaration.parameters import ParameterSpec
@@ -55,6 +53,47 @@ from qmb.optimize.objective import (
     coerce_study_criteria,
     compute_winner_set,
     study_criteria_identity,
+)
+from qmb.optimize.sampler import (
+    DEFAULT_RATIONAL_SCALE,
+    DEFAULT_ROUNDING,
+    GENERATION_SEED_CLASS,
+    PARAMETER_BATCH_CLASS,
+    PARAMETER_BATCH_FORMAT_VERSION,
+    PRIOR_TRIAL_CLASS,
+    PROPOSED_TRIAL_CLASS,
+    SAMPLED_VALUE_CLASS,
+    SAMPLER_CONSULTS_OPTUNA_STORE,
+    SAMPLER_FAMILY,
+    SAMPLER_GENERATOR,
+    SAMPLER_JOBS,
+    SAMPLER_LIBRARY,
+    SAMPLER_PARALLEL_ASK,
+    SAMPLER_PIN_KEY,
+    SAMPLER_STEPPING,
+    SAMPLER_TRIAL_ROLE,
+    STUDY_ARTIFACT_CLASS,
+    STUDY_ARTIFACT_FORMAT_VERSION,
+    STUDY_LABEL_CLASS,
+    TRIAL_LABEL_CLASS,
+    TRIAL_LABEL_FORMAT_VERSION,
+    AdmittedStudy,
+    ConvertedValue,
+    ParameterBatch,
+    PriorTrial,
+    ProposedTrial,
+    StudyArtifact,
+    StudyLabel,
+    StudyStepper,
+    admit_study,
+    coerce_prior_trials,
+    convert_sampled_value,
+    generator_provenance,
+    propose_generation,
+    refuse_parallel_ask,
+    refuse_sampler_contract_bump,
+    sampler_identity,
+    trial_label,
 )
 from qmb.optimize.space import (
     STUDY_SPACE_CLASS,
@@ -102,8 +141,11 @@ from qmb.optimize.splits import (
 __all__ = [
     "ALIASES_ARE_DISPLAY_ONLY",
     "DEFAULT_ACCESS_ROLES",
+    "DEFAULT_RATIONAL_SCALE",
+    "DEFAULT_ROUNDING",
     "DIRECTION_MAX",
     "DIRECTION_MIN",
+    "GENERATION_SEED_CLASS",
     "INCOMPLETE_TRIAL_CONSTRAINT_MISSING",
     "INCOMPLETE_TRIAL_CONSTRAINT_UNDEFINED",
     "INCOMPLETE_TRIAL_OBJECTIVE_MISSING",
@@ -117,19 +159,34 @@ __all__ = [
     "MIN_TRADES_OPERATOR",
     "OBJECTIVE_DIRECTIONS",
     "OBJECTIVE_SPLIT_ALIAS",
+    "PARAMETER_BATCH_CLASS",
+    "PARAMETER_BATCH_FORMAT_VERSION",
+    "PRIOR_TRIAL_CLASS",
+    "PROPOSED_TRIAL_CLASS",
+    "SAMPLED_VALUE_CLASS",
+    "SAMPLER_CONSULTS_OPTUNA_STORE",
+    "SAMPLER_FAMILY",
+    "SAMPLER_GENERATOR",
     "SAMPLER_JOBS",
+    "SAMPLER_LIBRARY",
+    "SAMPLER_PARALLEL_ASK",
     "SAMPLER_PIN_KEY",
+    "SAMPLER_STEPPING",
+    "SAMPLER_TRIAL_ROLE",
     "SEALED_HOLDOUT_ROLE",
     "SPLIT_ALIASES",
     "SPLIT_RUN_CLAIMS_EDGE",
     "SPLIT_RUN_SPENDS_BUDGET",
     "SPLIT_RUN_TAINT",
     "STUDIES_RUN_REPLAY_ONLY",
+    "STUDY_ARTIFACT_CLASS",
+    "STUDY_ARTIFACT_FORMAT_VERSION",
     "STUDY_CONSTRAINT_CLASS",
     "STUDY_CONSTRAINT_OPERATORS",
     "STUDY_CRITERIA_CLASS",
     "STUDY_CRITERIA_FORMAT_VERSION",
     "STUDY_CRITERIA_KEY",
+    "STUDY_LABEL_CLASS",
     "STUDY_OBJECTIVE_CLASS",
     "STUDY_SPACE_CLASS",
     "STUDY_SPACE_FORMAT_VERSION",
@@ -139,6 +196,8 @@ __all__ = [
     "STUDY_SPLITS_KEY",
     "TEST_ALIAS",
     "TRAIN_ALIAS",
+    "TRIAL_LABEL_CLASS",
+    "TRIAL_LABEL_FORMAT_VERSION",
     "TRIAL_SPLIT_PLAN_CLASS",
     "TRIAL_SPLIT_RUN_CLASS",
     "WINNER_MAKES_BAR_VERDICT",
@@ -147,27 +206,42 @@ __all__ = [
     "WINNER_SET_CLASS",
     "WINNER_SET_FORMAT_VERSION",
     "WINNER_VERDICT_DEFERRED_TO",
+    "AdmittedStudy",
+    "ConvertedValue",
     "IncompleteTrial",
     "MinTradesGate",
+    "ParameterBatch",
+    "PriorTrial",
+    "ProposedTrial",
     "ScoredTrial",
     "SplitEmbargo",
+    "StudyArtifact",
     "StudyConstraint",
     "StudyCriteria",
+    "StudyLabel",
     "StudyObjective",
     "StudyParameterSpace",
     "StudySplits",
+    "StudyStepper",
     "StudyWinnerSet",
     "TrialSplitPlan",
     "TrialSplitRun",
     "admit_default_split_access",
     "admit_objective_run",
+    "admit_study",
     "admit_study_world",
+    "coerce_prior_trials",
     "coerce_study_criteria",
     "coerce_study_space",
     "coerce_study_splits",
     "compute_winner_set",
+    "convert_sampled_value",
+    "generator_provenance",
     "parameter_space_from_bot",
     "plan_trial_runs",
+    "propose_generation",
+    "refuse_parallel_ask",
+    "refuse_sampler_contract_bump",
     "refuse_split_edge_or_budget",
     "sampler_identity",
     "serve_split_read",
@@ -178,11 +252,8 @@ __all__ = [
     "study_warmup",
     "study_warmup_from_config",
     "trading_evidence_range",
+    "trial_label",
 ]
-
-SAMPLER_PIN_KEY: Final[str] = "qmb_sampler_pin"
-SAMPLER_JOBS: Final[int] = 1
-
 
 def parameter_space_from_bot(declaration: object) -> Result[tuple[ParameterSpec, ...]]:
     """Read the CT-33-authoritative parameter-space schema (B-8, DEC-0183).
@@ -198,12 +269,3 @@ def parameter_space_from_bot(declaration: object) -> Result[tuple[ParameterSpec,
             return parsed
         bot = parsed.value
     return Ok(tuple(bot.parameter_space))
-
-
-def sampler_identity() -> dict[str, object]:
-    """Identity-bearing sampler-port fields. Package SemVer is omitted."""
-    return {
-        "pin_key": SAMPLER_PIN_KEY,
-        "jobs": SAMPLER_JOBS,
-        "stepping": "generation-barrier",
-    }
