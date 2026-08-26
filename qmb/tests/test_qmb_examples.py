@@ -445,6 +445,24 @@ def test_data_download_usage_example_runs_clean() -> None:
     assert "qmb data download ok" in completed.stdout
 
 
+def test_data_licensing_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "data_licensing_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "licensing gate:" in completed.stdout
+    assert "governed-evidence admitted:" in completed.stdout
+    assert "CT-07 lineage:" in completed.stdout
+    assert "unlicensed governed-evidence refused:" in completed.stdout
+    assert "non-evidence use allowed" in completed.stdout
+    assert "zero corpus bytes" in completed.stdout
+    assert "qmb data licensing gate ok" in completed.stdout
+
+
 def test_cli_refusal_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "cli_refusal_usage.py")],

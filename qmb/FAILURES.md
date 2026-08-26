@@ -24,6 +24,11 @@ invocation is a typed ``unsupported capability`` refusal, and
 door later ships. CLI v1 does not wait on it. Story 18.1 delivers
 ``qmb data download`` as a thin front over CT-10/CT-15 with Dukascopy
 adapter #1, typed provider refusals, and the runs-never-fetch policy.
+Story 18.2 delivers the ship-no-corpus licensing gate: a pure read-time
+check that turns each window's recorded licence tag into
+value-or-typed-refusal for governed-evidence use, carries granting
+authority into CT-07 lineage on pass, and asserts the wheel bundles
+zero corpus bytes.
 
 ### FR-1: Cancel or per-run limit breach aborts one OS process
 
@@ -395,3 +400,25 @@ adapter #1, typed provider refusals, and the runs-never-fetch policy.
 - **Product-user affordance:** experimentation runs read the archive you
   already downloaded. They never phone the provider. Use `qmb data
   download` under your own entitlement when you need a new window.
+
+### FR-21: Unlicensed window cited as governed evidence
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `admit_governed_evidence` — read-time licensing gate over
+  the recorded licence tag. `denied`, `unknown`, blank/absent, missing
+  granting authority, or a recorded tag that disagrees with the venue
+  policy / operator ruling refuses. Context carries
+  `(venue, symbol, window)` and the tag state.
+- **Auto-recovery / retry:** none automatic. Record an authorizing licence
+  tag under a venue policy or operator ruling (never an adapter
+  inference), then re-admit.
+- **Visible degraded state:** the window remains ingestible and
+  catalogable; infra-stress and strategy-logic-smoke non-evidence use
+  stay allowed. Governed-evidence citation is blocked. The gate writes
+  nothing.
+- **Notification tier:** operator-visible typed refusal
+  (`signal=refuse-unlicensed-window` or `field=granting_authority`).
+- **Product-user affordance:** you can keep the window for stress/smoke
+  work, but you cannot cite it as governed evidence until a usage right
+  is recorded and a granting authority (policy or ruling) stamps it.
+  QMB never ships a market-data corpus in the wheel.

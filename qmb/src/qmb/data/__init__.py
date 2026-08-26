@@ -2,7 +2,9 @@
 
 Download, verify, catalog, and generate are fronts over the ratified data
 contracts. Runs read qmf-data rooms; they never fetch from a provider.
-Every ingested window carries a license tag (DEC-0166).
+Every ingested window carries a license tag (DEC-0166). The ship-no-corpus
+licensing gate (Story 18.2) turns that tag into value-or-typed-refusal for
+governed-evidence use at read time and asserts the wheel ships no corpus.
 """
 
 from __future__ import annotations
@@ -30,6 +32,27 @@ from qmb.data.dukascopy import (
     DUKASCOPY_PROVIDER,
     DukascopyProviderAdapter,
 )
+from qmb.data.licensing import (
+    AUTHORITY_OPERATOR_RULING,
+    AUTHORITY_VENUE_POLICY,
+    CORPUS_EXTENSIONS,
+    DUKASCOPY_PERSONAL_USE_AUTHORITY,
+    DUKASCOPY_PERSONAL_USE_POLICY,
+    LICENSE_TAG_STATES,
+    NON_EVIDENCE_USES,
+    AuthorityKind,
+    GovernedEvidenceAdmission,
+    NonEvidenceUse,
+    SourceWindowRef,
+    VenueLicensePolicy,
+    admit_governed_evidence,
+    allow_non_evidence_use,
+    assert_distribution_has_no_corpus,
+    distribution_corpus_bytes,
+    entitlement_lineage_edge,
+    licensing_gate_identity,
+    resolve_license_tag,
+)
 from qmb.data.policy import refuse_run_provider_fetch
 from qmb.data.ports import (
     DOWNLOAD_SIDES,
@@ -42,29 +65,48 @@ from qmb.data.ports import (
 )
 
 __all__ = [
+    "AUTHORITY_OPERATOR_RULING",
+    "AUTHORITY_VENUE_POLICY",
     "CONVERSION_BOUNDARY",
     "CONVERSION_ROUNDING",
+    "CORPUS_EXTENSIONS",
     "DATA_COMMANDS",
     "DOWNLOAD_SIDES",
     "DUKASCOPY_BATCH_COUNT",
+    "DUKASCOPY_PERSONAL_USE_AUTHORITY",
+    "DUKASCOPY_PERSONAL_USE_POLICY",
     "DUKASCOPY_PROVIDER",
+    "LICENSE_TAG_STATES",
+    "NON_EVIDENCE_USES",
     "PROVIDER_ADAPTER_METHODS",
+    "AuthorityKind",
     "DownloadProgress",
     "DownloadReceipt",
     "DownloadRequest",
     "DownloadSide",
     "DukascopyProviderAdapter",
+    "GovernedEvidenceAdmission",
+    "NonEvidenceUse",
     "ProgressSink",
     "ProviderAdapter",
     "ProviderFetchRequest",
+    "SourceWindowRef",
+    "VenueLicensePolicy",
+    "admit_governed_evidence",
+    "allow_non_evidence_use",
+    "assert_distribution_has_no_corpus",
     "conversion_identity",
     "data_front_identity",
+    "distribution_corpus_bytes",
     "download",
+    "entitlement_lineage_edge",
     "fingerprint_conversion",
+    "licensing_gate_identity",
     "parse_download_request",
     "provider_price_to_exact",
     "refuse_run_provider_fetch",
     "resolve_end_ns",
+    "resolve_license_tag",
 ]
 
 DATA_COMMANDS: Final[tuple[str, ...]] = (
@@ -77,7 +119,7 @@ DATA_COMMANDS: Final[tuple[str, ...]] = (
 
 def data_front_identity() -> dict[str, object]:
     """Identity-bearing data-front fields. Package SemVer is omitted."""
-    return {
+    identity: dict[str, object] = {
         "commands": DATA_COMMANDS,
         "license_tag": f"{LicenseTag.__module__}.{LicenseTag.__qualname__}",
         "split_manifest": f"{SplitManifest.__module__}.{SplitManifest.__qualname__}",
@@ -86,3 +128,5 @@ def data_front_identity() -> dict[str, object]:
         "download_sides": DOWNLOAD_SIDES,
         "dukascopy_provider": DUKASCOPY_PROVIDER,
     }
+    identity.update(licensing_gate_identity())
+    return identity
