@@ -80,7 +80,7 @@ dependencies = ["pydantic", "python-dotenv", "pyyaml", "rich"]
 # import under `poe test`. Kept out of `dev` so the SSSF factory-gate contract stays
 # byte-stable; ta-lib stays declared only in qmf-indicators and never leaks into
 # another package.
-default-groups = ["dev", "store-engines", "calendar-tzdata", "venue-proto", "indicators-talib", "qml-lib", "qmb-lib"]
+default-groups = ["dev", "store-engines", "calendar-tzdata", "venue-proto", "indicators-talib", "qml-lib", "qmb-lib", "qa-suites"]
 
 [tool.uv.workspace]
 # The QMF distribution units. Seven roster packages (SemVer lockstep) under
@@ -148,6 +148,13 @@ dev = [
 # named here so a reader sees exactly why the workspace installs a member package
 # (Story 3.1; DEC-0117).
 store-engines = ["qmf-data"]
+
+# The independent QA verification suites (`qa/tests`, the separate `qa-verify`
+# gate; 2026-08-27 QA phase) use hypothesis for their property layers. It was
+# ad-hoc-installed during the QA phase and pruned by the next `uv sync`;
+# declared here so the gate always runs. Kept out of `dev` so the SSSF
+# factory-gate contract stays byte-stable.
+qa-suites = ["hypothesis>=6,<7"]
 
 # The forex calendar's pinned tzdata, provisioned by default. Installs the
 # qmf-calendar-forex workspace member so `tzdata==2025.2` is present for
@@ -438,7 +445,7 @@ fmt-check = "ruff format --check packages extensions qml qmb tools"
 lint = "ruff check packages extensions qml qmb tools"
 types = "pyright"
 test = "pytest packages extensions qml qmb --cov=qmf --cov=qml --cov=qmb --cov-branch --cov-report=term-missing --cov-report=json:coverage.json --cov-fail-under=80"
-qa-verify = "pytest qa/tests -q"
+qa-verify = "python qa/run_qa_verify.py"
 # Mechanical per-package + contract-module enforcement on top of the aggregate floor
 # above: reads the coverage.json `test` writes and fails the gate if any package drops
 # below 80% or exact.py/chrono.py drop below 100% branch (AR-20; M1).
