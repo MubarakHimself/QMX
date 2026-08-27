@@ -11,25 +11,29 @@ from __future__ import annotations
 from typing import Final
 
 from qmb.doors.parity import (
-    CAPABILITY_LIBRARY,
     CLI_ADAPTATION_COMMANDS,
     MCP_IN_DOOR_SET,
     SHIPPED_DOORS,
+    api_capability_surface,
     capability_gaps,
+    cli_capability_surface,
+    cli_library_adaptations,
     door_parity_identity,
     flatten_capabilities,
     required_library_names,
 )
 
 __all__ = [
-    "CAPABILITY_LIBRARY",
     "CLI_ADAPTATION_COMMANDS",
     "CLI_PIN_KEY",
     "CLI_PROG",
     "MCP_IN_DOOR_SET",
     "MCP_SHIPPED",
     "SHIPPED_DOORS",
+    "api_capability_surface",
     "capability_gaps",
+    "cli_capability_surface",
+    "cli_library_adaptations",
     "door_parity_identity",
     "flatten_capabilities",
     "required_library_names",

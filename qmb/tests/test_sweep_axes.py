@@ -17,7 +17,7 @@ from qmb.config import (
     materialize_bms_fragment,
     materialize_book_fragment,
 )
-from qmb.doors import CAPABILITY_LIBRARY, api, flatten_capabilities, required_library_names
+from qmb.doors import api, flatten_capabilities, required_library_names
 from qmb.doors.cli import invoke_sweep_count, main
 from qmb.doors.cli.tree import command_tree
 from qmb.registryread import AsOfSet, DatedPointer, PassiveHub, RegistryReadPort
@@ -209,11 +209,12 @@ def test_door_count_equals_the_library_and_lives_once() -> None:
 
 
 def test_sweep_count_is_catalogued_and_on_both_doors() -> None:
-    assert "sweep.count" in CAPABILITY_LIBRARY
-    assert CAPABILITY_LIBRARY["sweep.count"] == ("preflight_run_count",)
+    # Derived parity (R-006; OR-08): the capability comes from the command
+    # tree and its library surface from the adapters' AST, never a hand catalog.
     assert "sweep.count" in flatten_capabilities()
+    assert "preflight_run_count" in required_library_names()
     assert command_tree()["sweep"] == ("count",)
-    for name in CAPABILITY_LIBRARY["sweep.count"]:
+    for name in ("preflight_run_count",):
         assert name in required_library_names()
         assert hasattr(api, name)
         assert name in api.__all__

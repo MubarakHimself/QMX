@@ -26,6 +26,7 @@ from qmb.doors import (
     SHIPPED_DOORS,
     api,
     capability_gaps,
+    cli_capability_surface,
     flatten_capabilities,
 )
 from qmb.doors.cli import command_tree, invoke_config_compile, main, render_refusal
@@ -33,21 +34,22 @@ from qmf.core.refusal import TypedRefusal, is_refusal
 
 
 def shipped_doors_share_the_catalog() -> None:
+    # Both surfaces are DERIVED and reconciled (R-006; OR-08): the default call
+    # walks the CLI tree/adapters and introspects the API door — no hand catalog.
     tree = command_tree()
     cli = {f"{group}.{name}" for group, names in tree.items() for name in names}
-    gaps = capability_gaps(cli=cli, api_names=api.__all__)
-    assert gaps == {"extra_cli": (), "missing_api": (), "missing_cli": ()}
+    gaps = capability_gaps()
+    assert gaps == {"missing_api": ()}
     assert set(flatten_capabilities()) == cli
     assert SHIPPED_DOORS == ("cli", "api")
     assert MCP_SHIPPED is False
-    print("CLI and Python API share the catalog: " + ", ".join(flatten_capabilities()))
+    print("CLI and Python API reconcile derived surfaces: " + ", ".join(flatten_capabilities()))
     print("shipped doors: " + ", ".join(SHIPPED_DOORS) + "; MCP not in the door-set")
 
 
 def missing_capability_is_a_parity_failure() -> None:
-    gaps = capability_gaps(cli={"secret.only"}, api_names=api.__all__)
-    assert gaps["extra_cli"] == ("secret.only",)
-    assert gaps["missing_cli"]
+    gaps = capability_gaps(cli_names={*cli_capability_surface(), "secret_only"})
+    assert gaps["missing_api"] == ("secret_only",)
     print("a capability on one door missing from the other fails")
 
 

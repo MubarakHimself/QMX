@@ -1174,7 +1174,7 @@ def test_door_parity_usage_example_runs_clean() -> None:
         check=False,
     )
     assert completed.returncode == 0, completed.stderr
-    assert "CLI and Python API share the catalog:" in completed.stdout
+    assert "CLI and Python API reconcile derived surfaces:" in completed.stdout
     assert "shipped doors: cli, api; MCP not in the door-set" in completed.stdout
     assert "a capability on one door missing from the other fails" in completed.stdout
     assert "CLI: nonzero exit + stderr JSON" in completed.stdout

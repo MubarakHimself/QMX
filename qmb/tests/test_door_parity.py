@@ -9,7 +9,6 @@ import click
 from click.testing import CliRunner, Result
 from qmb.config import ResolvedRunConfig
 from qmb.doors import (
-    CAPABILITY_LIBRARY,
     CLI_ADAPTATION_COMMANDS,
     MCP_IN_DOOR_SET,
     MCP_SHIPPED,
@@ -190,7 +189,7 @@ def test_cli_tree_and_click_match_the_capability_catalog() -> None:
     assert tuple(command_tree()) == COMMAND_GROUPS
     for group, names in command_tree().items():
         for name in names:
-            assert f"{group}.{name}" in CAPABILITY_LIBRARY
+            assert f"{group}.{name}" in flatten_capabilities()
 
 
 def test_python_api_exposes_every_catalog_library_name_identity_equal() -> None:
@@ -226,14 +225,18 @@ def test_data_subcommands_are_the_library_data_commands() -> None:
 
 
 def test_capability_on_one_door_missing_from_the_other_fails() -> None:
-    aligned = capability_gaps(cli=_cli_commands(), api_names=api.__all__)
-    assert aligned == {"extra_cli": (), "missing_api": (), "missing_cli": ()}
-    extra = capability_gaps(cli={*_cli_commands(), "secret.only"}, api_names=api.__all__)
-    assert extra["extra_cli"] == ("secret.only",)
-    missing_cli = capability_gaps(cli=set(), api_names=api.__all__)
-    assert set(missing_cli["missing_cli"]) == set(flatten_capabilities())
-    missing_api = capability_gaps(cli=_cli_commands(), api_names=set())
-    assert set(missing_api["missing_api"]) == set(required_library_names())
+    # The reconciliation is DERIVED on both sides (R-006; OR-08): the default
+    # call reconciles the real door surfaces and must find no gap.
+    aligned = capability_gaps()
+    assert aligned == {"missing_api": ()}
+    # Counter-case: a library name the CLI door adapts that the API door does
+    # not re-export identity-equal is caught, never masked by a hand catalog.
+    from qmb.doors import cli_capability_surface
+
+    injected = capability_gaps(cli_names={*cli_capability_surface(), "not_a_real_capability"})
+    assert injected["missing_api"] == ("not_a_real_capability",)
+    empty_api = capability_gaps(api_names=set())
+    assert set(empty_api["missing_api"]) == set(required_library_names())
 
 
 def test_cli_invokers_are_not_orphan_capabilities() -> None:

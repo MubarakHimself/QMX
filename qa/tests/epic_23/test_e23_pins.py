@@ -40,19 +40,21 @@ def test_t23_pin_01_generate_capability_present_in_both_cli_and_api_doors() -> N
     and the Python API door. Each door's surface is enumerated programmatically (identity against the
     library function), never a hand-list.
 
-    EXPECTED TO FAIL against current source: the generate capability is exposed on the CLI door but
-    absent from the Python API door — a capability present on one door and missing from the other is
-    a parity break. The FAILURE records F-23-01.
-    Counter-case that would make this PASS: the Python API door re-exports the ``generate`` function.
+    CROSS-REFERENCE (OR-09): this pin covers the SAME defect as Epic 16's T-16.5-gap
+    (QMX-F016/QMX-F017) — one defect, counted once; the Epic 16 suite owns the fix.
+    Counter-case that would make this FAIL: the Python API door dropping the ``generate``
+    re-export, or the CLI tree no longer adapting the library function.
     """
     lib_generate = qdata.generate
 
-    # CLI door surface (derived): the CLI tree adapts the generate library fn and lists the command.
+    # CLI door surface (derived): SOME public attribute of the CLI tree module is
+    # identity-equal to the library function (never a hard-coded adapter attribute
+    # name, which would fail on an unrelated rename), and the command is listed.
     from qmb.doors.cli import tree
 
-    cli_reaches_generate = (
-        getattr(tree, "run_generate", None) is lib_generate and "generate" in qdata.DATA_COMMANDS
-    )
+    cli_reaches_generate = any(
+        getattr(tree, name, None) is lib_generate for name in dir(tree) if not name.startswith("_")
+    ) and "generate" in qdata.DATA_COMMANDS
 
     # API door surface (derived): a public attribute of the API door identity-equal to the fn.
     from qmb.doors import api
