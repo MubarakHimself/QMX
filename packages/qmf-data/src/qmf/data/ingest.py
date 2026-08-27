@@ -216,6 +216,31 @@ class IntakeReceipt:
     tick: TickObservation | None = None
     format_version: int = CONTRACT_FORMAT_VERSION
 
+    def observation_with_foreign_money(
+        self, foreign_money: ForeignMoney
+    ) -> Result[SourceObservation]:
+        """Rebuild the CT-10 producer value with exact quote money attached.
+
+        ``foreign_money`` is identity-bearing, so the observation must be rebuilt
+        through the validating CT-10 factory rather than mutated after intake.
+        """
+        observation = self.observation
+        return SourceObservation.try_create(
+            event_time=observation.event_time,
+            known_at=observation.known_at,
+            source=observation.source,
+            source_native_id=observation.source_native_id,
+            revision=observation.revision,
+            receive_wall_time=observation.receive_wall_time,
+            writer=observation.writer,
+            sequence=observation.sequence,
+            world=observation.world,
+            foreign_timestamp=observation.foreign_timestamp,
+            foreign_money=foreign_money,
+            receive_monotonic_diagnostic=observation.receive_monotonic_diagnostic,
+            correction_of=observation.correction_of,
+        )
+
 
 # --- provider request / record ----------------------------------------------
 

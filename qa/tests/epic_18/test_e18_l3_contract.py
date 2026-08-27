@@ -176,6 +176,25 @@ def test_t18_1h_ct10_row_carries_money_path_FINDING() -> None:
         )
 
 
+def test_t18_1h_ct10_money_reads_back_exact_at_declared_scale() -> None:
+    """18.1 AC3 / CT-01 / CT-10: archived price evidence is an exact
+    integer at the provider-declared scale, never a float or silent rescale."""
+    with tempfile.TemporaryDirectory() as d:
+        dest = Path(d) / "rooms"
+        res = download(
+            download_resources(dest, side="bid"),
+            adapter=FakeAdapter((provider_record("EURUSD#1", NS, bid=110_000, ask=110_020),)),
+            store=store_at(dest),
+        )
+        assert is_ok(res), res
+        rows = scan_raw_observations(store_at(dest))
+        assert rows
+        money = rows[0].get("foreign_money")
+        assert money == {"verbatim": 110_000, "scale": 5}
+        assert isinstance(money["verbatim"], int) and not isinstance(money["verbatim"], bool)
+        assert isinstance(money["scale"], int) and not isinstance(money["scale"], bool)
+
+
 # --- T18-2e  entitlement lineage edge; gate writes nothing (RQ17) -------------
 def test_t18_2e_passing_tag_rides_into_ct07_lineage_gate_writes_nothing() -> None:
     policy = {

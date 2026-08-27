@@ -22,9 +22,11 @@ from qmf.data.ingest import (
     ExternalSourceIngest,
     IntakeKey,
     IntakeOutcome,
+    IntakeReceipt,
     ProviderRecord,
     SourceRequest,
 )
+from qmf.data.observation import SourceObservation
 from qmf.data.source_boundary import SourceObservationBoundary
 from qmf.data.store import EvidenceStore
 
@@ -304,7 +306,10 @@ def download(
             if receipt.value.outcome is IntakeOutcome.PRODUCED:
                 produced += 1
                 sequence += 1
-                stored = ingest.submit(receipt.value.observation, gate)
+                observation = _observation_for_archive(receipt.value, request.side)
+                if is_refusal(observation):
+                    return observation
+                stored = ingest.submit(observation.value, gate)
                 if is_refusal(stored):
                     return stored
                 admitted += 1
@@ -397,6 +402,16 @@ def download(
             windows=tuple(windows),
         )
     )
+
+
+def _observation_for_archive(
+    receipt: IntakeReceipt, side: DownloadSide
+) -> Result[SourceObservation]:
+    """Attach the CT-15 quote's exact money to the persisted CT-10 value."""
+    if receipt.observation.foreign_money is not None or receipt.quote is None:
+        return Ok(receipt.observation)
+    money = receipt.quote.ask if side is DownloadSide.ASK else receipt.quote.bid
+    return receipt.observation_with_foreign_money(money)
 
 
 class _IngestBridge:
