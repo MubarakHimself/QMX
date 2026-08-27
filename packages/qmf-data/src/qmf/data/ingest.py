@@ -45,7 +45,9 @@ from typing import Final, Protocol, cast
 from qmf.core import (
     Instrument,
     Ok,
+    RefusalCategory,
     Result,
+    Retryability,
     TypedRefusal,
     VenueId,
     is_refusal,
@@ -467,7 +469,25 @@ class ExternalSourceIngest:
                 "a CT-15 request names a non-empty read-only source, never a VenueId",
                 given=repr(request.source),
             )
-        fetched = self._port.fetch(request)
+        try:
+            fetched = self._port.fetch(request)
+        except Exception as exc:  # R-007: returned, never raised across the ingest boundary
+            return TypedRefusal(
+                category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+                retryability=Retryability.YES,
+                context={
+                    "field": "port",
+                    "reason": (
+                        "the injected CT-15 provider port raised instead of returning; a "
+                        "boundary failure is returned as a typed refusal, never raised "
+                        "across the ingest boundary, and no observation is minted "
+                        "(R-007, CT-04, 6.1-AC5)"
+                    ),
+                    "source": repr(request.source),
+                    "error_type": type(exc).__name__,
+                    "error": str(exc),
+                },
+            )
         if is_refusal(fetched):
             # Provider unavailable / rate-limited — surface as-is; emit nothing (AC5).
             return fetched

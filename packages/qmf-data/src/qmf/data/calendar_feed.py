@@ -30,7 +30,9 @@ from typing import Final, Protocol, cast
 from qmf.core import (
     Instrument,
     Ok,
+    RefusalCategory,
     Result,
+    Retryability,
     TypedRefusal,
     VenueId,
     World,
@@ -561,7 +563,27 @@ class CalendarFeedAdapter:
             )
         revision = _clean_str(bounds.get("revision")) or "r1"
 
-        fetched = self._transport.fetch_snapshot(MappingProxyType(bounds))
+        try:
+            fetched = self._transport.fetch_snapshot(MappingProxyType(bounds))
+        except Exception as exc:  # R-007: returned, never raised across CT-15
+            # A RAISED transport outage would bypass CalendarFeedImport.run's
+            # fail-closed data-quality journal and its alarm entirely; returning
+            # the refusal keeps the outage on the journaled path (6.4-AC1).
+            return TypedRefusal(
+                category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+                retryability=Retryability.YES,
+                context={
+                    "field": "transport",
+                    "reason": (
+                        "the injected calendar transport raised instead of returning; a "
+                        "boundary failure is returned as a typed refusal, never raised "
+                        "across the CT-15 boundary, so the outage reaches the fail-closed "
+                        "data-quality journal (R-007, CT-04, 6.4-AC1)"
+                    ),
+                    "error_type": type(exc).__name__,
+                    "error": str(exc),
+                },
+            )
         if is_refusal(fetched):
             return fetched
 

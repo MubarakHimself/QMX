@@ -44,7 +44,9 @@ from qmf.core import (
     Instrument,
     Interval,
     Ok,
+    RefusalCategory,
     Result,
+    Retryability,
     TypedRefusal,
     is_refusal,
 )
@@ -602,7 +604,24 @@ class DukascopyAdapter:
             hour_start = key.hour_start_ns()
             if is_refusal(hour_start):
                 return hour_start
-            fetched = self._transport.fetch_hour(key)
+            try:
+                fetched = self._transport.fetch_hour(key)
+            except Exception as exc:  # R-007: returned, never raised across CT-15
+                return TypedRefusal(
+                    category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+                    retryability=Retryability.YES,
+                    context={
+                        "field": "transport",
+                        "reason": (
+                            "the injected Dukascopy transport raised instead of returning; "
+                            "a boundary failure is returned as a typed refusal, never raised "
+                            "across the CT-15 boundary (R-007, CT-04)"
+                        ),
+                        "hour_key": repr(key),
+                        "error_type": type(exc).__name__,
+                        "error": str(exc),
+                    },
+                )
             if is_refusal(fetched):
                 return fetched
             decoded = decode_bi5_ticks(
