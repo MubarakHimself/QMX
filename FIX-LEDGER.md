@@ -16,9 +16,9 @@ Objective and method: `FIX-GOAL.md`. Resume from the first row not marked `PROVE
 | FC-03 | QMX-F004 | PROVEN | `06ef7a2` | Epic-18 L2/L3 money pins + exact read-back; affected tests (563 passed, 6 skipped) | CT-15 quote money is rebuilt through the CT-10 factory and persisted at the requested side's exact integer/scale. Epic-18 residual reds are FC-14 plus QMX-F107 (UNPROVEN/out of backlog). |
 | FC-04 | QMX-F010 | PROVEN | `86945bd` | Partial-spawn real-disk pins (2 passed); targeted orchestrator tests (40 passed); Epic-15 QA (50 passed); QMB suite (1,039 passed, 10 skipped) | Batch spawn doors accept a ledger sink; every live sibling reaped after partial failure is killed and accounted exactly once as aborted with `reaped/abandoned`. |
 | FC-05 | QMX-F005 | in-progress | — | `qa/tests/epic_12` registration-removal/gate pin | OR-06: remove unauthorized wiring. |
-| FC-06 | QMX-F006 | todo | — | `qa/tests/epic_03` sealed-window read-path quantifier | TO-BE-WRITTEN. |
-| FC-07 | QMX-F007, QMX-F008, QMX-F009 | todo | — | `qa/tests/epic_06` L1-002 transport-raise tests | — |
-| FC-08 | QMX-F012 | todo | — | `qa/tests/epic_22` T22-PIN-01 + log-return arm | — |
+| FC-06 | QMX-F006 | in-progress | — | `qa/tests/epic_03` sealed-window read-path quantifier | TO-BE-WRITTEN. |
+| FC-07 | QMX-F007, QMX-F008, QMX-F009 | in-progress | — | `qa/tests/epic_06` L1-002 transport-raise tests | — |
+| FC-08 | QMX-F012 | in-progress | — | `qa/tests/epic_22` T22-PIN-01 + log-return arm | — |
 | FC-09 | QMX-F011 | todo | — | `qa/tests/epic_21` T21-PIN-01 | — |
 | FC-10 | QMX-F013 | todo | — | `qa/tests/epic_23` T23-PIN-02 | Tighten exact factor and lineage first. |
 | FC-11 | QMX-F014, QMX-F087 (R20 half) | todo | — | `qa/tests/epic_19` CT-32 embedded chart-series artifact | TO-BE-WRITTEN; re-point adjudicated assertions. |
