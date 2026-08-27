@@ -12,7 +12,10 @@ Ships one complete conformant bot as a tier-1 L27 artifact:
 2. Plain-Python logic (``conformant_bot/bot.py``) conforming to the runtime
    protocol — factory + callback, no clock, no I/O, no sizing, no exit-logic
    field.
-3. Layer 1 and Layer 2 both pass and the Bot kind mints.
+3. Layer 1 and Layer 2 both pass and the registration candidate carries the
+   two-layer ticket. The dated Bot-kind mint is defined-unwired in qml
+   (CT-33, DEC-0173; OR-06): a host composition root stamps the CT-06
+   envelope — this example never drives a mint.
 4. Driven per evaluation instant, the logic consumes only declared-footprint
    evidence, emits only permitted CT-23 kinds, and carries an advisory stop
    on every entry. Two golden-slice runs are identical.
@@ -24,11 +27,10 @@ import importlib.util
 from pathlib import Path
 from typing import TypeVar, cast
 
-from qmf.core.chrono import CalendarIdentity, Instant, WriterId
+from qmf.core.chrono import CalendarIdentity
 from qmf.core.exact import UnitKind
 from qmf.core.fingerprint import fingerprint
 from qmf.core.refusal import Result, is_ok
-from qmf.registry import KindRegistry, Registrar
 from qmf.risk.door import EntryIntent
 from qml.conformance import (
     DENIED_IMPORTS,
@@ -49,10 +51,8 @@ from qml.declaration import (
     KIND_BOT_DEFINITION,
     BotDefinition,
     Confluence,
-    install_bot_definition_kind,
     mint_bot_definition,
     mint_confluence,
-    register_bot_definition,
 )
 from qml.families import mint_strategy_family
 from qml.footprint import ProducerBinding, mint_footprint, report_completeness
@@ -68,7 +68,6 @@ T = TypeVar("T")
 
 _EXAMPLES = Path(__file__).resolve().parent
 _LOGIC_DIR = _EXAMPLES / "conformant_bot"
-_CREATED_NS = 1_700_000_000_000_000_000
 _OS = "windows-11"
 _AR = "none"
 _BOUND = 256
@@ -227,33 +226,20 @@ def _suite(world: dict[str, object]) -> Result[Layer2Verdict]:
     )
 
 
-def layers_pass_and_bot_kind_mints() -> bool:
+def layers_pass_and_candidate_is_content_only() -> bool:
     world = build_world()
     layer1 = _unwrap(_lint(world), "layer1")
     layer2 = _unwrap(_suite(world), "layer2")
     candidate = _unwrap(gate_registration(layer1=layer1, layer2=layer2), "gate")
     assert candidate.ticket.layer1_passed is True
     assert candidate.ticket.layer2_passed is True
-    registry = KindRegistry()
-    _unwrap(install_bot_definition_kind(registry), "install bot-definition kind")
-    registrar = Registrar(registry)
-    writer = _unwrap(
-        WriterId.try_create("example-host", "authoring", KIND_BOT_DEFINITION, "boot-1"),
-        "writer",
-    )
-    created = _unwrap(Instant.try_create(_CREATED_NS), "created-at")
-    receipt = _unwrap(
-        register_bot_definition(
-            candidate.declaration,
-            registrar=registrar,
-            writer=writer,
-            sequence=0,
-            created_at=created,
-        ),
-        "bot kind mint",
-    )
-    assert receipt.record.kind == KIND_BOT_DEFINITION
-    assert receipt.outcome.value == "stored"
+    # The dated Bot-kind mint is defined-unwired in qml (CT-33, DEC-0173;
+    # OR-06): the host composition root stamps writer/sequence/created-at.
+    # qml hands back fingerprintable content plus the two-layer ticket only.
+    payload = candidate.declaration.identity_payload()
+    assert payload["kind"] == KIND_BOT_DEFINITION
+    fp = _unwrap(candidate.declaration.fingerprint_content(), "content fp")
+    assert fp.value.startswith("fp1:sha256:")
     assert "writer" not in candidate.identity_payload()
     return True
 
@@ -376,8 +362,8 @@ def main() -> None:
     print(f"canonical assignment: lookback={lookback},stop_distance={stop_distance}")
     print(f"permitted exit intents: {','.join(declaration.permitted_exit_intents)}")
     print(f"declaration is complete: {declaration_is_complete()}")
-    print(f"layer 1 and layer 2 pass: {layers_pass_and_bot_kind_mints()}")
-    print("bot kind minted: True")
+    print(f"layer 1 and layer 2 pass: {layers_pass_and_candidate_is_content_only()}")
+    print("bot-kind mint defined-unwired: True")
     advisory, deterministic, kinds = logic_emits_advisory_entry_deterministically()
     print(f"advisory stop on entry: {advisory}")
     print(f"emitted kinds: {kinds}")

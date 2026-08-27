@@ -12,6 +12,8 @@ import importlib.util
 from pathlib import Path
 
 import qml
+import qml.declaration as qml_declaration
+import qml.declaration.bot as bot_declaration
 from qmf.core.refusal import is_ok
 from qmf.risk.door import EntryIntent
 from qml.conformance import (
@@ -45,8 +47,8 @@ def _scope(declaration: object) -> object:
     ).value
 
 
-def test_e12_l3_12_example_bot_passes_both_layers_and_mints() -> None:
-    """The shipped example passes Layer 1 AND Layer 2 and the Bot kind mints (both tickets)."""
+def test_e12_l3_12_example_bot_passes_both_layers_without_wiring_the_mint() -> None:
+    """The example passes both layers while the CT-33 mint stays defined-unwired in QML."""
     assert _EXAMPLE_PATH.exists(), "the L27 reference bot must ship in examples/"
     world = _load_example().build_world()
     d = world["declaration"]
@@ -69,6 +71,12 @@ def test_e12_l3_12_example_bot_passes_both_layers_and_mints() -> None:
     gate = gate_registration(layer1=l1.value, layer2=l2.value)
     assert is_ok(gate)
     assert gate.value.ticket.layer1_passed and gate.value.ticket.layer2_passed
+
+    forbidden_wiring = ("install_bot_definition_kind", "register_bot_definition")
+    for module in (qml, qml_declaration, bot_declaration):
+        assert all(not hasattr(module, name) for name in forbidden_wiring)
+    example_source = _EXAMPLE_PATH.read_text(encoding="utf-8")
+    assert all(name not in example_source for name in forbidden_wiring)
 
 
 def test_e12_l3_12_example_declaration_boundary_is_honest() -> None:

@@ -9,7 +9,7 @@ from qmf.core.chrono import CalendarIdentity, Instant, WriterId
 from qmf.core.exact import ExactRational, UnitKind
 from qmf.core.fingerprint import fingerprint
 from qmf.core.refusal import RefusalCategory, Result, is_ok, is_refusal
-from qmf.registry import FieldSetKind, KindRegistry, Registrar, RegistrationRecord
+from qmf.registry import FieldSetKind, RegistrationRecord
 from qmf.risk.door import ExitKind
 from qml.declaration import (
     BOT_DEFINITION_KIND_FORMAT_VERSION,
@@ -24,12 +24,10 @@ from qml.declaration import (
     bot_definition_kind_contract,
     branches_from_edge,
     continues_performance_edge,
-    install_bot_definition_kind,
     mint_bot_definition,
     mint_confluence,
     parse_parameter_type,
     promote_tuned_assignment,
-    register_bot_definition,
 )
 from qml.footprint import Footprint, ProducerBinding, mint_footprint
 from qml.logic import LogicIdentity, mint_logic_identity
@@ -57,12 +55,6 @@ def _writer(machine: str = "node-a") -> WriterId:
 
 def _instant(ns: int = _CREATED_NS) -> Instant:
     return _ok(Instant.try_create(ns))
-
-
-def _registrar() -> Registrar:
-    registry = KindRegistry()
-    assert is_ok(install_bot_definition_kind(registry))
-    return Registrar(registry)
 
 
 def _pinned(tag: str) -> ProducerBinding:
@@ -498,30 +490,6 @@ def test_mint_returns_fingerprintable_content_never_a_stamped_record() -> None:
 
 
 def test_host_stamped_records_deduplicate_across_sandboxes() -> None:
-    registrar = _registrar()
-    payload = _bot_kwargs()
-    a = _ok(
-        register_bot_definition(
-            payload,
-            registrar=registrar,
-            writer=_writer("node-a"),
-            sequence=0,
-            created_at=_instant(_CREATED_NS),
-        )
-    )
-    b = _ok(
-        register_bot_definition(
-            payload,
-            registrar=registrar,
-            writer=_writer("node-b"),
-            sequence=0,
-            created_at=_instant(_CREATED_NS + 1_000),
-        )
-    )
-    assert a.record.kind == KIND_BOT_DEFINITION
-    assert a.record.stable_id == b.record.stable_id
-    assert a.outcome.value == "stored"
-    assert b.outcome.value == "idempotent"
     sandbox_a = _ok(
         RegistrationRecord.try_create(
             KIND_BOT_DEFINITION,
@@ -561,12 +529,21 @@ def test_unknown_contract_format_version_is_unsupported_capability() -> None:
     assert zero.category is RefusalCategory.INVALID_INPUT
 
 
-def test_install_kind_refuses_a_non_registry_and_a_redefinition() -> None:
-    assert is_refusal(install_bot_definition_kind("nope"))
-    registry = KindRegistry()
-    assert is_ok(install_bot_definition_kind(registry))
-    again = install_bot_definition_kind(registry)
-    assert is_refusal(again)
+def test_bot_kind_mint_wiring_is_defined_unwired() -> None:
+    """CT-33 wiring_status is defined-unwired (OR-06): qml ships no mint wiring.
+
+    The kind contract itself stays authorable content; install/register wiring
+    belongs to the host composition root and must not resurface on any qml
+    surface.
+    """
+    import qml.declaration
+    import qml.declaration.bot
+
+    contract = _ok(bot_definition_kind_contract())
+    assert isinstance(contract, FieldSetKind)
+    for module in (qml, qml.declaration, qml.declaration.bot):
+        for name in ("install_bot_definition_kind", "register_bot_definition"):
+            assert not hasattr(module, name)
 
 
 def test_qml_adds_no_registry_configurable_row() -> None:

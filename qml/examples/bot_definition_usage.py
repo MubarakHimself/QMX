@@ -24,26 +24,24 @@ Shows the things QL-3 / Story 11.6 pin down:
    re-binding never does.
 6. qml returns fingerprintable content only; the host composition root stamps
    WriterId, sequence, and created-at. The writer unit is (machine, authoring
-   role, kind).
+   role, kind). The dated Bot-kind mint is defined-unwired in qml (CT-33,
+   DEC-0173; OR-06) — this example never drives one.
 """
 
 from __future__ import annotations
 
 from typing import TypeVar
 
-from qmf.core.chrono import CalendarIdentity, Instant, WriterId
+from qmf.core.chrono import CalendarIdentity, Instant
 from qmf.core.exact import UnitKind
 from qmf.core.fingerprint import fingerprint
 from qmf.core.refusal import Result, TypedRefusal, is_ok
-from qmf.registry import KindRegistry, Registrar
 from qml.declaration import (
     KIND_BOT_DEFINITION,
     BotVersionGraph,
-    install_bot_definition_kind,
     mint_bot_definition,
     mint_confluence,
     promote_tuned_assignment,
-    register_bot_definition,
 )
 from qml.footprint import ProducerBinding, mint_footprint
 from qml.logic import mint_logic_identity
@@ -63,13 +61,6 @@ def _unwrap(result: Result[T], what: str) -> T:
     if is_ok(result):
         return result.value
     raise AssertionError(f"expected {what} to construct, got {result}")
-
-
-def _writer(machine: str) -> WriterId:
-    return _unwrap(
-        WriterId.try_create(machine, "authoring", KIND_BOT_DEFINITION, "boot-1"),
-        "writer",
-    )
 
 
 def _instant(ns: int = _CREATED_NS) -> Instant:
@@ -219,38 +210,21 @@ def versioning_multiple_heads_and_changed_default() -> bool:
 
 
 def two_sandboxes_one_fp1() -> bool:
-    """Host stamps occurrence facts; identical content deduplicates."""
-    registry = KindRegistry()
-    _unwrap(install_bot_definition_kind(registry), "install bot-definition kind")
-    registrar = Registrar(registry)
+    """Identical content is one identity; occurrence facts stay host territory."""
     payload = _payload()
-    a = _unwrap(
-        register_bot_definition(
-            payload,
-            registrar=registrar,
-            writer=_writer("node-a"),
-            sequence=0,
-            created_at=_instant(),
-        ),
-        "sandbox-a",
-    )
-    b = _unwrap(
-        register_bot_definition(
-            payload,
-            registrar=registrar,
-            writer=_writer("node-b"),
-            sequence=0,
-            created_at=_instant(_CREATED_NS + 1_000),
-        ),
-        "sandbox-b",
-    )
-    assert a.record.stable_id == b.record.stable_id
-    assert a.outcome.value == "stored"
-    assert b.outcome.value == "idempotent"
-    minted = _unwrap(mint_bot_definition(payload), "content")
-    assert type(minted).__name__ == "BotDefinition"
-    assert "writer" not in minted.identity_payload()
-    return a.record.stable_id == b.record.stable_id
+    a = _unwrap(mint_bot_definition(payload), "sandbox-a content")
+    b = _unwrap(mint_bot_definition(payload), "sandbox-b content")
+    fp_a = _unwrap(a.fingerprint_content(), "fp-a")
+    fp_b = _unwrap(b.fingerprint_content(), "fp-b")
+    assert fp_a == fp_b
+    # The dated CT-06 stamp (writer, sequence, created-at) is defined-unwired
+    # in qml (CT-33, DEC-0173; OR-06): the host composition root mints it, and
+    # a stable id derived from this one fingerprint deduplicates across
+    # sandboxes by construction.
+    assert type(a).__name__ == "BotDefinition"
+    assert "writer" not in a.identity_payload()
+    assert a.identity_payload()["kind"] == KIND_BOT_DEFINITION
+    return fp_a == fp_b
 
 
 def main() -> None:

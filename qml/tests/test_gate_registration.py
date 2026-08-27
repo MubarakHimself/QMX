@@ -6,11 +6,11 @@ import ast
 from pathlib import Path
 from typing import TypeVar, cast
 
-from qmf.core.chrono import CalendarIdentity, Instant, WriterId
+from qmf.core.chrono import CalendarIdentity
 from qmf.core.exact import UnitKind
 from qmf.core.fingerprint import fingerprint
 from qmf.core.refusal import RefusalCategory, Result, is_ok, is_refusal
-from qmf.registry import KindRegistry, Registrar, RegistrationRecord
+from qmf.registry import RegistrationRecord
 from qml.conformance import (
     CITATION_KINDS,
     DROPPED_REGISTRATION_GATES,
@@ -36,10 +36,8 @@ from qml.conformance import (
 from qml.declaration import (
     KIND_BOT_DEFINITION,
     BotDefinition,
-    install_bot_definition_kind,
     mint_bot_definition,
     mint_confluence,
-    register_bot_definition,
 )
 from qml.families import mint_strategy_family
 from qml.footprint import ProducerBinding, mint_footprint
@@ -61,7 +59,6 @@ _CLOCK_SOURCE: dict[str, str] = {
 _REGISTRATION = (
     Path(__file__).resolve().parents[1] / "src" / "qml" / "conformance" / "registration.py"
 )
-_CREATED_NS = 1_700_000_000_000_000_000
 _OS = "windows-11"
 _AR = "none"
 _BOUND = 256
@@ -169,14 +166,6 @@ def _layer2(
 
 def _gate(world: dict[str, object], **extra: object) -> Result[RegistrationCandidate]:
     return gate_registration(layer1=_layer1(world), layer2=_layer2(world), **extra)
-
-
-def _writer(machine: str = "node-a") -> WriterId:
-    return _ok(WriterId.try_create(machine, "authoring", KIND_BOT_DEFINITION, "boot-1"))
-
-
-def _instant(ns: int = _CREATED_NS) -> Instant:
-    return _ok(Instant.try_create(ns))
 
 
 # --- AC: both layers pass → Bot kind may mint; either fail is policy --------
@@ -439,28 +428,19 @@ def test_dropped_complexity_gate_is_never_consulted() -> None:
             assert "complexity" not in dumped.lower()
 
 
-# --- AC: host stamps; qml returns content + verdict never a stamped record --
+# --- AC: qml returns content + verdict never a stamped record ---------------
 
 
-def test_host_stamps_after_a_pass_qml_never_returns_the_record() -> None:
+def test_qml_returns_content_and_verdict_never_a_stamped_record() -> None:
+    """The dated Bot-kind mint is defined-unwired (CT-33, OR-06): no wiring in qml."""
     world = _world()
     candidate = _ok(_gate(world))
-    registry = KindRegistry()
-    assert is_ok(install_bot_definition_kind(registry))
-    registrar = Registrar(registry)
-    receipt = _ok(
-        register_bot_definition(
-            candidate.declaration,
-            registrar=registrar,
-            writer=_writer(),
-            sequence=0,
-            created_at=_instant(),
-        )
-    )
-    assert receipt.record.kind == KIND_BOT_DEFINITION
-    assert receipt.record.writer == _writer()
-    assert "writer" not in candidate.identity_payload()
     assert type(candidate).__name__ == "RegistrationCandidate"
+    assert not isinstance(candidate, RegistrationRecord)
+    assert "writer" not in candidate.identity_payload()
+    assert candidate.declaration.identity_payload()["kind"] == KIND_BOT_DEFINITION
+    for name in ("install_bot_definition_kind", "register_bot_definition"):
+        assert not hasattr(qml, name)
 
 
 def test_evaluate_ticket_still_requires_both_bools() -> None:

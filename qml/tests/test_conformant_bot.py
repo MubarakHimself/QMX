@@ -7,11 +7,10 @@ import importlib.util
 from pathlib import Path
 from typing import TypeVar, cast
 
-from qmf.core.chrono import CalendarIdentity, Instant, WriterId
+from qmf.core.chrono import CalendarIdentity
 from qmf.core.exact import UnitKind
 from qmf.core.fingerprint import fingerprint
 from qmf.core.refusal import Result, is_ok, is_refusal
-from qmf.registry import KindRegistry, Registrar
 from qmf.risk.door import EntryIntent
 from qml.conformance import (
     collect_layer2_observations,
@@ -28,10 +27,8 @@ from qml.declaration import (
     KIND_BOT_DEFINITION,
     BotDefinition,
     Confluence,
-    install_bot_definition_kind,
     mint_bot_definition,
     mint_confluence,
-    register_bot_definition,
 )
 from qml.families import mint_strategy_family
 from qml.footprint import ProducerBinding, mint_footprint, report_completeness
@@ -50,7 +47,6 @@ _LOGIC_DIR = _QML_ROOT / "examples" / "conformant_bot"
 _OS = "windows-11"
 _AR = "none"
 _BOUND = 256
-_CREATED_NS = 1_700_000_000_000_000_000
 _DISTRIBUTION = "example-breakout-bot"
 _VERSION = "1.0.0"
 
@@ -216,7 +212,7 @@ def test_declaration_carries_no_exit_logic_or_sizing() -> None:
     assert is_refusal(stuffed)
 
 
-def test_layer1_and_layer2_pass_and_bot_kind_mints() -> None:
+def test_layer1_and_layer2_pass_and_candidate_is_content_only() -> None:
     world = _world()
     declaration = _declaration(world)
     layer1 = _ok(
@@ -240,21 +236,12 @@ def test_layer1_and_layer2_pass_and_bot_kind_mints() -> None:
     candidate = _ok(gate_registration(layer1=layer1, layer2=layer2))
     assert candidate.ticket.layer1_passed is True
     assert candidate.ticket.layer2_passed is True
-    registry = KindRegistry()
-    _ok(install_bot_definition_kind(registry))
-    receipt = _ok(
-        register_bot_definition(
-            candidate.declaration,
-            registrar=Registrar(registry),
-            writer=_ok(
-                WriterId.try_create("example-host", "authoring", KIND_BOT_DEFINITION, "boot-1")
-            ),
-            sequence=0,
-            created_at=_ok(Instant.try_create(_CREATED_NS)),
-        )
-    )
-    assert receipt.record.kind == KIND_BOT_DEFINITION
-    assert receipt.outcome.value == "stored"
+    # The dated Bot-kind mint is defined-unwired in qml (CT-33, OR-06): the
+    # candidate is fingerprintable content plus the two-layer ticket only.
+    payload = candidate.declaration.identity_payload()
+    assert payload["kind"] == KIND_BOT_DEFINITION
+    fp = _ok(candidate.declaration.fingerprint_content())
+    assert fp.value.startswith("fp1:sha256:")
     assert "writer" not in candidate.identity_payload()
 
 

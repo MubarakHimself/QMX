@@ -3,35 +3,30 @@
 F1 identity carve-out (the highest-damage guarantee); F2 parameter space law;
 F3 family cardinality-one + confluence ordering; F4 permitted-intent subset;
 F5 canonical assignment as a derived locus; F6 AD-30 versioning; F7 root-mints.
-Header exclusion is observed through a real Registrar sink; F7 uses a recording
-Registrar subclass owned by the test.
+Under OR-06 (CT-33 wiring_status defined-unwired) qml ships no mint wiring:
+header exclusion is observed on host-minted CT-06 records built directly at a
+test-owned composition root, and F7 pins both the content-only surface and the
+absence of any install/register wiring from qml.
 """
 
 from __future__ import annotations
 
 import helpers as H
 
-from qmf.core.chrono import Instant, WriterId
-from qmf.core.exact import UnitKind
 from qmf.core.refusal import Result
-from qmf.registry import KindRegistry, Registrar
+from qmf.registry import KindRegistry, Registrar, RegistrationRecord
 from qml.declaration import (
     KIND_BOT_DEFINITION,
     BotDefinition,
     BotVersionGraph,
-    install_bot_definition_kind,
+    bot_definition_kind_contract,
     mint_bot_definition,
     promote_tuned_assignment,
-    register_bot_definition,
 )
 from qml.footprint import mint_footprint
 from qml.logic import mint_logic_identity
 
-
-def _host_registrar() -> Registrar:
-    registry = KindRegistry()
-    H.unwrap(install_bot_definition_kind(registry), "install bot-definition kind")
-    return Registrar(registry)
+from qmf.core.exact import UnitKind
 
 
 def _fp(payload_overrides: object = None, **kw: object) -> str:
@@ -44,39 +39,44 @@ def _fp(payload_overrides: object = None, **kw: object) -> str:
 
 
 def test_f1_ad16_header_fields_are_excluded_from_identity() -> None:
-    """F1 (11.6 AC1): registering the same content with different header facts gives one stable id.
+    """F1 (11.6 AC1): the same content under different header facts gives one stable id.
 
-    Two sandboxes differing only in (writer, sequence, created_at) derive an
-    identical stable_id — the AD-16 header is carved out of fp1. Counter-case: if
+    Two host-minted CT-06 records differing only in (writer, sequence,
+    created_at) derive an identical stable_id — the AD-16 header is carved out
+    of fp1. The records are built directly at a test-owned composition root
+    because qml ships no mint wiring (OR-06). Counter-case: if
     writer/created_at entered identity, the two stable_ids would differ.
     """
-    # Two independent composition roots (sandboxes): each write is 'stored' with
-    # its own writer, so both records carry their real, differing header facts.
     payload = H.bot_payload()
+    body = H.unwrap(mint_bot_definition(payload), "content").body()
     a = H.unwrap(
-        register_bot_definition(
-            payload,
-            registrar=_host_registrar(),
-            writer=H.writer("node-a", KIND_BOT_DEFINITION),
-            sequence=0,
-            created_at=H.instant(H.CREATED_NS),
+        RegistrationRecord.try_create(
+            KIND_BOT_DEFINITION,
+            1,
+            [],
+            body,
+            H.writer("node-a", KIND_BOT_DEFINITION),
+            0,
+            H.instant(H.CREATED_NS),
         ),
         "sandbox-a",
     )
     b = H.unwrap(
-        register_bot_definition(
-            payload,
-            registrar=_host_registrar(),
-            writer=H.writer("node-b", KIND_BOT_DEFINITION),
-            sequence=3,
-            created_at=H.instant(H.CREATED_NS + 5_000),
+        RegistrationRecord.try_create(
+            KIND_BOT_DEFINITION,
+            1,
+            [],
+            body,
+            H.writer("node-b", KIND_BOT_DEFINITION),
+            3,
+            H.instant(H.CREATED_NS + 5_000),
         ),
         "sandbox-b",
     )
-    assert a.record.writer != b.record.writer
-    assert a.record.sequence != b.record.sequence
-    assert a.record.created_at != b.record.created_at
-    assert a.record.stable_id == b.record.stable_id  # header carved out of identity
+    assert a.writer != b.writer
+    assert a.sequence != b.sequence
+    assert a.created_at != b.created_at
+    assert a.stable_id == b.stable_id  # header carved out of identity
     # The fingerprintable content payload carries no header fields at all.
     payload_identity = H.unwrap(mint_bot_definition(payload), "content").identity_payload()
     for header in ("writer", "sequence", "stable_id", "created_at"):
@@ -338,32 +338,42 @@ class _RecordingRegistrar(Registrar):
 
 
 def test_f7_qml_returns_content_only_host_root_stamps_occurrence_facts() -> None:
-    """F7 (11.6 AC6): qml returns fingerprintable content only; the host root mints the record.
+    """F7 (11.6 AC6): qml returns fingerprintable content only; the host root mints.
 
-    mint_bot_definition returns a BotDefinition, never a stamped record; the host
-    supplies writer/sequence/created_at, observed reaching an injected recording
-    sink. Counter-case: mint returning a record, or register not forwarding the
-    host writer.
+    mint_bot_definition returns a BotDefinition, never a stamped record, and —
+    per OR-06 (CT-33 wiring_status defined-unwired) — qml ships no registrar
+    wiring at all: the host composition root installs the kind contract itself
+    and its occurrence facts reach a test-owned recording sink through the
+    host's own register call, with qml inventing none of them. Counter-case:
+    mint returning a record, or install/register wiring resurfacing in qml.
     """
     minted = H.unwrap(mint_bot_definition(H.bot_payload()), "content")
     assert isinstance(minted, BotDefinition)
     assert "writer" not in minted.identity_payload()
 
+    import qml
+    import qml.declaration
+    import qml.declaration.bot
+
+    for module in (qml, qml.declaration, qml.declaration.bot):
+        for name in ("install_bot_definition_kind", "register_bot_definition"):
+            assert not hasattr(module, name)
+
+    # The composition root — the test here — installs the kind and stamps.
     registry = KindRegistry()
-    H.unwrap(install_bot_definition_kind(registry), "install kind")
+    H.unwrap(registry.register(H.unwrap(bot_definition_kind_contract(), "contract")), "install")
     sink = _RecordingRegistrar(registry)
     host_writer = H.writer("node-root", KIND_BOT_DEFINITION)
     receipt = H.unwrap(
-        register_bot_definition(
-            H.bot_payload(),
-            registrar=sink,
+        sink.register(
+            kind=KIND_BOT_DEFINITION,
+            body=minted.body(),
             writer=host_writer,
             sequence=7,
             created_at=H.instant(),
         ),
         "root mint",
     )
-    # The host's occurrence facts reached the sink unchanged; qml invented none.
     assert len(sink.calls) == 1
     call = sink.calls[0]
     assert call["writer"] == host_writer
@@ -382,11 +392,12 @@ def test_f7_register_refusal_is_seen_through_the_sink() -> None:
     exception. Counter-case: the refusal being swallowed or raised across the seam.
     """
     registry = KindRegistry()
-    H.unwrap(install_bot_definition_kind(registry), "install kind")
+    H.unwrap(registry.register(H.unwrap(bot_definition_kind_contract(), "contract")), "install")
     sink = _RecordingRegistrar(registry)
-    refused = register_bot_definition(
-        H.bot_payload(),
-        registrar=sink,
+    body = H.unwrap(mint_bot_definition(H.bot_payload()), "content").body()
+    refused = sink.register(
+        kind=KIND_BOT_DEFINITION,
+        body=body,
         writer="not-a-writer-id",
         sequence=0,
         created_at=H.instant(),

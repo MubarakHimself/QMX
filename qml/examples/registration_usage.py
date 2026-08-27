@@ -18,18 +18,19 @@ Shows the things QL-8 / Story 12.7 pin down:
    ``promoted-from`` lineage edge back to the originating research artifact.
 5. ``max_acceptable_complexity_score`` is a stated drop — never a registration
    gate. qml returns fingerprintable content plus the pass/fail verdict; the
-   host composition root holds the ``WriterId`` and stamps the record.
+   host composition root holds the ``WriterId`` and stamps the record. The
+   dated Bot-kind mint is defined-unwired in qml (CT-33, DEC-0173; OR-06) —
+   this example never drives one.
 """
 
 from __future__ import annotations
 
 from typing import TypeVar, cast
 
-from qmf.core.chrono import CalendarIdentity, Instant, WriterId
+from qmf.core.chrono import CalendarIdentity
 from qmf.core.exact import UnitKind
 from qmf.core.fingerprint import fingerprint
 from qmf.core.refusal import Result, TypedRefusal, is_ok
-from qmf.registry import KindRegistry, Registrar
 from qml.conformance import (
     DROPPED_REGISTRATION_GATES,
     Layer1Verdict,
@@ -46,12 +47,9 @@ from qml.conformance import (
     run_layer2_suite,
 )
 from qml.declaration import (
-    KIND_BOT_DEFINITION,
     BotDefinition,
-    install_bot_definition_kind,
     mint_bot_definition,
     mint_confluence,
-    register_bot_definition,
 )
 from qml.families import mint_strategy_family
 from qml.footprint import ProducerBinding, mint_footprint
@@ -188,25 +186,12 @@ def qml_returns_fingerprintable_content() -> bool:
         gate_registration(layer1=_lint(world), layer2=_suite(world)),
         "gate",
     )
-    registry = KindRegistry()
-    _unwrap(install_bot_definition_kind(registry), "install")
-    registrar = Registrar(registry)
-    writer = _unwrap(
-        WriterId.try_create("node-a", "authoring", KIND_BOT_DEFINITION, "boot-1"),
-        "writer",
-    )
-    created = _unwrap(Instant.try_create(1_700_000_000_000_000_000), "created-at")
-    receipt = _unwrap(
-        register_bot_definition(
-            candidate.declaration,
-            registrar=registrar,
-            writer=writer,
-            sequence=0,
-            created_at=created,
-        ),
-        "host stamp",
-    )
-    assert receipt.record.kind == KIND_BOT_DEFINITION
+    # The dated Bot-kind mint is defined-unwired in qml (CT-33, DEC-0173;
+    # OR-06): the host composition root holds the WriterId and stamps the
+    # CT-06 record. qml ships no install/register wiring — the candidate is
+    # fingerprintable content plus the two-layer verdict, nothing more.
+    fp = _unwrap(candidate.declaration.fingerprint_content(), "content fp")
+    assert fp.value.startswith("fp1:sha256:")
     assert "writer" not in candidate.identity_payload()
     return True
 
@@ -319,7 +304,7 @@ def complexity_is_not_a_gate() -> bool:
 def main() -> None:
     print(f"layer 1 and layer 2 pass: {both_layers_pass()}")
     print(f"qml returns fingerprintable content: {qml_returns_fingerprintable_content()}")
-    print("host stamps WriterId: True")
+    print("bot-kind mint defined-unwired: True")
     print(f"layer 1 fail is policy rejection: {layer1_fail_is_policy()}")
     print(f"layer 2 fail is policy rejection: {layer2_fail_is_policy()}")
     print(f"no probation: {no_probation()}")

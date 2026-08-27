@@ -17,12 +17,7 @@ from typing import Final, cast
 
 from qmf.core.fingerprint import Fingerprint, fingerprint
 from qmf.core.refusal import Ok, Result, is_refusal
-from qmf.registry import (
-    FieldSetKind,
-    KindRegistry,
-    Registrar,
-    RegistrationReceipt,
-)
+from qmf.registry import FieldSetKind
 
 from qml._refuse import invalid, unsupported
 from qml.declaration.confluence import Confluence
@@ -45,10 +40,8 @@ __all__ = [
     "BotDefinition",
     "ConfluenceCite",
     "bot_definition_kind_contract",
-    "install_bot_definition_kind",
     "mint_bot_definition",
     "promote_tuned_assignment",
-    "register_bot_definition",
 ]
 
 KIND_BOT_DEFINITION: Final[str] = "bot-definition"
@@ -551,9 +544,9 @@ def mint_bot_definition(
 ) -> Result[BotDefinition]:
     """Mint fingerprintable CT-33 Bot definition content (DEC-0173).
 
-    The dated CT-06 envelope is stamped by a host composition root via
-    :func:`register_bot_definition`. This helper never invents a WriterId,
-    sequence, or created-at.
+    The dated CT-06 envelope is stamped by a host composition root; that mint
+    is defined-unwired here (CT-33, DEC-0173). This helper never invents a
+    WriterId, sequence, or created-at.
     """
     if isinstance(payload, BotDefinition):
         return Ok(payload)
@@ -633,61 +626,17 @@ def promote_tuned_assignment(
 
 
 def bot_definition_kind_contract() -> Result[FieldSetKind]:
-    """The CT-06 ``bot-definition`` kind contract — body field names only."""
+    """The CT-06 ``bot-definition`` kind contract — body field names only.
+
+    The dated Bot-kind mint itself is defined-unwired (CT-33 wiring_status,
+    DEC-0173; operator ruling OR-06 2026-08-27): no install/register wiring
+    ships in qml. Records reach qmf-registry only through a host composition
+    root under the AD-25 root-mints pattern, to be built at the QMB
+    composition root.
+    """
     return FieldSetKind.try_create(
         KIND_BOT_DEFINITION,
         BOT_DEFINITION_KIND_FORMAT_VERSION,
         required_fields=_BODY_FIELDS,
         optional_fields=(),
-    )
-
-
-def install_bot_definition_kind(registry: object) -> Result[FieldSetKind]:
-    """Register the Bot definition kind on a host :class:`KindRegistry`."""
-    if not isinstance(registry, KindRegistry):
-        return invalid(
-            "registry",
-            "the Bot definition kind installs on a CT-06 KindRegistry",
-            given=type(registry).__name__,
-        )
-    contract = bot_definition_kind_contract()
-    if is_refusal(contract):
-        return contract
-    installed = registry.register(contract.value)
-    if is_refusal(installed):
-        return installed
-    return Ok(contract.value)
-
-
-def register_bot_definition(
-    payload: object,
-    *,
-    registrar: object,
-    writer: object,
-    sequence: object,
-    created_at: object,
-    at_birth_parent_refs: object = None,
-) -> Result[RegistrationReceipt]:
-    """Stamp fingerprintable Bot definition content onto a host CT-06 Registrar.
-
-    The host supplies writer, sequence, and created-at (AD-25 root-mints). The
-    writer unit is ``(machine, authoring role, kind)``. qml never returns this
-    stamped record from :func:`mint_bot_definition`.
-    """
-    if not isinstance(registrar, Registrar):
-        return invalid(
-            "registrar",
-            "a host composition root stamps the dated CT-06 record through a Registrar",
-            given=type(registrar).__name__,
-        )
-    content = mint_bot_definition(payload, at_birth_parent_refs=at_birth_parent_refs)
-    if is_refusal(content):
-        return content
-    return registrar.register(
-        kind=KIND_BOT_DEFINITION,
-        body=content.value.body(),
-        writer=writer,
-        sequence=sequence,
-        created_at=created_at,
-        at_birth_parent_refs=content.value.at_birth_parent_refs,
     )

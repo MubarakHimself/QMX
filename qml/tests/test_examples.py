@@ -166,7 +166,7 @@ def test_registration_usage_example_runs_clean() -> None:
     assert completed.returncode == 0, completed.stderr
     assert "layer 1 and layer 2 pass: True" in completed.stdout
     assert "qml returns fingerprintable content: True" in completed.stdout
-    assert "host stamps WriterId: True" in completed.stdout
+    assert "bot-kind mint defined-unwired: True" in completed.stdout
     assert "layer 1 fail is policy rejection: policy rejection" in completed.stdout
     assert "layer 2 fail is policy rejection: policy rejection" in completed.stdout
     assert "no probation: True" in completed.stdout
@@ -184,7 +184,7 @@ def test_conformant_bot_usage_example_runs_clean() -> None:
     assert completed.returncode == 0, completed.stderr
     assert "declaration is complete: True" in completed.stdout
     assert "layer 1 and layer 2 pass: True" in completed.stdout
-    assert "bot kind minted: True" in completed.stdout
+    assert "bot-kind mint defined-unwired: True" in completed.stdout
     assert "advisory stop on entry: True" in completed.stdout
     assert "emitted kinds: entry" in completed.stdout
     assert "golden-slice deterministic: True" in completed.stdout

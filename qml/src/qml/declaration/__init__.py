@@ -25,10 +25,8 @@ from qml.declaration.bot import (
     BotDefinition,
     ConfluenceCite,
     bot_definition_kind_contract,
-    install_bot_definition_kind,
     mint_bot_definition,
     promote_tuned_assignment,
-    register_bot_definition,
 )
 from qml.declaration.confluence import (
     CONFLUENCE_KIND_FORMAT_VERSION,
@@ -94,7 +92,6 @@ __all__ = [
     "branches_from_edge",
     "confluence_kind_contract",
     "continues_performance_edge",
-    "install_bot_definition_kind",
     "install_confluence_kind",
     "mint_bot_definition",
     "mint_confluence",
@@ -103,7 +100,6 @@ __all__ = [
     "parse_parameter_type",
     "parse_ui_flag",
     "promote_tuned_assignment",
-    "register_bot_definition",
     "register_confluence",
     "resolve_confluence_at_layer1",
 ]
