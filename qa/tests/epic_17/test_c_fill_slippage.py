@@ -238,10 +238,11 @@ def test_t173j_execution_handler_mints_no_mid_slice_intent() -> None:
     # The cross-sub-phase "new intents rest for a later slice" is the Epic-14 loop's
     # guarantee (B-2 sub-phase 6); Epic 17's half is that the execution handler itself
     # mints NO fresh intent in a slice, so nothing it does makes one eligible this slice.
-    from _e17 import RecordingFill, RecordingSlippage
+    from _e17 import RecordingCost, RecordingFill, RecordingSlippage
     from qmb.execution.handler import ExecutionSliceHandler
 
     handler = ExecutionSliceHandler(fill=RecordingFill(), slippage=RecordingSlippage(),
+                                    cost=RecordingCost(),
                                     position_cap=qty(10), lot_step=qty(1))
     minted = ok(handler.mint_intents("eurusd", inst()))
     assert tuple(minted) == ()
@@ -319,3 +320,33 @@ def test_t173n_slippage_seed_is_deterministic_from_run_identity() -> None:
     assert ok(derive_slippage_seed(run_a)) == ok(derive_slippage_seed(run_a))
     # A different run identity derives a different seed (identity-bound, not ambient).
     assert ok(derive_slippage_seed(run_a)) != ok(derive_slippage_seed(run_b))
+
+
+# --- FC-12 (QMX-F015): the run-loop SliceHandler binds and drives the COST port
+
+
+def test_t171a_cost_port_bound_and_driven_by_the_slice_handler() -> None:
+    """17.1-AC1 / 17.4-AC2 (FC-12): ExecutionSliceHandler — the SliceHandler the six
+    sub-phases actually drive — binds the COST port and routes execute_resting through
+    the composed fill -> slippage -> cost path, so the cost recorder sees the POST-SLIP
+    fill and commission has a live producer on real runs. Counter-case: a handler with
+    no cost seam (no CostPort field, no itemize call) — commission is never itemized on
+    any run the loop drives.
+    """
+    from _e17 import RecordingCost, RecordingFill, RecordingSlippage
+    from qmb.execution.handler import ExecutionSliceHandler
+    from qmb.runloop import RestingIntent
+
+    fill, slip, cost = RecordingFill(), RecordingSlippage(post=price(100_500)), RecordingCost()
+    handler = ExecutionSliceHandler(
+        fill=fill, slippage=slip, cost=cost, position_cap=qty(10), lot_step=qty(1),
+    )
+    ok(handler.bind_path("eurusd", slice_path(open=100_000, high=110_000, low=90_000,
+                                              close=100_000, prints=(90_000, 110_000))))
+    resting = ok(RestingIntent.try_create("r1", "eurusd", order=None, authorized=entry()))
+    filled = ok(handler.execute_resting(resting, None, inst()))
+    assert filled is True
+    assert len(cost.calls) == 1, "the cost port must be driven by the handler's own path"
+    assert cost.calls[0]["saw_post"] == price(100_500), "cost itemizes the POST-SLIP fill"
+    assert handler.costed_fills, "the itemized CostedFill is retained as the commission producer"
+    assert handler.costed_fills[0].fill.post_slip_price == price(100_500)

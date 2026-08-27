@@ -32,7 +32,8 @@ from qmb.execution.financing import (
     apply_financing_rollover,
 )
 from qmb.execution.ports import (
-    TAINT_OPTIMISTIC,
+    CostedFill,
+    CostPort,
     Fill,
     FillPort,
     FinancingPort,
@@ -40,6 +41,7 @@ from qmb.execution.ports import (
     PartialFill,
     SlicePath,
     SlippagePort,
+    slip_then_cost,
 )
 from qmb.runloop.loop import RestingIntent, SliceObservation
 
@@ -58,12 +60,24 @@ def _empty_events() -> list[FinancingCashEvent]:
     return []
 
 
+def _empty_costed() -> list[CostedFill]:
+    return []
+
+
 @dataclass(slots=True)
 class ExecutionSliceHandler:
-    """SliceHandler: sub-phase 2 financing, then fill → slippage in sub-phase 3."""
+    """SliceHandler: sub-phase 2 financing, then fill → slippage → cost in sub-phase 3.
+
+    Sub-phase 3 runs the composed execution path (17.1-AC1): fill decides,
+    slippage maps price, and the bound COST port itemizes commission on the
+    post-slip fill — each itemized :class:`CostedFill` is retained on
+    :attr:`costed_fills`, the producer for per-partial commission (17.4-AC2)
+    and the cost-drag decomposition (17.5-AC4).
+    """
 
     fill: FillPort
     slippage: SlippagePort
+    cost: CostPort
     position_cap: Quantity
     lot_step: Quantity
     fill_basis: str = FILL_BASIS_WORST_CASE
@@ -77,6 +91,7 @@ class ExecutionSliceHandler:
     financing_world: World = World.REPLAY
     financing_sequence: int = 0
     financing_events: list[FinancingCashEvent] = field(default_factory=_empty_events)
+    costed_fills: list[CostedFill] = field(default_factory=_empty_costed)
 
     def update_stream(
         self,
@@ -163,7 +178,13 @@ class ExecutionSliceHandler:
         observation: SliceObservation | None,
         frontier: Instant,
     ) -> Result[bool]:
-        """Sub-phase 3: fill then slippage. ``True`` when the resting intent fills."""
+        """Sub-phase 3: the composed fill → slippage → cost path (17.1-AC1).
+
+        ``True`` when the resting intent fills. The post-decision pipeline is the
+        shared :func:`~qmb.execution.ports.slip_then_cost` tail, so slippage never
+        resizes, the COST port itemizes the post-slip fill (never resizing), and
+        the itemized :class:`CostedFill` is retained on :attr:`costed_fills`.
+        """
         del observation, frontier
         path = self.remaining_paths.get(intent.stream_id, self.paths.get(intent.stream_id))
         if path is None:
@@ -178,19 +199,14 @@ class ExecutionSliceHandler:
             return decided
         if isinstance(decided.value, NoFill):
             return Ok(False)
-        slipped = self.slippage.apply(decided.value, path)
-        if is_refusal(slipped):
-            return slipped
-        if isinstance(slipped.value, NoFill):
+        costed = slip_then_cost(self.slippage, self.cost, decided.value, path)
+        if is_refusal(costed):
+            return costed
+        if isinstance(costed.value, NoFill):
             return Ok(False)
-        filled = slipped.value
-        if filled.taint != TAINT_OPTIMISTIC:
-            return invalid(
-                "taint",
-                "until GAP-0048 every fill carries the optimistic taint (B-6, SC-06)",
-                given=filled.taint,
-                gap="GAP-0048",
-            )
+        outcome = costed.value
+        self.costed_fills.append(outcome)
+        filled = outcome.fill
         price = filled.post_slip_price
         if price is None:
             price = filled.pre_slip_price

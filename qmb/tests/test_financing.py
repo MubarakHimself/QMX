@@ -46,6 +46,7 @@ from qmb.execution import (
     fingerprint_financing,
     refuse_optimistic_edge_claim,
 )
+from qmb.execution.cost import ZeroCostAdapter
 from qmb.runloop import STREAM_SET_KEY, SilentSliceHandler, SliceObservation, run, run_slice
 from qmf.core.chrono import CalendarIdentity, CivilDate, Instant, TradingDate, WriterId
 from qmf.core.exact import Money, Quantity
@@ -449,6 +450,7 @@ def test_subphase_2_handler_applies_only_at_calendar_rollover() -> None:
     handler = ExecutionSliceHandler(
         fill=fill,
         slippage=slip,
+        cost=ZeroCostAdapter(),
         position_cap=_qty(1),
         lot_step=_qty(1),
         financing=scheduler,
@@ -480,6 +482,7 @@ def test_subphase_2_handler_applies_only_at_calendar_rollover() -> None:
     missing_cal = ExecutionSliceHandler(
         fill=fill,
         slippage=slip,
+        cost=ZeroCostAdapter(),
         position_cap=_qty(1),
         lot_step=_qty(1),
         financing=scheduler,

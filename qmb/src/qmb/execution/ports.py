@@ -79,6 +79,7 @@ __all__ = [
     "refuse_store_synthetic_governed_evidence",
     "require_authorized_intent",
     "restamp_filled",
+    "slip_then_cost",
 ]
 
 AuthorizedIntent: TypeAlias = EntryIntent | ExitIntent
@@ -1075,7 +1076,22 @@ def apply_execution_ports(
     if isinstance(classified.value, NoFill):
         return _as_outcome(classified.value)
     filled: Fill | PartialFill = classified.value
-    slipped = bound.value.slippage.apply(filled, declared.value)
+    return slip_then_cost(bound.value.slippage, bound.value.cost, filled, declared.value)
+
+
+def slip_then_cost(
+    slippage: SlippagePort,
+    cost: CostPort,
+    filled: Fill | PartialFill,
+    path: SlicePath,
+) -> Result[CostedFill | NoFill]:
+    """Slippage then cost on an already-decided fill — the composed tail (17.1-AC1).
+
+    The one post-decision pipeline every execution path shares: slippage may only
+    map price or veto and never resizes; cost itemizes the POST-SLIP fill and
+    never resizes; the optimistic taint holds until GAP-0048 (B-6, SC-06).
+    """
+    slipped = slippage.apply(filled, path)
     if is_refusal(slipped):
         return slipped
     if isinstance(slipped.value, NoFill):
@@ -1086,7 +1102,7 @@ def apply_execution_ports(
     priced = _require_post_slip(slipped.value)
     if is_refusal(priced):
         return priced
-    costed = bound.value.cost.itemize(priced.value)
+    costed = cost.itemize(priced.value)
     if is_refusal(costed):
         return costed
     resized_cost = _quantity_changed(priced.value, costed.value.fill)

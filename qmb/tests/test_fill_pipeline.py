@@ -42,6 +42,7 @@ from qmb.execution import (
     slip_fill,
     split_path_at,
 )
+from qmb.execution.cost import ZeroCostAdapter
 from qmb.runloop import (
     SAME_SLICE_NEW_INTENT_FILL,
     SUBPHASES,
@@ -436,6 +437,7 @@ def test_new_intents_rest_and_subphase_3_fill_handler() -> None:
     handler = ExecutionSliceHandler(
         fill=fill,
         slippage=slip,
+        cost=ZeroCostAdapter(),
         position_cap=_qty(1),
         lot_step=_qty(1),
     )
@@ -465,6 +467,7 @@ def test_new_intents_rest_and_subphase_3_fill_handler() -> None:
     minted_handler = _Minting(
         fill=fill,
         slippage=slip,
+        cost=ZeroCostAdapter(),
         position_cap=_qty(1),
         lot_step=_qty(1),
         paths=dict(handler.paths),
