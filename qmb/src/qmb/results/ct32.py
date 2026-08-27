@@ -61,6 +61,7 @@ from qmb.results.accounting import (
     VETO_DOOR_IDENTITIES,
     assemble_suppression_and_veto_accounting,
 )
+from qmb.results.charts import assemble_v1_chart_set
 from qmb.results.measures import (
     MEASURE_ARITHMETIC,
     MEASURE_CONTRACT_FORMAT_VERSION,
@@ -84,6 +85,7 @@ __all__ = [
     "MEASURE_CONTRACT_FORMAT_VERSION",
     "MEASURE_IDENTITIES",
     "METRIC_CONTRACT_FORMAT_VERSIONS",
+    "QMB_EXTENSIONS_KEY",
     "QMB_REPLAY_CALENDAR_RULE_SET",
     "QMB_REPLAY_CALENDAR_RULE_SET_VERSION",
     "QMB_REPLAY_CALENDAR_TZDATA",
@@ -109,6 +111,10 @@ __all__ = [
 ]
 
 RESULT_CONTRACT: Final[str] = "CT-32"
+# The stored-artifact key carrying the declared QMB extensions (chart set +
+# trade-event references, DEC-0163). AD-10-excluded from the artifact fp1: every
+# identity computation over a stored body strips this key first.
+QMB_EXTENSIONS_KEY: Final[str] = "qmb_extensions"
 CHART_SERIES_IN_IDENTITY: Final[bool] = False
 DISPLAY_DOWNSAMPLE_IN_IDENTITY: Final[bool] = False
 HTML_PAYLOAD: Final[bool] = False
@@ -188,9 +194,12 @@ def mint_run_performance_result(
 ) -> Result[PerformanceResult]:
     """Mint the CT-32 artifact of one completed pure ``run()`` (B-10).
 
-    Enough fields for a content fingerprint. Chart series and HTML are not
-    emitted. Domain failure is a typed refusal, returned never raised. A
-    multi-role span is a policy rejection and mints nothing.
+    Enough fields for a content fingerprint. The declared QMB extensions —
+    the machine-readable chart set and the trade-event references — are
+    assembled on this same path and carried on the container, AD-10-excluded
+    from its fp1 (DEC-0163). HTML is never emitted. Domain failure is a typed
+    refusal, returned never raised. A multi-role span is a policy rejection
+    and mints nothing.
     """
     if not isinstance(config, ResolvedRunConfig):
         return invalid(
@@ -296,6 +305,21 @@ def mint_run_performance_result(
     tallies = assemble_suppression_and_veto_accounting(journal_events, world=config.world)
     if is_refusal(tallies):
         return tallies
+    # The declared QMB extensions (DEC-0163): the machine-readable chart set is
+    # assembled from the run's own ordered record on the SAME assembly path that
+    # mints the container, and the trade-event references cite the CT-13 journal
+    # stream carrying the run's CT-29 trade record. Both are AD-10-excluded from
+    # the container's fp1 identity.
+    charts = assemble_v1_chart_set(
+        starting_capital=capital.value,
+        period=evidence_range,
+        trades=trades,
+        equity_curve=equity_curve,
+        journal_events=journal_events,
+        instruments=instruments.value,
+    )
+    if is_refusal(charts):
+        return charts
     return mint_performance_result(
         result_label=label.value,
         account_binding_role=role.value,
@@ -304,6 +328,8 @@ def mint_run_performance_result(
         measure_set=measures.value,
         suppression_accounting=tallies.value[0],
         veto_accounting=tallies.value[1],
+        chart_set=charts.value.fp1_identity(),
+        trade_event_references=_trade_event_references(config, trades),
     )
 
 
@@ -347,7 +373,11 @@ def assemble_run_performance_result(
             actual=derived.value.value,
             expected=stamped.value.value,
         )
-    payload = canonical_bytes(identity)
+    body: dict[str, object] = dict(identity)
+    extensions = _qmb_extensions_of(artifact.value)
+    if extensions is not None:
+        body[QMB_EXTENSIONS_KEY] = extensions
+    payload = canonical_bytes(body)
     if is_refusal(payload):
         return payload
     root = _as_existing_output_dir(output_dir)
@@ -357,6 +387,47 @@ def assemble_run_performance_result(
     if is_refusal(written):
         return written
     return stamped
+
+
+def _qmb_extensions_of(artifact: PerformanceResult) -> dict[str, object] | None:
+    """The stored-artifact extension block, or ``None`` when the run carries none.
+
+    The declared QMB extensions of the CT-32 container (DEC-0163): the
+    machine-readable chart-set payload and the trade-event references citing the
+    run's CT-13/CT-29 trade record. AD-10-excluded from the artifact fp1 — the
+    block rides the stored JSON under :data:`QMB_EXTENSIONS_KEY` only.
+    """
+    chart_set = artifact.chart_set
+    references = artifact.trade_event_references
+    if chart_set is None and not references:
+        return None
+    block: dict[str, object] = {
+        "ad10_excluded": True,
+        "in_identity": False,
+        "trade_event_references": list(references),
+    }
+    if chart_set is not None:
+        block["chart_set"] = dict(chart_set)
+    return block
+
+
+def _trade_event_references(config: ResolvedRunConfig, trades: object) -> tuple[str, ...]:
+    """Trade-event references for the extension block (CT-32 declared extension).
+
+    The realised-trade record is the run's CT-29 stream of ClosedTrade values,
+    carried on the CT-13 journal of the run's replay binding — so the reference
+    cites that stream by the binding's fingerprint. Emitted only when the run
+    actually closed trades; a quiet run carries no reference rather than a
+    fabricated one.
+    """
+    if not isinstance(trades, Sequence) or isinstance(trades, (str, bytes)):
+        return ()
+    if len(cast("Sequence[object]", trades)) == 0:
+        return ()
+    binding = config.binding_fp1
+    if binding is None:
+        return ()
+    return (f"ct-13:ct-29:{binding.value}",)
 
 
 def ct32_artifact_path(output_dir: object) -> Result[Path]:
@@ -517,11 +588,17 @@ def load_stored_ct32(output_dir: object) -> Result[dict[str, object]]:
 
 
 def stored_ct32_fingerprint(output_dir: object) -> Result[Fingerprint]:
-    """``fp1`` of the stored CT-32 identity, via qmf-core only."""
+    """``fp1`` of the stored CT-32 identity, via qmf-core only.
+
+    The stored body may carry the AD-10-excluded QMB extension block
+    (:data:`QMB_EXTENSIONS_KEY`); identity is everything else, so the fingerprint
+    is computed over the body with that key stripped (DEC-0163).
+    """
     body = as_ct32_artifact(output_dir)
     if is_refusal(body):
         return body
-    return fingerprint(body.value)
+    identity = {key: value for key, value in body.value.items() if key != QMB_EXTENSIONS_KEY}
+    return fingerprint(identity)
 
 
 def _as_bytes(value: object) -> bytes | None:

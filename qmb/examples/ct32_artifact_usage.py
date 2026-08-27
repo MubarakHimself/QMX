@@ -15,6 +15,7 @@ Shows the things B-10 / B-13 / AR-59 pin down:
 
 from __future__ import annotations
 
+import json
 import tempfile
 from pathlib import Path
 from typing import TypeVar
@@ -128,7 +129,13 @@ def assemble_one_canonical_artifact(output_dir: Path) -> str:
     assert list((output_dir / RESULTS_DIR_NAME).iterdir()) == [path]
     assert not (output_dir / "report.json").exists()
     raw = path.read_bytes()
-    assert raw == _unwrap(canonical_bytes(artifact.fp1_identity()), "canonical")
+    # The stored body is identity PLUS the AD-10-excluded QMB extension block
+    # (chart set + trade-event references, DEC-0163); identity stays byte-canonical.
+    body = json.loads(raw.decode("utf-8"))
+    body.pop("qmb_extensions", None)
+    assert _unwrap(canonical_bytes(body), "stripped") == _unwrap(
+        canonical_bytes(artifact.fp1_identity()), "canonical"
+    )
     assert stamped == _unwrap(fingerprint(artifact.fp1_identity()), "fp1")
     return stamped.value
 

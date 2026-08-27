@@ -522,6 +522,12 @@ class PerformanceResult:
     suppression_accounting: tuple[SuppressionCount, ...]
     veto_accounting: tuple[VetoCount, ...]
     baseline_pointer: Fingerprint | None
+    # The two DECLARED QMB EXTENSIONS of the CT-32 container (DEC-0163): the
+    # machine-readable chart-series payload and the trade-event references citing
+    # the run's CT-13/CT-29 trade record. Both are AD-10-excluded from
+    # ``fp1_identity`` — they ride the stored artifact, never the result fp1.
+    chart_set: Mapping[str, object] | None = None
+    trade_event_references: tuple[str, ...] = ()
 
     def fingerprint(self) -> Result[Fingerprint]:
         """Content fingerprint of this performance result."""
@@ -559,12 +565,16 @@ def mint_performance_result(
     suppression_accounting: object = (),
     veto_accounting: object = (),
     baseline_pointer: object = None,
+    chart_set: object = None,
+    trade_event_references: object = (),
 ) -> Result[PerformanceResult]:
     """Mint a CT-32 performance-result container, value-or-refusal (DEC-0155).
 
     Suppression and veto accounting default to empty (zero) rather than omitted so
     a quiet period reads as zero suppressions and zero vetoes, never as missing
-    evidence. A multi-role result is a policy rejection.
+    evidence. A multi-role result is a policy rejection. ``chart_set`` and
+    ``trade_event_references`` are the declared QMB extensions (DEC-0163) —
+    carried on the container, AD-10-excluded from its ``fp1_identity``.
     """
     if not isinstance(result_label, ResultLabel):
         return invalid(
@@ -616,6 +626,35 @@ def mint_performance_result(
             "the baseline pointer is a Fingerprint when present",
             given=repr(baseline_pointer),
         )
+    charts: Mapping[str, object] | None
+    if chart_set is None:
+        charts = None
+    elif isinstance(chart_set, Mapping):
+        charts = cast("Mapping[str, object]", chart_set)
+    else:
+        return invalid(
+            "chart_set",
+            "the QMB chart-set extension is a machine-readable mapping when present "
+            "(DEC-0163); it never enters the result fp1 (AD-10)",
+            given=type_name(chart_set),
+        )
+    if not isinstance(trade_event_references, Sequence) or isinstance(
+        trade_event_references, (str, bytes)
+    ):
+        return invalid(
+            "trade_event_references",
+            "trade-event references are a sequence of CT-13 stream citations (DEC-0163)",
+            given=type_name(trade_event_references),
+        )
+    references: list[str] = []
+    for item in cast("Sequence[object]", trade_event_references):
+        if not isinstance(item, str) or item.strip() == "":
+            return invalid(
+                "trade_event_references",
+                "each trade-event reference is a non-empty CT-13 stream citation",
+                given=repr(item),
+            )
+        references.append(item)
     return _Ok(
         PerformanceResult(
             result_label=result_label,
@@ -626,6 +665,8 @@ def mint_performance_result(
             suppression_accounting=suppressions,
             veto_accounting=vetoes,
             baseline_pointer=baseline,
+            chart_set=charts,
+            trade_event_references=tuple(references),
         )
     )
 

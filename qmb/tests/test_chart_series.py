@@ -364,7 +364,10 @@ def test_display_downsample_is_derivative_excluded_from_identity() -> None:
     assert derived.series.points[0].t == equity.points[0].t
     assert derived.series.points[-1].t == equity.points[-1].t
     assert not hasattr(derived, "fp1_identity")
-    assert not hasattr(charts, "fp1_identity")
+    # The chart SET carries its own canonical identity representation (FC-11,
+    # DEC-0163) while staying excluded from the CT-32 artifact fp1; the
+    # DERIVATIVE remains structurally identity-less.
+    assert charts.fp1_identity().get("class") == "qmb-chart-set"
     display = derived.as_data()
     assert display["ad10_excluded"] is True
     assert display["in_identity"] is False

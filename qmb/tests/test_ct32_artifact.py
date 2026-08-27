@@ -120,14 +120,17 @@ def test_assembly_writes_exactly_one_ct32_and_returns_fp1(tmp_path: Path) -> Non
     assert _ok(ct32_artifact_path(tmp_path)) == path
     raw = path.read_bytes()
     identity = artifact.fp1_identity()
-    assert raw == _ok(canonical_bytes(identity))
+    parsed = json.loads(raw.decode("utf-8"))
+    # The stored body is identity PLUS the AD-10-excluded QMB extension block
+    # (chart set + trade-event references, DEC-0163; FC-11).
+    stripped = {key: value for key, value in parsed.items() if key != "qmb_extensions"}
+    assert _ok(canonical_bytes(stripped)) == _ok(canonical_bytes(identity))
     assert stamped == _ok(artifact.fingerprint())
     assert stamped == _ok(fingerprint(identity))
     assert stamped.value.startswith("fp1:sha256:")
-    assert stamped.digest == _ok(fingerprint(json.loads(raw.decode("utf-8")))).digest
-    parsed = json.loads(raw.decode("utf-8"))
-    assert "chart" not in parsed
-    assert "html" not in parsed
+    assert stamped.digest == _ok(fingerprint(stripped)).digest
+    assert "chart" not in stripped
+    assert "html" not in stripped
     assert _walk_has_no_float(parsed)
 
 

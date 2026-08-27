@@ -61,9 +61,17 @@ def test_a1_assembly_writes_one_ct32_and_returns_qmfcore_fp1(out_dir: Path) -> N
     assert [p.name for p in (out_dir / "results").iterdir()] == ["ct-32.json"]
     assert not (out_dir / "report.json").exists()
 
-    # fp1 is qmf-core's fingerprint of the artifact identity — bytes on disk match.
+    # fp1 is qmf-core's fingerprint of the artifact identity. The stored body is
+    # identity PLUS the AD-10-excluded QMB extension block (chart set +
+    # trade-event references, DEC-0163; FC-11): stripping the block leaves the
+    # byte-canonical identity.
+    import json as _json
+
     raw = path.read_bytes()
-    assert raw == ok(canonical_bytes(artifact.fp1_identity()))
+    body = _json.loads(raw.decode("utf-8"))
+    extensions = body.pop("qmb_extensions")
+    assert extensions["in_identity"] is False and extensions["ad10_excluded"] is True
+    assert ok(canonical_bytes(body)) == ok(canonical_bytes(artifact.fp1_identity()))
     assert stamped == ok(artifact.fingerprint())
     assert stamped == ok(fingerprint(artifact.fp1_identity()))
     # a re-read of the stored bytes re-fingerprints to the same identity

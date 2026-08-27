@@ -169,10 +169,14 @@ def test_a19_downsample_declares_its_sampler_and_is_excluded_from_identity() -> 
     assert data["sampler_identity"] == "stride-nth"
     assert data["in_identity"] is False
     assert data["ad10_excluded"] is True
-    # AD-10 exclusion is structural: the derivative carries no fp1_identity, so it
-    # cannot be folded into the artifact fingerprint.
+    # AD-10 exclusion is structural for the DERIVATIVE: it carries no fp1_identity,
+    # so it cannot be folded into the artifact fingerprint. The chart SET carries
+    # its own canonical identity representation (FC-11 / QMX-F014, DEC-0163) while
+    # remaining excluded from the CT-32 artifact fp1 — that exclusion is asserted
+    # on the artifact identity itself in the sibling test below.
     assert not hasattr(down, "fp1_identity")
-    assert not hasattr(ChartSet, "fp1_identity")
+    assert hasattr(ChartSet, "fp1_identity")
+    assert _basic_chart_set().fp1_identity().get("class") == "qmb-chart-set"
 
 
 def test_a19_artifact_identity_is_invariant_to_charts_and_downsample() -> None:

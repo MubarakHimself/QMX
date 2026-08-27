@@ -312,8 +312,10 @@ class HoldingMark:
 class ChartSet:
     """V1 chart payload: series data plus companion tables, never images (R-RPT-13).
 
-    This extension is AD-10-excluded from CT-32 identity. It has no
-    ``fp1_identity`` so it cannot be folded into the artifact fingerprint.
+    This extension is AD-10-excluded from CT-32 artifact identity: the container's
+    ``fp1`` never folds it in. The set DOES carry its own canonical identity
+    representation (:meth:`fp1_identity`) so the embedded payload is verifiable,
+    fingerprintable content in its own right (DEC-0163).
     """
 
     series: tuple[ChartSeries, ...]
@@ -331,6 +333,16 @@ class ChartSet:
             if series.name == name:
                 return series
         return None
+
+    def fp1_identity(self) -> dict[str, object]:
+        """The chart set's OWN canonical identity content (DEC-0163).
+
+        This is the set's canonical representation — its full series-data payload
+        — so the embedded extension is verifiable content with its own ``fp1``.
+        It is never folded into the CT-32 artifact fingerprint (AD-10): the
+        container's ``fp1_identity`` excludes the extension entirely.
+        """
+        return self.as_data()
 
     def as_data(self) -> dict[str, object]:
         """Canonical chart payload. Display downsample is not included."""
