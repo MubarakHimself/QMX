@@ -1269,6 +1269,40 @@ def test_claim_class_usage_example_runs_clean() -> None:
     assert "claim class labeling ok" in completed.stdout
 
 
+def test_store_taint_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "store_taint_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "store-level origin=synthetic record: process, seed, config fp1, timestamp, version" in (
+        completed.stdout
+    )
+    assert "store read derives world=simulated; governed evidence refused until GAP-0048" in (
+        completed.stdout
+    )
+    assert (
+        "replay clock or replay/live adapter on synthetic data is invalid input; B-7 wins"
+        in completed.stdout
+    )
+    assert (
+        "synthetic is non-promotable; loading into replay/live or promoting to live refused"
+        in completed.stdout
+    )
+    assert (
+        "procedure-ephemeral perturbation stays world=replay, no partition, robustness-only"
+        in completed.stdout
+    )
+    assert (
+        "synthetic write routes only into the synthetic-tainted partition, never live/governed"
+        in completed.stdout
+    )
+    assert "store taint ok" in completed.stdout
+
+
 def test_import_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_EXAMPLE)],

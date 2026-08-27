@@ -428,6 +428,10 @@ class GenerateReceipt:
     config_fingerprint: str
     config_artifact_path: str
     config_artifact_written: bool
+    store_partition: str
+    store_provenance: Mapping[str, object]
+    store_provenance_path: str
+    store_provenance_written: bool
     bar_count: int
     start_ns: int
     end_ns: int
@@ -453,6 +457,10 @@ class GenerateReceipt:
             "config_fingerprint": self.config_fingerprint,
             "config_artifact_path": self.config_artifact_path,
             "config_artifact_written": self.config_artifact_written,
+            "store_partition": self.store_partition,
+            "store_provenance": dict(self.store_provenance),
+            "store_provenance_path": self.store_provenance_path,
+            "store_provenance_written": self.store_provenance_written,
             "bar_count": self.bar_count,
             "start_ns": self.start_ns,
             "end_ns": self.end_ns,
@@ -638,6 +646,7 @@ def generate(
     calendar: MarketHoursCalendar | None = None,
     source_series: object = None,
     output_root: object = None,
+    generated_at_ns: int | None = None,
 ) -> Result[GenerateReceipt]:
     """Produce one synthetic series from a resolved generator config (R1, R2, R6, R8).
 
@@ -647,6 +656,14 @@ def generate(
     integrity on integers, and materializes the fingerprinted config artifact
     alongside the run it produces. The library/tunnel is never swapped; only
     config variables select the process.
+
+    The produced series carries a store-level ``origin = synthetic`` taint (Story
+    23.3): a :class:`~qmb.data.store_taint.SyntheticStoreProvenance` record — the
+    process, seed, source-dataset id, config ``fp1``, generation timestamp, and QMX
+    generator version — routed into the synthetic-tainted store partition, never a
+    governed namespace (AR-33). ``generated_at_ns`` injects the generation timestamp
+    (defaulting to the wall clock); the timestamp is recorded provenance, never fp1
+    identity, so the run id stays the deterministic config fingerprint.
     """
     resolved = resolve_generator_config(resources)
     if is_refusal(resolved):
@@ -709,6 +726,17 @@ def generate(
         return materialized
     run_id, artifact_path, written = materialized.value
 
+    tainted = _store_taint(
+        config,
+        run_id=run_id,
+        generated_at_ns=generated_at_ns,
+        output_root=output_root,
+        resources=body,
+    )
+    if is_refusal(tainted):
+        return tainted
+    partition, provenance_record, provenance_path, provenance_written = tainted.value
+
     return Ok(
         GenerateReceipt(
             command="generate",
@@ -725,6 +753,10 @@ def generate(
             config_fingerprint=run_id.value,
             config_artifact_path=artifact_path,
             config_artifact_written=written,
+            store_partition=partition,
+            store_provenance=provenance_record,
+            store_provenance_path=provenance_path,
+            store_provenance_written=provenance_written,
             bar_count=len(bars),
             start_ns=config.start_ns,
             end_ns=config.end_ns,
@@ -1298,6 +1330,86 @@ def _write_artifact(root: Path, relative: str, config: ResolvedGeneratorConfig) 
     payload = json.dumps(config.as_mapping(), ensure_ascii=False, sort_keys=True).encode("utf-8")
     return write_bytes_exclusive_no_follow(
         target, payload, contain_within=root, field="generator_config"
+    )
+
+
+# --- store-level synthetic taint (Story 23.3; R4, AR-33) ---------------------
+
+
+def _store_taint(
+    config: ResolvedGeneratorConfig,
+    *,
+    run_id: Fingerprint,
+    generated_at_ns: int | None,
+    output_root: object,
+    resources: Mapping[str, object],
+) -> Result[tuple[str, dict[str, object], str, bool]]:
+    """Tag the persisted series with a store-level synthetic taint and route it (R4, AR-33).
+
+    Builds a :class:`~qmb.data.store_taint.SyntheticStoreProvenance` (process, seed,
+    source-dataset id, config ``fp1``, generation timestamp, generator version),
+    routes it into the synthetic-tainted store partition — never a governed namespace
+    (AR-33) — and, when a writable root is available, writes the store-level provenance
+    record as a partition sidecar (not merely a filename). Returns the partition
+    namespace, the record mapping, its relative path, and whether it was written.
+    """
+    from qmb.data.store_taint import (  # noqa: PLC0415 — import-cycle with store_taint
+        ARTIFACT_SERIES,
+        route_synthetic_persist,
+        tag_synthetic_artifact,
+    )
+
+    stamp = generated_at_ns
+    if stamp is None:
+        import time  # noqa: PLC0415 — the generation timestamp is provenance, never identity
+
+        stamp = time.time_ns()
+    provenance = tag_synthetic_artifact(
+        config,
+        artifact_kind=ARTIFACT_SERIES,
+        generation_timestamp_ns=stamp,
+    )
+    if is_refusal(provenance):
+        return provenance
+    partition = route_synthetic_persist(provenance.value)
+    if is_refusal(partition):
+        return partition
+    record = provenance.value.as_record()
+    relative = partition.value.relative_path
+    root = _resolve_output_root(output_root, resources)
+    if root is None:
+        return Ok((partition.value.namespace, record, relative, False))
+    written = _write_provenance(root, relative, record)
+    if is_refusal(written):
+        return written
+    return Ok((partition.value.namespace, record, relative, True))
+
+
+def _write_provenance(root: Path, relative: str, record: Mapping[str, object]) -> Result[None]:
+    import json  # noqa: PLC0415 — local, keeps the module import-light
+
+    from qmb.orchestrator.paths import (  # noqa: PLC0415 — import-cycle with orchestrator
+        write_bytes_exclusive_no_follow,
+    )
+
+    target = root / relative
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        return storage(
+            "store_provenance",
+            "could not create the synthetic-tainted store partition directory",
+            given=type(exc).__name__,
+            path=str(target.parent),
+        )
+    # The record's reproducible identity is content-addressed by the config fp1, so an
+    # existing regular file at this path already holds the same taint identity —
+    # re-recording it is idempotent, never an exclusive-write storage failure.
+    if target.is_file() and not target.is_symlink():
+        return Ok(None)
+    payload = json.dumps(dict(record), ensure_ascii=False, sort_keys=True).encode("utf-8")
+    return write_bytes_exclusive_no_follow(
+        target, payload, contain_within=root, field="store_provenance"
     )
 
 
