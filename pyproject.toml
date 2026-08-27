@@ -438,6 +438,7 @@ fmt-check = "ruff format --check packages extensions qml qmb tools"
 lint = "ruff check packages extensions qml qmb tools"
 types = "pyright"
 test = "pytest packages extensions qml qmb --cov=qmf --cov=qml --cov=qmb --cov-branch --cov-report=term-missing --cov-report=json:coverage.json --cov-fail-under=80"
+qa-verify = "pytest qa/tests -q"
 # Mechanical per-package + contract-module enforcement on top of the aggregate floor
 # above: reads the coverage.json `test` writes and fails the gate if any package drops
 # below 80% or exact.py/chrono.py drop below 100% branch (AR-20; M1).
