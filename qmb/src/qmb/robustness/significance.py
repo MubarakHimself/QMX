@@ -49,6 +49,7 @@ from __future__ import annotations
 
 import math
 import random
+import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from fractions import Fraction
@@ -409,9 +410,30 @@ def next_bar_log_returns(signals: object) -> Result[tuple[Fraction, ...]]:
         prev_close = bars[index].close.as_fraction()
         next_close = bars[index + 1].close.as_fraction()
         ratio = next_close / prev_close
+        # Bound-and-check BEFORE the one float coercion in the whole procedure
+        # (DEC-0109): a ratio beyond a finite C double would raise OverflowError
+        # out of float(), and one that underflows to 0.0 would raise ValueError
+        # out of log() — both must return a typed refusal instead.
+        if ratio > sys.float_info.max:
+            return invalid(
+                "signals",
+                "a next-bar price ratio must fit a finite C double before the log "
+                "carve-out; the magnitude bound is checked before conversion so an "
+                "un-floatable ratio returns a refusal, never raises (DEC-0109)",
+                index=index,
+            )
+        coerced = float(ratio)
+        if coerced <= 0.0:
+            return invalid(
+                "signals",
+                "a next-bar price ratio underflowed the C double range at the log "
+                "carve-out; a ratio that coerces to zero cannot express a log return "
+                "and returns a refusal, never raises (DEC-0109)",
+                index=index,
+            )
         # The one float in the whole procedure: log() of an exact price ratio. It
         # re-enters an exact value only through the named AD-22 carve-out (AC2).
-        carved = carve_return_statistic(_RETURN_LABEL, math.log(float(ratio)))
+        carved = carve_return_statistic(_RETURN_LABEL, math.log(coerced))
         if is_refusal(carved):
             return carved
         returns.append(carved.value.magnitude)

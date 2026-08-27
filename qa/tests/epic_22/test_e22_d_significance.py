@@ -289,3 +289,30 @@ def test_t22_325_auto_merge_and_live_world_are_refused():
     assert_ct04_refusal(
         refuse_live_result_world("live"), RefusalCategory.POLICY_REJECTION, what="live result world"
     )
+
+
+# --- T22-PIN-01 third arm (F-22-01: the log-return float boundary) P0 --------
+
+
+def test_t22_pin01_next_bar_log_return_returns_ct04_refusal_on_overflow_FINDING_F_22_01(instr):
+    """The one float boundary on the P0 return series must bound-and-check BEFORE float().
+
+    F-22-01 third arm (the site the two carve-out pins missed): ``next_bar_log_returns``
+    computes ``math.log(float(ratio))`` on an exact price ratio. Two legally-constructed
+    positive Price closes whose ratio exceeds a C double must return a CT-04 refusal,
+    never raise OverflowError across the public boundary (DEC-0109). Reachable from
+    ``run_significance_gate`` on the anti-look-ahead return series.
+    """
+    import pytest
+
+    bars = _bars(instr, [1, 10**400], [True, True])
+    try:
+        result = next_bar_log_returns(bars)
+    except BaseException as raised:  # noqa: BLE001 - catching to report the breach cleanly
+        pytest.fail(
+            f"un-floatable price ratio RAISED {type(raised).__name__} across the public "
+            f"boundary instead of returning a CT-04 refusal (F-22-01, DEC-0109)"
+        )
+    assert_ct04_refusal(
+        result, RefusalCategory.INVALID_INPUT, what="log-return of an un-floatable ratio"
+    )

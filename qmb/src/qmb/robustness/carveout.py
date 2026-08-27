@@ -23,6 +23,7 @@ declared rounding mode (:func:`reenter_money_path`) — a float becomes exact
 from __future__ import annotations
 
 import math
+import sys
 from dataclasses import dataclass
 from fractions import Fraction
 from typing import Final
@@ -52,6 +53,10 @@ __all__ = [
 # value is a label-derived scaled rational and never a raw binary float (AC2, AD-7).
 RETURN_SPACE_STAT_SCALE: Final[int] = 12
 RETURN_SPACE_STAT_ROUNDING: Final[RoundingMode] = RoundingMode.HALF_EVEN
+
+# The magnitude bound checked BEFORE every float() coercion at a conversion
+# boundary (DEC-0109): a value beyond a finite C double refuses, never raises.
+_MAX_FLOAT_MAGNITUDE: Final[float] = sys.float_info.max
 
 RETURN_SPACE_MEASURE_CLASS: Final[str] = "qmb-return-space-measure"
 RETURN_SPACE_MEASURE_FORMAT_VERSION: Final[int] = 1
@@ -134,6 +139,17 @@ def carve_return_statistic(
             label=token,
             given=repr(type(value).__name__),
         )
+    # Bound-and-check BEFORE the conversion (DEC-0109): an int too large for a
+    # finite C double would raise OverflowError out of float() instead of refusing.
+    if isinstance(value, int) and abs(value) > _MAX_FLOAT_MAGNITUDE:
+        return invalid(
+            "value",
+            "a return-space statistic must fit a finite C double; the magnitude bound "
+            "is checked before conversion so an un-floatable value returns a refusal, "
+            "never raises (DEC-0109)",
+            label=token,
+            given="int magnitude exceeding float range",
+        )
     number = float(value)
     if not math.isfinite(number):
         return invalid(
@@ -188,6 +204,15 @@ def reenter_money_path(
             "the money re-entry boundary converts a real-valued return-space result; "
             "construct exact Money from integers with try_create",
             given=repr(type(value).__name__),
+        )
+    # Bound-and-check BEFORE the conversion (DEC-0109), symmetric with the carve-out.
+    if isinstance(value, int) and abs(value) > _MAX_FLOAT_MAGNITUDE:
+        return invalid(
+            "value",
+            "a money re-entry value must fit a finite C double; the magnitude bound is "
+            "checked before conversion so an un-floatable value returns a refusal, "
+            "never raises (DEC-0109)",
+            given="int magnitude exceeding float range",
         )
     number = float(value)
     if not math.isfinite(number):
