@@ -823,6 +823,58 @@ def test_candle_perturbation_usage_example_runs_clean() -> None:
     assert "candle perturbation ok" in completed.stdout
 
 
+def test_significance_gate_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "significance_gate_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert (
+        "signal-only pass over the B-2 loop with orders disabled; trading locked, strategy flat"
+        in completed.stdout
+    )
+    assert (
+        "minting an entry, an exit, or a command during the pass is a policy rejection"
+        in completed.stdout
+    )
+    assert (
+        "signal at bar t scored on the next bar's log return; closes cross the AD-22 carve-out"
+        in completed.stdout
+    )
+    assert (
+        "detrended zero-edge null; one-tailed p-value = fraction of null resamples "
+        "at/above observed" in completed.stdout
+    )
+    assert (
+        "resampling scheme is iid, block, or stationary with a configurable block length"
+        in completed.stdout
+    )
+    assert (
+        "iterations and the minimum-observation floor are configurable with no ratified value"
+        in completed.stdout
+    )
+    assert (
+        "below the configured floor is a typed refusal, never a fabricated p-value"
+        in completed.stdout
+    )
+    assert (
+        "an unset minimum-observation floor emits a low-confidence warning label"
+        in completed.stdout
+    )
+    assert (
+        "seed provenance recorded; re-running reproduces the null distribution bit-for-bit"
+        in completed.stdout
+    )
+    assert (
+        "advisory: world replay/simulated never live, robustness never edge; never auto-merges, "
+        "never gates live money; alpha thresholds deferred to GAP-0049" in completed.stdout
+    )
+    assert "rule significance gate ok" in completed.stdout
+
+
 def pythonpath() -> str:
     return os.pathsep.join(
         [
