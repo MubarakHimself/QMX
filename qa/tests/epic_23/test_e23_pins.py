@@ -124,14 +124,29 @@ def test_t23_pin_02_source_scale_is_converted_or_refused_never_silently_reused()
         return
     receipt = result.value
     closes = [bar.close for bar in receipt.bars]
-    max_source_magnitude = max(row["high"] for row in src_scale3)
-    # option (a): a correct AD-7/AD-22 conversion scales the source (~1200 at scale 3) UP to the
-    # target scale (~120000 at scale 5). Silent reuse leaves the output in the source magnitude.
-    assert min(closes) > max_source_magnitude * 10, (
-        "F-23-02: the source's declared scale (3) was silently reused at the target scale (5) — "
-        f"produced closes {closes} sit in the source magnitude, neither converted via the named "
-        "AD-7/AD-22 boundary nor refused (DEC-0105: never a silent rescale)"
+    # option (a), TIGHTENED lock (the original >10x magnitude proxy would also pass a
+    # wrong-by-2x conversion): the AD-22 conversion factor is EXACTLY 10^(target-source)
+    # = 10^(5-3) = 100, recorded on the receipt as a derived value (lineage), every
+    # produced price is an exact integer multiple of it, and the closes sit inside the
+    # converted source's magnitude window.
+    factor = 10 ** (5 - 3)
+    recorded = getattr(receipt, "source_scale_factor", None)
+    assert recorded == factor, (
+        "F-23-02: the AD-22 source-scale conversion factor (10^(target-source) = 100) must be "
+        f"recorded on the receipt as a derived value (lineage); got {recorded!r}"
     )
+    assert all(close % factor == 0 for close in closes), (
+        f"F-23-02: a converted close must be an exact integer multiple of the AD-22 factor "
+        f"{factor}; got {closes}"
+    )
+    window_lo = (min(row["low"] for row in src_scale3) - 20) * factor
+    window_hi = (max(row["high"] for row in src_scale3) + 20) * factor
+    assert all(window_lo <= close <= window_hi for close in closes), (
+        "F-23-02: converted closes must sit in the converted source's magnitude window "
+        f"[{window_lo}, {window_hi}]; got {closes} (a silent reuse or a wrong-factor "
+        "conversion falls outside it; DEC-0105: never a silent rescale)"
+    )
+    assert all(bar.scale == 5 for bar in receipt.bars), "output bars carry the target scale"
 
 
 # --- T23-PIN-03 (R-008, F-23-03): nested-config replay-clock bypass -----------

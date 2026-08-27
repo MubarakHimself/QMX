@@ -467,6 +467,10 @@ class GenerateReceipt:
     rng_version: int
     artifact_fingerprint: str
     bars: tuple[SyntheticBar, ...]
+    # The exact AD-22 source-scale conversion factor 10^(target - source) applied to
+    # the cited source series, recorded as a derived value (DEC-0105); 1 = no
+    # conversion (same scale, or a from-scratch process with no source).
+    source_scale_factor: int = 1
 
     def as_mapping(self) -> dict[str, object]:
         """Door-transport payload; ``command`` keeps CLI/API naming stable."""
@@ -498,6 +502,7 @@ class GenerateReceipt:
             "rng_algorithm": self.rng_algorithm,
             "rng_version": self.rng_version,
             "artifact_fingerprint": self.artifact_fingerprint,
+            "source_scale_factor": self.source_scale_factor,
             "bars": tuple(bar.as_mapping() for bar in self.bars),
         }
 
@@ -738,10 +743,12 @@ def generate(
         cast("Mapping[str, object]", resources) if isinstance(resources, Mapping) else {}
     )
 
-    source_loaded = resolve_source_series(config, source_series=source_series, resources=body)
+    source_loaded = _resolve_source_series_with_lineage(
+        config, source_series=source_series, resources=body
+    )
     if is_refusal(source_loaded):
         return source_loaded
-    source_bars = source_loaded.value
+    source_bars, source_scale_factor = source_loaded.value
 
     grid = build_generation_grid(config, calendar=calendar, resources=body)
     if is_refusal(grid):
@@ -797,6 +804,7 @@ def generate(
             end_ns=config.end_ns,
             seed=config.seed,
             scenario_count=config.scenario_count,
+            source_scale_factor=source_scale_factor,
             rng_family=RNG_FAMILY,
             rng_algorithm=RNG_ALGORITHM,
             rng_version=RNG_VERSION,
@@ -823,17 +831,89 @@ def resolve_source_series(
     ``unavailable dependency`` refusal, never a silent from-scratch fallback. The
     resolved bars are the single real anchor every scenario shares (AC4).
     """
+    with_lineage = _resolve_source_series_with_lineage(
+        config, source_series=source_series, resources=resources
+    )
+    if is_refusal(with_lineage):
+        return with_lineage
+    bars, _factor = with_lineage.value
+    return Ok(bars)
+
+
+def _resolve_source_series_with_lineage(
+    config: ResolvedGeneratorConfig,
+    *,
+    source_series: object = None,
+    resources: object = None,
+) -> Result[tuple[tuple[SyntheticBar, ...] | None, int]]:
+    """Resolve the source bars normalized to the target scale, with the AD-22 factor.
+
+    The second element is the exact ``10^(target - source)`` conversion factor
+    applied to the cited source (a derived value, DEC-0105); ``1`` when no
+    conversion happened (same scale, or a from-scratch process with no source).
+    """
     body: Mapping[str, object] = (
         cast("Mapping[str, object]", resources) if isinstance(resources, Mapping) else {}
     )
     if not config.is_history_seeded:
-        return Ok(None)
+        return Ok((None, 1))
     explicit = source_series if source_series is not None else body.get("source_series")
     loaded = _resolve_source_series(config, explicit=explicit, store=body.get("store"))
     if is_refusal(loaded):
         return loaded
-    resolved: tuple[SyntheticBar, ...] | None = loaded.value
-    return Ok(resolved)
+    normalized = _normalize_source_scale(loaded.value, target_scale=config.scale)
+    if is_refusal(normalized):
+        return normalized
+    return Ok(normalized.value)
+
+
+def _normalize_source_scale(
+    bars: tuple[SyntheticBar, ...], *, target_scale: int
+) -> Result[tuple[tuple[SyntheticBar, ...], int]]:
+    """Convert the cited source bars to the target instrument's scale (AD-7/AD-22).
+
+    A cited CT-10 source dataset declares ONE scale; a mixed-scale series is
+    corrupt input. A source already at the target scale passes through (factor
+    ``1``). A source at a COARSER scale converts exactly by the AD-22 derived
+    factor ``10^(target - source)`` — an exact integer multiplication, never a
+    float. A source at a FINER scale would lose precision on the money path, so
+    it is refused rather than silently rescaled (DEC-0105).
+    """
+    scales = {bar.scale for bar in bars}
+    if len(scales) != 1:
+        return invalid(
+            "source_series",
+            "the cited source dataset declares one scale; a mixed-scale series is "
+            "refused rather than partially rescaled (DEC-0105)",
+            scales=sorted(scales),
+        )
+    (source_scale,) = scales
+    if source_scale == target_scale:
+        return Ok((bars, 1))
+    if source_scale > target_scale:
+        return invalid(
+            "source_series",
+            "the cited source dataset is declared at a finer scale than the target "
+            "instrument; downscaling would lose precision on the money path, so the "
+            "source is refused rather than silently rescaled (DEC-0105)",
+            source_scale=source_scale,
+            target_scale=target_scale,
+        )
+    factor = 10 ** (target_scale - source_scale)
+    converted: list[SyntheticBar] = []
+    for bar in bars:
+        built = SyntheticBar.try_create(
+            bar.instant_ns,
+            bar.open * factor,
+            bar.high * factor,
+            bar.low * factor,
+            bar.close * factor,
+            target_scale,
+        )
+        if is_refusal(built):
+            return built
+        converted.append(built.value)
+    return Ok((tuple(converted), factor))
 
 
 def build_generation_grid(
