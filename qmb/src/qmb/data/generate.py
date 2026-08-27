@@ -591,6 +591,10 @@ def resolve_generator_config(resources: object) -> Result[ResolvedGeneratorConfi
     body = cast("Mapping[str, object]", resources)
     inner = body.get("generator_config")
     if isinstance(inner, Mapping):
+        outer_clock_refusal = _refuse_replay_clock_on_synthetic(body)
+        if outer_clock_refusal is not None:
+            return outer_clock_refusal
+
         merged: dict[str, object] = dict(cast("Mapping[str, object]", inner))
         for key in ("destination", "output_root", "calendar", "source_series"):
             if key in body and key not in merged:
