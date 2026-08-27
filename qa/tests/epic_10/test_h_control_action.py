@@ -15,7 +15,16 @@ from __future__ import annotations
 
 from hypothesis import given, settings
 from hypothesis import strategies as st
-from qmf.core import Instant, RefusalCategory, Result, VenueId, is_ok, is_refusal, unpersistable
+from qmf.core import (
+    AccountRole,
+    Instant,
+    RefusalCategory,
+    Result,
+    VenueId,
+    is_ok,
+    is_refusal,
+    unpersistable,
+)
 from qmf.risk.binding import PositionModel
 from qmf.risk.control_action import (
     MONEY_BOUNDARIES_LEAVE_POSITIONS,
@@ -50,6 +59,15 @@ from qmf.risk.control_action import (
 )
 from qmf.risk.control_rank import ControlActionKind, ControlRankRow, ControlRankTable
 from qmf.risk.exit_record import CloseReason
+from qmf.risk.paper import (
+    ActiveControl,
+    BookMode,
+    ExecutionTarget,
+    RoutingOutcome,
+    SeatState,
+    TriggerDisposition,
+    resolve_execution_target,
+)
 
 
 def _instant(ns: int = 1_000) -> Instant:
@@ -60,6 +78,18 @@ def _instant(ns: int = 1_000) -> Instant:
 
 def _stream() -> CommandStreamKey:
     result = CommandStreamKey.try_create(VenueId(value="ctrader"), "acct-1")
+    assert is_ok(result)
+    return result.value
+
+
+def _target(role: AccountRole, account: str) -> ExecutionTarget:
+    result = ExecutionTarget.try_create(role, VenueId(value="ctrader"), account)
+    assert is_ok(result)
+    return result.value
+
+
+def _blocks_paper(control_id: str) -> ActiveControl:
+    result = ActiveControl.try_create(control_id, TriggerDisposition.BLOCKS_PAPER)
     assert is_ok(result)
     return result.value
 
@@ -120,11 +150,54 @@ def _pending(record: Result[ControlActionRecord], enforcement: EnforcementScope 
 def test_H1_exit_preservation_never_blocks_a_risk_reducing_act(
     kind: ControlActionKind, authority: AuthorityKind, scope: SubjectScope, act: RiskReducingAct
 ) -> None:
-    # For any imagined control (any kind x authority x scope), blocking a risk-reducing
-    # act is refused as a policy rejection — the blocking half is entries only.
-    result = check_exit_preservation(blocked_act=act)
-    assert is_refusal(result)
-    assert result.category is RefusalCategory.POLICY_REJECTION
+    # Every generated dimension drives an application path. A control that declares it
+    # would withhold a risk-reducing act is refused before its other policy checks.
+    minted = mint_control_action(
+        kind,
+        "authority-1",
+        authority,
+        scope,
+        "scope-1",
+        0,
+        "test",
+        _stream(),
+        _instant(),
+        blocked_act=act,
+    )
+    assert is_refusal(minted)
+    assert minted.category is RefusalCategory.POLICY_REJECTION
+
+    # The resolved enforcement scope and arbitration point carry the same guard.
+    enforcement = _enforcement(scope, "scope-1")
+    scoped = enforcement.check_withholding(blocked_act=act)
+    assert is_refusal(scoped)
+    assert scoped.category is RefusalCategory.POLICY_REJECTION
+
+    pending = _pending(_action(ControlActionKind.SUSPEND_NEW), enforcement)
+    arbitrated = arbitrate_same_tick(
+        [pending],
+        _table(_DEFAULT_ORDER),
+        stream=_stream(),
+        arbitration_seed="exit-preservation",
+        blocked_act=act,
+    )
+    assert is_refusal(arbitrated)
+    assert arbitrated.category is RefusalCategory.POLICY_REJECTION
+
+    # Most importantly, an in-force market-risk control cannot withhold the proposed
+    # act: the target still resolves, both for protection-window and kill-switch ids.
+    for control_id in ("protection-window", "kill-switch"):
+        routed = resolve_execution_target(
+            book_mode=BookMode.LIVE,
+            seat_state=SeatState.ACTIVE,
+            active_controls=(_blocks_paper(control_id),),
+            live_target=_target(AccountRole.LIVE, "live-account"),
+            paper_target=_target(AccountRole.DEMO, "paper-account"),
+            blocked_act=act,
+        )
+        assert is_ok(routed)
+        assert routed.value.outcome is RoutingOutcome.ROUTED_LIVE
+        assert routed.value.execution_target == _target(AccountRole.LIVE, "live-account")
 
 
 def test_H1_entries_are_the_only_blockable_half() -> None:
@@ -132,6 +205,19 @@ def test_H1_entries_are_the_only_blockable_half() -> None:
     assert is_ok(check_exit_preservation(blocked_act="new_entry"))
     for act in RISK_REDUCING_ACTS:
         assert is_refusal(check_exit_preservation(blocked_act=act))
+
+
+def test_H1_exit_intent_survives_an_active_blocks_paper_control() -> None:
+    routed = resolve_execution_target(
+        book_mode=BookMode.LIVE,
+        seat_state=SeatState.ACTIVE,
+        active_controls=(_blocks_paper("protection-window"),),
+        live_target=_target(AccountRole.LIVE, "live-account"),
+        paper_target=_target(AccountRole.DEMO, "paper-account"),
+        blocked_act=RiskReducingAct.CLOSE_POSITION,
+    )
+    assert is_ok(routed)
+    assert routed.value.outcome is RoutingOutcome.ROUTED_LIVE
 
 
 # --- H2 [P0-9]: no blanket command-pipe block kind may be minted -------------

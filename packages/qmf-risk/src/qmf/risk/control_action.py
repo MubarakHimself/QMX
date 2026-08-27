@@ -321,6 +321,10 @@ class EnforcementScope:
     scope_ref: str
     stream: CommandStreamKey
 
+    def check_withholding(self, *, blocked_act: object) -> Result[None]:
+        """Refuse any scope application that would withhold a risk-reducing act."""
+        return check_exit_preservation(blocked_act=blocked_act)
+
     def fp1_identity(self) -> dict[str, object]:
         """The pinned canonical ``fp1`` identity content for the enforcement scope."""
         return {
@@ -889,8 +893,12 @@ def mint_control_action(
     close_reason_ref: object = None,
     trigger_class: object = None,
     protection_declares_close_all: object = False,
+    blocked_act: object = "entry",
 ) -> Result[ControlActionRecord]:
     """Mint a CT-30 control-action record, filling the default satisfaction predicate."""
+    preserved = check_exit_preservation(blocked_act=blocked_act)
+    if is_refusal(preserved):
+        return preserved
     predicate: object = satisfaction_predicate
     if predicate is None:
         defaulted = default_satisfaction_predicate(action_kind)
@@ -1489,6 +1497,7 @@ def arbitrate_same_tick(
     *,
     stream: object,
     arbitration_seed: object = "arbitration",
+    blocked_act: object = "entry",
 ) -> Result[ArbitrationOutcome]:
     """Arbitrate same-tick actions at exactly one point per command stream (DEC-0151).
 
@@ -1503,6 +1512,9 @@ def arbitrate_same_tick(
     drain``) both execute. Rank table uniqueness is assumed already enforced at
     Layer 1; a missing kind is ``invalid input``.
     """
+    preserved = check_exit_preservation(blocked_act=blocked_act)
+    if is_refusal(preserved):
+        return preserved
     if not isinstance(stream, CommandStreamKey):
         return invalid(
             "stream",

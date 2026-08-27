@@ -61,6 +61,7 @@ from qmf.core import (
     Instant,
     Money,
     Ok,
+    RefusalCategory,
     Result,
     TypedRefusal,
     VenueId,
@@ -439,6 +440,7 @@ def resolve_execution_target(
     active_controls: object,
     live_target: object,
     paper_target: object = None,
+    blocked_act: object = "entry",
 ) -> Result[ExecutionResolution]:
     """Resolve the single per-intent execution target from the three inputs (AC2, AC4).
 
@@ -459,6 +461,17 @@ def resolve_execution_target(
     ``live_target`` must carry the ``live`` role and ``paper_target`` (when present) must
     not — live and demo are distinct streams.
     """
+    # Local import avoids the established control_action -> exit_record -> door -> paper
+    # module cycle while keeping the single CT-30 guard authoritative.
+    from qmf.risk.control_action import check_exit_preservation  # noqa: PLC0415
+
+    preserved = check_exit_preservation(blocked_act=blocked_act)
+    blocking_allowed = True
+    if is_refusal(preserved):
+        if preserved.category is not RefusalCategory.POLICY_REJECTION:
+            return preserved
+        blocking_allowed = False
+
     resolved_mode = coerce_enum(BookMode, book_mode)
     if resolved_mode is None:
         return invalid(
@@ -507,7 +520,7 @@ def resolve_execution_target(
         )
 
     blocking = next((c for c in controls if c.disposition is TriggerDisposition.BLOCKS_PAPER), None)
-    if blocking is not None:
+    if blocking is not None and blocking_allowed:
         return Ok(
             ExecutionResolution(
                 outcome=RoutingOutcome.BLOCKED,
