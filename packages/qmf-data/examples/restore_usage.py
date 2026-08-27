@@ -142,9 +142,13 @@ def main() -> None:
             "CT-14 encrypted copy",
         )
 
+        # The seal boundary sits ABOVE the stored rows' event-time (t = 1.7e18) so the
+        # open-position read below reads genuinely pre-seal content: the seal position is
+        # derived from the stored content itself, never only the caller's declared `at`
+        # (AC4; DEC-0119).
         seal = _unwrap(
             HoldoutSeal.try_create(
-                seal_boundary=_instant_boundary(1_000),
+                seal_boundary=_instant_boundary(2_000_000_000_000_000_000),
                 calendar_identity=_calendar(),
                 world=World.LIVE,
                 holdout_months=12,
@@ -173,7 +177,7 @@ def main() -> None:
             restored_live.append_store.read_raw(
                 export.records[0].fingerprint,
                 for_world=World.LIVE,
-                at=_instant_boundary(500),
+                at=_instant_boundary(1_800_000_000_000_000_000),
             ),
             "restored raw read outside seal",
         )
@@ -198,7 +202,7 @@ def main() -> None:
         sealed = restored_live.append_store.read_raw(
             export.records[0].fingerprint,
             for_world=World.LIVE,
-            at=_instant_boundary(2_000),
+            at=_instant_boundary(2_500_000_000_000_000_000),
         )
         _require(is_refusal(sealed), "sealed restored read refuses")
         _require(

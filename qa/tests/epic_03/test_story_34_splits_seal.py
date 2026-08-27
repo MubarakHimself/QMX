@@ -30,6 +30,8 @@ from qmf.data import (
     ReadBoundary,
     StoragePutAck,
 )
+from qmf.data.partitions import SeriesPartition
+from qmf.data.rooms import WorldRooms
 from qmf.data.seal import FINAL_LOOK_SUBTYPE, SEAL_CONTROL_STREAM
 from qmf.data.splits import (
     DEFAULT_SPLIT_ROLES,
@@ -163,9 +165,14 @@ def test_3_4_u5_sealed_read_refused_never_silent_empty(tmp_path: Path) -> None:
     # fail-closed: a positionless read while a seal is wired is ALSO refused (never fail-open)
     positionless = ws.append_store.read_raw(receipt.fingerprint, for_world=World.LIVE, at=None)
     H.assert_refusal(positionless, "policy rejection")
-    # a read positioned OUTSIDE the sealed window proceeds
+    # an UNDER-STATED caller position cannot read the sealed rows back out either: the
+    # position is derived from the stored content itself (t=1_500_000 is inside the sealed
+    # window), so this read refuses too (AC4; DEC-0119). Retention is proven by the refusal
+    # CATEGORY: policy rejection means the bytes exist and are refused — a missing artifact
+    # would be a stale-evidence refusal instead.
     open_read = ws.append_store.read_raw(receipt.fingerprint, for_world=World.LIVE, at=500_000)
-    assert is_ok(open_read)
+    understated = H.assert_refusal(open_read, "policy rejection")
+    assert understated.category.value != "stale evidence"
 
 
 # --- 3.4-U6 (L1): a foreign calendar identity is refused, never rescaled -------
@@ -208,29 +215,84 @@ def test_3_4_u7_single_final_look_journaled(tmp_path: Path) -> None:
     )
 
 
-# --- 3.4-P1 (L2 property, R-012/P0-6): sealed read refuses at EVERY boundary ----
+# --- 3.4-P1 (L2 property, R-012/P0-6): sealed read refuses at EVERY real path ----
 
 
-@settings(max_examples=80, deadline=None)
-@given(
-    seal_ns=st.integers(min_value=1, max_value=5_000_000),
-    delta=st.integers(min_value=0, max_value=1_000_000),
-)
-def test_3_4_p1_sealed_read_refused_at_every_boundary(seal_ns: int, delta: int) -> None:
-    """R-012/P0-6: for arbitrary seal boundaries, a position at/after the seal is a policy rejection at EVERY ReadBoundary."""
-    seal = H.unwrap(H.instant_seal(world=World.REPLAY, seal_ns=seal_ns))
-    sealed_position = H.instant_boundary(seal_ns + delta)  # at or after the frozen boundary => sealed
-    leaks = []
-    for boundary in ReadBoundary:  # raw archive, processed, research door, restored backup
-        guarded = seal.guard(sealed_position, boundary=boundary)
-        if not is_refusal(guarded) or guarded.category.value != "policy rejection":
-            leaks.append(boundary.value)
-    assert leaks == [], f"a sealed read must refuse at EVERY read boundary; leaking: {leaks}"
-    # a position strictly BEFORE the seal is admitted at every boundary (no false refusal)
-    if seal_ns >= 2:
-        open_position = H.instant_boundary(seal_ns - 1)
-        for boundary in ReadBoundary:
-            assert is_ok(seal.guard(open_position, boundary=boundary))
+def test_3_4_p1_sealed_read_refused_at_every_boundary(tmp_path: Path) -> None:
+    """R-012/P0-6 (the 3.3-P2 pattern): sealed-period CONTENT refuses through EVERY real read
+    entry point, even at an under-stated caller position — the knowledge position is derived
+    from the resolved evidence itself, never only from the caller's declared `at`, so the
+    seal cannot be bypassed by under-stating a position (AC4; DEC-0119; CT-12)."""
+    seal_ns = 1_000_000
+    understated = 500_000  # a caller position BEFORE the seal; the CONTENT sits inside it
+    seal = H.unwrap(H.instant_seal(world=World.LIVE, seal_ns=seal_ns))
+    store = EvidenceStore(tmp_path / "sealed", seal=seal)
+    ws = H.unwrap(store.for_world(World.LIVE))
+    rooms = H.unwrap(WorldRooms.for_world(store, World.LIVE, seal=seal))
+
+    sealed_rows = [{"t": 1_500_000, "px": 1}]
+    raw = H.unwrap(ws.append_store.append_raw(sealed_rows))
+    view = H.unwrap(ws.append_store.materialize_view(sealed_rows))
+    partition = H.unwrap(
+        SeriesPartition.try_create("dukascopy", H.instrument(), H.interval(1_400_000, 1_600_000))
+    )
+    placement = H.unwrap(rooms.place_series(partition, sealed_rows))
+
+    probes: dict[str, object] = {
+        "read_raw": ws.append_store.read_raw(
+            raw.fingerprint, for_world=World.LIVE, at=understated
+        ),
+        "read_raw_self_guarded": ws.append_store.read_raw_self_guarded(
+            raw.fingerprint,
+            for_world=World.LIVE,
+            boundary="raw archive",
+            derive_position=lambda rows: Ok(understated),  # a dishonest under-deriving caller
+        ),
+        "read_view": ws.append_store.read_view(
+            view.fingerprint, for_world=World.LIVE, at=understated
+        ),
+        "resolve_series": rooms.resolve_series(placement.archive.fingerprint, for_world=World.LIVE),
+        "read_room": ws.backup_input.read_room(
+            RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE, at=understated
+        ),
+    }
+    leaks = [
+        name
+        for name, result in probes.items()
+        if not is_refusal(result) or result.category.value != "policy rejection"
+    ]
+    assert leaks == [], f"sealed-period content must refuse at EVERY real read path; leaking: {leaks}"
+
+    # AC4's four named boundaries are exactly the ReadBoundary vocabulary, so a boundary
+    # dropped from the enum can never pass silently.
+    assert {b.value for b in ReadBoundary} == {
+        "raw archive",
+        "processed",
+        "split-governed research door",
+        "restored backup",
+    }
+
+    # No false refusal: pre-seal content at a truthful position reads normally on every path
+    # (a separate store, so the sealed artifact above cannot dominate the room's position).
+    open_store = EvidenceStore(tmp_path / "open", seal=seal)
+    open_ws = H.unwrap(open_store.for_world(World.LIVE))
+    open_rooms = H.unwrap(WorldRooms.for_world(open_store, World.LIVE, seal=seal))
+    open_rows = [{"t": 300_000, "px": 1}]
+    open_raw = H.unwrap(open_ws.append_store.append_raw(open_rows))
+    open_view = H.unwrap(open_ws.append_store.materialize_view(open_rows))
+    open_partition = H.unwrap(
+        SeriesPartition.try_create("dukascopy", H.instrument(), H.interval(200_000, 400_000))
+    )
+    open_placement = H.unwrap(open_rooms.place_series(open_partition, open_rows))
+    truthful = 450_000
+    assert is_ok(open_ws.append_store.read_raw(open_raw.fingerprint, for_world=World.LIVE, at=truthful))
+    assert is_ok(open_ws.append_store.read_view(open_view.fingerprint, for_world=World.LIVE, at=truthful))
+    assert is_ok(open_rooms.resolve_series(open_placement.archive.fingerprint, for_world=World.LIVE))
+    assert is_ok(
+        open_ws.backup_input.read_room(
+            RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE, at=truthful
+        )
+    )
 
 
 # --- 3.4-P2 (L2 property): the seal boundary is frozen; a re-derivation mints new
@@ -329,6 +391,11 @@ def test_3_4_i1_seal_survives_restore(tmp_path: Path) -> None:
     rep_ws = H.unwrap(replacement.for_world(World.LIVE))
     sealed_read = rep_ws.append_store.read_raw(receipt.fingerprint, for_world=World.LIVE, at=1_500_000)
     H.assert_refusal(sealed_read, "policy rejection")
-    # and a non-sealed read of the same restored artifact succeeds (the evidence is genuinely present)
+    # an UNDER-STATED caller position cannot read the restored sealed rows either: the seal
+    # position is derived from the restored content itself (t=1_500_000), so the restored
+    # boundary refuses exactly like the live one (AC4; DEC-0119). Presence is proven by the
+    # refusal category — policy rejection, never the stale-evidence refusal a missing
+    # artifact would produce — so the evidence genuinely survived the restore.
     open_read = rep_ws.append_store.read_raw(receipt.fingerprint, for_world=World.LIVE, at=500_000)
-    assert is_ok(open_read)
+    restored_refusal = H.assert_refusal(open_read, "policy rejection")
+    assert restored_refusal.category.value != "stale evidence"

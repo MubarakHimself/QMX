@@ -14,10 +14,12 @@ refusal (AC4). Stdlib + qmf-core; the engines stay behind their contracts.
 from __future__ import annotations
 
 import hashlib
+import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
-from qmf.core import Ok, Result, World, is_refusal
+from qmf.core import Ok, Result, TypedRefusal, World, is_refusal
 from qmf.data.store.engines import (
     AppendStreamOpener,
     ColumnarEngine,
@@ -26,7 +28,13 @@ from qmf.data.store.engines import (
 )
 from qmf.data.store.receipts import CONTRACT_FORMAT_VERSION
 from qmf.data.store.refusals import invalid_input, translate_engine_failure
-from qmf.data.store.rooms import ReadSeal, RoomRole, guard_sealed_read, require_same_world
+from qmf.data.store.rooms import (
+    ReadSeal,
+    RoomRole,
+    guard_derived_content,
+    guard_sealed_read,
+    require_same_world,
+)
 
 __all__ = ["BackupInput", "RecordExport", "RoomExport"]
 
@@ -111,7 +119,10 @@ class BackupInput:
         restored-backup boundary — never a silent empty result — and a read that declares
         **no** ``at`` while a seal is wired is *also* refused (fail-closed), since a
         positionless read cannot be proven outside the sealed window and must never export
-        the sealed bytes verbatim (AC4).
+        the sealed bytes verbatim (AC4). The declared ``at`` alone is bypassable by
+        under-statement, so the seal is additionally guarded at the position derived from
+        the exported records' own content (their canonical JSON event-times) before the
+        export is returned; records carrying no derivable event-time contribute nothing.
         """
         gate = require_same_world(self._world, for_world)
         if is_refusal(gate):
@@ -131,6 +142,9 @@ class BackupInput:
             records = self._records_for(role)
         except StoreEngineError as exc:
             return translate_engine_failure(exc)
+        content_sealed = self._guard_export_content(records)
+        if content_sealed is not None:
+            return content_sealed
         return Ok(
             RoomExport(
                 world=self._world,
@@ -139,6 +153,30 @@ class BackupInput:
                 records=records,
             )
         )
+
+    def _guard_export_content(self, records: tuple[RecordExport, ...]) -> TypedRefusal | None:
+        """Guard a wired seal at the position derived from the exported bytes (AC4; DEC-0119).
+
+        Each record's canonical bytes are stored JSON; the derivable event-times inside
+        them (row ``t`` values, series-envelope window ends and nested rows) are the
+        content the export would hand out, so the seal is guarded at their latest —
+        exactly the store-level derivation the raw and processed reads use. A record
+        whose bytes do not parse as JSON rows (journal control lines, registry records)
+        contributes nothing; with no wired seal this is a pass.
+        """
+        if self._seal is None:
+            return None
+        rows: list[object] = []
+        for record in records:
+            try:
+                parsed: object = json.loads(record.canonical)
+            except (ValueError, UnicodeDecodeError):
+                continue
+            if isinstance(parsed, list):
+                rows.extend(cast("list[object]", parsed))
+            elif isinstance(parsed, dict):
+                rows.append(cast("dict[str, object]", parsed))
+        return guard_derived_content(self._seal, rows, boundary=_RESTORED_BACKUP_BOUNDARY)
 
     def _records_for(self, role: RoomRole) -> tuple[RecordExport, ...]:
         """Gather one room-role's verbatim records (may raise StoreEngineError)."""

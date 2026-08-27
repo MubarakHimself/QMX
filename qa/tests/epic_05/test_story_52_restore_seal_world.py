@@ -21,7 +21,11 @@ from qmf.data.store.rooms import RoomRole
 
 import _epic5_helpers as H
 
-_ROWS = [{"t": 1_700_000_000_000_000_000, "px": 100}]
+# The rows' own event-time sits BEFORE the seal boundary so the open-position arms read
+# genuinely pre-seal content: the seal position is derived from the stored content itself,
+# never only the caller's declared `at` (AC4; DEC-0119), so sealed-period rows would refuse
+# at ANY declared position.
+_ROWS = [{"t": 500_000, "px": 100}]
 _SEVEN = list(RoomRole)
 _SEAL_NS = 1_000_000
 

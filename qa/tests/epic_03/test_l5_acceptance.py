@@ -158,5 +158,12 @@ def test_acc_2_scn_0003_sealed_holdout_excluded_everywhere(tmp_path: Path) -> No
     )
     H.assert_refusal(seal.authorize_final_look(ws.journal, look_writer, at=10_000), "policy rejection")
 
-    # (e) underlying evidence stays RETAINED: a read at an OPEN position returns the artifact intact
-    assert is_ok(ws.append_store.read_raw(sealed_artifact.fingerprint, for_world=World.LIVE, at=100_000))
+    # (e) underlying evidence stays RETAINED — but retention is never proven by reading the
+    # sealed rows back out (that is the act AC4 forbids). An under-stated caller position
+    # cannot bypass the seal: the position is derived from the stored content itself
+    # (t=1_500_000 is sealed), so this read refuses with a POLICY REJECTION — the category
+    # that means the bytes exist and are refused; a missing artifact would be a
+    # stale-evidence refusal instead (AC4; DEC-0119).
+    retained = ws.append_store.read_raw(sealed_artifact.fingerprint, for_world=World.LIVE, at=100_000)
+    retained_refusal = H.assert_refusal(retained, "policy rejection")
+    assert retained_refusal.category.value != "stale evidence"

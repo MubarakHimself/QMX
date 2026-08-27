@@ -201,7 +201,10 @@ def test_same_root_path_restore_is_policy_rejection(store: EvidenceStore) -> Non
 
 def test_restored_reads_enforce_seal(store: EvidenceStore, tmp_path: Path) -> None:
     export = _export(store)
-    seal = _instant_seal(boundary_ns=1_000)
+    # The seal boundary sits ABOVE the stored rows' own event-time (t = 1.7e18), so the
+    # open-position arm reads genuinely pre-seal content: the seal position is derived from
+    # the stored content itself, never only the caller's declared `at` (AC4; DEC-0119).
+    seal = _instant_seal(boundary_ns=2_000_000_000_000_000_000)
     replacement = EvidenceStore(tmp_path / "sealed-replacement", seal=seal)
     result = OffMachineRestore(_MemoryStorage(), _XorCipher()).restore_export(
         export, into=replacement, for_world=World.LIVE, source_store=store
@@ -209,8 +212,8 @@ def test_restored_reads_enforce_seal(store: EvidenceStore, tmp_path: Path) -> No
     assert is_ok(result)
 
     bundle = _world(replacement)
-    sealed_at = _instant_boundary(2_000)
-    open_at = _instant_boundary(500)
+    sealed_at = _instant_boundary(2_500_000_000_000_000_000)
+    open_at = _instant_boundary(1_800_000_000_000_000_000)
 
     fp = export.records[0].fingerprint
     sealed = bundle.append_store.read_raw(fp, for_world=World.LIVE, at=sealed_at)

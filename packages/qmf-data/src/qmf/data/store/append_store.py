@@ -30,6 +30,7 @@ from qmf.data.store.refusals import invalid_input, missing_artifact, translate_e
 from qmf.data.store.rooms import (
     ReadSeal,
     RoomRole,
+    guard_derived_content,
     guard_sealed_read,
     namespace_block,
     require_same_world,
@@ -135,6 +136,12 @@ class AppendStore:
         ``at`` is irrelevant and the read proceeds. A caller that needs the raw bytes to
         derive its own seal position (the split-governed research door) uses
         :meth:`read_raw_self_guarded` instead, which derives the position from the evidence.
+
+        The declared ``at`` alone is bypassable by under-statement, so the seal is
+        additionally guarded at the position **derived from the stored content itself**
+        (each row's ``t`` event-time; a series envelope's window end and nested rows) before
+        the rows are returned — sealed-period content refuses whatever position the caller
+        declares (AC4; DEC-0119).
         """
         gate = require_same_world(self._world, for_world)
         if is_refusal(gate):
@@ -145,7 +152,15 @@ class AppendStore:
         sealed = guard_sealed_read(self._seal, at, boundary=_RAW_ARCHIVE_BOUNDARY)
         if sealed is not None:
             return sealed
-        return self._read_admitted_raw(key.value)
+        rows = self._read_admitted_raw(key.value)
+        if is_refusal(rows):
+            return rows
+        content_sealed = guard_derived_content(
+            self._seal, rows.value, boundary=_RAW_ARCHIVE_BOUNDARY
+        )
+        if content_sealed is not None:
+            return content_sealed
+        return rows
 
     def read_raw_self_guarded(
         self,
@@ -167,6 +182,11 @@ class AppendStore:
         fail-open hole a plain positionless read would leave). ``derive_position`` returns the
         knowledge position, or a refusal (a corrupt or non-series artifact) that is surfaced
         unchanged. Cross-world and stale-evidence refusals apply exactly as :meth:`read_raw`.
+
+        Defense in depth: the seal is ALSO guarded at the position derived from the stored
+        content itself (the shared store-level derivation), so a caller-supplied
+        ``derive_position`` that under-derives cannot leak sealed-period content either
+        (AC4; DEC-0119).
         """
         gate = require_same_world(self._world, for_world)
         if is_refusal(gate):
@@ -183,6 +203,9 @@ class AppendStore:
         sealed = guard_sealed_read(self._seal, position.value, boundary=boundary)
         if sealed is not None:
             return sealed
+        content_sealed = guard_derived_content(self._seal, rows.value, boundary=boundary)
+        if content_sealed is not None:
+            return content_sealed
         return rows
 
     def _read_admitted_raw(self, key: Fingerprint) -> Result[list[dict[str, object]]]:
@@ -283,7 +306,9 @@ class AppendStore:
         a read declaring a knowledge position ``at`` that reaches into the sealed window is a
         ``policy rejection`` at the processed boundary — never a silent empty result — and a
         read that declares **no** ``at`` while a seal is wired is *also* refused (fail-closed),
-        since a positionless read cannot be proven outside the sealed window.
+        since a positionless read cannot be proven outside the sealed window. The declared
+        ``at`` alone is bypassable by under-statement, so the seal is additionally guarded at
+        the position derived from the view's own rows before they are returned.
         """
         gate = require_same_world(self._world, for_world)
         if is_refusal(gate):
@@ -302,6 +327,10 @@ class AppendStore:
                     "no analytics view is materialized under this fingerprint",
                     given=key.value.value,
                 )
-            return Ok(self._views.query(digest))
+            rows = self._views.query(digest)
         except StoreEngineError as exc:
             return translate_engine_failure(exc)
+        content_sealed = guard_derived_content(self._seal, rows, boundary=_PROCESSED_BOUNDARY)
+        if content_sealed is not None:
+            return content_sealed
+        return Ok(rows)

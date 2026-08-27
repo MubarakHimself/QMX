@@ -17,8 +17,9 @@ the room vocabulary and the cross-world read gate. Stdlib + qmf-core only.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from enum import StrEnum
-from typing import Protocol, runtime_checkable
+from typing import Protocol, cast, runtime_checkable
 
 from qmf.core import (
     Ok,
@@ -36,6 +37,8 @@ __all__ = [
     "ROOM_ROLE_VALUES",
     "ReadSeal",
     "RoomRole",
+    "derive_content_position",
+    "guard_derived_content",
     "guard_sealed_read",
     "guard_stored_row_world",
     "namespace_block",
@@ -246,6 +249,62 @@ class ReadSeal(Protocol):
     ) -> Result[None]:  # pragma: no cover - protocol seam
         """Refuse a read into the sealed window at ``boundary``, or pass (value-or-refusal)."""
         ...
+
+
+def derive_content_position(rows: Sequence[object]) -> int | None:
+    """The latest int64 event-time derivable from stored artifact content (AC4; DEC-0119).
+
+    The read-side twin of the derivation ``resolve_series`` pins ("never a caller
+    argument, so the seal cannot be bypassed"): scans each stored row's top-level
+    ``t`` event-time, and — for a series envelope — the declared partition window
+    end (``partition.window_end_ns``) plus every nested ``series`` row's own ``t``,
+    so the derived position is never earlier than the data it guards. Returns
+    ``None`` when the content carries no derivable event-time at all — CT-12
+    defines no derivation rule for such an artifact, so the caller-declared
+    position guard remains the only gate there (recorded specification gap).
+    """
+    latest: int | None = None
+
+    def _consider(value: object) -> None:
+        nonlocal latest
+        if not isinstance(value, int) or isinstance(value, bool):
+            return
+        if latest is None or value > latest:
+            latest = value
+
+    for row in rows:
+        if not isinstance(row, Mapping):
+            continue
+        mapping = cast("Mapping[str, object]", row)
+        _consider(mapping.get("t"))
+        partition = mapping.get("partition")
+        if isinstance(partition, Mapping):
+            _consider(cast("Mapping[str, object]", partition).get("window_end_ns"))
+        series = mapping.get("series")
+        if isinstance(series, Sequence) and not isinstance(series, (str, bytes)):
+            for nested in cast("Sequence[object]", series):
+                if isinstance(nested, Mapping):
+                    _consider(cast("Mapping[str, object]", nested).get("t"))
+    return latest
+
+
+def guard_derived_content(
+    seal: ReadSeal | None, rows: Sequence[object], *, boundary: str
+) -> TypedRefusal | None:
+    """Guard a wired seal at the position derived from the content itself (AC4; DEC-0119).
+
+    Consulted after the stored rows are resolved and before they are returned, in
+    addition to the caller-declared ``at`` guard — so a caller that under-states its
+    position can never read sealed-period content back out (the bypass the
+    caller-position guard alone leaves open). Content with no derivable event-time
+    contributes nothing here; ``seal is None`` is a pass.
+    """
+    if seal is None:
+        return None
+    position = derive_content_position(rows)
+    if position is None:
+        return None
+    return guard_sealed_read(seal, position, boundary=boundary)
 
 
 def guard_sealed_read(

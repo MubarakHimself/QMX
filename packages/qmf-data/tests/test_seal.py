@@ -305,7 +305,14 @@ def test_guard_refuses_sealed_read_at_every_boundary(tmp_path: Path) -> None:
     )
     assert is_refusal(backup_sealed)
     assert backup_sealed.context.get("boundary") == "restored backup"
-    assert is_ok(backup.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE, at=open_at))
+    # The raw room holds sealed-period content (the sealed series envelope), so an export at
+    # an UNDER-STATED position refuses too: the seal position is derived from the exported
+    # content itself, never only the caller's declared `at` (AC4; DEC-0119).
+    backup_understated = backup.read_room(
+        RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE, at=open_at
+    )
+    assert is_refusal(backup_understated)
+    assert backup_understated.category is RefusalCategory.POLICY_REJECTION
     backup_no_pos = backup.read_room(RoomRole.IMMUTABLE_RAW_ARCHIVE, for_world=World.LIVE)
     assert is_refusal(backup_no_pos)
     assert backup_no_pos.category is RefusalCategory.POLICY_REJECTION
