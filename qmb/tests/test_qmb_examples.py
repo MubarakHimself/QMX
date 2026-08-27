@@ -1234,6 +1234,41 @@ def test_data_generate_usage_example_runs_clean() -> None:
     assert "data generate ok" in completed.stdout
 
 
+def test_claim_class_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "claim_class_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "exactly one claim class, a field distinct from world; claims_edge=False" in (
+        completed.stdout
+    )
+    assert (
+        "from-scratch gbm robustness is a policy rejection; history-seeded permits robustness"
+        in completed.stdout
+    )
+    assert "edge / alpha / validation claim on synthetic data refused under any process" in (
+        completed.stdout
+    )
+    assert "percentile-band / p-value exist as interface only; no numeric threshold invented" in (
+        completed.stdout
+    )
+    assert "a pass/fail threshold is a config-declared configurable recorded before the run" in (
+        completed.stdout
+    )
+    assert "world=simulated refuses for governed evidence; infra-stress and logic-smoke only" in (
+        completed.stdout
+    )
+    assert (
+        "gaussian-family robustness carries a caveat: destroys autocorrelation / vol / fat tails"
+        in completed.stdout
+    )
+    assert "claim class labeling ok" in completed.stdout
+
+
 def test_import_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_EXAMPLE)],
