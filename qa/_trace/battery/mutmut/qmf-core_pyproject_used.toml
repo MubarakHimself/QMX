@@ -1,0 +1,47 @@
+[project]
+name = "qmf-core"
+version = "0.1.0"
+description = "Exact money/time/instrument primitives, asset-neutral nouns, typed refusals, the single fp1 serializer, and protocol seams. Zero outside dependencies."
+readme = "README.md"
+requires-python = ">=3.14,<3.15"
+dependencies = []
+
+[build-system]
+requires = ["uv_build>=0.12,<0.13"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+# PEP 420 namespace submodule. Dot notation tells uv_build the module lives at
+# src/qmf/core/ with NO src/qmf/__init__.py anywhere in the distribution.
+module-name = "qmf.core"
+
+# --- DISPOSABLE QA WORKTREE ONLY (qa-mutmut) --------------------------------
+# mutmut mutation-testing scope, added locally in the qa-mutmut worktree only.
+# Never merged. source_paths="src" copies the whole src/qmf/core tree so
+# sibling imports (qmf.core.identity, qmf.core.refusal) resolve inside
+# mutants/; only_mutate narrows actual mutation to exact.py/chrono.py.
+[tool.mutmut]
+source_paths = ["src"]
+only_mutate = ["src/qmf/core/exact.py", "src/qmf/core/chrono.py"]
+pytest_add_cli_args_test_selection = ["tests"]
+# tests/*_examples.py compute _PKG_ROOT = Path(__file__).resolve().parents[1] and
+# run examples/*_usage.py as a subprocess with PYTHONPATH=_PKG_ROOT/"src". Because
+# mutmut copies tests/ into mutants/ (default also_copy) and pytest ends up
+# importing the mutants/tests/ copy, _PKG_ROOT resolves under mutants/ too, so
+# examples/ must be copied there as well or these tests fail with FileNotFoundError.
+also_copy = ["examples"]
+# test_import_completes_well_under_one_second measures wall-clock import time via
+# a `-X importtime` subprocess; it is a performance smoke test, not a correctness
+# check of exact.py/chrono.py logic. It passes consistently standalone (1.5-1.8s
+# uv+pytest total, well under budget) but tripped once (1.10s vs 1.0s budget)
+# under mutmut's own subprocess/sys.path plumbing on this WSL/9p-mounted
+# worktree, aborting the whole baseline collection. Deselected here only, for
+# this disposable mutation run, so environment jitter on an unrelated timing
+# assertion cannot block coverage of the money/time arithmetic under test.
+pytest_add_cli_args = ["--deselect=tests/test_core.py::test_import_completes_well_under_one_second"]
+
+[tool.pytest.ini_options]
+# Anchors pytest's ini-file search here so it stops before walking up to the
+# workspace root pyproject.toml (which has its own unrelated
+# testpaths=["adws/tests"] / pythonpath for the SSSF factory gate).
+testpaths = ["tests"]

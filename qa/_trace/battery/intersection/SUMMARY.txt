@@ -1,0 +1,22 @@
+Dead-code verdict summary
+Skylos findings processed: 79
+
+Bucket counts:
+  THREE_WAY: 0
+  TWO_WAY_VULTURE: 2
+  TWO_WAY_COVERAGE: 0
+  SKYLOS_ONLY: 77
+
+THREE_WAY rows:
+
+TWO_WAY_VULTURE rows:
+  tools/workspace_meta.py:35 tools.workspace_meta.PACKAGES_DIR
+  tools/workspace_meta.py:36 tools.workspace_meta.EXTENSIONS_DIR
+
+TWO_WAY_COVERAGE rows:
+
+Reverse check (vulture 100%-confidence findings vs Skylos 79):
+  packages/qmf-core/src/qmf/core/secret.py:198 format_spec -> MISSING from Skylos (flagged direction=vulture_high)
+  packages/qmf-core/src/qmf/core/secret.py:219 protocol -> MISSING from Skylos (flagged direction=vulture_high)
+  packages/qmf-core/tests/test_sinks.py:165 thing -> MISSING from Skylos (flagged direction=vulture_high)
+  packages/qmf-registry/src/qmf/registry/persistence.py:402 exc_info -> MISSING from Skylos (flagged direction=vulture_high)

@@ -1,0 +1,4 @@
+packages\qmf-core\src\qmf\core\secret.py:198: unused variable 'format_spec' (100% confidence)
+packages\qmf-core\src\qmf\core\secret.py:219: unused variable 'protocol' (100% confidence)
+packages\qmf-core\tests\test_sinks.py:165: unused variable 'thing' (100% confidence)
+packages\qmf-registry\src\qmf\registry\persistence.py:402: unused variable 'exc_info' (100% confidence)

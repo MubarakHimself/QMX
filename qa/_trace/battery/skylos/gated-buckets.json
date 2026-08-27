@@ -1,0 +1,161 @@
+# skylos run_id=33039677890 date=2026-08-27T04:31:40Z head_sha=2c8d4957ef29eacf5ca87fdc09598128f6c78d5b
+{
+  "grade": {
+    "overall": {
+      "score": 77,
+      "letter": "C+"
+    },
+    "categories": {
+      "security": {
+        "score": 100,
+        "letter": "A+",
+        "weight": 0.3,
+        "base_weight": 0.3,
+        "key_issue": "No issues found"
+      },
+      "quality": {
+        "score": 8,
+        "letter": "F",
+        "weight": 0.25,
+        "base_weight": 0.25,
+        "key_issue": "CRITICAL: Cyclomatic complexity is 27 (threshold: 10). Consider splitting branches. (25 hits)"
+      },
+      "ai_defects": {
+        "score": 100,
+        "letter": "A+",
+        "weight": 0.1,
+        "base_weight": 0.1,
+        "key_issue": "No issues found"
+      },
+      "dead_code": {
+        "score": 99,
+        "letter": "A+",
+        "weight": 0.15,
+        "base_weight": 0.15,
+        "key_issue": "79 dead symbols (0.4/1K LOC)"
+      },
+      "dependencies": {
+        "score": 100,
+        "letter": "A+",
+        "weight": 0.1,
+        "base_weight": 0.1,
+        "key_issue": "No issues found"
+      },
+      "secrets": {
+        "score": 100,
+        "letter": "A+",
+        "weight": 0.1,
+        "base_weight": 0.1,
+        "key_issue": "No secrets found"
+      }
+    },
+    "scanned_categories": [
+      "security",
+      "quality",
+      "ai_defects",
+      "dead_code",
+      "dependencies",
+      "secrets"
+    ],
+    "total_loc": 200886
+  },
+  "dependency_vulnerabilities_count": 0,
+  "dependency_vulnerabilities": [],
+  "ai_security_stats": {
+    "total_findings": 4163,
+    "ai_authored_findings": 2,
+    "ai_authored_pct": 0.0,
+    "by_agent": {
+      "claude": 2
+    },
+    "by_severity": {
+      "LOW": {
+        "total": 2281,
+        "ai": 2
+      },
+      "MEDIUM": {
+        "total": 1252,
+        "ai": 0
+      },
+      "HIGH": {
+        "total": 361,
+        "ai": 0
+      },
+      "WARN": {
+        "total": 165,
+        "ai": 0
+      },
+      "CRITICAL": {
+        "total": 25,
+        "ai": 0
+      },
+      "UNKNOWN": {
+        "total": 79,
+        "ai": 0
+      }
+    },
+    "by_category": {
+      "quality": {
+        "total": 4084,
+        "ai": 2
+      },
+      "unused_variables": {
+        "total": 4,
+        "ai": 0
+      },
+      "unused_parameters": {
+        "total": 75,
+        "ai": 0
+      }
+    }
+  },
+  "security_category_score": {
+    "score": 100,
+    "letter": "A+",
+    "weight": 0.3,
+    "base_weight": 0.3,
+    "key_issue": "No issues found"
+  },
+  "secrets_category_score": {
+    "score": 100,
+    "letter": "A+",
+    "weight": 0.1,
+    "base_weight": 0.1,
+    "key_issue": "No secrets found"
+  },
+  "ai_defects_category_score": {
+    "score": 100,
+    "letter": "A+",
+    "weight": 0.1,
+    "base_weight": 0.1,
+    "key_issue": "No issues found"
+  },
+  "dead_code_category_score": {
+    "score": 99,
+    "letter": "A+",
+    "weight": 0.15,
+    "base_weight": 0.15,
+    "key_issue": "79 dead symbols (0.4/1K LOC)"
+  },
+  "dependencies_category_score": {
+    "score": 100,
+    "letter": "A+",
+    "weight": 0.1,
+    "base_weight": 0.1,
+    "key_issue": "No issues found"
+  },
+  "quality_category_score": {
+    "score": 8,
+    "letter": "F",
+    "weight": 0.25,
+    "base_weight": 0.25,
+    "key_issue": "CRITICAL: Cyclomatic complexity is 27 (threshold: 10). Consider splitting branches. (25 hits)"
+  },
+  "circular_dependencies_count": 2,
+  "dead_code_evidence_symbol_count": 40253,
+  "dead_code_classifications": {
+    "alive": 39541,
+    "likely_dead": 113,
+    "uncertain": 599
+  }
+}

@@ -1,0 +1,11 @@
+package,statements,line_pct,branches,branch_pct
+qml,5407,80.8,2626,65.96
+qmb,21467,83.22,9312,66.46
+qmf-risk,5294,91.42,2386,82.15
+qmf-data,4619,92.18,1636,82.46
+qmf-calendar-forex,270,94.81,62,75.81
+qmf-indicators,2302,97.44,892,94.17
+qmf-structure,1373,98.03,522,95.21
+qmf-registry,973,98.46,350,94.86
+qmf-venue,2638,99.13,896,96.99
+qmf-core,1425,99.65,494,98.38

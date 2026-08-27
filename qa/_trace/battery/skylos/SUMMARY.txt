@@ -1,0 +1,58 @@
+# skylos run_id=33039677890 date=2026-08-27T04:31:40Z head_sha=2c8d4957ef29eacf5ca87fdc09598128f6c78d5b
+
+Total files analyzed: 650
+Total LOC: 200886
+
+== Dead code family ==
+Total dead-code findings: 79
+  unused_functions: 0
+  unused_classes: 0
+  unused_imports: 0
+  unused_variables: 4
+  unused_parameters: 75
+  unused_files: 0
+  src (product) vs test split: product=79 test=0
+
+== Quality family ==
+Total quality findings: 4084
+  LOW: 2281
+  MEDIUM: 1252
+  HIGH: 361
+  WARN: 165
+  CRITICAL: 25
+  Top 5 rules:
+    SKY-L028: 806
+    SKY-L009: 797
+    SKY-L027: 784
+    SKY-C304: 400
+    SKY-Q301: 264
+  Top 5 files:
+    qmb/src/qmb/orchestrator/spawn.py: 55
+    qmb/src/qmb/data/generate.py: 51
+    qmb/src/qmb/execution/ports.py: 46
+    packages/qmf-risk/src/qmf/risk/control_action.py: 44
+    qmb/src/qmb/data/verify.py: 44
+  Top 5 packages:
+    qmb: 1926
+    qml: 564
+    packages/qmf-risk: 455
+    packages/qmf-data: 406
+    packages/qmf-indicators: 177
+  CRITICAL count: 25
+  HIGH count: 361
+
+== Gated buckets ==
+  dependency_vulnerabilities: 0
+  security category: score=100 letter=A+
+  secrets category: score=100 letter=A+
+  ai_defects category: score=100 letter=A+
+  ai_security_stats.total_findings: 4163 ai_authored: 2
+
+== Overall grade ==
+{"score": 77, "letter": "C+"}
+  security: score=100 letter=A+ key_issue=No issues found
+  quality: score=8 letter=F key_issue=CRITICAL: Cyclomatic complexity is 27 (threshold: 10). Consider splitting branches. (25 hits)
+  ai_defects: score=100 letter=A+ key_issue=No issues found
+  dead_code: score=99 letter=A+ key_issue=79 dead symbols (0.4/1K LOC)
+  dependencies: score=100 letter=A+ key_issue=No issues found
+  secrets: score=100 letter=A+ key_issue=No secrets found

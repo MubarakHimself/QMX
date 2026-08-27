@@ -1,0 +1,6 @@
+L0 baseline — tier-1 scanners vs integration@2c8d495 (qa-audit worktree), 2026-08-27
+money-path-scan: CLEAN (packages, extensions, qml, qmb, tools) — exit 0
+ambient-scan:    FAIL — qmb/src/qmb/data/download.py:127:24 system-clock-read: datetime.now() reads the system wall clock (below composition root; FR-002/CT-02/AR-16 violation; matches epic-21 advisory record) — exit 1
+mock-data-scan:  CLEAN (packages, extensions, qmb, qml) — exit 0
+secret-scan:     CLEAN (whole tracked tree) — exit 0
+Findings seeded: FIND-001 code fix (download.py clock read); FIND-002 process fix (factory merge gate ran ruff/pyright/pytest only — tier-1 scanners of poe check not enforced in the lanes that shipped epics 4+).

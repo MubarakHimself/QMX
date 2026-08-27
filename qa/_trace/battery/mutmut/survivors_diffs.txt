@@ -1,0 +1,1497 @@
+===== qmf.core.chrono.x__invalid__mutmut_4 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -9,7 +9,7 @@
+     condition — and ``context`` always names the offending ``field`` and a
+     human-legible ``reason`` (returned, never raised; CT-04; DEC-0109).
+     """
+-    context: dict[str, object] = {"field": field, "reason": reason}
++    context: dict[str, object] = {"field": field, "XXreasonXX": reason}
+     context.update(extra)
+     return TypedRefusal(
+         category=RefusalCategory.INVALID_INPUT,
+
+===== qmf.core.chrono.x__invalid__mutmut_5 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -9,7 +9,7 @@
+     condition — and ``context`` always names the offending ``field`` and a
+     human-legible ``reason`` (returned, never raised; CT-04; DEC-0109).
+     """
+-    context: dict[str, object] = {"field": field, "reason": reason}
++    context: dict[str, object] = {"field": field, "REASON": reason}
+     context.update(extra)
+     return TypedRefusal(
+         category=RefusalCategory.INVALID_INPUT,
+
+===== qmf.core.chrono.x__unavailable__mutmut_2 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -1,7 +1,7 @@
+ def _unavailable(field: str, reason: str, **extra: object) -> TypedRefusal:
+     """Build the ``unavailable dependency`` refusal the tzdb-pin seam returns when
+     the resolved tzdb does not equal the extension's pin (CT-02; FM-5)."""
+-    context: dict[str, object] = {"field": field, "reason": reason}
++    context: dict[str, object] = {"XXfieldXX": field, "reason": reason}
+     context.update(extra)
+     return TypedRefusal(
+         category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+
+===== qmf.core.chrono.x__unavailable__mutmut_3 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -1,7 +1,7 @@
+ def _unavailable(field: str, reason: str, **extra: object) -> TypedRefusal:
+     """Build the ``unavailable dependency`` refusal the tzdb-pin seam returns when
+     the resolved tzdb does not equal the extension's pin (CT-02; FM-5)."""
+-    context: dict[str, object] = {"field": field, "reason": reason}
++    context: dict[str, object] = {"FIELD": field, "reason": reason}
+     context.update(extra)
+     return TypedRefusal(
+         category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+
+===== qmf.core.chrono.x__unavailable__mutmut_4 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -1,7 +1,7 @@
+ def _unavailable(field: str, reason: str, **extra: object) -> TypedRefusal:
+     """Build the ``unavailable dependency`` refusal the tzdb-pin seam returns when
+     the resolved tzdb does not equal the extension's pin (CT-02; FM-5)."""
+-    context: dict[str, object] = {"field": field, "reason": reason}
++    context: dict[str, object] = {"field": field, "XXreasonXX": reason}
+     context.update(extra)
+     return TypedRefusal(
+         category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+
+===== qmf.core.chrono.x__unavailable__mutmut_5 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -1,7 +1,7 @@
+ def _unavailable(field: str, reason: str, **extra: object) -> TypedRefusal:
+     """Build the ``unavailable dependency`` refusal the tzdb-pin seam returns when
+     the resolved tzdb does not equal the extension's pin (CT-02; FM-5)."""
+-    context: dict[str, object] = {"field": field, "reason": reason}
++    context: dict[str, object] = {"field": field, "REASON": reason}
+     context.update(extra)
+     return TypedRefusal(
+         category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+
+===== qmf.core.chrono.x__unavailable__mutmut_8 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -5,6 +5,6 @@
+     context.update(extra)
+     return TypedRefusal(
+         category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+-        retryability=Retryability.NO,
++        retryability=None,
+         context=context,
+     )
+
+===== qmf.core.chrono.x__policy__mutmut_4 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -2,7 +2,7 @@
+     """Build the ``policy rejection`` refusal :func:`compare_causal` returns at
+     equal instants: the causality model's policy is that concurrent events are
+     never tie-broken (CT-02; DEC-0106)."""
+-    context: dict[str, object] = {"field": field, "reason": reason}
++    context: dict[str, object] = {"field": field, "XXreasonXX": reason}
+     context.update(extra)
+     return TypedRefusal(
+         category=RefusalCategory.POLICY_REJECTION,
+
+===== qmf.core.chrono.x__policy__mutmut_5 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -2,7 +2,7 @@
+     """Build the ``policy rejection`` refusal :func:`compare_causal` returns at
+     equal instants: the causality model's policy is that concurrent events are
+     never tie-broken (CT-02; DEC-0106)."""
+-    context: dict[str, object] = {"field": field, "reason": reason}
++    context: dict[str, object] = {"field": field, "REASON": reason}
+     context.update(extra)
+     return TypedRefusal(
+         category=RefusalCategory.POLICY_REJECTION,
+
+===== qmf.core.chrono.x__policy__mutmut_8 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -6,6 +6,6 @@
+     context.update(extra)
+     return TypedRefusal(
+         category=RefusalCategory.POLICY_REJECTION,
+-        retryability=Retryability.NO,
++        retryability=None,
+         context=context,
+     )
+
+===== qmf.core.chrono.x__checked_int64__mutmut_2 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -5,6 +5,6 @@
+     result is refused, never wrapped (FM-2). The input is already a Python ``int``
+     (unbounded), so only the range is in question.
+     """
+-    if value < _INT64_MIN or value > _INT64_MAX:
++    if value <= _INT64_MIN or value > _INT64_MAX:
+         return None
+     return value
+
+===== qmf.core.chrono.x__checked_int64__mutmut_3 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -5,6 +5,6 @@
+     result is refused, never wrapped (FM-2). The input is already a Python ``int``
+     (unbounded), so only the range is in question.
+     """
+-    if value < _INT64_MIN or value > _INT64_MAX:
++    if value < _INT64_MIN or value >= _INT64_MAX:
+         return None
+     return value
+
+===== qmf.core.chrono.xǁDataDrivenClockǁwall_now__mutmut_1 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -1,6 +1,6 @@
+ def wall_now(self) -> Instant:
+     """Return the next scripted wall instant; raise once the script is spent."""
+-    if self._wall_cursor >= len(self._wall):
++    if self._wall_cursor > len(self._wall):
+         raise LookupError("data-driven clock exhausted its scripted wall instants")
+     reading = self._wall[self._wall_cursor]
+     self._wall_cursor += 1
+
+===== qmf.core.chrono.xǁDataDrivenClockǁwall_now__mutmut_2 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -1,7 +1,7 @@
+ def wall_now(self) -> Instant:
+     """Return the next scripted wall instant; raise once the script is spent."""
+     if self._wall_cursor >= len(self._wall):
+-        raise LookupError("data-driven clock exhausted its scripted wall instants")
++        raise LookupError(None)
+     reading = self._wall[self._wall_cursor]
+     self._wall_cursor += 1
+     return reading
+
+===== qmf.core.chrono.xǁDataDrivenClockǁwall_now__mutmut_3 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -1,7 +1,7 @@
+ def wall_now(self) -> Instant:
+     """Return the next scripted wall instant; raise once the script is spent."""
+     if self._wall_cursor >= len(self._wall):
+-        raise LookupError("data-driven clock exhausted its scripted wall instants")
++        raise LookupError("XXdata-driven clock exhausted its scripted wall instantsXX")
+     reading = self._wall[self._wall_cursor]
+     self._wall_cursor += 1
+     return reading
+
+===== qmf.core.chrono.xǁDataDrivenClockǁwall_now__mutmut_4 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -1,7 +1,7 @@
+ def wall_now(self) -> Instant:
+     """Return the next scripted wall instant; raise once the script is spent."""
+     if self._wall_cursor >= len(self._wall):
+-        raise LookupError("data-driven clock exhausted its scripted wall instants")
++        raise LookupError("DATA-DRIVEN CLOCK EXHAUSTED ITS SCRIPTED WALL INSTANTS")
+     reading = self._wall[self._wall_cursor]
+     self._wall_cursor += 1
+     return reading
+
+===== qmf.core.chrono.xǁDataDrivenClockǁwall_now__mutmut_6 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -3,5 +3,5 @@
+     if self._wall_cursor >= len(self._wall):
+         raise LookupError("data-driven clock exhausted its scripted wall instants")
+     reading = self._wall[self._wall_cursor]
+-    self._wall_cursor += 1
++    self._wall_cursor = 1
+     return reading
+
+===== qmf.core.chrono.xǁDataDrivenClockǁmonotonic_now__mutmut_1 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -1,6 +1,6 @@
+ def monotonic_now(self) -> MonotonicReading:
+     """Return the next scripted monotonic reading; raise once the script is spent."""
+-    if self._monotonic_cursor >= len(self._monotonic):
++    if self._monotonic_cursor > len(self._monotonic):
+         raise LookupError("data-driven clock exhausted its scripted monotonic readings")
+     value = self._monotonic[self._monotonic_cursor]
+     self._monotonic_cursor += 1
+
+===== qmf.core.chrono.xǁDataDrivenClockǁmonotonic_now__mutmut_2 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -1,7 +1,7 @@
+ def monotonic_now(self) -> MonotonicReading:
+     """Return the next scripted monotonic reading; raise once the script is spent."""
+     if self._monotonic_cursor >= len(self._monotonic):
+-        raise LookupError("data-driven clock exhausted its scripted monotonic readings")
++        raise LookupError(None)
+     value = self._monotonic[self._monotonic_cursor]
+     self._monotonic_cursor += 1
+     return MonotonicReading(value_ns=value, boot_epoch_id=self.boot_epoch_id)
+
+===== qmf.core.chrono.xǁDataDrivenClockǁmonotonic_now__mutmut_3 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -1,7 +1,7 @@
+ def monotonic_now(self) -> MonotonicReading:
+     """Return the next scripted monotonic reading; raise once the script is spent."""
+     if self._monotonic_cursor >= len(self._monotonic):
+-        raise LookupError("data-driven clock exhausted its scripted monotonic readings")
++        raise LookupError("XXdata-driven clock exhausted its scripted monotonic readingsXX")
+     value = self._monotonic[self._monotonic_cursor]
+     self._monotonic_cursor += 1
+     return MonotonicReading(value_ns=value, boot_epoch_id=self.boot_epoch_id)
+
+===== qmf.core.chrono.xǁDataDrivenClockǁmonotonic_now__mutmut_4 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -1,7 +1,7 @@
+ def monotonic_now(self) -> MonotonicReading:
+     """Return the next scripted monotonic reading; raise once the script is spent."""
+     if self._monotonic_cursor >= len(self._monotonic):
+-        raise LookupError("data-driven clock exhausted its scripted monotonic readings")
++        raise LookupError("DATA-DRIVEN CLOCK EXHAUSTED ITS SCRIPTED MONOTONIC READINGS")
+     value = self._monotonic[self._monotonic_cursor]
+     self._monotonic_cursor += 1
+     return MonotonicReading(value_ns=value, boot_epoch_id=self.boot_epoch_id)
+
+===== qmf.core.chrono.xǁDataDrivenClockǁmonotonic_now__mutmut_6 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -3,5 +3,5 @@
+     if self._monotonic_cursor >= len(self._monotonic):
+         raise LookupError("data-driven clock exhausted its scripted monotonic readings")
+     value = self._monotonic[self._monotonic_cursor]
+-    self._monotonic_cursor += 1
++    self._monotonic_cursor = 1
+     return MonotonicReading(value_ns=value, boot_epoch_id=self.boot_epoch_id)
+
+===== qmf.core.chrono.xǁWriterSequencerǁ__init____mutmut_1 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -1,3 +1,3 @@
+-def __init__(self, writer: WriterId, *, start: int = 0) -> None:
++def __init__(self, writer: WriterId, *, start: int = 1) -> None:
+     self._writer: WriterId = writer
+     self._next: int = start
+
+===== qmf.core.chrono.xǁWriterSequencerǁmint__mutmut_2 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -1,6 +1,6 @@
+ def mint(self, instant: Instant) -> OrderingKey:
+     """Mint the next :class:`OrderingKey`, advancing the strictly-increasing
+         sequence."""
+-    key = OrderingKey(instant=instant, writer=self._writer, sequence=self._next)
++    key = OrderingKey(instant=None, writer=self._writer, sequence=self._next)
+     self._next += 1
+     return key
+
+===== qmf.core.chrono.xǁWriterSequencerǁmint__mutmut_3 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -1,6 +1,6 @@
+ def mint(self, instant: Instant) -> OrderingKey:
+     """Mint the next :class:`OrderingKey`, advancing the strictly-increasing
+         sequence."""
+-    key = OrderingKey(instant=instant, writer=self._writer, sequence=self._next)
++    key = OrderingKey(instant=instant, writer=None, sequence=self._next)
+     self._next += 1
+     return key
+
+===== qmf.core.chrono.x_render_utc_iso8601__mutmut_3 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -6,7 +6,7 @@
+     display-only and excluded from identity (CT-02; DEC-0106).
+     """
+     if not isinstance(instant, Instant):
+-        return _invalid("instant", "rendering takes an Instant", given=repr(instant))
++        return _invalid("instant", None, given=repr(instant))
+     seconds, nanos = divmod(instant.value_ns, _NANOS_PER_SECOND)
+     moment = _EPOCH_UTC + timedelta(seconds=seconds)
+     text = (
+
+===== qmf.core.chrono.x_render_utc_iso8601__mutmut_4 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -6,7 +6,7 @@
+     display-only and excluded from identity (CT-02; DEC-0106).
+     """
+     if not isinstance(instant, Instant):
+-        return _invalid("instant", "rendering takes an Instant", given=repr(instant))
++        return _invalid("instant", "rendering takes an Instant", given=None)
+     seconds, nanos = divmod(instant.value_ns, _NANOS_PER_SECOND)
+     moment = _EPOCH_UTC + timedelta(seconds=seconds)
+     text = (
+
+===== qmf.core.chrono.x_render_utc_iso8601__mutmut_7 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -6,7 +6,7 @@
+     display-only and excluded from identity (CT-02; DEC-0106).
+     """
+     if not isinstance(instant, Instant):
+-        return _invalid("instant", "rendering takes an Instant", given=repr(instant))
++        return _invalid("instant", "rendering takes an Instant", )
+     seconds, nanos = divmod(instant.value_ns, _NANOS_PER_SECOND)
+     moment = _EPOCH_UTC + timedelta(seconds=seconds)
+     text = (
+
+===== qmf.core.chrono.x_render_utc_iso8601__mutmut_10 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -6,7 +6,7 @@
+     display-only and excluded from identity (CT-02; DEC-0106).
+     """
+     if not isinstance(instant, Instant):
+-        return _invalid("instant", "rendering takes an Instant", given=repr(instant))
++        return _invalid("instant", "XXrendering takes an InstantXX", given=repr(instant))
+     seconds, nanos = divmod(instant.value_ns, _NANOS_PER_SECOND)
+     moment = _EPOCH_UTC + timedelta(seconds=seconds)
+     text = (
+
+===== qmf.core.chrono.x_render_utc_iso8601__mutmut_11 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -6,7 +6,7 @@
+     display-only and excluded from identity (CT-02; DEC-0106).
+     """
+     if not isinstance(instant, Instant):
+-        return _invalid("instant", "rendering takes an Instant", given=repr(instant))
++        return _invalid("instant", "rendering takes an instant", given=repr(instant))
+     seconds, nanos = divmod(instant.value_ns, _NANOS_PER_SECOND)
+     moment = _EPOCH_UTC + timedelta(seconds=seconds)
+     text = (
+
+===== qmf.core.chrono.x_render_utc_iso8601__mutmut_12 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -6,7 +6,7 @@
+     display-only and excluded from identity (CT-02; DEC-0106).
+     """
+     if not isinstance(instant, Instant):
+-        return _invalid("instant", "rendering takes an Instant", given=repr(instant))
++        return _invalid("instant", "RENDERING TAKES AN INSTANT", given=repr(instant))
+     seconds, nanos = divmod(instant.value_ns, _NANOS_PER_SECOND)
+     moment = _EPOCH_UTC + timedelta(seconds=seconds)
+     text = (
+
+===== qmf.core.chrono.x_render_utc_iso8601__mutmut_13 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -6,7 +6,7 @@
+     display-only and excluded from identity (CT-02; DEC-0106).
+     """
+     if not isinstance(instant, Instant):
+-        return _invalid("instant", "rendering takes an Instant", given=repr(instant))
++        return _invalid("instant", "rendering takes an Instant", given=repr(None))
+     seconds, nanos = divmod(instant.value_ns, _NANOS_PER_SECOND)
+     moment = _EPOCH_UTC + timedelta(seconds=seconds)
+     text = (
+
+===== qmf.core.chrono.x_compare_causal__mutmut_3 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -10,7 +10,7 @@
+     ordering key exists for replay determinism, not causal meaning.
+     """
+     if not isinstance(earlier, Instant):
+-        return _invalid("earlier", "causal comparison takes an Instant", given=repr(earlier))
++        return _invalid("earlier", None, given=repr(earlier))
+     if not isinstance(later, Instant):
+         return _invalid("later", "causal comparison takes an Instant", given=repr(later))
+     if earlier.value_ns < later.value_ns:
+
+===== qmf.core.chrono.x_compare_causal__mutmut_4 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -10,7 +10,7 @@
+     ordering key exists for replay determinism, not causal meaning.
+     """
+     if not isinstance(earlier, Instant):
+-        return _invalid("earlier", "causal comparison takes an Instant", given=repr(earlier))
++        return _invalid("earlier", "causal comparison takes an Instant", given=None)
+     if not isinstance(later, Instant):
+         return _invalid("later", "causal comparison takes an Instant", given=repr(later))
+     if earlier.value_ns < later.value_ns:
+
+===== qmf.core.chrono.x_compare_causal__mutmut_7 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -10,7 +10,7 @@
+     ordering key exists for replay determinism, not causal meaning.
+     """
+     if not isinstance(earlier, Instant):
+-        return _invalid("earlier", "causal comparison takes an Instant", given=repr(earlier))
++        return _invalid("earlier", "causal comparison takes an Instant", )
+     if not isinstance(later, Instant):
+         return _invalid("later", "causal comparison takes an Instant", given=repr(later))
+     if earlier.value_ns < later.value_ns:
+
+===== qmf.core.chrono.x_compare_causal__mutmut_10 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -10,7 +10,7 @@
+     ordering key exists for replay determinism, not causal meaning.
+     """
+     if not isinstance(earlier, Instant):
+-        return _invalid("earlier", "causal comparison takes an Instant", given=repr(earlier))
++        return _invalid("earlier", "XXcausal comparison takes an InstantXX", given=repr(earlier))
+     if not isinstance(later, Instant):
+         return _invalid("later", "causal comparison takes an Instant", given=repr(later))
+     if earlier.value_ns < later.value_ns:
+
+===== qmf.core.chrono.x_compare_causal__mutmut_11 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -10,7 +10,7 @@
+     ordering key exists for replay determinism, not causal meaning.
+     """
+     if not isinstance(earlier, Instant):
+-        return _invalid("earlier", "causal comparison takes an Instant", given=repr(earlier))
++        return _invalid("earlier", "causal comparison takes an instant", given=repr(earlier))
+     if not isinstance(later, Instant):
+         return _invalid("later", "causal comparison takes an Instant", given=repr(later))
+     if earlier.value_ns < later.value_ns:
+
+===== qmf.core.chrono.x_compare_causal__mutmut_12 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -10,7 +10,7 @@
+     ordering key exists for replay determinism, not causal meaning.
+     """
+     if not isinstance(earlier, Instant):
+-        return _invalid("earlier", "causal comparison takes an Instant", given=repr(earlier))
++        return _invalid("earlier", "CAUSAL COMPARISON TAKES AN INSTANT", given=repr(earlier))
+     if not isinstance(later, Instant):
+         return _invalid("later", "causal comparison takes an Instant", given=repr(later))
+     if earlier.value_ns < later.value_ns:
+
+===== qmf.core.chrono.x_compare_causal__mutmut_13 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -10,7 +10,7 @@
+     ordering key exists for replay determinism, not causal meaning.
+     """
+     if not isinstance(earlier, Instant):
+-        return _invalid("earlier", "causal comparison takes an Instant", given=repr(earlier))
++        return _invalid("earlier", "causal comparison takes an Instant", given=repr(None))
+     if not isinstance(later, Instant):
+         return _invalid("later", "causal comparison takes an Instant", given=repr(later))
+     if earlier.value_ns < later.value_ns:
+
+===== qmf.core.chrono.x_compare_causal__mutmut_16 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -12,7 +12,7 @@
+     if not isinstance(earlier, Instant):
+         return _invalid("earlier", "causal comparison takes an Instant", given=repr(earlier))
+     if not isinstance(later, Instant):
+-        return _invalid("later", "causal comparison takes an Instant", given=repr(later))
++        return _invalid("later", None, given=repr(later))
+     if earlier.value_ns < later.value_ns:
+         return Ok(TemporalOrder.BEFORE)
+     if earlier.value_ns > later.value_ns:
+
+===== qmf.core.chrono.x_compare_causal__mutmut_17 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -12,7 +12,7 @@
+     if not isinstance(earlier, Instant):
+         return _invalid("earlier", "causal comparison takes an Instant", given=repr(earlier))
+     if not isinstance(later, Instant):
+-        return _invalid("later", "causal comparison takes an Instant", given=repr(later))
++        return _invalid("later", "causal comparison takes an Instant", given=None)
+     if earlier.value_ns < later.value_ns:
+         return Ok(TemporalOrder.BEFORE)
+     if earlier.value_ns > later.value_ns:
+
+===== qmf.core.chrono.x_compare_causal__mutmut_20 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -12,7 +12,7 @@
+     if not isinstance(earlier, Instant):
+         return _invalid("earlier", "causal comparison takes an Instant", given=repr(earlier))
+     if not isinstance(later, Instant):
+-        return _invalid("later", "causal comparison takes an Instant", given=repr(later))
++        return _invalid("later", "causal comparison takes an Instant", )
+     if earlier.value_ns < later.value_ns:
+         return Ok(TemporalOrder.BEFORE)
+     if earlier.value_ns > later.value_ns:
+
+===== qmf.core.chrono.x_compare_causal__mutmut_23 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -12,7 +12,7 @@
+     if not isinstance(earlier, Instant):
+         return _invalid("earlier", "causal comparison takes an Instant", given=repr(earlier))
+     if not isinstance(later, Instant):
+-        return _invalid("later", "causal comparison takes an Instant", given=repr(later))
++        return _invalid("later", "XXcausal comparison takes an InstantXX", given=repr(later))
+     if earlier.value_ns < later.value_ns:
+         return Ok(TemporalOrder.BEFORE)
+     if earlier.value_ns > later.value_ns:
+
+===== qmf.core.chrono.x_compare_causal__mutmut_24 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -12,7 +12,7 @@
+     if not isinstance(earlier, Instant):
+         return _invalid("earlier", "causal comparison takes an Instant", given=repr(earlier))
+     if not isinstance(later, Instant):
+-        return _invalid("later", "causal comparison takes an Instant", given=repr(later))
++        return _invalid("later", "causal comparison takes an instant", given=repr(later))
+     if earlier.value_ns < later.value_ns:
+         return Ok(TemporalOrder.BEFORE)
+     if earlier.value_ns > later.value_ns:
+
+===== qmf.core.chrono.x_compare_causal__mutmut_25 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -12,7 +12,7 @@
+     if not isinstance(earlier, Instant):
+         return _invalid("earlier", "causal comparison takes an Instant", given=repr(earlier))
+     if not isinstance(later, Instant):
+-        return _invalid("later", "causal comparison takes an Instant", given=repr(later))
++        return _invalid("later", "CAUSAL COMPARISON TAKES AN INSTANT", given=repr(later))
+     if earlier.value_ns < later.value_ns:
+         return Ok(TemporalOrder.BEFORE)
+     if earlier.value_ns > later.value_ns:
+
+===== qmf.core.chrono.x_compare_causal__mutmut_26 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -12,7 +12,7 @@
+     if not isinstance(earlier, Instant):
+         return _invalid("earlier", "causal comparison takes an Instant", given=repr(earlier))
+     if not isinstance(later, Instant):
+-        return _invalid("later", "causal comparison takes an Instant", given=repr(later))
++        return _invalid("later", "causal comparison takes an Instant", given=repr(None))
+     if earlier.value_ns < later.value_ns:
+         return Ok(TemporalOrder.BEFORE)
+     if earlier.value_ns > later.value_ns:
+
+===== qmf.core.chrono.x_compare_causal__mutmut_32 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -19,7 +19,6 @@
+         return Ok(TemporalOrder.AFTER)
+     return _policy(
+         "instant",
+-        "equal instants are concurrent; causality does not tie-break — the "
+-        "(instant, writer, sequence) ordering key carries no causal meaning",
++        None,
+         instant=earlier.value_ns,
+     )
+
+===== qmf.core.chrono.x_compare_causal__mutmut_33 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -21,5 +21,5 @@
+         "instant",
+         "equal instants are concurrent; causality does not tie-break — the "
+         "(instant, writer, sequence) ordering key carries no causal meaning",
+-        instant=earlier.value_ns,
++        instant=None,
+     )
+
+===== qmf.core.chrono.x_compare_causal__mutmut_36 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -21,5 +21,4 @@
+         "instant",
+         "equal instants are concurrent; causality does not tie-break — the "
+         "(instant, writer, sequence) ordering key carries no causal meaning",
+-        instant=earlier.value_ns,
+-    )
++        )
+
+===== qmf.core.chrono.x_compare_causal__mutmut_39 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -19,7 +19,7 @@
+         return Ok(TemporalOrder.AFTER)
+     return _policy(
+         "instant",
+-        "equal instants are concurrent; causality does not tie-break — the "
++        "XXequal instants are concurrent; causality does not tie-break — the XX"
+         "(instant, writer, sequence) ordering key carries no causal meaning",
+         instant=earlier.value_ns,
+     )
+
+===== qmf.core.chrono.x_compare_causal__mutmut_40 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -19,7 +19,7 @@
+         return Ok(TemporalOrder.AFTER)
+     return _policy(
+         "instant",
+-        "equal instants are concurrent; causality does not tie-break — the "
++        "EQUAL INSTANTS ARE CONCURRENT; CAUSALITY DOES NOT TIE-BREAK — THE "
+         "(instant, writer, sequence) ordering key carries no causal meaning",
+         instant=earlier.value_ns,
+     )
+
+===== qmf.core.chrono.x_compare_causal__mutmut_41 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -20,6 +20,6 @@
+     return _policy(
+         "instant",
+         "equal instants are concurrent; causality does not tie-break — the "
+-        "(instant, writer, sequence) ordering key carries no causal meaning",
++        "XX(instant, writer, sequence) ordering key carries no causal meaningXX",
+         instant=earlier.value_ns,
+     )
+
+===== qmf.core.chrono.x_compare_causal__mutmut_42 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -20,6 +20,6 @@
+     return _policy(
+         "instant",
+         "equal instants are concurrent; causality does not tie-break — the "
+-        "(instant, writer, sequence) ordering key carries no causal meaning",
++        "(INSTANT, WRITER, SEQUENCE) ORDERING KEY CARRIES NO CAUSAL MEANING",
+         instant=earlier.value_ns,
+     )
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_5 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -16,7 +16,7 @@
+     if pinned is None:
+         return _invalid(
+             "pinned_version",
+-            "the pinned tzdata version is a non-empty IANA tzdb version string",
++            None,
+             given=repr(pinned_version),
+         )
+     resolved = _clean_str(resolved_version)
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_6 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -17,7 +17,7 @@
+         return _invalid(
+             "pinned_version",
+             "the pinned tzdata version is a non-empty IANA tzdb version string",
+-            given=repr(pinned_version),
++            given=None,
+         )
+     resolved = _clean_str(resolved_version)
+     if resolved is None:
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_9 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -17,8 +17,7 @@
+         return _invalid(
+             "pinned_version",
+             "the pinned tzdata version is a non-empty IANA tzdb version string",
+-            given=repr(pinned_version),
+-        )
++            )
+     resolved = _clean_str(resolved_version)
+     if resolved is None:
+         return _invalid(
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_12 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -16,7 +16,7 @@
+     if pinned is None:
+         return _invalid(
+             "pinned_version",
+-            "the pinned tzdata version is a non-empty IANA tzdb version string",
++            "XXthe pinned tzdata version is a non-empty IANA tzdb version stringXX",
+             given=repr(pinned_version),
+         )
+     resolved = _clean_str(resolved_version)
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_13 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -16,7 +16,7 @@
+     if pinned is None:
+         return _invalid(
+             "pinned_version",
+-            "the pinned tzdata version is a non-empty IANA tzdb version string",
++            "the pinned tzdata version is a non-empty iana tzdb version string",
+             given=repr(pinned_version),
+         )
+     resolved = _clean_str(resolved_version)
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_14 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -16,7 +16,7 @@
+     if pinned is None:
+         return _invalid(
+             "pinned_version",
+-            "the pinned tzdata version is a non-empty IANA tzdb version string",
++            "THE PINNED TZDATA VERSION IS A NON-EMPTY IANA TZDB VERSION STRING",
+             given=repr(pinned_version),
+         )
+     resolved = _clean_str(resolved_version)
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_15 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -17,7 +17,7 @@
+         return _invalid(
+             "pinned_version",
+             "the pinned tzdata version is a non-empty IANA tzdb version string",
+-            given=repr(pinned_version),
++            given=repr(None),
+         )
+     resolved = _clean_str(resolved_version)
+     if resolved is None:
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_20 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -23,7 +23,7 @@
+     if resolved is None:
+         return _invalid(
+             "resolved_version",
+-            "the resolved tzdata version is a non-empty IANA tzdb version string",
++            None,
+             given=repr(resolved_version),
+         )
+     if resolved != pinned:
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_21 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -24,7 +24,7 @@
+         return _invalid(
+             "resolved_version",
+             "the resolved tzdata version is a non-empty IANA tzdb version string",
+-            given=repr(resolved_version),
++            given=None,
+         )
+     if resolved != pinned:
+         return _unavailable(
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_24 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -24,8 +24,7 @@
+         return _invalid(
+             "resolved_version",
+             "the resolved tzdata version is a non-empty IANA tzdb version string",
+-            given=repr(resolved_version),
+-        )
++            )
+     if resolved != pinned:
+         return _unavailable(
+             "tzdata_version",
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_27 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -23,7 +23,7 @@
+     if resolved is None:
+         return _invalid(
+             "resolved_version",
+-            "the resolved tzdata version is a non-empty IANA tzdb version string",
++            "XXthe resolved tzdata version is a non-empty IANA tzdb version stringXX",
+             given=repr(resolved_version),
+         )
+     if resolved != pinned:
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_28 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -23,7 +23,7 @@
+     if resolved is None:
+         return _invalid(
+             "resolved_version",
+-            "the resolved tzdata version is a non-empty IANA tzdb version string",
++            "the resolved tzdata version is a non-empty iana tzdb version string",
+             given=repr(resolved_version),
+         )
+     if resolved != pinned:
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_29 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -23,7 +23,7 @@
+     if resolved is None:
+         return _invalid(
+             "resolved_version",
+-            "the resolved tzdata version is a non-empty IANA tzdb version string",
++            "THE RESOLVED TZDATA VERSION IS A NON-EMPTY IANA TZDB VERSION STRING",
+             given=repr(resolved_version),
+         )
+     if resolved != pinned:
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_30 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -24,7 +24,7 @@
+         return _invalid(
+             "resolved_version",
+             "the resolved tzdata version is a non-empty IANA tzdb version string",
+-            given=repr(resolved_version),
++            given=repr(None),
+         )
+     if resolved != pinned:
+         return _unavailable(
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_32 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -28,7 +28,7 @@
+         )
+     if resolved != pinned:
+         return _unavailable(
+-            "tzdata_version",
++            None,
+             "the resolved tzdb version does not equal the extension's pin; a "
+             "fingerprint must never attest a tzdb that was not used (FM-5)",
+             pinned=pinned,
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_33 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -29,8 +29,7 @@
+     if resolved != pinned:
+         return _unavailable(
+             "tzdata_version",
+-            "the resolved tzdb version does not equal the extension's pin; a "
+-            "fingerprint must never attest a tzdb that was not used (FM-5)",
++            None,
+             pinned=pinned,
+             resolved=resolved,
+         )
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_40 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -28,7 +28,7 @@
+         )
+     if resolved != pinned:
+         return _unavailable(
+-            "tzdata_version",
++            "XXtzdata_versionXX",
+             "the resolved tzdb version does not equal the extension's pin; a "
+             "fingerprint must never attest a tzdb that was not used (FM-5)",
+             pinned=pinned,
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_41 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -28,7 +28,7 @@
+         )
+     if resolved != pinned:
+         return _unavailable(
+-            "tzdata_version",
++            "TZDATA_VERSION",
+             "the resolved tzdb version does not equal the extension's pin; a "
+             "fingerprint must never attest a tzdb that was not used (FM-5)",
+             pinned=pinned,
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_42 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -29,7 +29,7 @@
+     if resolved != pinned:
+         return _unavailable(
+             "tzdata_version",
+-            "the resolved tzdb version does not equal the extension's pin; a "
++            "XXthe resolved tzdb version does not equal the extension's pin; a XX"
+             "fingerprint must never attest a tzdb that was not used (FM-5)",
+             pinned=pinned,
+             resolved=resolved,
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_43 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -29,7 +29,7 @@
+     if resolved != pinned:
+         return _unavailable(
+             "tzdata_version",
+-            "the resolved tzdb version does not equal the extension's pin; a "
++            "THE RESOLVED TZDB VERSION DOES NOT EQUAL THE EXTENSION'S PIN; A "
+             "fingerprint must never attest a tzdb that was not used (FM-5)",
+             pinned=pinned,
+             resolved=resolved,
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_44 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -30,7 +30,7 @@
+         return _unavailable(
+             "tzdata_version",
+             "the resolved tzdb version does not equal the extension's pin; a "
+-            "fingerprint must never attest a tzdb that was not used (FM-5)",
++            "XXfingerprint must never attest a tzdb that was not used (FM-5)XX",
+             pinned=pinned,
+             resolved=resolved,
+         )
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_45 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -30,7 +30,7 @@
+         return _unavailable(
+             "tzdata_version",
+             "the resolved tzdb version does not equal the extension's pin; a "
+-            "fingerprint must never attest a tzdb that was not used (FM-5)",
++            "fingerprint must never attest a tzdb that was not used (fm-5)",
+             pinned=pinned,
+             resolved=resolved,
+         )
+
+===== qmf.core.chrono.x_verify_tzdb_pin__mutmut_46 | file=src/qmf/core/chrono.py =====
+--- src/qmf/core/chrono.py
++++ src/qmf/core/chrono.py
+@@ -30,7 +30,7 @@
+         return _unavailable(
+             "tzdata_version",
+             "the resolved tzdb version does not equal the extension's pin; a "
+-            "fingerprint must never attest a tzdb that was not used (FM-5)",
++            "FINGERPRINT MUST NEVER ATTEST A TZDB THAT WAS NOT USED (FM-5)",
+             pinned=pinned,
+             resolved=resolved,
+         )
+
+===== qmf.core.exact.x__invalid__mutmut_4 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -8,7 +8,7 @@
+     transient condition — and ``context`` always names the offending ``field`` and
+     a human-legible ``reason`` (returned, never raised; CT-04; DEC-0109).
+     """
+-    context: dict[str, object] = {"field": field, "reason": reason}
++    context: dict[str, object] = {"field": field, "XXreasonXX": reason}
+     context.update(extra)
+     return TypedRefusal(
+         category=RefusalCategory.INVALID_INPUT,
+
+===== qmf.core.exact.x__invalid__mutmut_5 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -8,7 +8,7 @@
+     transient condition — and ``context`` always names the offending ``field`` and
+     a human-legible ``reason`` (returned, never raised; CT-04; DEC-0109).
+     """
+-    context: dict[str, object] = {"field": field, "reason": reason}
++    context: dict[str, object] = {"field": field, "REASON": reason}
+     context.update(extra)
+     return TypedRefusal(
+         category=RefusalCategory.INVALID_INPUT,
+
+===== qmf.core.exact.x__unavailable__mutmut_4 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -1,7 +1,7 @@
+ def _unavailable(field: str, reason: str, **extra: object) -> TypedRefusal:
+     """Build the ``unavailable dependency`` refusal a metadata-needing conversion
+     returns when its instrument-metadata input is absent (CT-01; DEC-0154)."""
+-    context: dict[str, object] = {"field": field, "reason": reason}
++    context: dict[str, object] = {"field": field, "XXreasonXX": reason}
+     context.update(extra)
+     return TypedRefusal(
+         category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+
+===== qmf.core.exact.x__unavailable__mutmut_5 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -1,7 +1,7 @@
+ def _unavailable(field: str, reason: str, **extra: object) -> TypedRefusal:
+     """Build the ``unavailable dependency`` refusal a metadata-needing conversion
+     returns when its instrument-metadata input is absent (CT-01; DEC-0154)."""
+-    context: dict[str, object] = {"field": field, "reason": reason}
++    context: dict[str, object] = {"field": field, "REASON": reason}
+     context.update(extra)
+     return TypedRefusal(
+         category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+
+===== qmf.core.exact.x__unavailable__mutmut_8 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -5,6 +5,6 @@
+     context.update(extra)
+     return TypedRefusal(
+         category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+-        retryability=Retryability.NO,
++        retryability=None,
+         context=context,
+     )
+
+===== qmf.core.exact.x__bad_scale__mutmut_2 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -7,7 +7,7 @@
+     """
+     return _invalid(
+         "scale",
+-        f"scale is an integer count of decimal places in [0, {MAX_SCALE}]",
++        None,
+         given=repr(scale),
+         max_scale=MAX_SCALE,
+     )
+
+===== qmf.core.exact.x__bad_scale__mutmut_3 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -8,6 +8,6 @@
+     return _invalid(
+         "scale",
+         f"scale is an integer count of decimal places in [0, {MAX_SCALE}]",
+-        given=repr(scale),
++        given=None,
+         max_scale=MAX_SCALE,
+     )
+
+===== qmf.core.exact.x__bad_scale__mutmut_7 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -8,6 +8,5 @@
+     return _invalid(
+         "scale",
+         f"scale is an integer count of decimal places in [0, {MAX_SCALE}]",
+-        given=repr(scale),
+         max_scale=MAX_SCALE,
+     )
+
+===== qmf.core.exact.x__bad_scale__mutmut_11 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -8,6 +8,6 @@
+     return _invalid(
+         "scale",
+         f"scale is an integer count of decimal places in [0, {MAX_SCALE}]",
+-        given=repr(scale),
++        given=repr(None),
+         max_scale=MAX_SCALE,
+     )
+
+===== qmf.core.exact.x__require_instrument__mutmut_4 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -6,7 +6,7 @@
+     """
+     if (
+         isinstance(value, Instrument)
+-        and value.symbol.strip() != ""
++        and value.symbol.strip() != "XXXX"
+         and value.venue.value.strip() != ""
+     ):
+         return value
+
+===== qmf.core.exact.x__require_instrument__mutmut_6 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -7,7 +7,7 @@
+     if (
+         isinstance(value, Instrument)
+         and value.symbol.strip() != ""
+-        and value.venue.value.strip() != ""
++        and value.venue.value.strip() != "XXXX"
+     ):
+         return value
+     return None
+
+===== qmf.core.exact.x__round_fraction_to_int__mutmut_14 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -15,7 +15,7 @@
+     if mode is RoundingMode.CEILING:
+         return ceil_value
+     if mode is RoundingMode.DOWN:  # toward zero
+-        return ceil_value if value < 0 else floor_value
++        return ceil_value if value <= 0 else floor_value
+     if mode is RoundingMode.UP:  # away from zero
+         return floor_value if value < 0 else ceil_value
+     # Half modes: compare the doubled remainder against the denominator exactly.
+
+===== qmf.core.exact.x__round_fraction_to_int__mutmut_15 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -15,7 +15,7 @@
+     if mode is RoundingMode.CEILING:
+         return ceil_value
+     if mode is RoundingMode.DOWN:  # toward zero
+-        return ceil_value if value < 0 else floor_value
++        return ceil_value if value < 1 else floor_value
+     if mode is RoundingMode.UP:  # away from zero
+         return floor_value if value < 0 else ceil_value
+     # Half modes: compare the doubled remainder against the denominator exactly.
+
+===== qmf.core.exact.x__round_fraction_to_int__mutmut_17 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -17,7 +17,7 @@
+     if mode is RoundingMode.DOWN:  # toward zero
+         return ceil_value if value < 0 else floor_value
+     if mode is RoundingMode.UP:  # away from zero
+-        return floor_value if value < 0 else ceil_value
++        return floor_value if value <= 0 else ceil_value
+     # Half modes: compare the doubled remainder against the denominator exactly.
+     twice_remainder = 2 * remainder
+     if twice_remainder < value.denominator:
+
+===== qmf.core.exact.x__round_fraction_to_int__mutmut_18 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -17,7 +17,7 @@
+     if mode is RoundingMode.DOWN:  # toward zero
+         return ceil_value if value < 0 else floor_value
+     if mode is RoundingMode.UP:  # away from zero
+-        return floor_value if value < 0 else ceil_value
++        return floor_value if value < 1 else ceil_value
+     # Half modes: compare the doubled remainder against the denominator exactly.
+     twice_remainder = 2 * remainder
+     if twice_remainder < value.denominator:
+
+===== qmf.core.exact.x__round_fraction_to_int__mutmut_25 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -26,6 +26,6 @@
+         return ceil_value
+     # Exactly halfway.
+     if mode is RoundingMode.HALF_UP:  # ties away from zero
+-        return floor_value if value < 0 else ceil_value
++        return floor_value if value <= 0 else ceil_value
+     # HALF_EVEN: ties to the even neighbour.
+     return floor_value if floor_value % 2 == 0 else ceil_value
+
+===== qmf.core.exact.x__round_fraction_to_int__mutmut_26 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -26,6 +26,6 @@
+         return ceil_value
+     # Exactly halfway.
+     if mode is RoundingMode.HALF_UP:  # ties away from zero
+-        return floor_value if value < 0 else ceil_value
++        return floor_value if value < 1 else ceil_value
+     # HALF_EVEN: ties to the even neighbour.
+     return floor_value if floor_value % 2 == 0 else ceil_value
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_3 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -13,8 +13,7 @@
+     if not isinstance(value, float):
+         return _invalid(
+             "value",
+-            "the float conversion boundary requires a binary float; construct exact "
+-            "values from integers with try_create",
++            None,
+             given=repr(value),
+         )
+     if not isfinite(value):
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_4 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -15,7 +15,7 @@
+             "value",
+             "the float conversion boundary requires a binary float; construct exact "
+             "values from integers with try_create",
+-            given=repr(value),
++            given=None,
+         )
+     if not isfinite(value):
+         return _invalid(
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_7 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -15,8 +15,7 @@
+             "value",
+             "the float conversion boundary requires a binary float; construct exact "
+             "values from integers with try_create",
+-            given=repr(value),
+-        )
++            )
+     if not isfinite(value):
+         return _invalid(
+             "value",
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_10 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -13,7 +13,7 @@
+     if not isinstance(value, float):
+         return _invalid(
+             "value",
+-            "the float conversion boundary requires a binary float; construct exact "
++            "XXthe float conversion boundary requires a binary float; construct exact XX"
+             "values from integers with try_create",
+             given=repr(value),
+         )
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_11 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -13,7 +13,7 @@
+     if not isinstance(value, float):
+         return _invalid(
+             "value",
+-            "the float conversion boundary requires a binary float; construct exact "
++            "THE FLOAT CONVERSION BOUNDARY REQUIRES A BINARY FLOAT; CONSTRUCT EXACT "
+             "values from integers with try_create",
+             given=repr(value),
+         )
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_12 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -14,7 +14,7 @@
+         return _invalid(
+             "value",
+             "the float conversion boundary requires a binary float; construct exact "
+-            "values from integers with try_create",
++            "XXvalues from integers with try_createXX",
+             given=repr(value),
+         )
+     if not isfinite(value):
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_13 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -14,7 +14,7 @@
+         return _invalid(
+             "value",
+             "the float conversion boundary requires a binary float; construct exact "
+-            "values from integers with try_create",
++            "VALUES FROM INTEGERS WITH TRY_CREATE",
+             given=repr(value),
+         )
+     if not isfinite(value):
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_14 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -15,7 +15,7 @@
+             "value",
+             "the float conversion boundary requires a binary float; construct exact "
+             "values from integers with try_create",
+-            given=repr(value),
++            given=repr(None),
+         )
+     if not isfinite(value):
+         return _invalid(
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_18 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -20,7 +20,7 @@
+     if not isfinite(value):
+         return _invalid(
+             "value",
+-            "NaN and infinity cannot cross the float conversion boundary",
++            None,
+             given=repr(value),
+         )
+     int_scale = _as_scale(scale)
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_19 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -21,7 +21,7 @@
+         return _invalid(
+             "value",
+             "NaN and infinity cannot cross the float conversion boundary",
+-            given=repr(value),
++            given=None,
+         )
+     int_scale = _as_scale(scale)
+     if int_scale is None:
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_22 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -21,8 +21,7 @@
+         return _invalid(
+             "value",
+             "NaN and infinity cannot cross the float conversion boundary",
+-            given=repr(value),
+-        )
++            )
+     int_scale = _as_scale(scale)
+     if int_scale is None:
+         return _bad_scale(scale)
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_25 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -20,7 +20,7 @@
+     if not isfinite(value):
+         return _invalid(
+             "value",
+-            "NaN and infinity cannot cross the float conversion boundary",
++            "XXNaN and infinity cannot cross the float conversion boundaryXX",
+             given=repr(value),
+         )
+     int_scale = _as_scale(scale)
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_26 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -20,7 +20,7 @@
+     if not isfinite(value):
+         return _invalid(
+             "value",
+-            "NaN and infinity cannot cross the float conversion boundary",
++            "nan and infinity cannot cross the float conversion boundary",
+             given=repr(value),
+         )
+     int_scale = _as_scale(scale)
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_27 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -20,7 +20,7 @@
+     if not isfinite(value):
+         return _invalid(
+             "value",
+-            "NaN and infinity cannot cross the float conversion boundary",
++            "NAN AND INFINITY CANNOT CROSS THE FLOAT CONVERSION BOUNDARY",
+             given=repr(value),
+         )
+     int_scale = _as_scale(scale)
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_28 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -21,7 +21,7 @@
+         return _invalid(
+             "value",
+             "NaN and infinity cannot cross the float conversion boundary",
+-            given=repr(value),
++            given=repr(None),
+         )
+     int_scale = _as_scale(scale)
+     if int_scale is None:
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_32 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -25,7 +25,7 @@
+         )
+     int_scale = _as_scale(scale)
+     if int_scale is None:
+-        return _bad_scale(scale)
++        return _bad_scale(None)
+     mode = _coerce_rounding(rounding)
+     if mode is None:
+         return _invalid(
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_37 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -30,7 +30,7 @@
+     if mode is None:
+         return _invalid(
+             "rounding",
+-            "the float conversion boundary must state an explicit rounding mode",
++            None,
+             given=repr(rounding),
+             allowed=[member.value for member in RoundingMode],
+         )
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_38 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -31,7 +31,7 @@
+         return _invalid(
+             "rounding",
+             "the float conversion boundary must state an explicit rounding mode",
+-            given=repr(rounding),
++            given=None,
+             allowed=[member.value for member in RoundingMode],
+         )
+     shifted = Fraction(value) * (10**int_scale)
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_39 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -32,7 +32,7 @@
+             "rounding",
+             "the float conversion boundary must state an explicit rounding mode",
+             given=repr(rounding),
+-            allowed=[member.value for member in RoundingMode],
++            allowed=None,
+         )
+     shifted = Fraction(value) * (10**int_scale)
+     return _round_fraction_to_int(shifted, mode)
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_42 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -31,7 +31,6 @@
+         return _invalid(
+             "rounding",
+             "the float conversion boundary must state an explicit rounding mode",
+-            given=repr(rounding),
+             allowed=[member.value for member in RoundingMode],
+         )
+     shifted = Fraction(value) * (10**int_scale)
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_43 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -32,7 +32,6 @@
+             "rounding",
+             "the float conversion boundary must state an explicit rounding mode",
+             given=repr(rounding),
+-            allowed=[member.value for member in RoundingMode],
+-        )
++            )
+     shifted = Fraction(value) * (10**int_scale)
+     return _round_fraction_to_int(shifted, mode)
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_46 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -30,7 +30,7 @@
+     if mode is None:
+         return _invalid(
+             "rounding",
+-            "the float conversion boundary must state an explicit rounding mode",
++            "XXthe float conversion boundary must state an explicit rounding modeXX",
+             given=repr(rounding),
+             allowed=[member.value for member in RoundingMode],
+         )
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_47 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -30,7 +30,7 @@
+     if mode is None:
+         return _invalid(
+             "rounding",
+-            "the float conversion boundary must state an explicit rounding mode",
++            "THE FLOAT CONVERSION BOUNDARY MUST STATE AN EXPLICIT ROUNDING MODE",
+             given=repr(rounding),
+             allowed=[member.value for member in RoundingMode],
+         )
+
+===== qmf.core.exact.x__coerce_float_to_scaled_int__mutmut_48 | file=src/qmf/core/exact.py =====
+--- src/qmf/core/exact.py
++++ src/qmf/core/exact.py
+@@ -31,7 +31,7 @@
+         return _invalid(
+             "rounding",
+             "the float conversion boundary must state an explicit rounding mode",
+-            given=repr(rounding),
++            given=repr(None),
+             allowed=[member.value for member in RoundingMode],
+         )
+     shifted = Fraction(value) * (10**int_scale)
+

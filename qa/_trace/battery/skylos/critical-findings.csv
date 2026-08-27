@@ -1,0 +1,27 @@
+# skylos run_id=33039677890 date=2026-08-27T04:31:40Z head_sha=2c8d4957ef29eacf5ca87fdc09598128f6c78d5b
+rule_id,file,line,message
+SKY-Q301,packages/qmf-data/src/qmf/data/verify.py,341,Cyclomatic complexity is 27 (threshold: 10). Consider splitting branches.
+SKY-Q301,packages/qmf-registry/src/qmf/registry/persistence.py,1066,Cyclomatic complexity is 26 (threshold: 10). Consider splitting branches.
+SKY-Q301,packages/qmf-risk/src/qmf/risk/control_action.py,647,Cyclomatic complexity is 38 (threshold: 10). Consider splitting branches.
+SKY-Q301,packages/qmf-risk/src/qmf/risk/control_action.py,1486,Cyclomatic complexity is 31 (threshold: 10). Consider splitting branches.
+SKY-Q306,packages/qmf-risk/src/qmf/risk/control_action.py,1486,Cognitive complexity is 62 (threshold: 15). Consider simplifying nested logic.
+SKY-Q301,packages/qmf-risk/src/qmf/risk/exit_record.py,412,Cyclomatic complexity is 28 (threshold: 10). Consider splitting branches.
+SKY-Q301,packages/qmf-risk/src/qmf/risk/journal.py,437,Cyclomatic complexity is 26 (threshold: 10). Consider splitting branches.
+SKY-Q301,qmb/src/qmb/config/compiler.py,291,Cyclomatic complexity is 36 (threshold: 10). Consider splitting branches.
+SKY-Q301,qmb/src/qmb/config/compiler.py,475,Cyclomatic complexity is 30 (threshold: 10). Consider splitting branches.
+SKY-Q301,qmb/src/qmb/data/catalog.py,279,Cyclomatic complexity is 32 (threshold: 10). Consider splitting branches.
+SKY-Q301,qmb/src/qmb/data/download.py,200,Cyclomatic complexity is 35 (threshold: 10). Consider splitting branches.
+SKY-Q306,qmb/src/qmb/data/download.py,200,Cognitive complexity is 64 (threshold: 15). Consider simplifying nested logic.
+SKY-Q301,qmb/src/qmb/data/generate.py,575,Cyclomatic complexity is 26 (threshold: 10). Consider splitting branches.
+SKY-Q301,qmb/src/qmb/data/verify.py,292,Cyclomatic complexity is 28 (threshold: 10). Consider splitting branches.
+SKY-Q306,qmb/src/qmb/data/verify.py,292,Cognitive complexity is 59 (threshold: 15). Consider simplifying nested logic.
+SKY-Q301,qmb/src/qmb/execution/cost.py,147,Cyclomatic complexity is 25 (threshold: 10). Consider splitting branches.
+SKY-Q301,qmb/src/qmb/execution/fill.py,164,Cyclomatic complexity is 26 (threshold: 10). Consider splitting branches.
+SKY-Q301,qmb/src/qmb/execution/financing.py,604,Cyclomatic complexity is 25 (threshold: 10). Consider splitting branches.
+SKY-Q301,qmb/src/qmb/results/charts.py,863,Cyclomatic complexity is 29 (threshold: 10). Consider splitting branches.
+SKY-Q306,qmb/src/qmb/results/charts.py,863,Cognitive complexity is 53 (threshold: 15). Consider simplifying nested logic.
+SKY-Q301,qmb/src/qmb/results/measures.py,286,Cyclomatic complexity is 32 (threshold: 10). Consider splitting branches.
+SKY-Q301,qmb/src/qmb/results/measures.py,358,Cyclomatic complexity is 28 (threshold: 10). Consider splitting branches.
+SKY-Q301,qmb/src/qmb/runloop/loop.py,794,Cyclomatic complexity is 26 (threshold: 10). Consider splitting branches.
+SKY-Q301,qmb/tests/test_qmb_scaffold.py,94,Cyclomatic complexity is 25 (threshold: 10). Consider splitting branches.
+SKY-Q301,qml/src/qml/footprint/template.py,227,Cyclomatic complexity is 25 (threshold: 10). Consider splitting branches.
