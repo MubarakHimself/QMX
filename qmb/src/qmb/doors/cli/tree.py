@@ -23,8 +23,17 @@ from qmb.config import (
     compile_run_config,
     run_config_identity,
 )
-from qmb.data import DATA_COMMANDS, catalog, data_front_identity, gap_check, list_data, verify
+from qmb.data import (
+    DATA_COMMANDS,
+    catalog,
+    data_front_identity,
+    gap_check,
+    has_generator_config,
+    list_data,
+    verify,
+)
 from qmb.data import download as run_download
+from qmb.data import generate as run_generate
 from qmb.doors import CLI_PIN_KEY, CLI_PROG
 from qmb.ledger import LedgerLine
 from qmb.optimize import CostEstimate, estimate_study_cost, parameter_space_from_bot
@@ -497,9 +506,18 @@ def invoke_data(command: object, provided: object = None) -> Result[Mapping[str,
         aliased: dict[str, object] = dict(coverage.value.as_mapping())
         aliased.update(data_front_identity())
         return Ok(aliased)
-    stub: dict[str, object] = {"command": token}
-    stub.update(data_front_identity())
-    return Ok(stub)
+    # generate — a resolved config runs the config-selected adapters; a bare
+    # destination reports the generator front's capability surface (B-11).
+    if has_generator_config(resources):
+        generated = run_generate(resources)
+        if is_refusal(generated):
+            return generated
+        produced: dict[str, object] = dict(generated.value.as_mapping())
+        produced.update(data_front_identity())
+        return Ok(produced)
+    front: dict[str, object] = {"command": token}
+    front.update(data_front_identity())
+    return Ok(front)
 
 
 def invoke_ledger_merge(

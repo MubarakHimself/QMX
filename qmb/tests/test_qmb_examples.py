@@ -1216,6 +1216,24 @@ def test_cli_tree_usage_example_runs_clean() -> None:
     assert "qmb CLI command tree ok" in completed.stdout
 
 
+def test_data_generate_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "data_generate_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "the library is never swapped — only config variables change" in completed.stdout
+    assert "source=none, world=simulated, origin=synthetic" in completed.stdout
+    assert "tick-quantized integer money=True; OHLC invariant holds=True" in completed.stdout
+    assert "cites source-dataset id dukascopy-fx:EURUSD:M1:bid" in completed.stdout
+    assert "deterministic: True" in completed.stdout
+    assert "unknown process=unsupported capability" in completed.stdout
+    assert "data generate ok" in completed.stdout
+
+
 def test_import_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_EXAMPLE)],
