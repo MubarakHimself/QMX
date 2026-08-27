@@ -1379,9 +1379,7 @@ def _coerce_scenarios(value: object) -> Result[tuple[PerturbationScenario, ...]]
     return Ok(tuple(out))
 
 
-def _resolve_configurable(
-    config: object, explicit: object, key: str, field: str
-) -> Result[int]:
+def _resolve_configurable(config: object, explicit: object, key: str, field: str) -> Result[int]:
     """Resolve a required positive-int configurable from the config key or an explicit arg.
 
     Neither the block length nor the scenario count has a ratified value (SC-07); an

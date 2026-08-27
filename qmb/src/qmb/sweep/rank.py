@@ -767,8 +767,7 @@ def _as_roster_identity(value: object, field_name: str) -> Result[str]:
     if token is None:
         return invalid(
             field_name,
-            "an objective or constraint metric is a measure_identity from the "
-            "AD-23/AD-41 roster",
+            "an objective or constraint metric is a measure_identity from the AD-23/AD-41 roster",
             given=repr(value),
         )
     lowered = token.casefold()

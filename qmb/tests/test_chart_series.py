@@ -187,9 +187,7 @@ def test_v1_set_derives_from_run_record_and_matches_measures() -> None:
     assert equity is not None
     assert isinstance(equity.points[-1].v, Money)
     assert equity.points[-1].v.value == 1_030_000
-    reconstructed = _ok(
-        assemble_v1_chart_set(starting_capital=seed, period=period, trades=trades)
-    )
+    reconstructed = _ok(assemble_v1_chart_set(starting_capital=seed, period=period, trades=trades))
     rebuilt = reconstructed.series_named("equity")
     assert rebuilt is not None
     assert isinstance(rebuilt.points[-1].v, Money)
@@ -316,9 +314,7 @@ def test_holdings_omitted_unless_multi_instrument_or_leveraged() -> None:
         )
     )
     assert leveraged.series_named("leverage") is not None
-    empty_lev = _ok(
-        assemble_v1_chart_set(starting_capital=seed, period=period, leveraged=True)
-    )
+    empty_lev = _ok(assemble_v1_chart_set(starting_capital=seed, period=period, leveraged=True))
     assert {row.name: row.reason for row in empty_lev.omitted}["leverage"] != ""
     assert empty_lev.series_named("leverage") is None
 

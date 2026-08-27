@@ -103,8 +103,7 @@ def main() -> None:
             assert candle.open > 0 and candle.high > 0 and candle.low > 0 and candle.close > 0
             assert candle.high >= max(candle.open, candle.close) >= candle.low
     print(
-        "every scenario rebuilds a valid strictly-positive OHLC series (high/low bounds "
-        "enforced):",
+        "every scenario rebuilds a valid strictly-positive OHLC series (high/low bounds enforced):",
         f"{len(result.series)} scenarios",
     )
 

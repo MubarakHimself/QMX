@@ -674,9 +674,7 @@ def _run_optuna(
         return distributions
     optuna_direction = "maximize" if direction == DIRECTION_MAX else "minimize"
     try:
-        study = optuna.create_study(
-            sampler=TPESampler(seed=gen_seed), direction=optuna_direction
-        )
+        study = optuna.create_study(sampler=TPESampler(seed=gen_seed), direction=optuna_direction)
         for prior in sorted(priors, key=lambda item: item.sort_key):
             params = _optuna_params(space, prior)
             if is_refusal(params):
@@ -735,7 +733,8 @@ def _int_distribution(spec: ParameterSpec) -> Result[BaseDistribution]:
     step = _plain_int(spec.step)
     if low is None or high is None or step is None or step < 1:
         return invalid(
-            "space", "an exact-integer parameter carries integer bounds and a positive step",
+            "space",
+            "an exact-integer parameter carries integer bounds and a positive step",
             parameter=spec.name,
         )
     return Ok(IntDistribution(low=low, high=high, step=step))
@@ -1271,9 +1270,7 @@ def admit_study(
         book_fp1=book_fp.value,
         bms_fp1=bms_fp.value,
     )
-    return Ok(
-        AdmittedStudy(port=frozen, space=parsed_space.value, artifact=artifact, label=label)
-    )
+    return Ok(AdmittedStudy(port=frozen, space=parsed_space.value, artifact=artifact, label=label))
 
 
 def _optional_ref(port: RegistryReadPort, ref: object) -> Result[Fingerprint | None]:

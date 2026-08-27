@@ -88,9 +88,7 @@ def test_complete_open_session_reports_no_gaps() -> None:
 
 def test_open_session_missing_bars_are_genuine_gaps() -> None:
     # Drop slots 3..5 inclusive → one contiguous gap.
-    ticks = tuple(
-        {"t_ns": _OPEN_START + (i * _STEP)} for i in range(10) if i not in {3, 4, 5}
-    )
+    ticks = tuple({"t_ns": _OPEN_START + (i * _STEP)} for i in range(10) if i not in {3, 4, 5})
     with tempfile.TemporaryDirectory() as tmp:
         report = _ok(gap_check(_resources(Path(tmp), ticks=ticks)))
         assert len(report.gaps) == 1
@@ -184,9 +182,7 @@ def test_fill_request_is_policy_rejection_until_gap_0048() -> None:
 
 
 def test_same_window_same_calendar_version_is_deterministic() -> None:
-    ticks = tuple(
-        {"t_ns": _OPEN_START + (i * _STEP)} for i in range(10) if i not in {2, 7}
-    )
+    ticks = tuple({"t_ns": _OPEN_START + (i * _STEP)} for i in range(10) if i not in {2, 7})
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         first = _ok(gap_check(_resources(root, ticks=ticks)))

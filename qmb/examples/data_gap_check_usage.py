@@ -64,9 +64,7 @@ def main() -> None:
         store = EvidenceStore(root)
 
         # Open session with a hole at slots 2..3.
-        ticks = tuple(
-            {"t_ns": _OPEN_START + (i * _STEP)} for i in range(8) if i not in {2, 3}
-        )
+        ticks = tuple({"t_ns": _OPEN_START + (i * _STEP)} for i in range(8) if i not in {2, 3})
         base: dict[str, object] = {
             "archive": str(root),
             "venue": "dukascopy-fx",
@@ -132,9 +130,7 @@ def main() -> None:
         )
         _require(len(crypto.gaps) == 1, "always-open reports interior hole")
         _require(crypto.gaps[0].expected == 2, "two missing interior slots")
-        print(
-            f"always-open gaps={len(crypto.gaps)} expected={crypto.gaps[0].expected}"
-        )
+        print(f"always-open gaps={len(crypto.gaps)} expected={crypto.gaps[0].expected}")
 
         # Determinism: same window + same calendar version → identical gap set.
         again = _unwrap(gap_check(base), "deterministic re-run")

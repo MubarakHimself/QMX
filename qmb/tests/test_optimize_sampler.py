@@ -338,9 +338,7 @@ def test_a_superseded_reference_at_admission_is_stale_evidence() -> None:
     bot_v1 = _record("bot-definition", {"class": "bot-definition", "alias": "v1"})
     bot_v2 = _record("bot-definition", {"class": "bot-definition", "alias": "v2"})
     supersedes = (_ok(SupersedesRef.try_create(bot_v2.stable_id, bot_v1.stable_id)),)
-    as_of = _ok(
-        AsOfSet.try_create(_instant(), records=(bot_v1, bot_v2), supersedes=supersedes)
-    )
+    as_of = _ok(AsOfSet.try_create(_instant(), records=(bot_v1, bot_v2), supersedes=supersedes))
     hub = _ok(PassiveHub.try_create((as_of,)))
     port = _ok(RegistryReadPort.try_create(hub, stale_evidence_severity=_SEVERITY))
     refused = admit_study(_space(), 1, port, bot=bot_v1.stable_id, direction="max")

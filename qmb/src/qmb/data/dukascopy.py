@@ -145,9 +145,7 @@ class DukascopyProviderAdapter:
             "license_tag": request.license_tag or PERSONAL_USE_LICENSE,
         }
         bounds.update(dict(request.bounds))
-        fetched = self._inner.fetch(
-            SourceRequest(source=DUKASCOPY_PROVIDER, bounds=bounds)
-        )
+        fetched = self._inner.fetch(SourceRequest(source=DUKASCOPY_PROVIDER, bounds=bounds))
         if is_refusal(fetched):
             return fetched
         records: list[ProviderRecord] = []

@@ -174,9 +174,14 @@ def test_block_length_is_a_required_configurable_with_no_ratified_value() -> Non
     assert is_refusal(refused)
     assert refused.category is RefusalCategory.INVALID_INPUT
     # An explicit block length is accepted.
-    assert _ok(
-        run_candle_perturbation(candles=_candles(), base_seed=1, block_length=3, scenario_count=5)
-    ).block_length == 3
+    assert (
+        _ok(
+            run_candle_perturbation(
+                candles=_candles(), base_seed=1, block_length=3, scenario_count=5
+            )
+        ).block_length
+        == 3
+    )
 
 
 def test_block_length_cannot_exceed_the_candle_count() -> None:

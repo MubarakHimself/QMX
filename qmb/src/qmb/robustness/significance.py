@@ -666,9 +666,7 @@ def run_significance_gate(
     if is_refusal(returns):
         return returns
     detrended = _detrend(returns.value)
-    rule_returns = tuple(
-        detrended[index] for index in range(len(bars) - 1) if bars[index].fired
-    )
+    rule_returns = tuple(detrended[index] for index in range(len(bars) - 1) if bars[index].fired)
     observation_count = len(rule_returns)
     if observation_count == 0:
         return invalid(
@@ -1008,9 +1006,7 @@ def _resolve_block_length(config: object, explicit: object, scheme: str) -> Resu
     return Ok(resolved.value)
 
 
-def _resolve_positive_int(
-    config: object, explicit: object, key: str, field: str
-) -> Result[int]:
+def _resolve_positive_int(config: object, explicit: object, key: str, field: str) -> Result[int]:
     """Resolve a required positive-int configurable from the config key or an explicit arg.
 
     The input carries no ratified value (SC-07); unset it is a typed ``invalid input``

@@ -572,9 +572,7 @@ def regenerate_scenario(
     if is_anchor:
         produced = _original_anchor_bars(source_bars, grid.value, config.scale)
     else:
-        produced = run_generator_adapter(
-            scenario_config, grid=grid.value, source_bars=source_bars
-        )
+        produced = run_generator_adapter(scenario_config, grid=grid.value, source_bars=source_bars)
     if is_refusal(produced):
         return produced
     bars = produced.value

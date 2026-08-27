@@ -129,9 +129,7 @@ class ChartSeries:
     points: tuple[SeriesPoint, ...]
 
     @classmethod
-    def try_create(
-        cls, name: object, unit_kind: object, points: object
-    ) -> Result[ChartSeries]:
+    def try_create(cls, name: object, unit_kind: object, points: object) -> Result[ChartSeries]:
         """Validate and build a :class:`ChartSeries`, value-or-refusal."""
         token = clean_token(name)
         if token is None:
@@ -603,9 +601,7 @@ def _core_series(
         series.append(cumulative.value)
     else:
         omitted.append(OmittedSeries("cumulative_returns", "start equity is zero"))
-    drawdown_s = ChartSeries.try_create(
-        "drawdown", UnitKind.DIMENSIONLESS_RATIO, tuple(dd_points)
-    )
+    drawdown_s = ChartSeries.try_create("drawdown", UnitKind.DIMENSIONLESS_RATIO, tuple(dd_points))
     if is_refusal(drawdown_s):
         return drawdown_s
     series.append(drawdown_s.value)
