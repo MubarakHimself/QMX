@@ -10,14 +10,20 @@ IN THIS REPOSITORY on this branch. Do not stop to ask; when a genuine ambiguity 
 all references here, record it in the ledger as BLOCKED with your reasoning and move to the
 next card.
 
-## 0. Environment
+## 0. Environment (LOCAL run, operator's Windows laptop)
 
-You are on branch `fix/qa-round-1` of `MubarakHimself/QMX` (check it out if not; it forks
-from `integration` at `2c8d495`). Linux or Windows both work; Linux is preferred (the full
-toolchain, including mutmut and Skylos, runs natively). Setup: install `uv` if absent, then
-`uv sync --group dev` at the repo root. The repo is a uv workspace (packages/, extensions/,
-qml/, qmb/, tools/). `main` contains planning only — the code lives on `integration` and
-this branch.
+Work in `C:\Users\Mubarak\Desktop\QMX-worktrees\qa-audit` — a git worktree of
+`MubarakHimself/QMX` ALREADY checked out on branch `fix/qa-round-1` (forked from
+`integration` at `2c8d495`) with everything committed. Do NOT work in
+`C:\Users\Mubarak\Desktop\QMX`: that checkout stays on `main`, and git refuses to check
+the same branch out in two worktrees anyway. A `.venv` already exists in the worktree with
+the dev group synced; run `uv sync --group dev` once to confirm it. The repo is a uv
+workspace (packages/, extensions/, qml/, qmb/, tools/). `main` contains planning only —
+the code lives on `integration` and this branch.
+Windows notes: you never run Skylos locally (CI verifies it after your final push); the
+nightly mutmut job you add in OR-10(b) is a CI YAML change executing on Linux runners, not
+on this machine (sanity-running mutmut locally would need WSL and is NOT required). Ignore
+the stray untracked `coverage.json` in the worktree — never commit it.
 
 ## 1. Where everything is (all repo-relative, all committed on this branch)
 
