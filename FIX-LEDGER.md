@@ -12,8 +12,8 @@ Objective and method: `FIX-GOAL.md`. Resume from the first row not marked `PROVE
 | card id | finding ids | status | commit sha | proving test(s) | notes |
 |---|---|---|---|---|---|
 | FC-01 | QMX-F001, QMX-F002 | PROVEN | `0ae38ec` | `qa/tests/epic_10/test_h_control_action.py` (13 passed); qmf-risk unit suite (613 passed); Epic-10 QA (108 passed) | Act discriminator now reaches mint, scope, arbitration, and execution-target enforcement. Risk-reducing acts bypass `BLOCKS_PAPER`; entries remain blockable. No ADR was edited because this run permits only the CT-17 docs edit. |
-| FC-02 | QMX-F003 | in-progress | — | `qa/tests/epic_23` T23-PIN-03 | — |
-| FC-03 | QMX-F004 | todo | — | `qa/tests/epic_18` L2/L3 reds + read-back assertion | — |
+| FC-02 | QMX-F003 | PROVEN | `f1bfb4b` | T23-PIN-03 + `qmb/tests/test_data_generate.py` (62 passed) | Outer replay clock/world is validated before nested config merge. Full Epic-23 QA remains red only at FC-10/FC-13 pins. |
+| FC-03 | QMX-F004 | in-progress | — | `qa/tests/epic_18` L2/L3 reds + read-back assertion | — |
 | FC-04 | QMX-F010 | todo | — | `qa/tests/epic_15` partial-spawn ledger test | TO-BE-WRITTEN. |
 | FC-05 | QMX-F005 | todo | — | `qa/tests/epic_12` registration-removal/gate pin | OR-06: remove unauthorized wiring. |
 | FC-06 | QMX-F006 | todo | — | `qa/tests/epic_03` sealed-window read-path quantifier | TO-BE-WRITTEN. |
