@@ -6,26 +6,38 @@ requirements and produced a findings inventory, a fix-card backlog, and a set of
 rulings. Your job: execute the ENTIRE fix backlog in this one session, self-verified,
 ledger-tracked, and leave the repo one operator-click away from a stable release.
 The operator is non-technical and will NOT answer questions mid-run. Everything you need is
-IN THIS REPOSITORY on this branch. Do not stop to ask; when a genuine ambiguity survives
-all references here, record it in the ledger as BLOCKED with your reasoning and move to the
+committed on one git branch. Do not stop to ask; when a genuine ambiguity survives all
+references here, record it in the ledger as BLOCKED with your reasoning and move to the
 next card.
 
-## 0. Environment (LOCAL run, operator's Windows laptop)
+## 0. Environment and workspace (do this FIRST)
 
-Work in `C:\Users\Mubarak\Desktop\QMX-worktrees\qa-audit` — a git worktree of
-`MubarakHimself/QMX` ALREADY checked out on branch `fix/qa-round-1` (forked from
-`integration` at `2c8d495`) with everything committed. Do NOT work in
-`C:\Users\Mubarak\Desktop\QMX`: that checkout stays on `main`, and git refuses to check
-the same branch out in two worktrees anyway. A `.venv` already exists in the worktree with
-the dev group synced; run `uv sync --group dev` once to confirm it. The repo is a uv
-workspace (packages/, extensions/, qml/, qmb/, tools/). `main` contains planning only —
-the code lives on `integration` and this branch.
-Windows notes: you never run Skylos locally (CI verifies it after your final push); the
-nightly mutmut job you add in OR-10(b) is a CI YAML change executing on Linux runners, not
-on this machine (sanity-running mutmut locally would need WSL and is NOT required). Ignore
-the stray untracked `coverage.json` in the worktree — never commit it.
+You are launched in `C:\Users\Mubarak\Desktop\QMX` — the operator's main checkout, on
+branch `main`, which holds planning only. NEVER commit, switch branches, or leave any
+mess in this folder. Your first action is to create your own disposable workspace:
 
-## 1. Where everything is (all repo-relative, all committed on this branch)
+    git fetch origin fix/qa-round-1
+    git worktree add C:\Users\Mubarak\Desktop\QMX-worktrees\fix-round-1 fix/qa-round-1
+
+The branch `fix/qa-round-1` already exists (locally and on origin, forked from
+`integration` at `2c8d495`) and already contains everything: the QA artifacts under
+`qa/`, the machine-battery evidence, and this very brief at `FIX-GOAL.md` in its root.
+If `git worktree add` complains the branch is checked out elsewhere: run
+`git worktree list`, and remove a stale `qa-audit` or `qa-mutmut` entry with
+`git worktree remove --force <path>` — never touch the `QMX` main checkout entry.
+
+From here on, the worktree `C:\Users\Mubarak\Desktop\QMX-worktrees\fix-round-1` is your
+project root for the ENTIRE run; every path below is relative to it. `cd` there, run
+`uv sync --group dev` (fresh venv), and after ANY restart or context loss: re-read
+`FIX-GOAL.md` and `FIX-LEDGER.md` in that worktree first, then resume — trust those files
+over your memory.
+
+The repo is a uv workspace (packages/, extensions/, qml/, qmb/, tools/). Windows notes:
+you never run Skylos locally (CI verifies it after your final push); the nightly mutmut
+job you add in OR-10(b) is a CI YAML change executing on Linux runners, not on this
+machine (sanity-running mutmut locally would need WSL and is NOT required).
+
+## 1. Where everything is (paths relative to your worktree)
 
 | Thing | Path |
 |---|---|
@@ -40,30 +52,30 @@ the stray untracked `coverage.json` in the worktree — never commit it.
 
 ## 2. Git discipline (non-negotiable)
 
-- Work on `fix/qa-round-1` only. `main` is untouchable — never commit to it, never push it.
-  No force-push anywhere. No `--no-verify`. No amending published commits.
+- Work on `fix/qa-round-1` in your worktree only. `main` is untouchable — never commit to
+  it, never push it. No force-push anywhere. No `--no-verify`. No amending published
+  commits.
 - Small commits, one card (or one coherent card cluster) per commit, message starts with
   the card id: `FC-07: ...`. No AI attribution lines in commit messages.
 - When ALL cards are done and gates are green (step 6): merge `fix/qa-round-1` into
   `integration`, push `integration`, and verify the Skylos CI workflow run on that push
-  succeeds (use `gh run list --workflow skylos.yml --branch integration` and wait, if `gh`
-  is available; otherwise poll the GitHub Checks API with your credentials, and if neither
-  works, say so in the final report with the Actions link). `main` moves only by the
+  succeeds (`gh run list --workflow skylos.yml --branch integration`, then wait for it;
+  `gh` is installed and authenticated on this machine). `main` moves only by the
   operator's own squash-merge click — never by you.
 
-## 3. Setup steps
+## 3. Setup steps (in your worktree)
 
-1. `uv sync --group dev`; baseline run: `uv run poe check` and `uv run poe test`.
+1. Baseline run: `uv run poe check` and `uv run poe test`.
    ambient-scan WILL FAIL at baseline — that is finding QMX-F018, one of your cards.
    Record baseline numbers in the ledger.
 2. Add a poe task in `pyproject.toml` `[tool.poe.tasks]`:
    `qa-verify = "pytest qa/tests -q"` — do NOT add `qa/tests` to the default `test` task
    (it must stay a separate gate).
-3. Create `FIX-LEDGER.md` at the repo root (commit it, update it after EVERY card, commit
-   the update with the card's commit). Columns: card id | finding ids | status
+3. Create `FIX-LEDGER.md` at the worktree root (commit it, update it after EVERY card,
+   commit the update with the card's commit). Columns: card id | finding ids | status
    (todo / in-progress / PROVEN / blocked) | commit sha | proving test(s) | notes.
-   This ledger is your compaction insurance: on any restart or context loss, re-read this
-   file FIRST and resume from the first non-PROVEN row. Trust the ledger over your memory.
+   This ledger is your compaction insurance: on any restart, re-read it FIRST and resume
+   from the first non-PROVEN row.
 
 ## 4. The operator rulings — FINAL, do not re-litigate
 
@@ -174,10 +186,10 @@ scope — the 35 cards only.
    tests whose findings are ruled UNPROVEN-by-design (list them in the report).
 3. Merge `fix/qa-round-1` into `integration`, push `integration`, verify the Skylos CI run
    passes with the new ratcheted gate numbers (see section 2 for how).
-4. Write `FINAL-REPORT.md` at the repo root, plain words for a non-technical operator:
-   per-card table (card, what was wrong, what changed, proving test, commit), gates
-   summary, the UNPROVEN-by-design list, anything BLOCKED and why, and the compare link
-   `https://github.com/MubarakHimself/QMX/compare/main...integration`.
+4. Write `FINAL-REPORT.md` at the worktree root, plain words for a non-technical
+   operator: per-card table (card, what was wrong, what changed, proving test, commit),
+   gates summary, the UNPROVEN-by-design list, anything BLOCKED and why, and the compare
+   link `https://github.com/MubarakHimself/QMX/compare/main...integration`.
    End with: "main moves only by your squash-merge click."
 
 Work autonomously, use your sub-agents freely for parallelizable cards (disjoint files
