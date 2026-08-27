@@ -221,17 +221,57 @@ class StudyObjective:
         """Whether an optional early-stop target is declared (OPT-5)."""
         return self.target_value is not None
 
-    def meets_target(self, magnitude: Fraction) -> bool:
+    def meets_target(
+        self,
+        magnitude: Fraction,
+        *,
+        unit_kind: object = None,
+        currency: object = None,
+    ) -> Result[bool]:
         """Whether ``magnitude`` reaches the target under the objective's direction.
 
         ``max`` reaches the target at or above it; ``min`` at or below it. No target
         is never reached — the Study runs to its budget rather than stop early.
+
+        The comparison is guarded by the CT-01 unit-kind law (R10): a declared
+        target compares only against a measure of the same unit kind and currency —
+        a cross-kind or cross-currency operand is an ``invalid input`` refusal,
+        never a silent numeric comparison treating one currency's count as
+        another's. ``unit_kind`` / ``currency`` are the measure's own labels.
         """
         if self.target_value is None:
-            return False
+            return Ok(False)
+        measure_kind = clean_token(unit_kind) if unit_kind is not None else None
+        measure_currency = clean_token(currency) if currency is not None else None
+        if (
+            self.target_unit_kind is not None
+            and measure_kind is not None
+            and measure_kind != self.target_unit_kind
+        ):
+            return invalid(
+                "target_value",
+                "a Study objective target compares only against a measure of its own "
+                "unit kind; a cross-kind comparison is refused, never evaluated "
+                "numerically (CT-01, R10)",
+                target_unit_kind=self.target_unit_kind,
+                measure_unit_kind=measure_kind,
+            )
+        if (
+            self.target_currency is not None
+            and measure_currency is not None
+            and measure_currency != self.target_currency
+        ):
+            return invalid(
+                "target_value",
+                "a Study objective target compares only against a measure in its own "
+                "currency; a cross-currency comparison is refused, never evaluated as "
+                "a bare magnitude (CT-01, R10)",
+                target_currency=self.target_currency,
+                measure_currency=measure_currency,
+            )
         if self.direction == DIRECTION_MAX:
-            return magnitude >= self.target_value
-        return magnitude <= self.target_value
+            return Ok(magnitude >= self.target_value)
+        return Ok(magnitude <= self.target_value)
 
     def fp1_identity(self) -> dict[str, object]:
         """Canonical identity content. The exact target is stored as num/den."""
@@ -840,6 +880,13 @@ def _place_trial(
     verdict = failed.value
     if verdict is None:
         return Ok(None)  # a constraint metric was undefined/missing → incomplete
+    met = objective.meets_target(
+        resolved_objective.value,
+        unit_kind=resolved_objective.unit_kind,
+        currency=resolved_objective.currency,
+    )
+    if is_refusal(met):
+        return met
     trial = ScoredTrial(
         run_id=line.run_id,
         world=line.world.value,
@@ -848,7 +895,7 @@ def _place_trial(
         objective_den=resolved_objective.value.denominator,
         objective_unit_kind=resolved_objective.unit_kind,
         objective_currency=resolved_objective.currency,
-        meets_target=objective.meets_target(resolved_objective.value),
+        meets_target=met.value,
         failed_constraints=tuple(verdict),
     )
     if verdict:
