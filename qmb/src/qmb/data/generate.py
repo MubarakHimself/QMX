@@ -39,9 +39,8 @@ instrument) is a category-appropriate ``invalid input`` (R2, R8).
 from __future__ import annotations
 
 import math
-import random
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from fractions import Fraction
 from pathlib import Path
 from types import MappingProxyType
@@ -60,6 +59,13 @@ from qmb.config.compiler import (
     PROVENANCE_SYNTHETIC_TAINTED,
 )
 from qmb.data.gap_check import MarketHoursCalendar
+from qmb.data.rng import (
+    RNG_ALGORITHM,
+    RNG_FAMILY,
+    RNG_VERSION,
+    SEED_DERIVATION_RULE,
+    PinnedRng,
+)
 
 __all__ = [
     "ASSET_CLASS_FOREX_CFD",
@@ -82,7 +88,9 @@ __all__ = [
     "GENERATOR_PROVENANCE",
     "GENERATOR_WORLD",
     "HISTORY_SEEDED_PROCESSES",
+    "RNG_ALGORITHM",
     "RNG_FAMILY",
+    "RNG_VERSION",
     "SEED_DERIVATION_RULE",
     "SOURCE_DATASET_NONE",
     "SYNTHETIC_ORIGIN",
@@ -90,10 +98,14 @@ __all__ = [
     "ResolvedGeneratorConfig",
     "SourceDatasetRef",
     "SyntheticBar",
+    "build_generation_grid",
     "generate",
     "generate_identity",
     "has_generator_config",
+    "reproduce_generation",
     "resolve_generator_config",
+    "resolve_source_series",
+    "run_generator_adapter",
 ]
 
 # --- the v1 process menu (R2) — exactly four config-selected adapters --------
@@ -144,10 +156,11 @@ SYNTHETIC_ORIGIN: Final[str] = "synthetic"
 GENERATOR_PROVENANCE: Final[str] = PROVENANCE_SYNTHETIC_TAINTED
 GENERATOR_WORLD: Final[str] = World.SIMULATED.value
 
-# --- the pinned RNG (R5 foundation) ------------------------------------------
+# --- the pinned RNG (R5 foundation; Story 23.4) ------------------------------
 
-RNG_FAMILY: Final[str] = "python-stdlib-random-mt19937"
-SEED_DERIVATION_RULE: Final[str] = "base_seed + scenario_index"
+# The generator draws every random value through the QMX-owned, version-pinned RNG
+# (:mod:`qmb.data.rng`), never a runtime stdlib Random (spec section 2A.3, AC2). The
+# algorithm and version are recorded in the config identity and store provenance.
 _DEFAULT_SEED: Final[int] = 0
 _DEFAULT_SCENARIO_COUNT: Final[int] = 1
 
@@ -381,7 +394,9 @@ class ResolvedGeneratorConfig:
                 key: self.process_params[key] for key in sorted(self.process_params)
             },
             "resolution": self.resolution,
+            "rng_algorithm": RNG_ALGORITHM,
             "rng_family": RNG_FAMILY,
+            "rng_version": RNG_VERSION,
             "rounding_mode": self.rounding_mode,
             "scale": self.scale,
             "scenario_count": self.scenario_count,
@@ -405,6 +420,16 @@ class ResolvedGeneratorConfig:
     def as_mapping(self) -> dict[str, object]:
         """Machine-readable resolved config (door transport)."""
         return dict(self.fp1_identity())
+
+    def with_seed(self, seed: int) -> ResolvedGeneratorConfig:
+        """This config with the master seed replaced — the per-scenario substream config.
+
+        A scenario's substream seed is ``base_seed + scenario_index`` (SEED_DERIVATION_RULE),
+        so ``config.with_seed(base + k)`` is scenario ``k``'s config; its ``fp1`` is a
+        distinct deterministic run id, and running the adapter over it reproduces
+        scenario ``k`` bit-for-bit in isolation (AC3).
+        """
+        return replace(self, seed=int(seed))
 
 
 # --- the generation receipt --------------------------------------------------
@@ -438,6 +463,9 @@ class GenerateReceipt:
     seed: int
     scenario_count: int
     rng_family: str
+    rng_algorithm: str
+    rng_version: int
+    artifact_fingerprint: str
     bars: tuple[SyntheticBar, ...]
 
     def as_mapping(self) -> dict[str, object]:
@@ -467,6 +495,9 @@ class GenerateReceipt:
             "seed": self.seed,
             "scenario_count": self.scenario_count,
             "rng_family": self.rng_family,
+            "rng_algorithm": self.rng_algorithm,
+            "rng_version": self.rng_version,
+            "artifact_fingerprint": self.artifact_fingerprint,
             "bars": tuple(bar.as_mapping() for bar in self.bars),
         }
 
@@ -487,10 +518,40 @@ def generate_identity() -> dict[str, object]:
         "synthetic_origin": SYNTHETIC_ORIGIN,
         "generator_provenance": GENERATOR_PROVENANCE,
         "generator_world": GENERATOR_WORLD,
+        "rng_algorithm": RNG_ALGORITHM,
         "rng_family": RNG_FAMILY,
+        "rng_version": RNG_VERSION,
+        "rng_is_runtime_stdlib_random": False,
+        "seed_derivation_rule": SEED_DERIVATION_RULE,
         "asset_class": ASSET_CLASS_FOREX_CFD,
         "library_is_never_swapped": True,
     }
+
+
+# --- the full-artifact fingerprint (R5; B-10 reproduce-or-refuse) -------------
+
+_ARTIFACT_CLASS: Final[str] = "qmb-synthetic-artifact"
+
+
+def artifact_fp1_identity(config_fp1: str, bars: tuple[SyntheticBar, ...]) -> dict[str, object]:
+    """The canonical identity of a produced synthetic artifact (R5, AC1).
+
+    Binds the generator-config ``fp1`` (which already pins ``{process, seed,
+    source-dataset id, rng algorithm/version}``) to the exact produced bar sequence, so
+    the artifact fingerprint is a pure function of ``{process, seed, source-dataset id,
+    generator-config fp1}`` and re-generation reproduces it bit-for-bit (B-10).
+    """
+    return {
+        "bars": [bar.fp1_identity() for bar in bars],
+        "class": _ARTIFACT_CLASS,
+        "config_fp1": config_fp1,
+        "rng_family": RNG_FAMILY,
+    }
+
+
+def _artifact_fingerprint(config_fp1: str, bars: tuple[SyntheticBar, ...]) -> Result[Fingerprint]:
+    """``fp1`` over the produced artifact, computed only by qmf-core (AR-14)."""
+    return fingerprint(artifact_fp1_identity(config_fp1, bars))
 
 
 def has_generator_config(resources: object) -> bool:
@@ -673,50 +734,16 @@ def generate(
         cast("Mapping[str, object]", resources) if isinstance(resources, Mapping) else {}
     )
 
-    instrument = config.instrument
-    if is_refusal(instrument):
-        return instrument
-    rounding = RoundingMode(config.rounding_mode)
+    source_loaded = resolve_source_series(config, source_series=source_series, resources=body)
+    if is_refusal(source_loaded):
+        return source_loaded
+    source_bars = source_loaded.value
 
-    source_bars: tuple[SyntheticBar, ...] | None = None
-    if config.is_history_seeded:
-        loaded = _resolve_source_series(
-            config,
-            explicit=source_series if source_series is not None else body.get("source_series"),
-            store=body.get("store"),
-        )
-        if is_refusal(loaded):
-            return loaded
-        source_bars = loaded.value
-
-    active_calendar = _resolve_calendar(config, calendar=calendar, resources=body)
-    if is_refusal(active_calendar):
-        return active_calendar
-
-    grid = _market_hours_grid(
-        active_calendar.value,
-        start_ns=config.start_ns,
-        end_ns=config.end_ns,
-        step_ns=config.bar_step_ns,
-    )
+    grid = build_generation_grid(config, calendar=calendar, resources=body)
     if is_refusal(grid):
         return grid
-    if not grid.value:
-        return invalid(
-            "window",
-            "the market-hours grid is empty for the requested window and calendar; "
-            "no open session bar falls in [start, end)",
-            start_ns=config.start_ns,
-            end_ns=config.end_ns,
-        )
 
-    produced = _run_adapter(
-        config,
-        instrument=instrument.value,
-        rounding=rounding,
-        grid=grid.value,
-        source_bars=source_bars,
-    )
+    produced = run_generator_adapter(config, grid=grid.value, source_bars=source_bars)
     if is_refusal(produced):
         return produced
     bars = produced.value
@@ -725,6 +752,10 @@ def generate(
     if is_refusal(materialized):
         return materialized
     run_id, artifact_path, written = materialized.value
+
+    artifact_fp = _artifact_fingerprint(run_id.value, bars)
+    if is_refusal(artifact_fp):
+        return artifact_fp
 
     tainted = _store_taint(
         config,
@@ -763,9 +794,160 @@ def generate(
             seed=config.seed,
             scenario_count=config.scenario_count,
             rng_family=RNG_FAMILY,
+            rng_algorithm=RNG_ALGORITHM,
+            rng_version=RNG_VERSION,
+            artifact_fingerprint=artifact_fp.value.value,
             bars=bars,
         )
     )
+
+
+# --- the generation building blocks (reused by the scenario fan-out) ----------
+
+
+def resolve_source_series(
+    config: ResolvedGeneratorConfig,
+    *,
+    source_series: object = None,
+    resources: object = None,
+) -> Result[tuple[SyntheticBar, ...] | None]:
+    """Resolve a history-seeded process's CT-10 source bars, or ``None`` for gbm (R2).
+
+    A from-scratch ``gbm`` config needs no source and returns ``None``. A history-seeded
+    process resolves the cited source series from an injected ``source_series`` (or the
+    ``source_series`` / ``store`` resources); an unresolved citation is an
+    ``unavailable dependency`` refusal, never a silent from-scratch fallback. The
+    resolved bars are the single real anchor every scenario shares (AC4).
+    """
+    body: Mapping[str, object] = (
+        cast("Mapping[str, object]", resources) if isinstance(resources, Mapping) else {}
+    )
+    if not config.is_history_seeded:
+        return Ok(None)
+    explicit = source_series if source_series is not None else body.get("source_series")
+    loaded = _resolve_source_series(config, explicit=explicit, store=body.get("store"))
+    if is_refusal(loaded):
+        return loaded
+    resolved: tuple[SyntheticBar, ...] | None = loaded.value
+    return Ok(resolved)
+
+
+def build_generation_grid(
+    config: ResolvedGeneratorConfig,
+    *,
+    calendar: MarketHoursCalendar | None = None,
+    resources: object = None,
+) -> Result[tuple[int, ...]]:
+    """Build the market-hours-aware int64 UTC-ns grid every scenario shares (R6).
+
+    Resolves the CT-02 market-hours calendar (injected, always-open, or the forex
+    extension) and enumerates the open-session bar-open instants in ``[start, end)``.
+    An empty grid for the requested window and calendar is a typed ``invalid input``.
+    The grid is scenario-independent — the timeline is shared so original-vs-perturbed
+    scenarios are directly comparable (spec section 2B).
+    """
+    body: Mapping[str, object] = (
+        cast("Mapping[str, object]", resources) if isinstance(resources, Mapping) else {}
+    )
+    active_calendar = _resolve_calendar(config, calendar=calendar, resources=body)
+    if is_refusal(active_calendar):
+        return active_calendar
+    grid = _market_hours_grid(
+        active_calendar.value,
+        start_ns=config.start_ns,
+        end_ns=config.end_ns,
+        step_ns=config.bar_step_ns,
+    )
+    if is_refusal(grid):
+        return grid
+    if not grid.value:
+        return invalid(
+            "window",
+            "the market-hours grid is empty for the requested window and calendar; "
+            "no open session bar falls in [start, end)",
+            start_ns=config.start_ns,
+            end_ns=config.end_ns,
+        )
+    return grid
+
+
+def run_generator_adapter(
+    config: ResolvedGeneratorConfig,
+    *,
+    grid: tuple[int, ...],
+    source_bars: tuple[SyntheticBar, ...] | None = None,
+) -> Result[tuple[SyntheticBar, ...]]:
+    """Run the config-selected adapter over a resolved grid, gating every bar (R6, R8).
+
+    The adapter draws every random value through the QMX-owned pinned RNG seeded from
+    ``config.seed`` (AC2), so a per-scenario config (seed ``base + scenario_index``)
+    reproduces that scenario's bars bit-for-bit in isolation (AC3). The completed-bar
+    OHLC integrity gate refuses, never corrects.
+    """
+    instrument = config.instrument
+    if is_refusal(instrument):
+        return instrument
+    rounding = RoundingMode(config.rounding_mode)
+    return _run_adapter(
+        config,
+        instrument=instrument.value,
+        rounding=rounding,
+        grid=tuple(grid),
+        source_bars=source_bars,
+    )
+
+
+# --- reproduce-or-refuse (R5; B-10) ------------------------------------------
+
+
+def reproduce_generation(
+    resources: object,
+    *,
+    expected_artifact_fingerprint: object,
+    calendar: MarketHoursCalendar | None = None,
+    source_series: object = None,
+    generated_at_ns: int | None = None,
+) -> Result[GenerateReceipt]:
+    """Regenerate and reproduce the recorded artifact fingerprint, or refuse (B-10, AC1).
+
+    Determinism is a platform property (NFR-03): the full artifact is bit-reproducible
+    from ``{process, seed, source-dataset id, generator-config fp1}``. This re-runs the
+    generation and compares its artifact fingerprint to the recorded
+    ``expected_artifact_fingerprint``. On a match the fresh receipt is returned; a
+    mismatch — a non-reproducible artifact — is a typed ``invalid input`` refusal, never
+    a silently-accepted divergence (reproduce-or-refuse). No output root is written; the
+    reproduction is a pure verification.
+    """
+    expected = clean_token(expected_artifact_fingerprint)
+    if expected is None and isinstance(expected_artifact_fingerprint, Fingerprint):
+        expected = expected_artifact_fingerprint.value
+    if expected is None:
+        return invalid(
+            "expected_artifact_fingerprint",
+            "reproduce-or-refuse compares against the recorded artifact fingerprint (fp1)",
+            given=repr(expected_artifact_fingerprint),
+        )
+    regenerated = generate(
+        resources,
+        calendar=calendar,
+        source_series=source_series,
+        output_root=None,
+        generated_at_ns=generated_at_ns,
+    )
+    if is_refusal(regenerated):
+        return regenerated
+    receipt = regenerated.value
+    if receipt.artifact_fingerprint != expected:
+        return invalid(
+            "artifact_fingerprint",
+            "re-generation did not reproduce the recorded artifact fingerprint; the "
+            "artifact is not bit-reproducible from {process, seed, source-dataset id, "
+            "generator-config fp1} and is refused, never silently accepted (B-10, R5, NFR-03)",
+            expected=expected,
+            regenerated=receipt.artifact_fingerprint,
+            config_fingerprint=receipt.config_fingerprint,
+        )
+    return Ok(receipt)
 
 
 # --- the config-selected adapters (R2, R6) -----------------------------------
@@ -932,7 +1114,7 @@ def _draw_gaussian_resample(
     lo_gaps = [min(bar.open, bar.close) - bar.low for bar in source_bars]
     _, hi_std = _mean_std(hi_gaps)
     _, lo_std = _mean_std(lo_gaps)
-    rng = random.Random(config.seed)  # noqa: S311 — a reproducible resample, never a cryptographic use
+    rng = PinnedRng(config.seed)  # QMX-owned pinned RNG, never a runtime stdlib Random (AC2)
     anchor = float(_seed_price_of(source_bars)) / scale_div
     mean_real = mean_delta / scale_div
     std_real = std_delta / scale_div
@@ -980,7 +1162,7 @@ def _draw_gaussian_noise(
     if is_refusal(sigma):
         return sigma
     sigma_real = float(sigma.value)
-    rng = random.Random(config.seed)  # noqa: S311 — a reproducible perturbation, never a cryptographic use
+    rng = PinnedRng(config.seed)  # QMX-owned pinned RNG, never a runtime stdlib Random (AC2)
     scale_div = float(10**config.scale)
     cumulative = 0.0
     draws: list[_Draw] = []
@@ -1020,7 +1202,7 @@ def _draw_gbm(
         return drift
     sigma = float(volatility.value)
     mu = float(drift.value)
-    rng = random.Random(config.seed)  # noqa: S311 — a reproducible GBM path, never a cryptographic use
+    rng = PinnedRng(config.seed)  # QMX-owned pinned RNG, never a runtime stdlib Random (AC2)
     scale_div = float(10**config.scale)
     anchor = float(seed_price) / scale_div
     draws: list[_Draw] = []
@@ -1039,7 +1221,17 @@ def _draw_gbm(
         close = convert.price(stepped)
         if is_refusal(close):
             return close
-        anchor = float(close.value) / scale_div
+        try:
+            anchor = float(close.value) / scale_div
+        except OverflowError:
+            # A finite but astronomically large price whose scaled integer exceeds the
+            # float-representable money path is a diverged GBM path — a typed refusal, the
+            # same category as a non-finite step, never an uncaught crash (R6, R8).
+            return invalid(
+                "volatility",
+                "the GBM path diverged beyond the representable price range; lower the volatility",
+                volatility=config.process_params.get("volatility"),
+            )
         hi_ext = convert.offset(abs(rng.gauss(0.0, sigma / 2.0)) * anchor)
         if is_refusal(hi_ext):
             return hi_ext
@@ -1363,7 +1555,10 @@ def _store_taint(
     if stamp is None:
         import time  # noqa: PLC0415 — the generation timestamp is provenance, never identity
 
-        stamp = time.time_ns()
+        # The generation timestamp is injectable via ``generated_at_ns``; this wall-clock
+        # fallback is a sanctioned recorded-provenance read that never enters fp1 identity,
+        # so determinism (the artifact fingerprint) does not depend on it (B-13, AC1).
+        stamp = time.time_ns()  # ambient-scan: allow
     provenance = tag_synthetic_artifact(
         config,
         artifact_kind=ARTIFACT_SERIES,
@@ -1701,7 +1896,7 @@ def _resample_blocks(
     n = len(deltas)
     num_starts = n - block_length + 1
     blocks_needed = -(-count // block_length)  # ceil division
-    rng = random.Random(seed)  # noqa: S311 — a reproducible resample, never a cryptographic use
+    rng = PinnedRng(seed)  # QMX-owned pinned RNG, never a runtime stdlib Random (AC2)
     resampled: list[tuple[int, int, int, int]] = []
     for _ in range(blocks_needed):
         start = rng.randrange(num_starts)

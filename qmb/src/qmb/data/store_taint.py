@@ -77,6 +77,7 @@ from qmb.data.generate import (
     SYNTHETIC_ORIGIN,
     ResolvedGeneratorConfig,
 )
+from qmb.data.rng import RNG_ALGORITHM, RNG_FAMILY, RNG_VERSION
 
 __all__ = [
     "ARTIFACT_DERIVED_AGGREGATE",
@@ -258,11 +259,18 @@ class SyntheticStoreProvenance:
 
         Adds the recorded-not-identity provenance fields AC1 enumerates — the
         generation timestamp (UTC-ns) and the QMX generator version — to the fp1
-        identity content.
+        identity content, plus the QMX-owned pinned-RNG algorithm and version the
+        generator drew through (Story 23.4, AC2; recorded provenance, never fp1 identity,
+        since the config ``fp1`` already binds the RNG). The generator never draws through
+        a runtime stdlib Random (spec section 2A.3).
         """
         record = dict(self.fp1_identity())
         record["generation_timestamp_ns"] = self.generation_timestamp_ns
         record["generator_version"] = self.generator_version
+        record["rng_algorithm"] = RNG_ALGORITHM
+        record["rng_family"] = RNG_FAMILY
+        record["rng_version"] = RNG_VERSION
+        record["rng_is_runtime_stdlib_random"] = False
         return record
 
     def fingerprint(self) -> Result[Fingerprint]:

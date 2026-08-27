@@ -1234,6 +1234,27 @@ def test_data_generate_usage_example_runs_clean() -> None:
     assert "data generate ok" in completed.stdout
 
 
+def test_data_scenarios_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "data_scenarios_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "RNG is QMX-owned qmx-splitmix64-v1, version-pinned" in completed.stdout
+    assert "is_runtime_stdlib_random=False" in completed.stdout
+    assert "reproduce-or-refuse: same inputs reproduce the artifact fingerprint" in completed.stdout
+    assert "scenario substreams seed=base+index" in completed.stdout
+    assert "reproduces in isolation=True" in completed.stdout
+    assert "history-seeded scenario 0 is the untouched original real path" in completed.stdout
+    assert "from-scratch gbm has no scenario-0 anchor and no robustness band" in completed.stdout
+    assert "never silent oversubscription" in completed.stdout
+    assert "scenario failures counted as typed refusals" in completed.stdout
+    assert "data scenarios ok" in completed.stdout
+
+
 def test_claim_class_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "claim_class_usage.py")],
