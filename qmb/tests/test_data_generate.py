@@ -517,10 +517,14 @@ def test_non_mapping_resources_refuses() -> None:
 def test_missing_instrument_parts_refuse() -> None:
     body = _gbm_resources()
     del body["venue"]
-    assert resolve_generator_config(body).context["field"] == "venue"
+    venue_refusal = resolve_generator_config(body)
+    assert is_refusal(venue_refusal)
+    assert venue_refusal.context["field"] == "venue"
     body = _gbm_resources()
     del body["symbol"]
-    assert resolve_generator_config(body).context["field"] == "symbol"
+    symbol_refusal = resolve_generator_config(body)
+    assert is_refusal(symbol_refusal)
+    assert symbol_refusal.context["field"] == "symbol"
 
 
 def test_non_integer_scale_refuses() -> None:
