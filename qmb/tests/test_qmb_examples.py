@@ -875,6 +875,34 @@ def test_significance_gate_usage_example_runs_clean() -> None:
     assert "rule significance gate ok" in completed.stdout
 
 
+def test_walk_forward_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "walk_forward_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert (
+        "a walk-forward is a sequence of split manifests; each window is two first-class runs; "
+        "train/test are display aliases" in completed.stdout
+    )
+    assert "in-sample run is role=trial, never a bar verdict" in completed.stdout
+    assert "not-yet-ruled" in completed.stdout
+    assert "one registry as-of resolved at admission, frozen for every window" in completed.stdout
+    assert (
+        "after admission fragments resolve by explicit fp1, never name@latest" in completed.stdout
+    )
+    assert "recompiling a run reproduces its run-config fingerprint" in completed.stdout
+    assert (
+        "window count / spans / step are UI-editable configurables with no ratified value"
+        in completed.stdout
+    )
+    assert "read-time aggregation over the window runs, never a merged run" in completed.stdout
+    assert "walk forward ok" in completed.stdout
+
+
 def pythonpath() -> str:
     return os.pathsep.join(
         [
