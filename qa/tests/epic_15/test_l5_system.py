@@ -10,21 +10,21 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from _e15 import config, make_ledger, ok, slices
-
-from qmf.core.refusal import is_ok
-
+import pytest
+from _e15 import config, lines_for_role, make_ledger, ok, slices
+from qmb.ledger import ROLE_ABORTED, ROLE_CONFIRMATION
 from qmb.orchestrator import (
     SpawnJob,
     abort_run,
     finish_run,
     run_directory_name,
     spawn_concurrent,
+    spawn_governed,
     spawn_run,
     start_run,
 )
 from qmb.orchestrator.watch import ABORT_KILLS_SIBLINGS
-from qmb.ledger import ROLE_CONFIRMATION
+from qmf.core.refusal import is_ok, is_refusal
 
 
 # -- T-15.1-a [R1] real stdlib spawn, isolated dir named by run id -----------
@@ -66,6 +66,48 @@ def test_concurrent_real_processes_never_share_a_writer(tmp_path):
     log_a, log_b = dir_a / "run.log", dir_b / "run.log"
     assert log_a.is_file() and log_b.is_file(), "each run streams its own operational log"
     assert log_a != log_b, "no two live runs share a log writer"
+
+
+# -- FC-04 [R13, R-010] partial spawn cleanup is never silently absent -------
+@pytest.mark.parametrize("governed", [False, True], ids=["concurrent", "governed"])
+def test_partial_spawn_failure_ledgers_each_reaped_run_once(tmp_path, governed):
+    """When run k fails to start, every already-started run is reaped and gets
+    exactly one aborted ledger line; the failed and never-attempted runs get none.
+
+    Counter-case that FAILS: cleanup kills an already-started process without a
+    durable line, or falsely ledgers a run for which no process was ever started.
+    """
+    out = tmp_path / "out"
+    out.mkdir()
+    led = tmp_path / "led"
+    led.mkdir()
+    started = config("partial-started")
+    fails_to_start = config("partial-refused")
+    never_started = config("partial-never-started")
+
+    refused_name = ok(run_directory_name(fails_to_start.fingerprint))
+    (out / refused_name).mkdir()
+    jobs = (
+        SpawnJob(config=started, slices=slices(), projected_peak_memory=1),
+        SpawnJob(config=fails_to_start, slices=slices(), projected_peak_memory=1),
+        SpawnJob(config=never_started, slices=slices(), projected_peak_memory=1),
+    )
+    if governed:
+        result = spawn_governed(
+            jobs,
+            output_root=out,
+            cpu_budget=3,
+            memory_budget=3,
+            ledger=make_ledger(led),
+        )
+    else:
+        result = spawn_concurrent(jobs, output_root=out, ledger=make_ledger(led))
+
+    assert is_refusal(result), "run k's start refusal is returned"
+    aborted = lines_for_role(led, ROLE_ABORTED)
+    assert [line.run_id for line in aborted] == [started.fingerprint]
+    assert aborted[0].refusal is not None
+    assert aborted[0].refusal.get("cause") == "reaped/abandoned"
 
 
 # -- T-15.3-e [R11] kill-one-not-siblings -----------------------------------

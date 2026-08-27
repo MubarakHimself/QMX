@@ -18,7 +18,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
-from typing import Final, cast
+from typing import TYPE_CHECKING, Final, cast
 
 from qmf.core.chrono import Instant
 from qmf.core.fingerprint import Fingerprint, World
@@ -33,6 +33,7 @@ from qmf.core.refusal import (
 
 from qmb._refuse import invalid, policy, unavailable
 from qmb.config.compiler import ResolvedRunConfig
+from qmb.ledger.line import mint_aborted_line
 from qmb.orchestrator.governor import (
     ON_FULL_ENQUEUE,
     GovernedRequest,
@@ -75,6 +76,9 @@ from qmb.runloop.observe import (
     limits_from_config,
 )
 
+if TYPE_CHECKING:
+    from qmb.orchestrator.ledger import LedgerSink
+
 __all__ = [
     "DAEMON",
     "DOCKER",
@@ -109,6 +113,7 @@ RESULT_NAME: Final[str] = "result.json"
 WRITER_NAME: Final[str] = "writer.json"
 WORKER_MODULE: Final[str] = "qmb.orchestrator.worker"
 _PAYLOAD_CLASS: Final[str] = "qmb-orchestrator-payload-v1"
+_REAPED_CAUSE: Final[str] = "reaped/abandoned"
 
 
 @dataclass(frozen=True, slots=True)
@@ -203,6 +208,7 @@ def spawn_governed(
     budgets: object = None,
     on_full: object = ON_FULL_ENQUEUE,
     projected_peak_memory: object = None,
+    ledger: object = None,
 ) -> Result[tuple[IsolatedRun, ...]]:
     """Spawn under the resource governor: admit by min(cpu, memory), enqueue-on-full.
 
@@ -213,6 +219,9 @@ def spawn_governed(
     parsed = _coerce_jobs(jobs)
     if is_refusal(parsed):
         return parsed
+    bound_ledger = _as_ledger_sink(ledger)
+    if is_refusal(bound_ledger):
+        return bound_ledger
     items = parsed.value
     if not items:
         return invalid(
@@ -249,14 +258,22 @@ def spawn_governed(
         submitted = bound.submit(request)
         if is_refusal(submitted):
             return submitted
-    return _drain_governed(items, bound, output_root)
+    return _drain_governed(items, bound, output_root, bound_ledger.value)
 
 
-def spawn_concurrent(jobs: object, *, output_root: object) -> Result[tuple[IsolatedRun, ...]]:
+def spawn_concurrent(
+    jobs: object,
+    *,
+    output_root: object,
+    ledger: object = None,
+) -> Result[tuple[IsolatedRun, ...]]:
     """Start every job as its own OS process, then collect — never a shared writer."""
     parsed = _coerce_jobs(jobs)
     if is_refusal(parsed):
         return parsed
+    bound_ledger = _as_ledger_sink(ledger)
+    if is_refusal(bound_ledger):
+        return bound_ledger
     items = parsed.value
     if not items:
         return invalid(
@@ -284,10 +301,17 @@ def spawn_concurrent(jobs: object, *, output_root: object) -> Result[tuple[Isola
             limits=job.limits,
         )
         if is_refusal(started):
-            _reap_live(live)
+            by_id = {job.config.fingerprint.value: job for job in items}
+            reaped = _reap_live(live, by_id=by_id, ledger=bound_ledger.value)
+            if is_refusal(reaped):
+                return reaped
             return started
         live.append(started.value)
-    return _collect_all(items, {item.run_id.value: item for item in live})
+    return _collect_all(
+        items,
+        {item.run_id.value: item for item in live},
+        bound_ledger.value,
+    )
 
 
 def start_run(
@@ -818,13 +842,20 @@ def _drain_governed(
     items: tuple[SpawnJob, ...],
     governor: ResourceGovernor,
     output_root: object,
+    ledger: LedgerSink | None,
 ) -> Result[tuple[IsolatedRun, ...]]:
     by_id = {job.config.fingerprint.value: job for job in items}
     live: dict[str, LiveSpawn] = {}
     collected: dict[str, IsolatedRun] = {}
     aborted: TypedRefusal | None = None
     for request in governor.running:
-        started = _start_job(by_id[request.run_id.value], output_root, live)
+        started = _start_job(
+            by_id[request.run_id.value],
+            output_root,
+            live,
+            by_id=by_id,
+            ledger=ledger,
+        )
         if is_refusal(started):
             return started
     while live:
@@ -835,22 +866,40 @@ def _drain_governed(
                 aborted = aborted or done
                 admitted = governor.release(token)
                 if is_refusal(admitted):
-                    _reap_live(tuple(live.values()))
+                    reaped = _reap_live(tuple(live.values()), by_id=by_id, ledger=ledger)
+                    if is_refusal(reaped):
+                        return reaped
                     return admitted
                 for admission in admitted.value:
-                    started = _start_job(by_id[admission.run_id.value], output_root, live)
+                    started = _start_job(
+                        by_id[admission.run_id.value],
+                        output_root,
+                        live,
+                        by_id=by_id,
+                        ledger=ledger,
+                    )
                     if is_refusal(started):
                         return started
                 continue
-            _reap_live(tuple(live.values()))
+            reaped = _reap_live(tuple(live.values()), by_id=by_id, ledger=ledger)
+            if is_refusal(reaped):
+                return reaped
             return done
         collected[token] = done.value
         admitted = governor.release(token)
         if is_refusal(admitted):
-            _reap_live(tuple(live.values()))
+            reaped = _reap_live(tuple(live.values()), by_id=by_id, ledger=ledger)
+            if is_refusal(reaped):
+                return reaped
             return admitted
         for admission in admitted.value:
-            started = _start_job(by_id[admission.run_id.value], output_root, live)
+            started = _start_job(
+                by_id[admission.run_id.value],
+                output_root,
+                live,
+                by_id=by_id,
+                ledger=ledger,
+            )
             if is_refusal(started):
                 return started
     if aborted is not None:
@@ -862,7 +911,9 @@ def _drain_governed(
 def _collect_all(
     items: tuple[SpawnJob, ...],
     live: dict[str, LiveSpawn],
+    ledger: LedgerSink | None,
 ) -> Result[tuple[IsolatedRun, ...]]:
+    by_id = {job.config.fingerprint.value: job for job in items}
     collected: dict[str, IsolatedRun] = {}
     aborted: TypedRefusal | None = None
     remaining = dict(live)
@@ -873,7 +924,9 @@ def _collect_all(
             if is_aborted_refusal(done):
                 aborted = aborted or done
                 continue
-            _reap_live(tuple(remaining.values()))
+            reaped = _reap_live(tuple(remaining.values()), by_id=by_id, ledger=ledger)
+            if is_refusal(reaped):
+                return reaped
             return done
         collected[token] = done.value
     if aborted is not None:
@@ -910,6 +963,9 @@ def _start_job(
     job: SpawnJob,
     output_root: object,
     live: dict[str, LiveSpawn],
+    *,
+    by_id: Mapping[str, SpawnJob],
+    ledger: LedgerSink | None,
 ) -> Result[None]:
     started = start_run(
         config=job.config,
@@ -919,7 +975,9 @@ def _start_job(
         limits=job.limits,
     )
     if is_refusal(started):
-        _reap_live(tuple(live.values()))
+        reaped = _reap_live(tuple(live.values()), by_id=by_id, ledger=ledger)
+        if is_refusal(reaped):
+            return reaped
         return started
     live[job.config.fingerprint.value] = started.value
     return Ok(None)
@@ -1379,9 +1437,48 @@ def _append_spawn_log(
     )
 
 
-def _reap_live(live: Sequence[LiveSpawn]) -> None:
+def _reap_live(
+    live: Sequence[LiveSpawn],
+    *,
+    by_id: Mapping[str, SpawnJob],
+    ledger: LedgerSink | None,
+) -> Result[None]:
+    first_ledger_failure: TypedRefusal | None = None
     for item in live:
         kill_owned_process(item.process)
+        if ledger is None:
+            continue
+        job = by_id[item.run_id.value]
+        refusal = refuse_aborted_process(
+            cause=_REAPED_CAUSE,
+            run_id=item.run_id.value,
+            output_dir=item.output_dir,
+            pid=item.pid,
+        )
+        minted = mint_aborted_line(job.config, refusal)
+        if is_refusal(minted):
+            first_ledger_failure = first_ledger_failure or minted
+            continue
+        appended = ledger.append(minted.value)
+        if is_refusal(appended):
+            first_ledger_failure = first_ledger_failure or appended
+    if first_ledger_failure is not None:
+        return first_ledger_failure
+    return Ok(None)
+
+
+def _as_ledger_sink(value: object) -> Result[LedgerSink | None]:
+    if value is None:
+        return Ok(None)
+    from qmb.orchestrator.ledger import LedgerSink  # noqa: PLC0415 - break import cycle
+
+    if not isinstance(value, LedgerSink):
+        return invalid(
+            "ledger",
+            "batch spawn cleanup writes each reaped run through a LedgerSink",
+            given=repr(type(value).__name__),
+        )
+    return Ok(value)
 
 
 def _as_cancel_token(value: object) -> Result[CancelToken]:
