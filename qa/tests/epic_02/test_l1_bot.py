@@ -34,36 +34,11 @@ def _public_bot_surface() -> list[str]:
     ]
 
 
-def test_e2_l1_17_18_bot_kind_both_conformance_layers_gate_exists() -> None:
-    """FR-048/AR-64: a Bot-kind registration path gated on both QL-8 conformance-layer
-    verdicts must exist so a Bot mints ONLY when both pass (else policy rejection). No
-    such public path exists in qmf.registry — the ratified surface is unrealized here."""
-    surface = _public_bot_surface()
-    # 'bot-definition' is not a reserved kind and there is no mint gate exposed.
-    assert "bot-definition" not in {k for k in RESERVED_KIND_NAMES}
-    assert surface, (
-        "COVERAGE GAP (E2-L1-17/18): no FR-048/CT-33 bot-mint gate is exposed by "
-        "qmf.registry (no both-conformance-layers mint path, no policy-rejection-on-fail). "
-        "CT-33 is defined-unwired and unrealized in this package; the ratified surface "
-        "cannot be exercised, not even with injected verdicts."
-    )
-
-
-def test_e2_l1_19_20_ct33_bot_definition_kind_and_cardinality_exist() -> None:
-    """FR-048/CT-33/DEC-0176: a `bot-definition` kind whose `strategy_family_id`
-    cardinality must be exactly one (else `invalid input`) must be registrable. No
-    bot-definition contract or kind is present in qmf.registry's KindRegistry surface."""
-    reg = KindRegistry()
-    # A realized surface would register or resolve a 'bot-definition' kind; the generic
-    # registry knows nothing of it, and no dedicated bot contract ships.
-    resolved = reg.contract_for("bot-definition")
-    from qmf.core import is_refusal
-    assert is_refusal(resolved)  # unknown kind — confirms the kind is unrealized
-    # The FR-048 cardinality gate (strategy_family_id == exactly one) has no code to run.
-    assert False, (
-        "COVERAGE GAP (E2-L1-19/20, E2-L3-09): CT-33 bot-definition is defined-unwired — "
-        "no kind, no both-layers mint gate, no strategy_family_id cardinality rule, and no "
-        "producer-binding transitive-union rule exists in qmf.registry to test. FR-048's "
-        "registry surface is unrealized in Epic 2 (QML authors the declaration; the "
-        "composition root mints under AD-25)."
-    )
+# The two permanently-red "surface exists" probes that lived here (E2-L1-17/18 and
+# E2-L1-19/20) are DELETED by the 2026-08-27 fix round: their observation was
+# accurate but filed against the wrong epic — epics.md assigns FR-048 to Epic 12,
+# CT-33 is defined-unwired, and absence in qmf-registry is the ratified build
+# order (superseded by FC-05 / OR-06: the unauthorized qml wiring was removed and
+# the dated Bot-kind mint will be built at the QMB composition root under AD-25).
+# A red test cannot prove a ratified absence; the wiring-absence pin lives in
+# qa/tests/epic_12/test_l3_example_bot.py.

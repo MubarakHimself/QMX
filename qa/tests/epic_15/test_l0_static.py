@@ -103,14 +103,17 @@ def test_ledger_fragment_written_only_by_orchestrator_ledger():
 def test_process_spawn_only_at_composition_root():
     """No module below the composition root spawns a process/thread.
 
-    Counter-case that FAILS: any module outside orchestrator/ importing
-    subprocess / multiprocessing / threading — concurrency owned below the root
-    (AD-15 says the library spawns nothing).
+    Counter-case that FAILS: any module outside the composition-root homes
+    importing subprocess / multiprocessing / threading — concurrency owned
+    below the root (AD-15 says the library spawns nothing). The root homes are
+    orchestrator/ and host/ — the latter is the ratified QMB home of the
+    impure conformance sandbox runner relocated out of the pure qml wheel
+    (OR-04 / FC-17; docs/components/qml.md Hosting seed).
     """
     spawners: list[str] = []
     for path in _pyfiles(SRC):
         rel = str(path.relative_to(SRC)).replace("\\", "/")
-        if rel.startswith("orchestrator/"):
+        if rel.startswith(("orchestrator/", "host/")):
             continue
         body = _text(path)
         for token in ("import subprocess", "import multiprocessing", "import threading"):
