@@ -42,7 +42,10 @@ from qmf.core.fingerprint import (
     canonical_bytes,
     fingerprint,
 )
-from qmf.core.identity import Account, AccountRole, DatedRecord, Instrument, VenueId
+from qmf.core.identity import (
+    CONTRACT_FORMAT_VERSION as CT03_VERSION,
+)
+from qmf.core.identity import Account, AccountRole, DatedRecord, Instrument, Venue, VenueId
 from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal, is_ok, is_refusal
 
 
@@ -179,7 +182,9 @@ def test_e1_c08_ct04_boundary_suite() -> None:
             assert is_ok(TypedRefusal.try_create(RefusalCategory.INVALID_INPUT, retry))
     # after-condition presence rule (both arms)
     assert is_refusal(
-        TypedRefusal.try_create(RefusalCategory.TRANSIENT_VENUE_FAILURE, Retryability.AFTER_CONDITION)
+        TypedRefusal.try_create(
+            RefusalCategory.TRANSIENT_VENUE_FAILURE, Retryability.AFTER_CONDITION
+        )
     )
     assert is_refusal(
         TypedRefusal.try_create(
@@ -227,13 +232,15 @@ def test_e1_c10_ct05_boundary_suite() -> None:
 
 # E1-C11 — version-from-birth: format version 1 --------------------------------
 def test_e1_c11_every_serialized_artifact_stamps_format_version_1() -> None:
-    """DEC-0103: every serialized CT-01/02/05 identity artifact stamps integer format
-    version = 1. (CT-03 core nouns carry their stamp via the qmf-registry record —
-    Epic 2 — and when embedded in a CT-01/CT-05 artifact that stamps it.)"""
+    """DEC-0103: every serialized CT-01..CT-05 identity artifact stamps its own
+    integer contract format version = 1; a registry wrapper is never the content
+    identity source (DEC-0138)."""
     assert CT01_VERSION == 1
     assert CT02_VERSION == 1
+    assert CT03_VERSION == 1
     assert CT05_VERSION == 1
-    instrument = _instrument()
+    venue_id = _ok(VenueId.try_create("VEN-1"))
+    instrument = _ok(Instrument.try_create(venue_id, "EURUSD"))
     artifacts = [
         _ok(Money.try_create(1, "USD", 2)),
         _ok(Price.try_create(1, instrument, 2)),
@@ -245,6 +252,11 @@ def test_e1_c11_every_serialized_artifact_stamps_format_version_1() -> None:
         _ok(Duration.try_create(0)),
         _ok(Interval.try_create(_ok(Instant.try_create(0)), _ok(Instant.try_create(1)))),
         _ok(CalendarIdentity.try_create("forex-17NY", "v3", "2025a")),
+        venue_id,
+        instrument,
+        _ok(Venue.try_create(venue_id)),
+        _ok(Account.try_create("ACC-1", venue_id, AccountRole.LIVE)),
+        _ok(DatedRecord.try_create(instrument, "2026-01-02", {"asset_class": "forex"})),
     ]
     for artifact in artifacts:
         assert artifact.fp1_identity()["format_version"] == 1, artifact

@@ -45,6 +45,7 @@ from typing import Final, cast
 from qmf.core.refusal import Ok, RefusalCategory, Result, Retryability, TypedRefusal
 
 __all__ = [
+    "CONTRACT_FORMAT_VERSION",
     "Account",
     "AccountRole",
     "DatedRecord",
@@ -52,6 +53,11 @@ __all__ = [
     "Venue",
     "VenueId",
 ]
+
+# Every serialized CT-03 identity artifact stamps this integer contract format
+# version. Its meaning never mutates: an incompatible identity-format change
+# mints the next version plus a migration note (DEC-0103).
+CONTRACT_FORMAT_VERSION: Final[int] = 1
 
 
 class AccountRole(StrEnum):
@@ -250,6 +256,14 @@ class VenueId:
             )
         return Ok(cls(token))
 
+    def fp1_identity(self) -> dict[str, object]:
+        """The CT-03 identity projection for this opaque venue token."""
+        return {
+            "class": "venue-id",
+            "value": self.value,
+            "format_version": CONTRACT_FORMAT_VERSION,
+        }
+
 
 @dataclass(frozen=True, slots=True)
 class Instrument:
@@ -288,6 +302,15 @@ class Instrument:
             )
         return Ok(cls(venue=venue_ref, symbol=token))
 
+    def fp1_identity(self) -> dict[str, object]:
+        """The CT-03 identity projection for the opaque ``(venue, symbol)`` pair."""
+        return {
+            "class": "instrument",
+            "venue": self.venue.value,
+            "symbol": self.symbol,
+            "format_version": CONTRACT_FORMAT_VERSION,
+        }
+
 
 @dataclass(frozen=True, slots=True)
 class Venue:
@@ -311,6 +334,14 @@ class Venue:
                 given=repr(venue_id),
             )
         return Ok(cls(venue_ref))
+
+    def fp1_identity(self) -> dict[str, object]:
+        """The CT-03 identity projection for the first-class venue noun."""
+        return {
+            "class": "venue",
+            "venue_id": self.venue_id.value,
+            "format_version": CONTRACT_FORMAT_VERSION,
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -362,6 +393,16 @@ class Account:
                 allowed=[member.value for member in AccountRole],
             )
         return Ok(cls(account_id=token, venue=venue_ref, role=resolved_role))
+
+    def fp1_identity(self) -> dict[str, object]:
+        """The CT-03 identity projection for this venue-scoped account."""
+        return {
+            "class": "account",
+            "account_id": self.account_id,
+            "venue": self.venue.value,
+            "role": self.role.value,
+            "format_version": CONTRACT_FORMAT_VERSION,
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -432,3 +473,18 @@ class DatedRecord:
         if refusal is not None:
             return refusal
         return Ok(cls(target=target_ref, effective_date=iso, content=content_map))
+
+    def fp1_identity(self) -> dict[str, object]:
+        """The CT-03 identity projection for this append-only dated fact.
+
+        Every contract field participates: the target's content identity, the
+        effective date, and the deeply frozen metadata content. The wrapping
+        registry record is deliberately absent (DEC-0138).
+        """
+        return {
+            "class": "dated-record",
+            "target": self.target.fp1_identity(),
+            "effective_date": self.effective_date,
+            "content": self.content,
+            "format_version": CONTRACT_FORMAT_VERSION,
+        }
