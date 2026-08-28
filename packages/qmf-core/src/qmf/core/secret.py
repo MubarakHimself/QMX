@@ -260,7 +260,7 @@ class SecretValue:
     def __str__(self) -> str:
         return f"SecretValue(ref={self._ref.value})"
 
-    def __format__(self, format_spec: str) -> str:
+    def __format__(self, _format_spec: str) -> str:
         # Ignore the spec entirely: no format spec may coax out the secret.
         return self.__str__()
 
@@ -281,7 +281,7 @@ class SecretValue:
         # hash, and the secret never enters the hash table's key material.
         return hash(self._ref)
 
-    def __reduce_ex__(self, protocol: object) -> NoReturn:
+    def __reduce_ex__(self, _protocol: object) -> NoReturn:
         # Block every pickle protocol (and copy, which routes through it): a
         # SecretValue is never serialized, so the secret can never reach a byte
         # stream (CT-21, AR-37).

@@ -32,9 +32,6 @@ import tomllib
 
 ROOT = Path(__file__).resolve().parent.parent
 
-PACKAGES_DIR = ROOT / "packages"
-EXTENSIONS_DIR = ROOT / "extensions"
-
 # The seven roster packages, in SemVer lockstep (AR-09; DEC-0103).
 ROSTER_PACKAGES: frozenset[str] = frozenset(
     {

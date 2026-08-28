@@ -162,7 +162,7 @@ class _RecordSink:
 
 
 class _NotASink:
-    def store(self, thing: object, /) -> None:
+    def store(self, _thing: object, /) -> None:
         return None
 
 

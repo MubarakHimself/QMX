@@ -399,7 +399,7 @@ class RegistryPersistence:
         """Enter a ``with`` block; the persistence is returned unchanged."""
         return self
 
-    def __exit__(self, *exc_info: object) -> None:
+    def __exit__(self, *_exc_info: object) -> None:
         """Release the one-writer locks on block exit (M6), success or error alike."""
         self.close()
 
