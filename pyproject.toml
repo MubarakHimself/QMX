@@ -408,29 +408,32 @@ max_ai_defects = 0
 # heuristics into the same verdict and collapsing the named failure reasons into
 # one line. Per-bucket zeros block just as hard and say why.
 strict = false
-# ANNOTATE-ONLY, by operator ruling. The quality family is opinion about module
-# structure, and the first whole-repo run priced it: 512 gate-counted findings —
-# SKY-Q502 "god file candidate" on exact.py and chrono.py (857/860 code lines against
-# a 500-line default) and on the CT-01/CT-02 test suites, SKY-Q702 "low cohesion" on
-# SecretValue, SKY-Q301 "cyclomatic complexity 26" on persistence.py, plus the
-# SKY-L0xx/C3xx/P4xx families. exact.py and chrono.py are the ratified 100%-branch
-# CT-01/CT-02 modules; splitting them to satisfy a line-count default would be a
-# design change made for a scanner's benefit, which we are not doing. So these are
-# reported, annotated on the commit and counted in the job summary, and they do not
-# block.
+# RATCHET GATE, by operator ruling OR-10a/b (2026-08-27). The quality and dead-code
+# families were ANNOTATE-ONLY through the build — max_quality was a 1000000 sentinel and
+# max_dead_code stayed unset (disabled) — because both are opinion about module structure:
+# SKY-Q502 "god file candidate" on the ratified 100%-branch exact.py/chrono.py (CT-01/CT-02),
+# SKY-Q702 "low cohesion" on SecretValue, SKY-Q301 "cyclomatic complexity 26" on
+# persistence.py, plus the SKY-L0xx/C3xx/P4xx families. Splitting those modules to satisfy a
+# line-count default would be a design change made for a scanner's benefit, which we are not
+# doing, so none of them ever blocks on structure alone.
 #
-# This number is a deliberate "off", not a tolerance: it has to be an int, because
-# gatekeeper.py::_safe_gate_limit replaces any non-int with the tool's default of 10,
-# and `_append_threshold_reason` only compares when the limit is an int. Ratchet it
-# down (1000 -> 100 -> 0) as the families are genuinely worked off; it can be lowered
-# freely, and only max_critical/max_secrets are capped by Skylos itself.
-max_quality = 1000000
-# Dead code is annotate-only for the same reason and by the same ruling: seven qmf-*
-# packages export a public API that nothing internal consumes yet — the classic
-# library false-positive shape for a dead-code detector. Leaving `max_dead_code`
-# unset is what disables the check (the default is None, and a non-int limit is never
-# compared), so this stays commented until the ratchet is wanted.
-# max_dead_code = 0
+# The QA phase priced the whole repo at HEAD (baseline run 33039677890 @ 2c8d495): 4,084
+# gate-counted quality findings and 79 dead-code findings. OR-10a/b turns that price into a
+# floor — NEVER WORSE THAN TODAY. The gate fails the instant a change pushes either family
+# above its baseline, and the two numbers RATCHET DOWN as families are genuinely worked off,
+# never up. It gates on the COUNTS only, never on the overall letter grade (NFR-02 / AR-11:
+# a deterministic, mechanically-checkable bar, not a subjective grade).
+#
+# Both limits must be ints: gatekeeper.py::_safe_gate_limit replaces any non-int with the
+# tool's default of 10, and `_append_threshold_reason` only compares when the limit is an int.
+# Lower them freely as the families clear (4084 -> ... -> 0); only max_critical/max_secrets are
+# additionally capped at 0 by Skylos itself.
+max_quality = 4084
+# Dead code holds ONE finding of headroom over the 79-finding baseline: seven qmf-* packages
+# export a public API nothing internal consumes yet — the classic library false-positive shape
+# for a dead-code detector — so the floor is 80 (never worse than today), ratcheting down as the
+# [[tool.skylos.dead_code.entrypoints]] / whitelist escape hatches retire the real positives.
+max_dead_code = 80
 #
 # The escape hatches for a genuine false positive in any family remain
 # [tool.skylos.whitelist], [[tool.skylos.dead_code.entrypoints]] and an inline

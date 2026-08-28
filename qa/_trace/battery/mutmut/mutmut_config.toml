@@ -1,0 +1,35 @@
+# QA-battery mutmut configuration for the nightly mutation job (card FC-34; OR-10b).
+#
+# The nightly `mutation` job in .github/workflows/battery.yml APPENDS these two sections to
+# packages/qmf-core/pyproject.toml on the Linux runner (that checkout is disposable and never
+# committed), then runs mutmut from packages/qmf-core so it reads [tool.mutmut] and the
+# [tool.pytest.ini_options] anchor from the current directory. The committed
+# packages/qmf-core/pyproject.toml carries NEITHER section, so appending is a clean add with no
+# duplicate TOML keys.
+#
+# Derived verbatim in intent from the QA phase's preserved run config,
+# qa/_trace/battery/mutmut/qmf-core_pyproject_used.toml, which produced the ratchet baseline
+# (run 2c8d495): 366 mutants over exact.py + chrono.py -> 249 killed / 117 survived = 68.03%
+# kill-rate. OR-10b sets the floor at 68% = killed / (killed + survived).
+
+[tool.mutmut]
+# source_paths = "src" copies the whole src/qmf/core tree so sibling imports (qmf.core.identity,
+# qmf.core.refusal) resolve inside mutants/; only_mutate narrows the actual mutation to the two
+# ratified 100%-branch CT-01 / CT-02 modules.
+source_paths = ["src"]
+only_mutate = ["src/qmf/core/exact.py", "src/qmf/core/chrono.py"]
+pytest_add_cli_args_test_selection = ["tests"]
+# tests/*_examples.py resolve _PKG_ROOT from their own location and run examples/*_usage.py as a
+# subprocess; mutmut copies tests/ into mutants/, so examples/ must be copied there too or those
+# tests fail with FileNotFoundError.
+also_copy = ["examples"]
+# test_import_completes_well_under_one_second is a wall-clock import-time smoke test, not a
+# correctness check of exact.py/chrono.py; it can jitter over its 1.0s budget under mutmut's own
+# subprocess/sys.path plumbing and abort baseline collection. Deselected for the mutation run only
+# so environment jitter on an unrelated timing assertion cannot block coverage of the arithmetic.
+pytest_add_cli_args = ["--deselect=tests/test_core.py::test_import_completes_well_under_one_second"]
+
+[tool.pytest.ini_options]
+# Anchor pytest here so it stops before walking up to the workspace-root pyproject.toml (whose
+# testpaths = ["adws/tests"] would otherwise be collected instead of qmf-core's own suite).
+testpaths = ["tests"]
