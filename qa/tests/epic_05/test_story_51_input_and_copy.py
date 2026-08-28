@@ -481,8 +481,16 @@ def test_5_1_c4_ct14_world_enum_version_and_refusal_categories(tmp_path: Path) -
     a = H.unwrap(backup.copy_export(export, for_world=World.LIVE))
     b = H.unwrap(backup.copy_export(export, for_world=World.LIVE))
     assert b.copy_version > a.copy_version
-    # NO governed CT-14 failure yields one of the four out-of-set categories
-    forbidden = {"unsupported capability", "unavailable dependency", "stale evidence", "transient venue failure"}
+    # NO governed CT-14 failure yields one of the five out-of-set categories: only
+    # `storage failure` and `policy rejection` may cross this boundary; `invalid input`
+    # is validated BEFORE the boundary and must never cross it (OR-05; DEC-0109).
+    forbidden = {
+        "invalid input",
+        "unsupported capability",
+        "unavailable dependency",
+        "stale evidence",
+        "transient venue failure",
+    }
     for res in (
         backup.copy_export(export, for_world=World.SIMULATED),
         backup.copy_export(export, for_world=World.REPLAY),

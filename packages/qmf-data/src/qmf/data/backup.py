@@ -296,10 +296,7 @@ class OffMachineBackup:
             # returned a different category.
             if put.category is RefusalCategory.STORAGE_FAILURE:
                 return put
-            remapped: dict[str, object] = dict(put.context)
-            remapped["signal"] = "storage-refused"
-            remapped["adapter_category"] = put.category.value
-            remapped["copy_version"] = copy_version
+            remapped = _remapped_adapter_context(put, copy_version=copy_version)
             return _storage_failure(
                 "object storage refused the off-machine put; completion is not claimed "
                 "(DEC-0109, DEC-0118)",
@@ -398,10 +395,7 @@ class OffMachineRestore:
         if is_refusal(fetched):
             if fetched.category is RefusalCategory.STORAGE_FAILURE:
                 return fetched
-            remapped: dict[str, object] = dict(fetched.context)
-            remapped["signal"] = "storage-refused"
-            remapped["adapter_category"] = fetched.category.value
-            remapped["copy_version"] = copy_version
+            remapped = _remapped_adapter_context(fetched, copy_version=copy_version)
             return _storage_failure(
                 "object storage refused the off-machine get; completion is not claimed "
                 "(DEC-0109, DEC-0118)",
@@ -932,6 +926,27 @@ def _read_u64(buf: bytes, offset: int) -> tuple[int, int]:
 def _fp1_of(payload: bytes) -> str:
     """The self-describing fp1 string for ciphertext bytes."""
     return fingerprint_bytes(payload).value
+
+
+def _remapped_adapter_context(refusal: TypedRefusal, *, copy_version: int) -> dict[str, object]:
+    """Remap a miswired adapter's refusal context for the CT-14 storage-failure remap (AC4; R-007).
+
+    The adapter returned a non-``storage failure`` category; AC4 remaps it to a *returned*
+    ``storage failure`` at this boundary. The adapter's own ``reason`` context key — which
+    every qmf refusal builder (``policy_rejection`` / ``invalid_input`` / ``unpersistable``)
+    sets unconditionally — is namespaced to ``adapter_reason`` so it never collides with the
+    reserved ``reason`` key :func:`qmf.core.unpersistable` sets from its own argument. Handing
+    that reserved key through would be refused as a programmer error and *raise* across the
+    boundary, which R-007/DEC-0109 forbids.
+    """
+    remapped: dict[str, object] = dict(refusal.context)
+    adapter_reason = remapped.pop("reason", None)
+    if adapter_reason is not None:
+        remapped["adapter_reason"] = adapter_reason
+    remapped["signal"] = "storage-refused"
+    remapped["adapter_category"] = refusal.category.value
+    remapped["copy_version"] = copy_version
+    return remapped
 
 
 def _storage_failure(reason: str, *, retryable: bool, context: dict[str, object]) -> TypedRefusal:
