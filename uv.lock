@@ -1370,12 +1370,14 @@ name = "qmf-indicators"
 version = "0.1.0"
 source = { editable = "packages/qmf-indicators" }
 dependencies = [
+    { name = "numpy" },
     { name = "qmf-core" },
     { name = "ta-lib" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "numpy", specifier = "==2.5.2" },
     { name = "qmf-core", editable = "packages/qmf-core" },
     { name = "ta-lib", specifier = "==0.7.1" },
 ]

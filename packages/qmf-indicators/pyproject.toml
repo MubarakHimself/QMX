@@ -16,6 +16,14 @@ requires-python = ">=3.14,<3.15"
 dependencies = [
     "qmf-core",
     "ta-lib==0.7.1",
+    # numpy is reached on the batch compute path: `batch.py` resolves it by name
+    # (`importlib.import_module("numpy")`) to project the reference output onto a float64
+    # array. It is satisfied transitively today through ta-lib's own closure, but AR-06
+    # default-deny (L30; DEC-0104) requires every dependency the package reaches to be
+    # declared in the package's OWN pyproject — transitive availability is not a
+    # declaration — so it is pinned to the exact version uv.lock resolves, on the same
+    # footing as the ta-lib pin above (QMX-F033; R5, AR-06, AR-18).
+    "numpy==2.5.2",
 ]
 
 [build-system]

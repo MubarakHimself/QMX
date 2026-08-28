@@ -11,6 +11,7 @@ import ast
 import inspect
 import os
 import re
+import sys
 
 import qmf.indicators as pkg
 
@@ -42,6 +43,96 @@ def _imported_roots() -> set[str]:
     return roots
 
 
+def _is_import_module_call(func: ast.expr) -> bool:
+    """True for an `importlib.import_module(...)` or bare `import_module(...)` call target."""
+    if isinstance(func, ast.Attribute):
+        return func.attr == "import_module"
+    if isinstance(func, ast.Name):
+        return func.id == "import_module"
+    return False
+
+
+def _dynamic_import_targets() -> set[str]:
+    """Every module name reached via `importlib.import_module(...)` in the package source.
+
+    A module resolved by name at call time (never a static `import`) is invisible to an
+    AST-root scan — the exact gap QMX-F033 rode in on. This resolves both a direct string
+    literal (`import_module("numpy")`, batch.py) and a module-level string constant passed
+    by name (`import_module(_REFERENCE_MODULE_NAME)` where `_REFERENCE_MODULE_NAME = "talib"`,
+    _reference.py), so a dependency pulled in dynamically is seen exactly as a static import
+    would be. A computed (non-constant) argument is skipped — it names no single module."""
+    targets: set[str] = set()
+    for path in _source_files():
+        with open(path, encoding="utf-8") as handle:
+            tree = ast.parse(handle.read(), filename=path)
+        constants: dict[str, str] = {}
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Assign)
+                and isinstance(node.value, ast.Constant)
+                and isinstance(node.value.value, str)
+            ):
+                for target in node.targets:
+                    if isinstance(target, ast.Name):
+                        constants[target.id] = node.value.value
+            elif (
+                isinstance(node, ast.AnnAssign)
+                and isinstance(node.value, ast.Constant)
+                and isinstance(node.value.value, str)
+                and isinstance(node.target, ast.Name)
+            ):
+                constants[node.target.id] = node.value.value
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and _is_import_module_call(node.func) and node.args:
+                arg = node.args[0]
+                if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                    targets.add(arg.value)
+                elif isinstance(arg, ast.Name) and arg.id in constants:
+                    targets.add(constants[arg.id])
+    return targets
+
+
+def _package_pyproject() -> str:
+    """The qmf-indicators pyproject.toml, found by walking up from the package source
+    (the nearest manifest above src/qmf/indicators/ is the package's own)."""
+    here = _SRC_DIR
+    for _ in range(10):
+        candidate = os.path.join(here, "pyproject.toml")
+        if os.path.isfile(candidate):
+            return candidate
+        parent = os.path.dirname(here)
+        if parent == here:
+            break
+        here = parent
+    raise AssertionError(f"pyproject.toml not found walking up from {_SRC_DIR!r}")
+
+
+def _distribution_name(spec: str) -> str:
+    """The bare distribution name from a PEP 508 dependency spec (drops the version):
+    `ta-lib==0.7.1` -> `ta-lib`; `qmf-core` -> `qmf-core`."""
+    for sep in ("==", ">=", "<=", "~=", "!=", ">", "<", "[", ";", " "):
+        idx = spec.find(sep)
+        if idx != -1:
+            spec = spec[:idx]
+    return spec.strip()
+
+
+def _declared_distributions() -> set[str]:
+    """The distribution names in `[project].dependencies` of qmf-indicators' own pyproject."""
+    import tomllib
+
+    with open(_package_pyproject(), "rb") as handle:
+        data = tomllib.load(handle)
+    deps = data.get("project", {}).get("dependencies", [])
+    return {_distribution_name(spec) for spec in deps}
+
+
+def _canonical(name: str) -> str:
+    """A PEP 503-style fold so a distribution name and its import root compare equal:
+    lowercased with `-`, `_`, `.` stripped (`ta-lib` -> `talib`; `numpy` -> `numpy`)."""
+    return re.sub(r"[-_.]", "", name.lower())
+
+
 # --- T7-S1: default-deny import graph [R5, AR-06] ---------------------------
 
 
@@ -57,11 +148,48 @@ def test_s1_static_imports_reach_only_qmf_core_and_own_package() -> None:
     assert offenders == [], f"default-deny violated: qmf sibling imports {offenders!r}"
 
 
+def test_s1_every_reached_third_party_module_is_declared() -> None:
+    """AR-06 default-deny [R5]: every non-stdlib, non-first-party module the package reaches
+    — by static `import`/`from` AND by `importlib.import_module` (string literal or module-level
+    string constant) — must be declared in qmf-indicators' OWN pyproject, never merely satisfied
+    transitively through another dependency's closure.
+
+    This widens the T7-S1 scanner past its `root.split(".")[0] == "qmf"` blind spot: the old
+    reach analysis filtered to `qmf` roots, so a non-`qmf` undeclared import was structurally
+    invisible, and an AST-root scan saw no dynamic import at all.
+
+    Counter-case that must fail (and did, as QMX-F033): `batch.py` resolves
+    `importlib.import_module("numpy")` on the compute path while the pyproject declares only
+    `qmf-core` + `ta-lib`; numpy arrives transitively via ta-lib but is not declared. The
+    isolated-build smoke (AR-18) cannot catch it — ta-lib pulls numpy into the isolated env
+    regardless — so a missing own-pyproject declaration is a governance/gate defect."""
+    reached = {root.split(".")[0] for root in (_imported_roots() | _dynamic_import_targets())}
+    third_party = {
+        root for root in reached if root != "qmf" and root not in sys.stdlib_module_names
+    }
+    declared = {_canonical(name) for name in _declared_distributions()}
+    undeclared = sorted(root for root in third_party if _canonical(root) not in declared)
+    assert undeclared == [], (
+        "third-party modules reached but not declared in qmf-indicators' own pyproject "
+        f"(AR-06 default-deny; transitive availability is not a declaration): {undeclared!r}"
+    )
+
+
 def test_s1_no_static_vendor_import_crosses_module_top_level() -> None:
     """talib is resolved by name at call time, never statically imported (so a missing
-    reference is a returned refusal, not an import error). A bare `import talib` would fail."""
+    reference is a returned refusal, not an import error) — but being resolved lazily does
+    NOT exempt it from declaration. AR-06 default-deny [R5] requires the lazily-resolved
+    vendor to appear in qmf-indicators' own pyproject exactly as a static import would, which
+    the widened T7-S1 scanner above now enforces for every dynamically reached module (the
+    gap QMX-F033 found for numpy). Counter-cases: a bare `import talib` (would fail), or the
+    reference resolved by name yet absent from the declared dependencies."""
     roots = _imported_roots()
     assert "talib" not in roots, "the reference must be imported lazily by name, not statically"
+    declared = {_canonical(name) for name in _declared_distributions()}
+    assert _canonical("ta-lib") in declared, (
+        "the lazily-resolved arithmetic reference (ta-lib) must still be a declared dependency "
+        "of qmf-indicators (AR-06 default-deny), not resolved by name alone"
+    )
 
 
 # --- T7-S2: no bare "timeframe" [R13 vocabulary half] -----------------------
