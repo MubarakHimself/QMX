@@ -27,6 +27,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import TypeVar
 
+import pytest
 import tomllib
 from qmf.core import (
     Account,
@@ -66,7 +67,7 @@ _MACHINE = "vps-fra-01"
 _ADAPTER_ROLE = "ctrader-adapter"
 _BOOT_EPOCH = "boot-epoch-A"
 _BOOT = _BOOT_EPOCH
-_CRED_REF_ID = "venue-demo-cred-ref-0001"
+_CRED_REF_ID = "sref-71a4c9e2d8b305"
 # A deliberately non-empty fake plaintext, used only as a test fixture (S106 waived for
 # tests): it must never render through any manager surface.
 _PLAINTEXT = "plaintext-refresh-token-value-xyz"
@@ -326,7 +327,7 @@ def test_manager_is_single_holder_and_exposes_no_value_getter() -> None:
     assert opened == binding.secret_ref
     # Presence is queryable; the value is not — no public attribute returns plaintext.
     assert manager.holds_secret(binding.secret_ref)
-    assert not manager.holds_secret(_secret_ref("some-other-ref"))
+    assert not manager.holds_secret(_secret_ref("sref-e2d3c4b5a60718"))
     assert not manager.holds_secret("not-a-ref")
     for name in dir(manager):
         if name.startswith("__"):
@@ -350,8 +351,8 @@ def test_no_secret_crosses_out_through_health_repr_or_refusal() -> None:
     assert _PLAINTEXT not in repr(manager)
     # A read failure refusal carries the reference id, never the value.
     kit.store.reject_read = True
-    refusal = _refusal(manager.open_session(_binding(ref=_secret_ref("missing-ref-0009"))))
-    assert refusal.context["secret_ref"] == "missing-ref-0009"
+    refusal = _refusal(manager.open_session(_binding(ref=_secret_ref("sref-09d8c7b6a5e403"))))
+    assert refusal.context["secret_ref"] == "sref-09d8c7b6a5e403"
     assert _PLAINTEXT not in str(refusal.context)
 
 
@@ -369,7 +370,7 @@ def test_open_session_refuses_value_for_wrong_reference() -> None:
     binding = _binding()
     # The store returns, for the requested reference, a value carrying a DIFFERENT ref — a
     # store contract violation, refused rather than trusted (and never held).
-    kit.store.preload_under(binding.secret_ref, _secret_value(ref=_secret_ref("a-different-ref")))
+    kit.store.preload_under(binding.secret_ref, _secret_value(ref=_secret_ref("sref-a7d2e9c4")))
     manager = _manager(kit)
     refusal = _refusal(manager.open_session(binding))
     assert refusal.category is RefusalCategory.UNAVAILABLE_DEPENDENCY
@@ -480,7 +481,7 @@ def test_rotation_refuses_malformed_new_secret() -> None:
     assert is_refusal(manager.rotate_secret("not-a-binding", _secret_value()))
     assert is_refusal(manager.rotate_secret(binding, "not-a-secret-value"))
     # A SecretValue for a different reference is refused.
-    mismatched = _secret_value(ref=_secret_ref("different-ref"))
+    mismatched = _secret_value(ref=_secret_ref("sref-d8f1a4c7"))
     refusal = _refusal(manager.rotate_secret(binding, mismatched))
     assert refusal.category is RefusalCategory.INVALID_INPUT
     # A command-pipe-block was never set by these caller mistakes.
@@ -544,6 +545,40 @@ def test_non_opaque_reference_construction_is_invalid_input() -> None:
     assert is_refusal(SecretRef.try_create(None))
     # A valid opaque token constructs cleanly.
     assert is_ok(SecretRef.try_create("opaque-token-0001"))
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        "venue=cTrader;broker=Pepperstone;account=1234567;env=live;key=material",
+        "live/ctrader/acct-9988/refresh-token-material",
+        "APIKEY-1a2b3c4d5e6f-account-1234567",
+        "sref-venue-0001",
+        "sref-broker-0001",
+        "sref-account-0001",
+        "sref-environment-0001",
+        "sref-key-0001",
+        "not-a-minted-id",
+    ],
+)
+def test_non_opaque_reference_semantics_are_refused_before_binding(bad: str) -> None:
+    """CT-21: the qmf-core construction gate protects the venue consumer."""
+    refusal = _refusal(SecretRef.try_create(bad))
+    assert refusal.category is RefusalCategory.INVALID_INPUT
+    assert refusal.context["field"] == "value"
+    assert bad not in repr(refusal.context)
+
+
+def test_binding_revalidates_an_unchecked_secret_ref() -> None:
+    """The public venue factory cannot trust qmf-core's unchecked constructor path."""
+    venue = _venue()
+    account = _account(venue)
+    unchecked = SecretRef("sref-account-0001")
+
+    refusal = _refusal(AccountBinding.try_create(venue, account, World.LIVE, unchecked))
+    assert refusal.category is RefusalCategory.INVALID_INPUT
+    assert refusal.context["field"] == "secret_ref"
+    assert unchecked.value not in repr(refusal.context)
 
 
 def test_binding_command_stream_matches_writer_stream() -> None:

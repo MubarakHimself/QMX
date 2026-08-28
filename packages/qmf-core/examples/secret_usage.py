@@ -87,7 +87,7 @@ class InMemorySecretStore:
 
 def ref_is_the_safe_handle() -> SecretRef:
     """A SecretRef renders its opaque id — safe for logs and refusal context."""
-    ref = _unwrap(SecretRef.try_create("secret-ref-ctrader-refresh-01"), "SecretRef")
+    ref = _unwrap(SecretRef.try_create("sref-7f3a9c2e8d4b01"), "SecretRef")
     assert ref.value in repr(ref)
     return ref
 
@@ -110,7 +110,7 @@ def value_never_renders(ref: SecretRef) -> tuple[SecretValue, str]:
 
 def missing_credential_is_a_refusal(store: SecretStore) -> TypedRefusal:
     """A read for an unprovisioned reference refuses, carrying the id, not the value."""
-    absent = _unwrap(SecretRef.try_create("secret-ref-never-provisioned"), "absent ref")
+    absent = _unwrap(SecretRef.try_create("sref-9a8b7c6d5e4f03"), "absent ref")
     result = store.read(absent)
     assert isinstance(result, TypedRefusal)
     assert result.category is RefusalCategory.UNAVAILABLE_DEPENDENCY

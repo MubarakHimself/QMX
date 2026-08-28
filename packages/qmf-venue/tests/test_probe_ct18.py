@@ -65,7 +65,7 @@ _WALL_MS = _WALL_NS // 1_000_000
 _PROTO_TAG = 91
 _BOOT_EPOCH = "boot-epoch-A"
 _SESSION_EPOCH = "session-epoch-1"
-_CRED_REF_ID = "venue-demo-cred-ref-0001"
+_CRED_REF_ID = "sref-71a4c9e2d8b305"
 
 
 def _ok(result: Result[T]) -> T:

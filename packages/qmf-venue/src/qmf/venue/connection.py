@@ -248,15 +248,25 @@ class AccountBinding:
                 given=repr(world),
                 allowed=[member.value for member in World],
             )
-        if not isinstance(secret_ref, SecretRef) or secret_ref.value.strip() == "":
+        if not isinstance(secret_ref, SecretRef):
             return _invalid(
                 "secret_ref",
                 "a binding names its credential by a bare opaque SecretRef, never a value; "
                 "a non-opaque reference is refused at construction",
-                given=repr(secret_ref),
+            )
+        validated_ref = SecretRef.try_create(secret_ref.value)
+        if is_refusal(validated_ref):
+            return _invalid(
+                "secret_ref",
+                "a binding names its credential by a construction-validated opaque SecretRef",
             )
         return Ok(
-            cls(venue_id=venue_id, account=account, world=resolved_world, secret_ref=secret_ref)
+            cls(
+                venue_id=venue_id,
+                account=account,
+                world=resolved_world,
+                secret_ref=validated_ref.value,
+            )
         )
 
     @property

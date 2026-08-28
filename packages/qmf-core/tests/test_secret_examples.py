@@ -27,7 +27,7 @@ def test_reference_usage_example_runs_clean() -> None:
         check=False,
     )
     assert completed.returncode == 0, completed.stderr
-    assert "ref renders its id: secret-ref-ctrader-refresh-01" in completed.stdout
+    assert "ref renders its id: sref-7f3a9c2e8d4b01" in completed.stdout
     assert "secret value hides its secret in repr/str/format: True" in completed.stdout
     assert "reveal is the only plaintext path: True" in completed.stdout
     assert "missing credential refused: unavailable dependency" in completed.stdout

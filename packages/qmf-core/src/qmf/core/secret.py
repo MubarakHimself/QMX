@@ -51,6 +51,45 @@ __all__ = [
 ]
 
 
+# Secret references are minted outside qmf-core, but their public representation has a
+# small, decidable envelope.  The namespace marker distinguishes a minted handle from a
+# human label, store path, or pasted credential while retaining the historical markers
+# already emitted by QMX composition roots.  Payload semantics remain opaque.
+_MINTED_REF_PREFIXES = (
+    "secret-ref-",
+    "opaque-token-",
+    "cred-ref-",
+    "ref-id-",
+    "sref-",
+    "ref-",
+)
+
+# CT-21 does not ask qmf-core to guess every possible broker or account identifier.  It
+# does require refusing the forms that are decidable at this boundary: explicit field
+# markers and the closed World/environment vocabulary.  Compare whole token components
+# so random opaque material containing (for example) ``live`` as a substring is not
+# rejected accidentally.
+_DEPLOYMENT_MARKERS = frozenset(
+    {
+        "venue",
+        "broker",
+        "account",
+        "acct",
+        "environment",
+        "env",
+        "live",
+        "replay",
+        "simulated",
+        "key",
+        "apikey",
+        "api_key",
+        "refresh",
+        "password",
+        "passwd",
+    }
+)
+
+
 def _invalid(field: str, reason: str, **extra: object) -> TypedRefusal:
     """Build the ``invalid input`` refusal a secret-value factory returns.
 
@@ -80,33 +119,59 @@ def _clean_token(value: object) -> str | None:
     return None
 
 
+def _opaque_minted_token(value: object) -> str | None:
+    """Return a construction-validated CT-21 secret-reference token.
+
+    Opacity is not fully decidable: qmf-core cannot know every account id or broker
+    name.  It can prove that a value has a minted-handle shape and that it does not
+    carry explicit venue/broker/account/environment/key markers.  Those are the
+    construction-time checks CT-21 requires; stable issuance and non-reuse remain
+    duties of the external mint.
+    """
+    token = _clean_token(value)
+    if token is None or not token.isascii():
+        return None
+
+    folded = token.casefold()
+    prefix = next((item for item in _MINTED_REF_PREFIXES if folded.startswith(item)), None)
+    if prefix is None:
+        return None
+
+    payload = folded[len(prefix) :]
+    parts = payload.split("-")
+    if not parts or any(not part or not part.isalnum() for part in parts):
+        return None
+    if any(part in _DEPLOYMENT_MARKERS for part in parts):
+        return None
+    return token
+
+
 @dataclass(frozen=True, slots=True)
 class SecretRef:
     """An opaque, operator-minted credential reference (CT-21; DEC-0136).
 
     The reference id is the *safe* handle: it is what appears in refusal context,
     logs, health reports, and metrics, and it is stored verbatim and never parsed.
-    Stability, non-reuse, and non-derivation from venue/broker/account/environment/
-    key material are operator disciplines this type cannot enforce; construction
-    validates only that the token is a non-empty opaque string. A secret reference
-    is occurrence/display-only and never enters ``fp1`` identity — it deliberately
-    exposes no ``fp1_identity``, so fingerprinting one is refused rather than
-    silently folding a credential into a market fact.
+    Construction enforces the decidable opacity boundary: the value must carry a
+    minted-reference namespace and token shape, and it must not embed explicit
+    venue/broker/account/environment/key markers. Stability and non-reuse remain mint
+    disciplines because a value type cannot observe issuance history. A secret
+    reference is occurrence/display-only and never enters ``fp1`` identity — it
+    deliberately exposes no ``fp1_identity``, so fingerprinting one is refused rather
+    than silently folding a credential into a market fact.
     """
 
     value: str
 
     @classmethod
     def try_create(cls, value: object) -> Result[SecretRef]:
-        """Validate and build a :class:`SecretRef`, returning value-or-refusal."""
-        token = _clean_token(value)
+        """Validate opacity and build a :class:`SecretRef`, returning value-or-refusal."""
+        token = _opaque_minted_token(value)
         if token is None:
             return _invalid(
                 "value",
-                "a SecretRef is a non-empty opaque token; it is operator-minted, "
-                "stable, and never encodes venue, broker, account, environment, or "
-                "key material",
-                given=repr(value),
+                "a SecretRef uses a minted opaque-token shape and never embeds venue, "
+                "broker, account, environment, or key material",
             )
         return Ok(cls(token))
 

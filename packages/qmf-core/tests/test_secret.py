@@ -20,7 +20,7 @@ from qmf.core.secret import SecretRef, SecretStore, SecretValue
 _PLAINTEXT = "correct-horse-staple-42"
 
 
-def _make_ref(token: str = "secret-ref-ctrader-refresh-01") -> SecretRef:
+def _make_ref(token: str = "sref-7f3a9c2e8d4b01") -> SecretRef:
     result = SecretRef.try_create(token)
     assert is_ok(result)
     return result.value
@@ -37,7 +37,7 @@ def _make_value(secret: str = _PLAINTEXT) -> SecretValue:
 
 def test_secret_ref_try_create_accepts_opaque_token() -> None:
     ref = _make_ref()
-    assert ref.value == "secret-ref-ctrader-refresh-01"
+    assert ref.value == "sref-7f3a9c2e8d4b01"
     # The reference id is the safe handle — it renders.
     assert ref.value in repr(ref)
 
@@ -48,6 +48,45 @@ def test_secret_ref_try_create_refuses_non_opaque_token(bad: object) -> None:
     assert isinstance(result, TypedRefusal)
     assert result.category is RefusalCategory.INVALID_INPUT
     assert result.context["field"] == "value"
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        "venue=cTrader;broker=Pepperstone;account=1234567;env=live;key=material",
+        "live/ctrader/acct-9988/refresh-token-material",
+        "APIKEY-1a2b3c4d5e6f-account-1234567",
+        "sref-venue-0001",
+        "sref-broker-0001",
+        "sref-account-0001",
+        "sref-environment-0001",
+        "sref-key-0001",
+    ],
+)
+def test_secret_ref_try_create_refuses_decidably_non_opaque_token(bad: str) -> None:
+    """CT-21: recognizable deployment semantics are not an opaque minted id."""
+    result = SecretRef.try_create(bad)
+    assert isinstance(result, TypedRefusal)
+    assert result.category is RefusalCategory.INVALID_INPUT
+    assert result.context["field"] == "value"
+    assert bad not in repr(result.context)
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        "plainword",
+        "human readable reference",
+        "vault://production/secret",
+        "not:a:minted:id",
+        "sref--0001",
+    ],
+)
+def test_secret_ref_try_create_refuses_non_minted_shape(bad: str) -> None:
+    """CT-21: a reference uses the minted-token shape, never a label or store path."""
+    result = SecretRef.try_create(bad)
+    assert isinstance(result, TypedRefusal)
+    assert result.category is RefusalCategory.INVALID_INPUT
 
 
 def test_secret_ref_is_excluded_from_fp1_identity() -> None:
@@ -63,7 +102,7 @@ def test_secret_ref_is_excluded_from_fp1_identity() -> None:
 def test_secret_value_try_create_ok() -> None:
     value = _make_value()
     assert value.reveal() == _PLAINTEXT
-    assert value.ref.value == "secret-ref-ctrader-refresh-01"
+    assert value.ref.value == "sref-7f3a9c2e8d4b01"
 
 
 def test_secret_value_try_create_refuses_bad_ref() -> None:
@@ -246,7 +285,7 @@ def test_secret_store_read_returns_value_or_refusal() -> None:
 def test_missing_credential_refusal_carries_reference_not_value() -> None:
     # The canonical shape a store returns for an absent credential (CT-21): an
     # unavailable-dependency refusal carrying the reference id, never the value.
-    ref = _make_ref("secret-ref-absent")
+    ref = _make_ref("sref-c1d2e3f4a5b607")
     refusal = TypedRefusal(
         category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
         retryability=Retryability.AFTER_CONDITION,
