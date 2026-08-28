@@ -79,8 +79,10 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
     baseline = (
-        _count_findings(  # skylos: ignore[SKY-D215] contained above; CI-pinned argv, not user input
-            resolved.read_text(encoding="utf-8").splitlines()
+        # The path is contained above (resolved inside the working tree) and comes
+        # from the workflow's own pinned argv, never user input.
+        _count_findings(
+            resolved.read_text(encoding="utf-8").splitlines()  # skylos: ignore[SKY-D215]
         )
     )
     baseline_count = len(baseline)
