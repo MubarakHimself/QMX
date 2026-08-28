@@ -289,6 +289,24 @@ class Footprint:
                 "field on the declaration",
                 forbidden=forbidden,
             )
+        # The closed set try_create enforces, plus the self-emitted serialization
+        # envelope (``class``/``format_version`` from fp1_identity/host_manifest) so a
+        # footprint's own canonical mapping round-trips; a genuinely foreign top-level
+        # field is still refused.
+        extra = sorted(
+            set(mapping)
+            - {"stream_set", "required_calendars", "producer_bindings"}
+            - {"class", "format_version"}
+            - FORBIDDEN_HORIZON_FIELDS
+        )
+        if extra:
+            return invalid(
+                "footprint",
+                "the footprint carries stream_set, required_calendars, and "
+                "producer_bindings only; the stream set is nested here, never a "
+                "second top-level field",
+                extra=extra,
+            )
         if "stream_set" not in mapping:
             return invalid(
                 "stream_set",
