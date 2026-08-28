@@ -124,12 +124,23 @@ class DownloadReceipt:
 
 
 def resolve_end_ns(end: object | None, *, now: datetime | None = None) -> Result[int]:
-    """Resolve ``end``; blank defaults to end-of-today UTC (exclusive next midnight)."""
+    """Resolve ``end``; blank defaults to end-of-today UTC (exclusive next midnight).
+
+    The default derives from the INJECTED ``now`` — a composition root's clock
+    reading — never from an ambient system-clock read below the root (FR-002,
+    DEC-0106). An end-less request with no injected reading is an ``invalid
+    input`` refusal, so the resolved window can never silently track the real
+    wall clock.
+    """
     if end is None:
-        clock = now or datetime.now(timezone.utc)
-        tomorrow = datetime(clock.year, clock.month, clock.day, tzinfo=timezone.utc) + timedelta(
-            days=1
-        )
+        if now is None:
+            return invalid(
+                "end",
+                "an end-less download derives end-of-today from the composition "
+                "root's injected clock reading; pass end, or inject now "
+                "(FR-002, DEC-0106)",
+            )
+        tomorrow = datetime(now.year, now.month, now.day, tzinfo=timezone.utc) + timedelta(days=1)
         return Ok(int(tomorrow.timestamp() * 1_000_000_000))
     return _as_ns(end, field="end")
 
@@ -149,7 +160,14 @@ def parse_download_request(resources: Mapping[str, object]) -> Result[DownloadRe
     start = _as_ns(resources.get("start", resources.get("start_ns")), field="start")
     if is_refusal(start):
         return start
-    end = resolve_end_ns(resources.get("end", resources.get("end_ns")))
+    # The clock-injection key is ``now``, carrying an aware datetime — a recorded
+    # FC-14 decision (no ratified authority defines the key; DEC-0106 demands the
+    # reading be injected by the composition root, never read ambiently here).
+    injected_now = resources.get("now")
+    end = resolve_end_ns(
+        resources.get("end", resources.get("end_ns")),
+        now=injected_now if isinstance(injected_now, datetime) else None,
+    )
     if is_refusal(end):
         return end
     if end.value <= start.value:

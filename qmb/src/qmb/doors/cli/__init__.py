@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable, Mapping, Sequence
+from datetime import datetime, timezone
 from typing import TypeVar, cast
 
 import click
@@ -256,6 +257,10 @@ def data_download(
         symbol = symbols[0]
     else:
         symbol = symbols
+    # The CLI door IS the composition root: when --end is omitted, the real
+    # clock is read HERE and injected under the library's `now` key, so the
+    # library below never reads the ambient wall clock (FR-002, DEC-0106).
+    injected_now = None if end is not None else datetime.now(timezone.utc)  # ambient-scan: allow
     _transport(
         ctx,
         invoke_data(
@@ -267,6 +272,7 @@ def data_download(
                 symbol=symbol,
                 start=start,
                 end=end,
+                now=injected_now,
                 resolution=resolution,
                 side=side,
                 overwrite=overwrite,

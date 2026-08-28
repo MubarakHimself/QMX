@@ -13,24 +13,36 @@ from __future__ import annotations
 
 import ast
 import subprocess
-import sys
 import tempfile
 import zipfile
 from pathlib import Path
-
-from qmf.core.refusal import is_ok
 
 from qmb.data.licensing import (
     assert_distribution_has_no_corpus,
     distribution_corpus_bytes,
 )
+from qmf.core.refusal import is_ok
 
 _DATA = Path(__file__).resolve().parents[3] / "qmb" / "src" / "qmb" / "data"
 _WORKTREE = Path(__file__).resolve().parents[3]
 _MODULES = sorted(p for p in _DATA.glob("*.py"))
 
-# Ambient system-clock reads banned below the composition root (AR-16, DEC-0106).
-_BANNED_CLOCK_ATTRS = {"now", "utcnow", "today", "perf_counter", "monotonic", "process_time"}
+# Ambient system-clock reads banned below the composition root (DEC-0106).
+# Resolve import origins rather than banning method spellings: an injected
+# ``clock.now()`` is compliant and must not be mistaken for ``datetime.now()``.
+_SYSTEM_CLOCK_CALLS = {
+    "datetime.date.today",
+    "datetime.datetime.now",
+    "datetime.datetime.utcnow",
+    "time.monotonic",
+    "time.monotonic_ns",
+    "time.perf_counter",
+    "time.perf_counter_ns",
+    "time.process_time",
+    "time.process_time_ns",
+    "time.time",
+    "time.time_ns",
+}
 # Raw persistence engines a thin front must NEVER open itself (B-11): the store
 # contracts own these. Reading through a qmf-data engine type is fine; importing
 # the raw driver in qmb.data is a second store.
@@ -66,29 +78,44 @@ def test_modules_present() -> None:
     assert {"download.py", "verify.py", "gap_check.py", "catalog.py", "licensing.py"} <= names
 
 
-# --- T18-0a  ambient-clock scan (RQ-CLOCK) — EXPECTED FAIL: FIND-001 ----------
+def _import_bindings(tree: ast.Module) -> dict[str, str]:
+    bindings: dict[str, str] = {}
+    for node in tree.body:
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                bindings[alias.asname or alias.name.split(".")[0]] = alias.name
+        elif isinstance(node, ast.ImportFrom) and node.module is not None:
+            for alias in node.names:
+                bindings[alias.asname or alias.name] = f"{node.module}.{alias.name}"
+    return bindings
+
+
+def _resolved_call_name(expression: ast.expr, bindings: dict[str, str]) -> str | None:
+    if isinstance(expression, ast.Name):
+        return bindings.get(expression.id)
+    if isinstance(expression, ast.Attribute):
+        parent = _resolved_call_name(expression.value, bindings)
+        return f"{parent}.{expression.attr}" if parent is not None else None
+    return None
+
+
+# --- T18-0a  ambient-clock scan (RQ-CLOCK / FIND-001) ------------------------
 def test_t18_0a_no_ambient_system_clock_read() -> None:
     """No qmb/data module reads an ambient wall/monotonic clock.
 
-    Counter-case that makes this PASS: every time read is taken from an injected
-    clock. It FAILS today — ``download.py`` calls ``datetime.now(...)`` below the
-    composition root (FIND-001). Recorded as a finding; source is not edited.
+    Import-origin resolution keeps the gate faithful to DEC-0106: system-clock
+    calls fail, while an injected collaborator such as ``clock.now()`` is valid.
     """
     offenders: list[str] = []
     for path in _MODULES:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        bindings = _import_bindings(tree)
         for node in ast.walk(tree):
-            if isinstance(node, ast.Attribute) and node.attr in _BANNED_CLOCK_ATTRS:
-                offenders.append(f"{path.name}:{node.lineno} .{node.attr}(")
-            elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-                # `time.time()` — the bare module call the attribute pass misses.
-                fn = node.func
-                if (
-                    fn.attr == "time"
-                    and isinstance(fn.value, ast.Name)
-                    and fn.value.id == "time"
-                ):
-                    offenders.append(f"{path.name}:{node.lineno} time.time(")
+            if not isinstance(node, ast.Call):
+                continue
+            resolved = _resolved_call_name(node.func, bindings)
+            if resolved in _SYSTEM_CLOCK_CALLS:
+                offenders.append(f"{path.name}:{node.lineno} {resolved}(")
     assert offenders == [], f"ambient system-clock reads below the composition root: {offenders}"
 
 
@@ -110,12 +137,13 @@ def test_t18_0b_no_module_global_mutable_state() -> None:
             names = [
                 t.id
                 for t in targets
-                if isinstance(t, ast.Name)
-                and not (t.id.startswith("__") and t.id.endswith("__"))
+                if isinstance(t, ast.Name) and not (t.id.startswith("__") and t.id.endswith("__"))
             ]
             if not names:
                 continue
-            if isinstance(value, (ast.List, ast.Dict, ast.Set, ast.ListComp, ast.DictComp, ast.SetComp)):
+            if isinstance(
+                value, (ast.List, ast.Dict, ast.Set, ast.ListComp, ast.DictComp, ast.SetComp)
+            ):
                 offenders.append(f"{path.name}: {names} = <mutable literal>")
             elif isinstance(value, ast.Call) and isinstance(value.func, ast.Name):
                 if value.func.id in mutable_ctor:
@@ -182,7 +210,9 @@ def test_t18_2d_built_wheel_bundles_zero_corpus() -> None:
             assert measured.value == 0, f"qmb package tree carries corpus bytes: {measured.value}"
             return
         gate = assert_distribution_has_no_corpus(str(wheel))
-        assert is_ok(gate), f"built wheel FAILS the ship-no-corpus gate: {getattr(gate,'context',gate)!r}"
+        assert is_ok(gate), (
+            f"built wheel FAILS the ship-no-corpus gate: {getattr(gate, 'context', gate)!r}"
+        )
         assert gate.value == 0
 
 

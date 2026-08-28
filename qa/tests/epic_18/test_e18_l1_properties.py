@@ -70,22 +70,17 @@ def test_t18_p1_download_threads_injected_clock_FIND001() -> None:
     """``data download`` must derive ``end``-defaults-to-today from an injected
     clock so the window is reproducible (18.1 AC2, FR-002/AR-16, DEC-0106).
 
-    EXPECTED FAIL — FIND-001: ``parse_download_request`` calls ``resolve_end_ns``
-    without threading any injected clock, so ``download.py:127`` reads the ambient
-    ``datetime.now()``. The resolved frontier tracks the real wall clock, not the
-    injected one. Source is NOT edited.
+    FC-14 selects the ``now`` key because no ratified authority names the
+    injection key; the other guessed keys from the original finding are removed.
     """
-    fixed = datetime(2021, 1, 1, tzinfo=timezone.utc)
+    fixed = datetime(2024, 1, 1, tzinfo=timezone.utc)
     expected = _next_midnight_ns(fixed)
     resources = {
         "venue": "dukascopy",
         "symbol": "EURUSD",
         "start_ns": NS,
         "destination": "rooms",
-        # every plausible injection key a reproducible-window impl would consult:
         "now": fixed,
-        "clock": fixed,
-        "now_ns": expected,
     }
     parsed = parse_download_request(resources)
     assert is_ok(parsed), parsed
