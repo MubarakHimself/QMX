@@ -25,6 +25,18 @@ def main() -> int:
         print("qa-verify: no epic suites found under qa/tests — failing closed")
         return 1
     failed: list[str] = []
+    # The lane-entry authority gate (FC-35) and any other cross-epic gate files
+    # at qa/tests top level run FIRST: a lane must never proceed on a
+    # reconstructed taxonomy, so a missing authority fails before any epic suite.
+    top_level = sorted(root.glob("test_*.py"))
+    if top_level:
+        print("=== qa-verify: lane-entry gates ===", flush=True)
+        proc = subprocess.run(
+            [sys.executable, "-m", "pytest", *map(str, top_level), "-q", *sys.argv[1:]],
+            check=False,
+        )
+        if proc.returncode != 0:
+            failed.append("lane-entry gates")
     for epic in epic_dirs:
         print(f"=== qa-verify: {epic.name} ===", flush=True)
         proc = subprocess.run(

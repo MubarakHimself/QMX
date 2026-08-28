@@ -45,7 +45,7 @@ Objective and method: `FIX-GOAL.md`. Resume from the first row not marked `PROVE
 | FC-32 | QMX-F040, QMX-F041, QMX-F042, QMX-F043 | todo | — | four qmf-core mutation pins + mutmut confirmation | OR-03 typed exhaustion refusal and boundary fix. |
 | FC-33 | QMX-F036, QMX-F018, QMX-F100 | todo | — | CI/factory gate assertion + Story 1.7/1.8 scanner fixtures | OR-10c: only permitted `adws/` edit. |
 | FC-34 | QMX-F038, QMX-F039 | todo | — | Skylos/Vulture/check CI and nightly mutmut configuration | OR-10a/b ratchets and permanent battery. |
-| FC-35 | QMX-F037 | todo | — | lane-entry authority-path assertion | Toolchain quarantine applies; do not execute authority machinery. |
+| FC-35 | QMX-F037 | PROVEN | `PENDING` | Lane-entry gate 3 passed; kill-probe: removing `QMX-handoff.md` fails the gate (2 failed), restore recovers | `_bmad-output/test-artifacts/` (test-design-qa.md, QMX-handoff.md, + 2 design docs; 160K) shipped INTO the verification worktree from the operator checkout and committed, so lanes read the L0-L6 taxonomy / 15 P0-P1 assertions / risk-gate ids from the authority, never a reconstruction. `qa/tests/test_lane_entry_gate.py` scans every epic PLAN brief for `_bmad-output/test-artifacts` references and FAILS on any unresolved path (plus non-stub content checks); `qa-verify` now runs the top-level lane-entry gates FIRST, before any epic suite. Authority files are committed data only — no BMad machinery executed (quarantine intact). |
 
 ## Run notes
 
