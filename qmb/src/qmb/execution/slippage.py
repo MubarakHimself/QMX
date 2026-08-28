@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 from fractions import Fraction
-from typing import Final, cast
+from typing import Final, Protocol, cast, runtime_checkable
 
 from qmf.core.exact import PRICE_STORAGE_SCALE, ExactRational, Price, PriceDelta, Quantity, UnitKind
 from qmf.core.fingerprint import Fingerprint, fingerprint
@@ -46,6 +46,7 @@ __all__ = [
     "GapVolatilitySlippageAdapter",
     "SizeTieredSlippageAdapter",
     "SlippageCalibration",
+    "SlippageModel",
     "SpreadCrossingSlippageAdapter",
     "ZeroSlippageAdapter",
     "derive_slippage_seed",
@@ -272,22 +273,54 @@ def legal_print(price: object, path: object) -> Result[bool]:
     return Ok(low.as_fraction() <= magnitude <= high.as_fraction())
 
 
+@runtime_checkable
+class SlippageModel(Protocol):
+    """The per-model offset seam slippage crosses (SLIP-2, SLIP-3, OR-11).
+
+    A model maps a decided fill to a signed-magnitude ``PriceDelta`` offset. The
+    per-run ``seed`` — derived from run identity by :func:`derive_slippage_seed`
+    — is handed to the model AT this boundary so a FUTURE stochastic model draws
+    reproducibly under replay (NFR-03, B-13). The five deterministic V1 models
+    ignore the seed; V1 ships no stochastic draw and nothing here is random.
+    """
+
+    def offset(
+        self,
+        fill: Fill | PartialFill,
+        path: SlicePath,
+        calibration: SlippageCalibration | None,
+        *,
+        seed: int | None,
+    ) -> Result[PriceDelta]:  # pragma: no cover - protocol seam
+        """Signed-magnitude offset for the fill; the per-run seed rides for a future draw."""
+        ...
+
+
 def slip_fill(
     fill: Fill | PartialFill,
     path: SlicePath,
     *,
-    model: str,
+    model: str | SlippageModel,
     calibration: SlippageCalibration | None,
     apply_to_passive_limits: bool,
     seed: int | None = None,
 ) -> Result[Fill | NoFill | PartialFill]:
-    """Map pre-slip → post-slip or veto. Never resizes."""
-    del seed
+    """Map pre-slip → post-slip or veto. Never resizes.
+
+    The per-run ``seed`` is threaded to the slippage-model interface (SLIP-3,
+    OR-11): a :class:`SlippageModel` object receives it at :meth:`SlippageModel.offset`
+    so a future stochastic model is reproducible by construction, and the five
+    deterministic V1 string models receive it in :func:`_offset_for` and ignore it.
+    V1 ships no stochastic draw — nothing on this path is random.
+    """
     if fill.passive and not apply_to_passive_limits:
         return _as_slip(restamp_filled(fill, post_slip_price=fill.pre_slip_price))
-    if model == SLIPPAGE_ADAPTER_ZERO:
-        return _as_slip(restamp_filled(fill, post_slip_price=fill.pre_slip_price))
-    offset = _offset_for(model, fill, path, calibration)
+    if isinstance(model, str):
+        if model == SLIPPAGE_ADAPTER_ZERO:
+            return _as_slip(restamp_filled(fill, post_slip_price=fill.pre_slip_price))
+        offset = _offset_for(model, fill, path, calibration, seed=seed)
+    else:
+        offset = model.offset(fill, path, calibration, seed=seed)
     if is_refusal(offset):
         return offset
     slipped = _apply_offset(fill.pre_slip_price, offset.value, side=fill.side)
@@ -497,7 +530,14 @@ def _offset_for(
     fill: Fill | PartialFill,
     path: SlicePath,
     calibration: SlippageCalibration | None,
+    *,
+    seed: int | None = None,
 ) -> Result[PriceDelta]:
+    # The per-run seed reaches every deterministic V1 model here (SLIP-3, OR-11).
+    # All five are DETERMINISTIC and receive-and-ignore it; a future stochastic
+    # model would draw from it so replay reproduces the same offset. No V1 model
+    # consumes it — nothing on this path is random.
+    _ = seed
     if calibration is None:
         return unavailable(
             "slippage_calibration",

@@ -322,6 +322,43 @@ def test_t173n_slippage_seed_is_deterministic_from_run_identity() -> None:
     assert ok(derive_slippage_seed(run_a)) != ok(derive_slippage_seed(run_b))
 
 
+# --- FC-30 (QMX-F030 / OR-11): slip_fill threads the per-run seed to the model boundary [R23,17.3-AC6]
+def test_t173o_slip_fill_threads_seed_to_the_model_boundary() -> None:
+    """OR-11 (Option A, binding): slip_fill must STOP discarding ``seed`` and thread
+    the per-run seed to the slippage-model interface, so a FUTURE stochastic model is
+    reproducible by construction (SLIP-3, NFR-03, B-13). The stochastic DRAW itself
+    stays UNPROVEN-by-design — V1 ships no random model (see test_t173n) — so this
+    proves only the PLUMBING: a test-owned recording model, driven through the REAL
+    slip_fill path, receives the exact seed at the model boundary. It is an observer
+    at a real seam, never a shim standing in for slip_fill.
+    """
+    from _e17 import RecordingSlippageModel
+
+    wide = slice_path(open=100_000, high=110_000, low=90_000, close=100_000, prints=(90_000, 110_000))
+    buy = ok(Fill.try_create(qty(10), qty(10), price(100_000), side=Direction.LONG))
+
+    # A concrete per-run seed reaches the model boundary verbatim through real slip_fill.
+    model = RecordingSlippageModel()
+    out = ok(slip_fill(buy, wide, model=model, calibration=None,
+                       apply_to_passive_limits=False, seed=1234567890))
+    assert model.seen_seeds == [1234567890], "the per-run seed must reach the model boundary"
+    # The pipeline still completes past the seam (offset applied, legal print, restamped).
+    assert isinstance(out, Fill) and out.post_slip_price is not None
+
+    # The wiring is unconditional: an absent seed is threaded through as None, never invented.
+    none_model = RecordingSlippageModel()
+    ok(slip_fill(buy, wide, model=none_model, calibration=None, apply_to_passive_limits=False))
+    assert none_model.seen_seeds == [None]
+
+    # No randomness was added: the deterministic string models ignore the seed entirely.
+    cal = ok(SlippageCalibration.try_create("constant-percent", "b", percent=ratio(1, 100)))
+    seeded = ok(slip_fill(buy, wide, model="constant-percent", calibration=cal,
+                          apply_to_passive_limits=False, seed=999))
+    unseeded = ok(slip_fill(buy, wide, model="constant-percent", calibration=cal,
+                            apply_to_passive_limits=False, seed=None))
+    assert seeded.post_slip_price == unseeded.post_slip_price  # seed changes no V1 draw
+
+
 # --- FC-12 (QMX-F015): the run-loop SliceHandler binds and drives the COST port
 
 

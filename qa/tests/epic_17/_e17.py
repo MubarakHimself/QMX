@@ -330,6 +330,24 @@ class RecordingSlippage:
         return restamp_filled(fill, post_slip_price=post)
 
 
+class RecordingSlippageModel:
+    """A test-owned SlippageModel observer at slip_fill's per-model boundary (SLIP-3, OR-11).
+
+    Records the per-run seed handed to it AT the model boundary when driven through
+    the REAL slip_fill path, and returns a FIXED, deterministic offset. This is a
+    plumbing probe, not a stochastic model — nothing here draws or is random. A
+    future stochastic model would consume the seed here; this one only witnesses it.
+    """
+
+    def __init__(self, *, offset_value: int = 100) -> None:
+        self.seen_seeds: list[int | None] = []
+        self._offset_value = offset_value
+
+    def offset(self, fill, path, calibration, *, seed):
+        self.seen_seeds.append(seed)
+        return Ok(delta(self._offset_value))
+
+
 class RecordingCost:
     """A CostPort stub that records and itemizes an empty cost set (no resize)."""
 
