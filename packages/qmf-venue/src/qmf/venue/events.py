@@ -764,17 +764,20 @@ def _optional_token(value: object, field_name: str) -> str | TypedRefusal | None
 # --- the observation journal event ------------------------------------------
 
 
-def observation_journal_event_type(kind: object) -> str:
+def observation_journal_event_type(kind: object) -> str | TypedRefusal:
     """The journal event type for one observation kind (CT-20; DEC-0137, DEC-0140).
 
     The deterministic ``(observation kind) -> journal event type`` mapping under the
-    cardinality law — exactly one journal event per recorded observation.
+    cardinality law — exactly one journal event per recorded observation. A value that
+    does not name an :class:`ObservationKind` is an ``invalid input`` refusal.
     """
     resolved = _coerce(ObservationKind, kind)
     if resolved is None:
-        # A defensive fallback that never fabricates a mapping for a non-kind; callers pass
-        # a real ObservationKind, so this arm is not reached in normal use.
-        raise ValueError(f"not an observation kind: {kind!r}")  # pragma: no cover
+        return _invalid(
+            "kind",
+            "an observation journal event type requires an ObservationKind",
+            given=repr(kind),
+        )
     return f"observation.{resolved.value}"
 
 
@@ -798,7 +801,7 @@ class ObservationJournalEvent:
         return cls(
             venue_native_identity=event.venue_native_identity,
             observation_kind=kind,
-            event_type=observation_journal_event_type(kind),
+            event_type=cast("str", observation_journal_event_type(kind)),
         )
 
 

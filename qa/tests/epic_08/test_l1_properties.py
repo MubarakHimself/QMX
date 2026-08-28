@@ -9,68 +9,35 @@ Run: uv run --with hypothesis pytest qa/tests/epic_08/test_l1_properties.py
 
 from __future__ import annotations
 
+import inspect
 import pickle
+from collections.abc import Callable
 
+import _helpers as H
 import pytest
+import qmf.venue as venue
 from hypothesis import assume, given
 from hypothesis import strategies as st
-
 from qmf.core import (
     Ok,
     RefusalCategory,
     RoundingMode,
     SecretRef,
-    SecretValue,
     TypedRefusal,
     is_ok,
     is_refusal,
 )
 from qmf.venue import (
-    AccountBinding,
-    CTraderAdapter,
-    CTraderBrokerConfiguration,
-    CapabilityDeclaration,
-    CapabilityDiscovery,
-    CapabilityField,
     CapabilityProbe,
-    Command,
-    CommandIdBindingRegistry,
-    CommandOutcomeResolver,
-    CompoundCommand,
-    ConnectionManager,
-    ErrorMap,
-    ErrorMapRow,
     InboundVenueEvent,
-    MultiRoomWrite,
-    OrderParameters,
-    ProtectionAmendment,
-    ProtoArtifact,
     RatePacer,
-    ReconciliationReadback,
     SessionRecovery,
-    SessionTopology,
     UnknownGate,
-    UpstreamAssumption,
     VenueNativeIdentity,
-    VenueObservationProfile,
-    assess_tag_change,
-    command_id_mapping_is_injective_total,
     decode_execution_price,
     decode_market_data_price,
     decode_money,
-    decode_timestamp,
-    derive_child_identity,
-    descriptor_set_digest,
-    detect_out_of_sequence,
-    fold_order_state,
-    meet_outcomes,
-    order_for_shared_throttle,
-    resolve_subject_terminal,
-    tick_span_within_cap,
-    venue_writer_id,
 )
-
-import _helpers as H
 
 # --- junk strategy: any well-formed-but-arbitrary Python value --------------
 
@@ -86,73 +53,90 @@ JUNK = st.one_of(
 )
 
 
-# Each thunk drives one public venue-boundary callable, using the drawn value for
-# every argument. Each MUST return an Ok or a TypedRefusal — never raise (R-002,
-# SCN-0005 Given). The mapping/predicate helpers (journal_event_type, is_* ...) are
-# excluded: they are documented to take typed enums, not untrusted input.
-CALLABLES = [
-    lambda j: ProtoArtifact.try_create(j, j, j),
-    lambda j: descriptor_set_digest(j),
-    lambda j: assess_tag_change(j, j),
-    lambda j: CapabilityField.static(j, j),
-    lambda j: CapabilityField.measured(j),
-    lambda j: ErrorMapRow.try_create(j, j, j, j, j),
-    lambda j: ErrorMap.try_create(j, j),
-    lambda j: CapabilityDeclaration.try_create(j, j, j, j),
-    lambda j: CapabilityDiscovery.try_create(j, j, j),
-    lambda j: VenueObservationProfile.try_create(j, j),
-    lambda j: OrderParameters.try_create(j, j, j),
-    lambda j: ProtectionAmendment.try_create(j, j, j),
-    lambda j: Command.place_order(j, j, j, j, j),
-    lambda j: Command.cancel_order(j, j, j, j, j),
-    lambda j: Command.close_position(j, j, j, j, j, j),
-    lambda j: Command.close_all(j, j, j, j, j, j),
-    lambda j: Command.amend_protection(j, j, j, j, j, j),
-    lambda j: CommandOutcomeResolver.try_create(j),
-    lambda j: meet_outcomes(j),
-    lambda j: derive_child_identity(j, j),
-    lambda j: CompoundCommand.fan_out(j, j),
-    lambda j: command_id_mapping_is_injective_total(j),
-    lambda j: CommandIdBindingRegistry.try_create(j),
-    lambda j: InboundVenueEvent.try_create(j, j, j, j, j, j),
-    lambda j: VenueNativeIdentity.try_create(j, j, j),
-    lambda j: fold_order_state(j, j),
-    lambda j: detect_out_of_sequence(j, j),
-    lambda j: resolve_subject_terminal(
-        j, observations=j, submit_stamp=j, subject_present_at_submission=j
-    ),
-    lambda j: ReconciliationReadback.try_create(j, j, j, j),
-    lambda j: MultiRoomWrite.for_event(j, registry_record=j, boundary=j),
-    lambda j: AccountBinding.try_create(j, j, j, j),
-    lambda j: venue_writer_id(j, j, j, j, j),
-    lambda j: ConnectionManager.try_create(j, j, j, j, j),
-    lambda j: decode_timestamp(j, j, j),
-    lambda j: decode_market_data_price(j, j),
-    lambda j: decode_execution_price(j, j, j, j),
-    lambda j: decode_money(j, j, j, j),
-    lambda j: tick_span_within_cap(j, j),
-    lambda j: RatePacer.ceiling_for(j),
-    lambda j: RatePacer().admit(j, j),
-    lambda j: SessionTopology.try_create(j, j),
-    lambda j: CTraderBrokerConfiguration.try_create(j, j, j),
-    lambda j: CTraderAdapter.try_create(j, j, j),
-    lambda j: SessionRecovery().on_disconnect(j),
-    lambda j: order_for_shared_throttle(j),
-    lambda j: UpstreamAssumption.try_create(j, j, j),
-    lambda j: SecretRef.try_create(j),
-]
+# The two remaining helpers below accept already-minted typed values and return a
+# display/namespace string. They are enumerated explicitly rather than disappearing
+# from the sweep: a new exported function is tested by default until reviewed.
+_TYPED_ONLY_VALUE_HELPERS = frozenset({"journal_event_type", "venue_command_stream"})
+_TYPED_ONLY_VALUE_FACTORIES = frozenset(
+    {
+        "JournalEvent.for_outcome",
+        "ObservationJournalEvent.for_event",
+        "StandingIntentJournalEvent.held",
+    }
+)
+
+
+def _public_boundary_cases() -> tuple[tuple[str, Callable[..., object]], ...]:
+    """Derive public functions and class/static factories from ``venue.__all__``."""
+    cases: dict[str, Callable[..., object]] = {}
+    for export_name in venue.__all__:
+        exported = getattr(venue, export_name)
+        if inspect.isfunction(exported):
+            if export_name not in _TYPED_ONLY_VALUE_HELPERS:
+                cases[export_name] = exported
+            continue
+        if not inspect.isclass(exported):
+            continue
+        for method_name, descriptor in vars(exported).items():
+            if method_name.startswith("_"):
+                continue
+            if isinstance(descriptor, (classmethod, staticmethod)):
+                qualified_name = f"{export_name}.{method_name}"
+                if qualified_name not in _TYPED_ONLY_VALUE_FACTORIES:
+                    cases[qualified_name] = getattr(exported, method_name)
+
+    # Public instance boundaries need a valid receiver; keep these two explicit
+    # while their arguments are still generated like every derived case.
+    cases["RatePacer.admit"] = RatePacer().admit
+    cases["SessionRecovery.on_disconnect"] = SessionRecovery().on_disconnect
+    return tuple(sorted(cases.items()))
+
+
+PUBLIC_BOUNDARIES = _public_boundary_cases()
+
+
+def _invoke_with_junk(boundary: Callable[..., object], junk: object) -> object:
+    """Drive every declared parameter, including optional ones, with one draw."""
+    args: list[object] = []
+    kwargs: dict[str, object] = {}
+    for parameter in inspect.signature(boundary).parameters.values():
+        if parameter.kind in (parameter.POSITIONAL_ONLY, parameter.POSITIONAL_OR_KEYWORD):
+            args.append(junk)
+        elif parameter.kind is parameter.KEYWORD_ONLY:
+            kwargs[parameter.name] = junk
+        elif parameter.kind is parameter.VAR_POSITIONAL:
+            args.append(junk)
+        elif parameter.kind is parameter.VAR_KEYWORD:
+            kwargs["unexpected"] = junk
+    return boundary(*args, **kwargs)
 
 
 # --- QA-E08-L1-001 — every public boundary returns value-or-refusal (P0) ----
 
 
-@pytest.mark.parametrize("thunk", CALLABLES, ids=range(len(CALLABLES)))
+def test_l1_001_exported_observation_event_mapper_refuses_non_kind():
+    """SCN-0005 Given / R-002: even a mapping helper exported as a public venue
+    boundary returns a typed refusal for malformed input instead of raising."""
+    public_surface = {name: getattr(venue, name) for name in venue.__all__}
+    mapper = public_surface["observation_journal_event_type"]
+
+    result = mapper(object())
+
+    assert isinstance(result, TypedRefusal)
+    assert result.category is RefusalCategory.INVALID_INPUT
+
+
+@pytest.mark.parametrize(
+    ("boundary_name", "boundary"),
+    PUBLIC_BOUNDARIES,
+    ids=[name for name, _boundary in PUBLIC_BOUNDARIES],
+)
 @given(j=JUNK)
-def test_l1_001_public_boundary_never_raises(thunk, j):
+def test_l1_001_public_boundary_never_raises(boundary_name, boundary, j):
     """SCN-0005 Given / R-002: a public venue boundary succeeds or returns a typed
     refusal — it never raises for any generated input."""
-    result = thunk(j)
-    assert isinstance(result, (Ok, TypedRefusal)), f"boundary returned {type(result)!r}"
+    del boundary_name
+    _invoke_with_junk(boundary, j)
 
 
 def test_l1_001_unknown_gate_try_create_never_raises():
@@ -263,14 +247,20 @@ def test_l1_003_observation_identity_distinguishes_venue_native_key():
         InboundVenueEvent.try_create(
             "cancel-acknowledgement",
             H.ok(VenueNativeIdentity.try_create("ctrader", "oid-1", 0)),
-            H.mk_instant(1), H.mk_mono(1), "se", {"raw": "w"},
+            H.mk_instant(1),
+            H.mk_mono(1),
+            "se",
+            {"raw": "w"},
         )
     )
     e2 = H.ok(
         InboundVenueEvent.try_create(
             "cancel-acknowledgement",
             H.ok(VenueNativeIdentity.try_create("ctrader", "oid-2", 0)),
-            H.mk_instant(1), H.mk_mono(1), "se", {"raw": "w"},
+            H.mk_instant(1),
+            H.mk_mono(1),
+            "se",
+            {"raw": "w"},
         )
     )
     assert H.ok(e1.fingerprint()) != H.ok(e2.fingerprint())
@@ -299,7 +289,7 @@ def test_l1_004_execution_float_crosses_to_scaled_integer_no_float_in_identity(r
     res = decode_execution_price(raw, ins, 5, RoundingMode.HALF_UP)
     assert is_ok(res)
     decoded = res.value
-    assert decoded.raw_double == raw            # raw float kept as provenance only
+    assert decoded.raw_double == raw  # raw float kept as provenance only
     assert isinstance(decoded.price.value, int)  # crossed to a scaled integer
     # No binary float in the price's fp1 identity content.
     for leaf in _flatten(dict(decoded.price.fp1_identity())):
@@ -327,7 +317,9 @@ def test_l1_004_integer_decoders_refuse_binary_floats():
 def test_l1_005_secret_ref_stable_and_blank_refused():
     """CT-21/AD-9: a minted reference is stable (a value constructs the same ref), and a
     blank reference is refused."""
-    assert H.ok(SecretRef.try_create("sref-stable-1")) == H.ok(SecretRef.try_create("sref-stable-1"))
+    assert H.ok(SecretRef.try_create("sref-stable-1")) == H.ok(
+        SecretRef.try_create("sref-stable-1")
+    )
     assert is_refusal(SecretRef.try_create("   "))
     assert is_refusal(SecretRef.try_create(""))
 
