@@ -68,7 +68,21 @@ def main(argv: list[str] | None = None) -> int:
     if not baseline_path.is_file():
         print(f"::error::vulture gate: baseline file not found at {baseline_path}", file=sys.stderr)
         return 2
-    baseline = _count_findings(baseline_path.read_text(encoding="utf-8").splitlines())
+    # Containment: the baseline is repo data named by the workflow's own pinned
+    # argv, never external input; refuse a path resolving outside the working
+    # tree so the argument cannot be turned into a traversal.
+    resolved = baseline_path.resolve()
+    if not resolved.is_relative_to(Path.cwd().resolve()):
+        print(
+            f"::error::vulture gate: baseline must live inside the repo, got {resolved}",
+            file=sys.stderr,
+        )
+        return 2
+    baseline = (
+        _count_findings(  # skylos: ignore[SKY-D215] contained above; CI-pinned argv, not user input
+            resolved.read_text(encoding="utf-8").splitlines()
+        )
+    )
     baseline_count = len(baseline)
 
     try:
