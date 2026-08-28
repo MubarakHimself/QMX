@@ -467,17 +467,25 @@ class CapabilityProbe:
             )
         )
 
-    def run(self) -> ProbeReport:
-        """Run the verification suite and return the recorded profile plus findings.
+    def run(self) -> Result[ProbeReport]:
+        """Run the verification suite and return the recorded profile plus findings, or
+        propagate an ``unavailable dependency`` refusal when the injected clock cannot
+        yield the run instant (OR-03; CT-04, DEC-0109).
 
         Reads the injected clock once for the run instant (the plausibility base for the
         spot-timestamp assertion and the receive-time fallback when a sample is
-        unavailable), executes the five checks in order, records each fact into the
-        profile with its supersedes edge, and weighs every upstream assumption. The run
-        itself always completes — a check that cannot pass is recorded ``unverified`` or
-        ``refused``, never raised and never defaulted.
+        unavailable). The clock read is value-or-refusal: a real clock returns ``Ok``, so
+        the run proceeds; a spent replay clock returns a refusal, which is propagated
+        (the probe has no anchor instant, so it cannot record a single fact). Once the
+        instant is in hand the run always completes — the five checks execute in order,
+        each fact is recorded into the profile with its supersedes edge, and every
+        upstream assumption is weighed; a check that cannot pass is recorded
+        ``unverified`` or ``refused``, never raised and never defaulted.
         """
-        run_instant = self.clock.wall_now()
+        wall = self.clock.wall_now()
+        if is_refusal(wall):
+            return wall
+        run_instant = wall.value
         facts = (
             self._check_spot_timestamp_unit(run_instant),
             self._check_daily_boundary(run_instant),
@@ -493,10 +501,12 @@ class CapabilityProbe:
             if is_refusal(recorded):  # pragma: no cover - facts are always MeasuredFacts
                 continue
             profile = recorded.value
-        return ProbeReport(
-            profile=profile,
-            findings=self._findings(profile),
-            proto_release_tag=self.proto_release_tag,
+        return Ok(
+            ProbeReport(
+                profile=profile,
+                findings=self._findings(profile),
+                proto_release_tag=self.proto_release_tag,
+            )
         )
 
     # -- fact construction ---------------------------------------------------

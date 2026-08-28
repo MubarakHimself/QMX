@@ -94,9 +94,11 @@ def causality_reads_instants_only(epoch: Instant, later: Instant) -> None:
 
 def clock_is_injected(clock: Clock) -> tuple[Instant, Duration]:
     """The composition root injects the clock; nothing below reads the system clock."""
-    first_wall = clock.wall_now()
-    start = clock.monotonic_now()
-    end = clock.monotonic_now()
+    # Reading the Clock seam is value-or-refusal (CT-04; OR-03): a real/replay clock
+    # returns Ok, a spent DataDrivenClock returns an unavailable-dependency refusal.
+    first_wall = _unwrap(clock.wall_now(), "wall reading")
+    start = _unwrap(clock.monotonic_now(), "monotonic start")
+    end = _unwrap(clock.monotonic_now(), "monotonic end")
 
     # A monotonic reading is its own type, never an Instant.
     assert isinstance(start, MonotonicReading)
@@ -111,8 +113,8 @@ def ordering_has_no_causal_meaning(clock: Clock) -> WriterSequencer:
         "writer id",
     )
     sequencer = WriterSequencer(writer)
-    first = sequencer.mint(clock.wall_now())
-    second = sequencer.mint(clock.wall_now())
+    first = sequencer.mint(_unwrap(clock.wall_now(), "wall reading"))
+    second = sequencer.mint(_unwrap(clock.wall_now(), "wall reading"))
     assert second.sequence > first.sequence
     return sequencer
 

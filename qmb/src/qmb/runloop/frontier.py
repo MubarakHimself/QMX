@@ -19,7 +19,7 @@ from typing import Final, Protocol, cast, runtime_checkable
 from qmf.core.chrono import Clock, DataDrivenClock, Instant, MonotonicReading
 from qmf.core.refusal import Ok, Result, is_refusal
 
-from qmb._refuse import clean_token, invalid, policy, unsupported
+from qmb._refuse import clean_token, invalid, policy, unavailable, unsupported
 from qmb.config import CLOCK_REPLAY, CLOCK_SIMULATED
 
 __all__ = [
@@ -205,11 +205,14 @@ def as_wall_replay_instant(
     return Ok(candidate)
 
 
-def read_frontier(clock: object) -> Instant:
+def read_frontier(clock: object) -> Result[Instant]:
     """Read the current wall Instant from the injected frontier ``Clock``.
 
     The only approved time read below the composition root (AR-16). Callers
-    pass the injected ``Clock``; nothing here touches the system clock.
+    pass the injected ``Clock``; nothing here touches the system clock. The read
+    is value-or-refusal (OR-03; CT-04): it propagates the clock's ``Ok`` Instant,
+    or the ``unavailable dependency`` refusal a spent/not-yet-advanced replay clock
+    returns. A non-``Clock`` argument is programmer error and still raises.
     """
     if not isinstance(clock, Clock):
         raise TypeError("read_frontier requires an injected qmf.core.chrono.Clock")
@@ -349,18 +352,32 @@ class FrontierClock:
         self._current = accepted.value
         return Ok(accepted.value)
 
-    def wall_now(self) -> Instant:
-        """The current wall/replay Instant (AD-8); raise if not yet advanced."""
-        if self._current is None:
-            raise LookupError(
-                "frontier clock has no current Instant; advance from stream next-emit cursors first"
-            )
-        return self._current
+    def wall_now(self) -> Result[Instant]:
+        """The current wall/replay Instant (AD-8), or an ``unavailable dependency``
+        refusal when the frontier has not advanced yet (OR-03; CT-04, DEC-0109).
 
-    def monotonic_now(self) -> MonotonicReading:
-        """Next scripted monotonic diagnostic; raise once the script is spent."""
+        Value-or-refusal at the clock seam, never raised: reading before the first
+        advance is a missing dependency (the data cursor has produced no Instant),
+        the refusal category asserted, not its prose."""
+        if self._current is None:
+            return unavailable(
+                "current",
+                "the frontier clock has no current Instant; advance from stream "
+                "next-emit cursors before reading (OR-03)",
+            )
+        return Ok(self._current)
+
+    def monotonic_now(self) -> Result[MonotonicReading]:
+        """Next scripted monotonic diagnostic, or an ``unavailable dependency`` refusal
+        once the script is spent (OR-03; CT-04, DEC-0109) — returned, never raised."""
         if self._monotonic_cursor >= len(self._monotonic):
-            raise LookupError("frontier clock exhausted its scripted monotonic readings")
+            return unavailable(
+                "monotonic_ns",
+                "the frontier clock consumed every scripted monotonic reading; the "
+                "replay was under-provisioned (OR-03)",
+                cursor=self._monotonic_cursor,
+                script_length=len(self._monotonic),
+            )
         value = self._monotonic[self._monotonic_cursor]
         self._monotonic_cursor += 1
-        return MonotonicReading(value_ns=value, boot_epoch_id=self.boot_epoch_id)
+        return Ok(MonotonicReading(value_ns=value, boot_epoch_id=self.boot_epoch_id))

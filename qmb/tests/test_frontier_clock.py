@@ -6,7 +6,6 @@ import ast
 from pathlib import Path
 from typing import TypeVar
 
-import pytest
 from qmb.config import CLOCK_REPLAY, CLOCK_SIMULATED
 from qmb.doors import api
 from qmb.runloop import (
@@ -73,8 +72,8 @@ def test_frontier_clock_is_qmf_core_clock_protocol() -> None:
     assert isinstance(clock, Clock)
     typed: Clock = clock
     assert typed.boot_epoch_id == "boot-1"
-    assert typed.wall_now().value_ns == _NS
-    assert isinstance(typed.monotonic_now(), MonotonicReading)
+    assert _ok(typed.wall_now()).value_ns == _NS
+    assert isinstance(_ok(typed.monotonic_now()), MonotonicReading)
 
 
 def test_injected_clock_is_used_including_data_driven_clock() -> None:
@@ -84,12 +83,12 @@ def test_injected_clock_is_used_including_data_driven_clock() -> None:
         monotonic_ns=(1, 2),
     )
     assert isinstance(scripted, DataDrivenClock)
-    assert read_frontier(scripted).value_ns == 10
-    assert read_frontier(scripted).value_ns == 20
+    assert _ok(read_frontier(scripted)).value_ns == 10
+    assert _ok(read_frontier(scripted)).value_ns == 20
 
     frontier = _ok(FrontierClock.try_create(boot_epoch_id="boot-2", clock_binding=CLOCK_REPLAY))
     first = _ok(frontier.advance((_stream("a", _NS + 5), _stream("b", _NS + 9))))
-    assert read_frontier(frontier).value_ns == first.value_ns == _NS + 5
+    assert _ok(read_frontier(frontier)).value_ns == first.value_ns == _NS + 5
 
 
 def test_runloop_source_never_reads_system_clock() -> None:
@@ -169,7 +168,7 @@ def test_frontier_clock_advance_is_monotone_pure_of_data_cursor() -> None:
     assert t1.value_ns == _NS + 1
     assert t2.value_ns == _NS + 1
     assert t3.value_ns == _NS + 5
-    assert clock.wall_now().value_ns == _NS + 5
+    assert _ok(clock.wall_now()).value_ns == _NS + 5
     refused = clock.advance((_stream("s2", _NS + 4),))
     assert is_refusal(refused)
     assert refused.category is RefusalCategory.INVALID_INPUT
@@ -239,7 +238,7 @@ def test_loop_never_forked_same_read_path() -> None:
             monotonic_ns=(0,),
         )
     )
-    assert read_frontier(replay).value_ns == read_frontier(frontier).value_ns == 1
+    assert _ok(read_frontier(replay)).value_ns == _ok(read_frontier(frontier)).value_ns == 1
     assert api.FrontierClock is qmb.FrontierClock
     assert api.read_frontier is qmb.read_frontier
     assert api.advance_frontier is qmb.advance_frontier
@@ -247,11 +246,17 @@ def test_loop_never_forked_same_read_path() -> None:
 
 
 def test_frontier_clock_wall_now_requires_advance() -> None:
+    # OR-03 / CT-04 (DEC-0109): reading the clock before the frontier has advanced (and
+    # reading a spent monotonic script) is a RETURNED `unavailable dependency` refusal,
+    # never a raise -- value-or-refusal holds at the clock seam. The category is
+    # asserted, not the message prose.
     clock = _ok(FrontierClock.try_create(boot_epoch_id="boot-empty"))
-    with pytest.raises(LookupError):
-        clock.wall_now()
-    with pytest.raises(LookupError):
-        clock.monotonic_now()
+    unadvanced = clock.wall_now()
+    assert is_refusal(unadvanced)
+    assert unadvanced.category is RefusalCategory.UNAVAILABLE_DEPENDENCY
+    spent_mono = clock.monotonic_now()
+    assert is_refusal(spent_mono)
+    assert spent_mono.category is RefusalCategory.UNAVAILABLE_DEPENDENCY
 
 
 def test_public_exports_surface() -> None:

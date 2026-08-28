@@ -237,7 +237,7 @@ def _probe(
 
 
 def test_run_records_all_five_checks_verified() -> None:
-    report = _probe().run()
+    report = _ok(_probe().run())
     assert isinstance(report, ProbeReport)
     assert report.proto_release_tag == _PROTO_TAG
     verdicts = {fact.check: fact.verdict for fact in report.profile.facts}
@@ -251,13 +251,13 @@ def test_run_records_all_five_checks_verified() -> None:
 
 
 def test_run_profile_is_keyed_per_venue_and_account() -> None:
-    report = _probe().run()
+    report = _ok(_probe().run())
     assert report.profile.venue_id == _venue()
     assert report.profile.account == _account()
 
 
 def test_verified_checks_make_every_evidence_class_available() -> None:
-    profile = _probe().run().profile
+    profile = _ok(_probe().run()).profile
     for evidence_class in VenueEvidenceClass:
         assert _ok(profile.require_evidence(evidence_class)) is True
 
@@ -265,21 +265,21 @@ def test_verified_checks_make_every_evidence_class_available() -> None:
 def test_each_fact_records_a_receive_instant_and_session_epoch() -> None:
     # Receive-time recording is mandatory (no server clock), and the session epoch is
     # distinct from the boot epoch (DEC-0135, DEC-0137).
-    for fact in _probe().run().profile.facts:
+    for fact in _ok(_probe().run()).profile.facts:
         assert isinstance(fact.received_at, Instant)
         assert fact.session_epoch == _SESSION_EPOCH
         assert fact.session_epoch != _BOOT_EPOCH
 
 
 def test_daily_boundary_is_measured_not_the_hardcoded_ny_claim() -> None:
-    fact = _probe().run().profile.latest_for(ProbeCheck.DAILY_BOUNDARY)
+    fact = _ok(_probe().run()).profile.latest_for(ProbeCheck.DAILY_BOUNDARY)
     assert fact is not None
     assert fact.verdict is ProbeVerdict.VERIFIED
     assert fact.measured["utc_minute_of_day"] == 0  # measured from data, not 17:00 NY
 
 
 def test_bar_basis_records_the_declared_quote_side_not_hardcoded_bid() -> None:
-    fact = _probe().run().profile.latest_for(ProbeCheck.BAR_BASIS)
+    fact = _ok(_probe().run()).profile.latest_for(ProbeCheck.BAR_BASIS)
     assert fact is not None
     assert fact.verdict is ProbeVerdict.VERIFIED
     # The verified basis is whatever quote side the tick sample declared.
@@ -288,7 +288,7 @@ def test_bar_basis_records_the_declared_quote_side_not_hardcoded_bid() -> None:
 
 
 def test_pip_formula_records_the_validated_exact_pip_size() -> None:
-    fact = _probe().run().profile.latest_for(ProbeCheck.PIP_FORMULA)
+    fact = _ok(_probe().run()).profile.latest_for(ProbeCheck.PIP_FORMULA)
     assert fact is not None
     assert fact.verdict is ProbeVerdict.VERIFIED
     assert fact.measured["pip_position"] == 4
@@ -297,7 +297,7 @@ def test_pip_formula_records_the_validated_exact_pip_size() -> None:
 
 
 def test_money_exponent_records_the_present_exponent() -> None:
-    fact = _probe().run().profile.latest_for(ProbeCheck.MONEY_EXPONENT)
+    fact = _ok(_probe().run()).profile.latest_for(ProbeCheck.MONEY_EXPONENT)
     assert fact is not None
     assert fact.measured["money_digits"] == 2
 
@@ -312,14 +312,14 @@ def test_probe_holds_a_reference_never_a_value() -> None:
 
 
 def test_facts_carry_only_the_credential_reference_id() -> None:
-    for fact in _probe().run().profile.facts:
+    for fact in _ok(_probe().run()).profile.facts:
         assert fact.credential_ref_id == _CRED_REF_ID
 
 
 def test_transport_is_read_only_no_submit_path_exists() -> None:
     transport = _FixtureTransport()
     probe = _probe(transport)
-    probe.run()
+    _ok(probe.run())
     assert transport.calls  # the probe measured
     assert all(name.startswith("fetch_") for name in transport.calls)
     # No submit/order surface exists on either the seam or the probe.
@@ -330,8 +330,20 @@ def test_transport_is_read_only_no_submit_path_exists() -> None:
 
 def test_probe_needs_no_port_contract_or_journal_to_run() -> None:
     # It runs with only qmf-core nouns, a clock, and the throwaway transport (AR-45).
-    report = _probe().run()
+    report = _ok(_probe().run())
     assert len(report.profile.facts) == 5
+
+
+def test_run_propagates_an_unavailable_refusal_when_the_clock_is_spent() -> None:
+    # OR-03 / CT-04 (DEC-0109): run() reads the injected clock once for its anchor
+    # instant. When the replay clock is spent (an under-provisioned script), wall_now()
+    # returns an `unavailable dependency` refusal and run() PROPAGATES it -- returned,
+    # never raised -- because the probe then has no anchor instant to record any fact.
+    # The refusal CATEGORY is asserted, not the message prose.
+    spent_clock = DataDrivenClock(boot_epoch_id=_BOOT_EPOCH, wall_instants=[], monotonic_ns=[])
+    result = _probe(clock=spent_clock).run()
+    assert is_refusal(result)
+    assert result.category is RefusalCategory.UNAVAILABLE_DEPENDENCY
 
 
 # --- the verify-or-refuse degraded paths ------------------------------------
@@ -340,7 +352,7 @@ def test_probe_needs_no_port_contract_or_journal_to_run() -> None:
 def test_spot_unit_unasserted_leaves_spot_evidence_unavailable() -> None:
     # Second-scale timestamps fall out of the millisecond magnitude band.
     spot = Ok(SpotSample(raw_timestamps=(1_724_000_000, 1_724_000_100), received_at=_instant(1)))
-    profile = _probe(_FixtureTransport(spot=spot)).run().profile
+    profile = _ok(_probe(_FixtureTransport(spot=spot)).run()).profile
     fact = profile.latest_for(ProbeCheck.SPOT_TIMESTAMP_UNIT)
     assert fact is not None
     assert fact.verdict is ProbeVerdict.UNVERIFIED
@@ -352,10 +364,8 @@ def test_spot_unit_unasserted_leaves_spot_evidence_unavailable() -> None:
 
 def test_spot_empty_sample_is_unverified() -> None:
     spot = Ok(SpotSample(raw_timestamps=(), received_at=_instant(1)))
-    fact = (
-        _probe(_FixtureTransport(spot=spot))
-        .run()
-        .profile.latest_for(ProbeCheck.SPOT_TIMESTAMP_UNIT)
+    fact = _ok(_probe(_FixtureTransport(spot=spot)).run()).profile.latest_for(
+        ProbeCheck.SPOT_TIMESTAMP_UNIT
     )
     assert fact is not None
     assert fact.verdict is ProbeVerdict.UNVERIFIED
@@ -364,17 +374,15 @@ def test_spot_empty_sample_is_unverified() -> None:
 def test_spot_degenerate_clock_is_unverified() -> None:
     # A wall reading of zero cannot anchor a magnitude band, even with timestamps.
     probe = _probe(clock=_clock(wall_ns=0))
-    fact = probe.run().profile.latest_for(ProbeCheck.SPOT_TIMESTAMP_UNIT)
+    fact = _ok(probe.run()).profile.latest_for(ProbeCheck.SPOT_TIMESTAMP_UNIT)
     assert fact is not None
     assert fact.verdict is ProbeVerdict.UNVERIFIED
 
 
 def test_spot_sample_unavailable_is_unverified() -> None:
     spot: Result[SpotSample] = _refusal(RefusalCategory.TRANSIENT_VENUE_FAILURE)
-    fact = (
-        _probe(_FixtureTransport(spot=spot))
-        .run()
-        .profile.latest_for(ProbeCheck.SPOT_TIMESTAMP_UNIT)
+    fact = _ok(_probe(_FixtureTransport(spot=spot)).run()).profile.latest_for(
+        ProbeCheck.SPOT_TIMESTAMP_UNIT
     )
     assert fact is not None
     assert fact.verdict is ProbeVerdict.UNVERIFIED
@@ -395,7 +403,7 @@ def test_daily_boundary_too_few_bars_is_unverified_and_ungoverned() -> None:
             received_at=_instant(_WALL_NS + 1),
         )
     )
-    profile = _probe(_FixtureTransport(trendbars=one_bar)).run().profile
+    profile = _ok(_probe(_FixtureTransport(trendbars=one_bar)).run()).profile
     fact = profile.latest_for(ProbeCheck.DAILY_BOUNDARY)
     assert fact is not None
     assert fact.verdict is ProbeVerdict.UNVERIFIED
@@ -425,10 +433,8 @@ def test_daily_boundary_inconsistent_bars_is_unverified() -> None:
             received_at=_instant(_WALL_NS + 1),
         )
     )
-    fact = (
-        _probe(_FixtureTransport(trendbars=bars))
-        .run()
-        .profile.latest_for(ProbeCheck.DAILY_BOUNDARY)
+    fact = _ok(_probe(_FixtureTransport(trendbars=bars)).run()).profile.latest_for(
+        ProbeCheck.DAILY_BOUNDARY
     )
     assert fact is not None
     assert fact.verdict is ProbeVerdict.UNVERIFIED
@@ -436,10 +442,8 @@ def test_daily_boundary_inconsistent_bars_is_unverified() -> None:
 
 def test_daily_boundary_sample_unavailable_is_unverified() -> None:
     trendbars: Result[TrendbarSample] = _refusal(RefusalCategory.TRANSIENT_VENUE_FAILURE)
-    fact = (
-        _probe(_FixtureTransport(trendbars=trendbars))
-        .run()
-        .profile.latest_for(ProbeCheck.DAILY_BOUNDARY)
+    fact = _ok(_probe(_FixtureTransport(trendbars=trendbars)).run()).profile.latest_for(
+        ProbeCheck.DAILY_BOUNDARY
     )
     assert fact is not None
     assert fact.verdict is ProbeVerdict.UNVERIFIED
@@ -468,7 +472,7 @@ def test_bar_basis_mismatch_refuses_bar_evidence() -> None:
             received_at=_instant(_WALL_NS + 1),
         )
     )
-    profile = _probe(_FixtureTransport(trendbars=bad_bars)).run().profile
+    profile = _ok(_probe(_FixtureTransport(trendbars=bad_bars)).run()).profile
     fact = profile.latest_for(ProbeCheck.BAR_BASIS)
     assert fact is not None
     assert fact.verdict is ProbeVerdict.REFUSED
@@ -485,14 +489,18 @@ def test_bar_basis_no_overlapping_ticks_is_unverified() -> None:
             received_at=_instant(_WALL_NS + 2),
         )
     )
-    fact = _probe(_FixtureTransport(ticks=far_ticks)).run().profile.latest_for(ProbeCheck.BAR_BASIS)
+    fact = _ok(_probe(_FixtureTransport(ticks=far_ticks)).run()).profile.latest_for(
+        ProbeCheck.BAR_BASIS
+    )
     assert fact is not None
     assert fact.verdict is ProbeVerdict.UNVERIFIED
 
 
 def test_bar_basis_tick_sample_unavailable_is_unverified() -> None:
     ticks: Result[TickHistorySample] = _refusal(RefusalCategory.TRANSIENT_VENUE_FAILURE)
-    fact = _probe(_FixtureTransport(ticks=ticks)).run().profile.latest_for(ProbeCheck.BAR_BASIS)
+    fact = _ok(_probe(_FixtureTransport(ticks=ticks)).run()).profile.latest_for(
+        ProbeCheck.BAR_BASIS
+    )
     assert fact is not None
     assert fact.verdict is ProbeVerdict.UNVERIFIED
 
@@ -507,7 +515,7 @@ def test_pip_formula_mismatch_refuses_metadata_parameters() -> None:
             received_at=_instant(_WALL_NS + 4),
         )
     )
-    profile = _probe(_FixtureTransport(symbol=bad_symbol)).run().profile
+    profile = _ok(_probe(_FixtureTransport(symbol=bad_symbol)).run()).profile
     fact = profile.latest_for(ProbeCheck.PIP_FORMULA)
     assert fact is not None
     assert fact.verdict is ProbeVerdict.REFUSED
@@ -526,10 +534,8 @@ def test_pip_formula_negative_position_is_unverified() -> None:
             received_at=_instant(_WALL_NS + 4),
         )
     )
-    fact = (
-        _probe(_FixtureTransport(symbol=odd_symbol))
-        .run()
-        .profile.latest_for(ProbeCheck.PIP_FORMULA)
+    fact = _ok(_probe(_FixtureTransport(symbol=odd_symbol)).run()).profile.latest_for(
+        ProbeCheck.PIP_FORMULA
     )
     assert fact is not None
     assert fact.verdict is ProbeVerdict.UNVERIFIED
@@ -537,14 +543,16 @@ def test_pip_formula_negative_position_is_unverified() -> None:
 
 def test_pip_formula_symbol_unavailable_is_unverified() -> None:
     symbol: Result[SymbolMetadataRecord] = _refusal(RefusalCategory.UNAVAILABLE_DEPENDENCY)
-    fact = _probe(_FixtureTransport(symbol=symbol)).run().profile.latest_for(ProbeCheck.PIP_FORMULA)
+    fact = _ok(_probe(_FixtureTransport(symbol=symbol)).run()).profile.latest_for(
+        ProbeCheck.PIP_FORMULA
+    )
     assert fact is not None
     assert fact.verdict is ProbeVerdict.UNVERIFIED
 
 
 def test_absent_money_exponent_is_unverified_never_defaulted() -> None:
     no_money = Ok(AccountMoneyRecord(money_digits=None, received_at=_instant(_WALL_NS + 5)))
-    profile = _probe(_FixtureTransport(money=no_money)).run().profile
+    profile = _ok(_probe(_FixtureTransport(money=no_money)).run()).profile
     fact = profile.latest_for(ProbeCheck.MONEY_EXPONENT)
     assert fact is not None
     assert fact.verdict is ProbeVerdict.UNVERIFIED
@@ -555,8 +563,8 @@ def test_absent_money_exponent_is_unverified_never_defaulted() -> None:
 
 def test_money_record_unavailable_is_unverified() -> None:
     money: Result[AccountMoneyRecord] = _refusal(RefusalCategory.UNAVAILABLE_DEPENDENCY)
-    fact = (
-        _probe(_FixtureTransport(money=money)).run().profile.latest_for(ProbeCheck.MONEY_EXPONENT)
+    fact = _ok(_probe(_FixtureTransport(money=money)).run()).profile.latest_for(
+        ProbeCheck.MONEY_EXPONENT
     )
     assert fact is not None
     assert fact.verdict is ProbeVerdict.UNVERIFIED
@@ -573,7 +581,7 @@ def test_findings_surface_a_contradiction_with_an_upstream_assumption() -> None:
             "2013-forum-grade, demoted DEC-0135",
         )
     )
-    report = _probe(assumptions=(claim,)).run()
+    report = _ok(_probe(assumptions=(claim,)).run())
     contradictions = report.findings.contradictions()
     assert len(contradictions) == 1
     assert contradictions[0].check is ProbeCheck.DAILY_BOUNDARY
@@ -586,7 +594,7 @@ def test_findings_agree_when_measurement_matches_claim() -> None:
             "daily-boundary", "bars=2;utc_minute_of_day=0", "measured elsewhere"
         )
     )
-    report = _probe(assumptions=(claim,)).run()
+    report = _ok(_probe(assumptions=(claim,)).run())
     assert report.findings.contradictions() == ()
     assert report.findings.findings[0].contradicts is False
 
@@ -596,7 +604,7 @@ def test_findings_leave_an_unverified_check_open_for_amendment() -> None:
     claim = _ok(
         UpstreamAssumption.try_create("money-exponent", "money_digits=2", "assumed default")
     )
-    report = _probe(_FixtureTransport(money=no_money), assumptions=(claim,)).run()
+    report = _ok(_probe(_FixtureTransport(money=no_money), assumptions=(claim,)).run())
     finding = report.findings.findings[0]
     assert finding.check is ProbeCheck.MONEY_EXPONENT
     assert finding.contradicts is False
@@ -605,14 +613,14 @@ def test_findings_leave_an_unverified_check_open_for_amendment() -> None:
 
 def test_findings_flag_an_assumption_key_that_names_no_check() -> None:
     claim = _ok(UpstreamAssumption.try_create("not-a-check", "whatever", "note"))
-    report = _probe(assumptions=(claim,)).run()
+    report = _ok(_probe(assumptions=(claim,)).run())
     finding = report.findings.findings[0]
     assert finding.check is None
     assert finding.contradicts is False
 
 
 def test_report_with_no_assumptions_has_no_findings() -> None:
-    report = _probe().run()
+    report = _ok(_probe().run())
     assert report.findings.findings == ()
 
 
@@ -855,7 +863,7 @@ def test_require_evidence_is_unavailable_when_no_fact_governs_the_class() -> Non
 
 
 def test_require_evidence_accepts_a_string_class_and_rejects_a_bad_one() -> None:
-    profile = _probe().run().profile
+    profile = _ok(_probe().run()).profile
     assert _ok(profile.require_evidence("spot")) is True
     assert is_refusal(profile.require_evidence("not-a-class"))
     assert is_refusal(profile.require_evidence(123))
@@ -949,7 +957,7 @@ def test_measured_fact_deep_freezes_a_nested_sequence() -> None:
 
 
 def test_mint_daily_calendar_identity_from_a_verified_boundary() -> None:
-    profile = _probe().run().profile
+    profile = _ok(_probe().run()).profile
     minted = profile.mint_daily_boundary_calendar("v1", "2024a")
     identity = _ok(minted)
     assert isinstance(identity, CalendarIdentity)
@@ -967,5 +975,5 @@ def test_mint_daily_calendar_identity_refuses_without_a_verified_boundary() -> N
 
 
 def test_mint_daily_calendar_identity_passes_through_a_bad_version() -> None:
-    profile = _probe().run().profile
+    profile = _ok(_probe().run()).profile
     assert is_refusal(profile.mint_daily_boundary_calendar("", "2024a"))

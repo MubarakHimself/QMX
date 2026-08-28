@@ -66,7 +66,9 @@ def injected_clock_drives_time() -> Instant:
         wall_instants=(_instant(_NS), _instant(_NS + 1_000)),
         monotonic_ns=(0, 1),
     )
-    first = read_frontier(scripted)
+    # read_frontier is value-or-refusal (CT-04; OR-03): a real/replay clock returns Ok,
+    # a spent or not-yet-advanced clock returns an unavailable-dependency refusal.
+    first = _unwrap(read_frontier(scripted), "wall reading")
     assert first.value_ns == _NS
     return first
 
@@ -119,7 +121,7 @@ def stream_driven_frontier_clock() -> FrontierClock:
         clock.advance((_stream("a", _NS + 5), _stream("b", _NS + 9))),
         "first advance",
     )
-    assert read_frontier(clock).value_ns == _NS + 5
+    assert _unwrap(read_frontier(clock), "wall reading").value_ns == _NS + 5
     return clock
 
 

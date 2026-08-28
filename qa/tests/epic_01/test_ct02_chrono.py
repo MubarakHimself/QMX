@@ -9,7 +9,6 @@ Source code is read-only evidence.
 
 from __future__ import annotations
 
-import pytest
 from qmf.core.chrono import (
     CalendarIdentity,
     CivilDate,
@@ -200,41 +199,50 @@ def test_e1_u40_clock_protocol_seam_data_driven_replays_in_order() -> None:
     i0, i1 = _instant(10), _instant(20)
     clock = DataDrivenClock(boot_epoch_id="boot-1", wall_instants=[i0, i1], monotonic_ns=[5, 6])
     assert isinstance(clock, Clock)  # runtime-checkable protocol
-    assert clock.wall_now() is i0
-    assert clock.wall_now() is i1
+    assert _ok(clock.wall_now()) is i0
+    assert _ok(clock.wall_now()) is i1
 
 
-# E1-U41 (mutmut pin chrono.py:756/764 exhaustion) -----------------------------
+# E1-U41 (mutmut pin chrono.py exhaustion guard; OR-03) ------------------------
 def test_e1_u41_data_driven_clock_exhaustion_is_a_clean_boundary() -> None:
-    """CT-02 / CT-04 (pin chrono.py:756/764): exhaustion fires at EXACTLY len(script)
-    via the `>= len` guard and raises a clean LookupError -- the boundary, NOT the
-    English message. PLAN section 5 declares the exhaustion message string not ratified
-    surface; OR-03 constrains this seam toward a typed refusal, so the message prose is
-    re-pointed away. Asserting the exact exception type distinguishes the deliberate
-    exhaustion raise from the IndexError a `> len` off-by-one would produce (IndexError
-    is a LookupError subclass, so `pytest.raises(LookupError)` alone would not catch the
-    off-by-one)."""
+    """CT-02 / CT-04 (OR-03; E1-U41 packet): exhaustion is a RETURNED typed refusal, not
+    a raise -- value-or-refusal holds even at the clock seam (DEC-0109). The refusal
+    CATEGORY is `unavailable dependency` (the replay under-provisioned a needed reading);
+    the packet forbids exact-message pins, so only the category is asserted. A one-element
+    script pins the boundary exactly: one Ok, then a refusal -- the `>= len` guard fires
+    at cursor == len and no exception escapes (a `> len` off-by-one would index past the
+    tuple and raise, which this returned-refusal assertion would catch)."""
     clock = DataDrivenClock(boot_epoch_id="boot-1", wall_instants=[_instant(1)], monotonic_ns=[7])
-    assert clock.wall_now().value_ns == 1  # consumes the only wall instant
-    with pytest.raises(LookupError) as exc_w:
-        clock.wall_now()
-    assert type(exc_w.value) is LookupError  # clean exhaustion boundary, not IndexError
-    assert clock.monotonic_now().value_ns == 7
-    with pytest.raises(LookupError) as exc_m:
-        clock.monotonic_now()
-    assert type(exc_m.value) is LookupError
+    first_wall = clock.wall_now()
+    assert is_ok(first_wall)
+    assert first_wall.value.value_ns == 1  # consumes the only wall instant
+    spent_wall = clock.wall_now()  # returns normally -- the seam never raises
+    assert is_refusal(spent_wall)
+    assert spent_wall.category is RefusalCategory.UNAVAILABLE_DEPENDENCY
+    first_mono = clock.monotonic_now()
+    assert is_ok(first_mono)
+    assert first_mono.value.value_ns == 7
+    spent_mono = clock.monotonic_now()
+    assert is_refusal(spent_mono)
+    assert spent_mono.category is RefusalCategory.UNAVAILABLE_DEPENDENCY
 
 
-# E1-U42 (mutmut pin chrono.py:756 advance-per-call) ---------------------------
+# E1-U42 (mutmut pin chrono.py cursor advance; OR-03) -------------------------
 def test_e1_u42_data_driven_clock_advances_exactly_one_per_call() -> None:
-    """CT-02 (pin chrono.py:756): the cursor advances exactly one per call (+= 1, not
-    reset to 1): three sequential reads return script[0], [1], [2]."""
+    """CT-02 (OR-03): the cursor advances exactly one per call (+= 1, not reset to 1):
+    three sequential reads return script[0], [1], [2] through their Ok results, then the
+    fourth read refuses (exhausted). The reset mutant would re-read script[1] forever and
+    never reach exhaustion."""
     i0, i1, i2 = _instant(10), _instant(20), _instant(30)
     clock = DataDrivenClock(
         boot_epoch_id="boot-1", wall_instants=[i0, i1, i2], monotonic_ns=[1, 2, 3]
     )
-    assert [clock.wall_now().value_ns for _ in range(3)] == [10, 20, 30]
-    assert [clock.monotonic_now().value_ns for _ in range(3)] == [1, 2, 3]
+    walls = [clock.wall_now() for _ in range(3)]
+    assert [_ok(w).value_ns for w in walls] == [10, 20, 30]
+    assert is_refusal(clock.wall_now())  # fourth call: exhausted, so the cursor advanced
+    monos = [clock.monotonic_now() for _ in range(3)]
+    assert [_ok(m).value_ns for m in monos] == [1, 2, 3]
+    assert is_refusal(clock.monotonic_now())
 
 
 # E1-U43 (mutmut pin chrono.py:881/895 WriterSequencer) ------------------------

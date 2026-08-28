@@ -13,7 +13,17 @@ import re
 from pathlib import Path
 
 from google.protobuf import descriptor_pb2
-from qmf.core import ExactRational, Instant, MonotonicReading, RefusalCategory, UnitKind, is_ok, is_refusal
+from qmf.core import (
+    ExactRational,
+    Instant,
+    MonotonicReading,
+    Ok,
+    RefusalCategory,
+    Result,
+    UnitKind,
+    is_ok,
+    is_refusal,
+)
 from qmf.venue import (
     SPOTWARE_PROTO_PACKAGE,
     AccountMoneyRecord,
@@ -53,11 +63,13 @@ class FakeClock:
         self.boot_epoch_id = boot
         self._wall = wall_ns
 
-    def wall_now(self) -> Instant:
-        return H.mk_instant(self._wall)
+    def wall_now(self) -> Result[Instant]:
+        # OR-03 / CT-04: the Clock seam is value-or-refusal; a real/fixture clock
+        # returns Ok unconditionally (only a spent replay clock refuses).
+        return Ok(H.mk_instant(self._wall))
 
-    def monotonic_now(self) -> MonotonicReading:
-        return H.mk_mono(1_000, self.boot_epoch_id)
+    def monotonic_now(self) -> Result[MonotonicReading]:
+        return Ok(H.mk_mono(1_000, self.boot_epoch_id))
 
 
 class FakeProbeTransport:
@@ -129,7 +141,7 @@ def test_l3_011_probe_records_unverified_rather_than_defaulting():
     """Story 8.1 AC-1/AC-3: the probe records an unpassable check as unverified rather
     than defaulting any value (an absent money exponent leaves money decode
     unavailable)."""
-    report = _run_probe(money_digits=None).run()
+    report = H.ok(_run_probe(money_digits=None).run())
     money = report.profile.latest_for(ProbeCheck.MONEY_EXPONENT)
     assert money is not None
     assert money.verdict is ProbeVerdict.UNVERIFIED  # never defaulted to 2
@@ -138,7 +150,7 @@ def test_l3_011_probe_records_unverified_rather_than_defaulting():
     assert is_refusal(report.profile.require_evidence(VenueEvidenceClass.MONEY_DECODE))
 
     # A present exponent verifies and makes the class available.
-    report2 = _run_probe(money_digits=2).run()
+    report2 = H.ok(_run_probe(money_digits=2).run())
     money2 = report2.profile.latest_for(ProbeCheck.MONEY_EXPONENT)
     assert money2.verdict is ProbeVerdict.VERIFIED
     assert is_ok(report2.profile.require_evidence(VenueEvidenceClass.MONEY_DECODE))
@@ -161,7 +173,7 @@ def test_l3_012_probe_renders_only_reference_and_submits_no_order():
     """Story 8.1 AC-4: the credential value is never rendered (only its reference id
     appears), no live host is contacted, and no order is submitted."""
     ref = H.mk_secret_ref("sref-demo-cred")
-    report = _run_probe(money_digits=2).run()
+    report = H.ok(_run_probe(money_digits=2).run())
     # Every recorded fact carries the credential REFERENCE id, never a value.
     for fact in report.profile.facts:
         assert fact.credential_ref_id == ref.value

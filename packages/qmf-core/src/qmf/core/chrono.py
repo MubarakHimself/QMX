@@ -123,8 +123,11 @@ def _invalid(field: str, reason: str, **extra: object) -> TypedRefusal:
 
 
 def _unavailable(field: str, reason: str, **extra: object) -> TypedRefusal:
-    """Build the ``unavailable dependency`` refusal the tzdb-pin seam returns when
-    the resolved tzdb does not equal the extension's pin (CT-02; FM-5)."""
+    """Build the ``unavailable dependency`` refusal a seam returns when a required
+    dependency is not present: the tzdb-pin mismatch (CT-02; FM-5) and the
+    data-driven clock's exhausted script (OR-03; CT-04, DEC-0109). ``retryability``
+    is ``no`` — a spent replay script or a mismatched pin is not transient — and
+    ``context`` names the missing dependency (returned, never raised)."""
     context: dict[str, object] = {"field": field, "reason": reason}
     context.update(extra)
     return TypedRefusal(
@@ -714,18 +717,22 @@ class Clock(Protocol):
     real clock in production and a :class:`DataDrivenClock` in replay, and **nothing
     below the root reads the system clock** (AR-16). ``boot_epoch_id`` scopes the
     monotonic readings this clock hands out. Wall and monotonic access are
-    type-separated by return type: :meth:`wall_now` returns an :class:`Instant`,
-    :meth:`monotonic_now` returns a :class:`MonotonicReading`.
+    type-separated by return type: :meth:`wall_now` returns a ``Result[Instant]``,
+    :meth:`monotonic_now` a ``Result[MonotonicReading]``. Reading is **value-or-refusal**
+    across this seam like every other qmf-core boundary (CT-04; DEC-0109): a real
+    clock returns ``Ok`` unconditionally, while a :class:`DataDrivenClock` returns an
+    ``unavailable dependency`` refusal once its script is spent — the clock seam never
+    raises a domain failure (OR-03).
     """
 
     boot_epoch_id: str
 
-    def wall_now(self) -> Instant:  # pragma: no cover - protocol seam
-        """The current wall-clock instant (UTC nanoseconds)."""
+    def wall_now(self) -> Result[Instant]:  # pragma: no cover - protocol seam
+        """The current wall-clock instant (UTC nanoseconds), value-or-refusal."""
         ...
 
-    def monotonic_now(self) -> MonotonicReading:  # pragma: no cover - protocol seam
-        """The current monotonic reading (a boot-scoped diagnostic)."""
+    def monotonic_now(self) -> Result[MonotonicReading]:  # pragma: no cover - protocol seam
+        """The current monotonic reading (a boot-scoped diagnostic), value-or-refusal."""
         ...
 
 
@@ -735,9 +742,10 @@ class DataDrivenClock:
     It reads **no** system clock: it replays a scripted, ordered sequence of wall
     :class:`Instant`\\ s and monotonic nanosecond readings, so replay is
     deterministic and nothing below the composition root touches the system clock.
-    Exhausting the script is programmer error — wiring that under-provisioned the
-    replay — and raises, the one case CT-04 reserves for exceptions rather than
-    refusals.
+    Exhausting the script — wiring that under-provisioned the replay — is an
+    ``unavailable dependency`` typed refusal, **returned never raised**: value-or-refusal
+    holds even at the clock seam (OR-03; CT-04, DEC-0109). Each successful read yields
+    an ``Ok`` and advances the cursor by exactly one.
     """
 
     def __init__(
@@ -753,21 +761,44 @@ class DataDrivenClock:
         self._wall_cursor: int = 0
         self._monotonic_cursor: int = 0
 
-    def wall_now(self) -> Instant:
-        """Return the next scripted wall instant; raise once the script is spent."""
+    def wall_now(self) -> Result[Instant]:
+        """Return the next scripted wall instant, or an ``unavailable dependency``
+        refusal once the script is spent (OR-03; CT-04, DEC-0109).
+
+        Exhaustion fires at EXACTLY ``cursor == len(script)`` — the ``>= len`` guard,
+        the script consumed rather than under-read by one — and the refusal names the
+        boundary (cursor, script length) in ``context``, never a pinned prose message
+        (CT-02; DEC-0106). Each success advances the cursor by exactly one."""
         if self._wall_cursor >= len(self._wall):
-            raise LookupError("data-driven clock exhausted its scripted wall instants")
+            return _unavailable(
+                "wall_instants",
+                "the data-driven clock consumed every scripted wall instant; the "
+                "replay was under-provisioned (OR-03)",
+                cursor=self._wall_cursor,
+                script_length=len(self._wall),
+            )
         reading = self._wall[self._wall_cursor]
         self._wall_cursor += 1
-        return reading
+        return Ok(reading)
 
-    def monotonic_now(self) -> MonotonicReading:
-        """Return the next scripted monotonic reading; raise once the script is spent."""
+    def monotonic_now(self) -> Result[MonotonicReading]:
+        """Return the next scripted monotonic reading, or an ``unavailable dependency``
+        refusal once the script is spent (OR-03; CT-04, DEC-0109).
+
+        Exhaustion fires at EXACTLY ``cursor == len(script)`` via the ``>= len`` guard;
+        the refusal names the boundary (cursor, script length), never a pinned prose
+        message. Each success advances the cursor by exactly one (CT-02; DEC-0106)."""
         if self._monotonic_cursor >= len(self._monotonic):
-            raise LookupError("data-driven clock exhausted its scripted monotonic readings")
+            return _unavailable(
+                "monotonic_ns",
+                "the data-driven clock consumed every scripted monotonic reading; the "
+                "replay was under-provisioned (OR-03)",
+                cursor=self._monotonic_cursor,
+                script_length=len(self._monotonic),
+            )
         value = self._monotonic[self._monotonic_cursor]
         self._monotonic_cursor += 1
-        return MonotonicReading(value_ns=value, boot_epoch_id=self.boot_epoch_id)
+        return Ok(MonotonicReading(value_ns=value, boot_epoch_id=self.boot_epoch_id))
 
 
 # --- writers, sequences, and ordering keys ----------------------------------
