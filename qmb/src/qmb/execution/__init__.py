@@ -45,6 +45,7 @@ from qmb.execution.binder import (
     BoundExecution,
     bind_execution_ports,
     composition_identity,
+    derive_composition_version,
     fingerprint_composition,
 )
 from qmb.execution.cost import (
@@ -352,6 +353,7 @@ __all__ = [
     "cross_declared_path",
     "decompose_cost_drag",
     "default_fill_order",
+    "derive_composition_version",
     "derive_slippage_seed",
     "derive_world_from_provenance",
     "evaluate_exit",

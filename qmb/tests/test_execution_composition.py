@@ -344,7 +344,13 @@ def test_bind_from_resolved_config_composes_separate_ports() -> None:
     assert bound.slippage_adapter_id == SLIPPAGE_ADAPTER_ZERO
     assert bound.cost_adapter_id == COST_ADAPTER_ZERO
     assert bound.financing_schedule_ref == _SCHEDULE
-    assert bound.composition_version == COMPOSITION_VERSION
+    # composition-version is RECOMPUTED from the bound port set (R8, 17.1/AC4), never the
+    # bare COMPOSITION_VERSION constant; the constant survives only as the recipe anchor.
+    from qmb.execution import derive_composition_version
+
+    assert bound.composition_version == _ok(derive_composition_version(bound.fidelity.bound))
+    assert bound.composition_version.startswith(f"{COMPOSITION_VERSION}:")
+    assert bound.composition_version != COMPOSITION_VERSION
     assert isinstance(bound.ports.fill, FillPort)
     assert isinstance(bound.ports.slippage, SlippagePort)
     assert isinstance(bound.ports.cost, CostPort)

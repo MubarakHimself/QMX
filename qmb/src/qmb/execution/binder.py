@@ -7,7 +7,7 @@ cost. Financing is a scheduled position-level cash event, not an order fill.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Final, Protocol, cast, runtime_checkable
 
@@ -73,6 +73,7 @@ __all__ = [
     "BoundExecution",
     "bind_execution_ports",
     "composition_identity",
+    "derive_composition_version",
     "fingerprint_composition",
 ]
 
@@ -108,6 +109,60 @@ def fingerprint_composition() -> Result[Fingerprint]:
     return fingerprint(composition_identity())
 
 
+def derive_composition_version(identities: object) -> Result[str]:
+    """Recompute the composition-version from the ORDERED bound port set (R8, 17.1/AC4).
+
+    The composition-version changes whenever the bound port set OR its order
+    changes, so a run's execution identity never silently drifts. The value is a
+    ``recipe:digest`` token: the leading integer is :data:`COMPOSITION_VERSION`,
+    the derivation-recipe format anchor (the module-level constant stays the
+    RECIPE version, never the bound value), and the digest is the fp1 fingerprint
+    of the ordered adapter fidelity identities. Deterministic — no wall clock, no
+    randomness, no floats; the same ordered set always derives the same token, and
+    a fp1 array is order-significant so reordering the ports mints a new version.
+    """
+    ordered = _as_ordered_identities(identities)
+    if is_refusal(ordered):
+        return ordered
+    recipe: dict[str, object] = {
+        "class": "composition-version",
+        "ordered_ports": [item.fp1_identity() for item in ordered.value],
+        "recipe_version": COMPOSITION_VERSION,
+    }
+    stamped = fingerprint(recipe)
+    if is_refusal(stamped):  # pragma: no cover - recipe is canonical by construction
+        return stamped
+    return Ok(f"{COMPOSITION_VERSION}:{stamped.value.digest}")
+
+
+def _as_ordered_identities(value: object) -> Result[tuple[FidelityIdentity, ...]]:
+    if isinstance(value, FidelityIdentity):
+        return Ok((value,))
+    if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
+        return invalid(
+            "identities",
+            "the composition-version derives from an ordered sequence of bound "
+            "adapter fidelity identities (R8, B-6)",
+            given=repr(type(value).__name__),
+        )
+    parsed: list[FidelityIdentity] = []
+    for index, item in enumerate(cast("Sequence[object]", value)):
+        if not isinstance(item, FidelityIdentity):
+            return invalid(
+                "identities",
+                "each bound port contributes a FidelityIdentity to the composition-version",
+                index=index,
+                given=repr(type(item).__name__),
+            )
+        parsed.append(item)
+    if not parsed:
+        return invalid(
+            "identities",
+            "a composition-version names the ordered adapters it bound (R8, B-6)",
+        )
+    return Ok(tuple(parsed))
+
+
 @dataclass(frozen=True, slots=True)
 class BoundExecution:
     """The four bound ports plus the run's fidelity identity."""
@@ -119,7 +174,10 @@ class BoundExecution:
     slippage_adapter_id: str
     cost_adapter_id: str
     financing_schedule_ref: str
-    composition_version: int = COMPOSITION_VERSION
+    # Recomputed from the bound port set at bind time (R8, 17.1/AC4) — a
+    # ``recipe:digest`` token, never the bare COMPOSITION_VERSION constant, so a
+    # run's execution identity never silently drifts. See derive_composition_version.
+    composition_version: str
 
     def fp1_identity(self) -> dict[str, object]:
         """Canonical identity. Taint is omitted (DEC-0164)."""
@@ -226,6 +284,9 @@ def bind_execution_ports(config: object) -> Result[BoundExecution]:
     fidelity = compute_run_fidelity(identities.value)
     if is_refusal(fidelity):
         return fidelity
+    version = derive_composition_version(identities.value)
+    if is_refusal(version):
+        return version
     return Ok(
         BoundExecution(
             config=resolved.value,
@@ -235,6 +296,7 @@ def bind_execution_ports(config: object) -> Result[BoundExecution]:
             slippage_adapter_id=slip_id.value,
             cost_adapter_id=cost_id.value,
             financing_schedule_ref=schedule.value,
+            composition_version=version.value,
         )
     )
 

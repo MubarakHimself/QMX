@@ -270,6 +270,33 @@ def test_t171i_changing_bound_set_changes_identity_no_drift() -> None:
     # The same bound set fingerprints identically — identity never silently drifts.
     c = ok(bind_execution_ports(config(**dict(_ADAPTERS, cost_adapter="zero"))))
     assert ok(fingerprint(c.fp1_identity())).value == fp_a.value
+    # R8/AC4 at the requirement level: the composition-version ITSELF (not only the
+    # surrounding fingerprint) changes with the bound set, and is stable for the same set.
+    assert a.composition_version != b.composition_version
+    assert c.composition_version == a.composition_version
+
+
+# --- FC-25 (R8, 17.1/AC4) the composition-version is RECOMPUTED from the bound port set ---
+# The falsifiable requirement-level assertion the lane demoted to UNPROVEN (E17-F04):
+# composition-version changes whenever the bound port set OR its order changes, so a run's
+# execution identity never silently drifts. This asserts the version FIELD, not the fp1
+# surrogate the anti-drift mechanism carries.
+def test_t171i2_composition_version_recomputed_from_bound_set() -> None:
+    # Same bound set twice -> identical composition-version (identity never drifts).
+    a = ok(bind_execution_ports(config(**dict(_ADAPTERS, cost_adapter="zero"))))
+    a_again = ok(bind_execution_ports(config(**dict(_ADAPTERS, cost_adapter="zero"))))
+    assert a.composition_version == a_again.composition_version
+    # Changing ONE bound port (cost adapter) -> a different composition-version [R8].
+    b = ok(bind_execution_ports(config(**dict(_ADAPTERS, cost_adapter="percent-of-notional"))))
+    assert a.composition_version != b.composition_version
+    # Changing the port ORDER -> a different composition-version (order-significant recipe).
+    from qmb.execution.binder import derive_composition_version
+
+    forward = ok(derive_composition_version(a.fidelity.bound))
+    reversed_order = ok(derive_composition_version(tuple(reversed(a.fidelity.bound))))
+    assert forward != reversed_order
+    # The bound value IS the recipe applied to the bound set — derived, not a constant.
+    assert a.composition_version == forward
 
 
 # --- T-17.1-j (L1) run-fidelity fold returns the LOWEST bound adapter [R9] P0 --
