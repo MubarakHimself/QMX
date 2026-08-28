@@ -106,7 +106,7 @@ worktrees:
 quality:
   lint: "{dev} ruff check ."
   typecheck: "{dev} mypy adws"
-  test: "{dev} pytest -q adws/tests"
+  test: "uv run poe check"
   scan: "{scan} skylos . --ai-defects --format concise"
   # A JavaScript/TypeScript project, for example, would say:
   #   lint: "npm run lint"
