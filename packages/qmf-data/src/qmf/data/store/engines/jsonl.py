@@ -22,14 +22,13 @@ same canonical bytes, so the identity guard and this index agree.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import re
 from pathlib import Path
 from typing import IO
 
-from qmf.core import Ok, Result
+from qmf.core import Ok, Result, fingerprint_bytes
 from qmf.data.store.engines import (
     AppendLocation,
     AppendStreamEngine,
@@ -242,7 +241,7 @@ class JsonlAppendStream:
                 detail={"stream": str(self._dir)},
             )
         line = canonical + b"\n"
-        digest = hashlib.sha256(canonical).hexdigest()
+        digest = fingerprint_bytes(canonical).digest
         try:
             if self._current_size > 0 and self._current_size + len(line) > self._rotation_bytes:
                 self._current_ordinal += 1
@@ -439,7 +438,7 @@ class JsonlAppendStream:
                         retryable=False,
                         detail={"stream": str(self._dir), "ordinal": ordinal},
                     ) from exc
-                digest = hashlib.sha256(payload).hexdigest()
+                digest = fingerprint_bytes(payload).digest
                 if digest not in self._index:
                     self._index[digest] = AppendLocation(
                         ordinal=ordinal,

@@ -52,6 +52,24 @@ def _src_files(pkg: str) -> list[Path]:
     return list((PACKAGES / pkg / "src").rglob("*.py"))
 
 
+def _is_static_string_expression(node: ast.AST) -> bool:
+    """Whether ``node`` builds a string with no runtime digest/value input."""
+    if isinstance(node, ast.Constant):
+        return isinstance(node.value, (str, int))
+    if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Mult)):
+        return _is_static_string_expression(node.left) and _is_static_string_expression(node.right)
+    return False
+
+
+def _contains_fp1_recipe_literal(node: ast.AST) -> bool:
+    fragments = [
+        part.value
+        for part in ast.walk(node)
+        if isinstance(part, ast.Constant) and isinstance(part.value, str)
+    ]
+    return "fp1:sha256:" in "".join(fragments)
+
+
 # E1-I01 — isolated per-package build: undeclared import fails ------------------
 def test_e1_i01_qmf_core_stdlib_only_makes_isolated_build_sound() -> None:
     """AR-06/AR-18 / DEC-0104 (static proxy for the isolated-build gate): qmf-core
@@ -94,23 +112,99 @@ def test_e1_i02_dependency_graph_default_deny_edges_hold() -> None:
 # E1-I03 — single fp1 implementation -------------------------------------------
 def test_e1_i03_single_fp1_implementation_only_in_qmf_core() -> None:
     """CT-05 / DEC-0108: no package computes a fingerprint except by calling qmf-core —
-    the canonical serializer and fp1 function live ONLY in qmf-core. A package that
-    hashes bytes and emits an 'fp1:sha256:' string itself is a second implementation."""
-    offenders: list[str] = []
+    the canonical serializer and fp1 function live ONLY in qmf-core.
+
+    Inspect every package Python file, including tests and examples.  Looking for one
+    exact f-string beside one exact ``hashlib`` spelling misses split helpers,
+    concatenation/format recipes, imported aliases, and callers which feed a locally
+    computed digest into ``Fingerprint.try_create``.
+    """
+    sanctioned_sha256 = {
+        # The one CT-05 implementation and its independent recipe test.
+        "packages/qmf-core/src/qmf/core/fingerprint.py",
+        "packages/qmf-core/tests/test_ct05_fingerprint.py",
+        # These are explicitly non-fp1 protocol/checksum digests.
+        "packages/qmf-indicators/src/qmf/indicators/series.py",
+        "packages/qmf-venue/src/qmf/venue/proto.py",
+    }
+    offenders: set[str] = set()
     for py in PACKAGES.rglob("*.py"):
         rel = py.relative_to(ROOT).as_posix()
-        if "tests/" in rel or "/examples/" in rel:
-            continue
-        if rel == "packages/qmf-core/src/qmf/core/fingerprint.py":
-            continue  # the one sanctioned implementation
-        text = py.read_text(encoding="utf-8")
-        computes_hash = "hashlib.sha256(" in text or ".hexdigest()" in text
-        emits_fp1 = 'f"fp1:sha256:' in text or "f'fp1:sha256:" in text
-        if computes_hash and emits_fp1:
-            offenders.append(rel)
-    assert offenders == [], (
+        tree = ast.parse(py.read_text(encoding="utf-8"), filename=str(py))
+        hashlib_aliases = {"hashlib"}
+        sha256_aliases: set[str] = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                hashlib_aliases.update(
+                    alias.asname or alias.name for alias in node.names if alias.name == "hashlib"
+                )
+            elif isinstance(node, ast.ImportFrom) and node.module == "hashlib":
+                sha256_aliases.update(
+                    alias.asname or alias.name for alias in node.names if alias.name == "sha256"
+                )
+
+        computes_sha256 = False
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            target = node.func
+            if (
+                (
+                    isinstance(target, ast.Attribute)
+                    and isinstance(target.value, ast.Name)
+                    and target.value.id in hashlib_aliases
+                    and target.attr == "sha256"
+                )
+                or isinstance(target, ast.Name)
+                and target.id in sha256_aliases
+            ):
+                computes_sha256 = True
+            if (
+                isinstance(target, ast.Attribute)
+                and isinstance(target.value, ast.Name)
+                and target.value.id in hashlib_aliases
+                and target.attr == "new"
+                and node.args
+                and isinstance(node.args[0], ast.Constant)
+                and node.args[0].value == "sha256"
+            ):
+                computes_sha256 = True
+        if computes_sha256 and rel not in sanctioned_sha256:
+            offenders.add(rel)
+
+        # A dynamic recipe construction is a second fp1 implementation even when
+        # hashing was routed through another helper/module.
+        for node in ast.walk(tree):
+            if isinstance(node, ast.JoinedStr):
+                literals = "".join(
+                    part.value
+                    for part in node.values
+                    if isinstance(part, ast.Constant) and isinstance(part.value, str)
+                )
+                if "fp1:sha256:" in literals and any(
+                    isinstance(part, ast.FormattedValue) for part in node.values
+                ):
+                    offenders.add(rel)
+            elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+                if node.func.attr == "format" and isinstance(node.func.value, ast.Constant):
+                    template = node.func.value.value
+                    if (
+                        isinstance(template, str)
+                        and "fp1:sha256:" in template
+                        and (node.args or node.keywords)
+                    ):
+                        offenders.add(rel)
+            elif (
+                isinstance(node, ast.BinOp)
+                and isinstance(node.op, (ast.Add, ast.Mod))
+                and _contains_fp1_recipe_literal(node)
+                and not _is_static_string_expression(node)
+            ):
+                offenders.add(rel)
+
+    assert sorted(offenders) == [], (
         "packages computing an fp1 fingerprint outside qmf-core (DEC-0108 single "
-        f"implementation): {offenders}"
+        f"implementation): {sorted(offenders)}"
     )
 
 

@@ -33,7 +33,6 @@ Stdlib + qmf-core + the store's CT-26 types only (default-deny; L30).
 
 from __future__ import annotations
 
-import hashlib
 import json
 import struct
 from collections.abc import Mapping
@@ -48,6 +47,7 @@ from qmf.core import (
     TypedRefusal,
     World,
     WriterId,
+    fingerprint_bytes,
     is_refusal,
     unpersistable,
 )
@@ -931,8 +931,7 @@ def _read_u64(buf: bytes, offset: int) -> tuple[int, int]:
 
 def _fp1_of(payload: bytes) -> str:
     """The self-describing fp1 string for ciphertext bytes."""
-    digest = hashlib.sha256(payload).hexdigest()
-    return f"fp1:sha256:{digest}"
+    return fingerprint_bytes(payload).value
 
 
 def _storage_failure(reason: str, *, retryable: bool, context: dict[str, object]) -> TypedRefusal:

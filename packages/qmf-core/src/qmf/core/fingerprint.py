@@ -96,6 +96,7 @@ __all__ = [
     "WriteReceipt",
     "canonical_bytes",
     "fingerprint",
+    "fingerprint_bytes",
     "governed_namespace",
     "reconcile_write",
 ]
@@ -377,6 +378,17 @@ def _fingerprint_of_bytes(canonical: bytes) -> Fingerprint:
     """Hash canonical bytes and stamp the ``fp1:sha256:<hex>`` form."""
     digest = hashlib.sha256(canonical).hexdigest()
     return Fingerprint(value=f"{_FP1_PREFIX}:{_SHA256}:{digest}")
+
+
+def fingerprint_bytes(payload: bytes) -> Fingerprint:
+    """Fingerprint bytes through qmf-core's single fp1 implementation.
+
+    This is the byte-preserving route for contracts which already own an exact byte
+    representation (for example encrypted backup payloads and persisted canonical
+    records). Structured identity content must continue to use :func:`fingerprint`,
+    which first applies the canonical serializer.
+    """
+    return _fingerprint_of_bytes(payload)
 
 
 def fingerprint(value: object) -> Result[Fingerprint]:

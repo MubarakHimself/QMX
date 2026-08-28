@@ -64,6 +64,7 @@ from qmf.core.fingerprint import (
     WriteReceipt,
     canonical_bytes,
     fingerprint,
+    fingerprint_bytes,
     governed_namespace,
     reconcile_write,
 )
@@ -157,6 +158,7 @@ __all__ = [
     "canonical_bytes",
     "compare_causal",
     "fingerprint",
+    "fingerprint_bytes",
     "governed_namespace",
     "is_ok",
     "is_refusal",

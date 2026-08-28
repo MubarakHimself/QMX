@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import hashlib
 import threading
 from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
-from qmf.core import canonical_bytes, is_ok, is_refusal
+from qmf.core import canonical_bytes, fingerprint_bytes, is_ok, is_refusal
 from qmf.data.store.engines import StoreEngineError
 from qmf.data.store.engines.jsonl import JsonlAppendStream
 
@@ -46,7 +45,7 @@ def test_digest_matches_fp1_digest(tmp_path: Path) -> None:
     obj = {"event": "x"}
     canonical = _canon(obj)
     stream.append(canonical)
-    digest = hashlib.sha256(canonical).hexdigest()
+    digest = fingerprint_bytes(canonical).digest
     assert stream.find(digest) == canonical
 
 
@@ -79,7 +78,7 @@ def test_location_of_reports_sequence(tmp_path: Path) -> None:
     stream = _stream(tmp_path)
     canonical = _canon({"n": 7})
     loc = stream.append(canonical)
-    digest = hashlib.sha256(canonical).hexdigest()
+    digest = fingerprint_bytes(canonical).digest
     assert stream.location_of(digest) == loc
     assert stream.location_of("f" * 64) is None
 
@@ -160,7 +159,7 @@ def test_find_raises_on_truncated_file(tmp_path: Path) -> None:
     stream = _stream(tmp_path)
     canonical = _canon({"n": 1})
     stream.append(canonical)
-    digest = hashlib.sha256(canonical).hexdigest()
+    digest = fingerprint_bytes(canonical).digest
     # Truncate the file below the length the index recorded.
     (tmp_path / "s" / "000000.jsonl").write_bytes(b"{")
     with pytest.raises(StoreEngineError):
@@ -277,7 +276,7 @@ def test_find_refuses_a_vanished_rotation_file(tmp_path: Path) -> None:
     stream = _stream(tmp_path)
     canonical = _canon({"n": 1})
     stream.append(canonical)
-    digest = hashlib.sha256(canonical).hexdigest()
+    digest = fingerprint_bytes(canonical).digest
     (tmp_path / "s" / "000000.jsonl").unlink()
     with pytest.raises(StoreEngineError):
         stream.find(digest)

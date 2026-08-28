@@ -13,13 +13,12 @@ refusal (AC4). Stdlib + qmf-core; the engines stay behind their contracts.
 
 from __future__ import annotations
 
-import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 
-from qmf.core import Ok, Result, TypedRefusal, World, is_refusal
+from qmf.core import Ok, Result, TypedRefusal, World, fingerprint_bytes, is_refusal
 from qmf.data.store.engines import (
     AppendStreamOpener,
     ColumnarEngine,
@@ -73,11 +72,6 @@ class RoomExport:
     def record_count(self) -> int:
         """The number of records in this export."""
         return len(self.records)
-
-
-def _fp1(digest: str) -> str:
-    """The self-describing fp1 string for a digest."""
-    return f"fp1:sha256:{digest}"
 
 
 class BackupInput:
@@ -194,7 +188,11 @@ class BackupInput:
         for key in self._raw.stored_keys():
             canonical = self._raw.read_canonical(key)
             if canonical is not None:
-                exports.append(RecordExport(fingerprint=_fp1(key), canonical=canonical))
+                exports.append(
+                    RecordExport(
+                        fingerprint=fingerprint_bytes(canonical).value, canonical=canonical
+                    )
+                )
         return tuple(sorted(exports, key=lambda record: record.fingerprint))
 
     def _export_registry_records(self) -> tuple[RecordExport, ...]:
@@ -203,7 +201,11 @@ class BackupInput:
         for digest in self._records.digests():
             canonical = self._records.get(digest)
             if canonical is not None:
-                exports.append(RecordExport(fingerprint=_fp1(digest), canonical=canonical))
+                exports.append(
+                    RecordExport(
+                        fingerprint=fingerprint_bytes(canonical).value, canonical=canonical
+                    )
+                )
         return tuple(exports)
 
     def _export_streams(self, base_dir: Path) -> tuple[RecordExport, ...]:
@@ -232,9 +234,12 @@ class BackupInput:
             reader = self._open(sub, "<backup>")
             reader.rebuild_index()
             for line in reader.read_all():
-                digest = hashlib.sha256(line).hexdigest()
                 exports.append(
-                    RecordExport(fingerprint=_fp1(digest), canonical=line, stream=sub.name)
+                    RecordExport(
+                        fingerprint=fingerprint_bytes(line).value,
+                        canonical=line,
+                        stream=sub.name,
+                    )
                 )
         return tuple(exports)
 
