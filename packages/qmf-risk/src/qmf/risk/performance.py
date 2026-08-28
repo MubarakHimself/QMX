@@ -23,6 +23,7 @@ surface — no live binding or order is authorized here (DEC-0158).
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
@@ -81,14 +82,38 @@ FORBIDDEN_COMPOSITE_EXPRESSIONS: Final[frozenset[str]] = frozenset(
     {
         "score",
         "rating",
+        "grade",
         "tier",
         "tier-band",
         "weighted-composite",
         "weighted-aggregate",
+        "weighted-rating",
         "composite-score",
         "composite",
     }
 )
+
+# Identities carry the same forbidden token spelled with any separator — the AC
+# names "grade" and "weighted rating", and a composite arrives as ``overall_grade``,
+# ``overall-grade``, or ``overall grade`` alike. Fold case and unify separators so
+# the substring guard cannot be evaded by choosing underscore over hyphen (DEC-0162).
+_COMPOSITE_SEPARATORS: Final = re.compile(r"[\s_-]+")
+
+
+def _normalize_composite_separators(token: str) -> str:
+    """Casefold ``token`` and collapse underscore/hyphen/space runs to one hyphen."""
+    return _COMPOSITE_SEPARATORS.sub("-", token.casefold())
+
+
+_NORMALIZED_COMPOSITE_EXPRESSIONS: Final[frozenset[str]] = frozenset(
+    _normalize_composite_separators(expression) for expression in FORBIDDEN_COMPOSITE_EXPRESSIONS
+)
+
+
+def _expresses_composite(token: str) -> bool:
+    """True when ``token`` embeds a forbidden composite expression under any separator."""
+    normalized = _normalize_composite_separators(token)
+    return any(expression in normalized for expression in _NORMALIZED_COMPOSITE_EXPRESSIONS)
 
 
 class PublishAct(StrEnum):
@@ -306,10 +331,8 @@ class PerformanceMeasure:
                 "every emitted measure declares a non-blank identity",
                 given=repr(measure_identity),
             )
-        lowered = token.casefold()
-        for forbidden in FORBIDDEN_COMPOSITE_EXPRESSIONS:
-            if forbidden in lowered:
-                return reject_composite_expression(token)
+        if _expresses_composite(token):
+            return reject_composite_expression(token)
         if not isinstance(quantity, (ExactRational, Money)):
             return invalid(
                 "quantity",
@@ -376,10 +399,8 @@ class UndefinedMeasure:
                 "every emitted measure declares a non-blank identity",
                 given=repr(measure_identity),
             )
-        lowered = token.casefold()
-        for forbidden in FORBIDDEN_COMPOSITE_EXPRESSIONS:
-            if forbidden in lowered:
-                return reject_composite_expression(token)
+        if _expresses_composite(token):
+            return reject_composite_expression(token)
         if (
             isinstance(metric_contract_format_version, bool)
             or not isinstance(metric_contract_format_version, int)
