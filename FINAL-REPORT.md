@@ -60,9 +60,18 @@ in `FIX-LEDGER.md` (one row per card, with the commit and the proving tests).
   (superseded by FC-05), and the epic-15 spawner scan now recognises
   `qmb.host` as the ratified composition-root home FC-17 moved the sandbox
   runner into.
-- Merge and CI: `fix/qa-round-1` fast-forwarded into `integration` and pushed;
-  the Skylos CI run on that push (now gating at the new ratcheted numbers) and
-  the first run of the new battery workflow were watched to completion.
+- Merge and CI: `fix/qa-round-1` fast-forwarded into `integration` and pushed.
+  **Both workflows are GREEN on the final push (`e874256`)**: Skylos passes at
+  the new ratcheted gate numbers, and the new QA Battery's first real runs
+  passed end-to-end on the Linux runner (full check sequence + the vulture
+  dead-code gate). Closing that loop surfaced and fixed four last items: the
+  battery's pyright job is pinned to the ratified tier-1 platform (Windows);
+  the `qa/` verification corpus itself is held outside the Skylos scan scope
+  (the ruled gate numbers were computed over the shipped tree, which it sits
+  outside); the new vulture gate's baseline read is containment-checked; and —
+  good news — the committed dead-code baseline ratcheted from 4 straight to
+  **zero**, because FC-31 cleared every corroborated finding. The nightly
+  mutation job gets its first live validation on tonight's cron.
 
 ## Deliberately-unproven list (by design, not failures)
 
