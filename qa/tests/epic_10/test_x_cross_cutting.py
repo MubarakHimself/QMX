@@ -10,6 +10,7 @@ Planned IDs: X1-X4 plus L0 gates.
 from __future__ import annotations
 
 import ast
+import re
 from pathlib import Path
 
 import yaml
@@ -77,6 +78,18 @@ def _r(num: int, den: int = 1) -> ExactRational:
 
 _SRC_DIR = Path(qmf.risk.__file__).resolve().parent
 _PACKAGES_DIR = _SRC_DIR.parents[3]  # .../packages
+_RISK_FAILURE_REGISTER = _PACKAGES_DIR / "qmf-risk" / "FAILURES.md"
+_REQUIRED_FAILURE_FIELDS = frozenset(
+    {
+        "Failure class",
+        "Detection",
+        "Auto-recovery / retry",
+        "Visible degraded state",
+        "Notification tier",
+        "Product-user affordance",
+    }
+)
+_FAILURE_FIELD = re.compile(r"(?m)^- \*\*(?P<name>[^*]+):\*\*\s+(?P<value>\S.*)$")
 
 
 def _register_from_docs() -> set[str]:
@@ -107,6 +120,34 @@ def test_X2_register_is_exactly_the_seven_categories() -> None:
         "invalid-input", "unsupported-capability", "unavailable-dependency", "stale-evidence",
         "policy-rejection", "transient-venue-failure", "storage-failure",
     }
+
+
+def test_X2_qmf_risk_ships_six_field_failure_register_entries() -> None:
+    """NFR-11: every qmf-risk refusal category has a complete operator-facing entry."""
+    assert _RISK_FAILURE_REGISTER.is_file(), f"{_RISK_FAILURE_REGISTER} is missing"
+    sections = re.split(r"(?m)^### ", _RISK_FAILURE_REGISTER.read_text(encoding="utf-8"))[1:]
+    entries: list[dict[str, str]] = []
+    for section in sections:
+        title, separator, body = section.partition("\n")
+        assert separator, f"failure-register entry has no body: {title!r}"
+        fields = {match["name"]: match["value"] for match in _FAILURE_FIELD.finditer(body)}
+        missing = _REQUIRED_FAILURE_FIELDS - fields.keys()
+        assert not missing, (
+            f"failure-register entry {title!r} omits required fields: {sorted(missing)}"
+        )
+        entries.append(fields)
+    assert entries, "qmf-risk/FAILURES.md contains no failure-register entries"
+
+    expected = {member.value for member in RefusalCategory}
+    covered = {
+        category
+        for category in expected
+        if any(category in entry["Failure class"].lower() for entry in entries)
+    }
+    assert covered == expected, (
+        "qmf-risk has no complete six-field failure-register entry for categories: "
+        f"{sorted(expected - covered)}"
+    )
 
 
 # --- X1 [R-009]: every door-reachable refusal is on the register -------------

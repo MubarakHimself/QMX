@@ -11,6 +11,7 @@ its evidence).
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -27,6 +28,34 @@ VENUE_BOUNDARY_REFUSALS = [
     "storage failure",
 ]
 
+_REQUIRED_FAILURE_FIELDS = frozenset(
+    {
+        "Failure class",
+        "Detection",
+        "Auto-recovery / retry",
+        "Visible degraded state",
+        "Notification tier",
+        "Product-user affordance",
+    }
+)
+_FIELD = re.compile(r"(?m)^- \*\*(?P<name>[^*]+):\*\*\s+(?P<value>\S.*)$")
+
+
+def _failure_entries(register: Path) -> list[tuple[str, dict[str, str]]]:
+    sections = re.split(r"(?m)^### ", register.read_text(encoding="utf-8"))[1:]
+    entries: list[tuple[str, dict[str, str]]] = []
+    for section in sections:
+        title, separator, body = section.partition("\n")
+        assert separator, f"failure-register entry has no body: {title!r}"
+        fields = {match["name"]: match["value"] for match in _FIELD.finditer(body)}
+        missing = _REQUIRED_FAILURE_FIELDS - fields.keys()
+        assert not missing, (
+            f"failure-register entry {title!r} omits required fields: {sorted(missing)}"
+        )
+        entries.append((title, fields))
+    assert entries, f"{register} contains no failure-register entries"
+    return entries
+
 
 def test_l3_015_qmf_venue_ships_a_failure_register_covering_its_refusals():
     """NFR-11/R-009: the qmf-venue distribution unit ships a FAILURES.md failure register
@@ -38,9 +67,17 @@ def test_l3_015_qmf_venue_ships_a_failure_register_covering_its_refusals():
         "package (qmf-core, qmf-data, qmf-indicators, qmf-registry, qmf-structure) ships "
         "one under the conventions/failure-register.md convention"
     )
-    text = register.read_text(encoding="utf-8").lower()
-    missing = [cat for cat in VENUE_BOUNDARY_REFUSALS if cat not in text]
-    assert not missing, f"the venue failure register omits refusal categories: {missing}"
+    entries = _failure_entries(register)
+    covered = {
+        category
+        for category in VENUE_BOUNDARY_REFUSALS
+        if any(category in fields["Failure class"].lower() for _, fields in entries)
+    }
+    missing = set(VENUE_BOUNDARY_REFUSALS) - covered
+    assert not missing, (
+        "the venue failure register has no complete six-field entry for refusal categories: "
+        f"{sorted(missing)}"
+    )
 
 
 def test_l3_015_qmf_venue_ships_reference_usage_examples():

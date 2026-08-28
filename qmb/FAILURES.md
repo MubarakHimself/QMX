@@ -41,6 +41,11 @@ Story 19.5 delivers pure downstream reads of that stored artifact: HTML and
 markdown are token substitution only, interpretation skills refuse a
 rendering, and re-executing a stored run id must reproduce the stored
 CT-32 fingerprint or return a typed refusal.
+Story 22 delivers the B-14 robustness ladder: required procedure inputs never
+default, synthetic perturbations remain procedure-ephemeral, significance never
+fabricates a result from insufficient data, and the deliberate float carve-out
+returns typed refusals at its magnitude boundary. Those modes are FR-38 through
+FR-42.
 
 ### FR-1: Cancel or per-run limit breach aborts one OS process
 
@@ -763,3 +768,101 @@ CT-32 fingerprint or return a typed refusal.
   or condition the sampler on a generation that never finished. Can I retry —
   not as-is; the resume points at the wrong Study or a corrupted history. Confirm
   the Study id/batch size match the ledger you are resuming from.
+
+### FR-38: Unset required robustness input
+
+- **Failure class:** `invalid input` (CT-04; Story 22.1 AC5).
+- **Detection:** the shared B-14 contract resolvers require every iteration count,
+  shuffle scenario count, perturbation scenario count, block length, significance
+  resampling choice, and walk-forward input that the procedure declares required.
+  An absent, boolean, non-integer, or non-positive value returns a typed refusal;
+  no platform default or advisory-review number is substituted.
+- **Auto-recovery / retry:** none automatic. Supply a positive exact value for the
+  named UI-editable configurable and start a new procedure call; the same unset
+  configuration deterministically refuses again.
+- **Visible degraded state:** no robustness result, scenario fan-out, significance
+  p-value, or walk-forward fold is produced. The pure library call writes no log or
+  ledger line and leaves the source run evidence unchanged.
+- **Notification tier:** operator-visible configuration refusal naming the missing
+  configurable.
+- **Product-user affordance:** the robustness run did not start because a required
+  setting has no ruled default. Choose the value explicitly and retry; the retry
+  starts from the same evidence with that declared value in its identity.
+
+### FR-39: Synthetic perturbation persistence is forbidden
+
+- **Failure class:** `policy rejection` (CT-04; Story 22.3 AC2/AC3).
+- **Detection:** `perturbation_persistence` and
+  `refuse_persisted_synthetic_series` detect a request to persist the candle series
+  minted by perturbation. Under the open GAP-0048 seam, such a series is
+  procedure-ephemeral and cannot enter governed evidence, even when the requested
+  persistence world is `simulated`.
+- **Auto-recovery / retry:** none automatic. Run the perturbation ephemerally with
+  `persist = false`; persistence remains forbidden until the governing gap closes
+  and a later contract version explicitly admits it.
+- **Visible degraded state:** the synthetic series may exist only inside the
+  procedure result in `world = replay`; no store row or governed ledger evidence is
+  created, and it cannot gate live money.
+- **Notification tier:** operator-visible policy refusal with the requested world
+  and synthetic provenance in context.
+- **Product-user affordance:** the perturbed candles are test data, not market
+  evidence, so QMX would not save them as if they were observed. Retry with
+  persistence off; the analysis still runs, but its synthetic series stays local to
+  that result.
+
+### FR-40: Replay clock on synthetic persisted data
+
+- **Failure class:** `invalid input` (CT-04; Story 22.3 AC3, B-2/B-7).
+- **Detection:** the perturbation persistence seam detects `persist = true` paired
+  with a replay clock for synthetic-tainted data and returns
+  `refuse_replay_clock_on_synthetic_persisted`. A replay clock can read historical
+  evidence; it cannot make newly synthesized persisted rows look historical.
+- **Auto-recovery / retry:** none automatic. Keep the synthetic series ephemeral
+  (`persist = false`) and retry the robustness procedure. Changing only the clock
+  cannot make persistence admissible while GAP-0048 is open.
+- **Visible degraded state:** no synthetic rows are stored and no replay run is
+  compiled over a false provenance claim. The original observed input remains
+  available and unchanged.
+- **Notification tier:** operator-visible configuration refusal.
+- **Product-user affordance:** the request combined a historical replay clock with
+  data that QMX just synthesized. Turn persistence off and retry; QMX then runs the
+  perturbation as replay-only analysis without rewriting provenance.
+
+### FR-41: Insufficient observations for significance
+
+- **Failure class:** `invalid input` (CT-04; Story 22.4 AC5).
+- **Detection:** `run_significance_gate` compares the look-ahead-safe next-bar return
+  count with the explicitly configured `minimum_observations`. A count below that
+  floor returns a refusal before constructing a null distribution or p-value. An
+  unset floor is a separate visible low-confidence result, never a fabricated hard
+  threshold.
+- **Auto-recovery / retry:** none automatic. Extend the declared evidence window, or
+  deliberately choose a different UI-editable minimum and start a new run; the
+  current evidence cannot be resampled into more observations.
+- **Visible degraded state:** no significance p-value or pass/fail gate is emitted,
+  and nothing may promote or block live money from this incomplete sample. The input
+  signal series remains readable.
+- **Notification tier:** operator-visible analysis refusal with observed and required
+  counts.
+- **Product-user affordance:** there are fewer independent observations than the
+  minimum you selected, so QMX will not manufacture a confidence number. Add more
+  data or consciously revise the minimum, then retry from a newly identified run.
+
+### FR-42: Float carve-out magnitude overflow
+
+- **Failure class:** `invalid input` (CT-04; F-22-01, DEC-0109).
+- **Detection:** the three deliberate non-money float boundaries — distribution
+  statistic carving, return-to-exact re-entry, and next-bar log returns — compare
+  caller-supplied integer or exact-ratio magnitude with the representable binary-float
+  range before conversion. Overflow and underflow-to-zero return a typed refusal;
+  `OverflowError` and `ValueError` never cross the public boundary.
+- **Auto-recovery / retry:** none automatic. Correct the source scale or provide a
+  value within the documented statistical carve-out range, then rerun. The exact
+  money path itself is never converted as a workaround.
+- **Visible degraded state:** the affected statistic or return series is absent and
+  no robustness verdict is produced. Exact source evidence is retained unchanged.
+- **Notification tier:** operator-visible invalid-input refusal naming the conversion
+  boundary and offending magnitude.
+- **Product-user affordance:** a value was too large or too small for the one
+  statistical float calculation QMX permits. Check the source scale/data and retry;
+  QMX refuses instead of rounding, overflowing, or leaking a stack trace.
