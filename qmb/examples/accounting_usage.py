@@ -98,7 +98,7 @@ def journals_attribute_control_versus_strategy() -> None:
     extra = _event(
         sequence=2,
         outcome=DecisionOutcome.REFUSED_BY_DOOR,
-        payload={"refusing_door": "spread-door"},
+        payload={"refusing_door": "budget"},
     )
     suppressions, vetoes = _unwrap(
         assemble_suppression_and_veto_accounting((veto, suppressed, extra)),
@@ -108,7 +108,7 @@ def journals_attribute_control_versus_strategy() -> None:
     by_veto = {row.door_identity: row.count for row in vetoes}
     assert by_suppression[(AuthorityKind.OPERATOR, "conflict-higher-rank-wins")] == 1
     assert by_veto["control-window"] == 1
-    assert by_veto["spread-door"] == 1
+    assert by_veto["budget"] == 1
     assert by_veto["sqs"] == 0
     assert TALLY_UNIT_KIND is UnitKind.COUNT
     assert TALLY_FIELD_GROUP == "control-accounting"

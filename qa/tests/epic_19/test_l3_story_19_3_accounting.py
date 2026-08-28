@@ -135,23 +135,38 @@ def test_a14_missing_reason_class_is_refused_not_bucketed() -> None:
 
 
 def test_a14_unresolvable_door_is_refused_not_dropped() -> None:
-    # A refused-by-door decision that carries no resolvable door reference cannot
-    # even be built as a CT-13 event (the outcome law requires the reference),
-    # so a door veto is never silently dropped.
-    from qmf.data.journal import JournalEvent
-    from conftest import writer
-
-    built = JournalEvent.try_create(
-        event_type=JournalEventType.DECISION,
-        writer=writer(),
-        sequence=0,
-        instant=1_700_000_000_000_000_000,
-        world=World.REPLAY,
-        payload={},
-        outcome=DecisionOutcome.REFUSED_BY_DOOR,
+    # RE-POINTED to Epic 19's own door folder (was a probe of
+    # qmf.data.journal.JournalEvent.try_create — another epic's constructor law).
+    # A present-but-unrostered refusing-door, outside the ratified
+    # VETO_DOOR_IDENTITIES spine roster (AD-36/DEC-0150), is a typed refusal on
+    # the accounting surface — never silently bucketed into a brand-new tally key.
+    unrostered = journal_event(
+        outcome=DecisionOutcome.REFUSED_BY_DOOR, payload={"refusing_door": "mystery-door"}
     )
-    assert is_refusal(built)
-    assert built.context["field"] == "refusing_door"
+    refused = assemble_suppression_and_veto_accounting((unrostered,))
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.INVALID_INPUT
+    assert refused.context["field"] == "refusing_door"
+    assert "mystery-door" not in VETO_DOOR_IDENTITIES
+
+
+def test_a14_unrostered_reason_class_is_refused_not_bucketed() -> None:
+    # The sibling hole one level over: a resolvable authority carrying a
+    # present-but-unrostered reason class, outside the closed
+    # SUPPRESSION_REASON_CLASSES roster (DEC-0151), is a typed refusal — never
+    # folded into a brand-new tally key. AC19.3 names "authority OR reason".
+    unrostered = journal_event(
+        outcome=DecisionOutcome.SUPPRESSED,
+        payload={
+            "suppressing_authority": AuthorityKind.OPERATOR.value,
+            "reason_class": "mystery-reason",
+        },
+    )
+    refused = assemble_suppression_and_veto_accounting((unrostered,))
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.INVALID_INPUT
+    assert refused.context["field"] == "reason_class"
+    assert "mystery-reason" not in SUPPRESSION_REASON_CLASSES
 
 
 if __name__ == "__main__":  # pragma: no cover

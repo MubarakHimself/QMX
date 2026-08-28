@@ -126,7 +126,7 @@ def test_tallies_fold_only_ct13_journals_and_stay_off_measure_set() -> None:
     extra_door = _event(
         sequence=2,
         outcome=DecisionOutcome.REFUSED_BY_DOOR,
-        payload={"refusing_door": "spread-door"},
+        payload={"refusing_door": "budget"},
     )
     suppressed = _event(
         sequence=3,
@@ -141,7 +141,7 @@ def test_tallies_fold_only_ct13_journals_and_stay_off_measure_set() -> None:
         outcome=DecisionOutcome.SUPPRESSED,
         payload={
             "suppressing_authority": AuthorityKind.BOOK_POLICY.value,
-            "reason_class": "kill_line_breach",
+            "reason_class": "collapse-same-mechanical-command",
         },
     )
     control = _event(
@@ -162,14 +162,14 @@ def test_tallies_fold_only_ct13_journals_and_stay_off_measure_set() -> None:
     by_suppression = {(row.authority, row.reason_class): row.count for row in suppressions}
     by_veto = {row.door_identity: row.count for row in vetoes}
     assert by_suppression[(AuthorityKind.OPERATOR, "conflict-higher-rank-wins")] == 1
-    assert by_suppression[(AuthorityKind.BOOK_POLICY, "kill_line_breach")] == 1
+    assert by_suppression[(AuthorityKind.BOOK_POLICY, "collapse-same-mechanical-command")] == 1
     protection = (AuthorityKind.PROTECTION_AUTHORITY, "collapse-same-mechanical-command")
     assert by_suppression[protection] == 1
     assert by_suppression[(AuthorityKind.OPERATOR, "collapse-same-mechanical-command")] == 0
     assert by_veto["control-window"] == 2
-    assert by_veto["spread-door"] == 1
+    assert by_veto["budget"] == 1
     assert by_veto["sqs"] == 0
-    assert "spread-door" not in VETO_DOOR_IDENTITIES
+    assert "budget" in VETO_DOOR_IDENTITIES
     minted = _ok(
         mint_run_performance_result(
             _config(),

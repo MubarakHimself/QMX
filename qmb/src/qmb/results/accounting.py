@@ -2,7 +2,8 @@
 
 Tallies are a distinct field group from the V1 returns/trade measure set.
 Each count carries the AD-40 ``count`` unit-kind. Keys that did not fire still
-emit explicit zeros — they are never omitted. Unresolvable authority or reason
+emit explicit zeros — they are never omitted. An authority, reason class, or
+door that is absent OR present-but-unrostered (outside its closed spine roster)
 is a typed refusal, never a drop or a silent bucket. Source is the run's own
 CT-13 journal streams, never a parallel bespoke log.
 """
@@ -51,8 +52,9 @@ VETO_DOOR_IDENTITIES: Final[tuple[str, ...]] = (
     "sqs",
 )
 
-# Arbitration-minted suppression reasons (DEC-0151). Other resolved reason
-# classes from the journal are added, never folded into these two.
+# Closed reason-class roster (DEC-0151): the arbitration-minted suppression
+# reasons. A present-but-unrostered reason class is a typed refusal, never
+# folded into a new tally key. Quiet runs still list each key at zero.
 SUPPRESSION_REASON_CLASSES: Final[tuple[str, ...]] = (
     "collapse-same-mechanical-command",
     "conflict-higher-rank-wins",
@@ -127,16 +129,10 @@ def _fold_suppressions(events: tuple[JournalEvent, ...]) -> Result[tuple[Suppres
 def _fold_vetoes(events: tuple[JournalEvent, ...]) -> Result[tuple[VetoCount, ...]]:
     counts: dict[str, int] = dict.fromkeys(VETO_DOOR_IDENTITIES, 0)
     for event in veto_ledger(events):
-        door = _payload_token(event.payload, _DOOR_KEYS)
-        if door is None:
-            return invalid(
-                "refusing_door",
-                "a refused-by-door decision carries a resolvable refusing-door "
-                "identity; unresolvable doors are a typed refusal, never dropped "
-                "or silently bucketed (R-RPT-8, AR-13)",
-                given=repr(dict(event.payload).get("refusing_door")),
-            )
-        counts[door] = counts.get(door, 0) + 1
+        door = _resolve_door(event)
+        if is_refusal(door):
+            return door
+        counts[door.value] = counts.get(door.value, 0) + 1
     rows: list[VetoCount] = []
     for door in sorted(counts):
         minted = _veto_row(door, counts[door])
@@ -150,16 +146,10 @@ def _suppression_key(event: JournalEvent, *, field: str) -> Result[tuple[str, st
     authority = _resolve_authority(_payload_token(event.payload, _AUTHORITY_KEYS), field=field)
     if is_refusal(authority):
         return authority
-    reason = _payload_token(event.payload, _REASON_KEYS)
-    if reason is None:
-        return invalid(
-            "reason_class",
-            "suppression accounting is keyed by reason class; an unresolvable "
-            "reason is a typed refusal, never dropped or silently bucketed "
-            "(R-RPT-8, AR-13)",
-            given=repr(_first_payload(event.payload, _REASON_KEYS)),
-        )
-    return Ok((authority.value.value, reason))
+    reason = _resolve_reason_class(event)
+    if is_refusal(reason):
+        return reason
+    return Ok((authority.value.value, reason.value))
 
 
 def _resolve_authority(value: object, *, field: str) -> Result[AuthorityKind]:
@@ -178,6 +168,52 @@ def _resolve_authority(value: object, *, field: str) -> Result[AuthorityKind]:
         given=repr(value),
         allowed=[member.value for member in AuthorityKind],
     )
+
+
+def _resolve_reason_class(event: JournalEvent) -> Result[str]:
+    reason = _payload_token(event.payload, _REASON_KEYS)
+    if reason is None:
+        return invalid(
+            "reason_class",
+            "suppression accounting is keyed by reason class; an unresolvable "
+            "reason is a typed refusal, never dropped or silently bucketed "
+            "(R-RPT-8, AR-13)",
+            given=repr(_first_payload(event.payload, _REASON_KEYS)),
+        )
+    if reason not in SUPPRESSION_REASON_CLASSES:
+        return invalid(
+            "reason_class",
+            "suppression accounting is keyed by reason class from the closed "
+            "DEC-0151 roster; a present-but-unrostered reason class is a typed "
+            "refusal, never dropped or silently bucketed into a new tally key "
+            "(R-RPT-8, AR-13)",
+            given=repr(reason),
+            allowed=list(SUPPRESSION_REASON_CLASSES),
+        )
+    return Ok(reason)
+
+
+def _resolve_door(event: JournalEvent) -> Result[str]:
+    door = _payload_token(event.payload, _DOOR_KEYS)
+    if door is None:
+        return invalid(
+            "refusing_door",
+            "a refused-by-door decision carries a resolvable refusing-door "
+            "identity; unresolvable doors are a typed refusal, never dropped "
+            "or silently bucketed (R-RPT-8, AR-13)",
+            given=repr(_first_payload(event.payload, _DOOR_KEYS)),
+        )
+    if door not in VETO_DOOR_IDENTITIES:
+        return invalid(
+            "refusing_door",
+            "veto accounting is keyed by refusing-door identity from the closed "
+            "AD-36/DEC-0150 spine roster; a present-but-unrostered door is a typed "
+            "refusal, never dropped or silently bucketed into a new tally key "
+            "(R-RPT-8, AR-13)",
+            given=repr(door),
+            allowed=list(VETO_DOOR_IDENTITIES),
+        )
+    return Ok(door)
 
 
 def _suppression_row(authority: str, reason: str, count: int) -> Result[SuppressionCount]:
