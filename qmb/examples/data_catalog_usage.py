@@ -132,6 +132,14 @@ def main() -> None:
             f"license={receipt.license_tag}"
         )
 
+        # Coverage derives from the persisted CT-10 observations, so a side's
+        # covered [start, end] is exactly its observed event-time span — never
+        # the requested acquisition window. This both-sides query carries no
+        # window: it asks which sides are present, and the answer is derived
+        # from the archive (bid observed, ask never downloaded → absent). A
+        # windowed query is exercised below against an absent symbol; asking
+        # here for the full request hour would (truthfully) read the 500 ms of
+        # observed ticks as a shortfall, not as full-hour coverage.
         present = _unwrap(
             list_data(
                 {
@@ -140,8 +148,6 @@ def main() -> None:
                     "venue": "dukascopy-fx",
                     "symbol": "EURUSD",
                     "side": "both",
-                    "start": _HOUR_NS,
-                    "end": _END_NS,
                 }
             ),
             "list both sides",
