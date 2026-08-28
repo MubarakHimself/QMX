@@ -134,6 +134,27 @@ def test_instant_add_duration_success_and_overflow_refusal() -> None:
     assert wrong.context["field"] == "duration"
 
 
+def test_checked_int64_accepts_exact_edges_refuses_one_past() -> None:
+    # CT-02 / DEC-0101 (mutmut pin chrono.py:171 _checked_int64): the nanosecond
+    # arithmetic overflow guard accepts a result of exactly INT64_MIN / INT64_MAX and
+    # refuses exactly +/-1 past, never wrapping (FM-2). `add_duration` routes its result
+    # through _checked_int64; adding a zero Duration lands the result on the exact edge.
+    # Kills `value < _INT64_MIN` -> `<= _INT64_MIN` (mutmut_2, exact MIN must be
+    # accepted) and `value > _INT64_MAX` -> `>= _INT64_MAX` (mutmut_3, exact MAX must be
+    # accepted). E1-U30 pins the exact.py constructor guard; chrono's arithmetic-result
+    # guard had no exact-edge test.
+    at_max = _instant(_INT64_MAX).add_duration(_duration(0))
+    assert is_ok(at_max)
+    assert at_max.value.value_ns == _INT64_MAX  # kills `>= _INT64_MAX`
+    at_min = _instant(_INT64_MIN).add_duration(_duration(0))
+    assert is_ok(at_min)
+    assert at_min.value.value_ns == _INT64_MIN  # kills `<= _INT64_MIN`
+    over = _instant(_INT64_MAX).add_duration(_duration(1))
+    assert is_refusal(over)
+    under = _instant(_INT64_MIN).add_duration(_duration(-1))
+    assert is_refusal(under)
+
+
 def test_instant_difference_is_an_evidence_span_and_checks_overflow() -> None:
     span = _instant(5).difference(_instant(2))
     assert is_ok(span)
@@ -456,6 +477,41 @@ def test_data_driven_clock_raises_when_its_script_is_exhausted() -> None:
     assert clock.monotonic_now().value_ns == 5
     with pytest.raises(LookupError):
         clock.monotonic_now()
+
+
+def test_data_driven_clock_exhaustion_is_a_clean_boundary_not_index_error() -> None:
+    # CT-02 / CT-04 (mutmut pin chrono.py:756/764): exhaustion fires at EXACTLY
+    # len(script) via the deliberate `>= len` guard, not one slot late. Kills
+    # `>= len(...)` -> `> len(...)` (mutmut_1 on both methods): with `>`, the (len+1)th
+    # read indexes past the tuple and raises IndexError -- a LookupError SUBCLASS that
+    # `pytest.raises(LookupError)` would still swallow. Asserting the exact type is
+    # LookupError distinguishes the clean exhaustion boundary from that out-of-bounds
+    # access. The boundary, NOT the English message (PLAN section 5: message prose is
+    # not ratified surface; see OR-03).
+    clock = DataDrivenClock(boot_epoch_id="boot-1", wall_instants=[_instant(0)], monotonic_ns=[5])
+    assert clock.wall_now().value_ns == 0  # consumes the only wall instant
+    with pytest.raises(LookupError) as exc_w:
+        clock.wall_now()
+    assert type(exc_w.value) is LookupError  # not the IndexError a `> len` off-by-one gives
+    assert clock.monotonic_now().value_ns == 5  # consumes the only monotonic reading
+    with pytest.raises(LookupError) as exc_m:
+        clock.monotonic_now()
+    assert type(exc_m.value) is LookupError
+
+
+def test_data_driven_clock_cursor_advances_exactly_one_per_call() -> None:
+    # CT-02 (mutmut pin chrono.py:756/764): the cursor advances by exactly one per call
+    # (`+= 1`), so three sequential reads return script[0], [1], [2]. Kills
+    # `self._..._cursor += 1` -> `= 1` (mutmut_6 on both methods): the reset mutant
+    # re-reads script[1] forever, so a three-element script exposes it (a two-element
+    # script cannot -- index 1 is correct either way).
+    clock = DataDrivenClock(
+        boot_epoch_id="boot-1",
+        wall_instants=[_instant(10), _instant(20), _instant(30)],
+        monotonic_ns=[1, 2, 3],
+    )
+    assert [clock.wall_now().value_ns for _ in range(3)] == [10, 20, 30]
+    assert [clock.monotonic_now().value_ns for _ in range(3)] == [1, 2, 3]
 
 
 # --- writers, sequences, ordering keys (no causal meaning) ------------------

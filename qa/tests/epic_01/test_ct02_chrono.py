@@ -205,18 +205,24 @@ def test_e1_u40_clock_protocol_seam_data_driven_replays_in_order() -> None:
 
 
 # E1-U41 (mutmut pin chrono.py:756/764 exhaustion) -----------------------------
-def test_e1_u41_data_driven_clock_exhaustion_boundary_exact_message() -> None:
-    """CT-02 (pin chrono.py:756/764): exhaustion at exactly len(script) raises
-    LookupError with the exact documented message (>= len, not > len)."""
+def test_e1_u41_data_driven_clock_exhaustion_is_a_clean_boundary() -> None:
+    """CT-02 / CT-04 (pin chrono.py:756/764): exhaustion fires at EXACTLY len(script)
+    via the `>= len` guard and raises a clean LookupError -- the boundary, NOT the
+    English message. PLAN section 5 declares the exhaustion message string not ratified
+    surface; OR-03 constrains this seam toward a typed refusal, so the message prose is
+    re-pointed away. Asserting the exact exception type distinguishes the deliberate
+    exhaustion raise from the IndexError a `> len` off-by-one would produce (IndexError
+    is a LookupError subclass, so `pytest.raises(LookupError)` alone would not catch the
+    off-by-one)."""
     clock = DataDrivenClock(boot_epoch_id="boot-1", wall_instants=[_instant(1)], monotonic_ns=[7])
     assert clock.wall_now().value_ns == 1  # consumes the only wall instant
     with pytest.raises(LookupError) as exc_w:
         clock.wall_now()
-    assert str(exc_w.value) == "data-driven clock exhausted its scripted wall instants"
+    assert type(exc_w.value) is LookupError  # clean exhaustion boundary, not IndexError
     assert clock.monotonic_now().value_ns == 7
     with pytest.raises(LookupError) as exc_m:
         clock.monotonic_now()
-    assert str(exc_m.value) == "data-driven clock exhausted its scripted monotonic readings"
+    assert type(exc_m.value) is LookupError
 
 
 # E1-U42 (mutmut pin chrono.py:756 advance-per-call) ---------------------------

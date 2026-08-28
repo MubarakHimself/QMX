@@ -232,6 +232,39 @@ def test_from_float_half_modes_break_ties_exactly() -> None:
     assert neg_floor.value.value == -3
 
 
+def test_round_fraction_zero_and_sign_boundary_every_mode() -> None:
+    # CT-01 / DEC-0158 (mutmut pin exact.py:304 _round_fraction_to_int): the zero
+    # boundary and the SIGN boundary of money-path rounding, for EVERY rounding mode.
+    # Exactly zero rounds to 0 under every mode (the remainder==0 early return), and a
+    # positive sub-unit fraction (+0.5, whose exact Fraction lies in the open interval
+    # (0, 1)) must round by SIGN, never by a `< 1` magnitude test. This kills the
+    # surviving `value < 0` -> `value < 1` mutants in the DOWN, UP and HALF_UP branches
+    # (mutmut_15/18/26). Never weaken: sign, not magnitude, decides the direction.
+    for mode in RoundingMode:
+        z = Money.from_float(0.0, currency="USD", scale=0, rounding=mode)
+        assert is_ok(z)
+        assert z.value.value == 0, mode
+        neg_z = Money.from_float(-0.0, currency="USD", scale=0, rounding=mode)
+        assert is_ok(neg_z)
+        assert neg_z.value.value == 0, mode
+
+    # Positive sub-unit 0.5 in (0, 1): kills `value < 1` in each branch.
+    down_pos = Money.from_float(0.5, currency="USD", scale=0, rounding=RoundingMode.DOWN)
+    assert is_ok(down_pos) and down_pos.value.value == 0  # toward zero -> floor 0
+    up_pos = Money.from_float(0.5, currency="USD", scale=0, rounding=RoundingMode.UP)
+    assert is_ok(up_pos) and up_pos.value.value == 1  # away from zero -> ceil 1
+    half_up_pos = Money.from_float(0.5, currency="USD", scale=0, rounding=RoundingMode.HALF_UP)
+    assert is_ok(half_up_pos) and half_up_pos.value.value == 1  # tie away from zero -> ceil 1
+
+    # Negative sub-unit -0.5: pins the sign boundary the other way (the else arm).
+    down_neg = Money.from_float(-0.5, currency="USD", scale=0, rounding=RoundingMode.DOWN)
+    assert is_ok(down_neg) and down_neg.value.value == 0  # toward zero -> ceil 0
+    up_neg = Money.from_float(-0.5, currency="USD", scale=0, rounding=RoundingMode.UP)
+    assert is_ok(up_neg) and up_neg.value.value == -1  # away from zero -> floor -1
+    half_up_neg = Money.from_float(-0.5, currency="USD", scale=0, rounding=RoundingMode.HALF_UP)
+    assert is_ok(half_up_neg) and half_up_neg.value.value == -1  # tie away from zero -> floor -1
+
+
 def test_from_float_boundary_is_shared_and_exact_for_price_and_quantity() -> None:
     # H1 applies to every from_float boundary sharing _coerce_float_to_scaled_int.
     price = Price.from_float(0.1, instrument=_instrument(), scale=30, rounding=RoundingMode.HALF_UP)
@@ -294,6 +327,31 @@ def test_price_refuses_missing_instrument_and_bad_scale() -> None:
     bad_scale = Price.try_create(1, _instrument(), -2)
     assert is_refusal(bad_scale)
     assert bad_scale.context["field"] == "scale"
+
+
+def test_blank_instrument_part_refuses_via_require_instrument() -> None:
+    # CT-03 / CT-01 (mutmut pin exact.py:251 _require_instrument): the defense-in-depth
+    # guard refuses an Instrument built through the UNCHECKED constructor with a blank
+    # part. A public Price factory (a caller of the guard) must refuse, naming
+    # `instrument`. Kills `value.symbol.strip() != ""` -> `!= "XXXX"` (mutmut_4) and the
+    # venue twin (mutmut_6): the mutant treats a blank part as non-blank and accepts it.
+    venue = VenueId.try_create("venue-1")
+    assert is_ok(venue)
+    # Empty symbol (Instrument(...) bypasses Instrument.try_create validation).
+    empty_symbol = Instrument(venue=venue.value, symbol="")
+    r_empty = Price.try_create(1, empty_symbol, 5)
+    assert is_refusal(r_empty)
+    assert r_empty.context["field"] == "instrument"
+    # Whitespace-only symbol is equally blank after strip().
+    ws_symbol = Instrument(venue=venue.value, symbol="   ")
+    r_ws = Price.try_create(1, ws_symbol, 5)
+    assert is_refusal(r_ws)
+    assert r_ws.context["field"] == "instrument"
+    # Blank venue token exercises the venue twin of the same guard.
+    blank_venue = Instrument(venue=VenueId(""), symbol="EURUSD")
+    r_venue = Price.try_create(1, blank_venue, 5)
+    assert is_refusal(r_venue)
+    assert r_venue.context["field"] == "instrument"
 
 
 def test_price_subtraction_yields_a_first_class_price_delta() -> None:
