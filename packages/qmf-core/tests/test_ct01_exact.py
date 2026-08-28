@@ -872,3 +872,18 @@ def test_price_add_is_the_inverse_of_subtraction() -> None:
     assert is_ok(recovered)
     assert recovered.value.value == b.value.value
     assert recovered.value.scale == b.value.scale
+
+
+def test_exact_rational_from_float_refuses_a_malformed_scale() -> None:
+    """CT-01: the named float boundary refuses a malformed decimal scale.
+
+    Pins the `_as_scale` refusal branch of ExactRational.from_float directly, so
+    the 100% branch floor on this contract module cannot silently rely on an
+    indirect caller (DEC-0105).
+    """
+    for bad_scale in ("nope", -1, 2.5, None):
+        refused = ExactRational.from_float(
+            1.5, unit_kind=UnitKind.COUNT, scale=bad_scale, rounding=RoundingMode.HALF_EVEN
+        )
+        assert is_refusal(refused), repr(bad_scale)
+        assert refused.category is RefusalCategory.INVALID_INPUT
