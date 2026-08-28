@@ -304,6 +304,12 @@ ignore = [
 # Strict, workspace-wide over the QMF code (AR-11). adws is mypy's job, not
 # pyright's, so it is not included here.
 include = ["packages", "extensions", "qml", "qmb", "tools"]
+# Pin the analysis platform to the ratified tier-1 OS (AR-04/AR-23: Windows).
+# The orchestrator's process-watch seam uses the Windows process APIs
+# (ctypes.WinDLL); pinning makes the battery CI job on a Linux runner render
+# the same byte-identical verdict the tier-1 machine renders (AR-11), instead
+# of failing on platform-conditional stdlib surface.
+pythonPlatform = "Windows"
 # The deliberately-broken money-path fixtures are scanner input data, not code to
 # type-check (Story 1.7); the rest preserves pyright's default exclusions.
 exclude = ["**/node_modules", "**/__pycache__", "**/.*", "tools/tests/fixtures"]
