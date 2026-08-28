@@ -364,6 +364,10 @@ pythonVersion = "3.14"
 exclude = [
     "adws",          # software-factory machinery — never touched by a scan-driven fix
     "_bmad",         # BMad planning machinery — same ruling as adws
+    "qa",            # the independent QA verification corpus (2026-08-27 phase): per-epic
+                     # suites, trace artifacts and the qa-verify runner — verification
+                     # machinery, not shipped code; the OR-10 gate numbers were ruled over
+                     # the shipped tree, which this corpus deliberately sits outside
     "recorder",      # standalone operator tool, outside the QMF roster gates
     "archive",       # retired material
     "workroom",      # working notes
