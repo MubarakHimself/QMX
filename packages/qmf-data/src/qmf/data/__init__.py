@@ -210,7 +210,12 @@ from qmf.data.logbooks import (
     records_stream,
     role_namespace,
 )
-from qmf.data.observation import ForeignMoney, ForeignTimestamp, SourceObservation
+from qmf.data.observation import (
+    ForeignMoney,
+    ForeignTimestamp,
+    MarketDataContext,
+    SourceObservation,
+)
 from qmf.data.partitions import ResolvedSeries, SeriesPartition, SeriesPlacement
 from qmf.data.retention import CitationIndex, RetentionPolicy, RetentionVerdict
 from qmf.data.rooms import RebuildPins, WorldRooms
@@ -337,6 +342,7 @@ __all__ = [
     "LicensedSourceWindow",
     "LineageEdgeAppender",
     "Logbook",
+    "MarketDataContext",
     "MigrationStage",
     "NightlyCycleReport",
     "ObjectStorage",

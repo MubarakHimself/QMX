@@ -26,7 +26,7 @@ from qmf.data.ingest import (
     ProviderRecord,
     SourceRequest,
 )
-from qmf.data.observation import SourceObservation
+from qmf.data.observation import MarketDataContext, SourceObservation
 from qmf.data.source_boundary import SourceObservationBoundary
 from qmf.data.store import EvidenceStore
 
@@ -305,40 +305,6 @@ def download(
         fetched = port.fetch(fetch_req)
         if is_refusal(fetched):
             return fetched
-        for record in fetched.value:
-            key = IntakeKey.try_create(record.source, record.source_native_id, record.revision)
-            if is_refusal(key):
-                return key
-            if key.value in known_keys:
-                idempotent += 1
-                continue
-            receipt = ingest.intake(
-                record,
-                writer=active_writer,
-                sequence=sequence,
-                world=request.world,
-                receive_wall_time=receive,
-            )
-            if is_refusal(receipt):
-                return receipt
-            if receipt.value.outcome is IntakeOutcome.PRODUCED:
-                produced += 1
-                sequence += 1
-                observation = _observation_for_archive(receipt.value, request.side)
-                if is_refusal(observation):
-                    return observation
-                stored = ingest.submit(observation.value, gate)
-                if is_refusal(stored):
-                    return stored
-                admitted += 1
-                known_keys.add(key.value)
-                appended = _append_intake_key(Path(request.destination), key.value)
-                if is_refusal(appended):
-                    return appended
-            else:
-                idempotent += 1
-                known_keys.add(key.value)
-
         window_meta: dict[str, object] = {
             "venue": request.venue,
             "symbol": symbol,
@@ -361,28 +327,82 @@ def download(
             window_meta["license_tag"] = last_window.license_tag.value
             window_meta["provenance"] = dict(last_window.provenance)
             window_meta["partition_key"] = last_window.partition.partition_key
-        # Coverage envelopes land in the Parquet raw archive so list/catalog can
-        # rebuild a DuckDB view over rooms (Story 18.3) — never a second store.
-        coverage_store = (
-            evidence if evidence is not None else EvidenceStore(Path(request.destination))
+        stored_side = (
+            DownloadSide.ASK.value if request.side is DownloadSide.ASK else DownloadSide.BID.value
         )
-        persisted = persist_coverage_windows(
-            coverage_store,
-            world=request.world,
-            venue=str(window_meta["venue"]),
+        market_data = MarketDataContext.try_create(
+            venue=request.venue,
             symbol=symbol,
-            resolution=str(window_meta["resolution"]),
-            side=str(window_meta["side"]),
-            start_ns=int(cast("int", window_meta["start_ns"])),
-            end_ns=int(cast("int", window_meta["end_ns"])),
-            observation_count=len(fetched.value),
-            license_tag=str(window_meta["license_tag"]),
-            revision=str(window_meta["revision"]),
-            source=str(window_meta["source"]),
-            provenance=cast("Mapping[str, object]", window_meta["provenance"]),
+            resolution=request.resolution,
+            side=stored_side,
+            license_tag=window_meta["license_tag"],
+            provenance=window_meta["provenance"],
         )
-        if is_refusal(persisted):
-            return persisted
+        if is_refusal(market_data):
+            return market_data
+        covered_event_ns: list[int] = []
+        for record in fetched.value:
+            key = IntakeKey.try_create(record.source, record.source_native_id, record.revision)
+            if is_refusal(key):
+                return key
+            if key.value in known_keys:
+                idempotent += 1
+                continue
+            receipt = ingest.intake(
+                record,
+                writer=active_writer,
+                sequence=sequence,
+                world=request.world,
+                receive_wall_time=receive,
+            )
+            if is_refusal(receipt):
+                return receipt
+            if receipt.value.outcome is IntakeOutcome.PRODUCED:
+                produced += 1
+                sequence += 1
+                observation = _observation_for_archive(
+                    receipt.value,
+                    request.side,
+                    market_data.value,
+                )
+                if is_refusal(observation):
+                    return observation
+                stored = ingest.submit(observation.value, gate)
+                if is_refusal(stored):
+                    return stored
+                admitted += 1
+                covered_event_ns.append(observation.value.event_time.value_ns)
+                known_keys.add(key.value)
+                appended = _append_intake_key(Path(request.destination), key.value)
+                if is_refusal(appended):
+                    return appended
+            else:
+                idempotent += 1
+                known_keys.add(key.value)
+
+        # The envelope is only a rebuildable cache.  Stamp it from observations
+        # actually admitted, never from the requested window or requested sides.
+        if covered_event_ns:
+            coverage_store = (
+                evidence if evidence is not None else EvidenceStore(Path(request.destination))
+            )
+            persisted = persist_coverage_windows(
+                coverage_store,
+                world=request.world,
+                venue=str(window_meta["venue"]),
+                symbol=symbol,
+                resolution=str(window_meta["resolution"]),
+                side=stored_side,
+                start_ns=min(covered_event_ns),
+                end_ns=max(covered_event_ns) + 1,
+                observation_count=len(covered_event_ns),
+                license_tag=str(window_meta["license_tag"]),
+                revision=str(window_meta["revision"]),
+                source=str(window_meta["source"]),
+                provenance=cast("Mapping[str, object]", window_meta["provenance"]),
+            )
+            if is_refusal(persisted):
+                return persisted
         windows.append(window_meta)
 
         percent = int(((index + 1) * 100) // total) if total else 100
@@ -423,13 +443,34 @@ def download(
 
 
 def _observation_for_archive(
-    receipt: IntakeReceipt, side: DownloadSide
+    receipt: IntakeReceipt,
+    side: DownloadSide,
+    market_data: MarketDataContext,
 ) -> Result[SourceObservation]:
-    """Attach the CT-15 quote's exact money to the persisted CT-10 value."""
-    if receipt.observation.foreign_money is not None or receipt.quote is None:
-        return Ok(receipt.observation)
-    money = receipt.quote.ask if side is DownloadSide.ASK else receipt.quote.bid
-    return receipt.observation_with_foreign_money(money)
+    """Attach exact quote money and self-describing context to the CT-10 value."""
+    observation = receipt.observation
+    if observation.foreign_money is None and receipt.quote is not None:
+        money = receipt.quote.ask if side is DownloadSide.ASK else receipt.quote.bid
+        priced = receipt.observation_with_foreign_money(money)
+        if is_refusal(priced):
+            return priced
+        observation = priced.value
+    return SourceObservation.try_create(
+        event_time=observation.event_time,
+        known_at=observation.known_at,
+        source=observation.source,
+        source_native_id=observation.source_native_id,
+        revision=observation.revision,
+        receive_wall_time=observation.receive_wall_time,
+        writer=observation.writer,
+        sequence=observation.sequence,
+        world=observation.world,
+        foreign_timestamp=observation.foreign_timestamp,
+        foreign_money=observation.foreign_money,
+        market_data=market_data,
+        receive_monotonic_diagnostic=observation.receive_monotonic_diagnostic,
+        correction_of=observation.correction_of,
+    )
 
 
 class _IngestBridge:

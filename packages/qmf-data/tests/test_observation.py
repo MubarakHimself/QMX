@@ -24,6 +24,7 @@ from qmf.data.observation import (
     CONTRACT_FORMAT_VERSION,
     ForeignMoney,
     ForeignTimestamp,
+    MarketDataContext,
     SourceObservation,
 )
 
@@ -165,6 +166,34 @@ def test_foreign_blocks_enter_identity_when_present() -> None:
     assert with_foreign.fingerprint.value != bare.fingerprint.value
     assert "foreign_timestamp" in with_foreign.fp1_identity()
     assert "foreign_money" in with_foreign.fp1_identity()
+
+
+def test_market_data_context_enters_identity_and_round_trips() -> None:
+    context = MarketDataContext.try_create(
+        venue="dukascopy",
+        symbol="EURUSD",
+        resolution="tick",
+        side="bid",
+        license_tag="internal-only",
+        provenance={"acquisition": "download-once"},
+    )
+    assert is_ok(context)
+    bare = _observation()
+    market = _observation(market_data=context.value)
+    assert market.fingerprint != bare.fingerprint
+    assert market.to_row()["market_data"] == {
+        "venue": "dukascopy",
+        "symbol": "EURUSD",
+        "resolution": "tick",
+        "side": "bid",
+        "license_tag": "internal-only",
+        "provenance": {"acquisition": "download-once"},
+        "format_version": CONTRACT_FORMAT_VERSION,
+    }
+    rebuilt = SourceObservation.from_row(market.to_row())
+    assert is_ok(rebuilt)
+    assert rebuilt.value.market_data is not None
+    assert rebuilt.value.market_data.license_tag == "internal-only"
 
 
 def test_diagnostic_is_excluded_from_identity_and_not_persisted() -> None:

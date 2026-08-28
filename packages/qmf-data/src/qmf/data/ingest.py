@@ -239,6 +239,7 @@ class IntakeReceipt:
             world=observation.world,
             foreign_timestamp=observation.foreign_timestamp,
             foreign_money=foreign_money,
+            market_data=observation.market_data,
             receive_monotonic_diagnostic=observation.receive_monotonic_diagnostic,
             correction_of=observation.correction_of,
         )

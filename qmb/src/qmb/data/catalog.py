@@ -15,6 +15,7 @@ from typing import Final, cast
 
 from qmf.core.fingerprint import World
 from qmf.core.refusal import Ok, Result, is_refusal
+from qmf.data.observation import SourceObservation
 from qmf.data.store import EvidenceStore, ParquetColumnarEngine, StoreEngineError
 from qmf.data.store.rooms import namespace_for_write
 
@@ -168,24 +169,115 @@ def persist_coverage_windows(
 def scan_coverage_rows(
     store: EvidenceStore, *, world: World
 ) -> Result[tuple[dict[str, object], ...]]:
-    """Read coverage envelopes from the Parquet raw archive (authoritative room)."""
+    """Derive coverage from CT-10 observations in the authoritative raw room.
+
+    QMB-authored envelopes are accepted only when their answer exactly matches the
+    derivation. Missing or stale envelopes cannot invent coverage or hide a side.
+    """
     namespace = namespace_for_write(world)
     if is_refusal(namespace):
         return namespace
     raw_dir = store.root / namespace.value / _RAW_ARCHIVE
     columnar = ParquetColumnarEngine(raw_dir)
-    rows: list[dict[str, object]] = []
+    observations: list[SourceObservation] = []
+    cached: list[dict[str, object]] = []
     for key in columnar.stored_keys():
         try:
             artifact = columnar.read(key)
         except StoreEngineError:
             continue
         for item in artifact:
-            if item.get("kind") != COVERAGE_KIND:
+            if item.get("kind") == COVERAGE_KIND:
+                cached.append(dict(item))
                 continue
-            rows.append(dict(item))
+            rebuilt = SourceObservation.from_row(item)
+            if is_refusal(rebuilt) or rebuilt.value.market_data is None:
+                continue
+            observations.append(rebuilt.value)
+    derived = _derive_coverage_rows(observations)
+    rows = _checked_cache_rows(derived, cached)
     rows.sort(key=_coverage_sort_key)
     return Ok(tuple(rows))
+
+
+def _derive_coverage_rows(
+    observations: Sequence[SourceObservation],
+) -> list[dict[str, object]]:
+    """Fold self-describing observations into per-side coverage rows."""
+    grouped: dict[tuple[str, str, str, str, str, str, str], dict[str, object]] = {}
+    for observation in observations:
+        context = observation.market_data
+        if context is None:  # narrowed by the caller; defensive for direct use
+            continue
+        key = (
+            context.venue,
+            context.symbol,
+            context.resolution,
+            context.side,
+            context.license_tag,
+            observation.revision,
+            observation.source,
+        )
+        event_ns = observation.event_time.value_ns
+        current = grouped.get(key)
+        if current is None:
+            grouped[key] = {
+                "kind": COVERAGE_KIND,
+                "venue": context.venue,
+                "symbol": context.symbol,
+                "resolution": context.resolution,
+                "side": context.side,
+                "start_ns": event_ns,
+                "end_ns": event_ns + 1,
+                "observation_count": 1,
+                "license_tag": context.license_tag,
+                "revision": observation.revision,
+                "source": observation.source,
+                "provenance": dict(context.provenance),
+                "status": PRESENT,
+            }
+            continue
+        current["start_ns"] = min(cast("int", current["start_ns"]), event_ns)
+        current["end_ns"] = max(cast("int", current["end_ns"]), event_ns + 1)
+        current["observation_count"] = cast("int", current["observation_count"]) + 1
+    return list(grouped.values())
+
+
+def _checked_cache_rows(
+    derived: Sequence[dict[str, object]],
+    cached: Sequence[dict[str, object]],
+) -> list[dict[str, object]]:
+    """Use only byte-equivalent normalized cache rows after CT-10 derivation."""
+    by_projection = {_cache_projection(row): row for row in cached}
+    checked: list[dict[str, object]] = []
+    for row in derived:
+        cached_row = by_projection.get(_cache_projection(row))
+        checked.append(dict(cached_row) if cached_row is not None else dict(row))
+    return checked
+
+
+def _cache_projection(row: Mapping[str, object]) -> tuple[object, ...]:
+    """Fields an envelope must match before it can serve as a cache hit."""
+    provenance = row.get("provenance")
+    provenance_items = (
+        repr(sorted(cast("Mapping[str, object]", provenance).items(), key=lambda item: item[0]))
+        if isinstance(provenance, Mapping)
+        else ""
+    )
+    return (
+        row.get("venue"),
+        row.get("symbol"),
+        row.get("resolution"),
+        row.get("side"),
+        row.get("start_ns"),
+        row.get("end_ns"),
+        row.get("observation_count"),
+        row.get("license_tag"),
+        row.get("revision"),
+        row.get("source"),
+        provenance_items,
+        row.get("status"),
+    )
 
 
 def list_data(

@@ -278,3 +278,13 @@ def test_t18_1m_window_records_provenance_and_license_tag() -> None:
         for entry in entries:
             assert entry.license_tag == "internal-only", entry.as_mapping()
             assert entry.provenance is not None and dict(entry.provenance), entry.as_mapping()
+
+        # R-011: the usage right rides the evidence-bearing CT-10 observation,
+        # rather than existing only on a QMB-authored coverage envelope.
+        observations = scan_raw_observations(store_at(dest))
+        assert len(observations) == 1
+        market_data = observations[0].get("market_data")
+        assert isinstance(market_data, dict)
+        assert market_data["license_tag"] == "internal-only"
+        assert market_data["side"] == "bid"
+        assert isinstance(market_data["provenance"], dict)

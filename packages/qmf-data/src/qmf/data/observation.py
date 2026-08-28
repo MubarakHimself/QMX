@@ -45,6 +45,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Final, cast
 
 from qmf.core import (
@@ -67,6 +68,7 @@ __all__ = [
     "CONTRACT_FORMAT_VERSION",
     "ForeignMoney",
     "ForeignTimestamp",
+    "MarketDataContext",
     "SourceObservation",
 ]
 
@@ -234,6 +236,119 @@ class ForeignMoney:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class MarketDataContext:
+    """Identity-bearing market-data coordinates carried by a CT-10 observation.
+
+    The context makes a persisted venue observation self-describing: catalog views can
+    be rebuilt from the observation itself without treating an acquisition-request
+    envelope as evidence.  The usage right and provenance ride the same immutable row.
+    """
+
+    venue: str
+    symbol: str
+    resolution: str
+    side: str
+    license_tag: str
+    provenance: Mapping[str, object]
+
+    @classmethod
+    def try_create(
+        cls,
+        *,
+        venue: object,
+        symbol: object,
+        resolution: object,
+        side: object,
+        license_tag: object,
+        provenance: object,
+    ) -> Result[MarketDataContext]:
+        """Validate the self-describing coordinates and copy provenance read-only."""
+        tokens: dict[str, str] = {}
+        for field_name, value in (
+            ("venue", venue),
+            ("symbol", symbol),
+            ("resolution", resolution),
+            ("license_tag", license_tag),
+        ):
+            token = _clean_str(value)
+            if token is None:
+                return _invalid(
+                    f"market_data.{field_name}",
+                    f"market-data {field_name} is a non-empty opaque token",
+                    given=repr(value),
+                )
+            tokens[field_name] = token
+        side_token = _clean_str(side)
+        if side_token not in ("bid", "ask"):
+            return _invalid(
+                "market_data.side",
+                "a persisted market-data observation names its actual bid or ask side",
+                given=repr(side),
+            )
+        if not isinstance(provenance, Mapping):
+            return _invalid(
+                "market_data.provenance",
+                "market-data provenance is a mapping recorded on the observation",
+                given=repr(provenance),
+            )
+        copied = MappingProxyType(dict(cast("Mapping[str, object]", provenance)))
+        return Ok(
+            cls(
+                venue=tokens["venue"],
+                symbol=tokens["symbol"],
+                resolution=tokens["resolution"],
+                side=side_token,
+                license_tag=tokens["license_tag"],
+                provenance=copied,
+            )
+        )
+
+    def fp1_identity(self) -> dict[str, object]:
+        """Canonical identity: coordinates, usage right, and provenance."""
+        return {
+            "class": "market-data-context",
+            "venue": self.venue,
+            "symbol": self.symbol,
+            "resolution": self.resolution,
+            "side": self.side,
+            "license_tag": self.license_tag,
+            "provenance": dict(self.provenance),
+            "format_version": CONTRACT_FORMAT_VERSION,
+        }
+
+    def to_row(self) -> dict[str, object]:
+        """JSON-native nested row carried by :class:`SourceObservation`."""
+        return {
+            "venue": self.venue,
+            "symbol": self.symbol,
+            "resolution": self.resolution,
+            "side": self.side,
+            "license_tag": self.license_tag,
+            "provenance": dict(self.provenance),
+            "format_version": CONTRACT_FORMAT_VERSION,
+        }
+
+    @classmethod
+    def from_row(cls, row: object) -> Result[MarketDataContext]:
+        """Rebuild a context from its persisted nested mapping."""
+        if not isinstance(row, Mapping):
+            return _invalid(
+                "market_data",
+                "persisted market-data context is a mapping",
+                given=repr(row),
+            )
+        body = cast("Mapping[str, object]", row)
+        return cls.try_create(
+            venue=body.get("venue"),
+            symbol=body.get("symbol"),
+            resolution=body.get("resolution"),
+            side=body.get("side"),
+            license_tag=body.get("license_tag"),
+            provenance=body.get("provenance"),
+        )
+
+
 # --- coercion helpers -------------------------------------------------------
 
 
@@ -294,6 +409,7 @@ def _identity_content(
     world: World,
     foreign_timestamp: ForeignTimestamp | None,
     foreign_money: ForeignMoney | None,
+    market_data: MarketDataContext | None,
     correction_of: Fingerprint | None,
 ) -> dict[str, object]:
     """The observation's canonical ``fp1`` identity content — the parts that ARE its
@@ -324,6 +440,8 @@ def _identity_content(
         content["foreign_timestamp"] = foreign_timestamp.fp1_identity()
     if foreign_money is not None:
         content["foreign_money"] = foreign_money.fp1_identity()
+    if market_data is not None:
+        content["market_data"] = market_data.fp1_identity()
     if correction_of is not None:
         content["correction_of"] = correction_of.value
     return content
@@ -357,6 +475,7 @@ class SourceObservation:
     fingerprint: Fingerprint
     foreign_timestamp: ForeignTimestamp | None = None
     foreign_money: ForeignMoney | None = None
+    market_data: MarketDataContext | None = None
     receive_monotonic_diagnostic: MonotonicReading | None = None
     correction_of: Fingerprint | None = None
 
@@ -381,6 +500,7 @@ class SourceObservation:
         world: object,
         foreign_timestamp: object | None = None,
         foreign_money: object | None = None,
+        market_data: object | None = None,
         receive_monotonic_diagnostic: object | None = None,
         correction_of: object | None = None,
     ) -> Result[SourceObservation]:
@@ -464,6 +584,9 @@ class SourceObservation:
         resolved_money = _resolve_foreign_money(foreign_money)
         if is_refusal(resolved_money):
             return resolved_money
+        resolved_market_data = _resolve_market_data(market_data)
+        if is_refusal(resolved_market_data):
+            return resolved_market_data
         resolved_diagnostic = _resolve_diagnostic(receive_monotonic_diagnostic)
         if is_refusal(resolved_diagnostic):
             return resolved_diagnostic
@@ -483,6 +606,7 @@ class SourceObservation:
             world=resolved_world,
             foreign_timestamp=resolved_ts.value,
             foreign_money=resolved_money.value,
+            market_data=resolved_market_data.value,
             correction_of=resolved_correction.value,
         )
         fp = fingerprint(content)
@@ -502,6 +626,7 @@ class SourceObservation:
                 fingerprint=fp.value,
                 foreign_timestamp=resolved_ts.value,
                 foreign_money=resolved_money.value,
+                market_data=resolved_market_data.value,
                 receive_monotonic_diagnostic=resolved_diagnostic.value,
                 correction_of=resolved_correction.value,
             )
@@ -523,6 +648,7 @@ class SourceObservation:
             world=self.world,
             foreign_timestamp=self.foreign_timestamp,
             foreign_money=self.foreign_money,
+            market_data=self.market_data,
             correction_of=self.correction_of,
         )
 
@@ -562,6 +688,8 @@ class SourceObservation:
                 "verbatim": self.foreign_money.verbatim,
                 "scale": self.foreign_money.scale,
             }
+        if self.market_data is not None:
+            row["market_data"] = self.market_data.to_row()
         if self.correction_of is not None:
             row["correction_of"] = self.correction_of.value
         return row
@@ -594,6 +722,9 @@ class SourceObservation:
         foreign_money = _row_foreign_money(mapping.get("foreign_money"))
         if is_refusal(foreign_money):
             return foreign_money
+        market_data = _row_market_data(mapping.get("market_data"))
+        if is_refusal(market_data):
+            return market_data
         built = cls.try_create(
             event_time=mapping.get("event_time_ns"),
             known_at=mapping.get("known_at_ns"),
@@ -606,6 +737,7 @@ class SourceObservation:
             world=mapping.get("world"),
             foreign_timestamp=foreign_timestamp.value,
             foreign_money=foreign_money.value,
+            market_data=market_data.value,
             correction_of=mapping.get("correction_of"),
         )
         if is_refusal(built):
@@ -646,6 +778,19 @@ def _resolve_foreign_money(value: object | None) -> Result[ForeignMoney | None]:
     return _invalid(
         "foreign_money",
         "foreign money is a ForeignMoney value (or omitted)",
+        given=repr(value),
+    )
+
+
+def _resolve_market_data(value: object | None) -> Result[MarketDataContext | None]:
+    """Resolve the optional self-describing market-data context."""
+    if value is None:
+        return Ok(None)
+    if isinstance(value, MarketDataContext):
+        return Ok(value)
+    return _invalid(
+        "market_data",
+        "market data is a MarketDataContext value (or omitted)",
         given=repr(value),
     )
 
@@ -739,4 +884,15 @@ def _row_foreign_money(value: object) -> Result[ForeignMoney | None]:
     if is_refusal(built):
         return built
     resolved: ForeignMoney | None = built.value
+    return Ok(resolved)
+
+
+def _row_market_data(value: object) -> Result[MarketDataContext | None]:
+    """Rebuild the optional market-data context from a persisted sub-mapping."""
+    if value is None:
+        return Ok(None)
+    built = MarketDataContext.from_row(value)
+    if is_refusal(built):
+        return built
+    resolved: MarketDataContext | None = built.value
     return Ok(resolved)

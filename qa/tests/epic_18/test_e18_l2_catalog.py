@@ -14,6 +14,7 @@ from pathlib import Path
 
 from qmf.core.fingerprint import World
 from qmf.core.refusal import is_ok, is_refusal
+from qmf.data.store import ParquetColumnarEngine
 
 from _e18 import (
     NS,
@@ -36,6 +37,16 @@ def _seed(dest: Path, *, side: str = "both", symbol: str = "EURUSD") -> None:
     assert is_ok(res), res
 
 
+def _drop_coverage_cache(dest: Path) -> None:
+    """Delete QMB-authored envelopes while retaining CT-10 evidence."""
+    raw = dest / "replay" / "immutable-raw-archive"
+    engine = ParquetColumnarEngine(raw)
+    for artifact in raw.glob("*.parquet"):
+        rows = engine.read(artifact.stem)
+        if any(row.get("kind") == "qmb-data-coverage" for row in rows):
+            artifact.unlink()
+
+
 # --- T18-3a  full coverage row (RQ18) -----------------------------------------
 def test_t18_3a_reports_full_coverage_fields() -> None:
     with tempfile.TemporaryDirectory() as d:
@@ -44,10 +55,11 @@ def test_t18_3a_reports_full_coverage_fields() -> None:
         listed = list_data({"destination": str(dest), "world": "replay"})
         assert is_ok(listed), listed
         by_side = {e.side: e for e in listed.value.entries}
-        assert set(by_side) == {"bid", "ask"}
+        # Catalog reports what CT-10 contains, never what the request asked for.
+        assert set(by_side) == {"bid"}
         for entry in by_side.values():
             assert entry.status == PRESENT
-            assert entry.start_ns == NS and entry.end_ns == NS + 10
+            assert entry.start_ns == NS and entry.end_ns == NS + 1
             assert isinstance(entry.observation_count, int)
             assert entry.provenance is not None
             assert entry.license_tag is not None
@@ -69,17 +81,18 @@ def test_t18_3b_view_is_rebuildable_not_authoritative() -> None:
         payload = report.as_mapping()["view"]
         assert payload["is_evidence_bearing"] is False
 
-        # Drop the processed view store entirely; the catalog must rebuild it from
-        # the Parquet rooms (the authority) and return identical coverage.
+        # Drop both QMB-owned rebuildable artifacts. The catalog must reconstruct
+        # the same answer from the retained CT-10 observations alone.
         processed = dest / "replay" / "processed"
         if processed.exists():
             shutil.rmtree(processed)
+        _drop_coverage_cache(dest)
         second = list_data({"destination": str(dest), "world": "replay"})
         assert is_ok(second), second
         assert [e.as_mapping() for e in second.value.entries] == [
             e.as_mapping() for e in report.entries
         ]
-        # Coverage is served straight from the Parquet rooms.
+        # Coverage is re-derived straight from CT-10 rows in the Parquet room.
         rooms = scan_coverage_rows(store_at(dest), world=World.REPLAY)
         assert is_ok(rooms) and len(rooms.value) == len(report.entries)
 
@@ -114,7 +127,7 @@ def test_t18_3c_absent_window_is_not_present_value() -> None:
 def test_t18_3d_missing_side_shown_absent() -> None:
     with tempfile.TemporaryDirectory() as d:
         dest = Path(d) / "rooms"
-        _seed(dest, side="bid")  # only bid coverage recorded
+        _seed(dest)  # request both; the admitted CT-10 observation carries bid
         listed = list_data(
             {
                 "destination": str(dest),
@@ -123,8 +136,6 @@ def test_t18_3d_missing_side_shown_absent() -> None:
                 "symbol": "EURUSD",
                 "resolution": "tick",
                 "side": "both",
-                "start_ns": NS,
-                "end_ns": NS + 10,
             }
         )
         assert is_ok(listed), listed

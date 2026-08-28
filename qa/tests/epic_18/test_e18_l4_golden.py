@@ -46,7 +46,7 @@ def test_t18_6b_download_list_verify_gapcheck_lifecycle() -> None:
         listed = list_data({"destination": str(dest), "world": "replay"})
         assert is_ok(listed), listed
         entries = {e.side: e for e in listed.value.entries}
-        assert set(entries) == {"bid", "ask"}
+        assert set(entries) == {"bid"}
         for entry in entries.values():
             assert entry.status == PRESENT
             assert entry.license_tag == "internal-only"
@@ -73,7 +73,9 @@ def test_t18_6b_download_list_verify_gapcheck_lifecycle() -> None:
 
         # 4) gap-check classifies closure-vs-gap deterministically against a
         #    controlled calendar: open [NS, NS+10), closed [NS+10, NS+20).
-        cal = ControlledCalendar(identity=calendar_identity(version="v3"), open_spans=((NS, NS + 10),))
+        cal = ControlledCalendar(
+            identity=calendar_identity(version="v3"), open_spans=((NS, NS + 10),)
+        )
         present_rows = [{"t_ns": NS + i} for i in range(5)]  # holes at NS+5..NS+9
         gaps = gap_check(
             {

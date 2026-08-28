@@ -112,7 +112,7 @@ def test_catalog_identity_names_rebuildable_view() -> None:
     assert "catalog" in front_commands
 
 
-def test_list_reports_present_bid_and_ask_with_duckdb_view() -> None:
+def test_list_reports_observed_side_with_duckdb_view() -> None:
     path = "EURUSD/2024/00/15/10h_ticks.bi5"
     transport = _FixtureTransport({path: _bi5((0, 110260, 110250), (1_000, 110265, 110255))})
     with tempfile.TemporaryDirectory() as tmp:
@@ -125,14 +125,14 @@ def test_list_reports_present_bid_and_ask_with_duckdb_view() -> None:
         assert report.is_evidence_bearing is False
         assert report.view_fingerprint is not None
         sides = {entry.side: entry for entry in report.entries}
-        assert set(sides) == {"bid", "ask"}
+        assert set(sides) == {"bid"}
         for entry in report.entries:
             assert entry.status == PRESENT
             assert entry.venue == "dukascopy-fx"
             assert entry.symbol == "EURUSD"
             assert entry.resolution == "tick"
             assert entry.start_ns == _HOUR_NS
-            assert entry.end_ns == _END_NS
+            assert entry.end_ns == _HOUR_NS + 1_000_000_001
             assert entry.observation_count == 2
             assert entry.license_tag == PERSONAL_USE_LICENSE
             assert entry.revision == "r1"
@@ -179,8 +179,6 @@ def test_missing_side_shown_absent_when_both_requested() -> None:
                     "venue": "dukascopy-fx",
                     "symbol": "EURUSD",
                     "side": "both",
-                    "start": _HOUR_NS,
-                    "end": _END_NS,
                 }
             )
         )
