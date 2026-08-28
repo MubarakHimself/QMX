@@ -18,6 +18,7 @@ from qmb.config import (
     materialize_book_fragment,
 )
 from qmb.doors import api
+from qmb.host import run_sandbox as public_run_sandbox
 from qmb.host.sandbox import run_sandbox
 from qmb.ledger import (
     CANONICAL_ASSIGNMENT_CANONICAL,
@@ -46,7 +47,6 @@ from qmf.risk.templates import (
 from qml.conformance import run_layer2_suite
 from qml.declaration import BotDefinition, mint_bot_definition, mint_confluence
 from qml.footprint import ProducerBinding, mint_footprint, mint_producer_template, resolve_template
-from qml.host.runner import run_sandbox as qml_run_sandbox
 from qml.logic import mint_logic_identity
 from qml.protocol import (
     PROTOCOL_FORMAT_VERSION,
@@ -501,17 +501,8 @@ def test_layer2_under_qmb_hosting_passes_verdict_through_unchanged() -> None:
             timeout_seconds=30,
         )
     )
-    qml_hosted = _ok(
-        qml_run_sandbox(
-            declaration=declaration,
-            source_tree=_CLEAN,
-            state_scope=_scope(declaration),
-            state_bound=256,
-            timeout_seconds=30,
-        )
-    )
     assert hosted.fp1_identity() == in_process.fp1_identity()
-    assert hosted.fp1_identity() == qml_hosted.fp1_identity()
+    assert run_sandbox is public_run_sandbox
     assert "host" not in hosted.fp1_identity()
     names = inspect.signature(run_sandbox).parameters
     assert "book" not in names

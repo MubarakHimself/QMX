@@ -325,7 +325,12 @@ def test_e12_l3_10_verdict_is_the_pure_function_fed_by_observations() -> None:
     world = w.build_world()
     silent = FunctionFactory(logic=lambda evidence: ())
     d = world["declaration"]
-    common = dict(declaration=d, source_tree=world["source"], state_scope=w.scope_for(d), state_bound=w.STATE_BOUND)
+    common = dict(
+        declaration=d,
+        source_tree=world["source"],
+        state_scope=w.scope_for(d),
+        state_bound=w.STATE_BOUND,
+    )
     suite = run_layer2_suite(factory=silent, **common)
     obs = collect_layer2_observations(factory=silent, **common)
     assert is_ok(suite) and is_ok(obs)
@@ -342,7 +347,7 @@ def test_e12_l3_10_spawned_runner_yields_the_same_pure_verdict() -> None:
 
     Best-effort: an infrastructure failure to spawn is not a conformance finding.
     """
-    from qml.host.runner import run_sandbox
+    from qmb.host.runner import run_sandbox
 
     world = w.build_world()
     silent = FunctionFactory(logic=lambda evidence: ())

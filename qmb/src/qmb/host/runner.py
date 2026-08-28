@@ -1,4 +1,4 @@
-"""Host-owned Layer-2 sandbox runner (QL-8, AR-68).
+"""QMB composition-root Layer-2 sandbox runner (QL-8, AR-68).
 
 V1 enforcement of no-clock / no-I-O / no-network is exactly three mechanisms:
 
@@ -40,7 +40,6 @@ from qmf.core.refusal import (
     TypedRefusal,
     is_refusal,
 )
-
 from qml._refuse import invalid, policy, unavailable
 from qml.conformance.layer2 import (
     Layer2Observations,
@@ -84,9 +83,9 @@ V1_OUT_OF_SCOPE: Final[tuple[str, ...]] = ("dynamically_evasive_malicious_bot",)
 
 _SEED_NAME: Final[str] = "seed"
 _LAYER: Final[int] = 2
-_WORKER_MODULE: Final[str] = "qml.host.worker"
+_WORKER_MODULE: Final[str] = "qmb.host.worker"
 _BOOK_KEYS: Final[frozenset[str]] = frozenset({"book", "book_module", "Book", "book_present"})
-_SANDBOX_CLASS: Final[str] = "qml-host-sandbox-v1"
+_SANDBOX_CLASS: Final[str] = "qmb-host-sandbox-v1"
 
 
 def v1_enforcement_identity() -> dict[str, object]:

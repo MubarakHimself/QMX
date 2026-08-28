@@ -1,8 +1,8 @@
-"""Reference usage — host-owned sandbox runner (Story 12.5).
+"""Reference usage — QMB composition-root sandbox runner (Story 12.5).
 
 Executable::
 
-    python qml/examples/sandbox_usage.py
+    python qmb/examples/sandbox_usage.py
 
 Shows the things QL-8 / Story 12.5 pin down:
 
@@ -21,6 +21,13 @@ from __future__ import annotations
 
 from typing import TypeVar
 
+from qmb.host import (
+    V1_DEFERRED_OS_CONFINEMENT,
+    V1_ENFORCEMENT_MECHANISMS,
+    V1_OUT_OF_SCOPE,
+    run_sandbox,
+    v1_enforcement_identity,
+)
 from qmf.core.chrono import CalendarIdentity
 from qmf.core.exact import UnitKind
 from qmf.core.fingerprint import fingerprint
@@ -28,13 +35,6 @@ from qmf.core.refusal import Result, TypedRefusal, is_ok
 from qml.conformance import CONFORMANCE_FORMAT_VERSION, Layer2Verdict, run_layer2_suite
 from qml.declaration import BotDefinition, mint_bot_definition, mint_confluence
 from qml.footprint import ProducerBinding, mint_footprint
-from qml.host import (
-    V1_DEFERRED_OS_CONFINEMENT,
-    V1_ENFORCEMENT_MECHANISMS,
-    V1_OUT_OF_SCOPE,
-    run_sandbox,
-    v1_enforcement_identity,
-)
 from qml.logic import mint_logic_identity
 from qml.protocol import PROTOCOL_FORMAT_VERSION, FunctionFactory, mint_state_scope
 
@@ -187,7 +187,7 @@ def network_scan_fails_before_spawn() -> str:
 
 def main() -> None:
     identity = v1_enforcement_identity()
-    assert identity["class"] == "qml-host-sandbox-v1"
+    assert identity["class"] == "qmb-host-sandbox-v1"
     print(f"v1 mechanisms: {','.join(V1_ENFORCEMENT_MECHANISMS)}")
     print(f"deferred os confinement: {','.join(V1_DEFERRED_OS_CONFINEMENT)}")
     print(f"out of scope: {','.join(V1_OUT_OF_SCOPE)}")

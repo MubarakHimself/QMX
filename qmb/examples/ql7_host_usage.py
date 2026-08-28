@@ -12,8 +12,8 @@ Shows the things Story 14.8 / QL-7 / DEC-0183 pin down:
 2. The B-3 compiler stamps assignment_is_canonical and resolves producer
    templates to one configured-producer fingerprint. A non-canonical assignment
    is a run-spec override, never a governed-seat execution.
-3. Layer 2 under QMB hosting calls qml.host.runner.run_sandbox and the QML
-   verdict passes through unchanged.
+3. Layer 2 runs at QMB's composition root and the pure QML verdict passes
+   through unchanged.
 4. An ungoverned plain-Python bot needs no QL-7 adapter; tunnel entry stays
    ungated by conformance.
 """
@@ -47,9 +47,9 @@ from qmf.risk.templates import (
     BmsDefinition,
     BookDefinition,
 )
+from qml.conformance import run_layer2_suite
 from qml.declaration import BotDefinition, mint_bot_definition, mint_confluence
 from qml.footprint import ProducerBinding, mint_footprint, mint_producer_template
-from qml.host.runner import run_sandbox as qml_run_sandbox
 from qml.logic import mint_logic_identity
 from qml.protocol import (
     PROTOCOL_FORMAT_VERSION,
@@ -376,17 +376,17 @@ def main() -> None:
         ),
         "qmb sandbox",
     )
-    qml_verdict = _unwrap(
-        qml_run_sandbox(
+    in_process = _unwrap(
+        run_layer2_suite(
             declaration=definition,
+            factory=FunctionFactory(logic=lambda evidence: ()),
             source_tree=_SOURCE,
             state_scope=scope,
             state_bound=256,
-            timeout_seconds=30,
         ),
-        "qml sandbox",
+        "in-process QML verdict",
     )
-    assert qmb_verdict.fp1_identity() == qml_verdict.fp1_identity()
+    assert qmb_verdict.fp1_identity() == in_process.fp1_identity()
     print("Layer 2 verdict under QMB hosting passed through unchanged")
 
     stub = _unwrap(

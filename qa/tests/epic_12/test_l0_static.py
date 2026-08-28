@@ -5,7 +5,8 @@ package's own report). Each gate carries a self-check that the detector fires on
 an injected violation, so a green here is a real green (falsifiability rule 1).
 
 - E12-L0-01 (P1): qml never imports ``qmf.venue``; no qmf roster package imports qml. (L30 roster-scoped)
-- E12-L0-02 (P1): the pure library spawns no thread/process and does no I/O outside ``qml.host``. (AD-15, COMP-QML "May never")
+- E12-L0-02 (P1): the pure qml wheel spawns no thread/process and does no I/O;
+  QMB owns the sandbox at its composition root. (AD-15, COMP-QML "May never")
 - E12-L0-03 (P2): the runtime-protocol / conformance contracts are QML-local (qml-ad5 ladder), never CT-numbered. (DEC-0171/0177)
 """
 
@@ -20,7 +21,7 @@ _QML_PKG = Path(qml.__file__).resolve().parent
 _REPO_ROOT = Path(qml.__file__).resolve().parents[3]
 _PACKAGES = _REPO_ROOT / "packages"
 
-# Impure module roots a PURE library must not import outside qml.host.
+# Impure module roots a PURE library must not import anywhere in qml.
 _IMPURE_ROOTS = frozenset(
     {
         "os",
@@ -112,13 +113,10 @@ def test_e12_l0_01_no_qmf_roster_package_imports_qml() -> None:
 # --- E12-L0-02 ---------------------------------------------------------------
 
 
-def test_e12_l0_02_pure_library_has_no_impure_imports_outside_host() -> None:
-    """No thread/process/I-O import in the pure library; impurity lives in qml.host."""
-    host_dir = _QML_PKG / "host"
+def test_e12_l0_02_pure_library_has_no_impure_imports() -> None:
+    """The complete qml wheel has no thread/process/I-O imports (AD-15)."""
     offenders: list[str] = []
     for path, source in _qml_sources():
-        if host_dir in path.parents or path == host_dir:
-            continue
         impure = _imported_roots(source) & _IMPURE_ROOTS
         if impure:
             offenders.append(f"{path.relative_to(_QML_PKG)}: {sorted(impure)}")
@@ -127,12 +125,12 @@ def test_e12_l0_02_pure_library_has_no_impure_imports_outside_host() -> None:
     assert offenders == [], f"the pure library must not import {sorted(_IMPURE_ROOTS)}: {offenders}"
 
 
-def test_e12_l0_02_host_is_the_only_impure_site() -> None:
-    """The impurity that DOES exist is confined to qml.host (evidence the split is real)."""
-    runner = _QML_PKG / "host" / "runner.py"
-    assert runner.exists(), "qml.host.runner is the host-owned impure site"
+def test_e12_l0_02_qmb_composition_root_owns_the_impure_runner() -> None:
+    """The required process impurity lives at QMB's composition root (OR-04)."""
+    runner = _REPO_ROOT / "qmb" / "src" / "qmb" / "host" / "runner.py"
+    assert runner.exists(), "qmb.host.runner is the composition-root impure site"
     roots = _imported_roots(runner.read_text(encoding="utf-8"))
-    assert {"os", "subprocess"} <= roots, "the host runner owns process spawning + isolation"
+    assert {"os", "subprocess"} <= roots, "QMB owns process spawning + isolation"
 
 
 # --- E12-L0-03 ---------------------------------------------------------------

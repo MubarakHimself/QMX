@@ -937,6 +937,30 @@ def test_ql7_host_usage_example_runs_clean() -> None:
     assert "ql7 host ok" in completed.stdout
 
 
+def test_sandbox_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "sandbox_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert (
+        "v1 mechanisms: static_ast_import_scan,capability_starvation,host_process_isolation"
+        in completed.stdout
+    )
+    assert "windows_restricted_tokens,windows_job_objects,linux_seccomp" in completed.stdout
+    assert "out of scope: dynamically_evasive_malicious_bot" in completed.stdout
+    assert "v1 scope is honest: True" in completed.stdout
+    assert "isolated run matches in-process: True" in completed.stdout
+    assert "two hosts identical verdict: True" in completed.stdout
+    assert "clock import before spawn: clock" in completed.stdout
+    assert "filesystem open before spawn: io" in completed.stdout
+    assert "network import before spawn: network" in completed.stdout
+    assert "sandbox runner ok" in completed.stdout
+
+
 def test_governor_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "governor_usage.py")],

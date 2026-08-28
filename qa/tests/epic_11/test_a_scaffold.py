@@ -20,13 +20,11 @@ from qml.conformance import admit_ungoverned_tunnel, cite_ungoverned_bot
 from qml.declaration import mint_bot_definition, mint_confluence
 from qml.logic import mint_logic_identity
 
-QML_ROOT = os.path.normpath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "..", "qml")
-)
+QML_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "qml"))
 QML_SRC = os.path.join(QML_ROOT, "src", "qml")
-# 11.1 AC2 names exactly seven module homes: five live under src/qml, two
-# (examples/, tests/) live at the distribution root.
-SRC_HOMES = ("declaration", "families", "footprint", "protocol", "conformance")
+# OR-04 settles the AC-text omission: ``logic`` is the legitimate Story-11.3
+# seed-of-intent home. The impure ``host`` home is not legitimate in this wheel.
+SRC_HOMES = ("declaration", "families", "footprint", "protocol", "conformance", "logic")
 ROOT_HOMES = ("examples", "tests")
 
 
@@ -82,19 +80,18 @@ def test_a2_no_console_scripts_entry_point() -> None:
     assert "console_scripts" not in cfg.get("project", {}).get("entry-points", {})
 
 
-def test_a2_seven_named_module_homes_are_present() -> None:
-    """A2: the seven ratified module homes are present (five in src, two at root)."""
+def test_a2_operator_ruled_module_homes_are_present() -> None:
+    """A2/OR-04: named homes plus the legitimate logic home are present."""
     for home in SRC_HOMES:
         assert os.path.isdir(os.path.join(QML_SRC, home)), f"missing src home: {home}"
     for home in ROOT_HOMES:
         assert os.path.isdir(os.path.join(QML_ROOT, home)), f"missing root home: {home}"
 
 
-def test_a2_no_source_module_home_beyond_the_named_seven() -> None:
-    """A2 (11.1 AC2): the package contains EXACTLY the named module homes — no extras.
+def test_a2_no_source_module_home_beyond_the_operator_ruled_set() -> None:
+    """A2/OR-04: the package contains exactly the operator-ruled homes.
 
-    Counter-case: a src package home not among the five named. FINDING if any extra
-    home ships in the distribution (the 'exactly' clause is falsified).
+    ``logic`` stays; a reintroduced impure ``host`` home or any other extra fails.
     """
     src_dirs = {
         name

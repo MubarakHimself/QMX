@@ -12,6 +12,14 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, TypeVar, cast
 
+from qmb.host import (
+    V1_DEFERRED_OS_CONFINEMENT,
+    V1_ENFORCEMENT_MECHANISMS,
+    V1_OUT_OF_SCOPE,
+    run_sandbox,
+    v1_enforcement_identity,
+)
+from qmb.host import runner as host_runner
 from qmf.core.chrono import CalendarIdentity
 from qmf.core.exact import UnitKind
 from qmf.core.fingerprint import fingerprint
@@ -19,14 +27,6 @@ from qmf.core.refusal import RefusalCategory, Result, is_ok, is_refusal
 from qml.conformance import Layer2Verdict, evaluate_layer2, run_layer2_suite
 from qml.declaration import BotDefinition, mint_bot_definition, mint_confluence
 from qml.footprint import ProducerBinding, mint_footprint
-from qml.host import (
-    V1_DEFERRED_OS_CONFINEMENT,
-    V1_ENFORCEMENT_MECHANISMS,
-    V1_OUT_OF_SCOPE,
-    run_sandbox,
-    v1_enforcement_identity,
-)
-from qml.host import runner as host_runner
 from qml.logic import mint_logic_identity
 from qml.protocol import PROTOCOL_FORMAT_VERSION, FunctionFactory, mint_state_scope
 
@@ -46,7 +46,7 @@ _OS = "windows-11"
 _AR = "none"
 _BOUND = 256
 _TIMEOUT = 30
-_HOST = Path(__file__).resolve().parents[1] / "src" / "qml" / "host"
+_HOST = Path(__file__).resolve().parents[1] / "src" / "qmb" / "host"
 
 
 def _ok(result: Result[T]) -> T:
@@ -151,7 +151,7 @@ def _host_obs(verdict: Layer2Verdict) -> dict[str, object]:
 
 def test_v1_enforcement_identity_names_the_honest_scope() -> None:
     identity = v1_enforcement_identity()
-    assert identity["class"] == "qml-host-sandbox-v1"
+    assert identity["class"] == "qmb-host-sandbox-v1"
     assert identity["mechanisms"] == list(V1_ENFORCEMENT_MECHANISMS)
     assert identity["mechanisms"] == [
         "static_ast_import_scan",
@@ -253,7 +253,7 @@ def test_clean_logic_spawns_isolated_process_and_matches_in_process_verdict(
     argv = cast("list[object]", recorded["argv"])
     assert argv[0] == sys.executable
     assert "-m" in argv
-    assert "qml.host.worker" in argv
+    assert "qmb.host.worker" in argv
 
 
 def test_source_factory_spec_isolated_run_passes() -> None:
@@ -319,7 +319,7 @@ def test_two_sandbox_hosts_mint_one_verdict() -> None:
 def test_worker_crash_is_unavailable(monkeypatch: Any) -> None:
     def fake_run(*_args: object, **_kwargs: object) -> subprocess.CompletedProcess[str]:
         return subprocess.CompletedProcess(
-            args=[sys.executable, "-m", "qml.host.worker"],
+            args=[sys.executable, "-m", "qmb.host.worker"],
             returncode=1,
             stdout="",
             stderr="boom",
@@ -341,7 +341,7 @@ def test_worker_module_never_imports_evaluate_layer2() -> None:
             imported.append(node.module)
             if node.names:
                 assert all(alias.name != "evaluate_layer2" for alias in node.names)
-    assert "qml.host.runner" in imported
+    assert "qmb.host.runner" in imported
     assert "qml.conformance.layer2" not in imported
     assert "qml.conformance" not in imported
 
