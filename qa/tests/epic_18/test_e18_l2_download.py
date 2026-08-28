@@ -243,6 +243,45 @@ def test_t18_1k_progress_emitted_to_injected_sink() -> None:
         assert last.completed_batches == last.total_batches
 
 
+# --- FC-29 / T18-1k'  every sample reports percent, date-reached AND ETA (RQ10, AC5) ---
+def test_t18_1k_progress_samples_carry_monotonic_eta() -> None:
+    """18.1 AC5 / RQ10: a progress sample reports percent, date-reached AND an ETA
+    — a non-None ``eta_ns`` on EVERY sample, not just the terminal one — and the
+    ETA falls as batches advance.
+
+    A multi-symbol download emits one sample per symbol (one batch each) over a
+    window wide enough that the per-batch ETA span is non-zero. Every symbol
+    advances the completed-batch count by exactly one, so no two samples share a
+    completed count: the stream is STRICTLY decreasing and equality is never
+    expected here.
+    """
+    with tempfile.TemporaryDirectory() as d:
+        dest = Path(d) / "rooms"
+        sink = RecordingProgressSink()
+        symbols = "EURUSD, GBPUSD, USDJPY, AUDUSD, USDCHF"
+        res = download(
+            download_resources(dest, symbol=symbols, start_ns=NS, end_ns=NS + 1_000),
+            adapter=FakeAdapter((provider_record("EURUSD#1", NS),)),
+            store=store_at(dest),
+            progress=sink,
+        )
+        assert is_ok(res), res
+        assert len(sink.samples) == 5, sink.samples
+        # AC5: an ETA is present on EVERY emitted sample, never hard-coded None.
+        missing = [s for s in sink.samples if s.eta_ns is None]
+        assert not missing, (
+            "a progress sample carried eta_ns=None; AC5 requires percent, "
+            f"date-reached AND ETA on every sample: {[s.eta_ns for s in sink.samples]}"
+        )
+        etas = [int(s.eta_ns) for s in sink.samples]
+        # Batches strictly advance one-per-sample, so the ETA strictly decreases.
+        assert all(earlier > later for earlier, later in zip(etas, etas[1:])), (
+            f"ETA is not strictly decreasing across the sample stream: {etas}"
+        )
+        # No batches remain at completion, so the final ETA is exactly zero.
+        assert etas[-1] == 0, etas
+
+
 # --- T18-1l  read commands reach only rooms, no provider port (RQ12) -----------
 def test_t18_1l_read_commands_hold_no_provider_port() -> None:
     # The read entrypoints take no provider adapter in their signature.

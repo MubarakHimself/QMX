@@ -406,10 +406,19 @@ def download(
         windows.append(window_meta)
 
         percent = int(((index + 1) * 100) // total) if total else 100
+        # ETA is derived from the declared window, never a wall-clock read below
+        # the composition root (DEC-0106). The half-open window [start, end) is
+        # apportioned evenly across the batches; the ETA is the remaining batches
+        # scaled by that per-batch span (ns). It is a data-derived remaining span
+        # in ns that falls to zero as the last batch completes — monotone with the
+        # completed-batch count, deterministic and clock-free.
+        remaining_batches = total - (index + 1)
+        per_batch_span_ns = (request.end_ns - request.start_ns) // total if total else 0
+        eta_ns = remaining_batches * per_batch_span_ns
         sample = DownloadProgress(
             percent=percent,
             date_reached_ns=request.end_ns,
-            eta_ns=None,
+            eta_ns=eta_ns,
             symbol=symbol,
             produced=produced,
             total_batches=total,
