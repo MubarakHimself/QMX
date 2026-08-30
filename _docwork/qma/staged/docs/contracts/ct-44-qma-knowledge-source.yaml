@@ -1,0 +1,70 @@
+id: CT-44
+name: QMA KnowledgeSource port contract
+status: ratified
+version: 1  # first minted format version; CT-44 is the qma-core KnowledgeSource port newly minted by the 2026-08-28/29 QMA architecture sitting (AD-19, DEC-0318), absorbed on the operator's order SRC-15 (DEC-0343); validation closed dry 2026-08-29 (DEC-0329)
+owner: COMP-QMA-CORE  # the Knowledge contract is a qma-core PORT (definitions only) with a read-only plain-file library adapter; qma-daemon copies cited bytes and validates provenance shape while calling the port, a KnowledgeSource adapter is contributed as an AD-1 singleton keyed by source_id, so ownership is qma-core-side while every runtime concern enters through this core-defined port (DEC-0335, DEC-0343)
+consumers: []  # consumer-blind by design: the port is a qma-core definition bound at the AD-1 contribution point; qma-daemon calls it and a plugin provides the adapter, so no package import edge is minted from this doc (DEC-0335, DEC-0343, DEC-0300)
+active_consumers: []
+intended_consumers: [COMP-QMA-DAEMON]  # qma-daemon is the sole process that runs anything and the sole caller — it validates each Citation's shape and copies cited bytes into the artifact store; a KnowledgeSource adapter is contributed through the daemon's loader as an AD-1 contribution, never a package import (DEC-0335, DEC-0300, DEC-0343)
+wiring_status: defined-unwired  # ratified port surface; no code exists; an adapter binds only through the daemon's plugin loader at the AD-1 KnowledgeSource singleton key (per source_id), and no wiring is authorized from this doc (DEC-0343, DEC-0335)
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0318, DEC-0343, DEC-0300, DEC-0309, DEC-0302]
+gaps: [GAP-0073]  # GAP-0073: what hybrid retrieval / indexing the Knowledge corpus needs beyond literal and locator-based search — deferred until the corpus holds an ingestible file and STRATS layout/serialization/stable-id are ratified upstream; v1 ships literal + locator search only (DEC-0343)
+purpose: >-
+  The one qma-core KnowledgeSource PORT through which QMA reads a READ-ONLY,
+  provenance-carrying corpus (DEC-0343). A KnowledgeSource declares kind, source id and
+  adapter; the plain-file source is read-only and imposes no schema; `snapshot()` returns
+  a CorpusSnapshot whose id is a content-addressed tree digest with per-file digests;
+  Provenance carries `source_ref`, `snapshot_ref`, `locator`, an opaque corpus-authored
+  evidence label QMA stores and surfaces verbatim, and an `evidence_confidence` map of
+  exactly six dimensions whose keys are declared once per source and fixed for its life.
+  Its purpose is to let every Role granted retrieval `search`, `retrieve` and `cite` the
+  corpus with grep-class reproducibility over bytes QMA retains — never over someone
+  else's filesystem — while QMX adapts to the library and the library is never built
+  around QMX, and while `evidence_confidence` (six corpus-owned dimensions) is never
+  conflated with `admission_confidence` (one QMA-owned scalar on Memory, CT-43).
+invariants:
+  - "CT-44 is a qma-core PORT, definitions only, owned by qma-core; qma-daemon validates provenance shape, copies cited bytes into the artifact store and is the sole caller, and a plugin contributes the KnowledgeSource adapter as an AD-1 contribution through the daemon's loader — no package import edge is minted from this doc (DEC-0335, DEC-0343, DEC-0300)."
+  - "READ-ONLY, ADAPT-TO-THE-LIBRARY: a KnowledgeSource declares kind, source id and adapter; the plain-file source is read-only and imposes no schema; QMX adapts to the library and the library is NEVER built around QMX — no write-back, no QMX folders or fields, no hardcoded layout (DEC-0318, DEC-0343)."
+  - "Per-`source_id` singleton (AD-1): the KnowledgeSource contribution point is a singleton whose scope key is `source_id`; exactly one adapter may bind a given source id, a second binding is a hard startup error naming both plugin ids, and a `source_id` no adapter names is simply unavailable, not an error (DEC-0300, DEC-0335)."
+  - "SNAPSHOT: `snapshot()` returns a CorpusSnapshot whose id is a CONTENT-ADDRESSED tree digest with per-file digests; a Mission pins ONE `snapshot_ref` at start, re-pinning is a recorded act, and snapshots of one source form a LINEAR supersedes chain so two agents in one Mission cite the same bytes with a stated relation between versions (DEC-0318, DEC-0343)."
+  - "PROVENANCE SHAPE: Provenance carries `source_ref`, `snapshot_ref`, `locator`, an EVIDENCE LABEL — an opaque corpus-authored string QMA stores and surfaces VERBATIM and never parses, ranks or compares — and an `evidence_confidence` map of EXACTLY SIX entries whose keys are declared once per source by the adapter's manifest field `confidence_dimensions` and are fixed for the life of that `source_id`; the daemon validates each Citation's key set and count and refuses a mismatch with the typed refusal `ProvenanceShapeMismatch` (DEC-0318, DEC-0343)."
+  - "SIX DIMENSIONS, NEVER SCALARIZED: the six `evidence_confidence` values are stored and surfaced, NEVER averaged, never compared across sources, never scalarized into one number (DEC-0318)."
+  - "NAME-SPLIT LAW: Knowledge carries `evidence_confidence` (six dimensions, corpus-owned); Memory (CT-43, AD-18) carries `admission_confidence` (one QMA-owned scalar); neither is EVER derived from the other, and a memory candidate citing knowledge stores the Citation plus the six dimensions verbatim (DEC-0318, DEC-0343, DEC-0317)."
+  - "CITATION COPY GATE: reproducibility is guaranteed over bytes QMA RETAINS, never over someone else's filesystem — on `cite` the daemon copies the cited bytes into the artifact store as a content-addressed evidence copy, registered through `before_artifact_register` (AD-10) with `authored_by` set to the citing Agent, and Citations resolve against THAT copy; a retrieval against a snapshot QMA never copied returns the typed refusal `StaleSnapshot` and never silently returns current bytes (DEC-0318, DEC-0343, DEC-0309)."
+  - "SEARCH IS LITERAL AND LOCATOR-BASED: `search` is literal and locator-based over the CorpusSnapshot — grep-class semantics, NO ranking and NO embedding, whether persisted or computed per call; v1 ships NO index and any ranked or semantic retrieval is unavailable until the deferred indexing row is decided (GAP-0073). The query surface `search`, `retrieve`, `cite` is a desk-agnostic Tool Registry entry available to every Role granted retrieval (DEC-0318, DEC-0343)."
+  - "RLM is an ADDITIONAL programmatic retrieval path on the Analysis desk, never the only retrieval path; the desk-agnostic Tool Registry `search`/`retrieve`/`cite` surface stands for every desk (DEC-0318)."
+  - "KNOWLEDGE NEVER BECOMES MEMORY SILENTLY: agent experience never becomes Knowledge silently — a QMA report re-enters only as a DISTINCT source kind with its own snapshot, never written back into a read-only source (DEC-0318, DEC-0343)."
+  - "AUTHORITY BOUNDARY — what this port may never do: it never writes back to a source, never imposes a QMX schema or layout on the library, never parses/ranks/compares the evidence label, never scalarizes the six confidence dimensions, and never returns current bytes for an uncopied snapshot (it returns `StaleSnapshot`) (DEC-0318, DEC-0343)."
+schema:
+  type: knowledge-source-port  # a qma-core-defined runtime port (definitions only): the KnowledgeSource declaration, CorpusSnapshot, Citation and Provenance records, the search/retrieve/cite query surface, and the ProvenanceShapeMismatch and StaleSnapshot typed refusals, implemented by a read-only plain-file library adapter (DEC-0343, DEC-0335)
+  operations:
+    - "snapshot() -> CorpusSnapshot: a content-addressed tree digest with per-file digests; a Mission pins one snapshot_ref at start and snapshots of one source form a linear supersedes chain (DEC-0318)"
+    - "search(snapshot, query) -> locators: LITERAL and LOCATOR-BASED only, grep-class semantics, no ranking and no embedding; v1 ships no index (DEC-0318)"
+    - "retrieve(snapshot, locator) -> content: the bytes at a locator within a pinned snapshot (DEC-0318)"
+    - "cite(snapshot, locator) -> Citation: the daemon copies the cited bytes into the artifact store through before_artifact_register with authored_by = the citing Agent; the Citation resolves against that retained copy; a retrieval against an uncopied snapshot returns StaleSnapshot (DEC-0318, DEC-0309)"
+  fields:
+    - "source.kind: the declared kind of the KnowledgeSource; a QMA report re-enters only as a distinct source kind, never a write-back (DEC-0318)"
+    - "source.source_id: the source's identity and the AD-1 singleton scope key; exactly one adapter binds it (DEC-0318, DEC-0300)"
+    - "source.adapter: the read-only plain-file library adapter; imposes no schema on the source (DEC-0318)"
+    - "source.confidence_dimensions: the adapter manifest field declaring, once per source, the exactly-six evidence_confidence keys fixed for the life of that source_id (DEC-0318)"
+    - "snapshot.id: a content-addressed tree digest with per-file digests (DEC-0318)"
+    - "provenance.source_ref: the ref to the source the citation came from (DEC-0318)"
+    - "provenance.snapshot_ref: the ref to the pinned CorpusSnapshot the citation resolves within (DEC-0318)"
+    - "provenance.locator: the in-snapshot locator the citation points at; search is locator-based (DEC-0318)"
+    - "provenance.evidence_label: an opaque corpus-authored string stored and surfaced verbatim, never parsed, ranked or compared (DEC-0318)"
+    - "provenance.evidence_confidence: a map of EXACTLY SIX entries whose keys equal the source's declared confidence_dimensions; stored and surfaced, never averaged, compared across sources or scalarized; a key-set or count mismatch is a ProvenanceShapeMismatch refusal (DEC-0318)"
+  enums:
+    - "query surface: search | retrieve | cite — a desk-agnostic Tool Registry entry available to every Role granted retrieval; search is literal and locator-based, no ranking, no embedding (DEC-0318)"
+    - "port cardinality: singleton, scope key `source_id` — exactly one adapter per source id; a second binding is a hard startup error (DEC-0300, DEC-0335)"
+    - "confidence surface: exactly six evidence_confidence dimensions per source, keys fixed for the source_id's life; never scalarized, averaged or compared across sources (DEC-0318)"
+    - "typed refusals on this port's paths, variants of `qmf-core`'s base (CT-04): `ProvenanceShapeMismatch` (a Citation whose evidence_confidence key set or count does not match the source's declared six confidence_dimensions); `StaleSnapshot` (a retrieval against a snapshot QMA never copied — current bytes are never silently returned); plus the parent category `unsupported-capability` per registry:typed_refusal_codes (a ranked or semantic retrieval request while v1 ships no index) (DEC-0318, DEC-0343, DEC-0302)"
+  units:
+    - "evidence_confidence: exactly six corpus-owned dimension values per Citation, stored and surfaced verbatim; carry no cross-source or scalar unit and are never averaged (DEC-0318)"
+    - "snapshot ids and per-file digests: content-addressed tree digests, reproducible over the bytes QMA retains, never over the source's live filesystem (DEC-0318)"
+  nullability:
+    - "the evidence_confidence map is mandatory and must carry exactly the six declared keys; a missing or extra key is a ProvenanceShapeMismatch refusal, never a defaulted or dropped dimension (DEC-0318)"
+    - "the evidence label is mandatory when the corpus supplies one and is stored verbatim; QMA never invents, parses or normalizes it (DEC-0318)"
+    - "a citation against an uncopied snapshot yields StaleSnapshot, never a silent substitution of current bytes for the absent retained copy (DEC-0318)"
+provenance_note: "CT-44 is newly minted by the 2026-08-28 QMA architecture sitting as the qma-core KnowledgeSource port (AD-19), absorbed into docs/ under the operator's order SRC-15 (2026-08-29); it realizes AD-19 (DEC-0318) with the read-only provenance-carrying corpus ruling and the two-confidences name split (DEC-0343), the AD-1 per-source_id singleton cardinality (DEC-0300), the AD-10 before_artifact_register copy gate (DEC-0309) and AD-3's no-parallel-base rule for the typed refusals (DEC-0302). The read-only, adapt-to-the-library posture and the name-split law derive from research/knowledge-corpus-boundary.md and the STRATS ground-state check of 2026-08-28. The spine is FINAL and its multi-round validation pass closed verified=true dry=true remaining=0 on 2026-08-29 (DEC-0329). Hybrid/semantic indexing is deferred (GAP-0073) until the corpus holds an ingestible file and STRATS layout, serialization and stable-id scheme are ratified upstream. The contract is defined-unwired: no code exists, and implementation authorization arrives only through the factory pipeline. Nothing in this doc grants credential, order, promotion, live-money or destructive authority."

@@ -1,0 +1,271 @@
+target: docs/knowledge/traceability.md
+ops:
+- op: frontmatter_add
+  field: decisions
+  ids:
+  - DEC-0300
+  - DEC-0301
+  - DEC-0302
+  - DEC-0303
+  - DEC-0304
+  - DEC-0305
+  - DEC-0306
+  - DEC-0307
+  - DEC-0308
+  - DEC-0309
+  - DEC-0310
+  - DEC-0311
+  - DEC-0312
+  - DEC-0313
+  - DEC-0314
+  - DEC-0315
+  - DEC-0316
+  - DEC-0317
+  - DEC-0318
+  - DEC-0319
+  - DEC-0320
+  - DEC-0321
+  - DEC-0322
+  - DEC-0323
+  - DEC-0324
+  - DEC-0325
+  - DEC-0326
+  - DEC-0327
+  - DEC-0328
+  - DEC-0329
+  - DEC-0330
+  - DEC-0331
+  - DEC-0332
+  - DEC-0333
+  - DEC-0334
+  - DEC-0335
+  - DEC-0336
+  - DEC-0337
+  - DEC-0338
+  - DEC-0339
+  - DEC-0340
+  - DEC-0341
+  - DEC-0342
+  - DEC-0343
+  - DEC-0344
+  - DEC-0345
+  - DEC-0346
+  - DEC-0347
+  - DEC-0348
+  - DEC-0349
+  - DEC-0350
+  - DEC-0360
+  - DEC-0361
+  - DEC-0362
+  - DEC-0363
+  - DEC-0364
+  - DEC-0365
+  - DEC-0366
+  - DEC-0367
+  - DEC-0368
+  - DEC-0369
+  - DEC-0370
+  - DEC-0371
+  - DEC-0372
+  - DEC-0373
+  - DEC-0374
+  - DEC-0375
+  - DEC-0376
+  - DEC-0377
+  - DEC-0378
+  - DEC-0379
+- op: frontmatter_add
+  field: depends_on
+  ids:
+  - COMP-QMA-CORE
+  - COMP-QMA-WIRE
+  - COMP-QMA-DAEMON
+- op: frontmatter_set
+  field: verified
+  value: '2026-08-29'
+- op: regex_replace
+  pattern: ^## Decision locator — (\d+) entries$
+  repl: '## Decision locator — \1 entries'
+  count_add:
+  - group: 1
+    delta: 71
+  all: false
+  skip_if: '| DEC-0300 |'
+- op: regex_replace
+  pattern: ^## Gap locator — (\d+) entries$
+  repl: '## Gap locator — \1 entries'
+  count_add:
+  - group: 1
+    delta: 22
+  all: false
+  skip_if: '| GAP-0070 |'
+- op: regex_replace
+  pattern: ^## Feature locator — (\d+) entries$
+  repl: '## Feature locator — \1 entries'
+  count_add:
+  - group: 1
+    delta: 7
+  all: false
+  skip_if: '| FEAT-0040 |'
+- op: regex_replace
+  pattern: \(`DEC-0001` through `DEC-\d{4}`\)
+  repl: '(`DEC-0001`–`DEC-0185`, `DEC-0300`–`DEC-0350` and `DEC-0360`–`DEC-0379`)'
+  all: false
+  skip_if: '`DEC-0300`–`DEC-0350`'
+- op: regex_replace
+  pattern: \(`GAP-0001` through `GAP-\d{4}`\)
+  repl: '(`GAP-0001`–`GAP-0049` and `GAP-0070`–`GAP-0091`)'
+  all: false
+  skip_if: '`GAP-0070`–`GAP-0091`'
+- op: regex_replace
+  pattern: \(`FEAT-0001` through `FEAT-\d{4}`\)
+  repl: '(`FEAT-0001`–`FEAT-0030` and `FEAT-0040`–`FEAT-0046`)'
+  all: false
+  skip_if: '`FEAT-0040`–`FEAT-0046`'
+- op: insert_before_heading
+  text: |
+    ### QMA increment decisions — DEC-0300 through DEC-0350, DEC-0360 through DEC-0379
+
+    These decisions were ratified at the 2026-08-28/29 QMX agentic-system child architecture sitting (spine AD-1 through AD-29, `architecture-QMA-2026-08-28/`, status FINAL, validation closed dry 2026-08-29, absorbed by operator delegation via the job-spec rider `SRC-15`). `AD-N` is the QMA spine invariant each carries where one applies; QMF spine AD-1 through AD-41 binds read-only as the parent. The QMX agentic system (QMA) is an application-layer consumer built ON QMF — the daemon plus the QMA SDK plus the wire contract — so these decisions add no QMF package edge and reverse no dependency direction. DEC-0300 through DEC-0328 carry AD-1 through AD-29; DEC-0329 is the spine-adoption umbrella; DEC-0330 through DEC-0350 are the naming, scope, ledger and money-path rulings; DEC-0360 through DEC-0379 are the Cut-outright table minted `status: dead`.
+
+    | Decision | Status | Spine | Primary document |
+    |---|---|---|---|
+    | DEC-0300 | `ratified` | AD-1 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-core](../components/qma-core.md); [CT-42](../contracts/ct-42-qma-plugin-manifest-context.yaml) |
+    | DEC-0301 | `ratified` | AD-2 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-core](../components/qma-core.md); [dependencies](../architecture/dependencies.yaml) |
+    | DEC-0302 | `ratified` | AD-3 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-core](../components/qma-core.md) |
+    | DEC-0303 | `ratified` | AD-4 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [Stack](../architecture/stack.md) |
+    | DEC-0304 | `ratified` | AD-5 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-wire](../components/qma-wire.md); [CT-40](../contracts/ct-40-qma-wire-envelope.yaml) |
+    | DEC-0305 | `ratified` | AD-6 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md) |
+    | DEC-0306 | `ratified` | AD-7 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-core](../components/qma-core.md); [Glossary](../glossary.md) |
+    | DEC-0307 | `ratified` | AD-8 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md) |
+    | DEC-0308 | `ratified` | AD-9 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [CT-51](../contracts/ct-51-qma-task-ledger-entry.yaml) |
+    | DEC-0309 | `ratified` | AD-10 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [CT-41](../contracts/ct-41-qma-hook-event-result.yaml) |
+    | DEC-0310 | `ratified` | AD-11 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [CT-41](../contracts/ct-41-qma-hook-event-result.yaml) |
+    | DEC-0311 | `ratified` | AD-12 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md) |
+    | DEC-0312 | `ratified` | AD-13 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md) |
+    | DEC-0313 | `ratified` | AD-14 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md) |
+    | DEC-0314 | `ratified` | AD-15 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [CT-45](../contracts/ct-45-qma-model-deployment-broker.yaml) |
+    | DEC-0315 | `ratified` | AD-16 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [SCN-0014](../scenarios/SCN-0014-money-path-barrier.md) |
+    | DEC-0316 | `ratified` | AD-17 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [CT-46](../contracts/ct-46-qma-execution-environment-job.yaml) |
+    | DEC-0317 | `ratified` | AD-18 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [CT-43](../contracts/ct-43-qma-memory-provider.yaml) |
+    | DEC-0318 | `ratified` | AD-19 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [CT-44](../contracts/ct-44-qma-knowledge-source.yaml) |
+    | DEC-0319 | `ratified` | AD-20 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [CT-48](../contracts/ct-48-qma-mailbox-envelope.yaml) |
+    | DEC-0320 | `ratified` | AD-21 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [CT-42](../contracts/ct-42-qma-plugin-manifest-context.yaml) |
+    | DEC-0321 | `ratified` | AD-22 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [CT-50](../contracts/ct-50-qma-refinement-proposal.yaml) |
+    | DEC-0322 | `ratified` | AD-23 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [Metrics and alerts](../lenses/observability/metrics-and-alerts.md) |
+    | DEC-0323 | `ratified` | AD-24 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [Security model](../lenses/security/security-model.md) |
+    | DEC-0324 | `ratified` | AD-25 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md) |
+    | DEC-0325 | `ratified` | AD-26 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [variables registry](../registry/variables.yaml) |
+    | DEC-0326 | `ratified` | AD-27 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md) |
+    | DEC-0327 | `ratified` | AD-28 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [SCN-0014](../scenarios/SCN-0014-money-path-barrier.md) |
+    | DEC-0328 | `ratified` | AD-29 | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [CT-49](../contracts/ct-49-qma-routine.yaml) |
+    | DEC-0329 | `ratified` | Spine-adoption umbrella | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [Gap report](../gap-report.md); [Changelog](../changelog.md) |
+    | DEC-0330 | `ratified` | QMA naming | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [Glossary](../glossary.md) |
+    | DEC-0331 | `ratified` | Quant replaces Bot | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [Glossary](../glossary.md); [qma-core](../components/qma-core.md) |
+    | DEC-0332 | `ratified` | Fresh start; multi-agent | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md) |
+    | DEC-0333 | `ratified` | Build priority; first milestone | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-wire](../components/qma-wire.md) |
+    | DEC-0334 | `ratified` | One Python daemon; stack pins | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [Stack](../architecture/stack.md); [qma-daemon](../components/qma-daemon.md) |
+    | DEC-0335 | `ratified` | Contract-hub house style | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-core](../components/qma-core.md) |
+    | DEC-0336 | `ratified` | Deployment envelope | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md) |
+    | DEC-0337 | `ratified` | Namespace `qma.*` | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [Glossary](../glossary.md); [qma-core](../components/qma-core.md) |
+    | DEC-0338 | `ratified` | Task-level ledgers | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [CT-51](../contracts/ct-51-qma-task-ledger-entry.yaml) |
+    | DEC-0339 | `ratified` | Hooks on every primitive | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [CT-41](../contracts/ct-41-qma-hook-event-result.yaml) |
+    | DEC-0340 | `ratified` | Three control primitives | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md) |
+    | DEC-0341 | `ratified` | No execution tool; reachability barrier | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [SCN-0014](../scenarios/SCN-0014-money-path-barrier.md) |
+    | DEC-0342 | `ratified` | No memory engine in-house | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [CT-43](../contracts/ct-43-qma-memory-provider.yaml) |
+    | DEC-0343 | `ratified` | Read-only Knowledge corpus | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [CT-44](../contracts/ct-44-qma-knowledge-source.yaml) |
+    | DEC-0344 | `ratified` | Model proxy chain; OpenCodex | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-daemon](../components/qma-daemon.md); [CT-45](../contracts/ct-45-qma-model-deployment-broker.yaml) |
+    | DEC-0345 | `ratified` | admit / apply / promote split | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [Glossary](../glossary.md); [qma-core](../components/qma-core.md) |
+    | DEC-0346 | `ratified` | Vocabulary and scope reconciliation | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [Glossary](../glossary.md); [AGENTS.md](../AGENTS.md) |
+    | DEC-0347 | `ratified` | Dependency direction (default-deny) | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-core](../components/qma-core.md); [dependencies](../architecture/dependencies.yaml) |
+    | DEC-0348 | `ratified` | Retired names | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [Glossary](../glossary.md) |
+    | DEC-0349 | `ratified` | Lead Quant (inferred parts Deferred) | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [qma-core](../components/qma-core.md); [Gap report](../gap-report.md), GAP-0071 |
+    | DEC-0350 | `ratified` | Constitution touchpoints | [ADR-0020](../decisions/ADR-0020-qma-agentic-system.md); [Constitution](../constitution.md); QMA constitution touchpoints (below) |
+    | DEC-0360 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+    | DEC-0361 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+    | DEC-0362 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+    | DEC-0363 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+    | DEC-0364 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+    | DEC-0365 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+    | DEC-0366 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+    | DEC-0367 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+    | DEC-0368 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+    | DEC-0369 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+    | DEC-0370 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+    | DEC-0371 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+    | DEC-0372 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+    | DEC-0373 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+    | DEC-0374 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+    | DEC-0375 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+    | DEC-0376 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+    | DEC-0377 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+    | DEC-0378 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+    | DEC-0379 | `dead` | Cut (D21) | [Gap report](../gap-report.md), Agentic system (QMA) — dead 20 |
+
+    DEC-0300 through DEC-0328 realize the QMA spine AD-1 through AD-29 into `COMP-QMA-CORE`, `COMP-QMA-WIRE` and `COMP-QMA-DAEMON`; DEC-0329 adopts the spine in full and makes the Cut-outright table spine law. DEC-0333 sets the build order and names the first milestone — a Quant reachable through models over the wire — landing in `FEAT-0043`. DEC-0341 and DEC-0327 (AD-16, AD-28) hold the money-path reachability barrier, and DEC-0345 reserves `promote` for the L17 live-zone act performed by a human outside QMA. DEC-0360 through DEC-0379 are minted `status: dead` and recorded in the gap report's **Agentic system (QMA) — dead 20** subsection; `DEC-0084`, `DEC-0085` and `DEC-0086` stay dead independently.
+  heading_regex: ^## Gap locator — \d+ entries$
+- op: insert_before_heading
+  text: |
+    ### Agentic system (QMA) gaps — GAP-0070 through GAP-0091
+
+    The QMA sitting deferred 22 questions, all `status: deferred`, `blocking: false`, `answer: null`, each carrying a stated revisit condition. None is revived; the full text is in the [gap report](../gap-report.md), **Deferred by the QMA sitting — 22**. A row is a discussion trigger, not implementation or live-money authority.
+
+    | Gap | Status | Blocking | Primary boundary |
+    |---|---|---:|---|
+    | GAP-0070 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-daemon](../components/qma-daemon.md). Windows VPS `desktop` environment, planned not provisioned; every computer-use tool fails `check_fn` until registered (DEC-0336, AD-25). |
+    | GAP-0071 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-core](../components/qma-core.md), [qma-daemon](../components/qma-daemon.md). One lead flag per desk and the lead-mailbox catch-all inferred, not ruled; interim rule is a startup error and `dead_letter` (DEC-0349, AD-7/AD-20). |
+    | GAP-0072 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-core](../components/qma-core.md), [qma-daemon](../components/qma-daemon.md). External memory backend (Hindsight/Mem0) behind the eval; v1 ships the `MemoryProvider` port and `NoMemoryProvider` only (DEC-0342, AD-18). |
+    | GAP-0073 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-core](../components/qma-core.md), [qma-daemon](../components/qma-daemon.md). Knowledge hybrid indexing; v1 is literal and locator search only (DEC-0343, AD-19). |
+    | GAP-0074 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-daemon](../components/qma-daemon.md). Self-improvement evaluation gates, gated on the AD-26 finished-Mission trajectory count; v1 ships invariants plus staging (DEC-0321, DEC-0322). |
+    | GAP-0075 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-core](../components/qma-core.md), [qma-daemon](../components/qma-daemon.md). Sandbox and compute vendors; Modal, Daytona and E2B rejected outright; backtesting fan-out first (DEC-0316, AD-17). |
+    | GAP-0076 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-daemon](../components/qma-daemon.md). RLM kernel performance envelope; a measurement obligation against the first Analysis fan-out (DEC-0313, AD-14). |
+    | GAP-0077 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-core](../components/qma-core.md), [qma-daemon](../components/qma-daemon.md). In-house threading node shape; no contribution type minted until the operator supplies spec or code (DEC-0320, AD-1/AD-21). |
+    | GAP-0078 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-daemon](../components/qma-daemon.md). Browser stack; the starting point is reverse-engineering Egolite, not a vendor shortlist (DEC-0315, AD-16/AD-17). |
+    | GAP-0079 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-wire](../components/qma-wire.md), [qma-daemon](../components/qma-daemon.md). External agent-to-agent transport; the internal bus comes first, the relay/signing transport is itself Cut (DEC-0319, DEC-0368). |
+    | GAP-0080 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-daemon](../components/qma-daemon.md). RLM beyond the Analysis desk and depth above 2; both triggers journal-readable (DEC-0313, AD-14). |
+    | GAP-0081 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-wire](../components/qma-wire.md). UI presentation, UI SDK and `qma-ui-contract` beyond a stub; the wire contract and variables registry bind now (DEC-0304, DEC-0333). |
+    | GAP-0082 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-daemon](../components/qma-daemon.md). Mission reports; revisit after the first missions run (DEC-0338, AD-9). |
+    | GAP-0083 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-core](../components/qma-core.md). Desk consolidation, a Profile-level display collapse only; never a `desk_slug`/`ActorId`/scope/index rename (DEC-0306, AD-7). |
+    | GAP-0084 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-core](../components/qma-core.md), [qma-daemon](../components/qma-daemon.md). Separate Mission Template registry; after the first three authored graph packs (DEC-0340, AD-13). |
+    | GAP-0085 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-core](../components/qma-core.md). Typed strategy-mechanism decomposition; QML and `qmf-registry` own strategy semantics, revisit at the QML sitting (DEC-0313, AD-14). |
+    | GAP-0086 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-daemon](../components/qma-daemon.md). Graph engine implementation; when the first three authored graph packs exist (DEC-0312, AD-13). |
+    | GAP-0087 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-daemon](../components/qma-daemon.md). Claude Agent SDK hook count 7-vs-10; bounded by the Cut on foreign runtimes, nothing in the spine depends on it (DEC-0309, DEC-0360). |
+    | GAP-0088 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-daemon](../components/qma-daemon.md). Backup destination, encryption-key custody and restore cadences; decided at first durable-store open, registered under AD-26 (DEC-0326, AD-27). |
+    | GAP-0089 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-daemon](../components/qma-daemon.md). Trim window for the bounded non-evidence streams; the AD-6 event journal is never trimmed (DEC-0319, DEC-0322). |
+    | GAP-0090 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-daemon](../components/qma-daemon.md). Context compaction rule; until the ceiling is reached, compaction persists nothing and no compacted transcript is evidence (DEC-0313, AD-14). |
+    | GAP-0091 | `deferred` | `false` | [Gap report](../gap-report.md); [qma-core](../components/qma-core.md), [qma-wire](../components/qma-wire.md), [qma-daemon](../components/qma-daemon.md). Interactive walkthrough artifact; an optional operator aid, revisit after review. |
+  heading_regex: ^## Feature locator — \d+ entries$
+- op: insert_before_heading
+  text: |
+    ### Agentic system (QMA) features — FEAT-0040 through FEAT-0046
+
+    The QMA increment adds seven implementing features in the operator's build order (`SRC-15`): `FEAT-0040` through `FEAT-0046`, all `size: multi-pass`, `status: planned`. The Wave column carries the QMA build-order step; the derived dependency wave sits on the QMF roster features each consumes. The QMX agentic system is an application-layer consumer built ON QMF — every edge carries a reason and no feature adds a QMF package edge or reverses a dependency direction. The first milestone, a Quant reachable through models over the wire, lands in `FEAT-0043`. Ratified by operator delegation via the rider; implementation ships only through the factory pipeline.
+
+    | Feature | Wave | Component | Status | Blocker summary |
+    |---|---:|---|---|---|
+    | FEAT-0040 | 1 | [COMP-QMA-CORE](../components/qma-core.md) | `planned` | FEAT-0005 (qmf-core substrate). The definitions package: ontology, the seven ports, the plugin contribution surface and the QMA refusal variants; depends only on qmf-core (DEC-0300, DEC-0335, DEC-0337, DEC-0347). |
+    | FEAT-0041 | 2 | [COMP-QMA-WIRE](../components/qma-wire.md) | `planned` | FEAT-0040. The wire envelope, the command/query/event families and JSON-Schema message families, `protocolVersion` and the transport posture (DEC-0304, DEC-0303, DEC-0336). |
+    | FEAT-0042 | 3 | [COMP-QMA-CORE](../components/qma-core.md), [COMP-QMA-DAEMON](../components/qma-daemon.md) | `planned` | FEAT-0040, FEAT-0041. The daemon substrate: one journal / sole writer / clock, the closed store list, the hooks registry, the Task Graph and store lifecycle (DEC-0305, DEC-0334, DEC-0338, DEC-0339, DEC-0340). |
+    | FEAT-0043 | 4 | [COMP-QMA-CORE](../components/qma-core.md), [COMP-QMA-DAEMON](../components/qma-daemon.md) | `planned` | FEAT-0042, FEAT-0007 (qmf-registry read-and-calculate), FEAT-0027 (qmf-risk read-and-calculate). The model proxy, Tool Registry, permissions and Credential Broker, and the money-path reachability barrier; the first milestone lands here (DEC-0314, DEC-0323, DEC-0341, DEC-0344). |
+    | FEAT-0044 | 5 | [COMP-QMA-CORE](../components/qma-core.md), [COMP-QMA-DAEMON](../components/qma-daemon.md) | `planned` | FEAT-0043, FEAT-0029 (QMB). Execution environments, the Compute Router, JobHandle, the RLM kernel and the QMB door (ExperimentSpec) (DEC-0316, DEC-0324, DEC-0313). |
+    | FEAT-0045 | 6 | [COMP-QMA-CORE](../components/qma-core.md), [COMP-QMA-DAEMON](../components/qma-daemon.md) | `planned` | FEAT-0042. The three ledgers, the Agent Bus, the scheduler and Routines, the memory and knowledge ports, the admission gate and telemetry export (DEC-0308, DEC-0317, DEC-0318, DEC-0319, DEC-0321, DEC-0322, DEC-0328, DEC-0342, DEC-0343, DEC-0345). |
+    | FEAT-0046 | 7 | [COMP-QMA-CORE](../components/qma-core.md), [COMP-QMA-DAEMON](../components/qma-daemon.md) | `planned` | FEAT-0043, FEAT-0044, FEAT-0045. The plugin loader with reversible scopes and the five desk plugin packs; the loader is daemon-owned and the contribution surface is [qma-core](../components/qma-core.md) (DEC-0320, DEC-0300). |
+  heading_regex: ^## FEAT-00\d\d scope and gate$
+- op: append
+  text: |
+    ## QMA constitution touchpoints
+
+    The QMX agentic system binds ten parent constitution laws read-only; QMA amends no parent by assertion, and these rows are the recorded touchpoints (`DEC-0350`). Each names the AD through which the law reaches QMA. The parent conventions rows of the Inherited Invariants table also bind read-only.
+
+    | Constitution law | Binds QMA via | Reading |
+    |---|---|---|
+    | **L17** — human-gated promotion | AD-24, AD-25 | Promotion into the live zone is a human act outside QMA; QMA mints no promotion or zone-transition command and records only the resulting artifact ref (DEC-0345, DEC-0323). |
+    | **L18** — store lifecycle discipline | AD-27 | Store versioning, migration (preflight, backup-first, dry-run, migrate, verify) and backup/restore follow the parent's AD-20 / L18 order (DEC-0326). |
+    | **L30** — roster scope (annotation) | AD-2 | The 2026-08-21 L30 roster-scope annotation places QMA's `qmf-registry` and `qmf-risk` read-and-calculate edges as application dependencies under L31 (DEC-0347). |
+    | **L31** — built with QMF, no contract re-implemented | AD-4 | L31 is dispositive for one Python 3.14 asyncio daemon built with QMF — no second daemon runtime, no contract re-implemented across a language boundary (DEC-0334). |
+    | **L33** — plain-Python escape hatch | AD-14 | `StrategyHandle` may create only content-addressed candidate artifacts in the parent registry's existing `dev` zone, mutating nothing (DEC-0313). |
+    | **L34** — secrets are references, never values | AD-24 | Components handle credential references only; values resolve inside the Credential Broker's egress call frame from the OS secret store (DEC-0323). |
+    | **L35** — adopted (UNKNOWN blocks its stream) | AD-12, AD-17 | An LLM may propose a transition but never author a terminal outcome, and an `unknown` job or Task holds its lease until an explicit recorded resolution (DEC-0311, DEC-0316). |
+    | **L36** — nothing above a bot on the market | AD-16, AD-28 | No execution tool exists at any account role, paper included, and the reachability barrier refuses any environment or edge that could reach the trading node (DEC-0341, DEC-0327). |
+    | **L38** — configurable means UI-editable | AD-26 | Every AD-26 variable declares `configurable: true` (UI-editable) or `false` (uneditable), carried in the variables registry (DEC-0325). |
+    | **L39** — exit-preservation / evidence recording | AD-5, AD-6, AD-9, AD-10, AD-21, AD-25, Conventions | L39 is discharged in six places plus Conventions: an evidence append arriving without a `correlation_id` is recorded under a daemon-minted lifecycle id annotated `correlation_missing` rather than refused (DEC-0304); the event journal is never trimmed (DEC-0305); the ledger quarantine path writes a refused entry verbatim and never discards it (DEC-0308); `before_ledger_append` fails open, so no permission policy or precedence resolution refuses a well-formed evidence append from the lease holder (DEC-0309); the load-refusal law never terminates a running daemon or discards a pending evidence append (DEC-0320); and the live boundary keeps L39 with the node, so nothing in QMA may invert, shortcut or automate it (DEC-0324). |

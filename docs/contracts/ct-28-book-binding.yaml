@@ -1,7 +1,7 @@
 id: CT-28
 name: Book binding record contract
 status: ratified
-version: 1  # first minted format version; the binding record is spine-ratified (AD-29), corpus signed off by the operator 2026-08-21
+version: 1  # first minted format version; the binding record is spine-ratified (AD-29), corpus signed off by the operator 2026-08-21; 2026-08-29 trading-node absorption: the node's state_carry usage, the live-binding-waits-on-its-own-baselines gate order, and the measured netting attribution partition recorded — usage notes only, no format change (DEC-0194, DEC-0219, DEC-0251)
 owner: COMP-QMF-RISK
 consumers: []  # consumer-blind by design: qmf-risk defines CT-28 on qmf-core nouns; the composition root wires persistence and nothing imports qmf-risk under default-deny, so no package import edge exists (DEC-0158)
 active_consumers: []
@@ -9,7 +9,7 @@ intended_consumers: [COMP-QMF-REGISTRY]  # Registry stores the Book binding as a
 wiring_status: defined-unwired  # the binding record is ratified surface; no code exists; records reach qmf-registry through the composition root under the AD-28 injected-sink pattern (DEC-0158); no wiring is authorized from this doc
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0143, DEC-0144, DEC-0146, DEC-0149, DEC-0150, DEC-0151, DEC-0153, DEC-0154, DEC-0155, DEC-0158, DEC-0160]
+decisions: [DEC-0143, DEC-0144, DEC-0146, DEC-0149, DEC-0150, DEC-0151, DEC-0153, DEC-0154, DEC-0155, DEC-0158, DEC-0160, DEC-0193, DEC-0194, DEC-0207, DEC-0219, DEC-0251, DEC-0259]
 gaps: []  # GAP-0039 answered (AD-29); the bind-time margin/free-margin check is decided-deferred to the node sitting with the consequence stated (AD-40), a pointer, not an open gap
 purpose: "One append-only Book binding record — the deployment that couples a Book instance to a BMS instance on one account at one venue — carrying the binding tuple `(BookInstanceId, BmsInstanceId, VenueId, AccountId, world)` aligned with the AD-27 `(VenueId, account)` command stream, the mandatory per-counter `state_carry` declaration, the paired-BMS pairing record, and the bind-time capability-check result; the binding EPOCH is the record's own fingerprint, cited by CT-32 populations and AD-41 folds."
 invariants:
@@ -28,6 +28,8 @@ invariants:
   - "A binding cites a Book definition (CT-22) and a BMS definition (CT-27) by fingerprint, never by a version string; `BmsInstanceId` is content-derived `fp1(BMS definition fingerprint, AccountId, VenueId, world)`, while `BookInstanceId` is an operator-minted deployment record (DEC-0143, DEC-0144)."
   - "Binding state is `live | paper | stood-down` (a stand-down being an authority-imposed halt on new entries at that binding, cleared only by an operator `resume`); a benched seat routes to the paired target through its seat record's execution target while the Book stays live — three vocabularies (binding, Book mode, seat state) never interchanged (DEC-0150, DEC-0149, DEC-0155)."
   - "The Book binding is a `qmf-registry` record kind minted under AD-16 (DEC-0158). This is a ratified `defined-unwired` contract awaiting the factory pipeline: no code exists, and nothing here reads as permission to implement outside it (DEC-0143, DEC-0144)."
+  - "Trading-node usage (no format change): the trading node mints CT-28 bindings at runtime and is the first consumer to exercise `state_carry` and the bind-time capability check live. The bind-time check GATES the deployment order — a live binding is refused without a live-conditioned SQS baseline (keyed `(VenueId, environment, instrument)`, so a demo-conditioned baseline never satisfies `role = live`) AND a live-path rung baseline on this deployment's `(OS, CPU-class)` tuple — which is why VPS procurement gates the SOAK's start while a late Spotware approval or live KYC gates GO-LIVE only: the week runs on the demo binding alone and the live connection opens for sensing and recording (a sensing-only roster entry, no binding minted) the moment credentials land (DEC-0251, DEC-0194, DEC-0193)."
+  - "Trading-node usage (no format change): `netting | hedging` is a MEASURED-at-connection CT-18 fact, never assumed; the bind-time shared-flatten signature is required with one Book per netted account the V1 default, scope resolution reads the position model before dispatch and REFUSES rather than widens, and where CT-18 declares `netting` the fill-to-virtual-position attribution declarations across every binding on that account must be jointly EXHAUSTIVE and DISJOINT — a partition proved at compile, an `invalid input` refusal otherwise — which makes 'the sum of virtual positions reconciles against the venue's netted position' arithmetic rather than aspiration (DEC-0219, DEC-0207)."
 bind_time_capability_check:  # the fixed list a binding must satisfy against CT-18's declaration AND the venue-observation profile; a shortfall refuses at bind time, never at trade time (DEC-0143)
   - "required venue capabilities: position model `netting | hedging`, protection primitives, command scopes, and protection-amendment support all satisfy the Book's declared `required_venue_capabilities` (DEC-0143)"
   - "settlement currency: the account's settlement currency matches the Book's `accounting_currency` (USD in V1) — otherwise a `policy rejection`, fired here and never at trade time (DEC-0154)"

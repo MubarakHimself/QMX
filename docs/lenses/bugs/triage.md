@@ -3,11 +3,11 @@ id: LENS-BUG-TRIAGE
 title: QMF Bug Triage
 type: lens
 status: ratified
-depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP, COMP-CTRADER, COMP-DUKASCOPY, COMP-CALENDAR-FEED, COMP-OBJECT-STORAGE]
-decisions: [DEC-0004, DEC-0007, DEC-0029, DEC-0030, DEC-0038, DEC-0044, DEC-0045, DEC-0046, DEC-0096, DEC-0099, DEC-0100, DEC-0101, DEC-0102, DEC-0103, DEC-0108, DEC-0109, DEC-0111, DEC-0112, DEC-0114, DEC-0117, DEC-0118, DEC-0119, DEC-0121, DEC-0136, DEC-0137, DEC-0138, DEC-0142, DEC-0143, DEC-0144, DEC-0146, DEC-0147, DEC-0150, DEC-0151, DEC-0155, DEC-0157]
-sources: [_docwork/ledger.yaml, _docwork/gaps.yaml, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, docs/constitution.md, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/components/, docs/contracts/, docs/lenses/testing/test-strategy.md, docs/lenses/testing/fixtures-and-scenarios.md]
+depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP, COMP-CTRADER, COMP-DUKASCOPY, COMP-CALENDAR-FEED, COMP-OBJECT-STORAGE, COMP-QMN]
+decisions: [DEC-0004, DEC-0007, DEC-0029, DEC-0030, DEC-0038, DEC-0044, DEC-0045, DEC-0046, DEC-0096, DEC-0099, DEC-0100, DEC-0101, DEC-0102, DEC-0103, DEC-0108, DEC-0109, DEC-0111, DEC-0112, DEC-0114, DEC-0117, DEC-0118, DEC-0119, DEC-0121, DEC-0136, DEC-0137, DEC-0138, DEC-0142, DEC-0143, DEC-0144, DEC-0146, DEC-0147, DEC-0150, DEC-0151, DEC-0155, DEC-0157, DEC-0191, DEC-0195, DEC-0200, DEC-0202, DEC-0208, DEC-0211, DEC-0233, DEC-0256, DEC-0257, DEC-0258, DEC-0259]
+sources: [_docwork/ledger.yaml, _docwork/gaps.yaml, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, docs/constitution.md, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/components/, docs/components/trading-node.md, docs/contracts/, docs/lenses/testing/test-strategy.md, docs/lenses/testing/fixtures-and-scenarios.md]
 generated: 2026-08-18
-verified: 2026-08-20
+verified: 2026-08-29
 stale_after: 30d
 ---
 
@@ -61,6 +61,28 @@ The risk sitting ratified the Book/BMS/binding surface (DEC-0143 through DEC-015
 - **Blank-admission-bar live binding.** A Book whose `admission_bar` holds any not-yet-ruled threshold or `pending` slot registers and binds to non-live roles freely; binding it to a live account is a `policy rejection` at admission Layer 1 (DEC-0146). A blank bar that reaches a live binding is an authority-boundary violation. An `evidence_requirements.account_role` naming a paper role in a bar gating a live binding is likewise a `policy rejection` — no paper role may gate live money (DEC-0146).
 - **Fold-fails-closed on the trading path.** No read-time fold on the trading path may refuse: it returns the most restrictive state, journals `data quality`, and alarms (DEC-0150). A trading-path fold that returns a permissive state on missing or conflicting input, or that raises instead of returning the most restrictive state, is a loud-failure and authority-boundary defect. Across writers, control and mode folds resolve by declared rank, never `WriterId` byte order.
 - **Stale-evidence intent refusal when an exit record lags.** Recording precedes interpretation for the bench: a fill closing a virtual (Book) position must have its exit record persisted and journaled before any later intent on the same seat is minted, else that intent returns the `stale evidence` refusal category (DEC-0155). An `(N+1)`th entry admitted while the `N`th exit record is still unpersisted is a documented-behavior regression — the leash misses the qualifying_loss_exit crossing it exists to catch.
+
+## Trading-node failure register and alert classes (2026-08-29 increment)
+
+The trading node (`COMP-QMN`) ships every failure mode as a `FAILURES.md` entry with NFR-11's six fields, and completeness is **gated, not promised**: a CI check asserts an entry for every typed-failure-id the node can emit, cross-checked against the failure-id enum, with all six fields populated (DEC-0208). Every entry's **operator affordance must resolve to a named door capability or an operations-toolkit recipe that exists** — the node has no operator command line, so an affordance is a powers-channel or evidence-channel door capability, or a `just node-…` recipe, and never a typed command (DEC-0208, DEC-0202, DEC-0211). A node bug against the register is an entry that is missing, incomplete, or whose named affordance does not resolve.
+
+### The notification-tier column is the sole home of alert-class membership
+
+`FAILURES.md`'s **`notification tier` column is the SOLE home of alert-class membership, and the alert allow-list is generated from it** — no registry row carries membership, and a failure mode with no register entry cannot be alerted (DEC-0208, DEC-0256, DEC-0200). A triage report that a push tier and the register have diverged is a documentation/traceability defect against the generation rule, not a code change to the allow-list.
+
+### Node triage classes map to the three allow-list classes
+
+The node's alert allow-list is the only push tier and has three classes; a node failure is triaged into the class its `FAILURES.md` notification tier names (DEC-0200):
+
+- **Money boundaries** — sweep, re-seed, refund. A treasury boundary act firing or failing is triaged here.
+- **Protection escalation** — the kill switch and KSA escalation, supervision fail-closed, node stand-down, and the named state alarms (a rotation-store failure, an unmapped venue code, a reused command identity, an undeliverable protection intent, a fold that cannot resolve, a missing scope record, a paper-stream outage at live severity). A protection or authority failure is triaged here.
+- **Silent degradation** — the node has stopped accepting entries or cannot persist evidence for a reason that is not a KSA escalation: a clock band at `no-new-entry` or worse, an unexplained live-drift entry stand-down, a failed news-calendar refresh, a degraded or dead canonical sensing feed, a failed backup or restore drill, disk headroom below `registry:disk_headroom_min`, or a live verification failure. A dead node cannot alarm about itself, so an external **dead-man's switch** heartbeats to an off-VPS watcher that alerts on a missing ping, backed by a liveness digest that survives go-live (DEC-0233, DEC-0200). This silent-degradation class, the dead-man's switch and the liveness digest are recorded as a **proposed** PRD section-3 allow-list widening, ratified by this increment under the cheap-veto posture (DEC-0257).
+
+Records and notification stay two planes: an alert is evidence, never permission, and losing a notification never erases the underlying evidence (DEC-0200).
+
+### UNKNOWN and out-of-lookback are first-class outcomes, never bugs
+
+A command whose fate the venue has not confirmed resolves to **UNKNOWN — a state, minted as an explicit observation carrying its trigger and the injected submission deadline — never a bug** (DEC-0191). While an UNKNOWN is outstanding on a `(VenueId, account)` stream every command on that stream is refused, protection included, and the refused protective act stands as a journaled protection intent re-decided on resolution; only `resolve_unknown` clears it, never a reconciliation verdict (DEC-0191). Reconciliation speaks **four verdicts — reconciled, drift, unknown, out-of-lookback** — so an out-of-lookback read-back is a distinct, nameable state rather than a silent failure to reconcile, and `resolve_unknown` issues automatically only from an unambiguous reconciled read-back inside the lookback, an ambiguous, absent or out-of-lookback read-back requiring operator attestation through the powers channel (DEC-0258, DEC-0195). A report that the specified refusal or fold fired as written is never a bug; it is a bug only when the ratified refusal or fold does not fire.
 
 ## Proposed reproduction record
 

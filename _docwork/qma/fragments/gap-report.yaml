@@ -1,0 +1,146 @@
+target: docs/gap-report.md
+ops:
+- op: regex_replace
+  pattern: ^## Dead decisions — (\d+)$
+  repl: '## Dead decisions — \1'
+  count_add:
+  - group: 1
+    delta: 20
+  all: false
+  skip_if: '### Agentic system (QMA)'
+- op: frontmatter_add
+  field: decisions
+  ids:
+  - DEC-0304
+  - DEC-0306
+  - DEC-0309
+  - DEC-0312
+  - DEC-0313
+  - DEC-0315
+  - DEC-0316
+  - DEC-0319
+  - DEC-0320
+  - DEC-0321
+  - DEC-0322
+  - DEC-0324
+  - DEC-0326
+  - DEC-0329
+  - DEC-0333
+  - DEC-0338
+  - DEC-0340
+  - DEC-0342
+  - DEC-0343
+  - DEC-0349
+  - DEC-0360
+  - DEC-0361
+  - DEC-0362
+  - DEC-0363
+  - DEC-0364
+  - DEC-0365
+  - DEC-0366
+  - DEC-0367
+  - DEC-0368
+  - DEC-0369
+  - DEC-0370
+  - DEC-0371
+  - DEC-0372
+  - DEC-0373
+  - DEC-0374
+  - DEC-0375
+  - DEC-0376
+  - DEC-0377
+  - DEC-0378
+  - DEC-0379
+- op: frontmatter_add
+  field: depends_on
+  ids:
+  - COMP-QMA-CORE
+  - COMP-QMA-WIRE
+  - COMP-QMA-DAEMON
+- op: frontmatter_set
+  field: verified
+  value: '2026-08-29'
+- op: regex_replace
+  pattern: \| CT-32 with QMB-declared extensions \|
+  repl: |-
+    | CT-32 with QMB-declared extensions |
+    | Agentic system (QMA) | GAP-0070–GAP-0091 | **deferred** (22 rows) | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) | [qma-core](components/qma-core.md), [qma-wire](components/qma-wire.md), [qma-daemon](components/qma-daemon.md) | [CT-40](contracts/ct-40-qma-wire-envelope.yaml)–[CT-51](contracts/ct-51-qma-task-ledger-entry.yaml) |
+  all: false
+  skip_if: '| Agentic system (QMA) | GAP-0070'
+  flags: M
+- op: insert_before_heading
+  heading: '## Five-hats sweep — input register, not resolved here'
+  text: |
+    ## Deferred by the QMA sitting — 22
+
+    The 2026-08-28/29 QMX agentic-system sitting deferred 22 questions (`GAP-0070` through `GAP-0091`, an id block reserved for this increment) and cut 20 (`DEC-0360` through `DEC-0379`, recorded below under **Agentic system (QMA) — dead 20**). Each deferred row stays deferred with its stated revisit condition and none is revived; the Cut-outright table is spine law and nothing in it returns (`DEC-0329`). A revisit condition is a discussion trigger, not an answer: it grants neither implementation nor live-money authority, and `answer: null` and `blocking: false` are carried in the catalog. Every row names the QMA component(s) it touches.
+
+    | Gap | Question | Needed by | Revisit condition — non-authorizing |
+    |---|---|---|---|
+    | **GAP-0070** | When and how is the Windows VPS for the computer-use agent provisioned and registered as a `desktop` ExecutionEnvironment, and what is its capability envelope? | qma-daemon | An `ExecutionEnvironment` of kind `desktop` is registered against a reachable host; until that record exists every computer-use tool fails its `check_fn` and the Compute Router returns `NoEnvironment` for a `desktop` `ComputeRequirement`. The VPS is the operator's own planned purchase — planned, not provisioned (`DEC-0324`, `DEC-0316`). |
+    | **GAP-0071** | Does each desk carry exactly one lead flag, and is the lead Quant's mailbox the catch-all for `Envelope`s whose recipient no longer exists? | qma-core, qma-daemon | The operator rules on both; until then a second lead flag on a desk is a hard startup error and an undeliverable `Envelope` resolves to `dead_letter` rather than to the lead. One lead flag per desk and the lead-mailbox catch-all were inferred, never ruled (`DEC-0349`). |
+    | **GAP-0072** | Which external memory backend (Hindsight, Mem0) becomes the first `MemoryProvider`, and against which store dependency? | qma-core, qma-daemon | The AD-22 staging store holds memory candidates from at least two desks and at least one Mission has been blocked by `recall` being unavailable — both readable from the journal; re-check the store dependency then, and re-verify the port-to-Hindsight mapping at admission (`DEC-0342`). |
+    | **GAP-0073** | What hybrid retrieval / indexing does the Knowledge corpus need beyond literal and locator-based search? | qma-core, qma-daemon | The corpus root holds at least one ingestible content file and the STRATS folder-layout, serialization and stable-id questions are ratified upstream; v1 ships literal and locator search only (`DEC-0343`). |
+    | **GAP-0074** | When do the self-improvement evaluation gates switch on, and against what trajectory evidence? | qma-daemon | The telemetry store holds complete agent trajectories for at least the AD-26-registered count of finished Missions (initially 50) across at least two desks; v1 ships the AD-22 invariants and the staging store only (`DEC-0321`, `DEC-0322`). |
+    | **GAP-0075** | Which sandbox and compute vendors (`remote_container`; `desktop` beyond the planned VPS) does QMA adopt, and from what shortlist? | qma-core, qma-daemon | The Compute Router has recorded at least the AD-26-registered count (initially 3) of `NoEnvironment` refusals no local Docker environment can satisfy, or a job has exceeded workstation memory or GPU — counted from telemetry. Operator constraint: Modal, Daytona and E2B are rejected outright on cost and fit, and the sandbox exists for backtesting fan-out first (`DEC-0316`). |
+    | **GAP-0076** | What is the RLM kernel performance envelope — fan-out throughput, snapshot fidelity for large handles, and cost per 800-variant aggregation? | qma-daemon | The Analysis desk's first full backtest fan-out has run: record wall-clock, peak memory and USD cost for one 800-variant aggregation and one snapshot-and-restore of the largest handle; if a snapshot fails or the cost exceeds `rlm.fanout_cost_ceiling_usd`, RLM-in-Docker is re-opened (`DEC-0313`). |
+    | **GAP-0077** | What is the in-house threading node's shape, and what `PluginManifest` contribution point does it need? | qma-core, qma-daemon | The operator supplies the threading node's spec or its code; until then no `PluginManifest` contribution type is minted for it and no plugin may declare one (`DEC-0320`). |
+    | **GAP-0078** | Which browser stack does QMA adopt for browser-heavy missions? | qma-daemon | A browser-heavy mission actually blocks. The starting point is the operator's own — reverse-engineer Egolite for this use case, not a vendor shortlist; Cloudflare Browser Run, Modal, Daytona and E2B were rejected on cost and fit, and the method is "extract, do not clone blindly" (`DEC-0315`). |
+    | **GAP-0079** | What external agent-to-agent transport does the mailbox need when a second host or external counterparty appears? | qma-wire, qma-daemon | A second host or an external counterparty needs the mailbox; the internal, single-operator bus comes first, and the public-messaging / relay / signing transport is itself Cut, so any external transport is a fresh design (`DEC-0319`, `DEC-0368`). |
+    | **GAP-0080** | Does the RLM runtime extend beyond the Analysis desk, and does the spawn depth rise above 2? | qma-daemon | A desk other than Analysis has recorded a Task blocked for want of an RLM kernel, or an Analysis run has hit the depth-2 cap — both readable from the journal (`DEC-0313`). |
+    | **GAP-0081** | What is the UI presentation architecture — Rust extension technology, UI SDK surfaces, contribution points, UI plugin packaging, and `qma-ui-contract` beyond a stub? | qma-wire | Its own session — the operator has not started the UI and does not plan to soon; the wire contract (AD-5) and the variables registry (AD-26) are not deferred and bind now. Revisit once the daemon API is live and stable. Carried forward: the UI reads as a trading/research terminal, not a generic agent dashboard (`DEC-0304`, `DEC-0333`). |
+    | **GAP-0082** | Are Mission reports (an agent-derived synthesis over a mission's task ledgers) wanted, and in what shape? | qma-daemon | The operator is not yet certain they are wanted; revisit after the first missions run. No live mission ledger exists in the meantime (`DEC-0338`). |
+    | **GAP-0083** | Does the desk count consolidate (five desks vs three vs two)? | qma-core | After the first missions run; roles are settled and Profile is presentation and may collapse desks for display — never a rename or retirement of a `desk_slug`, `ActorId`, plugin prefix, memory scope or ledger index key, which is what makes this deferral free (`DEC-0306`). |
+    | **GAP-0084** | Is a separate Mission Template registry needed beside Graph Templates? | qma-core, qma-daemon | After the first three authored graph packs exist and a desk demonstrably needs a mission skeleton a Graph Template cannot carry (`DEC-0340`). |
+    | **GAP-0085** | What is the typed strategy-mechanism decomposition (EntryMechanism, ExitMechanism, Filter, SessionRule, PositionRule, InvalidationRule with paper-level provenance)? | qma-core | QML and `qmf-registry` own strategy semantics; QMA carries the candidates and the lineage edges. Revisit at the QML sitting — `StrategyHandle` and `ExperimentSpec` are already shaped to carry the result (`DEC-0313`). |
+    | **GAP-0086** | Which graph engine implementation backs the Task Graph? | qma-daemon | When the first three authored graph packs exist; AD-13 fixes the Graph Template / Task Graph contract and nothing below it, and no graph-engine candidate was studied in this run (`DEC-0312`). |
+    | **GAP-0087** | Is the Claude Agent Python SDK in-process hook count 7 or 10, and does it bind any QMA adapter? | qma-daemon | Before any Claude-worker adapter is specified — which the Cut on foreign agent runtimes bars in v1, so this revisits only if a spine amendment reverses that Cut; AD-10's hook set is QMA-authored and nothing in the spine depends on the count (`DEC-0309`, `DEC-0360`). |
+    | **GAP-0088** | What are the backup destination, encryption-key custody, and the sample-restore-test and full-restore-rehearsal cadences? | qma-daemon | Before the daemon's first non-test run opens a durable store: the destination and both restore cadences are decided and registered under AD-26 at that point; the encryption-key custody stays with the parent's deferral (`DEC-0326`). |
+    | **GAP-0089** | What is the trim window for the bounded non-evidence streams (mailbox delivery projection, telemetry)? | qma-daemon | The stream's event count or on-disk size crosses its AD-26-registered trim threshold; trajectories may not be trimmed until the evidence-dependent rows are recorded, and exemption from trimming is never exemption from backup. The AD-6 event journal is never trimmed (`DEC-0319`, `DEC-0322`). |
+    | **GAP-0090** | What may a context compaction pass summarize, what must it preserve, and where does the compacted material go? | qma-daemon | The first Session reaches its deployment's `min_context_tokens` ceiling, readable from telemetry; until then compaction is Context Compiler behaviour that persists nothing and no compacted transcript is evidence (`DEC-0313`). |
+    | **GAP-0091** | Is an interactive walkthrough artifact for this spine wanted? | qma-core, qma-wire, qma-daemon | Optional operator aid over the whole QMA spine; not a component obligation. Revisit after the spine is reviewed. |
+- op: insert_before_heading
+  heading: '## Superseded baseline chains'
+  text: |
+    ### Agentic system (QMA) — dead 20
+
+    The QMA sitting's Cut-outright table is spine law: these 20 decisions (`DEC-0360` through `DEC-0379`) are prohibitions against resurrection, minted `status: dead` for the QMX agentic system, and each carries its one reason verbatim (`DEC-0329`). Never revive a dead decision without a later operator ruling that explicitly replaces it. `DEC-0084`, `DEC-0085` and `DEC-0086` in the QMF table above stay dead independently.
+
+    | Decision | Rejected statement | Reason | Navigation |
+    |---|---|---|---|
+    | **DEC-0360** | A QMX agent protocol plus adapters hosting foreign agent runtimes. | QMA owns its runtime bottom-up; nothing needs it to host foreign harnesses. | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+    | **DEC-0361** | Extension trust tiers, a marketplace or plugin store, and install counts. | one operator, no third-party publishers, no untrusted-extension problem | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+    | **DEC-0362** | A provides/requires/optional capability dependency solver. | a package-manager solver for a plugin set numbering in single digits | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+    | **DEC-0363** | The 20-service injectable context fabric. | architecture by enumeration; most entries have no described consumer | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+    | **DEC-0364** | The eight-type memory taxonomy. | never load-bearing; superseded by one narrow definition plus provenance-gated candidates | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+    | **DEC-0365** | The general-IDE lifecycle events (display, elicitation, config, cwd, directories). | multi-surface public-IDE plumbing; QMA fires only what its authored graphs need | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+    | **DEC-0366** | Hot-module reload and reactive re-mount of live plugins. | a dev nicety against a determinism requirement; explicit reload instead | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+    | **DEC-0367** | Isolate/intercept and label-joined config scopes. | multi-tenant overlay machinery; one operator, one config | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+    | **DEC-0368** | Relay, signing and public-messaging protocols as the bus transport. | sovereign multi-tenant messaging for strangers; a single-operator daemon needs none | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+    | **DEC-0369** | A shared account-level cloud computer with per-actor screens. | not a security boundary; Docker-per-worker replaces it | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+    | **DEC-0370** | A foreign-harness shim in the model proxy (masquerading, model-identity spoofing). | QMA owns its caller and records the true deployment honestly | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+    | **DEC-0371** | Plaintext credential files as a source for any QMA-resolved secret. | L34: QMA handles references only, values in the OS store through the Credential Broker; a local-proxy Deployment's own provider credentials remain that proxy's custody outside QMA's namespace, never read, copied, migrated or referenced by QMA (AD-15, AD-24) | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+    | **DEC-0372** | Multi-tenant memory and knowledge machinery (orgs, projects, ACLs, sharing, webhooks, billing). | single operator; keep the engine, drop the tenancy | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+    | **DEC-0373** | Cloud service tiers, telemetry to a vendor, account slots, mobile clients. | the daemon is authoritative and local; there is no service tier | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+    | **DEC-0374** | Permanent named specialist rosters. | the operator flagged the overcooking himself; worker templates spawned on demand instead | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+    | **DEC-0375** | A Trading-desk execution tool, "paper only" included. | QMA's money-path output is never an order; L36 puts nothing above a bot on the market, and paper is an account role on a real venue | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+    | **DEC-0376** | Git-branch-per-parameter-mutation as the lineage mechanism. | content-addressed resolved config; git only when code changes | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+    | **DEC-0377** | Group chat as the primary coordination mechanism. | parallel workers synchronize through the Task Graph, not chat | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+    | **DEC-0378** | An eleven-entry loop registry as the organizing centre. | the operator's last word enumerates graphs, not loops; the named cycles become authored Graph Templates | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+    | **DEC-0379** | Salvage from the deleted `workroom/agentic-system-planning` folder. | the operator deleted it and ruled it not an input; nothing enters unless the transcript says the same thing | [ADR-0020](decisions/ADR-0020-qma-agentic-system.md) |
+- op: regex_replace
+  pattern: The catalog contains \*\*(\d+) gaps\*\*
+  repl: The catalog contains **\1 gaps**
+  count_add:
+  - group: 1
+    delta: 22
+  all: false
+  skip_if: '## Deferred by the QMA sitting'
+- op: regex_replace
+  pattern: ^(\*\*Operator flag — resolved:\*\*)
+  repl: |-
+    - **22 deferred by the QMA sitting** — `GAP-0070`–`GAP-0091` from the 2026-08-28/29 QMX agentic-system sitting, each carrying its stated revisit condition and none blocking; `blocking: false` and `answer: null` are carried in the catalog (`DEC-0329`).
+
+    \1
+  all: false
+  skip_if: 22 deferred by the QMA sitting

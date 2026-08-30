@@ -1,0 +1,25 @@
+# Fragment: register the QMA increment's three sources SRC-13/14/15 in the intake manifest.
+# Seat D9. Rows continue the top-level `sources:` list (last block in the manifest), so a plain
+# append lands them correctly. Idempotent (op append skips when the text is already present).
+target: _docwork/manifest.yaml
+ops:
+  - op: append
+    text: |
+      - id: SRC-13
+        path: _bmad-output/planning-artifacts/architecture/architecture-QMA-2026-08-28/
+        kind: rider
+        role: primary
+        status: harvested
+        note: "The QMX agentic-system architecture sitting (2026-08-28/29): ARCHITECTURE-SPINE.md (FINAL, AD-1..AD-29 plus Inherited Invariants, Consistency Conventions, Stack, Structural Seed, Capability-to-Architecture Map, 22 Deferred rows, 20 Cut-outright rows and the Vocabulary table), .memlog.md (~290 typed entries, later lines superseding earlier; the 2026-08-29 tail records the validation close verified=true dry=true remaining=0), research/ (options-sheet.md D1..D22 plus twelve studies, evidence only), reviews/ (six gate lenses, validation-report.md, xref-table.md, all critical/high applied), and inputs/ (transcript-decision-register.md, packet-delta.md). This folder is the citation surface for the QMA increment (EXT-2300..EXT-2459); the memlog and spine are the citation surface for house treatment. QMF spine AD-1..41, QMB B-1..15 and QML QL-1..10 bind read-only as parents."
+      - id: SRC-14
+        path: archive/agentic-spine.txt
+        kind: transcript
+        role: primary
+        status: harvested
+        note: "Sitting transcript (968 lines); citation surface for the operator's own typed or dictated words only (EXT-2440..), while the SRC-13 memlog/spine is the citation surface for everything else (mirrors the SRC-08/SRC-10/SRC-12 treatment; no EXT cites the raw transcript for house treatment)."
+      - id: SRC-15
+        path: _docwork/qma/riders/job-spec-2026-08-29.md
+        kind: rider
+        role: primary
+        status: harvested
+        note: "The operator's verbatim job spec for the QMA absorption pass — a direct operator ruling of 2026-08-29, the highest authority in this increment: it orders the absorption, fixes the build order, and settles the plugin / RLM-kernel vocabulary reconciliation."

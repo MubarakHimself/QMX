@@ -3,11 +3,11 @@ id: PERF-BUDGETS-QMF-V1
 title: QMF V1 Performance Budgets
 type: lens
 status: ratified
-depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP]
-decisions: [DEC-0009, DEC-0030, DEC-0041, DEC-0045, DEC-0048, DEC-0059, DEC-0065, DEC-0096, DEC-0097, DEC-0098, DEC-0111, DEC-0114, DEC-0117, DEC-0118, DEC-0119, DEC-0121, DEC-0126, DEC-0127, DEC-0128, DEC-0129, DEC-0136, DEC-0137, DEC-0138, DEC-0142, DEC-0143, DEC-0146, DEC-0147, DEC-0149, DEC-0151, DEC-0155, DEC-0157, DEC-0158]
-sources: [DEC-0009, DEC-0030, DEC-0041, DEC-0045, DEC-0048, DEC-0059, DEC-0065, DEC-0096, DEC-0097, DEC-0098, DEC-0111, DEC-0126, DEC-0127, DEC-0128, DEC-0129, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _docwork/gaps.yaml, docs/registry/variables.yaml, _docwork/feature_inventory.yaml, docs/contracts/ct-08-gate-evidence.yaml, docs/contracts/ct-09-registry-persistence.yaml, docs/contracts/ct-10-source-observation.yaml, docs/contracts/ct-11-evidence-persistence.yaml, docs/contracts/ct-13-journal.yaml, docs/contracts/ct-14-backup-restore.yaml, docs/contracts/ct-16-indicator.yaml, docs/contracts/ct-17-causal-structure.yaml, docs/contracts/ct-18-venue-capabilities.yaml, docs/contracts/ct-19-venue-command.yaml, docs/contracts/ct-20-venue-event.yaml, docs/contracts/ct-23-risk-evaluation.yaml]
+depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP, COMP-QMN]
+decisions: [DEC-0009, DEC-0030, DEC-0041, DEC-0045, DEC-0048, DEC-0059, DEC-0065, DEC-0096, DEC-0097, DEC-0098, DEC-0111, DEC-0114, DEC-0117, DEC-0118, DEC-0119, DEC-0121, DEC-0126, DEC-0127, DEC-0128, DEC-0129, DEC-0136, DEC-0137, DEC-0138, DEC-0142, DEC-0143, DEC-0146, DEC-0147, DEC-0149, DEC-0151, DEC-0155, DEC-0157, DEC-0158, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0195, DEC-0196, DEC-0198, DEC-0200, DEC-0201, DEC-0203, DEC-0208, DEC-0236, DEC-0252, DEC-0256, DEC-0259]
+sources: [DEC-0009, DEC-0030, DEC-0041, DEC-0045, DEC-0048, DEC-0059, DEC-0065, DEC-0096, DEC-0097, DEC-0098, DEC-0111, DEC-0126, DEC-0127, DEC-0128, DEC-0129, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, _docwork/gaps.yaml, docs/registry/variables.yaml, _docwork/feature_inventory.yaml, docs/contracts/ct-08-gate-evidence.yaml, docs/contracts/ct-09-registry-persistence.yaml, docs/contracts/ct-10-source-observation.yaml, docs/contracts/ct-11-evidence-persistence.yaml, docs/contracts/ct-13-journal.yaml, docs/contracts/ct-14-backup-restore.yaml, docs/contracts/ct-16-indicator.yaml, docs/contracts/ct-17-causal-structure.yaml, docs/contracts/ct-18-venue-capabilities.yaml, docs/contracts/ct-19-venue-command.yaml, docs/contracts/ct-20-venue-event.yaml, docs/contracts/ct-23-risk-evaluation.yaml]
 generated: 2026-08-18
-verified: 2026-08-20
+verified: 2026-08-29
 stale_after: 30d
 ---
 
@@ -59,13 +59,46 @@ The ~40-bot source case remains a design input through `registry:design_bot_conc
 
 ## Storage and recovery budgets
 
-Retention, partitioning, compaction, and capacity remain GAP-0026. GAP-0027 is answered: the backup design (nightly, encrypted, versioned, off-machine, with automated sample-restore tests and periodic full-restore rehearsal) is ratified under DEC-0118, so `registry:backup_cadence` is nightly; only the numerics `registry:backup_recovery_point_objective`, `registry:backup_recovery_time_objective`, `registry:backup_retention_period`, and `registry:restore_verification_cadence` stay null pending the node/ops sitting. [DEC-0118]
+Retention, partitioning, compaction, and capacity remain GAP-0026. GAP-0027 is answered: the backup design (nightly, encrypted, versioned, off-machine, with automated sample-restore tests and periodic full-restore rehearsal) is ratified under DEC-0118, so `registry:backup_cadence` is nightly. The backup and recovery numerics that this QMF-level section left null pending the node/ops sitting were minted at the 2026-08-28 trading-node sitting as node-owned rows — with the single recovery-time objective split into two separately recorded rows — and are detailed in the Trading-node live-path and operational budgets section below (DEC-0198, DEC-0252). [DEC-0118]
 
 ## Exceeding a future budget
 
 A regression beyond a benchmark's stated threshold — in speed or in peak memory equally — fails the tier-2 merge gate (DEC-0111). Beyond the merge gate, no automatic runtime response is ratified: a breach may become CT-13 journal evidence after its threshold is recorded, but no breach can authorize promotion, order rejection, retry, flattening, exit, Book transition, restore, or external-provider action. CT-25 is an unwired placeholder and cannot be assumed as an evidence path. [DEC-0041] [DEC-0048] [DEC-0111]
 
 Venue outage handling is now ratified fail-closed — in-flight commands become UNKNOWN and command retry is prohibited (DEC-0137). Flatten authority is ratified (DEC-0150), exit ownership is ratified (the Book owns exit policy and bots propose through CT-23; DEC-0147), paper mode is ratified (a Book-level standing evidence state; DEC-0149), and same-tick priority is ratified (one arbitration point per command stream, resolved strictly by declared rank; DEC-0151); the node retains only the severity-to-effect matrix and the runtime evaluation (DEC-0142, tracker/trading-node-notes.md). No performance test may authorize or reorder any of those actions; a breach may become CT-13 journal evidence after its threshold is recorded but never a control action, promotion, order rejection, retry, flatten, exit, Book transition, restore, or external-provider action. [DEC-0157]
+
+## Trading-node live-path and operational budgets
+
+The trading node (`COMP-QMN`) inherits QMF's measure-then-budget stance unchanged and invents no latency budget: it ships its own benchmark harness at test status, measuring wall-clock and peak RSS at four seat counts against the roughly 40-seat design reference (`registry:design_bot_concurrency`), and no numeric budget is ratified before its baseline is recorded (DEC-0208, DEC-0259). Node acceptance is machinery proof, never performance — there is no profit gate and no invented latency budget (DEC-0208).
+
+### The six AD-13 live-path rungs
+
+The node names the six-stage live-path latency decomposition — tick received to evidence write to indicator update to decision to risk evaluation to order submitted — as six AD-13 rungs, each carrying its own arrival and submit stamps, with **the venue client owning the arrival and submit stamps** for its stages (DEC-0208, DEC-0196). The rungs export as monotonic histograms under the `qmn_` metric families with no numeric budget until a baseline exists (DEC-0200, DEC-0208). The operator's recorded latency figure of roughly 50 ms is a **watched target and never a budget or a gate** (DEC-0208).
+
+### The first Linux baseline is the gate, and it has three consumers
+
+The first Linux baseline is recorded on the VPS's declared `(OS, CPU-class)` tuple by the harness **in the soak's first hours, before the doors open on live bindings**, and that single baseline is simultaneously the regression gate, **CT-28's bind-time rung baseline**, and **AD-24's light-claim gate** — one recording satisfies all three, so a first boot is never circular (DEC-0208, DEC-0195). Each benchmark's regression threshold is stated when its baseline is recorded, as a **multiple of measured run-to-run variance**; a baseline without a stated threshold is not a gate (DEC-0208). The gate is evaluated on the VPS and in the nightly window; CI runs the harness for correctness only (DEC-0208, DEC-0201).
+
+**The harness never runs concurrently with a slice-driving node process.** It runs before the doors open or from node stand-down, and every baseline and gate run records the node's lifecycle state at measurement — a run recorded while the loop was driving slices is neither a baseline nor a gate, because the harness would contaminate the node's slice latency and the node would contaminate the baseline (DEC-0208). The harness holds `registry:governor_cpu_budget` and `registry:governor_memory_budget`, which are **soak-blocking** rather than merely live-blocking, so the soak gate refuses to start until each holds at least provisional-evidence (DEC-0208, DEC-0203, DEC-0256).
+
+### Boot-blocking live-path budget rows
+
+Four live-path bounds are node-minted registry rows tagged **blocks-boot**: a declared mechanism cannot run at all without the value, so the node refuses to compose while any is blank (DEC-0203, DEC-0256).
+
+- `registry:max_slice_latency` — the declared maximum per-slice latency, whose breach mints a journaled `data quality` record plus an entry-side `no-new-entry` band, never a silent skip and never a stand-down (DEC-0190).
+- `registry:accumulator_bound` — the bound on the push-to-pull accumulator, under a typed overflow rule that never drops an execution or system observation (market-data observations coalesce and the coalescing is journaled `data quality`) (DEC-0190).
+- `registry:local_queue_bound` — the bound on pacer-admission wait; time awaiting pacer admission is a local queue measured and exported separately, and a breach is a veto-path typed refusal naming the pacer, never an UNKNOWN and never a stream block (DEC-0191).
+- `registry:submission_deadline` — the deadline that mints UNKNOWN, **started at wire handoff** (the moment the venue client transmits) and never at command mint (DEC-0191).
+
+### Storage, capacity and recovery budgets
+
+Capacity is a **declared dimension, not a metric**: the VPS carries a declared disk budget and bytes-per-day of tick, bar, depth and journal growth is **measured and recorded at the soak, never estimated** (DEC-0198). The node-minted storage and recovery rows are:
+
+- `registry:hot_room_retention_window` — a hot room purges only after a verified copy exists in the evidence tier's sealed-archive role AND a verified off-host copy exists (verify-before-purge), since the evidence tier shares the machine and a same-disk sync frees nothing by itself (DEC-0198, DEC-0188).
+- `registry:disk_headroom_min` — a threshold that mints an entry-side `no-new-entry` band **before** the disk-full block arrives and pushes on the silent-degradation alert class, so headroom is bounded by design rather than watched (DEC-0198, DEC-0200).
+- `registry:vps_disk_budget` — whose line items are named and each separately capped: the journald size cap, room retention, backup staging, **the per-commit trees under `/opt/qmx` with their declared prune depth** (DEC-0201), **the reserved protection-intent extent under `/var/lib/qmx/state`** (DEC-0189), and **`/var/lib/qmx-observability`, which additionally carries its own filesystem quota** so the zero-authority observability stack can never consume the headroom `registry:disk_headroom_min` protects (DEC-0200).
+
+Backup and restore objectives are node-minted rows: `registry:backup_recovery_point_objective` (24 h by construction), the two separately recorded recovery-time rows `registry:backup_recovery_time_objective_integrity` and `registry:backup_recovery_time_objective_full_dr`, `registry:backup_retention_period`, and `registry:restore_verification_cadence` (DEC-0198, DEC-0252). **RTO is measured, never declared:** the integrity-restore RTO is measured at the monthly full-restore rehearsal and the full-DR RTO at the host-loss restore rehearsal, which includes VPS re-procurement, re-provisioning and key recovery; the three restore drills — a nightly sample restore, a monthly full restore, and the host-loss rehearsal — are what measure it (DEC-0198, DEC-0252). All storage and recovery rows are tagged **blocks-soak** (DEC-0203, DEC-0256).
 
 ## Acceptance gate
 

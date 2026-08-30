@@ -5,10 +5,10 @@ type: component-spec
 status: ratified
 component: COMP-QMF-CALENDAR-FOREX
 depends_on: [COMP-QMF-CORE]
-decisions: [DEC-0100, DEC-0101, DEC-0103, DEC-0104, DEC-0106, DEC-0108, DEC-0109, DEC-0111, DEC-0112, DEC-0135, DEC-0141]
-sources: [DEC-0100, DEC-0101, DEC-0103, DEC-0104, DEC-0106, DEC-0108, DEC-0109, DEC-0111, DEC-0112, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, docs/contracts/ct-02-time-calendar.yaml]
+decisions: [DEC-0100, DEC-0101, DEC-0103, DEC-0104, DEC-0106, DEC-0108, DEC-0109, DEC-0111, DEC-0112, DEC-0135, DEC-0141, DEC-0196, DEC-0199, DEC-0214, DEC-0259]
+sources: [DEC-0100, DEC-0101, DEC-0103, DEC-0104, DEC-0106, DEC-0108, DEC-0109, DEC-0111, DEC-0112, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, docs/components/trading-node.md, docs/contracts/ct-02-time-calendar.yaml]
 generated: 2026-08-20
-verified: 2026-08-20
+verified: 2026-08-29
 stale_after: 30d
 ---
 
@@ -51,6 +51,16 @@ flowchart TB
     CHECK -- yes --> READY[CT-02 calendar-provider ready:<br/>17:00 America/New_York rollover + session schedule]
     CHECK -- no --> REFUSE[unavailable dependency refusal]
 ```
+
+## Trading-node increment (2026-08-29)
+
+The trading node (`COMP-QMN`) adopts TN-14's time-discipline obligations at the live boundary, and this package — the forex **market-hours calendar**, one of three named-apart calendar kinds — is used unchanged; the increment adds no new law here and was ratified by operator delegation plus four direct rulings (DEC-0259, DEC-0199). See [COMP-QMN](trading-node.md) for the node's own spec.
+
+Three calendar kinds stay named apart at the node's live boundary and are never conflated: the **market-hours calendar** (this package, forex trading-hours rollover and session schedule), the **day-boundary (accounting) calendar** (an account-scoped accounting-boundary rule the node runs as the accounting period), and the **news calendar** ([COMP-CALENDAR-FEED](calendar-feed.md), the external event feed) (DEC-0199, DEC-0106). Calendar identity rides in-band on every `TradingDate`, one pinned `tzdata` version is verified at import, and the node forces the `TZPATH` to that pin once on the Linux VPS (DEC-0199).
+
+This package's 17:00 America/New_York accounting rollover stays QMF's own accounting rule, independent of any venue's bar slicing (DEC-0199, DEC-0135). At the node the venue D1 boundary is measured per broker at first connection and, once verified, minted as a **separate venue-scoped market-hours calendar identity** that anchors venue-native bars — never assumed aligned to this extension's rollover (DEC-0196, DEC-0135).
+
+The node's separate **news calendar** is a different package, [COMP-CALENDAR-FEED](calendar-feed.md), fed solely by Forex Factory's free weekly file with no paid fallback slot, ever (operator ruling R4); this market-hours calendar package defines no news content and is not a news calendar (DEC-0214, DEC-0106).
 
 ## Configuration
 

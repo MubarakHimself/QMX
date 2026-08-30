@@ -1,0 +1,73 @@
+id: CT-48
+name: QMA mailbox Envelope and WakePolicy contract
+status: ratified
+version: 1  # first minted format version; CT-48 realizes the QMA sitting's AD-20 (Agent Bus: durable, addressed, non-authoritative mailbox) with AD-24's operator approval queue and the AD-7/AD-20 lead-mailbox interim rule (DEC-0319, DEC-0323, DEC-0349); validation closed dry 2026-08-29
+owner: COMP-QMA-CORE  # a core definition (AD-1): the Envelope record, MessageKind, DeliveryState and WakePolicy fields are declared in qma-core; the daemon's Agent Bus stores each Quant's Mailbox and projects delivery from the AD-6 journal (DEC-0319, DEC-0335)
+consumers: []  # defined-unwired: no code exists; the daemon's Agent Bus realizes this contract at runtime through a core-defined port (DEC-0319, DEC-0335)
+active_consumers: []
+intended_consumers: [COMP-QMA-DAEMON]  # the daemon owns each Quant's durable Mailbox, evaluates WakePolicy at delivery time, projects DeliveryState from journal message.* events and resolves an undeliverable Envelope to dead_letter; the approval_request channel is delivered over the wire but the record and the queue are daemon-held (DEC-0319, DEC-0323)
+wiring_status: defined-unwired  # ratified surface; no code exists; the Mailbox is a projection over journal message.* events under the AD-6 journal and the AD-1 port pattern; no wiring is authorized from this doc (DEC-0319, DEC-0335)
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0319, DEC-0323, DEC-0325, DEC-0349, DEC-0304]
+gaps: [GAP-0071, GAP-0079, GAP-0089]  # GAP-0071 one lead flag per desk + the lead mailbox as catch-all (undeliverable resolves to dead_letter until ruled); GAP-0079 external agent-to-agent transport; GAP-0089 the delivery-projection trim window
+purpose: >-
+  One contract for QMA's internal message bus: each Quant's durable `Mailbox`,
+  the `Envelope` record it carries (msg id, from, to, kind, optional mission and
+  task refs, `correlation_id`, optional `reply_to_ref` and `causation_id`, body,
+  artifact refs, priority and creation time), the closed `MessageKind` and
+  `DeliveryState` vocabularies, and the `WakePolicy` the deterministic scheduler
+  evaluates at delivery time. The bus is durable, addressed and non-authoritative:
+  a message may request work but can never BE the work; a handoff becomes real
+  only when it writes a Task; the Mailbox is a projection over journal `message.*`
+  events whose bounded retention never deletes a journal record; and no model
+  authors, alters or overrides a `WakePolicy`. The `approval_request` kind is the
+  single human-approval channel every gate in the spine raises, read and answered
+  only from an `operator` principal in the daemon-held operator approval queue.
+invariants:
+  - "CT-48 realizes AD-20: each Quant owns one durable `Mailbox` living in the daemon's own store — no external relay — and the Agent Bus is durable, addressed and non-authoritative; a message may request work but can never BE the work, a handoff becomes real only when it writes a Task, and a reviewer's authoritative act is the task update while the message is only the ping (DEC-0319)."
+  - "An `Envelope` carries msg id, from, to, kind, optional mission and task refs, `correlation_id`, optional `reply_to_ref` and `causation_id`, body, artifact refs, priority and creation time; `causation_id` is the `id` of the single record that caused this one — per-record, never copied verbatim down a chain the way `correlation_id` is — and both `causation_id` and `correlation_id` are excluded from `fp1` identity by explicit versioned declaration (DEC-0319)."
+  - "`MessageKind` is one of `handoff`, `reply`, `notify`, `review_request`, `status`, `question` or `approval_request`; `approval_request` is the single human-approval channel AD-10 defines and every gate in this spine raises (DEC-0319)."
+  - "`DeliveryState` is one of `delivered`, `queued`, `woke`, `deferred` or `dead_letter`; delivery is at-least-once with idempotent msg-id dedup, a per-actor ack cursor and bounded retention — the bus is not institutional memory (DEC-0319)."
+  - "`WakePolicy` is a field of the Quant record in the definition store (AD-6, AD-7) — operator-authored, `ui-editable` under AD-26, scope `quant` — carrying wake conditions, quiet hours (a daily interval plus its IANA zone, registry:quant.quiet_hours) and max wakes per window (registry:quant.max_wakes_per_window); the deterministic scheduler EVALUATES it at delivery time and no model authors, alters or overrides it (DEC-0319, DEC-0325)."
+  - "Quiet hours suppress WAKES ONLY: a message arriving inside them is still delivered and still acked, its `DeliveryState` is `deferred`, and the wake fires at the next end of quiet hours; quiet hours never suppress a Routine firing (AD-29), never pause a run already under way and never delay an `approval_request` reply (DEC-0319)."
+  - "Retention boundary: the Mailbox is a projection over journal `message.*` events, and its bounded retention governs the delivery projection ONLY — queue depth, ack cursor and redelivery window, trimmed at registry:mailbox.delivery_trim_event_count / registry:mailbox.delivery_trim_disk_bytes — and never deletes a journal record; no journal record is ever trimmed (AD-8, AD-23) and the delivery-projection trim window is Deferred (GAP-0089) (DEC-0319)."
+  - "The `approval_request` in the daemon-held operator approval queue is read or answered only from an `operator` principal (AD-24), refused from a `machine` principal with the typed refusal `OperatorPrincipalRequired`; there is no headless, scripted, scheduled or agent-initiated path to answer an approval, which is the mechanism L17's human gate otherwise lacks (DEC-0323, DEC-0319)."
+  - "An undeliverable `Envelope` — one whose recipient no longer exists — resolves to `dead_letter` (AD-20), the interim rule until the operator rules on the lead-mailbox catch-all (GAP-0071); until then a second `lead` flag on a desk is a hard startup error and an undeliverable Envelope resolves to `dead_letter` rather than to the lead Quant (DEC-0349)."
+  - "Every send passes `before_message_send` (AD-10); external agent-to-agent transport is a later adapter behind the same `ActorId` contract with no relay or signing protocol adopted (GAP-0079), and the internal single-operator bus comes first (DEC-0319)."
+  - "An `Envelope`'s `from`, `to` and `causation_id` are three of the exactly ten cross-reference names the spine's Consistency Conventions whitelist against the `_ref` law and the validator accepts unsuffixed: `correlation_id`, `causation_id`, `producer_id`, `attempt_of`, `approval_route`, `scope_path`, `from`, `to`, `authored_by` and `proposer`; every other pointer at a record owned by another store carries a `_ref` suffix (DEC-0304, DEC-0319)."
+schema:
+  type: qma-mailbox-envelope-and-wakepolicy  # a qma-core surface: the Envelope record, the MessageKind and DeliveryState vocabularies, the WakePolicy field of the Quant record and the delivery projection over journal message.* events (DEC-0319)
+  fields:
+    - "envelope.msg_id: the durable message id; delivery dedup is idempotent on it (DEC-0319)"
+    - "envelope.from: the sending ActorId; the `from` endpoint of a mailbox `Envelope` and one of the ten cross-reference names the Conventions whitelist against the `_ref` law (AD-20) (DEC-0319, DEC-0304)"
+    - "envelope.to: the recipient ActorId; the `to` endpoint of a mailbox `Envelope` and one of the ten whitelisted `_ref`-law exceptions (AD-20); an undeliverable recipient resolves to dead_letter (GAP-0071) (DEC-0319, DEC-0349, DEC-0304)"
+    - "envelope.kind: one of the closed MessageKind vocabulary (DEC-0319)"
+    - "envelope.mission_ref: optional reference to the Mission this message concerns (DEC-0319)"
+    - "envelope.task_ref: optional reference to the Task this message concerns (DEC-0319)"
+    - "envelope.correlation_id: the tracing id propagated across boundaries and copied down a chain; excluded from fp1 identity by explicit versioned declaration (DEC-0319)"
+    - "envelope.reply_to_ref: optional reference to the message being replied to (DEC-0319)"
+    - "envelope.causation_id: the id of the single record that caused this one — per-record, never copied verbatim down a chain; excluded from fp1 identity by explicit versioned declaration; a whitelisted `_ref`-law exception (the id of the causing record, AD-20) (DEC-0319, DEC-0304)"
+    - "envelope.body: the message body (DEC-0319)"
+    - "envelope.artifact_refs: references to artifacts the message carries — references, never the artifacts themselves (DEC-0319)"
+    - "envelope.priority: the message priority (DEC-0319)"
+    - "envelope.created_at: the creation time (DEC-0319)"
+    - "wake_policy.wake_conditions: the conditions under which a delivery wakes the owning Quant; scope quant, ui-editable under AD-26 (DEC-0319, DEC-0325)"
+    - "wake_policy.quiet_hours: a daily interval plus its IANA zone (registry:quant.quiet_hours); suppresses wakes only (DEC-0319, DEC-0325)"
+    - "wake_policy.max_wakes_per_window: registry:quant.max_wakes_per_window (DEC-0319, DEC-0325)"
+    - "delivery.ack_cursor: the per-actor ack cursor over the delivery projection; part of the bounded retention, not institutional memory (DEC-0319)"
+  enums:
+    - "MessageKind: handoff | reply | notify | review_request | status | question | approval_request — closed; approval_request is the single human-approval channel AD-10 defines (DEC-0319)"
+    - "DeliveryState: delivered | queued | woke | deferred | dead_letter — closed; deferred is a message arriving inside quiet hours (delivered and acked, wake deferred), dead_letter is an undeliverable recipient (GAP-0071) (DEC-0319, DEC-0349)"
+    - "typed refusals on this contract's paths, variants of `qmf-core`'s base (CT-04): `OperatorPrincipalRequired` (a machine principal reading or answering an approval_request); a second lead flag on a desk is a hard startup error until GAP-0071 is ruled (DEC-0323, DEC-0349)"
+  units:
+    - "quant.max_wakes_per_window is a dimensionless count (registry:quant.max_wakes_per_window); quant.quiet_hours is a daily interval plus its IANA zone (registry:quant.quiet_hours) (DEC-0319, DEC-0325)"
+    - "the delivery projection is trimmed at registry:mailbox.delivery_trim_event_count / registry:mailbox.delivery_trim_disk_bytes (an event-count and an on-disk-size threshold, AD-26); the trim window is Deferred (GAP-0089) (DEC-0319)"
+    - "msg ids, ActorIds and refs are opaque qma-core-typed values; an Envelope carries no money or R value of its own (DEC-0319)"
+  nullability:
+    - "msg id, from, to, kind, body, priority and created_at are mandatory; mission_ref, task_ref, reply_to_ref and causation_id are optional and absent as an omitted key, never null (DEC-0319)"
+    - "`correlation_id` is mandatory on every Envelope — a record without one is refused at the gate (AD-5) and only an evidence append reaches the `correlation_missing` carve-out, which a mailbox `Envelope` is not; `artifact_refs` may be an empty declared set, never null (DEC-0319, DEC-0304)"
+    - "a message inside quiet hours is still delivered and acked with DeliveryState deferred — a deferred message is never a dropped or null delivery (DEC-0319)"
+    - "an undeliverable Envelope resolves to DeliveryState dead_letter, never to a silent drop and never to the lead Quant until GAP-0071 is ruled (DEC-0319, DEC-0349)"
+    - "a `WakePolicy` is operator-authored on the Quant record and no model may author, alter or override one; the spine mints no default for an unauthored policy and neither `quant.quiet_hours` nor `quant.max_wakes_per_window` carries a spine default (DEC-0319, DEC-0325)"
+provenance_note: "CT-48 is newly minted by the 2026-08-28 QMX agentic-system (QMA) architecture sitting, realizing AD-20 (Agent Bus: durable, addressed, non-authoritative mailbox) with AD-24's operator approval queue for the `approval_request` channel and the AD-7/AD-20 lead-mailbox interim rule (DEC-0319, DEC-0323, DEC-0349); WakePolicy variables are registered under AD-26 (DEC-0325). The mailbox-as-journal-projection and non-authoritative invariant keep messages out of the record (AD-8), and an undeliverable Envelope resolving to `dead_letter` pairs with the Deferred lead-mailbox catch-all question (GAP-0071). The contract is `defined-unwired`: no code exists, and no message kind, delivery state or wake policy grants an order, a binding, a sizing decision or a promotion. Ratified as rider material under SRC-15; spine FINAL, validation closed dry 2026-08-29; implementation authorization arrives only through the factory pipeline."

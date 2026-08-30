@@ -5,10 +5,10 @@ type: scenario
 status: ratified
 component: COMP-QMF-RISK
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA]
-decisions: [DEC-0150, DEC-0151, DEC-0147, DEC-0143, DEC-0158]
-sources: [docs/components/qmf-risk.md, docs/contracts/ct-30-control-action.yaml, docs/contracts/ct-29-exit-record.yaml, docs/contracts/ct-23-risk-evaluation.yaml, docs/contracts/ct-18-venue-capabilities.yaml, docs/registry/variables.yaml, _docwork/ledger.yaml, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md]
+decisions: [DEC-0150, DEC-0151, DEC-0147, DEC-0143, DEC-0158, DEC-0208, DEC-0209]
+sources: [docs/components/qmf-risk.md, docs/components/trading-node.md, docs/contracts/ct-30-control-action.yaml, docs/contracts/ct-29-exit-record.yaml, docs/contracts/ct-23-risk-evaluation.yaml, docs/contracts/ct-18-venue-capabilities.yaml, docs/registry/variables.yaml, _docwork/ledger.yaml, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, docs/decisions/ADR-0019-trading-node.md]
 generated: 2026-08-18
-verified: 2026-08-20
+verified: 2026-08-29
 stale_after: 30d
 ---
 
@@ -45,3 +45,7 @@ On one tick, on one command stream, several actions fall due on overlapping enfo
 ## Worked numbers
 
 **No rank value is supplied by QMF.** The class ordering (0 operator, 1 protection, 2 forced flats, 3 fast invalidation, 4 ordinary exits) is corpus-derived; the concrete rank integers are BMS-declared non-defaultable fields in the rank table, one per command stream, with no spine value, and uniqueness is enforced at admission Layer 1. The kill line is `registry:kill_line_capital_floor` — the same number as `loss_floor` in the sizing ladder (`loss_runway = book_capital - loss_floor`), configurable UI-editable with no spine value; `registry:window_forced_flat` and `registry:hold_time_force_flat_trigger` likewise carry no spine value. An executable fixture supplies a BMS rank table, the pending actions on one enforcement scope, and the CT-18 `netting | hedging` declaration, then asserts: one emitted close command, the arbitration winner as `closing_authority`, `suspend_new + flatten` both executing, and each suppressed action's record referencing a real CT-30 fingerprint. If any registry key or the rank table changes, recompute from the BMS-declared table and the control-action stream, never from scenario-local literals.
+
+## Wired by the trading node (2026-08-29)
+
+This golden scenario stays **defined-unwired** until the trading node (COMP-QMN, FEAT-0031) wires it: no integration or runtime proof of same-tick arbitration exists until then, and the node is the sole application that supplies it (DEC-0208). The node proves it on its week-long unattended soak acceptance gate (DEC-0208). The soak checklist item that exercises this scenario is the **AD-37 compose pair — a KSA `suspend_new` and a kill-line breach falling on one tick — proven to BOTH execute, neither suppressing the other** (`suspend_new + flatten`), with SCN-0010 wired and proven alongside the other three risk golden scenarios (DEC-0208). The node runs the exit-preservation invariant verbatim: a higher-ranked action may never reduce the protection a lower-ranked one would have delivered, and the kill-line breach flattens without waiting for a human (DEC-0209). Nothing here grants order, flatten, or live-money authority; that arrives only through the factory pipeline.

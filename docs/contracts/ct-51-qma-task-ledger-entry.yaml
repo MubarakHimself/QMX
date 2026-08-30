@@ -1,0 +1,68 @@
+id: CT-51
+name: QMA Task Ledger entry and TaskCompleted append contract
+status: ratified
+version: 1  # first minted format version; CT-51 realizes AD-9's Task Ledger entry and the TaskCompleted structured append, absorbed by the 2026-08-28/29 QMX agentic-system sitting (DEC-0308, DEC-0338)
+owner: COMP-QMA-CORE  # the Task Ledger entry and TaskCompleted record types are defined in qma-core (definitions only, depends only on qmf-core, AD-1); the daemon owns the ledger stores and persists every entry through the wire (DEC-0300, DEC-0308)
+consumers: []  # defined-unwired: no code imports this contract yet (DEC-0308)
+active_consumers: []
+intended_consumers: [COMP-QMA-DAEMON, COMP-QMA-WIRE]  # qma-daemon owns the Task Ledger store, persists appends through before_ledger_append and authors the daemon-authored entries; qma-wire carries the append and surfaces the entries and the desk ledger views as queries (DEC-0308, DEC-0309)
+wiring_status: defined-unwired  # ratified surface; no code exists; entries reach the daemon-owned Task Ledger store through before_ledger_append over the wire, and no wiring is authorized from this doc (DEC-0308)
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0308, DEC-0338, DEC-0309, DEC-0316, DEC-0305, DEC-0306]
+gaps: [GAP-0082]  # Mission reports — an agent-derived synthesis over a mission's task ledgers — are Deferred; in v1 no mission-level ledger or report synthesizes over Task Ledgers (DEC-0338, GAP-0082)
+purpose: >-
+  One Task Ledger entry — the append-only unit of the Task Ledger, the store owned
+  by the Task, one per Task for its whole life across every Agent that ever holds
+  it. An entry records what happened, when, what failed and why, what the agent did
+  to resolve it, and which model and agent did what, and is persisted in the daemon
+  store through the wire so it survives the worker. Every entry carries `attempt_no`,
+  `authored_by` (an agent ref plus the owning Quant's `ActorId`, or `daemon` on a
+  daemon-authored entry, which names no model deployment) and the model deployment
+  used, and may carry `trace_ref`, `artifact_ref`, `experiment_ref` or
+  `knowledge_ref`. Append rights follow a single `dispatch_lease` per Task; the two
+  daemon-authored entry kinds are `reassigned` (a change of the Agent holding the
+  lease, incrementing `attempt_no`) and `unknown_tail`. A task-completion transition
+  requires a structured TaskCompleted append — what was done, what changed, evidence
+  and artifact refs, unresolved issues, and the next recommendation — or the
+  completion, and only the completion, is refused while the entry is still written and
+  never discarded (DEC-0308, DEC-0338).
+invariants:
+  - "The Task Ledger is owned by the Task: one per Task for its whole life across every Agent that ever holds it, persisted in the daemon store through the wire so it survives the worker; `never shared between agents` means no ledger spans two Tasks and no Agent appends to a Task it does not hold, not that a resumed Task starts a second ledger (DEC-0308, DEC-0338)."
+  - "Append rights follow a single `dispatch_lease` per Task, distinct from AD-17's per-slot `environment_lease` and AD-9's per-Quant `quant_ledger_lease` and never named bare: `before_ledger_append` refuses an append from a non-holder of the `dispatch_lease` (DEC-0308, DEC-0316)."
+  - "Every entry carries `attempt_no`, `authored_by` (an agent ref plus the owning Quant's `ActorId`, or `daemon` on a daemon-authored entry, which names no model deployment) and the model deployment used; entries may additionally carry `trace_ref`, `artifact_ref`, `experiment_ref` or `knowledge_ref` — references, never shared semantics (DEC-0308, DEC-0306)."
+  - "Exactly two authors are exempt from `before_ledger_append`'s lease-holder check and from no other, the exempt set closed: the daemon itself for the two daemon-authored entry kinds `reassigned` and `unknown_tail`, and a `ledger_entry` returned by `before_task_complete` or `review_required` (recorded with `authored_by: daemon` plus the returning hook's registry id); both are still schema-validated (DEC-0308, DEC-0309)."
+  - "A reassignment — any change of the Agent holding the `dispatch_lease`, including a resume that must re-acquire it after release — is a daemon-authored entry of kind `reassigned` (`authored_by: daemon`) that increments `attempt_no`; a resume from `defer`, which retains the `dispatch_lease`, writes no `reassigned` entry and leaves `attempt_no` unchanged (DEC-0308)."
+  - "A task-completion transition requires a structured TaskCompleted append or the completion is refused — the completion is refused, the entry is still written, and a refused completion never discards an append; `before_ledger_append` is a validating gate, not a blocking control, and fails open because L39 forbids a control blocking the recording of evidence (DEC-0308, DEC-0309)."
+  - "The TaskCompleted append carries exactly five fixed fields — what was done, what changed, evidence and artifact refs, unresolved issues, and the next recommendation — the agent-authored institutional record that makes the Task Ledger the account of a Task's life (DEC-0308, DEC-0338)."
+  - "The Task Ledger is one of three ledger stores and everything else is a view: the Quant Ledger (a desk lead Quant's own work ledger under the `quant_ledger_lease`) and the Experiment Ledger are the other two stores, while Research, Trading, Development, Analysis and PM ledgers are read-time views over the three, never stores, and the daemon event journal is neither a ledger nor telemetry (DEC-0308, DEC-0338)."
+  - "Mission reports — an agent-derived synthesis over a mission's task ledgers — are Deferred (GAP-0082): in v1 the Quant Ledger never restates or synthesizes another Task's ledger, and no mission-level ledger or report is written over Task Ledgers (DEC-0338, GAP-0082)."
+  - "Ledger names are desk-scoped and never platform-prefixed; agent-to-agent messages are logged as Task Ledger entries (DEC-0308)."
+schema:
+  type: task-ledger-entry  # an append-only entry of the Task-owned Task Ledger, persisted by the daemon through the wire (DEC-0308)
+  fields:
+    - "id: the entry's own stable identity within its Task Ledger, a record's own `id` and never a `_ref` (DEC-0308)"
+    - "kind: the entry kind — an agent-authored progress, message or completion (TaskCompleted) entry, a daemon-authored `reassigned` or `unknown_tail` entry, or a hook-returned `ledger_entry`; the two daemon-authored kinds are closed (DEC-0308)"
+    - "attempt_no: the attempt counter, incremented by a daemon-authored `reassigned` entry and unchanged by a resume from `defer` (DEC-0308)"
+    - "authored_by: an agent ref plus the owning Quant's `ActorId` (AD-7), or `daemon` on a daemon-authored entry which names no model deployment — one of the whitelisted `_ref`-exempt fields (DEC-0308, DEC-0306)"
+    - "model_deployment_ref: the model deployment used to author the entry; absent on a daemon-authored entry (DEC-0308)"
+    - "recorded_at: the UTC instant the daemon recorded the entry through `qmf-core`'s clock; equal instants in a desk ledger view are disposed by ascending `journal_seq`, never by timestamp (AD-6) (DEC-0308, DEC-0305)"
+    - "trace_ref | artifact_ref | experiment_ref | knowledge_ref: optional references an entry may carry — references, never shared semantics (DEC-0308)"
+    - "task_completed: present only on a TaskCompleted entry — the five-field structured append (DEC-0308, DEC-0338)"
+  task_completed:  # the structured append a task-completion transition requires; exactly five fixed fields (DEC-0308, DEC-0338)
+    - "what_was_done: what the agent did on the Task (DEC-0338)"
+    - "what_changed: what changed as a result (DEC-0338)"
+    - "evidence_and_artifact_refs: the evidence and artifact refs backing the completion (`artifact_ref`, `trace_ref`, `experiment_ref` or `knowledge_ref`) (DEC-0338, DEC-0308)"
+    - "unresolved_issues: what remains unresolved (DEC-0338)"
+    - "next_recommendation: the recommended next step (DEC-0338)"
+  enums:
+    - "daemon-authored entry kinds (closed, exactly two): reassigned | unknown_tail — the only entries the daemon authors; both carry `authored_by: daemon` and name no model deployment (DEC-0308)"
+    - "authors exempt from before_ledger_append's lease-holder check (closed, exactly two): the daemon for `reassigned` and `unknown_tail`; a `ledger_entry` returned by `before_task_complete` or `review_required`, recorded with `authored_by: daemon` plus the returning hook's registry id — both still schema-validated (DEC-0308, DEC-0309)"
+    - "the three leases, never named bare: dispatch_lease (per Task, the Task Ledger append right), environment_lease (per environment slot, AD-17), quant_ledger_lease (per Quant, the Quant Ledger append right) — a Task Ledger entry follows the `dispatch_lease` alone (DEC-0308, DEC-0316)"
+    - "the three ledger stores (closed): Task Ledger | Quant Ledger | Experiment Ledger — everything else, including the five desk ledgers, is a read-time view, and the daemon event journal is neither a ledger nor telemetry (DEC-0308, DEC-0338)"
+  units:
+    - "this contract carries no money or R values and no thresholds; `attempt_no` is a count, and timestamps are persisted UTC through `qmf-core`'s clock via the daemon (AD-6) (DEC-0308, DEC-0305)"
+  nullability:
+    - "no field is null (AD-10): every entry carries `id`, `kind`, `attempt_no`, `authored_by` and `recorded_at`; `model_deployment_ref` is absent on a daemon-authored entry and mandatory otherwise; the `_ref` fields are present only when the entry carries that reference (DEC-0308)"
+    - "`task_completed` is present only on a TaskCompleted entry and, when present, carries all five fixed fields; a task-completion transition whose entry omits any of the five is refused at the completion while the entry is still written (DEC-0308, DEC-0338)"
+provenance_note: "CT-51 is newly minted by the 2026-08-28/29 QMX agentic-system architecture sitting (spine AD-9 Ledgers: task, quant, experiment; everything else is a view; realizing AD-6 daemon persistence and journal_seq ordering, AD-7 the ActorId in authored_by, AD-10 before_ledger_append / before_task_complete / review_required, and AD-17 the environment_lease distinct from the dispatch_lease), absorbed into docs/ under SRC-15 (the operator's job-spec rider of 2026-08-29). The TaskCompleted structured append is what makes the Task Ledger the agent-authored institutional record the operator asked for (DEC-0338); Mission reports over task ledgers are Deferred (GAP-0082). Ratified as rider material; the QMA spine is FINAL and export-ready with validation closed dry 2026-08-29. The contract is defined-unwired: no code exists, and implementation authorization arrives only through the factory pipeline."

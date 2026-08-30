@@ -1,0 +1,286 @@
+extractions:
+  # ── Framing: the two registers of doubt and out-of-scope (D21) ────────────
+  - id: EXT-2400
+    type: constraint
+    summary: "The Deferred table (22 rows) and the Cut-outright table (20 rows) are the two exhaustive registers of doubt and out-of-scope for the QMA v1 spine under D21. Spine law: anything on neither table, and not in D1..D23, is out of scope for v1. An AD carries rules only; doubt, unmeasured facts and unstudied implementation choices live in Deferred, each with a testable revisit condition. The Cut table is spine law — no Cut row is revived except by an explicit spine amendment, and the two tables are exclusive (a Deferred row may not specify what a Cut row bars). Every memlog 'NO NEW DEFERRED ROWS THIS ROUND' entry (L224, L246, L260) confirms findings were fixed in place rather than deferred; the rows that stand were each added or amended deliberately."
+    quote: "Spine law per D21: anything on neither this table nor the Deferred table, and not in D1..D23, is out of scope for v1."
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright; SRC-13:ARCHITECTURE-SPINE.md#deferred"
+    topics: [cut, deferred, d21, scope-law, spine-law]
+    authority: rider
+
+  # ── Cut outright — 20 rows (DEC-0360..DEC-0379) ───────────────────────────
+  - id: EXT-2401
+    type: death
+    summary: "CUT (DEC-0360): a QMX agent protocol plus adapters hosting foreign agent runtimes (a QMA-defined wire protocol other harnesses speak, and in-worker shims hosting the Claude Agent SDK, OpenAI or LangGraph loops). QMA owns its runtime bottom-up. This is why the Deferred Claude-Agent-SDK hook-count row (GAP-0087) revisits only if a spine amendment reverses this Cut, and why the model-proxy foreign-harness shim (DEC-0370) is also dead."
+    quote: "QMA owns its runtime bottom-up; nothing needs it to host foreign harnesses"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: A QMX agent protocol plus adapters hosting foreign agent runtimes)"
+    topics: [cut, dead, foreign-runtimes, agent-protocol, adapters]
+    authority: rider
+  - id: EXT-2402
+    type: death
+    summary: "CUT (DEC-0361): extension trust tiers, a marketplace or plugin store, and install counts. QMA is a single-operator system with no third-party publishers, so there is no untrusted-extension problem for a trust-tier or store to solve."
+    quote: "one operator, no third-party publishers, no untrusted-extension problem"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: Extension trust tiers, marketplace or plugin store, install counts)"
+    topics: [cut, dead, plugins, marketplace, trust-tiers]
+    authority: rider
+  - id: EXT-2403
+    type: death
+    summary: "CUT (DEC-0362): a provides/requires/optional capability dependency solver for the plugin set. A package-manager-style solver is unwarranted for a plugin set numbering in single digits (the five fixed desk plugins)."
+    quote: "a package-manager solver for a plugin set numbering in single digits"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: A provides/requires/optional capability dependency solver)"
+    topics: [cut, dead, plugins, capability-solver]
+    authority: rider
+  - id: EXT-2404
+    type: death
+    summary: "CUT (DEC-0363): the 20-service injectable context fabric (a large enumerated dependency-injection surface of context services). Architecture by enumeration; most entries have no described consumer, so QMA does not build it."
+    quote: "architecture by enumeration; most entries have no described consumer"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: The 20-service injectable context fabric)"
+    topics: [cut, dead, context-fabric, injection]
+    authority: rider
+  - id: EXT-2405
+    type: death
+    summary: "CUT (DEC-0364): the eight-type memory taxonomy (semantic/episodic/procedural/etc. typed memory classes). It was never load-bearing; QMA supersedes it with one narrow memory definition plus provenance-gated candidates behind the MemoryProvider port (AD-18)."
+    quote: "never load-bearing; superseded by one narrow definition plus provenance-gated candidates"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: The eight-type memory taxonomy)"
+    topics: [cut, dead, memory, taxonomy]
+    authority: rider
+  - id: EXT-2406
+    type: death
+    summary: "CUT (DEC-0365): the general-IDE lifecycle events (display, elicitation, config, cwd, directories). This is multi-surface public-IDE plumbing; QMA fires only the hook events its authored graphs need (AD-10), not a general editor event bus."
+    quote: "multi-surface public-IDE plumbing; QMA fires only what its authored graphs need"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: The general-IDE lifecycle events (display, elicitation, config, cwd, directories))"
+    topics: [cut, dead, ide-lifecycle, hooks]
+    authority: rider
+  - id: EXT-2407
+    type: death
+    summary: "CUT (DEC-0366): hot-module reload and reactive re-mount of live plugins. A developer nicety that runs against QMA's determinism requirement; QMA uses explicit reload instead (AD-21 reversible scopes)."
+    quote: "a dev nicety against a determinism requirement; explicit reload instead"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: Hot-module reload and reactive re-mount of live plugins)"
+    topics: [cut, dead, plugins, hot-reload, determinism]
+    authority: rider
+  - id: EXT-2408
+    type: death
+    summary: "CUT (DEC-0367): isolate/intercept and label-joined config scopes (multi-tenant overlay configuration machinery). QMA has one operator and one config, so the overlay machinery has nothing to isolate."
+    quote: "multi-tenant overlay machinery; one operator, one config"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: Isolate/intercept and label-joined config scopes)"
+    topics: [cut, dead, config-scopes, multi-tenant]
+    authority: rider
+  - id: EXT-2409
+    type: death
+    summary: "CUT (DEC-0368): relay, signing and public-messaging protocols as the Agent Bus transport. That is sovereign multi-tenant messaging for strangers; a single-operator daemon's bus (AD-20) needs none of it."
+    quote: "sovereign multi-tenant messaging for strangers; a single-operator daemon needs none"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: Relay, signing and public-messaging protocols as the bus transport)"
+    topics: [cut, dead, agent-bus, transport, messaging]
+    authority: rider
+  - id: EXT-2410
+    type: death
+    summary: "CUT (DEC-0369): a shared account-level cloud computer with per-actor screens. It is not a security boundary; Docker-per-worker (AD-17 ExecutionEnvironment) replaces it as the isolation mechanism."
+    quote: "not a security boundary; Docker-per-worker replaces it"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: A shared account-level cloud computer with per-actor screens)"
+    topics: [cut, dead, cloud-computer, per-actor-screens, docker]
+    authority: rider
+  - id: EXT-2411
+    type: death
+    summary: "CUT (DEC-0370): a foreign-harness shim in the model proxy (masquerading, model-identity spoofing so a call appears to originate from a different harness). QMA owns its caller and records the true Deployment honestly (AD-15); it never spoofs a model identity."
+    quote: "QMA owns its caller and records the true deployment honestly"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: A foreign-harness shim in the model proxy (masquerading, model-identity spoofing))"
+    topics: [cut, dead, model-proxy, masquerading, foreign-harness]
+    authority: rider
+  - id: EXT-2412
+    type: death
+    summary: "CUT (DEC-0371): plaintext credential files in a home directory as a source for any QMA-resolved secret. L34 binds — QMA handles references only, with values kept in the OS store through the Credential Broker (AD-24). A local-proxy Deployment's own provider credentials stay that proxy's custody outside QMA's namespace and are never read, copied, migrated or referenced by QMA."
+    quote: "L34: QMA handles references only, values in the OS store through the Credential Broker; a local-proxy Deployment's own provider credentials remain that proxy's custody outside QMA's namespace, never read, copied, migrated or referenced by QMA (AD-15, AD-24)"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: Plaintext credential files in a home directory as a source for any QMA-resolved secret)"
+    topics: [cut, dead, credentials, credential-broker, l34, secrets]
+    authority: rider
+  - id: EXT-2413
+    type: death
+    summary: "CUT (DEC-0372): multi-tenant memory and knowledge machinery (orgs, projects, ACLs, sharing, webhooks, billing). QMA keeps the memory/knowledge engine but drops the tenancy — there is a single operator."
+    quote: "single operator; keep the engine, drop the tenancy"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: Multi-tenant memory and knowledge machinery (orgs, projects, ACLs, sharing, webhooks, billing))"
+    topics: [cut, dead, multi-tenant, memory, knowledge]
+    authority: rider
+  - id: EXT-2414
+    type: death
+    summary: "CUT (DEC-0373): cloud service tiers, telemetry to a vendor, account slots and mobile clients. The daemon is authoritative and local (AD-6, AD-25); there is no service tier and no vendor telemetry sink."
+    quote: "the daemon is authoritative and local; there is no service tier"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: Cloud service tiers, telemetry to a vendor, account slots, mobile clients)"
+    topics: [cut, dead, cloud-tiers, vendor-telemetry, mobile]
+    authority: rider
+  - id: EXT-2415
+    type: death
+    summary: "CUT (DEC-0374): permanent named specialist rosters (a fixed cast of always-on named worker agents). The operator flagged the overcooking himself; QMA spawns worker templates on demand instead (AD-22 worker_template)."
+    quote: "the operator flagged the overcooking himself; worker templates spawned on demand instead"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: Permanent named specialist rosters)"
+    topics: [cut, dead, rosters, worker-templates]
+    authority: rider
+  - id: EXT-2416
+    type: death
+    summary: "CUT (DEC-0375): a Trading-desk execution tool, 'paper only' included. QMA's money-path output is never an order; L36 puts nothing above a bot on the market, and paper is an account role on a real venue, not a sandbox. This Cut is the ground for the AD-16/AD-28 money-path reachability barrier and DEC-0341."
+    quote: "QMA's money-path output is never an order; L36 puts nothing above a bot on the market, and paper is an account role on a real venue"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: A Trading-desk execution tool, \"paper only\" included)"
+    topics: [cut, dead, execution-tool, money-path, paper-trading, l36]
+    authority: rider
+  - id: EXT-2417
+    type: death
+    summary: "CUT (DEC-0376): git-branch-per-parameter-mutation as the lineage mechanism. QMA uses content-addressed resolved config for parameter lineage; git is used only when code changes, not for every parameter variant."
+    quote: "content-addressed resolved config; git only when code changes"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: Git-branch-per-parameter-mutation as the lineage mechanism)"
+    topics: [cut, dead, lineage, git-branch, content-addressed]
+    authority: rider
+  - id: EXT-2418
+    type: death
+    summary: "CUT (DEC-0377): group chat as the primary coordination mechanism. Parallel workers synchronize through the Task Graph (AD-12), not chat; the Agent Bus (AD-20) is durable and addressed but non-authoritative."
+    quote: "parallel workers synchronize through the Task Graph, not chat"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: Group chat as the primary coordination mechanism)"
+    topics: [cut, dead, group-chat, coordination, task-graph]
+    authority: rider
+  - id: EXT-2419
+    type: death
+    summary: "CUT (DEC-0378): an eleven-entry loop registry as the organizing centre. The operator's last word (T-4954) enumerates graphs, not loops; the named cycles become authored, plugin-contributed Graph Templates (AD-13), with Loop reduced to a node kind inside a Graph Template."
+    quote: "the operator's last word enumerates graphs, not loops; the named cycles become authored Graph Templates"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: An eleven-entry loop registry as the organizing centre)"
+    topics: [cut, dead, loop-registry, graph-templates, t-4954]
+    authority: rider
+  - id: EXT-2420
+    type: death
+    summary: "CUT (DEC-0379): salvage from the deleted workroom/agentic-system-planning folder. The operator deleted it and ruled it not an input; nothing from it enters the spine unless the transcript independently says the same thing. The folder is not an input to this documentation-factory pass either (operator ruling 2026-08-28)."
+    quote: "the operator deleted it and ruled it not an input; nothing enters unless the transcript says the same thing"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#cut-outright (row: Salvage from the deleted workroom/agentic-system-planning folder)"
+    topics: [cut, dead, salvage, workroom, deleted-folder]
+    authority: rider
+
+  # ── Deferred — 22 rows (GAP-0070..GAP-0091) ───────────────────────────────
+  - id: EXT-2421
+    type: open
+    summary: "DEFERRED (GAP-0070): Windows VPS for the computer-use agent — planned, not provisioned (AD-25). Until an ExecutionEnvironment of kind desktop is registered against a reachable host, every computer-use tool fails its check_fn and the Compute Router returns NoEnvironment for a desktop ComputeRequirement. The VPS is the operator's own planned purchase; AD-25 registers it only once provisioned, never in v1 (memlog L206)."
+    quote: "an ExecutionEnvironment of kind desktop is registered against a reachable host; until that record exists every computer-use tool fails its check_fn and the Compute Router returns NoEnvironment for a desktop ComputeRequirement"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#deferred (row: Windows VPS for the computer-use agent); SRC-13:.memlog.md:L206"
+    topics: [deferred, windows-vps, computer-use, desktop-environment, ad-25]
+    authority: rider
+  - id: EXT-2422
+    type: open
+    summary: "DEFERRED (GAP-0071): one lead flag per desk, and the lead Quant's mailbox as the catch-all for mailbox Envelopes whose recipient no longer exists — both inferred from the ledger ruling, never ruled by the operator. Until he rules on both, a second lead flag on a desk is a hard startup error and an undeliverable Envelope resolves to dead_letter (AD-20) rather than to the lead. AD-7's own sentence states this interim rule; the memlog narrowed the AD-7 tag to ratify only that a desk-level lead Quant exists and keeps a ledger (memlog L183)."
+    quote: "the operator rules on both; until then a second lead flag on a desk is a hard startup error and an undeliverable Envelope resolves to dead_letter (AD-20) rather than to the lead"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#deferred (row: One lead flag per desk, and the lead Quant's mailbox as the catch-all); SRC-13:.memlog.md:L183"
+    topics: [deferred, lead-flag, mailbox, catch-all, dead-letter, ad-7, ad-20]
+    authority: rider
+  - id: EXT-2423
+    type: open
+    summary: "DEFERRED (GAP-0072 + GAP-0073): the two provider-backend deferrals. (GAP-0072) External memory backend (Hindsight, Mem0): revisit when the AD-22 staging store holds memory candidates from at least two desks AND at least one Mission has been blocked by recall being unavailable — both readable from the journal — then re-check the store dependency (Postgres+pgvector or Oracle 23ai); the port-to-Hindsight 1:1 mapping in research/memory-providers.md was verified against 0.4.9 and the current release is v0.9.2, so re-verify the mapping at admission. (GAP-0073) Knowledge indexing (hybrid retrieval over the corpus): revisit when the corpus root holds at least one ingestible content file AND STRATS §6 Q1-Q12 (folder layout, serialization, stable-id scheme) are ratified upstream. v1 ships the MemoryProvider and KnowledgeSource ports only (AD-18, AD-19)."
+    quote: "the AD-22 staging store holds memory candidates from at least two desks and at least one Mission has been blocked by recall being unavailable"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#deferred (rows: External memory backend; Knowledge indexing)"
+    topics: [deferred, memory-backend, hindsight, mem0, knowledge-indexing, hybrid-retrieval, ad-18, ad-19]
+    authority: rider
+  - id: EXT-2424
+    type: open
+    summary: "DEFERRED (GAP-0074): self-improvement evaluation gates. Revisit when the telemetry store holds complete agent trajectories for at least the AD-26-registered count of finished Missions (initially 50) across at least two desks. v1 ships the AD-22 invariants plus the staging store only; the evaluation gates switch on when this condition is met."
+    quote: "the telemetry store holds complete agent trajectories for at least the AD-26-registered count of finished Missions (initially 50) across at least two desks; v1 ships invariants plus staging only"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#deferred (row: Self-improvement evaluation gates)"
+    topics: [deferred, self-improvement, evaluation-gates, trajectories, ad-22, ad-26]
+    authority: rider
+  - id: EXT-2425
+    type: open
+    summary: "DEFERRED (GAP-0075): sandbox and compute vendors — remote_container, and desktop beyond the operator's planned Windows VPS (which AD-25 registers only once provisioned, never in v1). Revisit when the Compute Router has recorded at least the AD-26-registered count (initially 3) of NoEnvironment refusals for ComputeRequirements no local Docker environment can satisfy, or a job has exceeded the workstation's memory or GPU capability — counted from telemetry, never judged. The operator rejected Modal, Daytona and E2B outright on cost and fit and said he would 'first look for what I want' (T-3976), so a shortlist starting from those three is not the starting point; the sandbox exists for backtesting fan-out first (T-3976). The row was rescoped so it no longer defers a provider the spine already ships (memlog L123)."
+    quote: "the Compute Router has recorded at least the AD-26-registered count (initially 3) of NoEnvironment refusals for ComputeRequirements no local Docker environment can satisfy, or a job has exceeded the workstation's memory or GPU capability"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#deferred (row: Sandbox and compute vendors); SRC-13:.memlog.md:L123"
+    topics: [deferred, sandbox, compute-vendors, remote-container, modal-daytona-e2b-rejected, t-3976]
+    authority: rider
+  - id: EXT-2426
+    type: open
+    summary: "DEFERRED (GAP-0076 + GAP-0080): the two RLM deferrals. (GAP-0076) RLM kernel performance envelope — fan-out throughput, namespace-snapshot fidelity for large handles, cost per 800-variant aggregation: a measurement obligation revisited when the Analysis desk's first full backtest fan-out has run, recording wall-clock, peak memory and USD cost for one 800-variant aggregation and one snapshot-and-restore of the largest handle in that run, as evidence under AD-26; if a snapshot fails or the recorded cost exceeds rlm.fanout_cost_ceiling_usd (AD-26), RLM-in-Docker is re-opened (memlog L135, L260). (GAP-0080) RLM beyond the Analysis desk, and depth above 2: revisit when a desk other than Analysis has recorded a Task blocked for want of an RLM kernel, OR an Analysis run has hit the depth-2 cap — both readable from the journal."
+    quote: "the Analysis desk's first full backtest fan-out has run: record wall-clock, peak memory and USD cost for one 800-variant aggregation and one snapshot-and-restore of the largest handle in that run, as evidence under AD-26; if a snapshot fails or the recorded cost exceeds rlm.fanout_cost_ceiling_usd (AD-26), RLM-in-Docker is re-opened"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#deferred (rows: RLM kernel performance envelope; RLM beyond the Analysis desk, and depth above 2); SRC-13:.memlog.md:L135"
+    topics: [deferred, rlm-kernel, performance-envelope, depth-cap, fan-out, ad-14, ad-26]
+    authority: rider
+  - id: EXT-2427
+    type: open
+    summary: "DEFERRED (GAP-0077): the in-house threading node's shape and the contribution point it needs. Revisit when the operator supplies the threading node's spec or its code; until then no PluginManifest contribution type is minted for it and no plugin may declare one (memlog L138)."
+    quote: "the operator supplies the threading node's spec or its code; until then no PluginManifest contribution type is minted for it and no plugin may declare one"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#deferred (row: The in-house threading node's shape and the contribution point it needs); SRC-13:.memlog.md:L138"
+    topics: [deferred, threading-node, plugin-manifest, contribution-point]
+    authority: rider
+  - id: EXT-2428
+    type: open
+    summary: "DEFERRED (GAP-0078): browser stack choice. Revisit when a browser-heavy mission actually blocks; no study exists yet. The starting point is the operator's own — reverse-engineer Egolite for this use case (T-3976), not a vendor shortlist; Cloudflare Browser Run, Modal, Daytona and E2B were rejected on cost and fit (T-3976), and his method is 'extract, do not clone blindly'."
+    quote: "a browser-heavy mission actually blocks; no study exists yet. The starting point is the operator's own - reverse-engineer Egolite for this use case (T-3976), not a vendor shortlist"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#deferred (row: Browser stack choice)"
+    topics: [deferred, browser-stack, egolite, t-3976, extract-not-clone]
+    authority: rider
+  - id: EXT-2429
+    type: open
+    summary: "DEFERRED (GAP-0079): external agent-to-agent transport. Revisit when a second host or an external counterparty needs the mailbox; the internal Agent Bus (AD-20) comes first."
+    quote: "a second host or an external counterparty needs the mailbox; the internal bus comes first"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#deferred (row: External agent-to-agent transport)"
+    topics: [deferred, agent-to-agent, transport, mailbox, ad-20]
+    authority: rider
+  - id: EXT-2430
+    type: open
+    summary: "DEFERRED (GAP-0081): UI presentation — architecture, Rust extension technology, UI SDK surfaces, contribution points, UI plugin packaging, and the qma-ui-contract package beyond a stub. Revisit in its own session, once the daemon API is live and stable; the operator has not started the UI and does not plan to soon. The wire contract (AD-5) and the variables registry (AD-26) are NOT deferred and bind now. Profile records are client state, specified in that session; nothing in the daemon reads or stores one (AD-7). Carried forward: the UI reads as a trading/research terminal, not a generic agent dashboard, and surfaces live remote-agent activity — status, current task, tool calls, outputs, progress, failures, attach and observe (operator, T-5071, T-5082-5084)."
+    quote: "its own session - the operator has not started the UI and does not plan to soon; the wire contract (AD-5) and the variables registry (AD-26) are not deferred and bind now. Revisit once the daemon API is live and stable"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#deferred (row: UI presentation ... and the qma-ui-contract package beyond a stub)"
+    topics: [deferred, ui-presentation, qma-ui-contract, rust-extension, trading-terminal, t-5071, t-5082]
+    authority: rider
+  - id: EXT-2431
+    type: open
+    summary: "DEFERRED (GAP-0082): Mission reports (an agent-derived synthesis over a mission's task ledgers). Revisit after the first missions run; the operator is not yet certain they are wanted. No live mission ledger exists in the meantime (memlog L84 ledger scoping context)."
+    quote: "the operator is not yet certain they are wanted; revisit after the first missions run. No live mission ledger exists in the meantime"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#deferred (row: Mission reports)"
+    topics: [deferred, mission-reports, task-ledgers, ad-9]
+    authority: rider
+  - id: EXT-2432
+    type: open
+    summary: "DEFERRED (GAP-0083): desk consolidation (five desks vs three vs two). Revisit after the first missions run. Roles are settled; Profile is presentation and may collapse desks for display — never a rename or retirement of a desk_slug, ActorId, plugin prefix, memory scope or ledger index key (AD-7), which is what makes this deferral free."
+    quote: "after the first missions run; roles are settled; Profile is presentation and may collapse desks for display - never a rename or retirement of a desk_slug, ActorId, plugin prefix, memory scope or ledger index key (AD-7), which is what makes this deferral free"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#deferred (row: Desk consolidation (five desks vs three vs two))"
+    topics: [deferred, desk-consolidation, profile-collapse, ad-7]
+    authority: rider
+  - id: EXT-2433
+    type: open
+    summary: "DEFERRED (GAP-0084): a separate Mission Template registry beside Graph Templates. Revisit when the first three authored graph packs exist AND a desk demonstrably needs a mission skeleton a Graph Template cannot carry. No Mission Template exists in v1 (AD-13)."
+    quote: "after the first three authored graph packs exist and a desk demonstrably needs a mission skeleton a Graph Template cannot carry"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#deferred (row: A separate Mission Template registry beside Graph Templates)"
+    topics: [deferred, mission-template, graph-templates, ad-13]
+    authority: rider
+  - id: EXT-2434
+    type: open
+    summary: "DEFERRED (GAP-0085): typed strategy-mechanism decomposition and recombination (EntryMechanism, ExitMechanism, Filter, SessionRule, PositionRule, InvalidationRule with paper-level provenance — operator, T-1896 / T-2832). QML and qmf-registry own strategy semantics (AD-14); QMA carries the candidates and the lineage edges. Revisit at the QML sitting — StrategyHandle and ExperimentSpec are already shaped to carry the result."
+    quote: "QML and qmf-registry own strategy semantics (AD-14); QMA carries the candidates and the lineage edges. Revisit at the QML sitting - StrategyHandle and ExperimentSpec are already shaped to carry the result"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#deferred (row: Typed strategy-mechanism decomposition and recombination)"
+    topics: [deferred, strategy-mechanism, strategyhandle, experimentspec, qml, t-1896, t-2832]
+    authority: rider
+  - id: EXT-2435
+    type: open
+    summary: "DEFERRED (GAP-0086): graph engine implementation choice. Revisit when the first three authored graph packs exist. AD-13 fixes the Graph Template / Task Graph contract and nothing below it: no graph-engine candidate was studied in this run, and the implementation choice is carried by this row."
+    quote: "when the first three authored graph packs exist"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#deferred (row: Graph engine implementation choice)"
+    topics: [deferred, graph-engine, implementation-choice, ad-13]
+    authority: rider
+  - id: EXT-2436
+    type: open
+    summary: "DEFERRED (GAP-0087): Claude Agent Python SDK in-process hook count — 7 (research/daemon-stack-options.md) vs 10 (research/claude-agent-sdk-hooks.md), same source, same day, unresolved. Revisit before any Claude-worker adapter is specified — which the Cut table bars in v1 (adapters hosting foreign agent runtimes), so this row revisits only if a spine amendment reverses that Cut; carried to the session that specifies AD-15 Deployment adapters or AD-17 worker templates. Nothing in this spine depends on it: AD-10's hook set is QMA-authored and no adapter is specified (memlog L244)."
+    quote: "before any Claude-worker adapter is specified - which the Cut table bars in v1 (\"adapters hosting foreign agent runtimes\"), so this row revisits only if a spine amendment reverses that Cut"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#deferred (row: Claude Agent Python SDK in-process hook count: 7 vs 10); SRC-13:.memlog.md:L244"
+    topics: [deferred, claude-agent-sdk, hook-count, foreign-runtimes-cut, ad-10, ad-15]
+    authority: rider
+  - id: EXT-2437
+    type: open
+    summary: "DEFERRED (GAP-0088 + GAP-0089): the two store-lifecycle deferrals. (GAP-0088) Backup destination, encryption-key custody, and the sample-restore-test and full-restore-rehearsal cadences: revisit before the daemon's first non-test run opens a durable store — AD-27's nightly off-machine copy cannot execute without a destination and a key, so the destination and both restore cadences are decided and registered under AD-26 at that point; the encryption-key custody stays with the parent's deferral and revisits on the parent's condition (memlog L223, L246). (GAP-0089) Trim window for the bounded non-evidence streams (mailbox delivery projection, telemetry) — the AD-6 event journal is never trimmed and agent trajectories are exempt (AD-8, AD-23): revisit when the stream's event count or on-disk size crosses its AD-26-registered trim threshold; trajectories may not be trimmed until the three evidence-dependent rows above are evaluated and recorded, and exemption from trimming is never exemption from backup (AD-27)."
+    quote: "before the daemon's first non-test run opens a durable store: AD-27's nightly off-machine copy cannot execute without a destination and a key, so the destination and both restore cadences are decided and registered under AD-26 at that point; the encryption-key custody stays with the parent's deferral and revisits on the parent's condition"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#deferred (rows: Backup destination, encryption-key custody, and the sample-restore-test and full-restore-rehearsal cadences; Trim window for the bounded non-evidence streams); SRC-13:.memlog.md:L223"
+    topics: [deferred, backup, encryption-key, restore-cadence, trim-window, ad-23, ad-27]
+    authority: rider
+  - id: EXT-2438
+    type: open
+    summary: "DEFERRED (GAP-0090): context compaction — what a compaction pass may summarize, what it must preserve, and where the compacted material goes. AD-14 names compaction as a shared subsystem and no AD carries it. Revisit when the first Session reaches its deployment's min_context_tokens ceiling, readable from telemetry; until then compaction is Context Compiler behaviour that persists nothing (AD-8, Context row) and no compacted transcript is evidence (memlog L234)."
+    quote: "the first Session reaches its deployment's min_context_tokens ceiling, readable from telemetry; until then compaction is Context Compiler behaviour that persists nothing (AD-8, Context row) and no compacted transcript is evidence"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#deferred (row: Context compaction); SRC-13:.memlog.md:L234"
+    topics: [deferred, context-compaction, context-compiler, min-context-tokens, ad-14]
+    authority: rider
+  - id: EXT-2439
+    type: open
+    summary: "DEFERRED (GAP-0091): interactive walkthrough artifact for this spine — an optional operator aid. Revisit after the spine is reviewed."
+    quote: "optional operator aid; after the spine is reviewed"
+    cite: "SRC-13:ARCHITECTURE-SPINE.md#deferred (row: Interactive walkthrough artifact for this spine)"
+    topics: [deferred, walkthrough-artifact, operator-aid]
+    authority: rider

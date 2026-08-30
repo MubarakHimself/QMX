@@ -291,3 +291,331 @@ open gaps. All memlog "assumption" entries are operator-overridable calls
 Remaining open after this: GAP-0016/0017 (registration gate, DEC-0121),
 GAP-0048 content, GAP-0049. Then the PRD, then BMad exit.
 ```
+
+## 12. Documentation factory — QMA increment (written 2026-08-28, after the agentic-system sitting closed; run this next)
+
+```
+Run /documentation-factory in change mode, QMA increment (the QMX agentic
+system). Intake: _bmad-output/planning-artifacts/architecture/
+architecture-QMA-2026-08-28/ — ARCHITECTURE-SPINE.md (FINAL, AD-1..AD-29 or
+higher if the validation pass minted more; ids are stable, never renumbered;
+Inherited Invariants table cites parent AD/L/DEC ids read-only), .memlog.md
+(THE AUTHORITY: ~110 entries of operator rulings, adopted leans, gate
+amendments, validation-pass fixes; later lines supersede earlier),
+research/options-sheet.md (D1..D22 options + leans + 21 adversary
+dispositions) and the 12 research/*.md primary-source studies (2026-08-28,
+cite them as evidence, never as rulings), reviews/ (six gate lenses, all
+critical/high applied), inputs/transcript-decision-register.md (the
+ChatGPT-session distillation; section 4 = operator's own words) and
+inputs/packet-delta.md. The raw transcript and the packet are seed
+material only. The deleted workroom/agentic-system-planning folder is NOT
+an input (operator ruling 2026-08-28). Job: absorb the agentic system into
+docs/ as a new application-layer consumer beside QMB and QML. New component
+docs: docs/components/qma-core.md (ontology, ports, refusal variants, plugin
+contribution surface, closed vocabularies: hook verbs, HookResult decisions
++ total precedence, JobHandle states incl. UNKNOWN, Task/Mission states,
+MessageKind, DeliveryState, handle kinds, ModelClass four values, principal
+classes, the three verbs admit/apply/promote), docs/components/qma-wire.md
+(envelope v/type/id/correlation_id/scope_path/seq/payload; JSON-RPC 2.0 over
+WebSocket + HTTP GET queries; initialize handshake + semver protocolVersion,
+additive-only within a major, wire.deprecation_minors; the 26-noun seed
+vocabulary; attach/detach/replay; transport posture loopback-default,
+TLS + recorded config otherwise, dial-out for remote workers),
+docs/components/qma-daemon.md (one journal / sole writer / clock law; the
+closed store list and folds; Task Graph; hooks registry and source bounds;
+ledgers task/quant/experiment + desk views; Agent Bus; scheduler + Routines
++ continuation; model proxy chain with OpenCodex behind it; Tool Registry
+with the act-level money-path deny-list and check_fn; ExecutionEnvironment /
+Compute Router / JobHandle; plugin loader with reversible scopes and
+migration down/forward_only; staging store and admission gate; telemetry
+export port; Credential Broker allowlist + egress rule; store lifecycle,
+backup, restore per parent AD-20/L18). Mint contracts from the ADs at the
+next free CT numbers: the wire envelope + command/query/event families,
+HookEvent/HookResult, PluginManifest/PluginContext, MemoryProvider,
+KnowledgeSource/CorpusSnapshot/Citation/Provenance, ModelClassRequest/
+Deployment/ModelCapabilities/CredentialBroker, ExecutionEnvironment/
+ComputeRequirement/JobHandle, ExperimentSpec (content-addressed, lineage
+DAG), Envelope/Mailbox, Routine, RefinementProposal, the Task Ledger entry
+schema and the TaskCompleted structured append. Mint ledger decisions for
+every load-bearing ruling: Python 3.14 daemon (L31 dispositive), contract-hub
+house style, workstation-default daemon + UI-driven remote deploy, Quant
+replaces Bot for the agentic actor, qma.* namespace and no blanket QMX
+prefix, task-level ledgers, hooks on every primitive, three control
+primitives with the Graph Template vs Task Graph name split, no execution
+tool at any account role + reachability barrier (AD-16/AD-28), no memory
+engine in-house (MemoryProvider port; Hindsight deferred behind an eval),
+read-only Knowledge adapter over the STRATS plain-file library, OpenCodex
+behind the Deployment/Broker contract with auth_mode none + loopback bind,
+promote reserved for the L17 live-zone act, plugin adopted / kernel only as
+"RLM kernel" (parent ban is QMB-scoped; L30 roster-scoped per its 2026-08-21
+annotation), the Cut-outright table as spine law. Glossary: add Quant, Desk
+/ Profile / Role (five of each, never interchanged), Agent / Subagent /
+Session / Worker, Mission / Task / Task Graph, Graph Template, Loop, Skill,
+Hook, Task Ledger / Quant Ledger / Experiment Ledger / desk ledger view /
+event journal, Memory vs Knowledge, evidence_confidence vs
+admission_confidence, admit / apply / promote, ModelClass / Deployment /
+Credential Broker / model_family, ExecutionEnvironment / JobHandle /
+UNKNOWN, ExperimentSpec, Agent Bus / Mailbox / Envelope, Routine,
+principal class, RLM kernel, plugin (agentic sense), QMA = QuantMind Agents
+(the SDK only); record "Quantum Mind", "Steward", "QMX Backtesting
+Framework" (= QMB) and "QMX Event Ledger" as retired names. Update
+registry/variables.yaml with every AD-26 variable (quiet hours, wake caps,
+sticky limit, budget hint, hook timeouts, ask_timeout,
+wire.deprecation_minors, dedup window, RLM depth cap, retention windows,
+max_in_flight, routine caps, continuation budget + escalation target,
+backup + restore-rehearsal cadence, model_family, ReviewPolicy families,
+proxy.allow_unauthenticated_loopback), each ui-editable/uneditable per L38.
+Record the constitution touchpoints (L17, L18, L30 scope, L31, L33, L34,
+L35 adopted, L36, L38, L39) in traceability; add the agentic system to
+docs/architecture/overview.md as an application-layer consumer and to
+AGENTS.md's reading order. Do not revive anything in the spine's Cut table;
+the UI extension SDK, memory backend, knowledge indexing, self-improvement
+gates, compute vendors, browser stack and desk consolidation stay Deferred
+with their stated revisit conditions. All memlog "assumption" entries and
+every Deferred row are operator-overridable — surface them in the changelog
+row so the operator can veto cheaply. Then bmad-create-epics-and-stories
+over the QMA increment (build order: qma-core → qma-wire → qma-daemon
+journal/store/hooks/task-graph → model proxy + tools → environments + QMB
+door → ledgers/bus/scheduler → plugins; a Quant reachable through models
+over the wire is the first milestone; UI later).
+```
+
+## 13. Documentation factory — TRADING-NODE increment (written 2026-08-28, after the trading-node sitting closed; run this next)
+
+```
+Run /documentation-factory in change mode, TRADING-NODE increment (Phase 2 of
+the PRD). Intake: _bmad-output/planning-artifacts/architecture/
+architecture-NODE-2026-08-28/ — ARCHITECTURE-SPINE.md (FINAL, TN-1..TN-25 +
+Inherited Invariants + "Corrections the node inherits from adjudication" +
+"Parent annotations and mints proposed by this sitting" + "Operator rulings
+2026-08-28" + "Assumption register (A1–A47)"), .memlog.md (every ruling,
+the 20 gate rulings, the four operator rulings, every assumption — the
+authority when spine and memlog differ on rationale), inputs/ (parts-bin.md
+= the ground-truth inventory of integration@ef9bb25: 154 capabilities,
+78 as-is / 24 needs-live-adapter / 52 missing, effort-weighted 45–60%;
+corpus-verdicts-A.md + corpus-verdicts-B.md; the ten discovery dossiers),
+reviews/ (six first-gate lenses, fix-pass-1.md, five re-gate lenses).
+Ground rules unchanged: docs/ is the requirements body the factory codes
+against; this increment is its only writer; lint_docs --strict stays clean;
+banned words (engine, kernel, plugins, exam, minimal core, "paper node",
+bare stop-out, bare calendar, timeframe); "the trading node" is ONE product
+with modes paper|live; there is NO operator command line (operator ruling
+2026-08-28) — deployment tooling is `just node-…` recipes only.
+
+Job: absorb the trading node into docs/.
+- New component doc docs/components/trading-node.md (code name qmn; the
+  operator declined to name it — record that). Cover every TN: identity and
+  base branch (application on QMF like QMB/QML; the sole sanctioned
+  qmf-venue wirer); composition root + boot ceremony (compose → fingerprint
+  → seal; composition_fp; boot-attempt record; preflight; check mode; timer
+  units' abbreviated ceremony); topology/planes/trust boundaries; process
+  model (one asyncio loop at the edge; QMB's loop unforked via run_slice;
+  push-to-pull accumulator as single first writer + interpretation cursor;
+  one loop per command stream; stand-down-alive + resurrect; safe point;
+  shutdown contract minting UNKNOWN for in-flight commands); the order path
+  chain of command with veto and suppression paths, entry-side-only blocks,
+  AD-37 collapse/conflict/compose, command ordinal ≠ journal sequence,
+  durable command-id-binding, submission deadline from wire handoff; KSA
+  (GitBook levels adopted, effect matrix blank-blocks-live, monotone fold,
+  kill switch under a dead wire, never-auto predicates); the protection set
+  run verbatim (kill line = loss_floor per binding on the virtual-ledger
+  equity series; windows; SQS via the signal snapshot only, baseline keyed
+  by environment; ratchet; bench; disposition routes-to-paper|blocks-paper);
+  paper mode + the WEEK-LONG unattended soak with its acceptance checklist;
+  startup/recovery/explained drift with FOUR verdicts, resolve_unknown
+  only from a reconciled read-back inside the lookback, drift stand-down
+  keyed by role, operator_review; venue integration (VenueClientPort minted
+  by the node; the cTrader transport increment lands in qmf-venue's
+  ConnectionManager — A37; refresh keyed by credential reference; equity
+  exact-integer at the account exponent; netting|hedging at bind time and
+  dispatch; maintenance windows = sensing-outage fail-closed); secrets
+  (two-layer store: systemd-creds --with-key=host KEK + AEAD state; three
+  named holders; wizard over SSH stdin from Credential Manager qmx/*;
+  backup payload key escrowed on the workstation + offline copy; VPS-loss
+  runbook; repo deploy key; privilege model); live data, bootstrap,
+  calendar timer (Forex Factory free is the SOLE source, refresh cadence
+  configurable, no paid fallback ever), backup + nightly sample restore +
+  monthly full restore + host-loss rehearsal, capacity/disk headroom,
+  hot_room_retention_window; time discipline (chrony, bands as registry
+  rows, skew vs offset, three calendars); observability (JSON logs to
+  journald ≠ journals; qmn_ metric families; /health independent states;
+  allow-list + the new "stopped accepting entries / cannot persist
+  evidence" class; external dead-man's switch; the SEPARATE zero-authority
+  observability stack Prometheus/Grafana/Loki-class under
+  qmn/deploy/observability/ — containers permitted for that stack only);
+  deployment (User=qmx, /var/lib/qmx trees, unit files in repo, Ubuntu
+  24.04, ubuntu-24.04 CI lane, check mode, deploy switch/rollback,
+  one environment with compensating controls); doors (Python API +
+  localhost HTTP evidence channel + unix-socket powers channel with
+  SO_PEERCRED; UI plugs in later over an SSH tunnel; per-read provenance
+  fields; AD-31 cross-role reads; settings scopes; admission_impact on
+  edits); config surface (eligibility-and-identity only, runtime state =
+  folds; registry = schema, config = values; value-status
+  blank|provisional-evidence|ratified with countersign; extensibility =
+  registry + config, never code); seats (QL-7 hosting, callback deadline +
+  quarantine, prediction linter, conformance runner, OR-06 relocation) +
+  MIS seam (signal snapshot, labelers as CT-16 producers under AD-24,
+  shadow-lane seam built now) ; promotion sign + separate activation
+  (AD-18 identity fields, sandbox-provenance refusal on the pull);
+  replay (import port = the one sanctioned cross-world read; ungoverned
+  diff); multi-account seam (roster, state_carry, broker = its own
+  VenueId); QA standard (battery + mutmut on node money-path modules on
+  the code-carrying branch + venue conformance double FEAT-0023 + the four
+  golden scenarios + soak checklist + QA-debt node stories by id);
+  position-safety closures (a)–(k); the accounting boundary + virtual
+  ledger (TN-25). NFR-11 FAILURES.md obligation mapped to the allow-list.
+- ADR (the factory numbers it): the trading node = supervised
+  composition-root runtime over a pure rulebook; one product two modes; no
+  command line; plain systemd service; separate observability stack.
+- docs/architecture/overview.md: the platform C4 context + container view
+  and a deployment diagram from TN-3/TN-16 and the process-internals
+  diagram (VPS plane: qmn.service + timers + hot rooms + evidence tier +
+  hub inbox/published; workstation plane; bucket; sandboxes; cTrader demo
+  and live hosts; observability stack); docs/architecture/dependencies.yaml
+  gains the qmn edges (qmn → qmf.* incl. qmf-venue, qmb, qml, extensions;
+  nothing imports qmn).
+- Lens pages: docs/lenses/ops/runbook.md (start/stop/restart/deploy/
+  rollback/switch now ruled as `just node-…` recipes; safe point; check
+  mode; stand-down + resurrect; VPS-loss runbook; compromise drill
+  unchanged; the warm-up rider = the soak week), incident-playbook.md
+  (stuck-UNKNOWN affordance; drift stand-down; kill switch under a dead
+  wire; disk-full), observability/logging-spec.md (node log fields and
+  levels; the five Records streams ↔ seven CT-13 types via CT-25 projection
+  names), metrics-and-alerts.md (qmn_ signal families; allow-list + new
+  class; dead-man's switch; drift bands as registry rows; the separate
+  stack as zero-authority consumer), security/security-model.md (three
+  named secret holders; SO_PEERCRED; backup-key escrow; repo deploy key;
+  privilege model; sandbox-provenance refusal).
+- Contracts and parent annotations (every one is in the spine's "Parent
+  annotations and mints proposed by this sitting" section — apply as
+  recorded, never widen): annotate L30 in docs/constitution.md at source
+  (the node's `qmn.venue` subpackage is the sanctioned qmf-venue import
+  boundary — declared reconciliation note); AD-15/L30 async stance: the
+  qmf-venue async-conformance test gains a named exemption for
+  `qmf.venue.connection` (the ConnectionManager holds the socket, session
+  and the single venue secret value on the loop the node injects — the one
+  DELEGATED impurity; if refused, the transport increment lands in
+  `qmn.venue.ctrader` instead); CT-18: the candidate annotation "realize
+  VenueClientPort in qmf-venue" recorded-not-applied, plus the
+  SessionTopology connection-count relaxation (derived from the roster)
+  as a qmf-venue increment item; CT-20: a mapping-row addition — position
+  and balance read-back observations journal under the existing seven
+  AD-21 types (never a new journal type); CT-25: the five Records streams
+  ↔ seven types projection-name bridge; CT-30: the node's
+  satisfaction-predicate declarations per matrix cell, and the AD-21
+  `control action` EVENT subtype `node_resurrect` (a node lifecycle act,
+  not a CT-30 kind) beside the sealed-period final-look subtype;
+  CT-24/CT-28: the node's disposition + state_carry usage (no format
+  change); CT-14: backup payload-key custody (workstation-escrowed),
+  the nightly sample + monthly full restore timers, the host-loss
+  rehearsal, the `sealed-archive` evidence-tier room role; PRD §3: the
+  PROPOSED allow-list widening (the "stopped accepting entries / cannot
+  persist evidence" silent-degradation class + the external dead-man's
+  switch + a liveness digest) recorded as a PRD amendment — surfaced by
+  the sitting, ratified by the increment only if the operator accepts it
+  (cheap veto; default = accept).
+- docs/registry/variables.yaml: mint every row of the spine's registry
+  mint table as configurable: true with unit-kind, owner scope, evidence
+  values and its BLANK-EFFECT tag (blocks-boot | blocks-role-live |
+  blocks-soak); add the NEW schema field `value_status_required` (the
+  per-value `value-status` blank | provisional-evidence | ratified lives on
+  the resolved config artifact, countersigned through the powers channel
+  with an evidence citation — the PRD-named gap, closed this way); record
+  that kill_line_capital_floor IS AD-40's loss_floor (one variable, one
+  name).
+- Glossary: Trading Node (full entry, retire the stub), composition_fp,
+  boot/session/binding/level epochs, stand-down-alive + resurrect,
+  push-to-pull accumulator + interpretation cursor, evidence tier, passive
+  hub (inbox | published), safe point, check mode, soak (= first-deploy
+  warm-up week), replay import port, KEK store, VenueClientPort, signal
+  snapshot, shadow-lane seam, value-status, virtual ledger vs venue
+  position, operations toolkit, observability stack, dead-man's switch,
+  amend_min_improvement (a ratchet authoring threshold, never a
+  suppression), four reconciliation verdicts.
+- Ledger decisions (DEC-*): one per TN (25) + the 20 gate rulings that
+  changed behaviour + the four operator rulings 2026-08-28 (no command
+  line; week-long soak with the DevOps stack; free news only; promotion =
+  click + separate activation) + KSA vocabulary re-ratified into docs from
+  the GitBook baseline (GAP-0015 shape closed; matrix values blank-block-
+  live, pre-SOAK ruling for whatever the checklist exercises) + PRD §6
+  mined doctrine ratified by adoption + PRD open items rows 12–15
+  dispositions + ticket 006 disposition (trendbar basis measured per
+  broker; SECONDARY web evidence says BID; tick-based interim comparison).
+- gap-report: GAP-0015 shape closed; new Deferred rows with GAP ids (MIS
+  training + shadow rollout epic; hot-apply settings; agent/MCP door;
+  hardened confinement; second VPS; fill simulation in replay); traceability,
+  changelog, AGENTS.md; tracker/trading-node-notes.md already carries the
+  sitting note.
+- All memlog assumption entries (A1–A47; A1/A10/A17/A26 RULED, A8 retired)
+  surface in the changelog row so the operator can veto cheaply.
+Remaining open after this: the KSA matrix values (pre-soak operator
+ratification through the settings surface), GAP-0016/0017, GAP-0048/0049,
+the MIS training epic. Then prompt 14 (epics for the node).
+```
+
+## 14. Epics and stories — TRADING NODE (run after prompt 13 lands)
+
+```
+Run /bmad-create-epics-and-stories for the trading node. Intake: the node
+spine (architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, FINAL) + its
+memlog + docs/ after the trading-node increment (docs/ is the requirements
+body; epics.md is what the factory codes — "what you see is what you
+code"). Target: a SMALL epic set (5–8), wave plan, paper-milestone epics
+first, routed for the Grok epic-factory lane (`/run-epics` in the Grok
+plugin, 4.5 workhorse / 4.6 orchestrator+reviewer); validate with the usual
+validator workflow; record factory-time ruling items explicitly. Base:
+origin/integration@ef9bb25 (re-point onto main after the operator's
+squash-merge). Sequencing rules: the cTrader transport increment (in
+qmf-venue's ConnectionManager, A37) + VenueClientPort is coded FIRST against
+the venue conformance double and is the first story unblocked by the
+Spotware tokens for its live test; every QA-debt id becomes a named story
+(QMX-F045, F046, F062, F063, F064, F067, F068, F069, F102, D008, D010,
+E15-F01/F02/F03, E7-R28, E9-F04, E12-F01/F04/F05); the TN-23 soak
+acceptance checklist is the paper-milestone epic's acceptance; MIS training
++ shadow rollout is the LAST epic (follow-on). Suggested waves: W1 host +
+config + doors + observability (boot ceremony, stand-down/resurrect, check
+mode, config compiler + value-status, three doors, logs/metrics/health/
+alerts, toolkit recipes, systemd units, ubuntu-24.04 CI lane, observability
+compose); W2 venue transport (qmf-venue) + VenueClientPort + accumulator +
+per-stream loop + order-path wiring + conformance double; W3 protection set
++ TN-25 ledger + paper + reconciliation + KSA; W4 data (live CT-10 producer,
+bootstrap, calendar timer, backups + drills, evidence tier, hub) + secrets
+wizard + replay; W5 the paper-soak epic (deploy to the VPS, week-long
+unattended soak, checklist, benchmark baselines) = the live-milestone gate;
+W6 MIS training + shadow rollout. Human-only steps to list inside the
+epics: Spotware app approval + sandbox token (Applications → Sandbox → Get
+token), VPS procurement (modest; the soak measures), live KYC, the
+swap-free admin-fee schedule in writing, the bucket account, backup-key
+escrow, the notification-channel account.
+```
+
+## 15. RESUME — QMA spine validation — OBSOLETE (closed dry 2026-08-29; the spine is export-ready — run prompt 12 directly)
+
+```
+Resume the QMA architecture sitting at _bmad-output/planning-artifacts/
+architecture/architecture-QMA-2026-08-28/ (bmad-architecture, update
+intent; .memlog.md is the authority — read its last 40 lines first). State
+at pause: ARCHITECTURE-SPINE.md is 29 ADs, lint-clean, frontmatter
+status: final, but validation is NOT dry: three divergence findings with
+exact replacement text are saved at reviews/final-three-findings.json
+(AD-6 record law vs the telemetry announcement exemption; AD-11's
+agent-authored-hook validator must also reject verifier_ref; AD-22
+role.base is a definition-store record written only by an operator-
+principal role.set_base wire command, plus the AD-24 gate-list insertion).
+Job: apply the three fixes surgically (touch nothing else), re-read the
+neighbouring ADs (6, 8, 10, 11, 22, 23, 24) for adjacent consistency, lint
+(uv run .claude/skills/bmad-architecture/scripts/lint_spine.py --workspace
+<run folder>), then run ONE high-effort divergence-only verifier over the
+whole spine (bar: a finding exists only if two builders obeying the text
+literally would build incompatibly; empty result is valid). If zero:
+update reviews/validation-report.md verdict to export-ready, append memlog
+event "validation final: verified=true dry=true remaining=0". If not zero:
+apply those, verify once more, and report the truth. Standing rulings
+(never reopen): Quant; task/quant/experiment ledgers; Python 3.14 daemon;
+contract-hub; workstation-default daemon + UI-driven remote deploy;
+Skill/Loop/Graph with Graph Template vs Task Graph; qma.*; hooks on every
+primitive; no external agent SDK; QMB path; no execution tool; admit/apply/
+promote; plugin adopted, kernel only as "RLM kernel". Do NOT ask the
+operator anything the transcript or memlog settled. Then hand off to
+prompt 12 (documentation factory, QMA increment).
+```

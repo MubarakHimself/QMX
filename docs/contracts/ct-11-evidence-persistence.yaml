@@ -1,22 +1,22 @@
 id: CT-11
 name: Evidence-persistence contract
 status: ratified
-version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
+version: 1  # first minted format version (DEC-0103; versioning-from-birth L15); 2026-08-29 trading-node absorption: AD-19 gains an eighth room-role, sealed-archive, added to enums.room_role and the invariant — no format change (DEC-0253, DEC-0188)
 owner: COMP-QMF-DATA
 consumers: [COMP-QMF-DATA-STORE, COMP-QMF-REGISTRY]
 layer_from: backend
 layer_to: data
-decisions: [DEC-0103, DEC-0108, DEC-0109, DEC-0110, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0163, DEC-0164]
+decisions: [DEC-0103, DEC-0108, DEC-0109, DEC-0110, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0163, DEC-0164, DEC-0188, DEC-0253]
 gaps: []  # all prior binding gaps (GAP-0005/0020/0021/0022/0023/0026) are answered; no still-open gap binds the persistence append-store
 purpose: >-
   Persist evidence through a QMF-owned append-store seam that keeps storage engines swappable: raw
   archive and journal are the only evidence-bearing formats, analytics are rebuildable views, artifacts
-  any result label cites are retained forever, the seven room-roles are instantiated per world with
+  any result label cites are retained forever, the eight room-roles are instantiated per world with
   cross-world reads refused, and the 12-month seal is enforced at every read boundary — so an engine
   change costs a rebuild rather than evidence, and no upgrade destroys the only copy.
 invariants:
   - "This is an append-store: evidence is written once and never overwritten; corrections append rather than mutate, and raw originals and lineage are kept forever (DEC-0117, DEC-0118)."
-  - "Seven room-roles — ingest door, immutable raw archive, processed, journal, split-governed research door, backup, and the registry room (records and lineage under the same retention, backup, and migration law) — are each instantiated PER WORLD; a read that crosses worlds is a policy-rejection refusal (DEC-0117)."
+  - "Eight room-roles — ingest door, immutable raw archive, processed, journal, split-governed research door, backup, the registry room (records and lineage under the same retention, backup, and migration law), and sealed-archive (the evidence tier's one-way-sync target, read by the replay import port and the backup) — are each instantiated PER WORLD; a read that crosses worlds is a policy-rejection refusal (DEC-0117, DEC-0253, DEC-0188)."
   - "Only raw-archive and journal formats are evidence-bearing; analytics engines (DuckDB) hold rebuildable views only, so an engine format break costs a rebuild and never evidence, and analytics engine major versions are pinned per release (DEC-0117, DEC-0103)."
   - "'Rebuildable' licenses deletion only of artifacts no result label cites; an artifact cited by any result label is retained forever, and any rebuild pins the original calendar identity and tzdata version (DEC-0117, DEC-0118)."
   - "Store engines (Parquet columnar time-series, DuckDB local analytics, SQLite transactional metadata, JSONL append streams) sit behind this QMF-owned contract with stdlib-typed boundary signatures; there is no database server (DEC-0117)."
@@ -43,7 +43,7 @@ schema:
       note: "the artifact's integer contract format version stamped into every stored artifact; its meaning never mutates (DEC-0103)."
     room_role:
       type: string-enum
-      note: "which of the seven room-roles holds the artifact; see enums.room_role (DEC-0117)."
+      note: "which of the eight room-roles holds the artifact; see enums.room_role (DEC-0117, DEC-0253)."
     world:
       type: string-enum
       note: "the world whose room instance holds the artifact; each room-role is instantiated per world and cross-world reads refuse; see enums.world (DEC-0117, DEC-0110)."
@@ -70,8 +70,8 @@ schema:
       note: "gapless per-(writer, boot-epoch) sequence for journal/append streams — a gap signals loss; omitted for non-stream artifacts (DEC-0119)."
   enums:
     room_role:
-      values: ["ingest door", "immutable raw archive", "processed", "journal", "split-governed research door", "backup", "registry room"]
-      note: "the seven room-roles; only immutable-raw-archive and journal are evidence-bearing; the registry room holds qmf-registry records and lineage under the same retention, backup, and migration law; each role is instantiated per world (DEC-0117)."
+      values: ["ingest door", "immutable raw archive", "processed", "journal", "split-governed research door", "backup", "registry room", "sealed-archive"]
+      note: "the eight room-roles; only immutable-raw-archive and journal are evidence-bearing; the registry room holds qmf-registry records and lineage under the same retention, backup, and migration law; sealed-archive is the eighth (AD-19), the evidence tier's one-way-sync target read by the replay import port and the backup, under the same retention, backup and migration law and instantiated per world like the other seven; each role is instantiated per world (DEC-0117, DEC-0253, DEC-0188)."
     world:
       values: [live, replay, simulated]
       note: "each room-role is instantiated per world; live and replay are writable, simulated is reserved-UNUSABLE in V1 (writing it is a policy-rejection refusal until the backtesting sitting); a cross-world read is a policy-rejection refusal (DEC-0117, DEC-0110)."

@@ -32,7 +32,12 @@ Rules:
 - PRD and Architecture are the only required BMad steps. After Architecture:
   documentation-factory, then epics-and-stories, then a factory lane —
   nothing else.
-- Never recommend, require, or gate on `bmad-sprint-planning`, `bmad-build`,
-  or any `bmad-testarch-*` skill. Treat catalog rows and agent menu items for
-  those as not applicable to this project. (`bmad-code-review` is allowed —
-  it is the reviewer's skill inside the factory lanes.)
+- Never recommend, require, or gate on `bmad-sprint-planning` or `bmad-build`.
+  Treat catalog rows and agent menu items for those as not applicable to this
+  project. (`bmad-code-review` is allowed — it is the reviewer's skill inside
+  the factory lanes.)
+- `bmad-testarch-*` skills are ALLOWED (operator ruling, reaffirmed
+  2026-08-27; an earlier overrule was never recorded here). They serve the
+  post-implementation QA phase — test design, tracing, automation — run
+  against factory-built code on `integration`. They remain planning/QA
+  instruments: implementation still ships only through the factory lanes.

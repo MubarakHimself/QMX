@@ -5,10 +5,10 @@ type: scenario
 status: ratified
 component: COMP-QMF-RISK
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA]
-decisions: [DEC-0155, DEC-0149, DEC-0143, DEC-0147, DEC-0154, DEC-0157, DEC-0158]
-sources: [docs/components/qmf-risk.md, docs/contracts/ct-29-exit-record.yaml, docs/contracts/ct-23-risk-evaluation.yaml, docs/contracts/ct-24-book-mode.yaml, docs/contracts/ct-30-control-action.yaml, docs/registry/variables.yaml, _docwork/ledger.yaml, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md]
+decisions: [DEC-0155, DEC-0149, DEC-0143, DEC-0147, DEC-0154, DEC-0157, DEC-0158, DEC-0208, DEC-0209]
+sources: [docs/components/qmf-risk.md, docs/components/trading-node.md, docs/contracts/ct-29-exit-record.yaml, docs/contracts/ct-23-risk-evaluation.yaml, docs/contracts/ct-24-book-mode.yaml, docs/contracts/ct-30-control-action.yaml, docs/registry/variables.yaml, _docwork/ledger.yaml, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, docs/decisions/ADR-0019-trading-node.md]
 generated: 2026-08-20
-verified: 2026-08-20
+verified: 2026-08-29
 stale_after: 30d
 ---
 
@@ -61,3 +61,7 @@ The four exits' `realized_r` values are scenario fixture inputs, each net of tha
 | 4 | `hold_time_force_flat` | `-1.2R` loss | `-1.2R` | yes (`-1.2 <= -1`) | qualifying loss exit #2 |
 
 Qualifying-loss count in the binding epoch = 2 = `registry:bench_consecutive_loss_threshold` -> the fold publishes the crossing and the door benches the seat. If `registry:qualifying_loss_threshold` or `registry:bench_consecutive_loss_threshold` changes, recompute from the CT-29 exit-record stream, never from these literals; the fixture depends on both keys plus `registry:hold_time_force_flat_trigger`, `registry:breakeven_ratchet_trigger`, and `registry:breakeven_ratchet_offset`.
+
+## Wired by the trading node (2026-08-29)
+
+This golden scenario stays **defined-unwired** until the trading node (COMP-QMN, FEAT-0031) wires it: no integration or runtime proof of the bench mechanism exists until then, and the node is the sole application that supplies it (DEC-0208). The node proves it on its week-long unattended soak acceptance gate (DEC-0208). The soak checklist item that exercises this scenario is the **bench fold benching a seat on qualifying losses, the seat routing to the paired demo target while the Book stays `LIVE`** — with the breakeven ratchet also proven to amend single-sided — and SCN-0011 wired and proven alongside the other three risk golden scenarios (DEC-0208). The node runs the disposition vocabulary verbatim: breakevens never count under any `q`, and scratches and partial losses count only where the Book's declared `q` reaches them (DEC-0209). Nothing here grants order, seat-promotion, or live-money authority; that arrives only through the factory pipeline.

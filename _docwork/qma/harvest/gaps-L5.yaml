@@ -1,0 +1,204 @@
+gaps:
+  # ── Deferred by the QMA sitting — 22 rows (GAP-0070..GAP-0091) ─────────────
+  # Spine Deferred-table order. status: deferred, blocking: false, answer: null.
+  # recommendation = the row's revisit condition verbatim from the spine
+  # Deferred table (markdown emphasis dropped, words unchanged). Each row stays
+  # deferred with its stated revisit condition; none is revived here.
+  - id: GAP-0070
+    question: "When and how is the Windows VPS for the computer-use agent provisioned and registered as a desktop ExecutionEnvironment, and what is its capability envelope?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "an ExecutionEnvironment of kind desktop is registered against a reachable host; until that record exists every computer-use tool fails its check_fn and the Compute Router returns NoEnvironment for a desktop ComputeRequirement"
+    status: deferred
+    answer: null
+    note: "AD-25 deployment envelope. The VPS is the operator's own planned purchase — planned, not provisioned; AD-25 registers a desktop ExecutionEnvironment only once provisioned, never in v1 (memlog L206). max_in_flight is pinned to 1 and uneditable for the desktop kind (AD-17)."
+    date: 2026-08-29
+  - id: GAP-0071
+    question: "Does each desk carry exactly one lead flag, and is the lead Quant's mailbox the catch-all for mailbox Envelopes whose recipient no longer exists?"
+    needed_by: [COMP-QMA-CORE, COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the operator rules on both; until then a second lead flag on a desk is a hard startup error and an undeliverable Envelope resolves to dead_letter (AD-20) rather than to the lead"
+    status: deferred
+    answer: null
+    note: "AD-7 (ontology) and AD-20 (Agent Bus / mailbox). Operator-flagged item on the cheap-veto register. The operator's ledger ruling ratified only that a desk-level lead Quant exists and keeps a Quant Ledger; one lead flag per desk and the lead's mailbox as catch-all were INFERRED, never ruled (memlog L183, DEC-0349). The interim rule is stated in AD-7's own sentence."
+    date: 2026-08-29
+  - id: GAP-0072
+    question: "Which external memory backend (Hindsight, Mem0) becomes the first MemoryProvider implementation, and against which store dependency?"
+    needed_by: [COMP-QMA-CORE, COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the AD-22 staging store holds memory candidates from at least two desks and at least one Mission has been blocked by recall being unavailable - both facts readable from the journal; re-check the store dependency (Postgres+pgvector or Oracle 23ai) then. The port-to-Hindsight 1:1 mapping in research/memory-providers.md was verified against 0.4.9 and the current release is v0.9.2 - re-verify the mapping at admission"
+    status: deferred
+    answer: null
+    note: "AD-18 MemoryProvider port. Hindsight (v0.9.2) is the deferred first backend behind a testable eval; pgvector 0.8.6 is deferred with it (DEC-0342). v1 ships the MemoryProvider port and the NoMemoryProvider typed refusal only; the no-database-server rule binds QMA's own stores, never a provider's internal storage behind a QMA-owned port."
+    date: 2026-08-29
+  - id: GAP-0073
+    question: "What hybrid retrieval / indexing does the Knowledge corpus need beyond literal and locator-based search?"
+    needed_by: [COMP-QMA-CORE, COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the corpus root holds at least one ingestible content file and STRATS §6 Q1-Q12 (folder layout, serialization, stable-id scheme) are ratified upstream"
+    status: deferred
+    answer: null
+    note: "AD-19 KnowledgeSource port. v1 ships the adapter over the STRATS plain-file library with CorpusSnapshot / Citation / Provenance and literal + locator search only; evidence_confidence on knowledge is never conflated with admission_confidence on memory (DEC-0343)."
+    date: 2026-08-29
+  - id: GAP-0074
+    question: "When do the self-improvement evaluation gates switch on, and against what trajectory evidence?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the telemetry store holds complete agent trajectories for at least the AD-26-registered count of finished Missions (initially 50) across at least two desks; v1 ships invariants plus staging only"
+    status: deferred
+    answer: null
+    note: "AD-22 admission gate + AD-23 telemetry store. v1 ships the AD-22 invariants and the staging store only; the gates are gated on deferred.finished_mission_trajectory_count (initially 50, registered under AD-26)."
+    date: 2026-08-29
+  - id: GAP-0075
+    question: "Which sandbox and compute vendors (remote_container; desktop beyond the planned Windows VPS) does QMA adopt, and starting from what shortlist?"
+    needed_by: [COMP-QMA-CORE, COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the Compute Router has recorded at least the AD-26-registered count (initially 3) of NoEnvironment refusals for ComputeRequirements no local Docker environment can satisfy, or a job has exceeded the workstation's memory or GPU capability - counted from telemetry, never judged; the operator rejected Modal, Daytona and E2B outright on cost and fit and said he would \"first look for what I want\" (T-3976), so a shortlist starting from those three is not the starting point - the sandbox exists for backtesting fan-out first (T-3976)"
+    status: deferred
+    answer: null
+    note: "AD-17 ExecutionEnvironment / Compute Router. Operator constraint: Modal, Daytona and E2B rejected OUTRIGHT on cost and fit (T-3976); the sandbox exists for backtesting fan-out first. Row rescoped so it no longer defers a provider the spine already ships (memlog L123). Gated on deferred.sandbox_refusal_count (initially 3, AD-26)."
+    date: 2026-08-29
+  - id: GAP-0076
+    question: "What is the RLM kernel performance envelope — fan-out throughput, namespace-snapshot fidelity for large handles, and cost per 800-variant aggregation?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the Analysis desk's first full backtest fan-out has run: record wall-clock, peak memory and USD cost for one 800-variant aggregation and one snapshot-and-restore of the largest handle in that run, as evidence under AD-26; if a snapshot fails or the recorded cost exceeds rlm.fanout_cost_ceiling_usd (AD-26), RLM-in-Docker is re-opened"
+    status: deferred
+    answer: null
+    note: "AD-14 RLM kernel (Analysis desk). A measurement obligation, not an open design question; AD-14 keeps its rule and this row carries the doubt (memlog L135). The ceiling rlm.fanout_cost_ceiling_usd is registered under AD-26 (memlog L260)."
+    date: 2026-08-29
+  - id: GAP-0077
+    question: "What is the in-house threading node's shape, and what PluginManifest contribution point does it need?"
+    needed_by: [COMP-QMA-CORE, COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the operator supplies the threading node's spec or its code; until then no PluginManifest contribution type is minted for it and no plugin may declare one"
+    status: deferred
+    answer: null
+    note: "AD-1 / AD-21 plugin contribution surface. Operator constraint: no contribution type is minted and no plugin may declare one until the operator supplies the spec or code (memlog L138)."
+    date: 2026-08-29
+  - id: GAP-0078
+    question: "Which browser stack does QMA adopt for browser-heavy missions?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "a browser-heavy mission actually blocks; no study exists yet. The starting point is the operator's own - reverse-engineer Egolite for this use case (T-3976), not a vendor shortlist; Cloudflare Browser Run, Modal, Daytona and E2B were rejected on cost and fit (T-3976), and his method is \"extract, do not clone blindly\""
+    status: deferred
+    answer: null
+    note: "AD-16 / AD-17 tool + environment territory. Operator constraint: the starting point is reverse-engineering Egolite, NOT a vendor shortlist; Cloudflare Browser Run, Modal, Daytona and E2B rejected on cost and fit (T-3976); method is 'extract, do not clone blindly'."
+    date: 2026-08-29
+  - id: GAP-0079
+    question: "What external agent-to-agent transport does the mailbox need when a second host or external counterparty appears?"
+    needed_by: [COMP-QMA-WIRE, COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "a second host or an external counterparty needs the mailbox; the internal bus comes first"
+    status: deferred
+    answer: null
+    note: "AD-20 Agent Bus / AD-5 wire. The internal, single-operator bus (durable, addressed, non-authoritative) comes first; the public-messaging/relay/signing transport is itself Cut (DEC-0368), so any external transport is a fresh design, not that machinery revived."
+    date: 2026-08-29
+  - id: GAP-0080
+    question: "Does the RLM runtime extend beyond the Analysis desk, and does the spawn depth rise above 2?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "a desk other than Analysis has recorded a Task blocked for want of an RLM kernel, or an Analysis run has hit the depth-2 cap - both readable from the journal"
+    status: deferred
+    answer: null
+    note: "AD-14 RLM runtime, v1 scoped by desk to Analysis with a depth cap of 2. Both triggers are journal-readable, not judged."
+    date: 2026-08-29
+  - id: GAP-0081
+    question: "What is the UI presentation architecture — Rust extension technology, UI SDK surfaces, contribution points, UI plugin packaging, and the qma-ui-contract package beyond a stub?"
+    needed_by: [COMP-QMA-WIRE]
+    blocking: false
+    recommendation: "its own session - the operator has not started the UI and does not plan to soon; the wire contract (AD-5) and the variables registry (AD-26) are not deferred and bind now. Revisit once the daemon API is live and stable. Profile records are client state and are specified in that session; nothing in the daemon reads or stores one (AD-7). Carried forward for that session: the UI reads as a trading/research terminal, not a generic agent dashboard, and surfaces live remote-agent activity - status, current task, tool calls, outputs, progress, failures, attach and observe (operator, T-5071, T-5082-5084)"
+    status: deferred
+    answer: null
+    note: "AD-5 wire. The qma-ui-contract package ships as a stub only in v1. The wire contract (AD-5) and the variables registry (AD-26) are NOT deferred and bind now. Carried forward: the UI reads as a trading/research terminal, not a generic agent dashboard (operator, T-5071, T-5082-5084)."
+    date: 2026-08-29
+  - id: GAP-0082
+    question: "Are Mission reports (an agent-derived synthesis over a mission's task ledgers) wanted, and in what shape?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the operator is not yet certain they are wanted; revisit after the first missions run. No live mission ledger exists in the meantime"
+    status: deferred
+    answer: null
+    note: "AD-9 ledgers. Mission reports are Deferred (DEC-0338); the three ledgers are Task, Quant and Experiment, and Research/Trading/Dev/Analysis/PM ledgers are read-time views."
+    date: 2026-08-29
+  - id: GAP-0083
+    question: "Does the desk count consolidate (five desks vs three vs two)?"
+    needed_by: [COMP-QMA-CORE]
+    blocking: false
+    recommendation: "after the first missions run; roles are settled; Profile is presentation and may collapse desks for display - never a rename or retirement of a desk_slug, ActorId, plugin prefix, memory scope or ledger index key (AD-7), which is what makes this deferral free"
+    status: deferred
+    answer: null
+    note: "AD-7 ontology. Only a Profile-level display collapse is on the table; the five desk_slug values (research, trading, dev, analysis, pm), ActorIds, plugin prefixes, memory scopes and ledger index keys are never renamed or retired, which is what makes this deferral free."
+    date: 2026-08-29
+  - id: GAP-0084
+    question: "Is a separate Mission Template registry needed beside Graph Templates?"
+    needed_by: [COMP-QMA-CORE, COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "after the first three authored graph packs exist and a desk demonstrably needs a mission skeleton a Graph Template cannot carry"
+    status: deferred
+    answer: null
+    note: "AD-13. No Mission Template in v1 (DEC-0340); graphs, not loops, are the organizing centre. Both facts must hold before a separate registry is revisited."
+    date: 2026-08-29
+  - id: GAP-0085
+    question: "What is the typed strategy-mechanism decomposition and recombination (EntryMechanism, ExitMechanism, Filter, SessionRule, PositionRule, InvalidationRule with paper-level provenance)?"
+    needed_by: [COMP-QMA-CORE]
+    blocking: false
+    recommendation: "QML and qmf-registry own strategy semantics (AD-14); QMA carries the candidates and the lineage edges. Revisit at the QML sitting - StrategyHandle and ExperimentSpec are already shaped to carry the result"
+    status: deferred
+    answer: null
+    note: "AD-14. Operator source T-1896 / T-2832. QML and qmf-registry own strategy semantics; QMA holds references and content-addressed candidates with lineage edges only, and no QMA contract redefines Strategy or Bot. Revisit at the QML sitting."
+    date: 2026-08-29
+  - id: GAP-0086
+    question: "Which graph engine implementation backs the Task Graph?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "when the first three authored graph packs exist"
+    status: deferred
+    answer: null
+    note: "AD-13 fixes the Graph Template / Task Graph contract and nothing below it; no graph-engine candidate was studied in this run (options-sheet §(iv) item 7). The implementation choice waits on the first three authored graph packs."
+    date: 2026-08-29
+  - id: GAP-0087
+    question: "Is the Claude Agent Python SDK in-process hook count 7 or 10, and does it bind any QMA adapter?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "before any Claude-worker adapter is specified - which the Cut table bars in v1 (\"adapters hosting foreign agent runtimes\"), so this row revisits only if a spine amendment reverses that Cut; carried to the session that specifies AD-15 Deployment adapters or AD-17 worker templates. Nothing in this spine depends on it: AD-10's hook set is QMA-authored and no adapter is specified"
+    status: deferred
+    answer: null
+    note: "AD-10 / AD-15 / AD-17. 7 (research/daemon-stack-options.md) vs 10 (research/claude-agent-sdk-hooks.md), same source, same day, unresolved. BOUNDED by the Cut on foreign agent runtimes (DEC-0360): revisits only if a spine amendment reverses that Cut (memlog L244). AD-10's hook set is QMA-authored; nothing in the spine depends on this count."
+    date: 2026-08-29
+  - id: GAP-0088
+    question: "What are the backup destination, encryption-key custody, and the sample-restore-test and full-restore-rehearsal cadences?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "before the daemon's first non-test run opens a durable store: AD-27's nightly off-machine copy cannot execute without a destination and a key, so the destination and both restore cadences are decided and registered under AD-26 at that point; the encryption-key custody stays with the parent's deferral and revisits on the parent's condition"
+    status: deferred
+    answer: null
+    note: "AD-27 store lifecycle. This was the only Deferred row whose revisit cell named no condition at all; it is now testable (memlog L223, L246). The destination and both restore cadences register under AD-26 at first durable-store open; encryption-key custody stays with the parent's deferral."
+    date: 2026-08-29
+  - id: GAP-0089
+    question: "What is the trim window for the bounded non-evidence streams (mailbox delivery projection, telemetry)?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the stream's event count or on-disk size crosses its AD-26-registered trim threshold; trajectories may not be trimmed until the three evidence-dependent rows above are evaluated and recorded, and exemption from trimming is never exemption from backup (AD-27)"
+    status: deferred
+    answer: null
+    note: "AD-20 mailbox delivery projection + AD-23 telemetry. The AD-6 event journal is NEVER trimmed and agent trajectories are exempt (AD-8, AD-23). Trim thresholds are AD-26-registered; exemption from trimming is never exemption from backup (AD-27)."
+    date: 2026-08-29
+  - id: GAP-0090
+    question: "What may a context compaction pass summarize, what must it preserve, and where does the compacted material go?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the first Session reaches its deployment's min_context_tokens ceiling, readable from telemetry; until then compaction is Context Compiler behaviour that persists nothing (AD-8, Context row) and no compacted transcript is evidence"
+    status: deferred
+    answer: null
+    note: "AD-14 names compaction as a shared subsystem and the container diagram draws it into COGNITION, yet no AD carries a compaction rule and no store owns its output (memlog L234). Until the ceiling is reached, compaction is Context Compiler behaviour that persists nothing; no compacted transcript is evidence."
+    date: 2026-08-29
+  - id: GAP-0091
+    question: "Is an interactive walkthrough artifact for this spine wanted?"
+    needed_by: [COMP-QMA-CORE, COMP-QMA-WIRE, COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "optional operator aid; after the spine is reviewed"
+    status: deferred
+    answer: null
+    note: "An optional operator aid over the whole QMA spine; not a component obligation. Revisit after the spine is reviewed."
+    date: 2026-08-29

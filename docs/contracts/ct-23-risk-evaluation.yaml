@@ -5,12 +5,12 @@ version: 2  # AD-5 format-version mint (DEC-0182), QML increment 2026-08-21: v1 
 owner: COMP-QMF-RISK
 consumers: []  # consumer-blind by design: the caller is the node/bot layer, which lives outside QMF and imports nothing under default-deny; the composition root mediates, so no package import edge exists (DEC-0147, DEC-0142)
 active_consumers: []
-intended_consumers: []  # the Book (qmf-risk) is the RECEIVER and owner of this inbound door; the caller (the node/bot layer) is a node-boundary pointer, never named here — see tracker/trading-node-notes.md (DEC-0142)
+intended_consumers: [COMP-QMN]  # the Book (qmf-risk) is the RECEIVER and owner of this inbound door; the caller is the trading node's order path — QL-7 seats mint the intents and the node calls the door (DEC-0142 superseded in part 2026-08-29, DEC-0191)
 caller_status: unassigned  # the bot/node layer calls the door; its assignment is node runtime matter and unassigned in QMF (DEC-0147, DEC-0142)
 wiring_status: defined-unwired  # AD-33 ratified the door shape; no code exists and no wiring is authorized from this doc — composition-root mediated until the software factory ships it (DEC-0147, DEC-0158)
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0143, DEC-0145, DEC-0147, DEC-0148, DEC-0149, DEC-0153, DEC-0154, DEC-0157, DEC-0158, DEC-0177, DEC-0179, DEC-0182, DEC-0185]
+decisions: [DEC-0142, DEC-0143, DEC-0145, DEC-0147, DEC-0148, DEC-0149, DEC-0153, DEC-0154, DEC-0157, DEC-0158, DEC-0177, DEC-0179, DEC-0182, DEC-0185, DEC-0191]
 gaps: []  # GAP-0047 answered by the QML sitting — ExitLogicRef and the CT-29 close-reason taxonomy are ratified as-is (DEC-0179); the old CloseReason members are recorded as an evidence mapping in CT-29, never a second taxonomy. GAP-0039/0040 were ANSWERED earlier (DEC-0143..0155) and removed
 purpose: "Define the single bot-to-Book inbound risk-evaluation door: two typed intent families — entry intent and exit intent — plus declared evidence slots, through which a Bot proposes and the Book resolves, sizes, admits, or refuses with a recorded, journal-bearing reason; minted once (AD-33) and read one way everywhere, with requested_r Book-resolved and every intent risk-monotonic by construction (DEC-0147)."
 invariants:

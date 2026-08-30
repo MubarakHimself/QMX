@@ -1,7 +1,7 @@
 id: CT-25
 name: Risk and entity journal-projection contract
 status: ratified
-version: 1  # first minted format version; the projection and record surface is spine-ratified (AD-31), corpus signed off by the operator 2026-08-21 (DEC-0145)
+version: 1  # first minted format version; the projection and record surface is spine-ratified (AD-31), corpus signed off by the operator 2026-08-21 (DEC-0145); 2026-08-29 trading-node absorption: COMP-QMN recorded as the runtime minter of the risk-authored events, the ksa_audit_log projection and the CT-20 read-back rows restated — no format change (DEC-0189, DEC-0246, DEC-0247)
 owner: COMP-QMF-RISK
 consumers: []  # projection-blind: entity journals are read-time projections the composition root resolves over AD-21 writer-scoped streams; nothing imports qmf-risk under default-deny, so no package import edge exists (DEC-0145, DEC-0158)
 active_consumers: []
@@ -9,7 +9,7 @@ intended_consumers: [COMP-QMF-DATA, COMP-QMF-REGISTRY]  # qmf-data resolves the 
 wiring_status: defined-unwired  # AD-31 ratified the projection and record surface; no code exists and no wiring is authorized from this doc — CT-25 is a composition-root-mediated contract that stays defined and unwired until the software factory ships it (DEC-0145, DEC-0158)
 layer_from: backend
 layer_to: data
-decisions: [DEC-0145, DEC-0143, DEC-0150, DEC-0147, DEC-0158]
+decisions: [DEC-0145, DEC-0143, DEC-0150, DEC-0147, DEC-0158, DEC-0189, DEC-0192, DEC-0200, DEC-0246, DEC-0247, DEC-0259]
 gaps: []  # GAP-0005 answered by minting version 1; GAP-0039's journal half answered 2026-08-20 (DEC-0145); the placeholder's open-schema gaps (GAP-0025/0042/0043/0045/0046) are all closed by the risk sitting
 purpose: "Declare the read-time projection and record surface for entity journals — the Book journal, the BMS journal, and the per-bot journal (the operator's logbook) — as selections over AD-21 writer-scoped streams keyed by entity identity, never as streams an entity writes; pin the command-fingerprint join between risk-authored and venue-authored events as versioned surface; and carry the legacy five Records stream names forward as projection names through one mapping table onto AD-21's seven event types."
 invariants:
@@ -26,6 +26,9 @@ invariants:
   - "Block-on-unpersistable binds the risk dispatcher exactly as it binds the connection manager: a control action is journaled before dispatch (AD-36), so the dispatcher must see a sink refusal — a storage failure blocks the dispatch rather than losing the intent (DEC-0145, DEC-0150)."
   - "Every risk record is a qmf-core value type, content-fingerprinted by qmf-core's single implementation and wrapped into a registry record by the composition root (the AD-28 pattern); no new package edge is created (DEC-0145)."
   - "Correlation vocabulary is renamed apart and never interchanged: cohort-correlation evidence (a CT-23 declared evidence slot, computed outside qmf-risk, enforced node-side, threshold unratified), fill-attribution label (venue, CT-18/AD-27), and correlation_id (tracing, AD-14) (DEC-0145, DEC-0147)."
+  - "The trading node (COMP-QMN) is the runtime MINTER of the risk-authored events these projections read — it is the first system to mint bindings, control actions and treasury boundary events at runtime — so the five legacy Records projection names are what the node's audit and observability surface speak; the projection-name-over-seven-types discipline is unchanged and no second event catalog is minted (DEC-0246, DEC-0189)."
+  - "The KSA audit trail IS the ksa_audit_log projection over the control-action stream — control action events of the protection-authority class plus their suppressed subtype — and never a stream of its own (DEC-0192, DEC-0200)."
+  - "Position and balance read-backs are CT-20 observation kinds journaled onto the existing seven event types through CT-20's versioned mapping table: they enter as venue-authored observation events under the venue WriterId and are read by the reconciliation and equity-derivation folds, so the node adds observation kinds and NO journal type and NO second event catalog (DEC-0247, DEC-0200)."
 schema:
   type: entity-journal-projection + risk-record  # a read-time projection is a selection over CT-13 journal streams keyed by entity identity; each risk-authored record is a qmf-core value type wrapped into a registry record by the composition root (DEC-0145)
   fields:

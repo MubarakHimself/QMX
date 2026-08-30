@@ -5,10 +5,10 @@ type: scenario
 status: ratified
 component: COMP-QMF-DATA-BACKUP
 depends_on: [COMP-QMF-CORE, COMP-QMF-DATA-STORE, COMP-OBJECT-STORAGE]
-decisions: [DEC-0044, DEC-0045, DEC-0117, DEC-0118]
-sources: [docs/components/qmf-data-store.md, docs/components/qmf-data-backup.md, docs/components/object-storage.md, docs/registry/variables.yaml, docs/contracts/ct-14-backup-restore.yaml, docs/contracts/ct-26-store-backup-input.yaml, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md]
+decisions: [DEC-0044, DEC-0045, DEC-0117, DEC-0118, DEC-0198, DEC-0217, DEC-0252]
+sources: [docs/components/qmf-data-store.md, docs/components/qmf-data-backup.md, docs/components/object-storage.md, docs/components/trading-node.md, docs/registry/variables.yaml, docs/contracts/ct-14-backup-restore.yaml, docs/contracts/ct-26-store-backup-input.yaml, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md]
 generated: 2026-08-18
-verified: 2026-08-20
+verified: 2026-08-29
 stale_after: 30d
 ---
 
@@ -26,7 +26,7 @@ An agent is asked to create a snapshot, transmit it off-machine, restore it into
 
 ## Then
 
-Recoverability is claimed only through the ratified verify primitives — automated sample-restore tests plus a periodic full-restore rehearsal (DEC-0118) — never asserted from a snapshot alone. A recovery or migration never mutates the only copy in place: it runs preflight, backs up first, dry-runs, then verifies against a documented restore path, and must not overwrite the only good local evidence or perform operational cutover, which stays application/ops-owned. [DEC-0045] [DEC-0118]
+Recoverability is claimed only through the ratified verify primitives — automated sample-restore tests plus a periodic full-restore rehearsal (DEC-0118) — never asserted from a snapshot alone. The trading node instantiates these primitives as THREE restore drills, each with its own unit: a nightly sample restore (`qmn-restore-sample.timer`), a monthly full restore into a scratch directory (`qmn-restore-full.timer`), and a host-loss restore rehearsal — the operator's `restore_drill_run` power onto a clean host holding ONLY the workstation-escrowed CT-14 payload key (never VPS-minted), which is the one drill that exercises key availability and therefore the only one that can prove disaster recovery (DEC-0198, DEC-0252, DEC-0217). A recovery or migration never mutates the only copy in place: it runs preflight, backs up first, dry-runs, then verifies against a documented restore path, and must not overwrite the only good local evidence or perform operational cutover, which stays application/ops-owned. [DEC-0045] [DEC-0118]
 
 ## Worked numbers
 

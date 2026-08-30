@@ -1,0 +1,87 @@
+# dependencies-qma.yaml — the three QMA components for docs/architecture/dependencies.yaml.
+# Seat D9. Source: SRC-13 ARCHITECTURE-SPINE.md (AD-1, AD-2, AD-3) and BRIEF section 9.
+# generated 2026-08-29, verified 2026-08-29. Row shape mirrors the dependencies.yaml component
+# blocks (COMP-QMB, COMP-QML). Appended into docs/architecture/dependencies.yaml by fragment
+# dependencies.yaml (op yaml_append_items over key components).
+components:
+  - id: COMP-QMA-CORE
+    name: qma-core
+    kind: library
+    layer: backend
+    roster_role: consumer-product
+    distribution: separate-versioned-package-own-semver
+    depends_on: [COMP-QMF-CORE]
+    interfaces: [CT-41, CT-42, CT-43, CT-44, CT-45, CT-46, CT-47, CT-48, CT-49, CT-50, CT-51, CT-04, CT-05]
+    spec: docs/components/qma-core.md
+    notes: >-
+      The definitions-only package of the QMX agentic system (QMA = QuantMind
+      Agents, the SDK), built ON QMF and never a roster package: it depends only
+      on qmf-core and has no parallel base of its own (AD-3). The QMA workspace
+      is its own uv workspace on QMF in lockstep, `qma.*` namespace (qma.core),
+      own SemVer as display-only provenance never identity, and no blanket
+      `qmx.` prefix (DEC-0300, DEC-0335, DEC-0337). qma-core defines the seven
+      ports (MemoryProvider, ModelDeployment, ExecutionEnvironment,
+      KnowledgeSource, ToolAdapter, ComputeProvider, ContextCompiler) with
+      singleton scope keys and multi points, the plugin contribution surface
+      (PluginManifest, PluginContext, HookEvent, HookResult, handle kinds,
+      credential_ref), the QMA refusal variants of qmf-core's base
+      (NoMemoryProvider, NoEnvironment, SlugUnavailable, CursorScopeMismatch,
+      NoEligibleReviewer), and the default-deny enumeration of the permitted
+      qmf-registry and qmf-risk surfaces the daemon may reach (AD-1, AD-2,
+      DEC-0300, DEC-0301, DEC-0302, DEC-0347). Every runtime concern enters
+      through a core-defined port and is implemented in the daemon; qma-core
+      runs nothing (DEC-0335). CT-04 and CT-05 are the parent qmf-core refusal
+      and serialization contracts it reuses.
+
+  - id: COMP-QMA-WIRE
+    name: qma-wire
+    kind: library
+    layer: backend
+    roster_role: consumer-product
+    distribution: separate-versioned-package-own-semver
+    depends_on: [COMP-QMA-CORE, COMP-QMF-CORE]
+    interfaces: [CT-40]
+    spec: docs/components/qma-wire.md
+    notes: >-
+      The contract-only package both the daemon and the future UI import: the
+      wire envelope, the command / query / event families, the initialize
+      handshake with semver protocolVersion, attach/detach/replay over the
+      durable seq stream, the host_request bridge, dedup and principal classes
+      (AD-5, DEC-0304). The seam qma-wire carries is `ui -> backend`, declared
+      on CT-40, so the component itself sits where its owner does and no upward
+      edge is drawn; the daemon and future UI meet only at qma-wire, and the two
+      plugin halves meet only here (DEC-0304, DEC-0333, DEC-0336, DEC-0347).
+      Transport posture: loopback default, TLS with recorded config otherwise,
+      remote workers dial out and the daemon never dials in. The
+      qma-ui-contract is a deferred stub (GAP-0081).
+
+  - id: COMP-QMA-DAEMON
+    name: qma-daemon
+    kind: process
+    layer: backend
+    roster_role: consumer-product
+    distribution: separate-versioned-package-own-semver
+    depends_on: [COMP-QMA-CORE, COMP-QMA-WIRE, COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-RISK]
+    interfaces: [CT-40, CT-41, CT-42, CT-43, CT-44, CT-45, CT-46, CT-47, CT-48, CT-49, CT-50, CT-51, CT-13, CT-06, CT-07, CT-05, CT-04]
+    spec: docs/components/qma-daemon.md
+    notes: >-
+      The one Python 3.14 asyncio process that runs everything and the sole
+      writer of every QMA store (AD-4, AD-6, AD-8; DEC-0334, DEC-0335). Its
+      depends_on is exactly AD-2's diagram (undrawn edge = default-deny): it
+      imports qma-core, qma-wire, qmf-core, qmf-registry, qmf-data and qmf-risk
+      only. The qmf-registry and qmf-risk edges are read-and-calculate only,
+      narrowed to the surface enumerated default-deny in qma-core (DEC-0347).
+      There is NO edge to COMP-QMF-VENUE — qmf-venue is importable by no QMA
+      package, worker or plugin, part of the money-path reachability barrier
+      (DEC-0341, DEC-0347). There is NO edge to COMP-QMB — the qmb door is an
+      AD-17 job placement by the analysis-backtest plugin, a runtime interaction
+      not a package import. There is NO edge to COMP-QML. The daemon owns the
+      journal, the closed store list with its sixteen-member definition store,
+      the hooks registry, the Task Graph and
+      Mission Compiler, the three ledgers, the Agent Bus, the scheduler and
+      Routines, the model proxy, the Tool Registry, the Compute Router, the
+      plugin loader, the staging store and admission gate, the telemetry store
+      and OTel export port, the Credential Broker and the AD-26 registry write
+      path (DEC-0305, DEC-0334, DEC-0338, DEC-0339, DEC-0341, DEC-0342,
+      DEC-0343, DEC-0344, DEC-0347). CT-13 is the parent journal contract, CT-06
+      and CT-07 the parent registry surfaces it reads under the narrowing.

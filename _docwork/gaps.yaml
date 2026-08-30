@@ -156,7 +156,7 @@ gaps:
     recommendation: "Require every consumed fact's knowledge time to be no later than the decision time and persist the tested input fingerprint, test version, and counterexample details."
     status: deferred
     answer: null
-    note: "Operator-deferred per DEC-0121, consequence knowingly accepted: artifacts registered before then carry no causality evidence, not retroactively reconstructible. The bitemporal ingredients stay ratified via AD-8/CT-10. QMB increment 2026-08-20 (DEC-0169): look-ahead PREVENTION is now DELIVERED — B-2's forming-bar/completed-boundary rules, B-8's split-manifest enforcement at every read, and B-12's declared stream sets make look-ahead structurally unexpressible inside a QMB run; only the registration GATE (the CT-08 evidence checklist that PROVES a pass) stays deferred, and B-4/B-8 ledger completeness accrues its raw material regardless. Do NOT close this gap here."
+    note: "Operator-deferred per DEC-0121, consequence knowingly accepted: artifacts registered before then carry no causality evidence, not retroactively reconstructible. The bitemporal ingredients stay ratified via AD-8/CT-10. QMB increment 2026-08-20 (DEC-0169): look-ahead PREVENTION is now DELIVERED — B-2's forming-bar/completed-boundary rules, B-8's split-manifest enforcement at every read, and B-12's declared stream sets make look-ahead structurally unexpressible inside a QMB run; only the registration GATE (the CT-08 evidence checklist that PROVES a pass) stays deferred, and B-4/B-8 ledger completeness accrues its raw material regardless. Trading-node increment 2026-08-29: the node sitting leaves this DEFERRED and does not need it to run. The node touches it only at the admission bar, where a blank bar blocks live binding regardless (AD-32) — so no node component waits on the registration gate, and none may synthesize one. What the node adds is raw material, not policy: the always-on evidence tier and the four-verdict reconciliation record every live observation under its writer and boot epoch (DEC-0195), and the QA standard gates FAILURES.md completeness rather than causality (DEC-0208). Do NOT close this gap here."
     date: 2026-08-20
 
   - id: GAP-0017
@@ -166,7 +166,7 @@ gaps:
     recommendation: "Count immutable research attempts against a declared charter and dataset split, never reset silently, and require explicit human authorization for a new budget."
     status: deferred
     answer: null
-    note: "Operator-deferred per DEC-0121; registry occurrence records still log every run, so the tally's raw material accrues without policy. QMB increment 2026-08-20 (DEC-0169): every optimize trial, replicate, and walk-forward window is now a first-class ledgered run with a discriminated role and study_fp, so attempt counting's raw material is complete by construction; the counting POLICY (scope, reset, budget effect) stays deferred — a search-campaign candidate alongside GAP-0049. Do NOT close this gap here."
+    note: "Operator-deferred per DEC-0121; registry occurrence records still log every run, so the tally's raw material accrues without policy. QMB increment 2026-08-20 (DEC-0169): every optimize trial, replicate, and walk-forward window is now a first-class ledgered run with a discriminated role and study_fp, so attempt counting's raw material is complete by construction; the counting POLICY (scope, reset, budget effect) stays deferred — a search-campaign candidate alongside GAP-0049. Trading-node increment 2026-08-29: the node sitting leaves this DEFERRED. The node runs no research campaign and counts no attempts; it touches the question only at the admission bar, where a blank bar blocks live binding regardless (AD-32), and its own do-not-default value roster is node-minted and unrelated to a research budget (DEC-0193). The node's journals keep accruing the raw material under the writer-and-boot-epoch discipline it inherits (DEC-0195). Do NOT close this gap here."
     date: 2026-08-20
 
   - id: GAP-0018
@@ -268,6 +268,7 @@ gaps:
     answer: "Ratified design: nightly, encrypted, versioned, off-machine (object-storage bucket), automated sample-restore tests plus periodic full-restore rehearsal; QMF provides the backup/restore/verify primitives (CT-14, CT-26) while schedule and execution are application/ops-owned; encryption key custody and the crypto dependency are named at the node/ops sitting; topology: VPS records and syncs down, workstation holds the working archive, bucket catches nightly copies (DEC-0118, AD-20). Numeric RPO/RTO await the node/ops sitting."
     answered_by: operator (architecture sitting 2026-08-20)
     date: 2026-08-20
+    node_note: "Trading-node sitting 2026-08-28 (DEC-0198, DEC-0217, DEC-0252): the application/ops-owned values this answer left to the node are now registry schema rows (backup_recovery_point_objective, backup_recovery_time_objective_integrity, backup_recovery_time_objective_full_dr, backup_retention_period, restore_verification_cadence, backup_object_storage_provider, backup_payload_key_custody), configurable UI-editable with evidence values only; custody = workstation-minted payload key escrowed at qmx/backup-payload-key plus one offline copy; drills = nightly sample restore, monthly full restore, host-loss rehearsal before the live milestone and after every rebuild."
 
   - id: GAP-0028
     question: "Where is the exact boundary between qmf-data source adapters and application-owned downloading, scheduling, retries, and lifecycle control?"
@@ -477,7 +478,7 @@ gaps:
     recommendation: "The seams are ruled; ratify the CONTENT in a dedicated sitting: the fidelity taxonomy values (including the cross-fidelity comparison/refusal rule and aggregation detail beyond lowest-wins), the forex fill/slippage/financing calibration content, parity contracts, and the simulated-time typing that unlocks world = simulated (DEC-0110). Old battery values (WF windows, OOS counts, PBO bands, CSCV) remain candidates only — 'keep it simple' per the operator."
     status: deferred
     answer: "PARTIALLY closed by the QMB increment 2026-08-20 (DEC-0164, DEC-0169): the SEAMS are ruled — separate fill/slippage/cost ports plus financing as a scheduled position-level event, pinned composition order, partial fills first-class, fidelity identity = adapter-id + composition-version + taint, lowest-fidelity-wins per run, mixed-fidelity bar comparison a typed refusal, an optimistic taint on every fill until the taxonomy lands (such runs spend no split budget and claim no edge), provenance-derived world with store-level synthetic taint, and the solve method fixed as CALIBRATION-not-invention from QMX's own recorded evidence per broker (DEC-0135). Still OPEN and owned by this gap's sitting: the fidelity taxonomy VALUES, the calibration content itself, parity contracts, and simulated-time typing."
-    note: "The isolated-sandbox and Bot-by-Book-matrix halves of the original question are answered by the QMB architecture (B-5 process isolation, B-12 permutation batches; DEC-0161, DEC-0169); the gap stays deferred for the fidelity/calibration content only. The backtesting-CONTENT sitting may run after the QML sitting per the operator's ordering lead (see GAP-0047)."
+    note: "The isolated-sandbox and Bot-by-Book-matrix halves of the original question are answered by the QMB architecture (B-5 process isolation, B-12 permutation batches; DEC-0161, DEC-0169); the gap stays deferred for the fidelity/calibration content only. The backtesting-CONTENT sitting may run after the QML sitting per the operator's ordering lead (see GAP-0047). Trading-node increment 2026-08-29: the node sitting leaves this DEFERRED and adds nothing to it. The node's replay mode has NO FILL SIMULATION — it diffs decisions only, replaying recorded observations through the same loop on the replay frontier clock so the diff moves only when a decision moves (DEC-0206), and its one crossing into recorded evidence is the single sanctioned cross-world import port (DEC-0229). Fidelity taint therefore stays QMB tunnel territory in full; the node mints no fidelity value. Fill simulation in replay is carried as its own deferred row, GAP-0056. Do NOT close this gap here."
     date: 2026-08-20
 
   - id: GAP-0049
@@ -487,5 +488,289 @@ gaps:
     recommendation: "Defer the threshold until the attempt counter, split policy, result-label tuple, and evaluation statistics are defined; do not treat the proposed SR* label as a contract."
     status: deferred
     answer: null
-    note: "QMB increment 2026-08-20: the raw material now accrues by construction — every trial and replicate is a fully-labeled ledgered run (DEC-0161, DEC-0169) — and B-8's anti-overfit sensitivity analysis ships with every sweep; the thresholds, SR* definition, and pass batteries stay this gap's sitting, alongside the GAP-0016/0017 registration gate and the staged-funnel triage shape (ticket 008)."
+    note: "QMB increment 2026-08-20: the raw material now accrues by construction — every trial and replicate is a fully-labeled ledgered run (DEC-0161, DEC-0169) — and B-8's anti-overfit sensitivity analysis ships with every sweep; the thresholds, SR* definition, and pass batteries stay this gap's sitting, alongside the GAP-0016/0017 registration gate and the staged-funnel triage shape (ticket 008). Trading-node increment 2026-08-29: the node sitting leaves this DEFERRED and mints no threshold. The node touches it at exactly one place — the admission bar it enforces before a live binding — and there a BLANK BAR BLOCKS LIVE REGARDLESS (AD-32), so the node needs no search-quality number to run and must not invent one; the same rule covers GAP-0016 and GAP-0017. The node's own value roster is separately node-minted, unit-kinded and blank-effect tagged (DEC-0193, DEC-0256), and its QA standard gates machinery rather than performance — no profit gate, no invented latency budget (DEC-0208). Do NOT close this gap here."
     date: 2026-08-20
+
+  - id: GAP-0050
+    question: "What are the KSA trigger→level→effect matrix VALUES per cell (and per enforcement scope)?"
+    needed_by: [COMP-QMN, COMP-QMF-RISK]
+    blocking: false
+    recommendation: "A PRE-SOAK operator ratification through the settings surface, recorded as a config version — the soak acceptance checklist exercises the matrix, so live-blocking alone would leave the mechanism inert at the soak. TN-7 binds the SHAPE (levels adopted from the GitBook baseline, monotone fold, level epochs qualified by level scope, the kill switch under a dead wire, never-auto predicates); a blank or provisional-evidence cell blocks live money."
+    status: deferred
+    answer: null
+    note: "Trading-node increment 2026-08-29. Mis-cite surfaced, not propagated: the node spine cites 'GAP-0015' for these matrix values, but catalog GAP-0015 is the lineage-edges gap, answered 2026-08-20 under DEC-0114 — GAP-0015 is untouched and this row carries the KSA question instead. The SHAPE is closed by TN-7 (DEC-0192) and the KSA vocabulary is re-ratified into docs/ from the GitBook baseline with the effect matrix as node severity policy (DEC-0237); the value-status discipline that gates a cell — blank | provisional-evidence | ratified, countersigned through the powers channel with an evidence citation — and the pre-SOAK ruling itself are DEC-0231, with value_status_required minted as a registry schema field by DEC-0254. Only the per-cell VALUES stay open. Do NOT close this gap here."
+    date: 2026-08-29
+
+  - id: GAP-0051
+    question: "How are the MIS labelers trained and shadow-rolled — the data window, RNG seed, training-code fingerprint, model-artifact registration, and the promotion cadence for a trained labeler?"
+    needed_by: [COMP-QMN, COMP-QMF-REGISTRY]
+    blocking: false
+    recommendation: "A follow-on epic after the paper milestone, not V1 node work. The models do not exist and must be trained — download, clean, train, shadow-roll — and the job runs OFFLINE in a factory sandbox or on the operator's own laptop, never on the trading VPS and never on the decision path. Each training run records its data window, its RNG seed and the training code's fp1; the outputs are versioned model artifacts registered in the registry like any other identity-bearing artifact. Promotion of a trained labeler is ratification → version bump → re-certification over one full affected-Book cycle, and Kronos-class pretrained models are candidates only: a recovered or pre-trained model carries no authority without fresh ratification. The node side is already built — the shadow-lane seam is V1 node work — so the epic drops models into a lane that exists."
+    status: deferred
+    answer: null
+    note: "Trading-node increment 2026-08-29. TN-19 makes the SEAM explicit V1 node work — candidate-labeler registration, the shadow snapshot stream, the comparison read model, and shadow_composition_fp kept apart from composition_fp so registering or changing a candidate never re-identifies governed evidence (DEC-0204). V1 binds no trained model and the labelers stay rule-based; the live binding, the quarterly training cadence and the re-certification cadence are all this gap. The operator ruled MIS training LAST in the sequence (DEC-0215), and the PRD section 6 doctrine this rests on is ratified by adoption (DEC-0238). Do NOT close this gap here."
+    date: 2026-08-29
+
+  - id: GAP-0052
+    question: "What is the hot-apply path for a settings change — which resolved-config keys may take effect without a new boot epoch, and on what evidence?"
+    needed_by: [COMP-QMN]
+    blocking: false
+    recommendation: "V1 applies a config change at the NEXT BOOT EPOCH: a settings edit mints a new source definition version, regenerates the derived fragment, and the node picks it up on a restart at a safe point — extensibility without code. Hot-apply is a later mint on the SAME versioned artifact, never a second precedence path and never a runtime override layer."
+    status: deferred
+    answer: null
+    note: "Trading-node increment 2026-08-29. TN-18 fixes the config surface as ONE resolved, fingerprinted node-config artifact compiled from four explicit layers with no invocation layer, UI-editable by design (DEC-0203); config carries eligibility and identity only, runtime state is a read-time fold (DEC-0223); a restart at a safe point is the sanctioned application moment and the safe point itself is defined by DEC-0226. Nothing here is blocked: V1 is complete without hot-apply. Do NOT close this gap here."
+    date: 2026-08-29
+
+  - id: GAP-0053
+    question: "What shape does the agent / MCP door take over the node's library, and which powers — if any — does it carry?"
+    needed_by: [COMP-QMN]
+    blocking: false
+    recommendation: "A later sibling wrapper over the same library, built the way the other doors are: one pure function per capability, a thin door over it, and a parity contract test scoped to shared capabilities. Nothing an agent can reach exists on the node in V1. The three V1 doors are built so the wrapper needs no door change, and the powers channel already refuses every trading, protection, promotion, activation and settings power to the ops principal — an agent signer among them."
+    status: deferred
+    answer: null
+    note: "Trading-node increment 2026-08-29. TN-17 fixes the V1 door set — the in-process Python API, the localhost HTTP evidence channel (publish-never-act, per-read provenance fields) and the unix-socket powers channel with a CLOSED powers list under two declared principals (DEC-0202); the peer-credential check that makes the principal split real is SO_PEERCRED (DEC-0234); and there is NO operator command line at all, ruled (DEC-0211). Do NOT close this gap here."
+    date: 2026-08-29
+
+  - id: GAP-0054
+    question: "What hardened operating-system-level confinement will contain bot seats — the one named deferred dependency of the QL-8 Layer-2 conformance runner?"
+    needed_by: [COMP-QMN, COMP-QML]
+    blocking: false
+    recommendation: "Wait, and do not let a second containment story grow meanwhile: the V1 controls are named once and are these — the seat callback deadline, the seat memory ceiling, automatic seat quarantine whose ONLY exit is the operator-signed seat_reinstate power, the door layer's slice-progress watch over the published slice_start stamp, the supervised restart of last resort, plus QL-8's static scan and the stdlib process isolation of the Layer-2 runner. V1 does not wait on operating-system confinement, and in-process seat failure is no longer undefined."
+    status: deferred
+    answer: null
+    note: "Trading-node increment 2026-08-29. TN-19 hosts QL-7 seats and owns the seat states active | benched | quarantined, the conformance runner and the prediction linter (DEC-0204); the supervision mechanics the watch and the restart of last resort ride on — and the definition of a safe point — are DEC-0226; the process model, stand-down-alive and the shutdown contract that bound a seat's blast radius are DEC-0189. This is QML's named deferred dependency, carried forward unchanged. Do NOT close this gap here."
+    date: 2026-08-29
+
+  - id: GAP-0055
+    question: "When does the evidence tier move onto a second VPS, and what does that move change?"
+    needed_by: [COMP-QMN]
+    blocking: false
+    recommendation: "A config change once the placement boundary already exists. The three planes are drawn with a co-located evidence tier and passive hub in V1 precisely so a second host is a placement change — a roster and deployment edit — rather than a re-architecture; nothing in the node's trust boundaries assumes co-location."
+    status: deferred
+    answer: null
+    note: "Trading-node increment 2026-08-29. TN-3 draws the three planes, two machines and one bucket, and places the evidence tier and hub co-located with the node while keeping the boundary explicit (DEC-0188); TN-16 fixes the deployment shape — plain systemd service, canonical checkout root, immutable per-commit trees under a current symlink, one environment with named compensating controls — that a second host would extend (DEC-0201). V1 is complete without it. Do NOT close this gap here."
+    date: 2026-08-29
+
+  - id: GAP-0056
+    question: "What fill simulation, if any, does replay carry — and what fidelity taint does a simulated fill acquire?"
+    needed_by: [COMP-QMN, COMP-QMB]
+    blocking: false
+    recommendation: "None in V1: replay diffs DECISIONS only, feeding recorded observations back through the same loop with the replay frontier clock, so a replay diff moves only when a decision moves. Fidelity taint, fill and slippage models, and their calibration content stay QMB tunnel territory under GAP-0048 — the node mints no fidelity value of its own."
+    status: deferred
+    answer: null
+    note: "Trading-node increment 2026-08-29. TN-21 makes replay the node's own regression tool — a process-per-job spawn OUTSIDE the node process, composed from the same resolved node-config artifact with world = replay, drawing WriterIds from a disjoint namespace, resolving no credential reference and selecting the replay VenueClientPort implementation for every VenueId (DEC-0206); its one crossing into recorded evidence is the single sanctioned cross-world import port (DEC-0229). See GAP-0048 for the fidelity taxonomy values and calibration content this waits on. Do NOT close this gap here."
+    date: 2026-08-29
+
+  - id: GAP-0057
+    question: "After promotion and activation, does a newly promoted bot get its own per-bot warm-up or probation period before it trades at its full seat allowance, or does the inherited admission row (registration linters, technical demo/paper shakedown, one operator signature; no probation, no paper-performance gate) stand as-is?"
+    needed_by: [COMP-QMN, COMP-QMF-RISK, COMP-QML]
+    blocking: false
+    recommendation: "Keep the inherited admission row as ratified (no probation, no paper-performance gate): the only warm-up the corpus carries is the deploy-level first-deploy soak week (TN-9, DEC-0194, DEC-0212), and the agentic system's own paper-trading period before a bot returns for promotion is outside this layer (R3, DEC-0213). If the operator wants a per-bot warm-up after activation, it is a Book-level admission or seat-allowance ramp declared at the settings surface (a CT-22 admission_bar row), never node architecture - a one-line ruling either way."
+    status: open
+    answer: null
+    note: "Surfaced by the transcript scan of SRC-12 (uncarried statement U1, EXT-2162): in the promotion ruling the operator recalled 'not every bot starts trading right away. I do recall there is some sort of warm-up period, unless I'm wrong.' Neither the memlog nor the spine answers it; the memlog folds it into his separate sentence about the agentic system's pre-promotion paper period. Cheap veto: default = the inherited admission row stands and no per-bot warm-up exists in V1 (DEC-0259)."
+    date: 2026-08-29
+
+  # ── Deferred by the QMA sitting — 22 rows (GAP-0070..GAP-0091) ─────────────
+  # Spine Deferred-table order. status: deferred, blocking: false, answer: null.
+  # recommendation = the row's revisit condition verbatim from the spine
+  # Deferred table (markdown emphasis dropped, words unchanged). Each row stays
+  # deferred with its stated revisit condition; none is revived here.
+  - id: GAP-0070
+    question: "When and how is the Windows VPS for the computer-use agent provisioned and registered as a desktop ExecutionEnvironment, and what is its capability envelope?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "an ExecutionEnvironment of kind desktop is registered against a reachable host; until that record exists every computer-use tool fails its check_fn and the Compute Router returns NoEnvironment for a desktop ComputeRequirement"
+    status: deferred
+    answer: null
+    note: "AD-25 deployment envelope. The VPS is the operator's own planned purchase — planned, not provisioned; AD-25 registers a desktop ExecutionEnvironment only once provisioned, never in v1 (memlog L206). max_in_flight is pinned to 1 and uneditable for the desktop kind (AD-17)."
+    date: 2026-08-29
+  - id: GAP-0071
+    question: "Does each desk carry exactly one lead flag, and is the lead Quant's mailbox the catch-all for mailbox Envelopes whose recipient no longer exists?"
+    needed_by: [COMP-QMA-CORE, COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the operator rules on both; until then a second lead flag on a desk is a hard startup error and an undeliverable Envelope resolves to dead_letter (AD-20) rather than to the lead"
+    status: deferred
+    answer: null
+    note: "AD-7 (ontology) and AD-20 (Agent Bus / mailbox). Operator-flagged item on the cheap-veto register. The operator's ledger ruling ratified only that a desk-level lead Quant exists and keeps a Quant Ledger; one lead flag per desk and the lead's mailbox as catch-all were INFERRED, never ruled (memlog L183, DEC-0349). The interim rule is stated in AD-7's own sentence."
+    date: 2026-08-29
+  - id: GAP-0072
+    question: "Which external memory backend (Hindsight, Mem0) becomes the first MemoryProvider implementation, and against which store dependency?"
+    needed_by: [COMP-QMA-CORE, COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the AD-22 staging store holds memory candidates from at least two desks and at least one Mission has been blocked by recall being unavailable - both facts readable from the journal; re-check the store dependency (Postgres+pgvector or Oracle 23ai) then. The port-to-Hindsight 1:1 mapping in research/memory-providers.md was verified against 0.4.9 and the current release is v0.9.2 - re-verify the mapping at admission"
+    status: deferred
+    answer: null
+    note: "AD-18 MemoryProvider port. Hindsight (v0.9.2) is the deferred first backend behind a testable eval; pgvector 0.8.6 is deferred with it (DEC-0342). v1 ships the MemoryProvider port and the NoMemoryProvider typed refusal only; the no-database-server rule binds QMA's own stores, never a provider's internal storage behind a QMA-owned port."
+    date: 2026-08-29
+  - id: GAP-0073
+    question: "What hybrid retrieval / indexing does the Knowledge corpus need beyond literal and locator-based search?"
+    needed_by: [COMP-QMA-CORE, COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the corpus root holds at least one ingestible content file and STRATS §6 Q1-Q12 (folder layout, serialization, stable-id scheme) are ratified upstream"
+    status: deferred
+    answer: null
+    note: "AD-19 KnowledgeSource port. v1 ships the adapter over the STRATS plain-file library with CorpusSnapshot / Citation / Provenance and literal + locator search only; evidence_confidence on knowledge is never conflated with admission_confidence on memory (DEC-0343)."
+    date: 2026-08-29
+  - id: GAP-0074
+    question: "When do the self-improvement evaluation gates switch on, and against what trajectory evidence?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the telemetry store holds complete agent trajectories for at least the AD-26-registered count of finished Missions (initially 50) across at least two desks; v1 ships invariants plus staging only"
+    status: deferred
+    answer: null
+    note: "AD-22 admission gate + AD-23 telemetry store. v1 ships the AD-22 invariants and the staging store only; the gates are gated on deferred.finished_mission_trajectory_count (initially 50, registered under AD-26)."
+    date: 2026-08-29
+  - id: GAP-0075
+    question: "Which sandbox and compute vendors (remote_container; desktop beyond the planned Windows VPS) does QMA adopt, and starting from what shortlist?"
+    needed_by: [COMP-QMA-CORE, COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the Compute Router has recorded at least the AD-26-registered count (initially 3) of NoEnvironment refusals for ComputeRequirements no local Docker environment can satisfy, or a job has exceeded the workstation's memory or GPU capability - counted from telemetry, never judged; the operator rejected Modal, Daytona and E2B outright on cost and fit and said he would \"first look for what I want\" (T-3976), so a shortlist starting from those three is not the starting point - the sandbox exists for backtesting fan-out first (T-3976)"
+    status: deferred
+    answer: null
+    note: "AD-17 ExecutionEnvironment / Compute Router. Operator constraint: Modal, Daytona and E2B rejected OUTRIGHT on cost and fit (T-3976); the sandbox exists for backtesting fan-out first. Row rescoped so it no longer defers a provider the spine already ships (memlog L123). Gated on deferred.sandbox_refusal_count (initially 3, AD-26)."
+    date: 2026-08-29
+  - id: GAP-0076
+    question: "What is the RLM kernel performance envelope — fan-out throughput, namespace-snapshot fidelity for large handles, and cost per 800-variant aggregation?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the Analysis desk's first full backtest fan-out has run: record wall-clock, peak memory and USD cost for one 800-variant aggregation and one snapshot-and-restore of the largest handle in that run, as evidence under AD-26; if a snapshot fails or the recorded cost exceeds rlm.fanout_cost_ceiling_usd (AD-26), RLM-in-Docker is re-opened"
+    status: deferred
+    answer: null
+    note: "AD-14 RLM kernel (Analysis desk). A measurement obligation, not an open design question; AD-14 keeps its rule and this row carries the doubt (memlog L135). The ceiling rlm.fanout_cost_ceiling_usd is registered under AD-26 (memlog L260)."
+    date: 2026-08-29
+  - id: GAP-0077
+    question: "What is the in-house threading node's shape, and what PluginManifest contribution point does it need?"
+    needed_by: [COMP-QMA-CORE, COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the operator supplies the threading node's spec or its code; until then no PluginManifest contribution type is minted for it and no plugin may declare one"
+    status: deferred
+    answer: null
+    note: "AD-1 / AD-21 plugin contribution surface. Operator constraint: no contribution type is minted and no plugin may declare one until the operator supplies the spec or code (memlog L138)."
+    date: 2026-08-29
+  - id: GAP-0078
+    question: "Which browser stack does QMA adopt for browser-heavy missions?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "a browser-heavy mission actually blocks; no study exists yet. The starting point is the operator's own - reverse-engineer Egolite for this use case (T-3976), not a vendor shortlist; Cloudflare Browser Run, Modal, Daytona and E2B were rejected on cost and fit (T-3976), and his method is \"extract, do not clone blindly\""
+    status: deferred
+    answer: null
+    note: "AD-16 / AD-17 tool + environment territory. Operator constraint: the starting point is reverse-engineering Egolite, NOT a vendor shortlist; Cloudflare Browser Run, Modal, Daytona and E2B rejected on cost and fit (T-3976); method is 'extract, do not clone blindly'."
+    date: 2026-08-29
+  - id: GAP-0079
+    question: "What external agent-to-agent transport does the mailbox need when a second host or external counterparty appears?"
+    needed_by: [COMP-QMA-WIRE, COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "a second host or an external counterparty needs the mailbox; the internal bus comes first"
+    status: deferred
+    answer: null
+    note: "AD-20 Agent Bus / AD-5 wire. The internal, single-operator bus (durable, addressed, non-authoritative) comes first; the public-messaging/relay/signing transport is itself Cut (DEC-0368), so any external transport is a fresh design, not that machinery revived."
+    date: 2026-08-29
+  - id: GAP-0080
+    question: "Does the RLM runtime extend beyond the Analysis desk, and does the spawn depth rise above 2?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "a desk other than Analysis has recorded a Task blocked for want of an RLM kernel, or an Analysis run has hit the depth-2 cap - both readable from the journal"
+    status: deferred
+    answer: null
+    note: "AD-14 RLM runtime, v1 scoped by desk to Analysis with a depth cap of 2. Both triggers are journal-readable, not judged."
+    date: 2026-08-29
+  - id: GAP-0081
+    question: "What is the UI presentation architecture — Rust extension technology, UI SDK surfaces, contribution points, UI plugin packaging, and the qma-ui-contract package beyond a stub?"
+    needed_by: [COMP-QMA-WIRE]
+    blocking: false
+    recommendation: "its own session - the operator has not started the UI and does not plan to soon; the wire contract (AD-5) and the variables registry (AD-26) are not deferred and bind now. Revisit once the daemon API is live and stable. Profile records are client state and are specified in that session; nothing in the daemon reads or stores one (AD-7). Carried forward for that session: the UI reads as a trading/research terminal, not a generic agent dashboard, and surfaces live remote-agent activity - status, current task, tool calls, outputs, progress, failures, attach and observe (operator, T-5071, T-5082-5084)"
+    status: deferred
+    answer: null
+    note: "AD-5 wire. The qma-ui-contract package ships as a stub only in v1. The wire contract (AD-5) and the variables registry (AD-26) are NOT deferred and bind now. Carried forward: the UI reads as a trading/research terminal, not a generic agent dashboard (operator, T-5071, T-5082-5084)."
+    date: 2026-08-29
+  - id: GAP-0082
+    question: "Are Mission reports (an agent-derived synthesis over a mission's task ledgers) wanted, and in what shape?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the operator is not yet certain they are wanted; revisit after the first missions run. No live mission ledger exists in the meantime"
+    status: deferred
+    answer: null
+    note: "AD-9 ledgers. Mission reports are Deferred (DEC-0338); the three ledgers are Task, Quant and Experiment, and Research/Trading/Dev/Analysis/PM ledgers are read-time views."
+    date: 2026-08-29
+  - id: GAP-0083
+    question: "Does the desk count consolidate (five desks vs three vs two)?"
+    needed_by: [COMP-QMA-CORE]
+    blocking: false
+    recommendation: "after the first missions run; roles are settled; Profile is presentation and may collapse desks for display - never a rename or retirement of a desk_slug, ActorId, plugin prefix, memory scope or ledger index key (AD-7), which is what makes this deferral free"
+    status: deferred
+    answer: null
+    note: "AD-7 ontology. Only a Profile-level display collapse is on the table; the five desk_slug values (research, trading, dev, analysis, pm), ActorIds, plugin prefixes, memory scopes and ledger index keys are never renamed or retired, which is what makes this deferral free."
+    date: 2026-08-29
+  - id: GAP-0084
+    question: "Is a separate Mission Template registry needed beside Graph Templates?"
+    needed_by: [COMP-QMA-CORE, COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "after the first three authored graph packs exist and a desk demonstrably needs a mission skeleton a Graph Template cannot carry"
+    status: deferred
+    answer: null
+    note: "AD-13. No Mission Template in v1 (DEC-0340); graphs, not loops, are the organizing centre. Both facts must hold before a separate registry is revisited."
+    date: 2026-08-29
+  - id: GAP-0085
+    question: "What is the typed strategy-mechanism decomposition and recombination (EntryMechanism, ExitMechanism, Filter, SessionRule, PositionRule, InvalidationRule with paper-level provenance)?"
+    needed_by: [COMP-QMA-CORE]
+    blocking: false
+    recommendation: "QML and qmf-registry own strategy semantics (AD-14); QMA carries the candidates and the lineage edges. Revisit at the QML sitting - StrategyHandle and ExperimentSpec are already shaped to carry the result"
+    status: deferred
+    answer: null
+    note: "AD-14. Operator source T-1896 / T-2832. QML and qmf-registry own strategy semantics; QMA holds references and content-addressed candidates with lineage edges only, and no QMA contract redefines Strategy or Bot. Revisit at the QML sitting."
+    date: 2026-08-29
+  - id: GAP-0086
+    question: "Which graph engine implementation backs the Task Graph?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "when the first three authored graph packs exist"
+    status: deferred
+    answer: null
+    note: "AD-13 fixes the Graph Template / Task Graph contract and nothing below it; no graph-engine candidate was studied in this run (options-sheet §(iv) item 7). The implementation choice waits on the first three authored graph packs."
+    date: 2026-08-29
+  - id: GAP-0087
+    question: "Is the Claude Agent Python SDK in-process hook count 7 or 10, and does it bind any QMA adapter?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "before any Claude-worker adapter is specified - which the Cut table bars in v1 (\"adapters hosting foreign agent runtimes\"), so this row revisits only if a spine amendment reverses that Cut; carried to the session that specifies AD-15 Deployment adapters or AD-17 worker templates. Nothing in this spine depends on it: AD-10's hook set is QMA-authored and no adapter is specified"
+    status: deferred
+    answer: null
+    note: "AD-10 / AD-15 / AD-17. 7 (research/daemon-stack-options.md) vs 10 (research/claude-agent-sdk-hooks.md), same source, same day, unresolved. BOUNDED by the Cut on foreign agent runtimes (DEC-0360): revisits only if a spine amendment reverses that Cut (memlog L244). AD-10's hook set is QMA-authored; nothing in the spine depends on this count."
+    date: 2026-08-29
+  - id: GAP-0088
+    question: "What are the backup destination, encryption-key custody, and the sample-restore-test and full-restore-rehearsal cadences?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "before the daemon's first non-test run opens a durable store: AD-27's nightly off-machine copy cannot execute without a destination and a key, so the destination and both restore cadences are decided and registered under AD-26 at that point; the encryption-key custody stays with the parent's deferral and revisits on the parent's condition"
+    status: deferred
+    answer: null
+    note: "AD-27 store lifecycle. This was the only Deferred row whose revisit cell named no condition at all; it is now testable (memlog L223, L246). The destination and both restore cadences register under AD-26 at first durable-store open; encryption-key custody stays with the parent's deferral."
+    date: 2026-08-29
+  - id: GAP-0089
+    question: "What is the trim window for the bounded non-evidence streams (mailbox delivery projection, telemetry)?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the stream's event count or on-disk size crosses its AD-26-registered trim threshold; trajectories may not be trimmed until the three evidence-dependent rows above are evaluated and recorded, and exemption from trimming is never exemption from backup (AD-27)"
+    status: deferred
+    answer: null
+    note: "AD-20 mailbox delivery projection + AD-23 telemetry. The AD-6 event journal is NEVER trimmed and agent trajectories are exempt (AD-8, AD-23). Trim thresholds are AD-26-registered; exemption from trimming is never exemption from backup (AD-27)."
+    date: 2026-08-29
+  - id: GAP-0090
+    question: "What may a context compaction pass summarize, what must it preserve, and where does the compacted material go?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "the first Session reaches its deployment's min_context_tokens ceiling, readable from telemetry; until then compaction is Context Compiler behaviour that persists nothing (AD-8, Context row) and no compacted transcript is evidence"
+    status: deferred
+    answer: null
+    note: "AD-14 names compaction as a shared subsystem and the container diagram draws it into COGNITION, yet no AD carries a compaction rule and no store owns its output (memlog L234). Until the ceiling is reached, compaction is Context Compiler behaviour that persists nothing; no compacted transcript is evidence."
+    date: 2026-08-29
+  - id: GAP-0091
+    question: "Is an interactive walkthrough artifact for this spine wanted?"
+    needed_by: [COMP-QMA-CORE, COMP-QMA-WIRE, COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "optional operator aid; after the spine is reviewed"
+    status: deferred
+    answer: null
+    note: "An optional operator aid over the whole QMA spine; not a component obligation. Revisit after the spine is reviewed."
+    date: 2026-08-29

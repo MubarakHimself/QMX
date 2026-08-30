@@ -1,0 +1,172 @@
+target: docs/glossary.md
+ops:
+  - op: frontmatter_add
+    field: decisions
+    ids: [DEC-0303, DEC-0304, DEC-0305, DEC-0306, DEC-0308, DEC-0309, DEC-0311, DEC-0312, DEC-0313, DEC-0314, DEC-0315, DEC-0316, DEC-0317, DEC-0318, DEC-0319, DEC-0320, DEC-0321, DEC-0322, DEC-0323, DEC-0328, DEC-0330, DEC-0331, DEC-0332, DEC-0337, DEC-0338, DEC-0339, DEC-0340, DEC-0342, DEC-0343, DEC-0344, DEC-0345, DEC-0346, DEC-0348, DEC-0349, DEC-0361, DEC-0376, DEC-0378]
+  - op: frontmatter_add
+    field: depends_on
+    ids: [COMP-QMA-CORE, COMP-QMA-WIRE, COMP-QMA-DAEMON]
+  - op: frontmatter_set
+    field: verified
+    value: '2026-08-29'
+  - op: glossary_insert_sorted
+    section_heading: '## Canonical terms'
+    entries:
+      - term: Agent
+        text: |
+          A running reasoning or execution instance under a **Session**, the fourth link of the ontology chain Desk -> Role -> **Quant** -> Agent -> **Subagent** (DEC-0306). An Agent holds a **Task** through its `dispatch_lease`, authors that Task's **Task Ledger**, and runs the model deployment recorded on every ledger entry. Its effective capability set is computed once by the daemon at spawn as an ordered narrowing (`role.base` ceiling, then `role.overlay`, then Mission, then parent) and recorded verbatim on the Agent record, never recomputed for a running Agent (DEC-0315). An Agent has no **Mailbox** and is never a `to` address (DEC-0306).
+      - term: Agent Bus
+        text: |
+          The durable, addressed, non-authoritative messaging layer: each **Quant** owns one durable **Mailbox** in the daemon's own store, with no external relay (DEC-0319). A message may request work but can never BE the work: a handoff becomes real only when it writes a **Task**, and a reviewer's authoritative act is the task update, the message only the ping (DEC-0319). Delivery is at-least-once with idempotent msg-id dedup, a per-actor ack cursor and bounded retention, so the bus is not institutional memory. External agent-to-agent transport is a later adapter behind the same `ActorId` contract; no relay or signing protocol is adopted (DEC-0319, GAP(GAP-0079)).
+      - term: admit, apply, promote
+        text: |
+          Three verbs naming three different acts, never interchanged (DEC-0345). A **Memory** candidate is *admitted*, gated by `admission_confidence`; a `RefinementProposal` is *applied* out of the AD-22 staging store; and only a registered artifact is *promoted* into the live zone, by a human outside QMA, under constitution L17. The word `promote` (and `promotion`) never appears for memory or refinement, and QMA mints no promotion or zone-transition command at all, recording only the resulting artifact ref (DEC-0345, DEC-0323).
+      - term: Backtesting Service
+        text: |
+          The `analysis-backtest` plugin's daemon-half adapter — one Tool Registry entry plus the single `qmb` door — holding no scheduling authority, no parallelism and no state of its own, and never a second backtesting engine (DEC-0348, DEC-0316). QMB owns intra-node parallelism, its own run ledger and its artifact contract; QMA places exactly one `qmb` job per environment and never re-specifies it. See **QMB** and **ExperimentSpec**.
+      - term: Credential Broker
+        text: |
+          The component that resolves secret references from an OS secret store behind a backend interface (Windows Credential Manager the first and only v1 backend), so QMA components handle references and never values (DEC-0323, DEC-0344). Its scope is a code-declared allowlist shipped in `qma-core` — model and inference providers, compute and sandbox providers, corpus and knowledge sources, telemetry sinks; venue, broker, exchange, trading-node and platform-registry credentials sit outside QMA's namespace, and a reference not on the allowlist returns the typed refusal `CredentialOutOfScope` (DEC-0323). The allowlist is source code — never settings, a plugin contribution, a UI-editable variable or widened by a Mission — and the broker does exact-reference resolution only, never enumerate, search, list or glob (DEC-0323).
+      - term: Deployment
+        text: |
+          A registered model endpoint the proxy chain resolves a **ModelClass** request against, load-balanced within the eligible pool under a routing policy of `failover`, `weighted_round_robin`, `quota_lowest` or `fill_first`, returning `ModelCapabilities` to the Context Compiler (DEC-0314). OpenCodex is the first `ModelDeployment` implementation and sits behind the Deployment contract, deliberately NOT behind the **Credential Broker** (DEC-0314, DEC-0344). A local-proxy Deployment carries `auth_mode: none` on the QMA side, binds loopback only (`127.0.0.1` or `::1`, else `NonLoopbackProxy`), and never receives a QMA-resolved secret; its own provider credentials stay in its own custody outside QMA's namespace (DEC-0314, DEC-0344).
+      - term: Desk
+        text: |
+          The organizational and workspace unit at the head of the ontology chain Desk -> **Role** -> **Quant** -> **Agent** -> **Subagent** (DEC-0306). The five desks are exactly Research, Trading, Development, Analysis and PM, with `desk_slug` values `research`, `trading`, `dev`, `analysis` and `pm` — identical to the plugin prefix tokens `research-*`, `trading-*`, `dev-*`, `analysis-*` and `pm-*`, minted once at bootstrap and never reused (DEC-0306, DEC-0337). A Role name is never used as a Desk name. Desk consolidation is a **Profile**-level display collapse only and never renames or retires a `desk_slug`, `ActorId`, plugin prefix, memory scope or ledger index key (DEC-0306, GAP(GAP-0083)).
+      - term: desk ledger view
+        text: |
+          A read-time view over the three ledger stores — **Task Ledger**, **Quant Ledger** and **Experiment Ledger** — indexed by desk, quant, agent, mission, task, experiment and date, never itself a store (DEC-0308, DEC-0338). The Research, Trading, Development, Analysis and PM ledgers are all views. Its fold contract streams the three stores' `ledger.appended` announcements filtered by the view's index key, orders by the announcement `journal_seq`, bounds knowledge-time by the view's `as_of` over `recorded_at` (defaulting to now), and disposes equal instants by ascending `journal_seq` (DEC-0308).
+      - term: Envelope
+        text: |
+          The mailbox record on the **Agent Bus**, carrying msg id, `from`, `to`, `kind`, optional mission and task refs, `correlation_id`, optional `reply_to_ref` and `causation_id`, body, artifact refs, priority and creation time (DEC-0319). `MessageKind` is one of `handoff`, `reply`, `notify`, `review_request`, `status`, `question`, `approval_request`; `DeliveryState` is one of `delivered`, `queued`, `woke`, `deferred`, `dead_letter`. A mailbox Envelope whose more specific recipient no longer exists resolves to `dead_letter` until the operator rules on the catch-all (GAP(GAP-0071)). The mailbox `Envelope` (an AD-20 record) is distinct from the **wire envelope** (the AD-5 frame `v`, `type`, `id`, `producer_id`, `correlation_id`, `scope_path`, `seq`, `payload`); the word `envelope` is never written bare (DEC-0319, DEC-0304).
+      - term: evidence_confidence vs admission_confidence
+        text: |
+          Two confidences that are never conflated (DEC-0318, DEC-0343). `evidence_confidence` is a map of exactly six corpus-owned dimensions on a **Knowledge** `Citation`, whose keys are declared once per source and are stored and surfaced verbatim, never averaged, compared across sources or scalarized (DEC-0318). `admission_confidence` is one QMA-owned scalar the daemon's admission gate computes DETERMINISTICALLY from a MemoryCandidate's provenance, supporting artifacts, corroboration count and validation history; a proposing agent may never set, suggest or influence it, and a `propose` call carrying the field is refused (DEC-0317). Neither is ever derived from the other, and a memory candidate citing knowledge stores the Citation plus the six dimensions verbatim (DEC-0318).
+      - term: event journal
+        text: |
+          The daemon's single append-only journal under one writer and one clock; neither a ledger nor telemetry (DEC-0305, DEC-0322). No journal record is ever trimmed (DEC-0322). The **Mailbox** delivery projection, telemetry store and other bounded streams are folds over journal events and never delete a journal record (DEC-0319, DEC-0322). "QMX Event Ledger" is a retired name for the event journal (DEC-0348).
+      - term: Experiment Ledger
+        text: |
+          The scientist's notebook, one per Experiment, owned by the **Quant** that registered it and appended by the **Agent** holding the `dispatch_lease` of the **Task** that registered the Experiment, so two Tasks registering against one Experiment never produce two simultaneous authors (DEC-0308, DEC-0338). Every entry carries `authored_by` and the model deployment used. It is one of exactly three ledger stores; everything else is a **desk ledger view** (DEC-0308).
+      - term: ExecutionEnvironment
+        text: |
+          A declaration of a `kind` (`local`, `docker`, `remote_container`, `remote_host`, `browser` or `desktop`) with provider ref, image, mounts, an environment allowlist, capabilities, a required `network` field of `none` or `allowlist`, and a lifecycle of `ephemeral` or `persistent` — a declared allowlist, never a control channel (DEC-0316). Docker-per-worker, ephemeral, is the default and there is no shared dirty filesystem. An instance grants at most one `environment_lease` per slot unless its declaration sets the AD-26 configurable `environment.max_in_flight` (default 1); `remote_host` and `desktop` may never exceed 1 (DEC-0316). A `ComputeRequirement` naming a `kind` no registered environment provides returns the typed refusal `NoEnvironment`; the unprovisioned Windows VPS `desktop` is the v1 case (GAP(GAP-0070)).
+      - term: ExperimentSpec
+        text: |
+          The content-addressed specification of an experiment: a code ref only when code changes, a resolved-config ref for parameter and configuration changes, plus data ref, environment ref, seed, model and harness version, cost assumptions and a lineage DAG — never a git branch per parameter (DEC-0316; git-branch-per-mutation lineage is dead, DEC-0376). It links to the **Experiment Ledger** and carries `BacktestHandle` / `StrategyHandle` references. QMB is the backtesting path, reached through the single `qmb` door of the `analysis-backtest` plugin (the **Backtesting Service**), one job per environment (DEC-0316).
+      - term: Graph Template
+        text: |
+          The authored, plugin-contributed, versioned artifact that holds NO runtime state, addressed `<plugin_id>:<local_id>` (DEC-0312). It is never interchanged with the daemon's **Task Graph**, which is the runtime work state. A **Loop** is invoked as a node kind inside a Graph Template. v1 ships no `graph_template` in `qma-daemon`; every named cycle — Act-Observe-Verify and Hypothesis-Test-Learn-Mutate-Gate included — arrives as a plugin-contributed Graph Template (DEC-0312, DEC-0340). Graphs, not loops, are the organizing centre (DEC-0340).
+      - term: Hook
+        text: |
+          The single enforcement and control surface of the daemon, never an optional feature (DEC-0309, DEC-0339). Every daemon-owned primitive ships a `before_<verb>` and an `after_<verb>` event; the v1 registry is closed-and-addable across twenty-three verbs plus the two phase-less blocking controls `agent_stop` and `review_required` (DEC-0309). A hook is a deterministic Python callable or subprocess with no prompt-type and no agent-type handlers, and its source (`desk`, `role`, `mission` or `plugin`) bounds the events it can ever receive. `HookResult` decisions have the total precedence `block_stop` > `deny` > `defer` > `ask` > `allow` > `observe`, parallel hooks resolving most-restrictive-wins, and a `deny` binds under any permissive mode (DEC-0309, DEC-0323).
+      - term: JobHandle
+        text: |
+          A daemon-resolved reference to a placed job carrying a job id and a state of `queued`, `running`, `done`, `failed`, `cancelled`, `aborted` or `unknown`, with `submit`, `JobHandle.attach`, `wait`, `JobHandle.reattach`, `wake`, `cancel` and `stream` (DEC-0316). Terminal states are exactly `done`, `failed`, `cancelled` and `aborted`, and `aborted` never becomes `cancelled`. `unknown` is mandatory: a timeout, a lost supervisor or an unreachable environment resolves to `unknown` and never to `failed`, holding one `max_in_flight` slot until an explicit recorded resolution, and no component retries or invents terminal state (DEC-0316). This job-supervision `unknown` is distinct from the venue submission outcome **UNKNOWN (outcome state)** and from a **Task**'s `unknown` state (DEC-0316, DEC-0311).
+      - term: Knowledge
+        text: |
+          A read-only, provenance-carrying corpus behind the `KnowledgeSource` port over the operator's STRATS plain-file library; QMX adapts to the library and the library is never built around QMX (DEC-0318, DEC-0343). `snapshot()` returns a `CorpusSnapshot` whose id is a content-addressed tree digest; a `Citation` carries `source_ref`, `snapshot_ref`, `locator`, an opaque evidence label and an `evidence_confidence` map of exactly six corpus-declared dimensions stored and surfaced verbatim (DEC-0318). `search` is literal and locator-based — grep-class semantics, no ranking and no embedding — and v1 ships no index (GAP(GAP-0073)). Knowledge is never conflated with **Memory**, and `evidence_confidence` is never derived from `admission_confidence` (DEC-0318, DEC-0343). "Knowledge Base" is a retired name (DEC-0348).
+      - term: Loop
+        text: |
+          An executable control cycle whose `stopping_condition`, `budget` and `escalation` are runtime-owned, invoked as a node kind inside a **Graph Template** (DEC-0312). A **Skill** is not a Loop, though a Skill may invoke a Loop (DEC-0312). v1 loops are authored in-house in the Loop Registry, with no self-invented loops; a candidate loop reaches the registry only through the AD-22 admission gate (DEC-0312, DEC-0321). There is no `loop` contribution point, and an eleven-entry loop registry as the organizing centre is Cut and dead (DEC-0378).
+      - term: Mailbox
+        text: |
+          The single durable inbox each **Quant** owns in the daemon's store, a projection over journal `message.*` events (DEC-0319). Its bounded retention governs the delivery projection only — queue depth, ack cursor, redelivery window — and never deletes a journal record. A **WakePolicy** field of the Quant record carries wake conditions, quiet hours (a daily interval plus its IANA zone) and max wakes per window, evaluated by the deterministic scheduler at delivery time; quiet hours suppress wakes only, so a message arriving inside them is still delivered and acked with `DeliveryState` `deferred` (DEC-0319). **Agent**s and **Subagent**s have no mailbox (DEC-0306).
+      - term: Memory
+        text: |
+          Everything an agent remembers, entering QMA only through the `MemoryProvider` port; QMA builds no memory engine in-house (DEC-0317, DEC-0342). A MemoryCandidate carries provenance, supporting artifacts, `admission_confidence`, scope, proposer, occurrence time and supersession, with `validation_state` one of `proposed`, `validated`, `admitted`, `superseded`, `invalidated`, `expired` or `contradicted`. A candidate is **admitted**, never promoted (DEC-0345). Until a provider is bound, `recall` returns the typed refusal `NoMemoryProvider` and candidates stage in the AD-22 staging store (DEC-0317). Hindsight is the deferred first backend, admitted only behind a QMA-owned evaluation (GAP(GAP-0072)). Memory is not **Knowledge**, and "Knowledge Base" is a retired name (DEC-0342, DEC-0348).
+      - term: Mission
+        text: |
+          The executable organizational contract owned by exactly one **Quant**, from whose record the owning desk is derived and on which the desk is never separately stored (DEC-0311). It declares intent, scope, constraints, evidence requirements, available capabilities, success criteria, outputs, verification, budget, escalation, termination criteria and an optional `approval_route`. The Mission Compiler is deterministic daemon code, never an LLM, turning a Goal plus an optional **Graph Template** into a Mission record and its initial **Task Graph**; there is no separate Mission Template registry in v1 (DEC-0311, GAP(GAP-0084)). Mission state is closed-and-addable with terminal states `done`, `failed` and `cancelled`; a Mission containing an `unknown` **Task** is itself `unknown`, never `failed`. Mission reports are Deferred (DEC-0338, GAP(GAP-0082)).
+      - term: ModelClass
+        text: |
+          A cost-and-difficulty tier with exactly four values — `REASONING_HIGH`, `WORKHORSE_GENERAL`, `CODING_HIGH` and `FAST_CHEAP` — resolved by a deterministic proxy chain ModelClass -> **Deployment** -> **Credential Broker**, never by an LLM (DEC-0314, DEC-0344). Selection is two-stage and never crosses a class boundary: stage one the class selects the candidate pool, stage two the request's `needs` flags plus `min_context_tokens` filter it; an empty filtered pool returns the typed refusal `NoEligibleDeployment` naming the class and the unmet constraint, and there is no substitution across classes (DEC-0314). The harness picks the class; an agent never names a vendor (DEC-0314).
+      - term: model_family
+        text: |
+          An optional, operator-assigned field on every **Deployment** — unset at registration, never defaulted or synthesized, and independent of **ModelClass** and of the provider account (DEC-0314, an AD-26 configurable `deployment.model_family`). AD-10's ReviewPolicy compares it to enforce `author_family != reviewer_family`, and the daemon returns the typed refusal `NoEligibleReviewer` when none qualifies; a deployment whose family is unassigned is routable but ineligible for every review comparison (DEC-0314, DEC-0309). `model_family` assignment is a human-gate command accepted only from an `operator` principal (DEC-0323).
+      - term: plugin (agentic sense)
+        text: |
+          A desk extension package contributing to QMA's declared contribution surface; the word `plugin` is adopted for QMA prose (DEC-0346, DEC-0320). A `PluginManifest` declares id, version, supported `qma_api` range, desk, dependencies, provided contributions, permissions, entrypoint, migrations and rollback mode; activation registers each contribution through a scoped context and unload disposes the scope LIFO (DEC-0320). Plugins are named by desk with the prefix tokens `research-*`, `trading-*`, `dev-*`, `analysis-*` and `pm-*` (DEC-0337). The adoption is scoped to QMA prose and never lifts the parent ban: QMB stays a library and a CLI, `engine` stays banned for backtesting and `exam` stays banned outright (DEC-0346). Extension trust tiers, a marketplace and install counts are Cut and dead (DEC-0361).
+      - term: principal class
+        text: |
+          The single class every authenticated wire connection carries, exactly `operator` or `machine`, recorded verbatim on every command, journal entry and ledger entry (DEC-0323). The `operator` class comes only from an interactive human credential presented by a client a human is driving; workers, plugin worker halves, remote deployments, the scheduler, routines and cron, and every daemon-internal caller are `machine`, and no machine principal may acquire, delegate, borrow, cache or impersonate the operator class (DEC-0323). Human-gate commands are accepted only from an `operator` principal and refused from a `machine` principal with the typed refusal `OperatorPrincipalRequired` (DEC-0323).
+      - term: Profile
+        text: |
+          Presentation only: a client-side grouping of `desk_slug`s with a display name held in client configuration (DEC-0306). A Profile is never daemon state, never a `scope_path` segment, and never an index, filter, permission or routing key. The deferred desk-consolidation question is a Profile-level display collapse only, never a rename or retirement of a `desk_slug`, `ActorId`, plugin prefix, memory scope or ledger index key (DEC-0306, GAP(GAP-0083)).
+      - term: QMA
+        text: |
+          QuantMind Agents — the SDK only, never the name of the whole system and never a framework (DEC-0330). The whole system is "the QMX agentic system" = the daemon + the QMA SDK + the wire contract. The Python namespace is `qma.*` (`qma.core`, `qma.wire`, `qma.daemon`) with no blanket `qmx.` prefix anywhere (DEC-0330, DEC-0337). "Quantum Mind" is a retired dictation error (DEC-0330, DEC-0348).
+      - term: Quant
+        text: |
+          The persistent named organizational actor of the QMX agentic system, instantiated from a **Role** and never called a Bot or a Steward (DEC-0331). It carries a name, a memory scope, missions, routines, preferences, a **WakePolicy** and a **Mailbox**; its `ActorId` grammar is `quant:<desk_slug>/<quant_slug>` where each slug is lower-case, 2 to 32 characters, and minted only by the `desk.create` and `quant.create` wire commands from an `operator` principal (DEC-0306). The daemon refuses a colliding slug with the typed refusal `SlugUnavailable`. `Role:Quant` and `Desk:Quant` are one-to-many; exactly one Quant per **Desk** carries the lead flag — inferred, never ruled, and Deferred; until the operator rules, a second lead flag on a desk is a hard startup error — and only a lead Quant opens a **Quant Ledger** (DEC-0306, DEC-0349, GAP(GAP-0071)). `quant` is never used as an adjective, and Bot, Seat, Book, BMS and kill switch stay platform terms that never name an agentic actor (DEC-0306, DEC-0331).
+      - term: Quant Ledger
+        text: |
+          A desk lead **Quant**'s own larger work ledger with a declared entry schema — mission opened and closed, delegation, escalation, and the standing decisions the Quant makes at desk level — appended only by an **Agent** of that Quant holding the `quant_ledger_lease`, which the daemon grants to at most one Agent of that Quant at a time (DEC-0308, DEC-0338). It is opened only while the Quant carries its desk's lead flag and retained if the flag moves; a Quant that has never held the lead flag has none (DEC-0306, DEC-0349). It never restates or synthesizes another Task's ledger. Whether each desk carries exactly one lead flag is Deferred (GAP(GAP-0071)).
+      - term: Role
+        text: |
+          A declarative behavioral contract, close to a system prompt, and stateless (DEC-0306). The five roles are Researcher, Trader, Developer, Analyst and Product Manager; a Role name never names a **Desk**. A Role carries a permission policy and a capability grant where `role.base` is the ceiling of an **Agent**'s effective capability set, narrowed in order by `role.overlay`, then Mission, then parent, and every step after `role.base` may only remove (DEC-0315). A `role.base` write via `role.set_base` is a human-gate command accepted only from an `operator` principal (DEC-0323).
+      - term: Routine
+        text: |
+          A durable, **Quant**-owned scheduled trigger carrying an id, the owning `ActorId`, a cron expression or interval with an explicit IANA zone, the Goal it supplies to the Mission Compiler, the fully-qualified `graph_template` id it expands, an enable flag and a max-concurrent cap (DEC-0328). It is declarative daemon state, never agent-authored, and UI-editable under AD-26. Firing is deterministic and never an LLM decision: a Routine is a `machine` principal and can answer no human gate; missed fires while the daemon is down are recorded, not replayed, and catch-up is an explicit operator command (DEC-0328, DEC-0323).
+      - term: Session
+        text: |
+          The run container, home of the two orthogonal session axes (DEC-0313). The durable Session record carries the execution-model axis (`dialogue` or `rlm`) and the autonomy axis (`interactive`, `semi` or `autonomous`) only; attachment (`attached` or `detached`) is client state, never daemon state and never persisted, which is what makes closing a client harmless (DEC-0313, DEC-0304). In the wire `scope_path` order Session sits between Task and Agent because a Task outlives its session (DEC-0304).
+      - term: Skill
+        text: |
+          A reusable procedure and knowledge with progressive disclosure (DEC-0312). A Skill is not a **Loop**; a Skill may invoke a Loop. A skill an overlay appends to an **Agent** is knowledge, never a capability grant (DEC-0315).
+      - term: Subagent
+        text: |
+          An **Agent** spawned by an Agent, with capabilities no wider than its parent, and a leaf that spawns none because AD-16 blocks it from delegation tools (DEC-0306, DEC-0315). A Subagent is blocked from delegation and memory-write tools at the leaf and is never wider than its parent (DEC-0315, DEC-0323). Like an Agent, a Subagent has no **Mailbox** and is never a `to` address (DEC-0306).
+      - term: Task
+        text: |
+          The transcript-independent unit of work carrying intent, inputs, refs, acceptance criteria and its **Task Ledger**, so another **Agent** can be assigned or resume it without the prior Agent's transcript (DEC-0311). Task state is a closed-and-addable vocabulary — `pending`, `ready`, `running`, `blocked`, `unknown`, `done`, `failed`, `cancelled` — with terminal states exactly `done`, `failed` and `cancelled`; a Task reaches exactly one terminal state (DEC-0311). Append rights follow a single `dispatch_lease` per Task, and a completion transition requires a structured **Task Ledger** append or the completion is refused (DEC-0308).
+      - term: Task Graph
+        text: |
+          Deterministic persisted daemon state, the only place work state lives (DEC-0311). It is minted by instantiating a **Graph Template** and is never interchanged with it (DEC-0312). Parallel workers synchronize through the Task Graph, never through chat (DEC-0311, DEC-0332). Its node kinds are `task`, `conditional`, `parallel_branch`, `join`, `approval_gate`, `human_gate`, `deterministic_script`, `loop`, `agent` and `artifact_dependency`; only `task`, `agent` and `loop` emit Tasks (DEC-0312). "Kanban" is a retired name for the Task Graph (DEC-0348).
+      - term: Task Ledger
+        text: |
+          The store owned by the **Task**, one per Task for its whole life across every **Agent** that ever holds it, recording what happened, when, what failed and why, what the agent did to resolve it, and which model and agent did what (DEC-0308, DEC-0338). It is persisted in the daemon store through the wire so it survives the worker. Append rights follow a single `dispatch_lease`, and a task-completion transition requires a structured append — what was done, what changed, evidence and artifact refs, unresolved issues and the next recommendation — or the completion is refused while the entry is still written (DEC-0308). The daemon-authored entry kinds `reassigned` and `unknown_tail` are the only entries authored outside the lease (DEC-0308).
+      - term: Worker
+        text: |
+          An addressable execution slot, deliberately not an ontology object (DEC-0306). A worker runs in a Docker-per-worker **ExecutionEnvironment** by default, and workers and non-Python clients reach the daemon over the wire (DEC-0303). An `agent` **Graph Template** node emits one **Task** pinned at compile time to a `worker_template` the dispatcher may not substitute (DEC-0312).
+      - term: RLM kernel
+        text: |
+          The Analysis desk worker's persistent Python interpreter inside the worker's Docker container, reaching the host through a typed `host_request` bridge that is a `qma-wire` message family, never a second channel (DEC-0303, DEC-0313). The RLM Runtime v1 is scoped by desk to Analysis (`analysis-*`), never by Role, with a spawn depth cap (the AD-26 configurable `rlm.depth_cap`, default 2) (DEC-0313, GAP(GAP-0080)). "RLM kernel" is the one qualified compound in which QMA uses the word `kernel`; bare `kernel` is never written, and the parent ban stays in force for QMF, QMB and trading-node prose (DEC-0346). Its performance envelope is a deferred measurement obligation (GAP(GAP-0076)).
+  - op: regex_replace
+    skip_if: 'The one exception is the qualified compound **RLM kernel**'
+    all: false
+    pattern: '^(### Kernel\n\nRetired name\..*?)$'
+    repl: '\1 The one exception is the qualified compound **RLM kernel** — the Analysis worker''s persistent Python interpreter in the QMX agentic system (QMA) — which is adopted for QMA prose only; bare `kernel` is never written, and the retirement stands unchanged for `qmf-core` and the Trading Node (DEC-0346).'
+  - op: append
+    text: |
+      ### Bot (agentic sense)
+
+      Retired name. Use **Quant** for the persistent named organizational actor of the QMX agentic system (DEC-0331, DEC-0348). **Bot** stays the platform's trading-strategy instance and never names an agentic actor or artifact (DEC-0306).
+
+      ### Context Engine
+
+      Retired name. Use the Context Compiler — the daemon subsystem that assembles a model's context window from ledgers, memory, knowledge and injected hook context (DEC-0348).
+
+      ### Kanban
+
+      Retired name. Use **Task Graph** for the daemon's deterministic runtime work state (DEC-0348).
+
+      ### Knowledge Base
+
+      Retired name. Use **Knowledge** and the `KnowledgeSource` port for the read-only, provenance-carrying corpus over the operator's STRATS plain-file library (DEC-0348, DEC-0343).
+
+      ### QMX Backtesting Framework
+
+      Retired name for **QMB**, the QMX experimentation and backtesting product; the design transcript's "QMX Backtesting Framework" names that same pre-existing product, reached through the **Backtesting Service** (DEC-0348, DEC-0316).
+
+      ### QMX Event Ledger
+
+      Retired name for the **event journal** — the daemon's single append-only journal under one writer and one clock, which is neither a ledger nor telemetry (DEC-0348, DEC-0305).
+
+      ### Quantum Mind
+
+      Retired dictation error. **QMA** = QuantMind Agents, the SDK only; the whole system is "the QMX agentic system" (DEC-0330, DEC-0348).
+
+      ### Steward
+
+      Retired options-sheet draft name. Use **Quant** for the persistent named organizational actor (DEC-0331, DEC-0348).

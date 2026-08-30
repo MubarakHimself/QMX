@@ -1,0 +1,65 @@
+id: CT-50
+name: QMA RefinementProposal (admission-gate) record contract
+status: ratified
+version: 1  # first minted format version; CT-50 realizes AD-22's admission gate as the single staging-store record type, absorbed by the 2026-08-28/29 QMX agentic-system sitting (DEC-0321)
+owner: COMP-QMA-CORE  # the RefinementProposal record type is defined in qma-core (definitions only, depends only on qmf-core, AD-1); the daemon owns the staging store and runs the validate -> verify -> review -> stage -> approve -> apply pipeline (DEC-0300, DEC-0321)
+consumers: []  # defined-unwired: no code imports this contract yet (DEC-0321)
+active_consumers: []
+intended_consumers: [COMP-QMA-DAEMON, COMP-QMA-WIRE]  # qma-daemon owns the staging store and the admission pipeline (before_proposal_stage / before_proposal_apply); qma-wire carries the proposal, the approval_request and the operator-principal approval (DEC-0321, DEC-0323)
+wiring_status: defined-unwired  # ratified surface; no code exists; v1 ships the AD-22 invariants, the staging store and the data model, and no wiring is authorized from this doc (DEC-0321)
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0321, DEC-0345, DEC-0323, DEC-0317, DEC-0314, DEC-0313, DEC-0309, DEC-0305]
+gaps: [GAP-0074]  # the evaluation gates that let a verified proposal apply switch on only when the Deferred self-improvement row's condition is met; v1 ships invariants plus staging only (DEC-0321, GAP-0074)
+purpose: >-
+  One RefinementProposal — the single record type the staging store holds and the
+  gate through which nothing agent-produced becomes runtime state by itself. It
+  carries a summary, a rationale, a set of edits and an expected outcome, where an
+  edit is a create, update or delete over a kind of `prompt`, `memory`, `skill`,
+  `toolset`, `worker_template`, `hook`, `graph_template`, `loop` or `role`, with an
+  id, content and reference. Every proposal runs one pipeline: deterministic
+  validation (schema, immutable base, optimistic-concurrency conflict check) ->
+  deterministic verification (verifier script, test or backtest replay, never an
+  LLM judging itself) -> optional cross-model review under ReviewPolicy -> a staged
+  candidate in the staging store, never live -> approval by an `operator` principal
+  -> application, with recorded before-and-after snapshots per applied edit for
+  rollback. A proposal is applied, never promoted; `role.base` is immutable to the
+  pipeline and `role.overlay` is the only role edit target; no edit kind may name a
+  money-path record; and only definitions are edit targets, so a spawned worker's
+  durable definition is a `worker_template` and subagent is never an edit kind
+  (DEC-0321, DEC-0345).
+invariants:
+  - "Nothing agent-produced becomes runtime state by itself: a create, update or delete over any editable definition reaches the live definition store only as a RefinementProposal that passes deterministic validation, deterministic verification, optional cross-model review, staging and an `operator`-principal approval, never through any other path — there is no policy, machine, scripted or scheduled approval path for any edit kind, and adding one is a spine amendment (DEC-0321, DEC-0323)."
+  - "The staging store has exactly one record type, the RefinementProposal: every staged edit of every kind is one, and a MemoryCandidate (AD-18) is never written to it on its own — it enters only wrapped in a RefinementProposal carrying exactly one `memory` edit (DEC-0321, DEC-0317)."
+  - "A proposal is applied, never promoted: `promote` is reserved for L17's live-zone act performed by a human outside QMA, QMA mints no promotion or zone-transition command, and applying an edit records before-and-after snapshots per applied edit for rollback (DEC-0321, DEC-0345)."
+  - "The pipeline stages are fixed and ordered: deterministic validation (schema, immutable base, optimistic-concurrency conflict check) -> deterministic verification by verifier script, test or backtest replay (never an LLM judging itself) -> optional cross-model review under ReviewPolicy (AD-15) -> a staged candidate, never live -> approval -> application; `before_proposal_stage` admits the proposal to the staging store and `before_proposal_apply` applies it, each firing its `after_*` sibling once the effect is durable (DEC-0321, DEC-0314, DEC-0309)."
+  - "Every application requires an `operator` principal in v1, and `before_proposal_apply` is where AD-24's operator-principal check runs; no `machine` principal, agent, plugin, hook, Role or Mission may approve or apply a proposal (DEC-0321, DEC-0323)."
+  - "No edit kind may name a money-path record and nothing in this pipeline reaches `qmf-registry` or a registry zone: AD-2 makes every zone-transition surface uncallable, and the one write AD-2 permits (a content-addressed dev-zone candidate, AD-14) is not a RefinementProposal edit and never enters this pipeline (DEC-0321, DEC-0313)."
+  - "A candidate flagged `money_path_relevant` (AD-14) never reaches an `approval_request` whose payload lacks that field-level diff — the v1 obligation is stated against the wire, so an operator always sees the money-path-relevant diff before approving (DEC-0321, DEC-0313)."
+  - "Role splits are enforced by the validator: `role.base` is operator-authored and immutable to the pipeline — a definition-store record (AD-6) written only by an `operator`-principal `role.set_base` wire command recording a `role.updated` journal event, never by an agent, plugin, hook or any other `machine` principal and never by this pipeline; `role.overlay` is the only role edit target (appended prompt sections, added skills, narrowed toolsets), and the validator rejects any edit whose path resolves into a base (DEC-0321, DEC-0305)."
+  - "Only definitions are edit targets: no runtime-instanced object is an edit kind, so the durable definition of a spawned worker is a `worker_template` (a definition-store record carrying role ref, toolset ref, `ModelClass`, `ExecutionEnvironment` ref, `ComputeRequirement` and permission set, contributable by a plugin as an AD-1 multi contribution) and subagent is never an edit kind (DEC-0321)."
+  - "Once a MemoryProvider is bound, memory admission leaves this pipeline entirely: a MemoryCandidate is admitted through the daemon's deterministic admission gate via `before_memory_write`, is never a RefinementProposal and requires no operator principal; the AD-22 `memory` edit kind governs only candidates staged while no provider is bound (AD-18) (DEC-0321, DEC-0317)."
+  - "v1 ships the invariants, the staging store and the data model; the deterministic-verification evaluation gates that let a verified proposal apply switch on only when the Deferred self-improvement row's condition is met — the telemetry store holding complete agent trajectories for at least `registry:deferred.finished_mission_trajectory_count` finished Missions across at least two desks (GAP-0074) (DEC-0321, GAP-0074)."
+schema:
+  type: refinement-proposal  # the single record type of the staging store: the admission-gate carrier for every editable definition (DEC-0321)
+  fields:
+    - "id: the RefinementProposal's own stable identity, a record's own `id` and never a `_ref` (DEC-0321)"
+    - "summary: a short statement of what the proposal changes (DEC-0321)"
+    - "rationale: why the change is proposed (DEC-0321)"
+    - "edits: one-or-more edits, each `{ kind, operation, id, content, reference }` — `kind` from the closed edit-kind vocabulary, `operation` one of create | update | delete, `id` the target definition's id, `content` the new definition body, and `reference` the base the edit is against for the immutable-base and optimistic-concurrency checks (DEC-0321)"
+    - "expected_outcome: the outcome the proposer expects, recorded so verification and review have a stated target (DEC-0321)"
+    - "applied_snapshots: on application, the recorded before-and-after snapshot per applied edit that makes the application reversible for rollback (DEC-0321)"
+  enums:
+    - "edit kind (closed, AD-22): prompt | memory | skill | toolset | worker_template | hook | graph_template | loop | role — the nine editable definition kinds and no other; a runtime-instanced object is never an edit kind (DEC-0321)"
+    - "edit operation (closed): create | update | delete — the three acts an edit may take over an editable definition (DEC-0321)"
+    - "role edit target (closed): role.overlay only — `role.base` is never an edit target and is set only by an `operator`-principal `role.set_base` wire command; the validator rejects any edit whose path resolves into a base (DEC-0321, DEC-0305)"
+    - "approval principal (v1, closed): operator only — there is no policy, machine, scripted or scheduled approval path for any edit kind, and `before_proposal_apply` runs the AD-24 operator-principal check (DEC-0321, DEC-0323)"
+    - "pipeline hook events (closed, AD-10): before_proposal_stage | after_proposal_stage | before_proposal_apply | after_proposal_apply — staging and application each fire a before/after pair once the effect is durable (DEC-0321, DEC-0309)"
+    - "staging store record type (closed): refinement-proposal — exactly one; a MemoryCandidate enters only wrapped in a RefinementProposal carrying exactly one `memory` edit (DEC-0321, DEC-0317)"
+    - "typed refusals on this contract's paths, variants of `qmf-core`'s base (CT-04): `OperatorPrincipalRequired` (a `machine` principal approving or applying a RefinementProposal at `before_proposal_apply`) (DEC-0323, DEC-0321)"
+  units:
+    - "this contract carries no money or R values and no thresholds of its own; the self-improvement trajectory threshold that gates verification is the AD-26 variable `registry:deferred.finished_mission_trajectory_count`, referenced by name, never restated (DEC-0321, GAP-0074)"
+  nullability:
+    - "per `fp1` null is prohibited and an absent value is an omitted key (AD-3): a proposal carries a summary, a rationale, at least one edit and an expected outcome; `applied_snapshots` is absent until application and mandatory once applied (DEC-0321)"
+    - "each edit carries its `kind`, `operation`, target `id`, `content` and `reference`; an edit whose `kind` is outside the closed edit-kind vocabulary, or whose path resolves into a `role.base`, is rejected at validation, never applied best-effort (DEC-0321, DEC-0305)"
+provenance_note: "CT-50 is newly minted by the 2026-08-28/29 QMX agentic-system architecture sitting (spine AD-22 Admission gate: nothing agent-produced becomes runtime state by itself; realizing AD-6 the definition-store record for role.base, AD-10 before_proposal_stage / before_proposal_apply, AD-14 the money_path_relevant flag, AD-15 ReviewPolicy cross-model review, AD-18 the MemoryCandidate seam, and AD-24 the operator-principal approval), absorbed into docs/ under SRC-15 (the operator's job-spec rider of 2026-08-29). A proposal is applied, never promoted (DEC-0345); v1 ships the invariants, the staging store and the data model, and the evaluation gates switch on only when the Deferred self-improvement row's condition is met (GAP-0074). Ratified as rider material; the QMA spine is FINAL and export-ready with validation closed dry 2026-08-29. The contract is defined-unwired: no code exists, and implementation authorization arrives only through the factory pipeline."

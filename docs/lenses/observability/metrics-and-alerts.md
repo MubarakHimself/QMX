@@ -3,11 +3,11 @@ id: OBS-METRICS-QMF-V1
 title: QMF V1 Metrics and Alerts
 type: lens
 status: ratified
-depends_on: [COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP]
-decisions: [DEC-0038, DEC-0041, DEC-0045, DEC-0048, DEC-0055, DEC-0058, DEC-0059, DEC-0065, DEC-0074, DEC-0096, DEC-0098, DEC-0106, DEC-0111, DEC-0112, DEC-0117, DEC-0118, DEC-0119, DEC-0121, DEC-0126, DEC-0127, DEC-0128, DEC-0129, DEC-0131, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0142, DEC-0143, DEC-0149, DEC-0150, DEC-0151, DEC-0152, DEC-0153, DEC-0155, DEC-0157, DEC-0158]
-sources: [DEC-0038, DEC-0041, DEC-0045, DEC-0048, DEC-0055, DEC-0058, DEC-0059, DEC-0065, DEC-0072, DEC-0074, DEC-0096, DEC-0098, DEC-0106, DEC-0111, DEC-0112, DEC-0126, DEC-0127, DEC-0128, DEC-0129, DEC-0131, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/time-audit-devops.md, _docwork/gaps.yaml, docs/registry/variables.yaml, docs/contracts/ct-08-gate-evidence.yaml, docs/contracts/ct-10-source-observation.yaml, docs/contracts/ct-13-journal.yaml, docs/contracts/ct-14-backup-restore.yaml, docs/contracts/ct-16-indicator.yaml, docs/contracts/ct-17-causal-structure.yaml, docs/contracts/ct-18-venue-capabilities.yaml, docs/contracts/ct-19-venue-command.yaml, docs/contracts/ct-20-venue-event.yaml, docs/contracts/ct-21-venue-secret-session.yaml, docs/contracts/ct-23-risk-evaluation.yaml, docs/contracts/ct-24-book-mode.yaml, docs/contracts/ct-25-risk-journal.yaml]
+depends_on: [COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP, COMP-QMN, COMP-QMA-CORE, COMP-QMA-DAEMON]
+decisions: [DEC-0038, DEC-0041, DEC-0045, DEC-0048, DEC-0055, DEC-0058, DEC-0059, DEC-0065, DEC-0074, DEC-0096, DEC-0098, DEC-0106, DEC-0111, DEC-0112, DEC-0117, DEC-0118, DEC-0119, DEC-0121, DEC-0126, DEC-0127, DEC-0128, DEC-0129, DEC-0131, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0142, DEC-0143, DEC-0149, DEC-0150, DEC-0151, DEC-0152, DEC-0153, DEC-0155, DEC-0157, DEC-0158, DEC-0190, DEC-0192, DEC-0197, DEC-0198, DEC-0199, DEC-0200, DEC-0201, DEC-0202, DEC-0204, DEC-0208, DEC-0211, DEC-0212, DEC-0233, DEC-0236, DEC-0238, DEC-0256, DEC-0257, DEC-0258, DEC-0259, DEC-0322, DEC-0334]
+sources: [DEC-0038, DEC-0041, DEC-0045, DEC-0048, DEC-0055, DEC-0058, DEC-0059, DEC-0065, DEC-0072, DEC-0074, DEC-0096, DEC-0098, DEC-0106, DEC-0111, DEC-0112, DEC-0126, DEC-0127, DEC-0128, DEC-0129, DEC-0131, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/time-audit-devops.md, _docwork/gaps.yaml, docs/registry/variables.yaml, docs/contracts/ct-08-gate-evidence.yaml, docs/contracts/ct-10-source-observation.yaml, docs/contracts/ct-13-journal.yaml, docs/contracts/ct-14-backup-restore.yaml, docs/contracts/ct-16-indicator.yaml, docs/contracts/ct-17-causal-structure.yaml, docs/contracts/ct-18-venue-capabilities.yaml, docs/contracts/ct-19-venue-command.yaml, docs/contracts/ct-20-venue-event.yaml, docs/contracts/ct-21-venue-secret-session.yaml, docs/contracts/ct-23-risk-evaluation.yaml, docs/contracts/ct-24-book-mode.yaml, docs/contracts/ct-25-risk-journal.yaml, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, docs/decisions/ADR-0019-trading-node.md]
 generated: 2026-08-18
-verified: 2026-08-20
+verified: '2026-08-29'
 stale_after: 30d
 ---
 
@@ -17,7 +17,7 @@ QMF V1 has no ratified metrics schema, aggregation window, dashboard, alert thre
 
 ## Exportability obligation
 
-Emitted signals must be exportable to standard monitoring stacks (Prometheus-class metrics, push alerts); the stack selection, dashboard, storage backend, and full monitoring/evaluation design land at the node/ops sitting, but the exportability obligation binds now (DEC-0112). The DevOps time-audit names concrete signals to export once a node exists — chrony offset, stratum, and sync-age; per-venue clock skew; the clock step counter — over a push alert path with no on-call rotation (DEC-0112, DEC-0106; companion `_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/time-audit-devops.md`). These are stated node/ops obligations binding later sittings, not implemented panels here.
+Emitted signals must be exportable to standard monitoring stacks (Prometheus-class metrics, push alerts); the stack selection, dashboard, storage backend, and full monitoring/evaluation design land at the node/ops sitting, but the exportability obligation binds now (DEC-0112). The DevOps time-audit names concrete signals to export once a node exists — chrony offset, stratum, and sync-age; per-venue clock skew; the clock step counter — over a push alert path with no on-call rotation (DEC-0112, DEC-0106; companion `_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/time-audit-devops.md`). These are stated node/ops obligations binding later sittings, not implemented panels here. The trading node (COMP-QMN) now exists and realizes them: it exports these as `qmn_` clock-family metrics and pushes a closed alert allow-list with no on-call rotation, specified in the "Trading node metrics, health, and alerts (COMP-QMN)" section of this lens (DEC-0200, DEC-0199).
 
 ## Performance measurement subjects
 
@@ -45,7 +45,7 @@ The venue live-path adds a **six-stage latency decomposition** (tick received �
 
 ## Dashboard status
 
-No dashboard is specified. No metric name, unit, label set, aggregation, sampling interval, storage backend, panel, query, or baseline may be invented from the measurement-subject table.
+No dashboard is specified for QMF-library components. No metric name, unit, label set, aggregation, sampling interval, storage backend, panel, query, or baseline may be invented from the measurement-subject table. For the trading node (COMP-QMN), versioned dashboard-as-code seeds are ratified and ship under `qmn/deploy/observability/` for a separate zero-authority observability stack; the node still invents no metric name, unit, or numeric panel threshold before a fingerprinted baseline exists — see the "Trading node metrics, health, and alerts (COMP-QMN)" section of this lens (DEC-0200, DEC-0212).
 
 The performance measurement method is ratified (measure-then-budget, DEC-0111); numeric budgets await first fingerprinted baselines before performance panels can carry thresholds. No metric name, unit, or panel may be invented before its baseline exists.
 
@@ -55,7 +55,7 @@ Numeric retention windows and metrics-store capacity are set after measured volu
 
 ## Alert status
 
-No numeric-threshold alert may be implemented because no threshold or severity model is ratified. A registry key with a null value is not an implicit default. The venue and risk ADs name several **state- and event-triggered alarms** (DEC-0136, DEC-0137, DEC-0138, DEC-0149, DEC-0150, DEC-0152, DEC-0153) — these carry no numeric threshold and invent none; their severity, notification destination, and paging route remain node/ops territory.
+No numeric-threshold alert may be implemented because no threshold or severity model is ratified. A registry key with a null value is not an implicit default. The trading node (COMP-QMN) ratifies the closed alert allow-list as **class membership** generated from `FAILURES.md`'s notification-tier column and still invents no numeric threshold this phase — see the "Trading node metrics, health, and alerts (COMP-QMN)" section of this lens (DEC-0200, DEC-0208). The venue and risk ADs name several **state- and event-triggered alarms** (DEC-0136, DEC-0137, DEC-0138, DEC-0149, DEC-0150, DEC-0152, DEC-0153) — these carry no numeric threshold and invent none; their severity, notification destination, and paging route remain node/ops territory.
 
 | Alert domain | Trigger or threshold source | Severity/notification | Automatic action |
 |---|---|---|---|
@@ -82,8 +82,90 @@ Flatten is mechanical `close_position`/`close_all` the adapter never initiates; 
 
 ## External authority boundary
 
-QMF metrics may eventually describe responses observed through CT-14 and CT-15, and venue market data enters as CT-10/CT-15 source observations (DEC-0138). CT-18 through CT-21 are the ratified venue-adapter contracts, but no live venue caller is assigned in QMF, so the named venue signals above are measurement subjects, not live panels. No metric may claim provider-internal health, cause, queue depth, capacity, or recovery state without a ratified external contract. [DEC-0059]
+QMF metrics may eventually describe responses observed through CT-14 and CT-15, and venue market data enters as CT-10/CT-15 source observations (DEC-0138). CT-18 through CT-21 are the ratified venue-adapter contracts, but no live venue caller is assigned in QMF, so the named venue signals above are measurement subjects, not live panels. No metric may claim provider-internal health, cause, queue depth, capacity, or recovery state without a ratified external contract. [DEC-0059] The trading node (COMP-QMN) **is** the live venue caller: it assigns the caller the QMF layer left unwired, so those venue measurement subjects become live `qmn_` session, command-stream and reconciliation families, specified in the "Trading node metrics, health, and alerts (COMP-QMN)" section of this lens — still with no metric claiming provider-internal state (DEC-0200, DEC-0208).
 
 ## Traceability
 
 Every future metric or alert must name its emitting component, contract field, registry threshold, measurement window, evidence identity, and the ratified `correlation_id` path propagated across every package boundary (DEC-0112). CT-13 event types are ratified (DEC-0119); per-event fields are set after measured volume, and CT-25 cannot be used until its Data consumer is wired. [DEC-0038] [DEC-0048] [DEC-0112]
+
+## Trading node metrics, health, and alerts (COMP-QMN)
+
+The trading node (COMP-QMN, code name `qmn`) makes AD-14 concrete: it exports a `qmn_`-prefixed metric family set, serves a `/health` read model of independent states, and pushes a **closed** alert allow-list — inventing no numeric threshold this phase (DEC-0200). `prometheus_client` is used as registry and exposition format only; the node's own localhost door serves `/metrics`, and no library-spawned server thread exists (DEC-0200, DEC-0202). The node/ops sitting this section absorbs ratified what QMF V1 deferred to it, while the QMF-library obligations — signals exportable to a Prometheus-class stack, and performance governed by measure-then-budget — still bind any component running outside the node (DEC-0111, DEC-0112). The node is one product with two run modes, `paper | live`; there is no operator command line, and the deployment and monitoring recipes are the operations toolkit's `just node-…` recipes, DevOps tooling and never a trading control (DEC-0211, DEC-0202).
+
+### The `qmn_` metric families
+
+Each family is a named subject, not a threshold. No numeric budget or panel value is invented here; every latency rung and every drift band stays numberless until a fingerprinted baseline or a registry value exists (DEC-0200, DEC-0111, DEC-0199). Labels carry no secret and no raw account number — opaque ids only, the opaque-id-to-account mapping living with the roster in the resolved node-config artifact and never in the metrics path (DEC-0202, DEC-0136).
+
+| Family group | Named subjects it measures |
+|---|---|
+| clock | chrony offset, stratum, sync-age and step counter; per-venue skew; the clock band state (DEC-0200, DEC-0199). |
+| session | connection state per connection, heartbeat age, pacer occupancy, reconnects (DEC-0200). |
+| command streams | outstanding UNKNOWN count and age per `(VenueId, account)` stream, sequence gaps, and command outcome counts (`accepted-by-venue`, `rejected-by-venue`, `denied-locally`, `UNKNOWN`) (DEC-0200, DEC-0136). |
+| reconciliation | last verdict — one of the four `reconciled \| drift \| unknown \| out-of-lookback` — with the quantity and cash residuals reported **separately** and their age (DEC-0200, DEC-0258). |
+| protection | KSA level **per enforcement scope**, the scope carried as a label; standing-intent count and age; Book modes; binding states; seat states; bench counts (DEC-0200, DEC-0192). |
+| latency | the six AD-13 rungs (tick received, evidence write, indicator update, decision, risk evaluation, order submitted) as monotonic histograms, plus slice latency, with **no budgets until baselines exist** (DEC-0200, DEC-0138, DEC-0208). |
+| data | canonical-feed staleness, SQS markers, news-calendar age and staleness margin, accumulator depth, journal write latency, and disk headroom (DEC-0200, DEC-0190). |
+| backup | backup age, last restore-drill outcome, and the measured RTO (DEC-0200, DEC-0198). |
+| process | RSS, loop lag, and slice latency (DEC-0200). |
+| seat | per-seat callback time — an implementation-gate family **beyond the spine's nine ratified `qmn_` families** (clock, session, command streams, reconciliation, protection, latency, data, backup, process), not part of the ratified set (DEC-0200, DEC-0204). |
+| evidence channel | the evidence-channel budget occupancy — an implementation-gate family **beyond the spine's nine ratified `qmn_` families**, not part of the ratified set (DEC-0200, DEC-0202). |
+| dead-man heartbeat | the outbound heartbeat's emission — the off-VPS watcher, never the node, alarms on its absence; an implementation-gate family **beyond the spine's nine ratified `qmn_` families**, not part of the ratified set (DEC-0200, DEC-0233). |
+
+### `/health` — independent, provenance-stamped states
+
+The `/health` read model aggregates every component's `health()` into **independent** states and never one colour; a consumer that wants an overall colour computes it itself. Requested protection state is shown apart from enforced, and every state carries its own per-read provenance — authority source (`live-authoritative \| replicated-evidence`), source time, receive time and watermark (DEC-0200, DEC-0202). The `/health` states are the **seven** the node adopts from the PRD section 6 doctrine — **safety, execution readiness, connection, reconciliation, data freshness, lifecycle and sync** — each independent and provenance-stamped (DEC-0200, DEC-0238). No state is derived from another — the node never collapses them into a single verdict; an evidence-persistence failure is a silent-degradation ALERT class, not a `/health` state (DEC-0233).
+
+### The closed alert allow-list, generated from `FAILURES.md`
+
+The closed allow-list is the **only** push tier, and it is **generated** from `FAILURES.md`'s notification-tier column, so the register and the push tier can never diverge: a failure mode with no register entry cannot be alerted, no registry row carries alert-class membership, and TN-23's CI check gates the register's completeness (every typed-failure-id has an entry with all six NFR-11 fields) (DEC-0200, DEC-0208, DEC-0236). The column's closed vocabulary is three classes, not a second list:
+
+1. **Money boundaries** — sweep, re-seed, refund (refund dormant in V1) (DEC-0200).
+2. **Protection escalation** — kill-switch and KSA escalation, supervision fail-closed, node stand-down, plus the named state alarms: rotation store failure, unmapped venue code, reused command identity, undeliverable protection intent, fold-cannot-resolve, missing scope record, and a paper-stream outage at live severity (DEC-0200, DEC-0192).
+3. **Silent degradation** — "the node has stopped accepting entries, or cannot persist evidence, for a reason that is not a KSA escalation," enumerated as: a clock band at `no-new-entry` or worse; an unexplained live-drift entry stand-down on any binding; a failed news-calendar refresh (which fail-closes entries); a degraded or dead canonical sensing feed; a failed nightly backup, sample restore, full restore or host-loss rehearsal; disk headroom below `registry:disk_headroom_min`; and a live first-connection or data-quality verification failure (DEC-0200, DEC-0233).
+
+Classes 1 and 2 are the existing ratified PRD section 3 allow-list. Class 3, together with the external dead-man's switch and the liveness digest, is a **proposed PRD section 3 amendment** surfaced by the node sitting: the node binds PRD section 3 in its Inherited Invariants, so it may not widen a closed ratified list by assertion. This increment **ratifies the widening by default** under the cheap-veto posture — the operator overturns it in one line, and the node then ships the mechanisms with the notification half withheld (DEC-0257, DEC-0233). Wherever another rule in this lens or the node spine says "alarms," it means **this push class**, not merely an ERROR log line (DEC-0200). The two-plane rule is untouched: authoritative records and notification delivery stay separate layers, and losing a notification erases nothing and authorizes nothing (DEC-0200, DEC-0041).
+
+### The external dead-man's switch and the liveness digest
+
+Because the whole notification plane lives inside the node, a dead node or a dead VPS cannot alarm about itself. The node therefore emits an outbound heartbeat on a declared cadence to an **off-VPS watcher** (Healthchecks or ntfy class; service, endpoint and token configured by reference) that alerts on a **missing** ping — the one signal the node cannot send for itself (DEC-0200, DEC-0233). A **liveness digest survives go-live**: it is the one scheduled push that is not a failure (DEC-0200). The dead-man's-switch endpoint, cadence and token reference are `blocks-soak` registry rows; alert-class membership is **not** a registry row, its sole home being `FAILURES.md`'s notification-tier column (DEC-0256, DEC-0236).
+
+### The clock drift bands as registry rows
+
+The clock band that gates entries is four registry rows, all configurable and — being live-money gates — tagged `blocks-role-live` plus `blocks-soak`; only their names are fixed here, their values being evidence values recorded from the time audit and never ratified constants (DEC-0199, DEC-0256):
+
+- `registry:clock_drift_warn`
+- `registry:clock_drift_no_new_entry`
+- `registry:clock_drift_halt`
+- `registry:clock_unsynchronized_after`
+
+The band is evaluated as a per-decision-cycle precondition, entry-side only; the `no-new-entry` band and worse push on the silent-degradation class, and the clock-band alert does **not** switch off at go-live (DEC-0199, DEC-0200).
+
+### One push channel and its sinks
+
+V1 ships **one** push channel through a `NotificationChannel` port with a generic HTTPS-webhook implementation (ntfy or Pushover class), plus a console sink and a file sink; the operations toolkit's `just node-notify-test` recipe delivers a synthetic alert end-to-end through the powers channel on demand (DEC-0200). No numeric thresholds and no quiet hours bind this phase; a **second** notification channel is deferred (DEC-0200, DEC-0259).
+
+### The soak alert profile
+
+During the soak — the full first-deploy warm-up week, run unattended on the demo account with the live binding taken at its end (DEC-0212) — the push profile is the three classes plus a daily digest, plus a soak-scoped demo-drift digest and a soak-only first-connection-check alert (DEC-0200, DEC-0212). The clock-band alert is a permanent member of class 3 and does **not** switch off at go-live; the soak-scoped digests are the only alerts that end with the soak (DEC-0200).
+
+### The observability stack is a zero-authority consumer
+
+A Prometheus + Grafana + Loki/Promtail-class stack is a **separate, zero-authority system**, ruled mandatory by the operator for tracking through the unattended soak week and after it; the operator named Prometheus and Grafana himself and required the tracking, being explicit that the DevOps posture was delegated to the agent (DEC-0212). The stack **consumes** the node's exported metrics and JSON-lines logs and can never write to the node, hold a credential the node holds, or appear on any decision, command or evidence path — losing the whole stack loses visibility and nothing else (DEC-0212, DEC-0200). Its footprint is explicit, or "zero authority" is falsified by that footprint:
+
+- **Its own unit** `qmx-observability.service` under a **distinct non-`qmx` service account** — it is not one of the node's units (DEC-0200, DEC-0201).
+- **Its own storage** under `/var/lib/qmx-observability`, a named line item of `registry:vps_disk_budget` with its own retention caps and its **own filesystem quota**, so it can never consume the headroom `registry:disk_headroom_min` protects (DEC-0200, DEC-0256).
+- **`network_mode: host` with every container port bound to loopback** (127.0.0.1); it scrapes the `/metrics` path only, and the node's evidence channel stays loopback-bound and is never reachable from a container (DEC-0200).
+- It reads the node's log stream through a **dedicated read-only journald namespace**, never the system journal (DEC-0200, DEC-0212).
+- Its own credentials — the Grafana admin credential and any log-shipper auth token — are the **declared fourth secret holder** of the node's secret model, delivered by its own `LoadCredentialEncrypted` line and holding nothing the node holds (DEC-0197, DEC-0200).
+- **Containers are permitted for this stack only**; the trading node itself stays a plain systemd service with no container requirement (DEC-0201, DEC-0200).
+- It ships as a checked-in compose file under `qmn/deploy/observability/`; Skylos's IaC scan gates it exactly as it gates the unit files, and its image versions are pinned at the implementation gate and registered as external tools in `DEPENDENCIES.md`, never floating tags (DEC-0200, DEC-0201).
+
+The node's own half is small: the `/metrics` exposition, the JSON-lines log stream journald already carries, and versioned **dashboard-as-code seeds** (a starter dashboard set and alert-rule seeds) so the stack stands up from the checkout rather than from clicks (DEC-0200). **The node runs and passes with the stack stopped**; the stack's absence loses visibility and nothing else, and the push channel and the external dead-man's switch stay exactly as they are — a stack that dies with its host cannot report its own silence (DEC-0200, DEC-0212). A dedicated **monitoring agent** may consume this stack later — reading dashboards and signals, never the node — and is explicitly out of scope for this increment (DEC-0212, DEC-0259).
+
+## QMA telemetry export port
+
+The QMX agentic system (QMA) keeps logs, traces, metrics, agent trajectories, and the event-replay stream **off the ledgers**: telemetry is a separate system with separate stores and separate contracts (DEC-0322). Logs, traces, metrics, and trajectories are harness-authored, never agent-authored, and QMA owns its own trace and metric record types; **OpenTelemetry conformance happens at the EXPORT PORT as a swappable adapter, never as an SDK imported into the daemon core** (the OpenTelemetry Python SDK is a pinned stack dependency behind that port, not a daemon import) (DEC-0322, DEC-0334). Every telemetry record carries the inherited `correlation_id` and the wire `id`, and routing decisions, token and cost usage, compute-job and log streams, tool-call traces, and agent trajectories are **telemetry, not evidence** — a ledger entry may carry a `trace_ref`, never the reverse (DEC-0322).
+
+### Back-pressure, the announcement exemption, and retention
+
+Telemetry travelling from a remote worker rides the same durable outbox as evidence, and **under back-pressure telemetry is dropped BEFORE evidence**, never the reverse (DEC-0322). A telemetry append emits **no journal announcement** — the telemetry store is the one declared store the announcement law exempts, because a journal that is never trimmed may not grow with a stream that is bounded — so a telemetry record carries `occurred_at` and `recorded_at`, no `journal_seq`, and is ordered by `recorded_at` and its `correlation_id` alone (DEC-0322). The AD-6 event journal is evidence and is **kept forever** — no policy, cadence, or job trims it — and agent trajectories, which the event-replay stream reads alongside it, are retention-exempt until the deferred rows that revisit on them (the external memory backend GAP-0072, the self-improvement evaluation gates GAP-0074, and RLM beyond the Analysis desk GAP-0080) have been evaluated and recorded (DEC-0322). Only the two bounded non-evidence streams — the mailbox delivery projection and the telemetry store — may be trimmed by a daemon job, and only inside their AD-26-registered retention windows, each trim recorded with its window, its reason, and its `correlation_id`; a trim may never remove an unacked `Envelope` or an unanswered `approval_request`, which keeps an AD-13 `human_gate` from being deleted (DEC-0322). The trim window for the two bounded non-evidence streams is Deferred (GAP-0089).

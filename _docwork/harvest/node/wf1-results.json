@@ -1,0 +1,525 @@
+{
+ "transcript_scan": {
+  "delegation": "Explicitly granted by the operator in his own kickoff turn: \"Treat this as a one-shot: run the whole sitting autonomously, batch every genuinely open decision into at most two AskUserQuestion rounds, and otherwise do not wait on me. I am non-technical; the corpus is my memory.\" — closed by \"Work autonomously. Batch questions. Everything ratified or assumed goes into the memlog.\" Answer style fixed: \"Only what none of it decides comes to me, dumbed down (plain words, a concrete example, <=3 sentences, a recommended option first).\" One AskUserQuestion round of four questions was used, inside the authorised two. FRAMING: the sitting framing is OPERATOR-AUTHORED in full (the kickoff /bmad-architecture turn fixes scope, non-negotiables, five ordered deliverables, the reviewer gate, the memlog rule, and a things-to-check list); the four rulings were agent-questioned and operator-dictated, but the R1-R4 TEXTS in the spine and memlog are agent-authored distillations that the operator ratified only by this delegation — there is no turn in which he read back or approved the spine text, and no operator turn exists after the agent's closing summary. The nearest thing to sign-off is procedural: \"run the validation or some sort of regression... so there is no ambiguity, no assumption, and no contradiction\". Also note the DevOps lens was DELEGATED, not ruled: \"the one I'm not so certain on, and I will need you to take point on, is the dev opsulence [the DevOps lens]\". This grant is the authority behind authority: rider on every non-directly-ruled entry in the increment.",
+  "discrepancies": [
+   "D1 MISATTRIBUTED (worst): memlog line 48 and spine R2 quote the operator as 'I know what you're talking about' about a Prometheus/Grafana-class stack. He said the opposite about himself and addressed the phrase TO the agent: 'I know how DevOps work, I'm not so technical, I don't know what all that is, but you know what I'm talking about.' Docs must not present him as claiming familiarity with the stack; the naming of Prometheus and Grafana IS his, and the tracking mandate is unaffected.",
+   "D2 SPLICED: 'A simple click on the user interface... two separate acts.' is not contiguous. Transcript has, separately, 'But promotion is more like a click on the user interface to be like, okay, now this can go to the live trading node' and later 'So, two separate acts. Promotion is just a simple click because promotion, I'm going to be looking at the results, how it performed'. Substance correct, quotation is a composite with a capitalised 'A' added.",
+   "D3 RECONSTRUCTED: 'it might have its own page... I'm not certain yet' is not what he said. Transcript: 'In fact, it is going to be a plug-in to the UI. It's not a, it doesn't have its own page or something. Okay, I think it might. I think it might. ... I don't know yet. Okay, I'm not certain yet, okay.' He leaned to NO dedicated page then hedged; the carried phrasing reverses the lean while keeping the uncertainty.",
+   "D4 PARAPHRASE IN QUOTES: 'focus on live trading' — transcript reads 'For you, you're focusing on live trading.'",
+   "D5 DROPPED SELF-CORRECTION: 'later versions, yes, we're going to iterate' — transcript reads 'Now, the later versions, yes, no, we're going to iterate.' Meaning unchanged.",
+   "D6 NOT A QUOTE: the spine puts 'QMF is portable' in quotation marks. Transcript: 'because QMF we made it portable, unless I recall properly, but it is bloody portable. And if it isn't, that doesn't concern you.' — the not-my-concern disposition is conditional on it being false.",
+   "D7 SPEAKER ERROR: R1's enumeration (status, kill everything, resolve a stuck order, promote) is the ASKING agent's wording inside the AskUserQuestion prompt, not the operator's. His words: 'killing and all that, typing commands and whatnot most likely is going to be controlled via a UI' — the hedge 'most likely' sits immediately before the flat 'So there is nothing like commands or anything.'",
+   "D8 RELOCATED REFERENT: 'a very separate system, like how big tech teams work' is verbatim but was said of the DevOps LAYER OR LENS ('I don't think the development operations layer or lens needs to be part of QMX'), not of the deployment recipes. Spine R1 attaches it to the just node-... operations toolkit; the memlog also reuses it for the observability stack.",
+   "D9 INFERENCE PRESENTED AS A REFUSAL TO NAME: 'that question is not for this layer' is tied in the transcript to the NODE COMMAND half of the bundled Q1 — 'things that you're asking about in the question, I think is it the node command? That question is not for this layer. I will repeat this: it's not for this layer. That question was for a layer about QMF.' The spine's 'the operator declined to rule the name itself' is a defensible inference, not a direct refusal to name.",
+   "D10 CASE/PUNCTUATION ONLY (no meaning change): spine capitalises 'There is nothing like commands...' and 'Two days to a week...'; both memlog and spine merge the two sentences 'Okay, first, make the trading node work. Make sure it can execute.' into one comma-joined clause; the spine lowercases 'if we haven't, leave it for now' (transcript capitalises 'If')."
+  ],
+  "ext_ids_used": "EXT-2160..EXT-2169 (all ten allocated ids used, one entry each, type: decision, authority: rider, every cite of the form \"SRC-12:archive/trading-node.txt (operator turn: <first 8 words>)\"). Map: 2160 = R1 no operator command line (Q1 answer); 2161 = R2 the week-long unattended soak + mandatory tracking + the Hammers agent (Q2 answer); 2162 = R3 promotion click / two separate acts / agentic paper period out of scope / the unanswered post-promotion warm-up recollection (Q3 answer); 2163 = R4 no paid news, free-only, scrape-later fallback (Q4 answer); 2164 = also-ruled: the UI will exist, consider it everywhere, behaviour-driven walk-through, the \"plug-in\" naming remark and the own-page uncertainty (Q4 answer); 2165 = also-ruled: MIS models do not exist and must be trained, shadow rollout (Q2 answer); 2166 = also-ruled: extensibility is a requirement, alpha decay deferred, the ~60% parts belief (Q4 answer); 2167 = also-ruled scope boundaries: DevOps lens separate + delegated, the naming/\"not for this layer\" refusal, QMF portability, the priority sentence (Q4 answer); 2168 = the delegation grant, the operator's posture, and the kickoff constraints his own later dumps superseded (kickoff turn); 2169 = the next-steps statement and the authority under which SRC-12 exists (final turn). File parses with yaml.safe_load: 10 entries, keys id/type/summary/quote/cite/topics/authority.",
+  "extractions_file": "C:/Users/Mubarak/Desktop/QMX/_docwork/harvest/node/extractions-T.yaml (scan report: C:/Users/Mubarak/Desktop/QMX/_docwork/node-transcript-scan.md; _docwork/extractions.yaml was NOT touched — git status clean for it)",
+  "next_steps": "Operator's own words, kickoff turn steps 3-5: step 3 = \"/documentation-factory change-mode absorption of the node spine into docs/: mint the DECs, the node component(s), ADRs, the overall C4 architecture and deployment diagrams, the ops/observability lens pages, glossary terms; keep lint_docs --strict clean\" (this increment). Step 4 = \"bmad-create-epics-and-stories for the node — a SMALL epic set (aim 5-8 epics), wave plan, paper-milestone epics first, routed for the Grok epic-factory lane (fast workhorse); validate with the usual validator workflow; record factory-time ruling items explicitly. Sequence the live-connection story so it is the first thing unblocked by the tokens.\" Step 5 = plain-words hand-off ending \"the exact command to start the Grok factory on the node epics. Then stop. You do not launch coding.\" Final turn (why SRC-12 exists as a source): \"You append a prompt for me for the documentation factory and also run the validation or some sort of regression... So you run everything architecture or the plan or everything you've produced is solid. Then I'm going to export this session as is so that the documentation factory is going to be using it. So you do that. Actually, it's next session prompt, it's actually existing. You do that, so there is no ambiguity, no assumption, and no contradiction. Do that for me, and I believe we call it a day.\" The acceptance bar for this absorption is therefore his own phrase — no ambiguity, no assumption, no contradiction; the epics-stage constraints (5-8 epics, paper milestone first, live-connection story first unblocked by the Spotware tokens, Grok lane) belong to prompt 14 and must be carried forward, not re-decided; no coding is launched by either stage.",
+  "uncarried_statements": [
+   "U1 REAL GAP — the post-promotion warm-up recollection is unanswered: 'And I believe, according to the documentation, not every bot starts trading right away. I do recall there is some sort of warm-up period, unless I'm wrong.' (Q3 answer). Neither memlog nor spine addresses it; the spine carries the inherited admission row 'registration linters, technical demo/paper shakedown, one operator signature; no probation, no paper-performance gate' and its only warm-up is the deploy-level first-deploy warm-up week (TN-9). The memlog folds his recollection into his OTHER sentence about the agentic system's pre-promotion paper period, which is a different thing. The increment should close this explicitly.",
+   "U2 RATIONALE DROPPED — why the UI is out of scope: 'we are not going to build the UI yet. We are mostly back-end data and DevOps. This entire part so far is back-end data and DevOps. The reason we are not putting in the UI is because the UI is a bit large. We can't really have only the UI and take the trading node, it won't make sense. Okay, we are trying to be efficient with our resources.' The memlog keeps only 'back-end + data + DevOps only'; the spine drops the sizing/efficiency rationale entirely.",
+   "U3 SCOPE STATEMENT carried nowhere: 'the trading node is very back-end heavy, to be honest with you. The user interface is less.'",
+   "U4 DELEGATION, NOT A RULING: 'Now, the one I'm not so certain on, and I will need you to take point on, is the dev opsulence [the DevOps lens]. That one I'm not so certain on because I feel like it is going to be standard... unless we don't need it, but we do need it, in my opinion. We need to have logs.' The spine presents the DevOps posture as ruled; the transcript shows explicit delegation with a stated need — relevant to the rider authority line for everything DevOps-shaped.",
+   "U5 MEMLOG-ONLY, DROPPED BY THE SPINE — the named future monitoring consumer: 'I'm going to have a dedicated agent, I believe it's the Hammers agent. Don't worry about it, we shall set it up because we still haven't done the entire UI stuff and whatnot.' Should survive absorption as a deferred/known-later item.",
+   "U6 POSTURE, RECORDED NOWHERE — the question-quality instruction, said of the promotion question: 'don't be stupid, please don't. This is annoying, by the way. Such a question is very annoying' and 'this is a very stupid question. Sorry to say, but it is. I get you didn't have all the other context that I'm providing earlier.' Carry as posture (do not ask what the corpus and plain logic already settle), never as doc prose.",
+   "U7 FIDELITY INSTRUCTION, only paraphrased: 'Okay, I hope I'm clear and quote me right, please. These are more of brain dumps than actual answers.' The memlog renders this as its framing ('dictated brain dumps, quoted faithfully and distilled') rather than as his instruction.",
+   "U8 SELF-SUPERSESSION UNRECORDED — two kickoff non-negotiables were overridden by his own later dumps and nothing labels them as superseded: 'No UI in this phase. UI comes after the agentic system. Every operator-facing control the node needs (promotion to live, kill switch, config edits, status) gets a CLI/API door now and a screen later' (R1 deletes the CLI half; the Q4 dump reverses the no-UI framing) and 'the first milestone is the node running paper mode on a demo account for ~2 days under full logging/monitoring' (R2 makes it a week). The changelog should say plainly that the operator overrode his own opening instructions so no later reader treats the kickoff text as live.",
+   "U9 NAMING REMARK (vocabulary): his own word for the node's place in the UI is 'a plug-in to the UI' — a banned word here. The memlog reproduces it verbatim; the spine paraphrases as 'one surface inside that UI'. Absorbing docs must keep the paraphrase. (extractions-T.yaml contains the word only inside the quoted operator text and in the instruction not to reuse it.)",
+   "U10 EPICS-STAGE CONSTRAINTS to carry forward, not re-decide (owned by prompt 14): 'a SMALL epic set (aim 5-8 epics), wave plan, paper-milestone epics first, routed for the Grok epic-factory lane (fast workhorse)... Sequence the live-connection story so it is the first thing unblocked by the tokens.'",
+   "U11 PROCESS NUDGE, no doc bearing: 'I would prefer if you use dynamic workflows as well as sub-agents because you have access to them. Use them and use Opus 5, as I said earlier, as well as Bulk Workers or even Sonnet 5... it's a simple nudge' — relaxes the kickoff's own 'avoid Sonnet' line. Session mechanics only.",
+   "CHECKED AND NOT UNCARRIED (do not mint gaps for these): the '~40 bots at the 95th-percentile design load' footprint IS carried by the spine as 'the roughly 40-seat design reference (variables.yaml:145)' measured by the TN-23 bench harness at 10/40/100/200 seats; ticket 006 trendbar basis; the three-session timeliness rationale behind R4; the cron-job/agent-scraped-JSON idea as R4's later fallback; the Kronos-on-GitHub candidate; the ~60% parts belief (answered as 45-60% effort-weighted)."
+  ],
+  "verified_quotes": [
+   "VERBATIM 'the same setting or the same logic behind even the agentic system' (Q1 answer)",
+   "VERBATIM \"it's a user interface on the desktop application as per the overall architecture\" (Q1 answer)",
+   "VERBATIM 'there is nothing like commands or anything' (Q1 answer; spine capitalises 'There' and drops the leading 'So', memlog matches the transcript)",
+   "VERBATIM 'a very separate system, like how big tech teams work' (Q4 answer; but its transcript referent is the DevOps layer/lens — see discrepancy D8)",
+   "VERBATIM 'two days to a week' (Q2 answer; spine capitalises 'Two', memlog matches)",
+   "VERBATIM 'I think a week is enough and sufficient' (Q2 answer)",
+   "VERBATIM 'the last part should be about the MIS' (Q2 answer; memlog only)",
+   "VERBATIM 'two separate acts' — transcript 'So, two separate acts.' (Q3 answer)",
+   "VERBATIM \"doesn't concern you\" — transcript 'so that doesn't concern you because it's part of the agentic system and it will come later' (Q3 answer)",
+   "VERBATIM 'I will not pay for news.' (Q4 answer)",
+   "VERBATIM \"I'm not certain yet\" — transcript 'Okay, I'm not certain yet, okay.' (Q4 answer)",
+   "VERBATIM 'That question is not for this layer' (Q4 answer; spine lowercases 'that'; scope differs — see D9)",
+   "VERBATIM 'If we haven't, leave it for now' (Q4 answer; spine quotes it lowercase mid-sentence)",
+   "VERBATIM as TWO sentences: 'Okay, first, make the trading node work. Make sure it can execute.' (Q4 answer; memlog and spine merge them with a comma)"
+  ]
+ },
+ "ledger_L2": {
+  "ledger_file": "C:/Users/Mubarak/Desktop/QMX/_docwork/harvest/node/ledger-L2.yaml",
+  "extractions_file": "C:/Users/Mubarak/Desktop/QMX/_docwork/harvest/node/extractions-L2.yaml",
+  "decs": [
+   {
+    "id": "DEC-0199",
+    "title": "Time discipline at the live boundary (TN-14)",
+    "ref": "TN-14"
+   },
+   {
+    "id": "DEC-0200",
+    "title": "Observability: logs, metrics, health, alerts (TN-15)",
+    "ref": "TN-15"
+   },
+   {
+    "id": "DEC-0201",
+    "title": "Deployment, supervision shape, CI matrix, rollback, hardening (TN-16)",
+    "ref": "TN-16"
+   },
+   {
+    "id": "DEC-0202",
+    "title": "Doors: library first, three thin doors, no command line (TN-17)",
+    "ref": "TN-17"
+   },
+   {
+    "id": "DEC-0203",
+    "title": "The config surface: UI-editable by design (TN-18)",
+    "ref": "TN-18"
+   },
+   {
+    "id": "DEC-0204",
+    "title": "Bot seats, runtime-protocol hosting, and the MIS seam (TN-19)",
+    "ref": "TN-19"
+   },
+   {
+    "id": "DEC-0205",
+    "title": "Promotion and activation: human only, two acts (TN-20)",
+    "ref": "TN-20"
+   },
+   {
+    "id": "DEC-0206",
+    "title": "Replay mode: the node's own regression tool (TN-21)",
+    "ref": "TN-21"
+   },
+   {
+    "id": "DEC-0207",
+    "title": "Multi-account and multi-broker seam: config, not architecture (TN-22)",
+    "ref": "TN-22"
+   },
+   {
+    "id": "DEC-0208",
+    "title": "QA standard, benchmarks, soak acceptance, QA-debt discharge (TN-23)",
+    "ref": "TN-23"
+   },
+   {
+    "id": "DEC-0209",
+    "title": "Position-safety closures (TN-24)",
+    "ref": "TN-24"
+   },
+   {
+    "id": "DEC-0210",
+    "title": "The accounting boundary and the virtual ledger (TN-25)",
+    "ref": "TN-25"
+   }
+  ],
+  "ext_ids_used": "EXT-2110..EXT-2125 — all 16 allocated ids used, none spare. Twelve primary extractions, one per TN, citing the TN's own memlog decision entry: EXT-2110 TN-14 (#line-29), EXT-2111 TN-15 (#line-30), EXT-2112 TN-16 (#line-31), EXT-2113 TN-17 (#line-32), EXT-2114 TN-18 (#line-33), EXT-2115 TN-19 (#line-34), EXT-2116 TN-20 (#line-35), EXT-2117 TN-21 (#line-36), EXT-2118 TN-22 (#line-37), EXT-2119 TN-23 (#line-38), EXT-2120 TN-24 (#line-39), EXT-2121 TN-25 (#line-46 — TN-25 has NO memlog decision entry; it was minted by the first-gate ruling entry's item (17), so its primary EXT cites that ruling line). Four second extractions for ruling-entry amendments that changed the rule text: EXT-2122 = operator ruling R1, no node command line, rewriting TN-17 (#line-48); EXT-2123 = the operator-round amendment shipping the observability stack, rewriting TN-15 (#line-49); EXT-2124 = the GATE-2 deployment/supervision half, rewriting TN-16 (#line-51); EXT-2125 = GATE-2 (6) plus (26), the replay half, rewriting TN-21 (#line-51). Every EXT is referenced by exactly one ledger entry and every ledger `sources` id resolves.",
+  "contradictions": [
+   "TN-17 doors. memlog line 32: 'Door 2: the `qmn` CLI (click, the same pin as qmb) — the operator's typed door on the VPS over SSH'. Spine TN-17: 'THE NODE HAS NO COMMAND LINE, ruled by the operator 2026-08-28 ... The desktop UI is the operator's control surface'. Decided per authority order 1-2 (operator ruling memlog line 48 Q1; amendment line 49 'Door 2 deleted'): the spine's amended text governs; memlog line 32's door roster is superseded history and is written into DEC-0202/EXT-2113 as such.",
+   "TN-21 replay invocation and read source. memlog line 36: '`qmn replay <day|range>` runs THE SAME loop ... and a REPLAY VENUE ADAPTER behind the same neutral port that feeds the recorded observations (ticks/bars/fills/lifecycle events) from the live world room'. Spine TN-21: 'a stdlib process-per-job spawn OUTSIDE the node process ... started from the operations toolkit's `just node-replay <day or range>` recipe or from the Python API' and 'reads live-world observations through a named one-way REPLAY IMPORT PORT ... reading from the evidence tier's `sealed-archive` role'. Decided: spine governs (line 48 Q1 deletes the command; line 46 (14) and line 51 (6)/(26) move the read onto the import port and the run outside the node process).",
+   "TN-16 canonical checkout. memlog line 31: 'ONE canonical checkout: `/opt/qmx` = a git clone at a pinned commit'. Spine TN-16: '`/opt/qmx` is a canonical ROOT holding one immutable tree per commit plus a `current` symlink ... `uv sync --frozen` never writes into a tree a running node resolved from'. Decided: spine governs (memlog line 51 (12); assumption A41).",
+   "TN-16 service account. memlog line 31: 'DynamicUser=yes + StateDirectory=qmn + LogsDirectory'. Spine TN-16: 'a fixed `User=qmx` service account for all five node units — not `DynamicUser`, because a dynamic UID cannot deterministically own the trees TN-3 names'. Decided: spine governs (memlog line 46 (12); assumption A31).",
+   "TN-16 install/upgrade path and unit roster. memlog line 31: 'Install/upgrade = `qmn deploy install` ... then `qmn deploy switch <commit>` ... ROLLBACK = `qmn deploy switch <previous commit>`', with four unit files '(qmn.service, qmn-calendar.timer/service, qmn-backup.timer/service, qmn-restore-drill.timer/service)'. Spine TN-16: '`just node-install`', '`just node-switch <commit>`', '`just node-rollback`', and FIVE node units — qmn.service, qmn-news-calendar, qmn-backup, qmn-restore-sample (nightly), qmn-restore-full (monthly) — plus `qmx-observability.service` as a SIXTH unit that is NOT one of the node's. Decided: spine governs (line 48 Q1 / line 49 for the toolkit; line 51 (16) for the timer split and rename).",
+   "TN-18 config layer precedence. memlog line 33: 'compiled from explicit layers with fixed precedence — invocation > deployment roster > BMS fragment > Book fragment > node defaults'. Spine TN-18: 'compiled from FOUR explicit layers with fixed precedence — the deployment roster ... then the BMS fragment, then the Book fragment, then node defaults ... There is NO invocation layer ... The layer is deleted.' Decided: spine governs (memlog line 51 (30)).",
+   "TN-18 do-not-default roster. memlog line 33 lists 'holdout_months' among the values that 'are BLANK until ruled'. Spine TN-18: '`holdout_months = 12` is NOT on this list: it is a corpus-ratified inherited value (`ct-14:18`) the node does not mint and never leaves blank.' Decided: spine governs — a parent-ratified inherited value cannot be a node blank; the memlog listing is an error the gate pass corrected.",
+   "TN-18 blank effect. memlog line 33: 'a blank that gates live money blocks role=live bindings only — paper runs' (one effect). Spine TN-18: 'BLANKS PARTITION INTO THREE EFFECTS, and every mint-table row is TAGGED with which one it carries' — `blocks-boot | blocks-role-live | blocks-soak`, with `blocks-soak` GENERATED from the TN-23 checklist. Decided: spine governs (memlog line 51 (20); assumption A45).",
+   "TN-15 observability stack posture. memlog line 30: 'Prometheus/Grafana-class stacks are optional zero-authority consumers of the exported signals.' Spine TN-15: 'THE OBSERVABILITY STACK, ruled by the operator 2026-08-28 — tracking is mandatory through the unattended soak and after it', shipped as a compose file under `qmn/deploy/observability/`. Decided per authority order 1 (the operator's own words at memlog line 48 Q2, applied by line 49 and detailed by line 51 (13)): spine governs; the stack is mandatory, not optional.",
+   "TN-15 soak alert profile. memlog line 30: 'two soak-only alerts (first-connection check failure; clock band breach) that switch off at go-live'. Spine TN-15: 'The clock-band alert does NOT switch off at go-live — it is a member of class 3.' Decided: spine governs (memlog line 46 (18) made silent degradation a permanent third allow-list class).",
+   "TN-15 / TN-23 reconciliation residual count. memlog line 30: 'reconciliation (last verdict, residual, age)'; memlog line 38: 'reconciliation with four verdicts and an explained residual' (singular). Spine TN-15/TN-23/TN-10: 'two separately reported residuals — quantity and cash — in the exact integer domain, with the two equity series shown side by side and never differenced'. Decided: spine governs (memlog line 51 (10)).",
+   "TN-19 snapshot dispatch. memlog line 34: the signal snapshot is 'dispatched SYNCHRONOUSLY to a CLOSED consumer set'. Spine TN-19: 'until the live-path rung has a recorded baseline on the deployment tuple, every labeler is HEAVY by default and a light claim is refused at the gate ... the snapshot is computed once and fanned out with staleness stamps'; synchronous dispatch only after a benchmark-proven light claim. Decided: spine governs (memlog line 46 (15), line 51 (17)).",
+   "TN-19 shadow lane scope. memlog line 34: 'Shadow lane, quarterly cloud training, re-certification and any ML labeler are Deferred with the seam named'. Spine TN-19: 'THE SHADOW-LANE SEAM IS EXPLICIT V1 NODE WORK — three pieces, built now', with only the ML and training half deferred. Decided per authority order 1 (operator ruling, memlog line 48 (b): 'MIS MODELS DO NOT EXIST AND MUST BE TRAINED ... shadow rollout is required, not overruled'; applied by line 49): spine governs.",
+   "TN-19 registration surface. memlog line 34: 'mints CT-33 records only on a conformance pass (registration doors `qmn registry …`)'. Spine TN-19: 'mints CT-33 records only on a conformance pass, through the registration capability on the doors (TN-17)'. Decided: spine governs — the operator's no-command-line ruling (line 48 Q1) leaves no `qmn registry` surface to exist.",
+   "TN-22 pacer bucket ownership. memlog line 37: the command-stream object carries 'its own UNKNOWN block, WriterId, gapless sequence, control-rank table, pacer bucket (keyed by the CT-18 throttle scope)'. Spine TN-22: 'It does NOT carry a pacer bucket. The pacer bucket is owned by the CONNECTION, instantiated once per CT-18-declared `throttle_scope`', reserving a declared minimum capacity for protective commands. Decided: spine governs (the residual-fix rule text; the memlog's placement would let a protective `close_all` queue behind a gap replay).",
+   "TN-22 venue port selection. memlog line 37: 'adapter selected by VenueId at the root'. Spine TN-22/TN-21: 'the `VenueClientPort` implementation is selected at the root by the pair `(world, VenueId)`, never by `VenueId` alone'. Decided: spine governs (memlog line 51 (6)).",
+   "TN-23 first-connection checks. memlog line 38: 'five first-connection checks passed per instrument'. Spine TN-23: 'six first-connection checks passed per instrument, the amend-atomicity measurement among them and its verdict recorded in the venue-observation profile'. Decided: spine governs (the amend-atomicity measurement was added at the gates as the sixth check).",
+   "TN-23 clock-band checklist item. memlog line 38: 'clock band breach simulated → suspend_new'. Spine TN-23: 'a simulated clock-band breach produces the entry-side `no-new-entry` effect and pushes'. Decided: spine governs (memlog line 46 (3) — a band is a per-decision-cycle precondition and can never be a standing CT-30 `suspend_new` action).",
+   "TN-23 restore drills. memlog line 38: 'nightly backup + sample restore + one full restore drill passed'. Spine TN-23: the nightly backup plus the nightly `qmn-restore-sample` timer plus one monthly `qmn-restore-full` timer run, 'plus the HOST-LOSS RESTORE REHEARSAL, triggered by the `restore_drill_run` power onto a clean host holding only the escrowed payload key, which is what measures the full-DR RTO'. Decided: spine governs (memlog line 46 (2) and line 51 (16)).",
+   "TN-24 (c) versus (h) block scope. memlog line 39 (h): 'a partial write = storage failure blocking the command stream'. Spine TN-24 (h): 'a partial write is a storage failure that blocks entries only', while (c)'s UNKNOWN block 'is the WHOLE STREAM, not the entry side' as AD-36's one non-control block. Decided: spine governs (memlog line 51 (1) and line 46 (6)) — the two blocks are different and the memlog conflated them.",
+   "TN-24 (e) disposition counting. memlog line 39 (e): 'breakeven/scratch exits count for NEITHER the bench nor the sizing loss-rate'. Spine TN-24 (e): 'Breakevens never count under any `q` ... scratches and partial losses do not count by default and count only where the Book's declared `q` reaches them — `q` is a per-family UI-editable variable, not a spine constant.' Decided: spine governs (assumption A29: the scratch band is left to the Book's declared `q` rather than excluded by spine law).",
+   "TN-24 (f) flatten authority and floating P&L. memlog line 39 (f): 'money boundaries ... never touch positions — only the kill line flattens; floating P&L is an explained drift component, never swept'. Spine TN-24 (f): flatten authority is AD-36's three (the operator at any scope; Book policy only through pre-declared trigger classes, the kill-line breach included; the protection authority per the matrix), a coinciding declared window/hold-time/boundary force-flat is honoured as a separate Book trigger at AD-37 rank 2, and floating P&L 'is NEVER a term in either reconciliation residual ... it is a mark, not a fact, and marks are never reconciled'. Decided: spine governs (memlog line 46 (1) and line 51 (10))."
+  ],
+  "notes": "Files written: only the two assigned (`_docwork/harvest/node/ledger-L2.yaml`, `_docwork/harvest/node/extractions-L2.yaml`). `_docwork/ledger.yaml` and `_docwork/extractions.yaml` were not touched. Both files pass `yaml.safe_load`; indentation matches `_docwork/ledger.yaml` (2-space, list under a single top-level key) and every string containing a colon is double-quoted. Sources read: the brief in full; spine lines 1-125 (Design Paradigm, Inherited Invariants, Corrections from adjudication), each TN-14..TN-25 block, Dependency direction, Parent annotations and mints, Operator rulings 2026-08-28, Assumption register A1-A47; memlog lines 29-39 and ruling lines 46, 48, 49, 51 (plus a line-index pass over the whole memlog).\n\nTN-25 has NO memlog decision entry. The memlog's TN decision lines run 16..39 = TN-1..TN-24; TN-25 was minted at the first reviewer gate by memlog line 46 ruling (17) (\"TN-25 minted — the accounting boundary and the virtual ledger (`qmn/ledger`)\"), with ruling (1) supplying its kill-line/virtual-ledger core and ruling (20) the paper ledger. EXT-2121 therefore cites `SRC-11:.memlog.md#line-46`, and DEC-0210's rationale says so explicitly.\n\nLine 40 (the old cheap-veto register) was NOT used as authority anywhere; per the brief, the spine's Assumption register table governs. Every rationale marks its A-ids: A1/A10/A17/A26 as RULED by the operator 2026-08-28 (A1 additionally narrowed — `qmn` survives as a code/import name only, the operator declining to name the product), A8 as RETIRED (it belongs to TN-8, outside this range, so it appears in no L2 entry), and everything else as proceed-on-recommendation. A-ids carried in this range: A20 (TN-14); A21/A35/A42 (TN-15); A22/A31/A41 (TN-16); A1/A23/A32/A39/A40 (TN-17); A24/A34/A45 (TN-18); A25/A38 (TN-19); A26/A32/A34/A40 (TN-20); A27/A33/A44 (TN-21); A28, A47 inherited (TN-22); A30, A47 (TN-23); A29/A13, with (a),(b),(j) parent- or corpus-ratified (TN-24); A13 (TN-25).\n\nVocabulary: a mechanical scan confirms zero occurrences of `engine`, `kernel`, `plugin`, `exam`, `minimal core`, `paper node`, `stop-out` or `timeframe` in either file; every `calendar` occurrence is qualified (news / market-hours / day-boundary / session / period / calendar identity / calendar kinds / the `qmn-news-calendar` unit). The node is written throughout as ONE product with modes paper|live, with NO command line — install, switch, rollback, replay, config authoring, notify test and hub publish are `just node-…` recipes of the operations toolkit, and the memlog's pre-ruling `qmn` command / `qmn deploy …` / `qmn replay` / `qmn registry …` / \"Door 2\" text is named as superseded history inside the rationales and extractions rather than presented as current.\n\nNo numeric evidence value is restated as a ratified constant: the clock bands, the log retention window, `slice_watch_trip_multiple`, the news-refresh cadence, the crash-loop K/T, the benchmark seat counts and the operator's ~50 ms are all written as \"evidence value\", \"watched target\" or left as a named variable with no value. Registry keys are named; resolved values are not.\n\n[ADOPTED] rules say what they adopt and from where: TN-14 adopts the time-audit obligations of the ratified operations runbook table (runbook.md:107-116) and ratifies them by adoption; TN-15's AD-14 concretisation and TN-23's NFR-11 register obligation are stated as parent bindings rather than adoptions. (The other [ADOPTED] TNs — TN-8's GitBook risk-protection set and TN-10's PRD §6 doctrine — are outside this seat's range.)\n\nCross-seat boundary respected: the parent annotations and mints this range depends on — the L30 `qmn.venue` boundary note, the candidate AD-28 annotation, the CT-25 Records-streams bridge, the CT-20 position/balance read-back mapping rows, the `node_resurrect` control-action subtype, the `sealed-archive` room-role addition, the `qmf.venue.connection` async exemption, the `SessionTopology` relaxation, the PRD §3 allow-list widening, the `value_status_required` registry field, and `kill_line_capital_floor` = AD-40's `loss_floor` — are referenced as context inside the TN rules that rest on them, but NONE is minted here; they belong to the L3 rulings/annotations seat starting at DEC-0211.\n\nOne discrepancy for the component-doc drafter, in the brief rather than in the corpus: the operator's job spec (brief §2) says \"position-safety closures (a)–(k)\", but the spine's TN-24 carries TEN closures, (a) through (j). DEC-0209's statement opens by fixing the count at ten \"and no eleventh\" so a downstream drafter does not go hunting for a (k)."
+ },
+ "ledger_L1": {
+  "ledger_file": "C:/Users/Mubarak/Desktop/QMX/_docwork/harvest/node/ledger-L1.yaml",
+  "extractions_file": "C:/Users/Mubarak/Desktop/QMX/_docwork/harvest/node/extractions-L1.yaml",
+  "decs": [
+   {
+    "id": "DEC-0186",
+    "title": "Trading node identity, packaging, and base branch (TN-1)",
+    "ref": "TN-1"
+   },
+   {
+    "id": "DEC-0187",
+    "title": "The composition root and the boot ceremony — compose, fingerprint, seal (TN-2)",
+    "ref": "TN-2"
+   },
+   {
+    "id": "DEC-0188",
+    "title": "Topology, planes and trust boundaries — three planes, two machines, one bucket (TN-3)",
+    "ref": "TN-3"
+   },
+   {
+    "id": "DEC-0189",
+    "title": "Process model, supervision, stand-down-alive and the shutdown contract (TN-4)",
+    "ref": "TN-4"
+   },
+   {
+    "id": "DEC-0190",
+    "title": "The live loop is QMB's loop, unforked, behind a push-to-pull accumulator (TN-5)",
+    "ref": "TN-5"
+   },
+   {
+    "id": "DEC-0191",
+    "title": "The order path — chain of command wired, not redefined (TN-6)",
+    "ref": "TN-6"
+   },
+   {
+    "id": "DEC-0192",
+    "title": "KSA — the protection authority, and the kill switch under a dead wire (TN-7)",
+    "ref": "TN-7"
+   },
+   {
+    "id": "DEC-0193",
+    "title": "The risk protection set the node runs verbatim, and the node-minted value roster (TN-8)",
+    "ref": "TN-8"
+   },
+   {
+    "id": "DEC-0194",
+    "title": "Paper mode and the soak as the full unattended warm-up week (TN-9)",
+    "ref": "TN-9"
+   },
+   {
+    "id": "DEC-0195",
+    "title": "Startup, recovery and explained-drift doctrine, ratified by adoption (TN-10)",
+    "ref": "TN-10"
+   },
+   {
+    "id": "DEC-0196",
+    "title": "Venue integration on cTrader — the transport increment, the node-minted port, equity derivation (TN-11)",
+    "ref": "TN-11"
+   },
+   {
+    "id": "DEC-0197",
+    "title": "Secrets — two-layer store, the provisioning wizard, rotation by credential reference, the drills (TN-12)",
+    "ref": "TN-12"
+   },
+   {
+    "id": "DEC-0198",
+    "title": "Live data, history bootstrap, the news calendar, backup and the three restore drills (TN-13)",
+    "ref": "TN-13"
+   }
+  ],
+  "ext_ids_used": "EXT-2100..EXT-2109 written this run (ten entries appended in id order); extractions-L1.yaml now holds EXT-2094..EXT-2109 — 16 ids, no gaps, verified by the prescribed yaml.safe_load id-print. Mapping written: EXT-2100=TN-7 (memlog line 22), EXT-2101=TN-8 (line 23), EXT-2102=TN-9 (line 24), EXT-2103=TN-10 (line 25), EXT-2104=TN-11 (line 26), EXT-2105=TN-12 (line 27), EXT-2106=TN-13 (line 28); the three second-EXTs distil the ruling-entry amendments their DEC rationales name — EXT-2107 = operator ruling Q1, no operator command line + the `just node-…` operations toolkit (line 48, applied at desk by line 49's TN-1/TN-17 amendment, withdrawing line 46 ruling 5's CLI reconciliation note); EXT-2108 = operator ruling Q2, the soak as one full unattended week + the separate zero-authority observability stack (line 48, applied by line 49's TN-9/TN-15 amendment, acceptance checklist unchanged); EXT-2109 = operator ruling Q4, Forex Factory's free weekly file as the sole V1 news-calendar source with no paid slot ever (line 48, applied by line 49's TN-13 amendment minting news_calendar_refresh_cadence). All three cite SRC-11:.memlog.md#line-48 (the ruling itself) and name the line-49 desk application inside the summary.",
+  "contradictions": [],
+  "notes": "ledger-L1.yaml was read only, never rewritten (13 entries, DEC-0186..DEC-0198, parses clean). extractions-L1.yaml was appended to only; EXT-2094..EXT-2099 untouched. Neither _docwork/ledger.yaml nor _docwork/extractions.yaml was opened or modified. Sources read: node-increment-brief.md in full; ledger-L1.yaml whole; extractions-L1.yaml whole; .memlog.md lines 22-28 (TN-7..TN-13 decision entries) plus 46 (first-gate rulings), 48 (operator rulings), 49 (amendments from the operator round) and 51 (GATE-2 rulings); ARCHITECTURE-SPINE.md TN-1 (123-135) and TN-7..TN-13 (297-458). VERIFICATION RUN: (1) the prescribed one-liner prints EXT-2094..EXT-2109, 16 ids, no gaps; (2) every source cited across the 13 ledger entries resolves in that list — zero missing, zero unused extractions; (3) every new entry carries id/type: decision/summary/cite/topics/authority: rider in the same shape as the six pre-existing ones, with all colon-bearing strings double-quoted and no inner double quotes (operator quotations use single quotes, matching EXT-2094's idiom). VOCABULARY: a regex sweep of the ten new summaries returns zero hits for engine, kernel, plugin/plugins, exam, minimal core, \"paper node\", timeframe, and bare stop-out; every occurrence of \"calendar\" is qualified (news calendar / news-calendar / qmn-news-calendar.timer / calendar_feed identifiers) — TN-13's spine justification \"because a bare 'calendar' names three things\" was rephrased to \"named for its kind, because the bare word names three things\" to avoid introducing a bare occurrence, and the memlog's \"the node is a plug-in to the UI\" (line 48 Q1) was rendered as \"appearing inside that UI as its own surface\" for the same reason. AMENDED-TEXT DISCIPLINE: each summary distils the memlog entry AS AMENDED and names the superseded pre-ruling text explicitly rather than silently dropping it — TN-7's \"drain/close_all satisfied only on a reconciled verdict\" (now suspend_new and drain never-auto, flatten alone on scope-flat-at-reconciled-verdict), TN-8's A8-retired \"sitting default posture = the wider roughly 3 h dead-zone band\" (withdrawn; disagreeing figures recorded unmerged), TN-9's \"roughly 2-day soak inside the 1-week rider\" (now the full week), TN-10's five verification checks and single blended residual (now six checks and two separately compared residuals), TN-11's \"the node ships the in-house transport\" (now a qmf-venue increment completing the existing ConnectionManager), TN-12's \"qmn secrets provision\" command (now the `just node-secrets-provision` recipe), TN-13's paid FMP/Trading-Economics fallback slot and the backup_recovery_time_objective / backup_key_custody row names (now no paid slot ever, and the split integrity / full-DR rows plus backup_payload_key_custody). CONTRADICTION SWEEP: each DEC statement was read against its amended spine block (TN-1 and TN-7..TN-13) — no statement contradicts the spine; the only deltas found are compressions that lose no meaning (e.g. DEC-0192 omits the qualifier \"market-risk\" when saying connectivity and unknown_state are blocks-paper on the escalation's own scope only, which the spine supplies; DEC-0198 says news_recorder_max_attempts and news_recorder_backoff are \"configurable and blocking boot\" where the spine tags them blocks-boot). Nothing outside _docwork/harvest/node/extractions-L1.yaml was edited; a scratch copy of the new entries sits at the session scratchpad as ext-tail.yaml."
+ },
+ "ledger_L3": {
+  "ledger_file": "C:/Users/Mubarak/Desktop/QMX/_docwork/harvest/node/ledger-L3.yaml",
+  "extractions_file": "C:/Users/Mubarak/Desktop/QMX/_docwork/harvest/node/extractions-L3.yaml",
+  "decs": [
+   {
+    "id": "DEC-0211",
+    "title": "Operator ruling R1 — the trading node has no operator command line",
+    "ref": "R1"
+   },
+   {
+    "id": "DEC-0212",
+    "title": "Operator ruling R2 — the soak is one full unattended week, with a separate zero-authority observability stack",
+    "ref": "R2"
+   },
+   {
+    "id": "DEC-0213",
+    "title": "Operator ruling R3 — promotion is a click, activation is a second act, the battery runs silently",
+    "ref": "R3"
+   },
+   {
+    "id": "DEC-0214",
+    "title": "Operator ruling R4 — no paid news, ever; Forex Factory's free weekly file is the sole source",
+    "ref": "R4"
+   },
+   {
+    "id": "DEC-0215",
+    "title": "Also ruled from the same round — the UI, MIS training, extensibility, alpha decay, QMF portability",
+    "ref": "also-ruled"
+   },
+   {
+    "id": "DEC-0216",
+    "title": "Gate ruling 1 — the kill-line input series",
+    "ref": "gate-46(1)"
+   },
+   {
+    "id": "DEC-0217",
+    "title": "Gate ruling 2 — backup payload-key custody and the host-loss rehearsal",
+    "ref": "gate-46(2)"
+   },
+   {
+    "id": "DEC-0218",
+    "title": "Gate ruling 3 — never-auto predicates, and node stand-down as a lifecycle state",
+    "ref": "gate-46(3)"
+   },
+   {
+    "id": "DEC-0219",
+    "title": "Gate ruling 4 — netting or hedging is a measured venue fact, never an assumption",
+    "ref": "gate-46(4)"
+   },
+   {
+    "id": "DEC-0220",
+    "title": "Gate ruling 5 — the second command-line question, surfaced at the gate and OVERTAKEN by R1",
+    "ref": "gate-46(5)"
+   },
+   {
+    "id": "DEC-0221",
+    "title": "Gate ruling 6 — entry-side-only blocks (L39 exit preservation)",
+    "ref": "gate-46(6)"
+   },
+   {
+    "id": "DEC-0222",
+    "title": "Gate ruling 7 — credential rotation is scoped by credential reference, not by connection",
+    "ref": "gate-46(7)"
+   },
+   {
+    "id": "DEC-0223",
+    "title": "Gate ruling 8 — config carries eligibility and identity only; runtime state is a fold",
+    "ref": "gate-46(8)"
+   },
+   {
+    "id": "DEC-0224",
+    "title": "Gate ruling 9 — the command ordinal and the journal sequence are two different counters",
+    "ref": "gate-46(9)"
+   },
+   {
+    "id": "DEC-0225",
+    "title": "Gate ruling 10 — the equity and drift arithmetic domain is exact scaled integers",
+    "ref": "gate-46(10)"
+   },
+   {
+    "id": "DEC-0226",
+    "title": "Gate ruling 11 — supervision mechanics and the definition of a safe point",
+    "ref": "gate-46(11)"
+   },
+   {
+    "id": "DEC-0227",
+    "title": "Gate ruling 12 — a fixed qmx service account and three named secret holders",
+    "ref": "gate-46(12)"
+   },
+   {
+    "id": "DEC-0228",
+    "title": "Gate ruling 13 — the node mints VenueClientPort; qmf-venue is not amended by a child",
+    "ref": "gate-46(13)"
+   },
+   {
+    "id": "DEC-0229",
+    "title": "Gate ruling 14 — replay reads through one sanctioned cross-world import port",
+    "ref": "gate-46(14)"
+   },
+   {
+    "id": "DEC-0230",
+    "title": "Gate ruling 15 — SQS reaches the door only inside the signal snapshot, and the baseline is keyed",
+    "ref": "gate-46(15)"
+   },
+   {
+    "id": "DEC-0231",
+    "title": "Gate ruling 16 — value-status, and the pre-SOAK ruling",
+    "ref": "gate-46(16)"
+   },
+   {
+    "id": "DEC-0232",
+    "title": "Gate ruling 17 — TN-25 minted: the accounting boundary and the virtual ledger",
+    "ref": "gate-46(17)"
+   },
+   {
+    "id": "DEC-0233",
+    "title": "Gate ruling 18 — the alert allow-list gains a silent-degradation class, a dead-man's switch and a liveness digest",
+    "ref": "gate-46(18)"
+   },
+   {
+    "id": "DEC-0234",
+    "title": "Gate ruling 19 — powers authentication over a unix socket with SO_PEERCRED",
+    "ref": "gate-46(19)"
+   },
+   {
+    "id": "DEC-0235",
+    "title": "Gate ruling 20 — the paper ledger runs, so the kill line is drillable before live",
+    "ref": "gate-46(20)"
+   },
+   {
+    "id": "DEC-0236",
+    "title": "The 34 GATE-2 rulings, applied at desk by residual fix pass 2 (TN ids stable)",
+    "ref": "gate2-umbrella"
+   },
+   {
+    "id": "DEC-0237",
+    "title": "KSA vocabulary re-ratified into docs/ from the GitBook baseline; the effect matrix is node severity policy",
+    "ref": "ksa"
+   },
+   {
+    "id": "DEC-0238",
+    "title": "PRD section 6 mined node doctrine ratified by adoption",
+    "ref": "prd6"
+   },
+   {
+    "id": "DEC-0239",
+    "title": "PRD section 10 open items rows 12-15 — dispositions at the node sitting",
+    "ref": "prd10-12-15"
+   },
+   {
+    "id": "DEC-0240",
+    "title": "Ticket 006 disposition — the trendbar price basis is measured per broker, not pinned from the web",
+    "ref": "ticket-006"
+   },
+   {
+    "id": "DEC-0241",
+    "title": "Parent annotation — L30 annotated at source: qmn.venue is the sanctioned qmf-venue import boundary [APPLIED]",
+    "ref": "annot:L30"
+   },
+   {
+    "id": "DEC-0242",
+    "title": "Parent annotation — AD-28 candidate: realize VenueClientPort inside qmf-venue [RECORDED-NOT-APPLIED]",
+    "ref": "annot:AD-28"
+   },
+   {
+    "id": "DEC-0243",
+    "title": "Parent annotation — the qmf-venue async-conformance exemption for qmf.venue.connection [APPLIED as a declared exemption]",
+    "ref": "annot:async-exemption"
+   },
+   {
+    "id": "DEC-0244",
+    "title": "Parent annotation — SessionTopology connection count derived from the roster [APPLIED as a qmf-venue increment item]",
+    "ref": "annot:SessionTopology"
+   },
+   {
+    "id": "DEC-0245",
+    "title": "Parent annotation — the stale qmf-venue README is corrected [APPLIED as a factory correction item]",
+    "ref": "annot:readme"
+   },
+   {
+    "id": "DEC-0246",
+    "title": "Parent annotation — the Records-streams to CT-13 bridge through CT-25 projection names [APPLIED]",
+    "ref": "annot:CT-13/CT-25-bridge"
+   },
+   {
+    "id": "DEC-0247",
+    "title": "Parent annotation — CT-20 mapping rows for position and balance read-back observations [APPLIED]",
+    "ref": "annot:CT-20-mapping-rows"
+   },
+   {
+    "id": "DEC-0248",
+    "title": "Parent annotation — CT-20 lifecycle-stop as a candidate fourth UNKNOWN trigger [RECORDED-NOT-APPLIED]",
+    "ref": "annot:CT-20-lifecycle-stop"
+   },
+   {
+    "id": "DEC-0249",
+    "title": "Parent annotation — node_resurrect is an AD-21 control-action EVENT subtype, not a CT-30 action kind [APPLIED]",
+    "ref": "annot:node_resurrect"
+   },
+   {
+    "id": "DEC-0250",
+    "title": "Parent annotation — CT-30 satisfaction-predicate declarations per matrix cell [APPLIED]",
+    "ref": "annot:CT-30-predicates"
+   },
+   {
+    "id": "DEC-0251",
+    "title": "Parent annotation — the node's CT-24 and CT-28 disposition and state_carry usage, with no format change [APPLIED]",
+    "ref": "annot:CT-24/CT-28"
+   },
+   {
+    "id": "DEC-0252",
+    "title": "Parent annotation — CT-14 backup payload-key custody, the two restore timers, and the host-loss rehearsal [APPLIED]",
+    "ref": "annot:CT-14"
+   },
+   {
+    "id": "DEC-0253",
+    "title": "Parent annotation — AD-19 gains an eighth room role, sealed-archive [APPLIED]",
+    "ref": "annot:AD-19-sealed-archive"
+   },
+   {
+    "id": "DEC-0254",
+    "title": "Parent annotation — value_status_required minted as a registry schema field; value-status lives on the resolved value [APPLIED]",
+    "ref": "annot:value_status_required"
+   },
+   {
+    "id": "DEC-0255",
+    "title": "Parent annotation — kill_line_capital_floor IS AD-40's loss_floor: one variable, one name [APPLIED]",
+    "ref": "annot:kill_line=loss_floor"
+   },
+   {
+    "id": "DEC-0256",
+    "title": "The registry mint table — every node-minted row configurable, unit-kinded, owner-scoped and blank-effect tagged [APPLIED]",
+    "ref": "annot:registry-mint-table"
+   },
+   {
+    "id": "DEC-0257",
+    "title": "Parent annotation — PRD section 3 notification allow-list widening [PROPOSED; ratified by this increment by default, cheap veto]",
+    "ref": "annot:PRD-3-allow-list"
+   },
+   {
+    "id": "DEC-0258",
+    "title": "The four reconciliation verdicts replace the three-verdict baseline everywhere the node speaks [APPLIED]",
+    "ref": "annot:four-verdicts"
+   },
+   {
+    "id": "DEC-0259",
+    "title": "Trading-node spine TN-1..TN-25 adopted in full (FINAL 2026-08-28, ratified by delegation plus four direct rulings)",
+    "ref": "adoption"
+   },
+   {
+    "id": "DEC-0260",
+    "title": "The node's open-items register — the ten items carried, with each disposition after the rulings",
+    "ref": "open-items"
+   }
+  ],
+  "ext_ids_used": "EXT-2126..EXT-2159 (all 34 L3 entries) plus EXT-2160..EXT-2169 (all 10 T entries) = 44 ids, every available id cited at least once, none unused, and NO new EXT ids minted (the L3 range was already exhausted by the previous run).",
+  "contradictions": [
+   "GAP ID MIS-CITE (carried as a correction, per brief section 5): the spine's adjudication correction 7, its Deferred table and its KSA paragraph all cite GAP-0015 for the KSA trigger-to-level-to-effect matrix VALUES, but catalog GAP-0015 is the lineage-edges gap answered 2026-08-20 by DEC-0114. GAP-0015 is NOT touched; the ledger writes GAP-0050 throughout (DEC-0237, DEC-0259, DEC-0260) and reads 'GAP-0015 shape closed' as 'the matrix SHAPE is closed by TN-7 under GAP-0050's heading'.",
+   "TRANSCRIPT MISATTRIBUTION (worst, corrected in DEC-0212): memlog line 48 and spine R2 quote the operator as saying 'I know what you're talking about' about a Prometheus/Grafana-class stack, presenting him as familiar with it. He said the opposite about himself and addressed the phrase TO the agent: 'I know how DevOps work, I'm not so technical, I don't know what all that is, but you know what I'm talking about.' The ruling substance (tracking mandatory through the soak week; he named Prometheus and Grafana himself) is unaffected.",
+   "SPLICED QUOTE (corrected in DEC-0213): 'A simple click on the user interface... two separate acts.' does not occur contiguously; it is a composite of two sentences from different points in the same turn with a capitalised 'A' added. The verified wording is used instead.",
+   "RECONSTRUCTED QUOTE (corrected in DEC-0215): 'it might have its own page... I'm not certain yet' reverses the operator's actual lean; the transcript reads 'It's not a, it doesn't have its own page or something. Okay, I think it might. I think it might... Okay, I'm not certain yet.' Uncertainty carried faithfully, wording was not.",
+   "FOUR FURTHER QUOTATION DEFECTS carried into the rationales: 'focus on live trading' is a paraphrase inside quotation marks (transcript: 'For you, you're focusing on live trading'); 'later versions, yes, we're going to iterate' drops a mid-sentence self-correction ('yes, no, we're going to iterate'); 'QMF is portable' is not a quotation at all and his not-my-concern disposition is conditional on the portability being false; and R1's enumeration (status / kill everything / resolve a stuck order / promote) is the ASKING agent's wording, not the operator's.",
+   "RELOCATED REFERENT and INFERENCE-AS-REFUSAL: 'a very separate system, like how big tech teams work' is verbatim but was said of the DevOps LAYER OR LENS, not of the just node-... recipes the spine attaches it to; and 'That question is not for this layer' is tied in the transcript to the node-command half of the bundled Q1, so 'the operator declined to rule the name' is a defensible inference rather than a direct refusal. Both recorded in DEC-0211.",
+   "APPARENT TENSION WITH DEC-0150, reconciled not overridden: DEC-0150 forbids minting any control-action kind whose effect is a blanket command-pipe block, yet GATE-2 ruling 1 makes AD-27's per-command UNKNOWN block refuse EVERY command on that stream, protection included. It is not a contradiction because that block is AD-27's uncertainty law and AD-36's one non-control block, not a minted CT-30 kind, and the refused protective act stands as a journaled standing intent. Recorded explicitly in DEC-0221.",
+   "SUPERSEDED MEMLOG TEXT: memlog line 46 ruling 5 states 'the node needs an operator-typed door on the VPS' and the pre-ruling memlog TN-1/TN-17 text names a qmn command and a 'Door 2'. Both are contradicted by operator ruling R1 the same day and are superseded history, never to be presented as current (recorded in DEC-0220 and DEC-0211).",
+   "SUPERSEDED CHEAP-VETO REGISTER: memlog line 40 still frames A1/A10/A17/A26 as open and still lists A8 as live. The spine's A1-A47 table is the current reconciled view and the ruling entries govern where they disagree (recorded in DEC-0259).",
+   "PRD vs CORPUS on verdict count: PRD section 6's mined doctrine names three reconciliation verdicts; the ratified CT-20 contract carries four. The corpus wins — reconciled | drift | unknown | out-of-lookback replaces the three everywhere the node speaks (DEC-0258, DEC-0238(c)).",
+   "PRD ROW 12 VOCABULARY: PRD section 10 row 12 is written with two terms this project's banned-vocabulary rule forbids (a bare disposition term and an abbreviated protective-order pair). The substance is unchanged but the row is restated in the corpus's vocabulary in DEC-0239.",
+   "PRE-LIVE vs PRE-SOAK on the KSA matrix values: memlog line 42 item (1) says 'a pre-live operator ratification'; gate ruling 16 and the spine's Deferred table make it PRE-SOAK, because the soak checklist exercises the matrix. The later ruling governs (DEC-0231, DEC-0237, DEC-0260).",
+   "DELEGATION PRESENTED AS A RULING: the spine presents the DevOps posture as ruled, while the transcript shows explicit delegation with a stated need ('I will need you to take point on... the DevOps lens... we do need it, in my opinion. We need to have logs'). This is why every DevOps-shaped entry in this file carries authority: rider rather than a direct-ruling authority (recorded in DEC-0259).",
+   "OPERATOR SELF-SUPERSESSION, unlabelled anywhere before this increment: his kickoff non-negotiables 'No UI in this phase... gets a CLI/API door now' and 'the first milestone is the node running paper mode on a demo account for ~2 days' are both overridden by his own later dumps (R1, R2 and the UI dump). Recorded in DEC-0212, DEC-0215 and DEC-0259 so no later reader treats the kickoff text as live."
+  ],
+  "notes": "LAST DEC ID MINTED: DEC-0260. Fifty entries, DEC-0211 through DEC-0260, strictly sequential, no gaps, no renumbering.\n\nVALIDATION (the exact command from the prompt) prints: `50 []` — the file parses under yaml.safe_load, has 50 ledger entries, and every `sources` id resolves in extractions-L3.yaml union extractions-T.yaml. Independently checked: every entry carries all eleven house-shape fields (id, title, statement, status, rationale, sources, authority, component, tags, date, spine_ref); status is `ratified` and authority is `rider` on all 50; date is 2026-08-28 on all 50; no banned vocabulary anywhere (engine, kernel, plugin/plug-in, exam, minimal core, \"paper node\", bare stop-out, bare calendar, timeframe all return zero hits — every `calendar` occurrence is qualified as news calendar / calendar timer / day-boundary calendar / accounting-period calendar, and the sole `CLI` occurrence is inside the operator's own superseded kickoff wording); every internally referenced DEC id is either in-range (DEC-0186..DEC-0260) or verified present in _docwork/ledger.yaml (DEC-0049, 0114, 0119, 0135, 0150, 0157, 0159, 0185).\n\nALLOCATION USED — (a) R1..R4 = DEC-0211..0214; (b) also-ruled = DEC-0215; (c) the twenty first-gate rulings = DEC-0216..0235, one each, titled \"Gate ruling n — <topic>\", each rationale naming the TN DEC(s) it amends from DEC-0186..DEC-0210 and, where a later round modified it, saying so and citing memlog line 49 or line 51 (notably ruling 5 overtaken by R1, ruling 6 modified by GATE-2 (1), ruling 13 gaining a third V1 implementation from GATE-2 (6)); (d) GATE-2 umbrella = DEC-0236 enumerating all 34 with a gist each; (e) KSA = DEC-0237; (f) PRD section 6 = DEC-0238; (g) PRD rows 12-15 = DEC-0239; (h) ticket 006 = DEC-0240; (i) the eighteen parent annotations and mints = DEC-0241..0258, one each, every statement opening with APPLIED / RECORDED-NOT-APPLIED / PROPOSED and tagged `parent-annotation`; (j) adoption umbrella = DEC-0259; (k) open-items register = DEC-0260.\n\nCOMPONENT ASSIGNMENT: COMP-QMN on 35 entries; COMP-QMF-CORE on the L30 annotation and the async exemption (2); COMP-QMF-VENUE on the AD-28 candidate, the SessionTopology relaxation, the stale README, and both CT-20 items (5); COMP-QMF-REGISTRY on the CT-13/CT-25 bridge and value_status_required (2); COMP-QMF-RISK on node_resurrect, the CT-30 satisfaction predicates, CT-24/CT-28 + state_carry, and kill_line=loss_floor (4); COMP-QMF-DATA on CT-14 custody and AD-19 sealed-archive (2). The registry mint table, the PRD section 3 widening and the four-verdicts entry stay COMP-QMN (they are mints and a PRD amendment, not annotations on a QMF component) while still carrying the `parent-annotation` tag, since the spine files all three under its \"Parent annotations and mints\" section.\n\nGAP-0050 (not GAP-0015) is used throughout for the KSA matrix values, per brief section 5; GAP-0015 was not touched. DEC-0260 also opens three items the round itself created: the declined product name, the desktop-UI sitting, and the A39 QMA wire-vocabulary alignment obligation.\n\nFILES: only C:/Users/Mubarak/Desktop/QMX/_docwork/harvest/node/ledger-L3.yaml was created. _docwork/ledger.yaml, _docwork/extractions.yaml and the other harvest files were read but not modified (git status confirms _docwork/harvest/node/ is the only untracked addition and no tracked _docwork file other than manifest.yaml — modified by another seat — shows as changed).\n\nONE JUDGEMENT CALL WORTH THE OPERATOR'S EYE: DEC-0257 records the PRD section 3 allow-list widening as PROPOSED but ratifies it by default under the cheap-veto posture the brief sets, exactly as instructed. If the operator vetoes it, the node still ships the silent-degradation detection, the external dead-man's switch and the liveness digest — only the notification half is withheld — so the veto is genuinely one line and costs no rework."
+ },
+ "catalog": {
+  "gaps_added": [
+   "GAP-0050",
+   "GAP-0051",
+   "GAP-0052",
+   "GAP-0053",
+   "GAP-0054",
+   "GAP-0055",
+   "GAP-0056"
+  ],
+  "gaps_noted": [
+   "GAP-0016",
+   "GAP-0017",
+   "GAP-0048",
+   "GAP-0049"
+  ],
+  "feat_id": "FEAT-0031",
+  "blocked_by": [
+   "FEAT-0023",
+   "FEAT-0024",
+   "FEAT-0025",
+   "FEAT-0026",
+   "FEAT-0027",
+   "FEAT-0028",
+   "FEAT-0029",
+   "FEAT-0030",
+   "FEAT-0012",
+   "FEAT-0016",
+   "FEAT-0013",
+   "FEAT-0017",
+   "FEAT-0014"
+  ],
+  "validator_output_tail": "ERROR features[30] FEAT-0031: decision 'DEC-0258' not in ledger\nERROR features[30] FEAT-0031: decision 'DEC-0259' not in ledger\nERROR features[30] FEAT-0031: decision 'DEC-0260' not in ledger\nERROR features[30] FEAT-0031: component 'COMP-QMN' not in dependencies\n(76 ERROR lines total: 75 = DEC-0186..DEC-0260 unresolved pending the orchestrator's ledger merge; 1 = COMP-QMN pending the architecture seat's dependencies.yaml write. Zero errors of any other class — `grep \"^ERROR\" | grep -v \"not in ledger\" | grep -v \"not in dependencies\"` returns nothing.)",
+  "notes": "FILES WRITTEN (only the two assigned): C:/Users/Mubarak/Desktop/QMX/_docwork/gaps.yaml and C:/Users/Mubarak/Desktop/QMX/_docwork/feature_inventory.yaml. Nothing else touched.\n\ngaps.yaml — 56 rows now, parses clean under yaml.safe_load, unique ids, CRLF preserved.\n- GAP-0050 (KSA trigger→level→effect matrix VALUES per cell and per enforcement scope): needed_by [COMP-QMN, COMP-QMF-RISK], blocking false, status deferred, answer null, date 2026-08-29. recommendation is the spine's verbatim shape: pre-SOAK operator ratification through the settings surface recorded as a config version, TN-7 binds the shape, a blank or provisional-evidence cell blocks live money. note records the spine's GAP-0015 mis-cite explicitly (catalog GAP-0015 = lineage edges, answered 2026-08-20 under DEC-0114) and states GAP-0015 is untouched; cites DEC-0192 (TN-7, shape closed), DEC-0237 (KSA vocabulary re-ratified, effect matrix = node severity policy), DEC-0231 (value-status + the pre-SOAK ruling), DEC-0254 (value_status_required schema field).\n- GAP-0051 MIS training + shadow rollout epic (offline only, never the VPS, never the decision path; data window + RNG seed + training-code fp1; versioned model artifacts registered; promotion = ratification → version bump → re-certification over one full affected-Book cycle; Kronos-class pretrained = candidates only) — DEC-0204, DEC-0215, DEC-0238.\n- GAP-0052 hot-apply of settings (V1 applies at the next boot epoch; hot-apply is a later mint on the same versioned artifact) — DEC-0203, DEC-0223, DEC-0226.\n- GAP-0053 agent / MCP door (later sibling wrapper over the same library; nothing agent-reachable on the node in V1) — DEC-0202, DEC-0234, DEC-0211.\n- GAP-0054 hardened OS-level confinement for seats — recommendation NAMES the V1 containment controls so no second containment story grows: seat callback deadline, seat memory ceiling, automatic quarantine exited only by the operator-signed seat_reinstate, the door layer's slice-progress watch, the supervised restart of last resort, QL-8's static scan and the stdlib process isolation of the Layer-2 runner — DEC-0204, DEC-0226, DEC-0189.\n- GAP-0055 second VPS for the evidence tier (a config change once the placement boundary exists) — DEC-0188, DEC-0201.\n- GAP-0056 fill simulation in replay (TN-21 diffs decisions only; fidelity taint stays QMB tunnel territory, GAP-0048) — DEC-0206, DEC-0229.\n\nDated notes APPENDED (status and answer untouched on all four): GAP-0016 and GAP-0017 — node leaves them deferred, touches them only at the admission bar where a blank bar blocks live regardless (AD-32), node accrues raw material and mints no policy (DEC-0195, DEC-0208 / DEC-0193, DEC-0195). GAP-0048 — replay has NO fill simulation, diffs decisions only, one sanctioned cross-world import port, fidelity taint stays QMB's; the deferred row is carried as GAP-0056 (DEC-0206, DEC-0229). GAP-0049 — blank bar blocks live regardless (AD-32), same rule covers GAP-0016/0017; node value roster separately node-minted and blank-effect tagged, QA standard gates machinery not performance (DEC-0193, DEC-0256, DEC-0208). Every appended note keeps the corpus \"Do NOT close this gap here.\" closer.\n\nfeature_inventory.yaml — FEAT-0031 \"Trading node (qmn) — supervised composition-root runtime, paper|live, on QMF\" appended in FEAT-0030's exact shape. scope 8360 chars, one paragraph, In/Out/Done. In names every TN across the full structural seed (host, loop, venue + venue/ctrader, orderpath, protection, ledger, paper, reconcile, seats, promotion, mis, data, time, secrets, config, observability, doors, replay, bench, deploy) plus the operations toolkit recipe bodies, the node's half of the separate zero-authority observability stack, all THREE VenueClientPort implementations including the FEAT-0023 conformance double, SCN-0006/0008/0010/0011 wired and proven, the soak acceptance checklist, the gated FAILURES.md register, and the QA-debt node stories by id (QMX-F045, F046, F062, F063, F064, F067, F068, F069, F102, D008, D010, E15-F01/F02/F03, E7-R28, E9-F04, E12-F01/F04/F05). Out lists the desktop UI, agent/MCP door, MIS training epic, hot-apply, hardened confinement, second VPS, fill simulation, the staging host and the 26.04 upgrade, each Out row cross-referencing its new GAP id. Done = soak acceptance gate passes on the demo binding across the full unattended week + the live binding satisfies its own baselines (live-conditioned SQS baseline and live-path rung baseline present on the deployment tuple) + battery/qa tests/conformance suite/mutmut green on the code-carrying branch. decisions = all 75 ids DEC-0186..DEC-0260. components [COMP-QMN]. size multi-pass, status planned.\n\nblocked_by: 13 blockers, each with a reason and DEC cites. Every blocker id's NAME was verified in the inventory before citing — FEAT-0012 \"Durable operational and research journal-evidence contract\", FEAT-0013 \"Backup snapshot and recovery-boundary specification\", FEAT-0014 \"Raw-evidence persistence adapter\", FEAT-0016 \"Journal persistence adapter\", FEAT-0017 \"Off-machine backup and recovery adapter\", FEAT-0023 \"Platform-neutral venue port contract\", FEAT-0024/0025/0026 the three cTrader adapters, FEAT-0027 \"Book, BMS, and risk-boundary specification and reconciliation\", FEAT-0028 \"Forex market-hours calendar extension\", FEAT-0029 \"QMB experimentation library and qmb CLI\", FEAT-0030 \"QML bot-authoring library\". None dropped — all thirteen fit.\n\nVOCABULARY: both files scanned programmatically for engine / kernel / plugin / exam / minimal core / \"paper node\" / timeframe / bare stop-out across scope, notes, blocked_by reasons, and every new gap question/recommendation/note — zero hits. Every occurrence of \"calendar\" is qualified (day-boundary calendar, news-calendar, market-hours calendar, \"market-hours, day-boundary and news calendars\"). No operator command line implied anywhere: the toolkit is described as `just node-…` recipe bodies running as the ops principal, DevOps only.\n\nVALIDATOR: `python .../validate_inventory.py --root .` exits with 76 ERRORs, all two expected classes only. Verified against a simulated merged root (ledger.yaml + harvest ledger-L1/L2/L3 merged = 260 entries; COMP-QMN added to dependencies.yaml with the TN-spine depends_on set): ZERO errors, \"OK: feature inventory valid (31 features)\", no FEAT-0031 contract-order warnings, and the pre-existing \"15 ratified component-scoped decision(s) belong to no feature\" count is UNCHANGED — i.e. FEAT-0031 covers all 75 node decisions and introduces no new coverage gap. gaps.yaml parses clean.\n\nFOR THE ORCHESTRATOR: two merges are still owed before the validator goes green — (1) the ledger merge of _docwork/harvest/node/ledger-L1/L2/L3.yaml into _docwork/ledger.yaml, and (2) the architecture seat adding COMP-QMN (name trading-node, kind application, layer backend) to docs/architecture/dependencies.yaml with the qmn → qmf.* / qmb / qml / extensions edges. Neither is in this seat's write scope."
+ }
+}

@@ -1,0 +1,52 @@
+# Fragment: add the QMA application stack section to docs/architecture/stack.md, derived from the
+# QMA sitting Stack table. Seat D9. insert_before_heading is idempotent (skips when present).
+target: docs/architecture/stack.md
+ops:
+  - op: insert_before_heading
+    heading: '## Related'
+    text: |
+      ## QMA application stack
+
+      The QMX agentic system (QMA) is a third application-layer product — the daemon plus the QMA SDK (QuantMind Agents, the SDK only) plus the wire contract — built ON QMF, outside the seven-package roster and outside QMF V1. It is its own uv workspace on the QMF workspace in lockstep, in the `qma.*` namespace (`qma.core`, `qma.wire`, `qma.daemon`) with no blanket `qmx.` prefix, SemVer display-only provenance never identity (DEC-0334, DEC-0335, DEC-0337). The daemon runs on the operator's workstation by default with workers in Docker on that host, and ships no command line — deployment is driven from the operator's UI and wire commands, and `qmb` stays the platform's single command-line surface (DEC-0336). It consumes `qmf-core` and reads-and-calculates over `qmf-registry`, `qmf-data`, and `qmf-risk` on an enumerated default-deny surface, and imports `qmf-venue` in no package, worker, or plugin (DEC-0347). It inherits QMF's runtime and quality toolchain — CPython 3.14 on the tier-1 OSes, `uv_build`, pyright, pytest, and poethepoet unchanged from the QMF workspace — with `uv` and `ruff` bumped for this workspace. Every pin was verified 2026-08-28 as authoring evidence; recorded numbers are evidence, never ratified constants, and the code owns these pins once it exists (DEC-0334).
+
+      | Name | Version / status | Role | Cites |
+      |---|---|---|---|
+      | CPython (daemon runtime) | 3.14 (3.14.7 re-verified 2026-08-28) | The single asyncio daemon runtime, inherited from the parent spine | DEC-0334 |
+      | SQLite (stdlib `sqlite3`, WAL mode) | 3.50.4 — a WAL floor by design, below the 3.51.3 multi-writer WAL-reset fix because AD-6's one-connection sole-writer rule forbids the conditions that bug needs; the floor becomes 3.51.3, or the 3.50.7 backport, the moment sole-writer is relaxed | The daemon store engine behind AD-6's sole-writer, one-connection journal | DEC-0334 |
+      | JSON-RPC (wire transport spec) | 2.0 | Commands and events over WebSocket on the wire envelope | DEC-0334 |
+      | websockets (wire transport implementation) | 17.1 | The WebSocket transport for qma-wire | DEC-0334 |
+      | JSON-Schema validator (message-family validation) | `[UNPINNED — implementation choice at the build gate, stated rather than invented]` | Validates the wire message families | DEC-0334 |
+      | Model Context Protocol (adapter surface only) | revision 2026-07-28 | The MCP adapter surface behind a ToolAdapter, never a second runtime | DEC-0334 |
+      | uv (workspace + lockfile) | 0.12.7 (bumped from the parent's 0.12.5, re-verified 2026-08-28) | The QMA uv workspace and lockfile | DEC-0334 |
+      | ruff | 0.16.5 (bumped from the parent's 0.16.3, re-verified 2026-08-28) | Format and lint | DEC-0334 |
+      | pyright (strict) | 1.1.411 (inherited, re-verified 2026-08-28) | Strict type checking | DEC-0334 |
+      | pytest | 9.1.1 (inherited, re-verified 2026-08-28) | Test runner | DEC-0334 |
+      | poethepoet | 0.48.0 (inherited, re-verified 2026-08-28) | Task runner | DEC-0334 |
+      | duckdb (rebuildable fold views only) | 1.5.5 (inherited, re-verified 2026-08-28) | Rebuildable analytic fold views only; engine major pinned per release | DEC-0334 |
+      | Docker Engine (default worker isolation) | 29.7.2 | The default worker isolation on the daemon host | DEC-0334 |
+      | OpenTelemetry Python SDK (behind the export port) | 1.44.0 | Telemetry export behind the OTel port; telemetry is neither the ledger nor the journal | DEC-0334 |
+      | OpenCodex (first ModelDeployment implementation) | 2.34.0 published; 2.31.0 installed locally | The first `ModelDeployment` behind the Deployment contract, not behind the Credential Broker | DEC-0334, DEC-0344 |
+      | Hindsight (deferred first memory backend) | v0.9.2 — deferred | The deferred first `MemoryProvider` backend, arriving behind a testable eval | DEC-0334, DEC-0342 |
+      | pgvector (arrives only with the deferred memory provider) | 0.8.6 — deferred | Arrives only with the deferred memory backend | DEC-0334, DEC-0342 |
+
+      The JSON-Schema validator is deliberately `[UNPINNED]` — the implementation choice is made at the build gate rather than invented here. Hindsight and pgvector are deferred and arrive only with the deferred external memory provider behind its eval (GAP-0072). OpenCodex sits behind the `ModelDeployment` contract with `auth_mode: none` and a mandatory loopback bind, and its own provider credentials stay outside QMA's namespace (DEC-0344). QMA pins no database server: the daemon's stores are SQLite, DuckDB fold views, and append-only journals behind daemon-owned contracts, and the no-database-server rule binds QMA's own stores while never reaching inside a provider's storage behind a QMA-owned port (DEC-0342).
+  # Append the QMA cross-reference sentence after the QML application-stack sentence.
+  # Non-idempotent `replace` is wrong here: its `new` contains its `old`, so op_replace's
+  # count-based skip never fires and a re-run double-applies. regex_replace with skip_if is
+  # idempotent (skips once the QMA sentence is present); the pattern is the full, unique
+  # QML-sentence tail — bare (DEC-0180) is NOT unique (frontmatter + QML pins line).
+  - op: regex_replace
+    pattern: 'its stack captured under \[QML application stack\]\(#qml-application-stack\)\. \(DEC-0180\)'
+    repl: 'its stack captured under [QML application stack](#qml-application-stack). (DEC-0180) The QMX agentic system QMA is a third such application-layer product — the daemon plus the QMA SDK and the wire contract, built ON QMF outside the seven-package roster — its stack captured under [QMA application stack](#qma-application-stack). (DEC-0335)'
+    all: false
+    skip_if: 'The QMX agentic system QMA is a third such application-layer product'
+    flags: M
+  - op: frontmatter_add
+    field: decisions
+    ids: [DEC-0334, DEC-0335, DEC-0336, DEC-0337, DEC-0342, DEC-0344, DEC-0347]
+  - op: frontmatter_add
+    field: depends_on
+    ids: [COMP-QMA-CORE, COMP-QMA-WIRE, COMP-QMA-DAEMON]
+  - op: frontmatter_set
+    field: verified
+    value: '2026-08-29'

@@ -5,10 +5,10 @@ type: component-spec
 status: ratified
 component: COMP-CALENDAR-FEED
 depends_on: []
-decisions: [DEC-0009, DEC-0038, DEC-0052, DEC-0065, DEC-0074, DEC-0106, DEC-0117, DEC-0119, DEC-0152, DEC-0156, DEC-0157, DEC-0158]
-sources: [DEC-0009, DEC-0038, DEC-0052, DEC-0065, DEC-0072, DEC-0074, DEC-0106, DEC-0117, DEC-0119, DEC-0152, DEC-0156, DEC-0157, DEC-0158, EXT-2030, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, docs/architecture/dependencies.yaml, docs/contracts/ct-15-external-source-adapter.yaml, docs/contracts/ct-31-control-window.yaml]
+decisions: [DEC-0009, DEC-0038, DEC-0052, DEC-0065, DEC-0074, DEC-0106, DEC-0117, DEC-0119, DEC-0152, DEC-0156, DEC-0157, DEC-0158, DEC-0193, DEC-0198, DEC-0214, DEC-0236, DEC-0259]
+sources: [DEC-0009, DEC-0038, DEC-0052, DEC-0065, DEC-0072, DEC-0074, DEC-0106, DEC-0117, DEC-0119, DEC-0152, DEC-0156, DEC-0157, DEC-0158, EXT-2030, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, docs/components/trading-node.md, docs/architecture/dependencies.yaml, docs/contracts/ct-15-external-source-adapter.yaml, docs/contracts/ct-31-control-window.yaml]
 generated: 2026-08-18
-verified: 2026-08-20
+verified: 2026-08-29
 stale_after: 30d
 ---
 
@@ -41,6 +41,22 @@ The news-calendar recorder discipline is ratified (DEC-0119): provider-native id
 The risk-side mechanism GAP-0042 once reserved is now ratified as [CT-31](../contracts/ct-31-control-window.yaml), and lives outside this feed: event severity is stored as the **provider's impact labels verbatim** (QMX mints no severity scale of its own in V1, and severity-to-window is a declared node mapping); currency-to-instrument mapping runs through **dated per-instrument currency-exposure records**, never by parsing a symbol; blackout windows are **entries-only control windows**, live and paper alike; open-position behavior is a Book's `window_forced_flat` declaration entering same-tick arbitration at rank 2, declaring none being the V1 posture; and window widths and buffers are configurable UI-editable variables with no spine value. This feed defines none of it. [DEC-0152] [DEC-0156] [DEC-0157]
 
 <!-- no-diagram: this is one external CT-15 source boundary; the standalone recorder is a separate application outside the QMF component roster -->
+
+## Trading-node increment (2026-08-29)
+
+The trading node (`COMP-QMN`) is the runtime consumer of this news-calendar feed, and the 2026-08-28 trading-node sitting ruled its V1 source and refresh discipline; the feed's own authority boundary is unchanged — it defines no window and holds no permission — and the increment was ratified by operator delegation plus four direct rulings (DEC-0259). See [COMP-QMN](trading-node.md) for the node's own spec.
+
+### Forex Factory's free weekly file is the sole V1 source (R4)
+
+The operator ruled 2026-08-28 that the node never pays for news: **Forex Factory's free weekly file is the SOLE V1 news-calendar source, and no paid fallback slot exists anywhere, ever** (operator ruling R4) — the free file is chosen because it carries the impact label the news blackout needs (DEC-0214, DEC-0198). The later fallback path is named rather than left open: **a second free source, or an agent-scraped JSON delivered in the same CT-15 intake shape** — the intake shape is the seam, so a second source is an adapter and a config row, never a code path through the news blackout (DEC-0214, DEC-0198). The legal archiving posture stays an **open operator item recorded as personal use**, exactly as the historical source was (DEC-0214, DEC-0198).
+
+### The recorder is a systemd timer with a configurable refresh cadence
+
+At the node the recorder is re-homed from a Windows Scheduled Task to the systemd timer `qmn-news-calendar.timer` — named `qmn-news-calendar` for its kind, since the word alone would name three distinct calendar kinds — calling the ratified CT-15 ingest adapter with provider-native `(source, id, revision)` identity and revisions (DEC-0198). Because all three sessions are traded and timeliness matters, `registry:news_calendar_refresh_cadence` is a configurable node variable with a duration unit-kind (recorded evidence: every 2 h and before each session open), and the scheduler respects the free feed's roughly 2-downloads-per-5-minutes limit — a configured cadence that would breach it is refused at config compile, not silently throttled (DEC-0198, DEC-0214). The recorder's retry policy is declared, not left to the implementer: at most `registry:news_recorder_max_attempts` per timer firing with `registry:news_recorder_backoff`, counted against the same provider budget, and a provider rate-limit or block response is journaled `data quality`, alarmed on the silent-degradation class, and never retried inside the same firing — a retry loop on the sole V1 source could get the host blocked (DEC-0198).
+
+### Fail-closed on staleness, and the widen-or-add-only revision rule
+
+A failed refresh blocks entries fail-closed with no live skip button, and staleness fails closed by a **per-decision-cycle precondition, `registry:news_calendar_max_staleness`** — a value the timer does not send as a signal, so a silently dead timer fails entries closed by itself (DEC-0198, DEC-0193). A news-calendar CODE identity is sealed into `composition_fp` while the ingested snapshot DATA is a frontier-read observation, so a twice-hourly data refresh never requires a restart while a code change does (DEC-0198). A news-calendar revision **may only widen or add** an in-force or same-day window automatically; narrowing, downgrading, delaying or removing one takes effect no earlier than the superseded window's end and is otherwise an operator act on the powers channel citing both revisions (DEC-0193, DEC-0198, DEC-0236). The blackout the feed's evidence drives remains CT-31's — entries-only, live and paper alike — and this feed still defines none of it (DEC-0152).
 
 ## Configuration
 

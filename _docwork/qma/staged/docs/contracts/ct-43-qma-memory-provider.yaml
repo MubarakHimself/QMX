@@ -1,0 +1,73 @@
+id: CT-43
+name: QMA MemoryProvider port contract
+status: ratified
+version: 1  # first minted format version; CT-43 is the qma-core MemoryProvider port newly minted by the 2026-08-28/29 QMA architecture sitting (AD-18, DEC-0317), absorbed on the operator's order SRC-15 (DEC-0342); validation closed dry 2026-08-29 (DEC-0329)
+owner: COMP-QMA-CORE  # the MemoryProvider contract is a qma-core PORT (definitions only); qma-daemon implements the deterministic admission gate and calls the port, a desk plugin contributes the provider implementation as an AD-1 multi/singleton contribution, so ownership is qma-core-side while every runtime concern enters through this core-defined port (DEC-0335, DEC-0342)
+consumers: []  # consumer-blind by design: the port is a qma-core definition bound at the AD-1 contribution point; qma-daemon calls it and a plugin provides the implementation, so no package import edge is minted from this doc (DEC-0335, DEC-0342, DEC-0300)
+active_consumers: []
+intended_consumers: [COMP-QMA-DAEMON]  # qma-daemon is the sole process that runs anything and the sole caller of the port; a desk plugin contributes the provider half through the daemon's loader as an AD-1 contribution — never a package import (DEC-0335, DEC-0300, DEC-0342)
+wiring_status: defined-unwired  # ratified port surface; no code exists; a provider binds only through the daemon's plugin loader at the AD-1 MemoryProvider singleton key, and no wiring is authorized from this doc (DEC-0342, DEC-0335)
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0317, DEC-0342, DEC-0345, DEC-0300, DEC-0321, DEC-0309, DEC-0302]
+gaps: [GAP-0072]  # GAP-0072: which external memory backend (Hindsight/Mem0) becomes the first MemoryProvider implementation, and against which store dependency — deferred behind a QMA-owned eval; v1 ships the port and the NoMemoryProvider typed refusal only (DEC-0342)
+purpose: >-
+  The one qma-core MemoryProvider PORT through which all memory enters QMA — QMA builds
+  no memory engine in-house (DEC-0342). It is a per-`desk` singleton port (AD-1) defining
+  the operation surface `propose`, `admit`, `recall`, `get`, `list`, `history`,
+  `supersede`, `invalidate`, `expire`, `scopes` (with `reflect` optional and off, because
+  cognition is QMA's) and NO `promote` operation, a MemoryCandidate whose
+  `admission_confidence` is a daemon-computed scalar an agent may never set or influence,
+  a `validation_state` lifecycle, and the typed refusal `NoMemoryProvider` returned by
+  `recall` until a provider is bound. Its purpose is to let a candidate be ADMITTED — never
+  promoted (DEC-0345) — through the daemon's deterministic admission gate once a provider
+  is bound, and to stage candidates safely under AD-22 while none is, so that arbitrary
+  agent text never becomes trusted memory and memory never becomes the ledger.
+invariants:
+  - "CT-43 is a qma-core PORT, definitions only, owned by qma-core; qma-daemon implements the deterministic admission gate and is the sole caller, and a desk plugin contributes the provider implementation as an AD-1 contribution through the daemon's loader — no package import edge is minted from this doc (DEC-0335, DEC-0342, DEC-0300)."
+  - "QMA builds NO memory engine in-house: every memory concern enters through this port (DEC-0342). The MemoryProvider operation surface is exactly `propose`, `admit`, `recall`, `get`, `list`, `history`, `supersede`, `invalidate`, `expire`, `scopes`; `reflect` is optional and off because cognition is QMA's, and there is NO `promote` operation on this port — a candidate is ADMITTED, never promoted (DEC-0317, DEC-0345)."
+  - "`recall` is TOKEN-BUDGETED, not result-count-bounded: it returns as much admitted memory as fits a caller-supplied token budget, never a fixed number of records (DEC-0317)."
+  - "Per-`desk` singleton (AD-1): the MemoryProvider contribution point is a singleton whose scope key is `desk`; exactly one provider may bind a desk's key, a second binding is a hard startup error naming both plugin ids, and no provider is bound by default — the port ships with no default binding (DEC-0300, DEC-0335)."
+  - "NO-PROVIDER PATH: until a provider is bound for a desk, `recall` returns the typed refusal `NoMemoryProvider` (a variant of qmf-core's typed-refusal base, AD-3, minting no parallel base) and every proposed candidate STAGES under AD-22 wrapped in a RefinementProposal carrying exactly one `memory` edit — which is staging, not memory; the AD-22 `memory` edit kind governs only candidates staged while no provider is bound (DEC-0317, DEC-0321, DEC-0302, DEC-0342)."
+  - "BOUND-PROVIDER PATH: once a MemoryProvider is bound, admission is the daemon's deterministic admission gate ALONE — the candidate is written through `before_memory_write` (AD-10), is NEVER a RefinementProposal, and requires NO `operator` principal; the two paths never overlap (DEC-0317, DEC-0321, DEC-0309)."
+  - "A MemoryCandidate carries provenance, supporting artifacts, `admission_confidence`, scope, proposer, occurrence time and supersession; its `validation_state` is one of exactly seven values — proposed, validated, admitted, superseded, invalidated, expired, contradicted (DEC-0317)."
+  - "`admission_confidence` is a SCALAR the daemon's admission gate computes DETERMINISTICALLY from the candidate's provenance, supporting artifacts, corroboration count and validation history; a proposing agent may NEVER set, suggest or influence it, and a `propose` call carrying the field is REFUSED — it is a gate output, never agent input, otherwise the gate would admit on a number the proposer minted about its own output, the exact failure AD-22 exists to prevent (DEC-0317)."
+  - "NAME-SPLIT LAW: Memory carries `admission_confidence` (one QMA-owned scalar); Knowledge (CT-44, AD-19) carries `evidence_confidence` (six corpus-owned dimensions); neither is ever derived from the other, and a memory candidate citing knowledge stores the CT-44 Citation plus the six dimensions verbatim (DEC-0317, DEC-0318, DEC-0343)."
+  - "ADMIT, NOT PROMOTE (closed verbs): a memory candidate is ADMITTED (operation `admit`, `validation_state` value `admitted`); `promote`/`promotion` never appears for memory anywhere — promotion is reserved for the L17 live-zone act a human performs OUTSIDE QMA, and applying a RefinementProposal is `apply`, never promote (DEC-0345, DEC-0317)."
+  - "NO-DATABASE-SERVER SCOPE (surfaced conflict, not an override): the inherited no-database-server rule binds QMA's OWN evidence and metadata stores — the event journal, the three ledgers, the artifact store, the staging store and the telemetry store — never a third-party provider's internal storage sitting behind this QMA-owned port; an admitted provider's server is isolated inside that provider, holds no QMA evidence and is never read or folded by QMA (DEC-0342, DEC-0317)."
+  - "DEFERRED BACKEND: v1 ships this port and the `NoMemoryProvider` typed refusal ONLY. Hindsight (v0.9.2) is the deferred first backend admitted only after a QMA-owned evaluation on real desk experience (GAP-0072); its PostgreSQL-with-pgvector or Oracle 23ai store arrives isolated inside that provider and never touches the QMA journal (DEC-0342)."
+  - "Every memory write passes `before_memory_write` (AD-10); this hook is the single enforcement point for memory in the agent path, and a deny binds under any permissive mode (DEC-0317, DEC-0309, DEC-0323)."
+  - "AUTHORITY BOUNDARY — what this port may never do: it mints no `promote` or zone-transition operation, it never lets an agent set `admission_confidence`, it never writes an admitted memory through the AD-22 staging pipeline once a provider is bound, and no provider's internal database ever holds or is read for QMA evidence (DEC-0345, DEC-0317, DEC-0342)."
+schema:
+  type: memory-provider-port  # a qma-core-defined runtime port (definitions only): the MemoryProvider operation surface, the MemoryCandidate record, and the NoMemoryProvider typed refusal, implemented by a desk plugin and called by the daemon's admission gate (DEC-0342, DEC-0335)
+  operations:
+    - "propose(candidate) -> staging outcome: submit a MemoryCandidate; while no provider is bound the candidate stages under AD-22 wrapped in one `memory` RefinementProposal edit; a `propose` carrying `admission_confidence` is refused (DEC-0317, DEC-0321)"
+    - "admit(candidate) -> admitted memory: the daemon's deterministic admission gate writes the candidate through `before_memory_write` once a provider is bound; the verb is `admit`, never `promote` (DEC-0317, DEC-0345)"
+    - "recall(scope, token_budget) -> admitted memory within the budget: token-budgeted, not result-count-bounded; returns `NoMemoryProvider` when no provider is bound (DEC-0317)"
+    - "get / list / history: read-side retrieval, enumeration and supersession history of admitted memory (DEC-0317)"
+    - "supersede / invalidate / expire: lifecycle transitions that move a memory's `validation_state` to superseded, invalidated or expired (DEC-0317)"
+    - "scopes: enumerate the memory scopes the provider serves (DEC-0317)"
+    - "reflect: OPTIONAL and OFF in v1 — cognition is QMA's, not the provider's; a provider need not implement it and the daemon never calls it (DEC-0317)"
+  fields:
+    - "candidate.provenance: where the candidate came from — the source and derivation of the proposed memory (DEC-0317)"
+    - "candidate.supporting_artifacts: refs to the artifacts corroborating the candidate; an input to the gate's deterministic computation, never an agent-set confidence (DEC-0317)"
+    - "candidate.admission_confidence: a daemon-computed scalar; GATE OUTPUT ONLY — an agent may never set, suggest or influence it and a `propose` carrying it is refused (DEC-0317)"
+    - "candidate.scope: the memory scope the candidate belongs to; mandatory (DEC-0317)"
+    - "candidate.proposer: the proposing Agent's ref; mandatory (DEC-0317). `proposer` is one of the ten suffix-less cross-reference exceptions the spine's Consistency Conventions whitelist for the `_ref` law (AD-18), so the field keeps this name and never becomes `proposer_ref`"
+    - "candidate.occurrence_time: when the remembered fact occurred (DEC-0317)"
+    - "candidate.supersession: the ref to the memory this candidate supersedes, if any (DEC-0317)"
+    - "candidate.validation_state: the candidate's lifecycle state, one of the seven closed values (DEC-0317)"
+    - "cited_knowledge: when a candidate cites Knowledge, the CT-44 Citation plus its six `evidence_confidence` dimensions are stored verbatim; the two confidences are never conflated (DEC-0317, DEC-0318)"
+  enums:
+    - "validation_state: proposed | validated | admitted | superseded | invalidated | expired | contradicted — the closed seven-value lifecycle (DEC-0317)"
+    - "operation surface: propose | admit | recall | get | list | history | supersede | invalidate | expire | scopes — plus reflect (optional, off); NO promote operation exists on this port (DEC-0317, DEC-0345)"
+    - "port cardinality: singleton, scope key `desk` — exactly one provider per desk; a second binding is a hard startup error (DEC-0300, DEC-0335)"
+    - "typed refusals on this port's paths, variants of `qmf-core`'s base (CT-04): `NoMemoryProvider` (a variant returned by `recall` while no provider is bound, AD-1/AD-3); plus the parent category `invalid-input` per registry:typed_refusal_codes (a `propose` carrying `admission_confidence`, or a candidate missing its mandatory scope or proposer) (DEC-0317, DEC-0300, DEC-0302)"
+  units:
+    - "recall is TOKEN-BUDGETED: the budget is a token count the caller supplies, never a result count; the provider returns as much admitted memory as fits it (DEC-0317)"
+    - "admission_confidence is a single scalar the daemon computes; it carries no units of an agent's choosing and is never averaged with any knowledge confidence (DEC-0317, DEC-0318)"
+  nullability:
+    - "admission_confidence is ABSENT on a `propose` call — it is a gate output, and a candidate arriving with it set is an `invalid input` refusal, never a best-effort read (DEC-0317)"
+    - "candidate scope and proposer are mandatory; supersession is optional (absent when the candidate supersedes nothing) and its absence is an omitted key, never a null (DEC-0317)"
+    - "while no provider is bound, `recall` returns the typed refusal `NoMemoryProvider` and never an empty result silently standing in for absent memory (DEC-0317, DEC-0342)"
+provenance_note: "CT-43 is newly minted by the 2026-08-28 QMA architecture sitting as the qma-core MemoryProvider port (AD-18), absorbed into docs/ under the operator's order SRC-15 (2026-08-29); it realizes AD-18 (DEC-0317) with the no-memory-engine-in-house ruling (DEC-0342), the admit-not-promote closed-verb ruling (DEC-0345), the AD-1 port cardinality and NoMemoryProvider typed refusal (DEC-0300), the AD-22 staging seam for the unbound path (DEC-0321), the AD-10 before_memory_write hook (DEC-0309) and AD-3's no-parallel-base rule for the refusal variant (DEC-0302). The spine is FINAL and its multi-round validation pass closed verified=true dry=true remaining=0 on 2026-08-29 (DEC-0329). Hindsight (v0.9.2) as the deferred first backend behind a QMA-owned eval is GAP-0072. The contract is defined-unwired: no code exists, and implementation authorization arrives only through the factory pipeline. Nothing in this doc grants credential, order, promotion, live-money or destructive authority."
