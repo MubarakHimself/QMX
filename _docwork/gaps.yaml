@@ -510,6 +510,8 @@ gaps:
     answer: null
     note: "Trading-node increment 2026-08-29. TN-19 makes the SEAM explicit V1 node work — candidate-labeler registration, the shadow snapshot stream, the comparison read model, and shadow_composition_fp kept apart from composition_fp so registering or changing a candidate never re-identifies governed evidence (DEC-0204). V1 binds no trained model and the labelers stay rule-based; the live binding, the quarterly training cadence and the re-certification cadence are all this gap. The operator ruled MIS training LAST in the sequence (DEC-0215), and the PRD section 6 doctrine this rests on is ratified by adoption (DEC-0238). Do NOT close this gap here."
     date: 2026-08-29
+    veto_round_note: "Operator 2026-08-30 (DEC-0261): asked for the training plan before epics; accepts training on his own machine but warns it is slow and the data must be fetched, cleaned and categorised across all sessions; wants epics to run in parallel on separate branches. Guidance for the epics session: this epic may run in PARALLEL on its own branch (it touches no node code until the shadow lane consumes a candidate), its first story is research-first (labeler candidates, data windows across sessions, evaluation - the corpus names no models), and the compute location (operator machine / factory sandbox / rented hours) is the operator's call at epic time."
+    catalog_note: "Starting inventory (mined corpus, prd discovery mine-node.md section 3; DEC-0262): six rule-based labelers (identity, spread-state, gap-event, feed-state, SQS, degraded-sensors), one fitted (liquidity_stress_v1, CPU quantile fit), one trained (regime_classifier_v1) with no ratified model family, hyperparameters, label-generation method or training location - the design story; recovered candidates Kronos, HMM, BOCPD, MS-GARCH carry no authority without fresh ratification. Operator 2026-08-30: the LAST epic under the trading node; training = a script the operator runs on his own machine, hours, seed recorded."
 
   - id: GAP-0052
     question: "What is the hot-apply path for a settings change — which resolved-config keys may take effect without a new boot epoch, and on what evidence?"
@@ -566,8 +568,9 @@ gaps:
     needed_by: [COMP-QMN, COMP-QMF-RISK, COMP-QML]
     blocking: false
     recommendation: "Keep the inherited admission row as ratified (no probation, no paper-performance gate): the only warm-up the corpus carries is the deploy-level first-deploy soak week (TN-9, DEC-0194, DEC-0212), and the agentic system's own paper-trading period before a bot returns for promotion is outside this layer (R3, DEC-0213). If the operator wants a per-bot warm-up after activation, it is a Book-level admission or seat-allowance ramp declared at the settings surface (a CT-22 admission_bar row), never node architecture - a one-line ruling either way."
-    status: open
-    answer: null
+    status: answered
+    answer: "NO per-bot warm-up, probation, ramp or paper lane on the node, ever (operator direct, 2026-08-30, DEC-0261): a bot's backtesting, iteration and paper trading happen before promotion and outside the node; by promotion it is known ready for live capital, and everything on the node carries the operator's approval to touch money; the only route back to paper is a BMS/Book protective demotion after a drawdown or bench event. One added rule: a bot promoted mid-day does not trade until the next trading day (activation takes effect at the next day boundary of the account-scoped day-boundary calendar)."
+    answered_by: operator (documentation-factory veto round 2026-08-30)
     note: "Surfaced by the transcript scan of SRC-12 (uncarried statement U1, EXT-2162): in the promotion ruling the operator recalled 'not every bot starts trading right away. I do recall there is some sort of warm-up period, unless I'm wrong.' Neither the memlog nor the spine answers it; the memlog folds it into his separate sentence about the agentic system's pre-promotion paper period. Cheap veto: default = the inherited admission row stands and no per-bot warm-up exists in V1 (DEC-0259)."
     date: 2026-08-29
 
@@ -774,3 +777,13 @@ gaps:
     answer: null
     note: "An optional operator aid over the whole QMA spine; not a component obligation. Revisit after the spine is reviewed."
     date: 2026-08-29
+
+  - id: GAP-0058
+    question: "The single-machine placement variant is IN SCOPE (operator 2026-08-30, DEC-0262): the node co-located with the agentic system on one box as one installed QMX application, set up out of the box without technical knowledge. What is its design - supervision without systemd, the secret store without systemd-creds host-key sealing, the powers channel without a unix socket, the observability stack placement, containers where needed, and the self-setup installer the UI later fronts - and what re-scopes the V1 VPS-only refusal?"
+    needed_by: [COMP-QMN]
+    blocking: false
+    recommendation: "Rule it in a one-shot architecture increment BEFORE the variant's epic; the VPS epics proceed now. Not a second product: placement is the roster's VPS machine tuple (DEC-0188) plus the V1 enforcement that the composition root refuses to compose off that tuple and the SecretStore refuses a venue-session holder off that host (DEC-0236 ruling 18). A co-located variant = naming that machine as the tuple and lifting the refusal by a later ruling, with the reasons for the refusal (the venue session secret lives there; the box must stay up 24/5 while the operator's laptop sleeps; broker latency) weighed at that time. Defer until the UI and the agentic system exist on a machine."
+    status: open
+    answer: null
+    note: "Flipped from deferred to OPEN (non-blocking) by the operator in the second exchange of the veto round 2026-08-30 ('let's do the two variants, please... I have a colleague who might want to try this out'; 'the backend should set itself up... If you need Docker, you use Docker'). Raised by the operator at the veto round 2026-08-30 ('is it possible to have two variants of this trading node? One that can run on the same machine... as the agentic system'); recorded as deferred, never a second product (DEC-0261)."
+    date: 2026-08-30

@@ -4,10 +4,10 @@ title: QMF Test Strategy
 type: lens
 status: ratified
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP, COMP-QMN, COMP-CTRADER, COMP-DUKASCOPY, COMP-CALENDAR-FEED, COMP-OBJECT-STORAGE]
-decisions: [DEC-0004, DEC-0007, DEC-0008, DEC-0009, DEC-0013, DEC-0022, DEC-0026, DEC-0029, DEC-0030, DEC-0031, DEC-0033, DEC-0038, DEC-0041, DEC-0044, DEC-0045, DEC-0046, DEC-0054, DEC-0060, DEC-0061, DEC-0074, DEC-0076, DEC-0080, DEC-0092, DEC-0096, DEC-0099, DEC-0100, DEC-0101, DEC-0102, DEC-0103, DEC-0104, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0113, DEC-0114, DEC-0115, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0126, DEC-0127, DEC-0128, DEC-0129, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0147, DEC-0148, DEC-0149, DEC-0150, DEC-0151, DEC-0152, DEC-0153, DEC-0154, DEC-0155, DEC-0157, DEC-0158, DEC-0191, DEC-0195, DEC-0196, DEC-0201, DEC-0202, DEC-0204, DEC-0205, DEC-0206, DEC-0208, DEC-0209, DEC-0228, DEC-0234, DEC-0236]
+decisions: [DEC-0004, DEC-0007, DEC-0008, DEC-0009, DEC-0013, DEC-0022, DEC-0026, DEC-0029, DEC-0030, DEC-0031, DEC-0033, DEC-0038, DEC-0041, DEC-0044, DEC-0045, DEC-0046, DEC-0054, DEC-0060, DEC-0061, DEC-0074, DEC-0076, DEC-0080, DEC-0092, DEC-0096, DEC-0099, DEC-0100, DEC-0101, DEC-0102, DEC-0103, DEC-0104, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0113, DEC-0114, DEC-0115, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0126, DEC-0127, DEC-0128, DEC-0129, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0147, DEC-0148, DEC-0149, DEC-0150, DEC-0151, DEC-0152, DEC-0153, DEC-0154, DEC-0155, DEC-0157, DEC-0158, DEC-0191, DEC-0195, DEC-0196, DEC-0201, DEC-0202, DEC-0204, DEC-0205, DEC-0206, DEC-0208, DEC-0209, DEC-0228, DEC-0234, DEC-0236, DEC-0261]
 sources: [_docwork/ledger.yaml, _docwork/gaps.yaml, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, _docwork/feature_inventory.yaml, docs/constitution.md, docs/architecture/dependencies.yaml, docs/decisions/ADR-0019-trading-node.md, docs/components/trading-node.md, docs/registry/variables.yaml, docs/components/, docs/contracts/]
 generated: 2026-08-18
-verified: 2026-08-29
+verified: 2026-08-30
 stale_after: 30d
 ---
 
@@ -189,7 +189,8 @@ The soak acceptance gate for the live milestone — the soak being the **full fi
 - **A simulated clock-band breach produces the entry-side `no-new-entry` effect and pushes an alert.**
 - **The powers door refuses a call whose peer credential is neither declared principal, and refuses every trading, protection, promotion and settings power to the ops principal — an agent signer among them** (DEC-0202, DEC-0234).
 - **A `value-status` countersign carrying the variable's evidence citation flips a provisional live-gating value to `ratified`; a countersign without one is refused as `invalid input`; and the promotion battery refuses before the countersign and passes after** (DEC-0205).
-- **The dead-man's switch alerts the operator's device when the heartbeat stops**, and a synthetic alert is proven delivered end to end before the node is left unattended.
+- **A bot promoted or activated during a trading day is proven not to trade until the next trading day** — activation takes effect at the next day boundary of the account-scoped day-boundary calendar, with no manual override, and there is no per-bot warm-up, probation or ramp on the node (DEC-0261).
+- **The liveness heartbeat (formerly the dead-man's switch) alerts the operator's device when the alive-ping stops** — notification only, zero authority — and a synthetic alert is proven delivered end to end before the node is left unattended (DEC-0261).
 - **The venue conformance double and the live client both pass one suite, and SCN-0006, SCN-0008, SCN-0010 and SCN-0011 are wired and proven.**
 - **A replay of a recorded soak day diffs clean from a process outside the node, resolving no credential.**
 - **Metrics, health and alerts are observed; the observability stack stands up from its checked-in compose file under its own unit and account, its seeded dashboards rendering the exported signals for the whole unattended week, and the node is proven to run unchanged when the stack is stopped.**

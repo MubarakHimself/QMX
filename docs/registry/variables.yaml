@@ -1507,8 +1507,8 @@ variables:
     blank_effect: [blocks-soak]
     notes: "The journald SystemMaxUse size cap on the operator-log stream, a named line item of vps_disk_budget (TN-15/DEC-0200, TN-3/DEC-0188). Key name minted at implementation, which may rename it. Value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203)."
 
-  # --- External dead-man's switch (TN-15/DEC-0200) ---
-  - name: dead_mans_switch_endpoint
+  # --- Liveness heartbeat (formerly the external dead-man's switch) (TN-15/DEC-0200) ---
+  - name: liveness_heartbeat_endpoint
     symbol: null
     value: declared-per-node
     formula: null
@@ -1520,9 +1520,9 @@ variables:
     owner_scope: node-and-ops
     value_status_required: true
     blank_effect: [blocks-soak]
-    notes: "The off-VPS watcher endpoint the external dead-man's switch heartbeats to; the watcher alerts on a MISSING ping because a dead node cannot alarm about itself (TN-15/DEC-0200). Key name minted at implementation, which may rename it. Alert-class membership is NOT a registry row — FAILURES.md's notification-tier column is its sole home (DEC-0200, DEC-0256). Value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203)."
+    notes: "The off-VPS free-tier watcher endpoint the liveness heartbeat sends its outbound alive-ping to; the watcher alerts on a MISSING ping because a dead node cannot alarm about itself (TN-15/DEC-0200). Formerly dead_mans_switch_endpoint; renamed by the operator 2026-08-30 (DEC-0261) — notification only, zero authority, it can never stop entries, close positions or touch the node. Key name minted at implementation, which may rename it. Alert-class membership is NOT a registry row — FAILURES.md's notification-tier column is its sole home (DEC-0200, DEC-0256). Value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203)."
 
-  - name: dead_mans_switch_cadence
+  - name: liveness_heartbeat_cadence
     symbol: null
     value: declared-per-node
     formula: null
@@ -1534,9 +1534,9 @@ variables:
     owner_scope: node-and-ops
     value_status_required: true
     blank_effect: [blocks-soak]
-    notes: "The heartbeat cadence of the external dead-man's switch (TN-15/DEC-0200). Key name minted at implementation, which may rename it. Value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203)."
+    notes: "The cadence of the liveness heartbeat's outbound alive-ping (TN-15/DEC-0200). Formerly dead_mans_switch_cadence; renamed by the operator 2026-08-30 (DEC-0261) — notification only, zero authority. Key name minted at implementation, which may rename it. Value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203)."
 
-  - name: dead_mans_switch_token_reference
+  - name: liveness_heartbeat_token_reference
     symbol: null
     value: declared-per-node
     formula: null
@@ -1548,7 +1548,7 @@ variables:
     owner_scope: node-and-ops
     value_status_required: true
     blank_effect: [blocks-soak]
-    notes: "The credential REFERENCE for the dead-man's-switch heartbeat token — a reference, never the secret value (TN-15/DEC-0200, TN-12/DEC-0197). Key name minted at implementation, which may rename it. Value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203)."
+    notes: "The credential REFERENCE for the liveness heartbeat token — a reference, never the secret value (TN-15/DEC-0200, TN-12/DEC-0197). Formerly dead_mans_switch_token_reference; renamed by the operator 2026-08-30 (DEC-0261) — notification only, zero authority. Key name minted at implementation, which may rename it. Value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203)."
 
   # --- Evidence channel and governor budgets (TN-17/TN-19/TN-21/TN-23) ---
   - name: evidence_channel_budget

@@ -553,40 +553,131 @@ ratification through the settings surface), GAP-0016/0017, GAP-0048/0049,
 the MIS training epic. Then prompt 14 (epics for the node).
 ```
 
-## 14. Epics and stories — TRADING NODE (run after prompt 13 lands)
+## 14. Epics and stories — TRADING NODE (rewritten 2026-08-30 after the docs increment and the veto round; run this next)
 
 ```
-Run /bmad-create-epics-and-stories for the trading node. Intake: the node
-spine (architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, FINAL) + its
-memlog + docs/ after the trading-node increment (docs/ is the requirements
-body; epics.md is what the factory codes — "what you see is what you
-code"). Target: a SMALL epic set (5–8), wave plan, paper-milestone epics
-first, routed for the Grok epic-factory lane (`/run-epics` in the Grok
-plugin, 4.5 workhorse / 4.6 orchestrator+reviewer); validate with the usual
-validator workflow; record factory-time ruling items explicitly. Base:
-origin/integration@ef9bb25 (re-point onto main after the operator's
-squash-merge). Sequencing rules: the cTrader transport increment (in
-qmf-venue's ConnectionManager, A37) + VenueClientPort is coded FIRST against
-the venue conformance double and is the first story unblocked by the
-Spotware tokens for its live test; every QA-debt id becomes a named story
-(QMX-F045, F046, F062, F063, F064, F067, F068, F069, F102, D008, D010,
-E15-F01/F02/F03, E7-R28, E9-F04, E12-F01/F04/F05); the TN-23 soak
-acceptance checklist is the paper-milestone epic's acceptance; MIS training
-+ shadow rollout is the LAST epic (follow-on). Suggested waves: W1 host +
-config + doors + observability (boot ceremony, stand-down/resurrect, check
-mode, config compiler + value-status, three doors, logs/metrics/health/
-alerts, toolkit recipes, systemd units, ubuntu-24.04 CI lane, observability
+Run /bmad-create-epics-and-stories for the trading node. Fully autonomous
+session; ask me only for money, vocabulary I care about, or irreversible
+scope. Use dynamic workflows and subagents: bulk-worker for fan-out, Opus 5
+for synthesis and adversarial verdicts, Sonnet 5 for light stages; no Fable
+subagents.
+
+Intake (docs/ is the requirements body — "what you see is what you code";
+the spine is background only): docs/components/trading-node.md (COMP-QMN,
+every TN-1..TN-25 section), docs/decisions/ADR-0019-trading-node.md,
+docs/architecture/overview.md (deployment view + process internals),
+docs/architecture/dependencies.yaml (COMP-QMN edges), docs/registry/
+variables.yaml (the 71 node rows with blank-effect tags and
+value_status_required), the lens pages (ops runbook + incident playbook,
+observability logging-spec + metrics-and-alerts, security-model,
+test-strategy + fixtures, performance budgets, data-layer, bugs triage),
+the contracts CT-13/14/18/19/20/21/24/25/28/30/31 as annotated, the
+glossary, and _docwork/feature_inventory.yaml FEAT-0031 (its blocked_by
+reasons are the ordering). Ledger DEC-0186..DEC-0262; gaps GAP-0050..
+GAP-0058 (0057 answered, 0058 OPEN and in scope, the rest deferred). Existing epics.md carries
+epics 1–23 (shipped) — number the node epics from 24; the QMA epics draft
+parked at _docwork/qma/epics-draft/ is NOT in scope (operator ruling
+2026-08-30: QMA is documentation only).
+
+Base: main@361ae2c carries the docs; code lives on origin/integration@
+ef9bb25 until the operator's squash-merge click — write the epics against
+that code base and re-point onto main after the click.
+
+Target: a SMALL epic set (5–8), a wave plan, paper-milestone epics first,
+routed for the Grok epic-factory lane (/run-epics in the Grok plugin, 4.5
+workhorse / 4.6 orchestrator + reviewer). The operator wants throughput:
+epics that can run in parallel on disjoint branches must be marked so, and
+no epic may block on a human step it does not need. Validate with the usual
+validator workflow; record factory-time ruling items explicitly.
+
+Binding rulings to carry into every epic (already in docs/, DEC-0261):
+- There is NO operator command line. Every operator act is a powers-channel
+  call the desktop UI makes later; deployment tooling is `just node-…`
+  recipes (DevOps, never a trading control). Do not write a CLI story.
+- ONE product, modes paper|live; NO per-bot warm-up, probation, ramp or
+  paper lane on the node — bots arrive backtested and paper-tested outside
+  the node (QMB) and operator-approved; the only route back to paper is the
+  BMS/Book protective demotion. Activation takes effect at the next day
+  boundary of the account-scoped day-boundary calendar (a mid-day promotion
+  trades from the next trading day). No manual override.
+- The soak = the full first-deployment week, unattended, whole system on the
+  demo account, TN-23 acceptance checklist = the paper-milestone epic's
+  acceptance; the live connection opens for sensing-and-recording only once
+  credentials exist; VPS procurement gates the soak, Spotware approval +
+  live KYC gate go-live only.
+- Forex Factory's free weekly file is the SOLE news-calendar source; no paid
+  fallback story, ever.
+- Alerts: the closed allow-list generated from FAILURES.md + the accepted
+  silent-degradation class + the liveness heartbeat (renamed from dead-man's
+  switch; outbound alive-ping to a free off-VPS watcher; notification only,
+  zero authority). The daily liveness digest is REJECTED — no story. The
+  Prometheus/Grafana/Loki-class stack is a SEPARATE zero-authority system
+  under qmn/deploy/observability/ (the only place containers are allowed;
+  the node itself is a plain systemd service on Ubuntu 24.04).
+- Costs already accepted: Backblaze B2 bucket via rclone; the observability
+  stack on the same VPS. VPS spec is measured by the node's own benchmark in
+  the soak's first hours (procurement starting point, evidence only: 4 vCPU,
+  8 GB RAM, ~100 GB SSD, near the broker's cTrader server).
+- TWO PLACEMENT VARIANTS are in scope (DEC-0262, GAP-0058 open): the VPS
+  variant (build it now, as ratified) and a SINGLE-MACHINE variant (the node
+  co-located with the agentic system as one installed QMX application, set
+  up out of the box by a non-technical operator; Docker where it earns its
+  place; the UI fronts an install page later). The single-machine variant
+  and the self-setup installer are DESIGN-OWED: mint ONE epic for them whose
+  first story is "run a one-shot bmad-architecture change increment for
+  GAP-0058 (supervision without systemd, secrets without systemd-creds,
+  powers channel without a unix socket, observability placement,
+  installer)"; no other story in that epic starts before that ruling lands,
+  and NO VPS epic blocks on it. Do not design the variant inside stories.
+- qmn.venue is the ONE sanctioned qmf-venue importer; the cTrader transport
+  increment lands in qmf-venue's ConnectionManager (A37) with the
+  qmf.venue.connection async exemption; if the parent refuses the exemption
+  it lands in qmn.venue.ctrader — the epics may not choose between them,
+  they carry both as the declared fallback.
+
+Sequencing rules: the cTrader transport increment + VenueClientPort (three
+implementations: cTrader client, replay adapter, the FEAT-0023 conformance
+double) is coded FIRST against the conformance double and is the first
+story unblocked by the Spotware tokens for its live test; every QA-debt id
+becomes a named story (QMX-F045, F046, F062, F063, F064, F067, F068, F069,
+F102, D008, D010, E15-F01/F02/F03, E7-R28, E9-F04, E12-F01/F04/F05); the
+stale packages/qmf-venue/README.md correction is a story; the four golden
+scenarios SCN-0006/0008/0010/0011 are wired and proven by the node; nightly
+mutmut extends to the node money-path modules on the code-carrying branch.
+
+Suggested waves: W1 host + config + doors + observability (boot ceremony,
+stand-down/resurrect, check mode, config compiler + value-status, three
+doors, logs/metrics/health/alerts incl. the liveness heartbeat, toolkit
+recipes, the five systemd units, ubuntu-24.04 CI lane, observability
 compose); W2 venue transport (qmf-venue) + VenueClientPort + accumulator +
 per-stream loop + order-path wiring + conformance double; W3 protection set
-+ TN-25 ledger + paper + reconciliation + KSA; W4 data (live CT-10 producer,
-bootstrap, calendar timer, backups + drills, evidence tier, hub) + secrets
-wizard + replay; W5 the paper-soak epic (deploy to the VPS, week-long
-unattended soak, checklist, benchmark baselines) = the live-milestone gate;
-W6 MIS training + shadow rollout. Human-only steps to list inside the
-epics: Spotware app approval + sandbox token (Applications → Sandbox → Get
-token), VPS procurement (modest; the soak measures), live KYC, the
-swap-free admin-fee schedule in writing, the bucket account, backup-key
-escrow, the notification-channel account.
++ TN-25 virtual ledger + paper/demotion + reconciliation (four verdicts,
+two residuals) + KSA; W4 data (live CT-10 producer, bootstrap, news-calendar
+timer, backups + the three restore drills, evidence tier + sealed-archive,
+hub) + secrets wizard + replay; W5 the paper-soak epic (deploy to the VPS,
+the unattended week, checklist, benchmark baselines) = the live-milestone
+gate; W6 MIS training + shadow rollout — the LAST epic, but mark it
+PARALLEL-CAPABLE on its own branch from W3 onward (it touches no node code
+until the shadow lane consumes a candidate): starting inventory = the
+ratified labeler catalog (six rule-based: identity, spread-state,
+gap-event, feed-state, SQS, degraded-sensors; one fitted:
+liquidity_stress_v1, CPU quantile fit; one trained: regime_classifier_v1
+with NO ratified model family, hyperparameters, label-generation method or
+training location; recovered candidates Kronos/HMM/BOCPD/MS-GARCH carry no
+authority) — so the first story is the regime_classifier_v1 DESIGN (model
+family, features, label generation, data windows across all sessions,
+evaluation), then data fetch/clean/label, then offline training as a
+script the operator runs on his own machine (hours; seed and data window
+recorded), model registration as versioned artifacts, shadow rollout,
+re-certification over one full affected-Book cycle. Sequencing: W6 is the
+LAST epic in importance; the fitted liquidity_stress_v1 needs no epic of
+its own and ships with the rule-based labelers in W3. Human-only
+steps to list inside the epics, never as blockers of unrelated epics:
+Spotware app approval + sandbox token (Applications → Sandbox → Get token),
+VPS procurement (an existing Linux VPS may serve the demo window), live
+KYC, the swap-free admin-fee schedule in writing, the bucket account, the
+backup-key escrow, the notification-channel account, the liveness-heartbeat
+watcher account (free tier).
 ```
 
 ## 15. RESUME — QMA spine validation — OBSOLETE (closed dry 2026-08-29; the spine is export-ready — run prompt 12 directly)

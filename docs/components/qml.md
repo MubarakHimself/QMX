@@ -5,10 +5,10 @@ type: component-spec
 status: ratified
 component: COMP-QML
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-RISK]
-decisions: [DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184, DEC-0185, DEC-0017, DEC-0024, DEC-0090, DEC-0169, DEC-0186, DEC-0204, DEC-0259]
+decisions: [DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184, DEC-0185, DEC-0017, DEC-0024, DEC-0090, DEC-0169, DEC-0186, DEC-0204, DEC-0259, DEC-0261]
 sources: [DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184, DEC-0185, _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, docs/decisions/ADR-0018-qml-bot-authoring-library.md, docs/decisions/ADR-0019-trading-node.md, docs/architecture/dependencies.yaml, docs/contracts/ct-33-bot-definition.yaml, docs/contracts/ct-34-confluence.yaml, docs/contracts/ct-06-registration.yaml, docs/contracts/ct-22-book-charter.yaml, docs/contracts/ct-23-risk-evaluation.yaml, docs/contracts/ct-28-book-binding.yaml, docs/contracts/ct-29-exit-record.yaml, docs/contracts/ct-16-indicator.yaml, docs/contracts/ct-17-causal-structure.yaml, docs/contracts/ct-18-venue-capabilities.yaml, docs/contracts/ct-01-money-quantity.yaml, docs/contracts/ct-04-typed-refusal.yaml, docs/contracts/ct-05-version-fingerprint.yaml, docs/contracts/ct-07-lineage-edge.yaml]
 generated: 2026-08-21
-verified: 2026-08-29
+verified: 2026-08-30
 stale_after: 90d
 ---
 
@@ -166,7 +166,7 @@ Deferred means deferred, with named seams (DEC-0184): the **declarative conditio
 
 ## Trading-node increment (2026-08-29)
 
-The trading node (`COMP-QMN`, code name `qmn`) is the runtime host of QML's bot seats; it was absorbed into `docs/` at the 2026-08-28 trading-node sitting, adopted in full and ratified by operator delegation plus four direct rulings (DEC-0259). The node is an application built ON QMF exactly as QML is, and nothing imports `qmn`; QML does not depend on the node, and QL-10's build order stands — QMF core, then QML alongside QMB, then the trading node hosting seats (DEC-0186, DEC-0180). See [COMP-QMN](trading-node.md) for the node's own spec.
+The trading node (`COMP-QMN`, code name `qmn`) is the runtime host of QML's bot seats; it was absorbed into `docs/` at the 2026-08-28 trading-node sitting, adopted in full and ratified by operator delegation plus four direct rulings (DEC-0259). The node is an application built ON QMF exactly as QML is, and nothing imports `qmn`; QML does not depend on the node, and QL-10's build order stands — QMF core, then QML alongside QMB, then the trading node hosting seats (DEC-0186, DEC-0180). QML's conformance ticket is part of the bot's pre-promotion journey: a bot is authored, made conformant, backtested and paper stress-tested BEFORE promotion and OUTSIDE the node, so the node hosts only promoted, operator-approved bots and runs no per-bot warm-up, probation, ramp or paper lane (operator direct, 2026-08-30) (DEC-0261). See [COMP-QMN](trading-node.md) for the node's own spec.
 
 ### The node hosts QL-7 seats
 
