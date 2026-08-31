@@ -1,0 +1,109 @@
+"""Closed-and-addable vocabularies declared in qma-core (FR-Q08, FR-Q10).
+
+Every member identifies the architecture decision that owns any extension.
+Locally invented values fail executable validation. Serialization is
+``lower_snake_case`` except ``ModelClass`` (SCREAMING_SNAKE) and handle kinds
+(CamelCase type names) (AR-Q14).
+"""
+
+from __future__ import annotations
+
+from qma.core.vocabulary.acts import (
+    ACT_TARGET,
+    GovernedAct,
+    GovernedActTarget,
+    validate_governed_act,
+)
+from qma.core.vocabulary.enums import (
+    TASK_EMITTING_NODE_KINDS,
+    DeliveryState,
+    ExecutionEnvironmentKind,
+    GraphArtifactKind,
+    HandleKind,
+    HookControl,
+    HookResultDecision,
+    HookVerb,
+    JobHandleState,
+    MemoryValidationState,
+    MessageKind,
+    ModelClass,
+    NetworkPolicy,
+    NodeKind,
+    PrincipalClass,
+    RefinementEditKind,
+    RoutingPolicy,
+    TaskMissionState,
+    VariableScope,
+)
+from qma.core.vocabulary.handles import (
+    MONEY_PATH_LIVE_WRITABLE_HANDLE_KINDS,
+    READ_ONLY_EVIDENCE_HANDLE_KINDS,
+    assert_handle_kind_not_money_path,
+)
+from qma.core.vocabulary.hooks import (
+    HOOK_CONTROLS,
+    HOOK_EVENT_NAMES,
+    HOOK_RESULT_PRECEDENCE,
+    HOOK_VERBS,
+    build_hook_event_names,
+    hook_result_rank,
+    most_restrictive_hook_result,
+    parse_hook_event_name,
+)
+from qma.core.vocabulary.principals import (
+    assert_no_principal_conversion,
+    may_convert_principal,
+)
+from qma.core.vocabulary.registry import (
+    CLOSED_VOCABULARIES,
+    HOST_REQUEST_OWNING_AD,
+    HOST_REQUEST_VOCABULARY_OWNER,
+    ClosedVocabulary,
+    VocabularyError,
+    parse_closed,
+)
+
+__all__ = [
+    "ACT_TARGET",
+    "CLOSED_VOCABULARIES",
+    "HOOK_CONTROLS",
+    "HOOK_EVENT_NAMES",
+    "HOOK_RESULT_PRECEDENCE",
+    "HOOK_VERBS",
+    "HOST_REQUEST_OWNING_AD",
+    "HOST_REQUEST_VOCABULARY_OWNER",
+    "MONEY_PATH_LIVE_WRITABLE_HANDLE_KINDS",
+    "READ_ONLY_EVIDENCE_HANDLE_KINDS",
+    "TASK_EMITTING_NODE_KINDS",
+    "ClosedVocabulary",
+    "DeliveryState",
+    "ExecutionEnvironmentKind",
+    "GovernedAct",
+    "GovernedActTarget",
+    "GraphArtifactKind",
+    "HandleKind",
+    "HookControl",
+    "HookResultDecision",
+    "HookVerb",
+    "JobHandleState",
+    "MemoryValidationState",
+    "MessageKind",
+    "ModelClass",
+    "NetworkPolicy",
+    "NodeKind",
+    "PrincipalClass",
+    "RefinementEditKind",
+    "RoutingPolicy",
+    "TaskMissionState",
+    "VariableScope",
+    "VocabularyError",
+    "assert_handle_kind_not_money_path",
+    "assert_no_principal_conversion",
+    "build_hook_event_names",
+    "hook_result_rank",
+    "may_convert_principal",
+    "most_restrictive_hook_result",
+    "parse_closed",
+    "parse_hook_event_name",
+    "validate_governed_act",
+]
