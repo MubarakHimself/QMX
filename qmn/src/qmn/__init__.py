@@ -6,7 +6,8 @@ engine, and never an operator CLI (DEC-0186, DEC-0211, DEC-0220).
 
 ``qmn.venue`` is the one sanctioned importer and wirer of ``qmf-venue`` (DEC-0241);
 every other ``qmn`` module receives :class:`~qmn.venue.VenueClientPort` and the
-CT-19/CT-20 shapes re-exported there. Nothing imports ``qmn``.
+CT-19/CT-20 shapes re-exported there. ``qmn.loop`` drives QMB ``run_slice``
+unforked behind the recording accumulator (DEC-0190). Nothing imports ``qmn``.
 
 ``__version__`` is display-only SemVer provenance and never enters ``fp1``
 (DEC-0186).
@@ -14,6 +15,25 @@ CT-19/CT-20 shapes re-exported there. Nothing imports ``qmn``.
 
 from __future__ import annotations
 
+from qmn.loop import (
+    DATA_QUALITY_EVENT_TYPE,
+    PINNED_SUBPHASES,
+    CommandStreamLoop,
+    CycleBand,
+    InboundObservation,
+    InterpretationCursor,
+    ObservationClass,
+    RecordingAccumulator,
+    SliceDriveResult,
+    classify_observation,
+    clear_first_writer_registry,
+    entry_side_refused,
+    first_writer_for,
+    forming_bars_actionable,
+    forming_bars_visible,
+    protection_enactable,
+    stream_key,
+)
 from qmn.venue import (
     ASYNC_EXEMPTION_MODULE,
     CONFORMANCE_CASES,
@@ -36,21 +56,38 @@ from qmn.venue import (
 __all__ = [
     "ASYNC_EXEMPTION_MODULE",
     "CONFORMANCE_CASES",
+    "DATA_QUALITY_EVENT_TYPE",
     "FTR04_DISPOSITION",
+    "PINNED_SUBPHASES",
     "TRANSPORT_LOCUS",
+    "CommandStreamLoop",
     "ConformanceCase",
     "ConformanceDouble",
+    "CycleBand",
+    "InboundObservation",
+    "InterpretationCursor",
     "LiveCTraderClient",
+    "ObservationClass",
     "ParentAsyncExemptionDisposition",
     "PositionModel",
+    "RecordingAccumulator",
+    "SliceDriveResult",
     "VenueClientKind",
     "VenueClientPort",
     "VenueClientSelection",
     "WireKind",
     "__version__",
+    "classify_observation",
+    "clear_first_writer_registry",
     "compound_command_acceptance_blocked",
+    "entry_side_refused",
+    "first_writer_for",
+    "forming_bars_actionable",
+    "forming_bars_visible",
+    "protection_enactable",
     "resolve_transport_locus",
     "select_venue_client",
+    "stream_key",
 ]
 
 # Display-only provenance — never part of fp1 identity (DEC-0186).

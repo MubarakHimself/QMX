@@ -116,8 +116,9 @@ qml = { workspace = true }
 # click and optuna are declared only in qmb's own pyproject.
 qmb = { workspace = true }
 # The qmn application-layer member, referenced by qmn-lib below so `import qmn`
-# resolves in the gate environment (Story 24.1; DEC-0186). qmn declares qmf-core
-# and qmf-venue (sanctioned at qmn.venue only); protobuf stays in qmf-venue.
+# resolves in the gate environment (Story 24.1; DEC-0186). qmn declares qmf-core,
+# qmf-venue (sanctioned at qmn.venue only), and qmb (Story 24.4 unforked loop);
+# protobuf stays in qmf-venue.
 qmn = { workspace = true }
 
 [dependency-groups]
@@ -196,8 +197,8 @@ qml-lib = ["qml"]
 qmb-lib = ["qmb"]
 
 # The qmn trading node, provisioned by default. Installs the qmn workspace member
-# so `import qmn` resolves under `poe test` / `poe types`. qmn declares qmf-core
-# and qmf-venue only at Story 24.1 (DEC-0186, DEC-0241); protobuf stays declared
+# so `import qmn` resolves under `poe test` / `poe types`. qmn declares qmf-core,
+# qmf-venue (DEC-0186, DEC-0241), and qmb (Story 24.4); protobuf stays declared
 # only in qmf-venue. Kept out of `dev` so the SSSF factory-gate contract stays
 # byte-stable.
 qmn-lib = ["qmn"]

@@ -1457,12 +1457,14 @@ name = "qmn"
 version = "0.1.0"
 source = { editable = "qmn" }
 dependencies = [
+    { name = "qmb" },
     { name = "qmf-core" },
     { name = "qmf-venue" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "qmb", editable = "qmb" },
     { name = "qmf-core", editable = "packages/qmf-core" },
     { name = "qmf-venue", editable = "packages/qmf-venue" },
 ]
