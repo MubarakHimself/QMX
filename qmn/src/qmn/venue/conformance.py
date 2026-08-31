@@ -41,6 +41,12 @@ from qmf.venue.commands import (
 from qmf.venue.events import Reconciliation, ReconciliationVerdict, SubjectResolution
 
 from qmn.venue.port import VenueClientKind, VenueClientPort
+from qmn.venue.verify import (
+    VenueFactVerification,
+    VenueFactVerifier,
+    conformance_measured_facts,
+    ctrader_static_declaration,
+)
 
 __all__ = [
     "CONFORMANCE_CASES",
@@ -111,6 +117,8 @@ class ConformanceDouble:
     _observations: list[dict[str, object]] = field(default_factory=list[dict[str, object]])
     _capabilities_verified: bool = False
     _ordinal: int = 0
+    _verification: VenueFactVerification | None = None
+    _verifier: VenueFactVerifier | None = None
 
     @classmethod
     def try_create(cls, world: object, venue_id: object) -> Result[ConformanceDouble]:
@@ -227,7 +235,13 @@ class ConformanceDouble:
         return Ok(True)
 
     def verify_capabilities(self) -> Result[Mapping[str, object]]:
-        if not self._session_open:
+        """Run Story 24.2 CT-18 verify-or-refuse against synthetic measured facts.
+
+        Static declaration stays distinct from the measured observation profile.
+        No network and no Spotware token — the credentialed live path is tagged
+        ``@pytest.mark.live`` separately.
+        """
+        if not self._session_open or self._account is None:
             return TypedRefusal(
                 category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
                 retryability=Retryability.AFTER_CONDITION,
@@ -237,16 +251,67 @@ class ConformanceDouble:
                 },
                 after_condition_descriptor="open_session",
             )
+        declaration = ctrader_static_declaration()
+        if is_refusal(declaration):
+            return declaration
+        verifier = VenueFactVerifier.try_create(
+            declaration.value, self._venue_id, self._account
+        )
+        if is_refusal(verifier):
+            return verifier
+        receive = Instant.try_create(1_700_000_000_000_000_000)
+        if is_refusal(receive):
+            return receive
+        measured = conformance_measured_facts(
+            received_at=receive.value,
+            position_model=self._position_model.value,
+        )
+        if is_refusal(measured):
+            return measured
+        verified = verifier.value.verify(measured.value, received_at=receive.value)
+        if is_refusal(verified):
+            return verified
+        outcome = verified.value
+        sequencer = verifier.value.require_command_sequencer(outcome)
+        if is_refusal(sequencer):
+            # Surface journaled data-quality defects; sequencer stays closed.
+            self._verification = outcome
+            self._verifier = verifier.value
+            self._observations.append(
+                {
+                    "kind": "data-quality",
+                    "journal": [event.as_mapping() for event in outcome.journal],
+                    "defects": {key: value.value for key, value in outcome.defects.items()},
+                }
+            )
+            return sequencer
+        self._verification = outcome
+        self._verifier = verifier.value
+        self._capabilities_verified = True
         profile: dict[str, object] = {
             "position_model": self._position_model.value,
             "proto_tag": 91,
             "verified": True,
             "static_declaration_present": True,
             "measured_at_connection": True,
+            "profile_version": outcome.profile_version,
+            "command_sequencer_open": outcome.command_sequencer_open,
+            "market_data_recordable": outcome.market_data_recordable,
+            "static_fields": sorted(
+                name.value
+                for name, cap_field in outcome.declaration.fields.items()
+                if cap_field.is_static
+            ),
+            "measured_checks": [fact.check.value for fact in outcome.profile.facts],
+            "journal_event_types": [event.event_type for event in outcome.journal],
         }
-        self._capabilities_verified = True
         self._observations.append({"kind": "capability-profile", "profile": dict(profile)})
         return Ok(profile)
+
+    @property
+    def verification(self) -> VenueFactVerification | None:
+        """The latest Story 24.2 verification outcome, if any."""
+        return self._verification
 
     def submit(self, command: object) -> Result[SubmissionResult]:
         if isinstance(command, CompoundCommand):

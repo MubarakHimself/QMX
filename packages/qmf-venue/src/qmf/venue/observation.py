@@ -54,6 +54,9 @@ from qmf.core import (
 )
 
 __all__ = [
+    "FIRST_CONNECTION_CHECKS",
+    "PROBE_V1_CHECKS",
+    "REQUIRED_CONNECTION_CHECKS",
     "MeasuredFact",
     "ProbeCheck",
     "ProbeVerdict",
@@ -68,7 +71,10 @@ class ProbeCheck(StrEnum):
     """The named first-connection verify-or-refuse checks (CT-18; DEC-0135, DEC-0138).
 
     Each is a member of the verification suite the probe runs once per connection;
-    the set is addable, never redefined.
+    the set is addable, never redefined. Story 8.1 minted the five sensing/decode
+    checks; the trading-node first-connection suite (TN-10) adds amend-atomicity;
+    Story 24.2 adds the remaining measured CT-18 connection facts (position model,
+    pacing/throttle scope, protective-stop forms).
     """
 
     SPOT_TIMESTAMP_UNIT = "spot-timestamp-unit"
@@ -76,6 +82,10 @@ class ProbeCheck(StrEnum):
     BAR_BASIS = "bar-basis"
     PIP_FORMULA = "pip-formula"
     MONEY_EXPONENT = "money-exponent"
+    AMEND_ATOMICITY = "amend-atomicity"
+    POSITION_MODEL = "position-model"
+    PACING_SCOPE = "pacing-scope"
+    PROTECTIVE_STOP_FORMS = "protective-stop-forms"
 
 
 class ProbeVerdict(StrEnum):
@@ -101,6 +111,8 @@ class VenueEvidenceClass(StrEnum):
     boundary leaves venue daily bars ungoverned; a failed bar-basis reconciliation
     refuses bar evidence; a failed pip-formula validation refuses metadata-derived
     parameters; an absent money exponent refuses that message's money decode.
+    Amend-atomicity, position-model, pacing-scope, and protective-stop-forms gate
+    their own dependent command/decode surfaces under the same verify-or-refuse law.
     """
 
     SPOT = "spot"
@@ -108,7 +120,34 @@ class VenueEvidenceClass(StrEnum):
     BAR = "bar"
     METADATA_DERIVED_PARAMETERS = "metadata-derived-parameters"
     MONEY_DECODE = "money-decode"
+    AMEND_ATOMICITY = "amend-atomicity"
+    POSITION_MODEL = "position-model"
+    PACING_SCOPE = "pacing-scope"
+    PROTECTIVE_STOP_FORMS = "protective-stop-forms"
 
+
+# Story 8.1's original five sensing/decode checks — still what CapabilityProbe records.
+PROBE_V1_CHECKS: Final[tuple[ProbeCheck, ...]] = (
+    ProbeCheck.SPOT_TIMESTAMP_UNIT,
+    ProbeCheck.DAILY_BOUNDARY,
+    ProbeCheck.BAR_BASIS,
+    ProbeCheck.PIP_FORMULA,
+    ProbeCheck.MONEY_EXPONENT,
+)
+
+# TN-10 six first-connection checks (adds amend atomicity).
+FIRST_CONNECTION_CHECKS: Final[tuple[ProbeCheck, ...]] = (
+    *PROBE_V1_CHECKS,
+    ProbeCheck.AMEND_ATOMICITY,
+)
+
+# Story 24.2 required live-venue-fact checks at connection time.
+REQUIRED_CONNECTION_CHECKS: Final[tuple[ProbeCheck, ...]] = (
+    *FIRST_CONNECTION_CHECKS,
+    ProbeCheck.POSITION_MODEL,
+    ProbeCheck.PACING_SCOPE,
+    ProbeCheck.PROTECTIVE_STOP_FORMS,
+)
 
 # The fixed 1:1 mapping from a check to the evidence class it governs (DEC-0138). A
 # class-level constant, not a per-instance value; a read-only mapping so it cannot be
@@ -120,6 +159,10 @@ _CHECK_EVIDENCE: Final[Mapping[ProbeCheck, VenueEvidenceClass]] = MappingProxyTy
         ProbeCheck.BAR_BASIS: VenueEvidenceClass.BAR,
         ProbeCheck.PIP_FORMULA: VenueEvidenceClass.METADATA_DERIVED_PARAMETERS,
         ProbeCheck.MONEY_EXPONENT: VenueEvidenceClass.MONEY_DECODE,
+        ProbeCheck.AMEND_ATOMICITY: VenueEvidenceClass.AMEND_ATOMICITY,
+        ProbeCheck.POSITION_MODEL: VenueEvidenceClass.POSITION_MODEL,
+        ProbeCheck.PACING_SCOPE: VenueEvidenceClass.PACING_SCOPE,
+        ProbeCheck.PROTECTIVE_STOP_FORMS: VenueEvidenceClass.PROTECTIVE_STOP_FORMS,
     }
 )
 

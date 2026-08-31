@@ -257,9 +257,14 @@ def test_run_profile_is_keyed_per_venue_and_account() -> None:
 
 
 def test_verified_checks_make_every_evidence_class_available() -> None:
+    # CapabilityProbe records Story 8.1's five sensing/decode checks; later suite
+    # members (amend-atomicity / position-model / pacing / protective-stop forms)
+    # are measured by the node verifier (Story 24.2) and are not required here.
+    from qmf.venue.observation import PROBE_V1_CHECKS, evidence_class_for
+
     profile = _ok(_probe().run()).profile
-    for evidence_class in VenueEvidenceClass:
-        assert _ok(profile.require_evidence(evidence_class)) is True
+    for check in PROBE_V1_CHECKS:
+        assert _ok(profile.require_evidence(evidence_class_for(check))) is True
 
 
 def test_each_fact_records_a_receive_instant_and_session_epoch() -> None:
@@ -877,6 +882,15 @@ def test_evidence_class_for_maps_every_check() -> None:
         evidence_class_for(ProbeCheck.PIP_FORMULA) is VenueEvidenceClass.METADATA_DERIVED_PARAMETERS
     )
     assert evidence_class_for(ProbeCheck.MONEY_EXPONENT) is VenueEvidenceClass.MONEY_DECODE
+    assert evidence_class_for(ProbeCheck.AMEND_ATOMICITY) is VenueEvidenceClass.AMEND_ATOMICITY
+    assert evidence_class_for(ProbeCheck.POSITION_MODEL) is VenueEvidenceClass.POSITION_MODEL
+    assert evidence_class_for(ProbeCheck.PACING_SCOPE) is VenueEvidenceClass.PACING_SCOPE
+    assert (
+        evidence_class_for(ProbeCheck.PROTECTIVE_STOP_FORMS)
+        is VenueEvidenceClass.PROTECTIVE_STOP_FORMS
+    )
+    for check in ProbeCheck:
+        assert evidence_class_for(check) in VenueEvidenceClass
 
 
 # --- MeasuredFact -----------------------------------------------------------
