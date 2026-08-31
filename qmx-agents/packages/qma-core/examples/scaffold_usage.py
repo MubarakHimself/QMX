@@ -1,8 +1,10 @@
-"""L27 reference usage for qma-core ports and plugin contribution surface."""
+"""L27 reference usage for qma-core ports, content identity, and refusals."""
 
 from __future__ import annotations
 
 import qma.core
+from qma.core import content_address, tree_digest
+from qma.core.foundation import Money, fingerprint, is_ok, is_refusal
 from qma.core.plugins import (
     HandleKind,
     HookSource,
@@ -16,6 +18,7 @@ from qma.core.ports import (
     require_singleton_scope_key,
     validate_contribution_point,
 )
+from qma.core.refusals import NoMemoryProvider, StoreVersionMismatch
 from qma.core.vocabulary import HOOK_VERBS, HookResultDecision, validate_governed_act
 
 
@@ -40,6 +43,24 @@ def main() -> None:
         }
     )
     validate_governed_act("admit", "memory_candidate")
+
+    money = Money.try_create(150, "USD", 2)
+    assert is_ok(money)
+    addressed = content_address(money.value.fp1_identity())
+    assert is_ok(addressed)
+    file_fp = fingerprint({"path": "readme.md", "bytes": "hello"})
+    assert is_ok(file_fp)
+    digest = tree_digest({"readme.md": file_fp.value})
+    assert is_ok(digest)
+
+    refused = NoMemoryProvider.of(desk="research")
+    assert is_refusal(refused)
+    mismatch = StoreVersionMismatch.of(
+        store="journal",
+        expected_schema_version=1,
+        store_schema_version=2,
+    )
+    assert is_refusal(mismatch)
     print(f"qma.core {qma.core.__version__} (definitions only)")
 
 
