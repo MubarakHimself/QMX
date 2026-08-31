@@ -2,16 +2,24 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://qmx.local/qma-wire/schemas/envelope.v1.schema.json",
   "title": "QMA wire envelope (CT-40)",
-  "description": "Structural seed stub for the wire envelope frame. Fields and validation land with the wire epic.",
+  "description": "Wire envelope frame: v, type, id, producer_id, correlation_id, scope_path, payload, optional seq. Absent optional keys are omitted, never null. journal_seq is never present.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["v", "type", "id", "producer_id", "scope_path", "payload"],
+  "required": ["v", "type", "id", "producer_id", "correlation_id", "scope_path", "payload"],
   "properties": {
-    "v": { "type": "string", "description": "semver protocolVersion" },
-    "type": { "type": "string" },
-    "id": { "type": "string" },
-    "producer_id": { "type": "string" },
-    "correlation_id": { "type": "string" },
+    "v": {
+      "type": "string",
+      "minLength": 1,
+      "description": "semver protocolVersion negotiated at initialize"
+    },
+    "type": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Closed vocabulary message type (command, query, or noun.verb event)"
+    },
+    "id": { "type": "string", "minLength": 1 },
+    "producer_id": { "type": "string", "minLength": 1 },
+    "correlation_id": { "type": "string", "minLength": 1 },
     "scope_path": {
       "type": "array",
       "items": {
@@ -19,12 +27,23 @@
         "additionalProperties": false,
         "required": ["kind", "id"],
         "properties": {
-          "kind": { "type": "string" },
-          "id": { "type": "string" }
+          "kind": {
+            "type": "string",
+            "enum": ["desk", "quant", "mission", "task", "session", "agent", "subagent"]
+          },
+          "id": { "type": "string", "minLength": 1 }
         }
       }
     },
-    "seq": { "type": "integer", "minimum": 0 },
-    "payload": { "type": "object" }
+    "seq": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Projection index of the final named scope_path segment; never journal_seq"
+    },
+    "payload": { "type": "object" },
+    "correlation_missing": {
+      "type": "boolean",
+      "description": "Evidence-append carve-out annotation (DEC-0304); lifecycle id still present in correlation_id"
+    }
   }
 }

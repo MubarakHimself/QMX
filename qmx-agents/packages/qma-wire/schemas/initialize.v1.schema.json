@@ -2,13 +2,21 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://qmx.local/qma-wire/schemas/initialize.v1.schema.json",
   "title": "QMA wire initialize handshake (CT-40)",
-  "description": "Structural seed stub for the MCP-style initialize handshake family.",
+  "description": "MCP-style initialize params over JSON-RPC 2.0. Negotiates semver protocolVersion and capabilities; producer_id is assigned in the result.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["family", "protocolVersion"],
+  "required": ["protocolVersion"],
   "properties": {
-    "family": { "const": "initialize" },
-    "protocolVersion": { "type": "string" },
-    "capabilities": { "type": "object" }
+    "protocolVersion": {
+      "type": "string",
+      "minLength": 1,
+      "description": "semver protocol version offered by the client"
+    },
+    "capabilities": { "type": "object" },
+    "producer_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional client-hint producer_id; server assigns the stable value in the result"
+    }
   }
 }

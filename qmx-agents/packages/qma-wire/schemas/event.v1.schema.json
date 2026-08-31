@@ -2,13 +2,27 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://qmx.local/qma-wire/schemas/event.v1.schema.json",
   "title": "QMA wire event family (CT-40)",
-  "description": "Structural seed stub for the durable event stream family. Seed noun.verb events land with the wire epic.",
+  "description": "Durable event stream family (noun.verb). Progress events are not authoritative. Hook before_/after_ names are not members. Closed-and-addable under qma-wire.",
   "type": "object",
   "additionalProperties": false,
   "required": ["family", "name"],
   "properties": {
     "family": { "const": "event" },
-    "name": { "type": "string" },
+    "name": {
+      "type": "string",
+      "enum": [
+        "agent.started",
+        "message.delta",
+        "tool.started",
+        "task.completed",
+        "hook.blocked",
+        "ledger.updated",
+        "mission.updated",
+        "worker.detached",
+        "provider.cooldown",
+        "artifact.created"
+      ]
+    },
     "body": { "type": "object" }
   }
 }
