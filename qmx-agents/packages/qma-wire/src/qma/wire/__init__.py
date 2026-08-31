@@ -1,7 +1,8 @@
 """qma.wire — sole cross-boundary contract package.
 
 Envelope, command/query/event families, protocol version, initialize handshake,
-compatibility law, scoped attach/detach replay, and the closed-and-addable
+compatibility law, scoped attach/detach replay, command idempotency on
+``producer_id``+``id``, correlation provenance, and the closed-and-addable
 ``host_request`` verb set. Owns no client implementation and no alternate
 cross-boundary contract (DEC-0304; AR-Q04). SemVer is display-only provenance
 in lockstep with the QMF workspace (AR-Q11).
@@ -38,6 +39,16 @@ from qma.wire.compatibility import (
     ignore_unknown_types,
     parse_protocol_version,
 )
+from qma.wire.correlation import (
+    CORRELATION_MINT_ORIGINS,
+    CorrelationAdmission,
+    CorrelationMintOrigin,
+    admit_correlation,
+    assert_copied_verbatim,
+    copy_correlation_id,
+    mint_correlation_id,
+    propagate_correlation,
+)
 from qma.wire.envelope import (
     CORRELATION_MISSING_ANNOTATION,
     JOURNAL_SEQ_FIELD,
@@ -64,6 +75,13 @@ from qma.wire.host_request import (
     HOST_REQUEST_VOCABULARY_OWNER,
     HostRequestVerbError,
     parse_host_request_verb,
+)
+from qma.wire.idempotency import (
+    DEDUP_WINDOW_REGISTRY_KEY,
+    CommandDedupCursor,
+    DedupVerdict,
+    IdempotencyKey,
+    idempotency_key_from_envelope,
 )
 from qma.wire.initialize import (
     JSONRPC_VERSION,
@@ -108,7 +126,9 @@ from qma.wire.vocabulary import (
 __all__ = [
     "ATTACH_METHOD",
     "COMPATIBILITY_AUTHORITY",
+    "CORRELATION_MINT_ORIGINS",
     "CORRELATION_MISSING_ANNOTATION",
+    "DEDUP_WINDOW_REGISTRY_KEY",
     "DEPRECATION_MINORS_DEFAULT",
     "DEPRECATION_MINORS_REGISTRY_KEY",
     "DETACH_METHOD",
@@ -135,12 +155,17 @@ __all__ = [
     "AttachRequest",
     "AttachSubscription",
     "ClientAttachmentState",
+    "CommandDedupCursor",
     "CompatibilityError",
     "CompatibilityVerdict",
+    "CorrelationAdmission",
+    "CorrelationMintOrigin",
+    "DedupVerdict",
     "DetachRequest",
     "FamilyContract",
     "FamilyFormatDeclaration",
     "HostRequestVerbError",
+    "IdempotencyKey",
     "InitializeError",
     "InitializeParams",
     "InitializeResult",
@@ -161,19 +186,24 @@ __all__ = [
     "WireQuery",
     "WireVocabularyError",
     "__version__",
+    "admit_correlation",
     "assert_client_close_safe",
+    "assert_copied_verbatim",
     "assert_sole_compatibility_authority",
     "contract_for",
     "contract_for_type",
+    "copy_correlation_id",
     "evaluate_deprecation_removal",
     "evaluate_schema_evolution",
     "family_of",
     "family_schema_name",
     "format_scope_key",
+    "idempotency_key_from_envelope",
     "ignore_unknown_fields",
     "ignore_unknown_types",
     "is_scope_prefix",
     "load_schema",
+    "mint_correlation_id",
     "mint_replay_cursor",
     "negotiate_initialize",
     "parse_host_request_verb",
@@ -181,6 +211,7 @@ __all__ = [
     "parse_scope_path",
     "parse_wire_type",
     "progress_is_authoritative",
+    "propagate_correlation",
     "snapshots_are_authoritative",
     "validate_attach",
     "validate_family_payload",
