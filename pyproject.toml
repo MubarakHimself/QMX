@@ -242,7 +242,17 @@ exclude = "adws/adw_data"
 # qmx-agents/ is a nested uv workspace with its own SemVer ladder, lockfile, and
 # quality surface (Story 40.1; AR-Q01/AR-Q11). Parent ruff must not own it —
 # QMA pins ruff 0.16.5 while this workspace pins 0.16.3.
-extend-exclude = ["adws/adw_data", "recorder", "tools/tests/fixtures", "qmx-agents"]
+# qa/ is the independent verification corpus (OR-10 / skylos exclude twin): not
+# shipped code; SSSF `ruff check .` must not own its thousands of assert-S101 hits.
+# _docwork/ is documentation-factory scratch (skylos twin) — same ruling.
+extend-exclude = [
+    "adws/adw_data",
+    "recorder",
+    "tools/tests/fixtures",
+    "qmx-agents",
+    "qa",
+    "_docwork",
+]
 line-length = 100
 
 [tool.ruff.lint]
@@ -460,7 +470,8 @@ max_dead_code = 80
 fmt = "ruff format packages extensions qml qmb tools"
 fmt-check = "ruff format --check packages extensions qml qmb tools"
 lint = "ruff check packages extensions qml qmb tools"
-types = "pyright"
+# python -m: direct `pyright` console script can be blocked by host App Control.
+types = "python -m pyright"
 test = "pytest packages extensions qml qmb --cov=qmf --cov=qml --cov=qmb --cov-branch --cov-report=term-missing --cov-report=json:coverage.json --cov-fail-under=80"
 qa-verify = "python qa/run_qa_verify.py"
 # Mechanical per-package + contract-module enforcement on top of the aggregate floor
