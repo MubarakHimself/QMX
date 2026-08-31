@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Final, Literal, cast
+from typing import Literal, cast
 
+from qma.core.ontology.desks import DESK_PREFIX_TOKENS
 from qma.core.ports.cardinality import (
     PORT_CONTRACT_BY_NAME,
     Cardinality,
@@ -22,10 +23,6 @@ __all__ = [
     "PluginRosterEntry",
     "parse_plugin_manifest",
 ]
-
-DESK_PREFIX_TOKENS: Final[frozenset[str]] = frozenset(
-    {"research", "trading", "dev", "analysis", "pm"}
-)
 
 RollbackMode = Literal["forward_only"]
 
