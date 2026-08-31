@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import pytest
 from qmf.core import Account, AccountRole, Instant, VenueId, World, is_ok, is_refusal
 from qmf.venue.observation import (
@@ -100,7 +102,9 @@ def test_conformance_double_verify_capabilities_runs_full_suite() -> None:
     assert profile["static_declaration_present"] is True
     assert profile["measured_at_connection"] is True
     assert profile["command_sequencer_open"] is True
-    assert set(profile["measured_checks"]) == {check.value for check in REQUIRED_CONNECTION_CHECKS}
+    assert set(cast("list[str]", profile["measured_checks"])) == {
+        check.value for check in REQUIRED_CONNECTION_CHECKS
+    }
     assert client.verification is not None
     assert client.verification.command_sequencer_open is True
     for check in REQUIRED_CONNECTION_CHECKS:

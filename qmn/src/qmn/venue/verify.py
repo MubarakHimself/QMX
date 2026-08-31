@@ -24,7 +24,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Final
+from typing import Final, cast
 
 from qmf.core import (
     Account,
@@ -145,7 +145,7 @@ class MeasuredFactBundle:
                 },
             )
         resolved: dict[ProbeCheck, MeasuredFact] = {}
-        for key, value in facts.items():
+        for key, value in cast("Mapping[object, object]", facts).items():
             check = key if isinstance(key, ProbeCheck) else None
             if check is None and isinstance(key, str):
                 try:
@@ -429,16 +429,13 @@ class VenueFactVerifier:
                     "given": repr(received_at),
                 },
             )
-        bundle = (
-            measured
-            if isinstance(measured, MeasuredFactBundle)
-            else MeasuredFactBundle.try_create(measured)
-        )
-        if is_refusal(bundle):
-            return bundle
-        if not isinstance(bundle, MeasuredFactBundle):
-            # try_create returned Ok
-            bundle = bundle.value
+        if isinstance(measured, MeasuredFactBundle):
+            bundle = measured
+        else:
+            created = MeasuredFactBundle.try_create(measured)
+            if is_refusal(created):
+                return created
+            bundle = created.value
 
         discovery = CapabilityDiscovery.try_create(self.declaration, self.venue_id, self.account)
         if is_refusal(discovery):
@@ -555,16 +552,13 @@ class VenueFactVerifier:
                     "given": repr(received_at),
                 },
             )
-        bundle_result = (
-            measured
-            if isinstance(measured, MeasuredFactBundle)
-            else MeasuredFactBundle.try_create(measured)
-        )
-        if is_refusal(bundle_result):
-            return bundle_result
-        bundle = (
-            bundle_result if isinstance(bundle_result, MeasuredFactBundle) else bundle_result.value
-        )
+        if isinstance(measured, MeasuredFactBundle):
+            bundle = measured
+        else:
+            created = MeasuredFactBundle.try_create(measured)
+            if is_refusal(created):
+                return created
+            bundle = created.value
 
         profile = base.profile
         journal: list[DataQualityJournalEvent] = list(base.journal)
@@ -722,8 +716,8 @@ class VenueFactVerifier:
         remaining_stale = any(
             state is BindingRevalidationState.NEEDS_REVALIDATION for state in updated.values()
         )
-        cleared_defects = (
-            MappingProxyType({})
+        cleared_defects: Mapping[str, FieldDefectKind] = (
+            MappingProxyType[str, FieldDefectKind]({})
             if not remaining_stale
             else verification.defects
         )
@@ -784,7 +778,7 @@ def _coerce_binding_ids(value: object) -> Result[tuple[str, ...]]:
             },
         )
     resolved: list[str] = []
-    for index, item in enumerate(value):
+    for index, item in enumerate(cast("Sequence[object]", value)):
         if not isinstance(item, str) or item.strip() == "":
             return TypedRefusal(
                 category=RefusalCategory.INVALID_INPUT,
