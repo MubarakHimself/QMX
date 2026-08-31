@@ -6,6 +6,10 @@ binding before wire handoff, refuses unprotected ``place_order``, admits through
 the protection-priority pacer, starts the submission deadline only at handoff,
 and never retries after handoff. Compound all-rejected acceptance stays blocked
 on FTR-02 (DEC-0191, DEC-0224).
+
+Story 24.6: when an optional :class:`~qmn.order.unknown.CommandStreamUnknownBoundary`
+is bound, every submit is gated at the exact ``(VenueId, account)`` UNKNOWN
+stream boundary before pacer admission — UNKNOWN never becomes a rejection.
 """
 
 from __future__ import annotations
@@ -30,7 +34,10 @@ from qmn.order.identity import CommandIdentityBinder, mint_venue_client_id
 from qmn.order.ordinal import CommandOrdinalStore
 from qmn.order.pacer import ConnectionCommandPacer, PacerAdmission, WireHandoff
 from qmn.order.protection import require_venue_resident_protective_stop
+from qmn.order.unknown import CommandStreamUnknownBoundary, HeldProtectionAct
 from qmn.venue import (
+    AdmissionDisposition,
+    AdmissionResult,
     Command,
     CompoundCommand,
     SubmissionResult,
@@ -86,6 +93,8 @@ class OrderPath:
     Constructed after ordinal high-water recovery and CT-18 verification. The
     protection gate is assumed already applied by the caller — this path mints
     at most one durable attributable venue command per authorized intent.
+    When ``unknown_boundary`` is bound, submit is gated at the exact
+    ``(VenueId, account)`` UNKNOWN stream boundary (Story 24.6 / QMX-F062).
     """
 
     ordinal_store: CommandOrdinalStore
@@ -94,6 +103,7 @@ class OrderPath:
     client: VenueClientPort
     forms_per_order_type: Mapping[str, object]
     submission_deadline_duration: Duration
+    unknown_boundary: CommandStreamUnknownBoundary | None = None
     _sequencer_open: bool = False
 
     @classmethod
@@ -106,6 +116,7 @@ class OrderPath:
         client: object,
         forms_per_order_type: object,
         submission_deadline_duration: object,
+        unknown_boundary: object = None,
     ) -> Result[OrderPath]:
         if not isinstance(ordinal_store, CommandOrdinalStore):
             return TypedRefusal(
@@ -170,6 +181,24 @@ class OrderPath:
                     "given": repr(submission_deadline_duration),
                 },
             )
+        boundary: CommandStreamUnknownBoundary | None
+        if unknown_boundary is None:
+            boundary = None
+        elif isinstance(unknown_boundary, CommandStreamUnknownBoundary):
+            boundary = unknown_boundary
+        else:
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "unknown_boundary",
+                    "reason": (
+                        "order path gates through a CommandStreamUnknownBoundary "
+                        "or None"
+                    ),
+                    "given": type(unknown_boundary).__name__,
+                },
+            )
         return Ok(
             cls(
                 ordinal_store=ordinal_store,
@@ -180,6 +209,7 @@ class OrderPath:
                     cast("Mapping[str, object]", forms_per_order_type)
                 ),
                 submission_deadline_duration=submission_deadline_duration,
+                unknown_boundary=boundary,
             )
         )
 
@@ -246,6 +276,61 @@ class OrderPath:
                 },
                 after_condition_descriptor="recover ordinal high-water then open_sequencer",
             )
+
+        # Story 24.6: exact (VenueId, account) UNKNOWN boundary before dispatch.
+        if self.unknown_boundary is not None:
+            if not isinstance(handed_off_at, Instant):
+                return TypedRefusal(
+                    category=RefusalCategory.INVALID_INPUT,
+                    retryability=Retryability.NO,
+                    context={
+                        "field": "handed_off_at",
+                        "reason": (
+                            "UNKNOWN boundary admit requires a wall Instant "
+                            "(also used as the receive stamp)"
+                        ),
+                        "given": repr(handed_off_at),
+                    },
+                )
+            gated = self.unknown_boundary.admit(
+                command, receive_instant=handed_off_at
+            )
+            if is_refusal(gated):
+                return gated
+            gate_value = gated.value
+            if isinstance(gate_value, HeldProtectionAct):
+                return TypedRefusal(
+                    category=RefusalCategory.TRANSIENT_VENUE_FAILURE,
+                    retryability=Retryability.AFTER_CONDITION,
+                    context={
+                        "field": "command_stream",
+                        "reason": gate_value.detail,
+                        "disposition": gate_value.disposition.value,
+                        "held": True,
+                        "journaled_to_extent": gate_value.journaled_to_extent,
+                        "command_fp1": gate_value.command_fp1.value,
+                        "command_kind": gate_value.kind.value,
+                        "outcome": "UNKNOWN",
+                        "never_rejection": True,
+                    },
+                    after_condition_descriptor="resolution",
+                )
+            if isinstance(gate_value, AdmissionResult):
+                if gate_value.disposition is not AdmissionDisposition.ADMITTED:
+                    if gate_value.refusal is not None:
+                        return gate_value.refusal
+                    return TypedRefusal(
+                        category=RefusalCategory.TRANSIENT_VENUE_FAILURE,
+                        retryability=Retryability.AFTER_CONDITION,
+                        context={
+                            "field": "command_stream",
+                            "reason": gate_value.detail,
+                            "disposition": gate_value.disposition.value,
+                            "outcome": "UNKNOWN",
+                            "never_rejection": True,
+                        },
+                        after_condition_descriptor="resolution",
+                    )
 
         consumed = self.ordinal_store.mark_submitted(command.ordering_ordinal)
         if is_refusal(consumed):

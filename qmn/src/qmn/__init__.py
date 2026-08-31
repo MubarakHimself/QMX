@@ -8,7 +8,8 @@ engine, and never an operator CLI (DEC-0186, DEC-0211, DEC-0220).
 every other ``qmn`` module receives :class:`~qmn.venue.VenueClientPort` and the
 CT-19/CT-20 shapes re-exported there. ``qmn.loop`` drives QMB ``run_slice``
 unforked behind the recording accumulator (DEC-0190). ``qmn.order`` wires
-command identity, protection priority, and submission timing (DEC-0224).
+command identity, protection priority, submission timing, and the exact
+``(VenueId, account)`` UNKNOWN stream boundary (DEC-0224, QMX-F062).
 Nothing imports ``qmn``.
 
 ``__version__`` is display-only SemVer provenance and never enters ``fp1``
@@ -41,10 +42,13 @@ from qmn.order import (
     AdmissionClass,
     CommandIdentityBinder,
     CommandOrdinalStore,
+    CommandStreamUnknownBoundary,
     ConnectionCommandPacer,
     JournalSequenceCursor,
     OrderPath,
+    UnknownStreamRegistry,
     compound_all_rejected_acceptance_blocked,
+    decide_resolve_path,
     require_venue_resident_protective_stop,
 )
 from qmn.venue import (
@@ -78,6 +82,7 @@ __all__ = [
     "CommandIdentityBinder",
     "CommandOrdinalStore",
     "CommandStreamLoop",
+    "CommandStreamUnknownBoundary",
     "ConformanceCase",
     "ConformanceDouble",
     "ConnectionCommandPacer",
@@ -92,6 +97,7 @@ __all__ = [
     "PositionModel",
     "RecordingAccumulator",
     "SliceDriveResult",
+    "UnknownStreamRegistry",
     "VenueClientKind",
     "VenueClientPort",
     "VenueClientSelection",
@@ -101,6 +107,7 @@ __all__ = [
     "clear_first_writer_registry",
     "compound_all_rejected_acceptance_blocked",
     "compound_command_acceptance_blocked",
+    "decide_resolve_path",
     "entry_side_refused",
     "first_writer_for",
     "forming_bars_actionable",

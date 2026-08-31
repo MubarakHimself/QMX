@@ -9,6 +9,10 @@ Protective reserve capacity is unavailable to entry work; the submission
 deadline begins only at wire handoff; a local queue-bound breach is a door
 refusal (never UNKNOWN); no retry after handoff. Compound all-rejected child
 outcomes stay blocked on FTR-02.
+
+Story 24.6: UNKNOWN is enforced at the exact ``(VenueId, account)`` command-stream
+boundary (QMX-F062) — whole-stream block including protection, standing
+protection intents with reserved-extent fallback, and two-path resolve.
 """
 
 from __future__ import annotations
@@ -45,28 +49,56 @@ from qmn.order.protection import (
     require_venue_resident_protective_stop,
     resolved_protective_stop_form,
 )
+from qmn.order.unknown import (
+    OPERATOR_PRINCIPAL,
+    UNDELIVERABLE_ALARM_CLASS,
+    CommandStreamUnknownBoundary,
+    HeldProtectionAct,
+    HoldDisposition,
+    ProtectionIntentExtent,
+    ReadbackClarity,
+    ResolveDecision,
+    ResolvePath,
+    UndeliverableProtectionIntent,
+    UnknownStreamRegistry,
+    decide_resolve_path,
+    unknown_never_rejection,
+)
 
 __all__ = [
     "COMMAND_ORDINAL_RECORD_CLASS",
     "ENTRY_RELATIVE_FORM",
     "FTR02_COMPOUND_BLOCKED",
     "JOURNAL_SEQUENCE_RECORD_CLASS",
+    "OPERATOR_PRINCIPAL",
     "PACER_DOOR",
+    "UNDELIVERABLE_ALARM_CLASS",
     "VENUE_CLIENT_ID_PREFIX",
     "AdmissionClass",
     "CommandIdentityBinder",
     "CommandOrdinalHighWater",
     "CommandOrdinalStore",
+    "CommandStreamUnknownBoundary",
     "ConnectionCommandPacer",
+    "HeldProtectionAct",
+    "HoldDisposition",
     "JournalSequenceCursor",
     "OrderPath",
     "OrderPathSubmission",
     "PacerAdmission",
+    "ProtectionIntentExtent",
+    "ReadbackClarity",
+    "ResolveDecision",
+    "ResolvePath",
+    "UndeliverableProtectionIntent",
+    "UnknownStreamRegistry",
     "WireHandoff",
     "admission_class_for",
     "compound_all_rejected_acceptance_blocked",
+    "decide_resolve_path",
     "local_queue_bound_refusal",
     "mint_venue_client_id",
     "require_venue_resident_protective_stop",
     "resolved_protective_stop_form",
+    "unknown_never_rejection",
 ]

@@ -6,12 +6,29 @@ DEC-0228). Story 24.1 lands the port, the FEAT-0023 conformance double, the
 FTR-04 parent-disposition record, and the credential-free conformance suite.
 Story 24.2 adds CT-18 verify-or-refuse at connection time (D008). Story 24.3
 adds the live cTrader client: record-before-interpret, exact scale decode, and
-FTR-01-blocked position/balance read-backs.
+FTR-01-blocked position/balance read-backs. Story 24.6 re-exports the UNKNOWN
+stream-gate shapes so ``qmn.order`` can enforce the exact ``(VenueId, account)``
+boundary without importing ``qmf.venue`` (QMX-F062).
 """
 
 from __future__ import annotations
 
 # Re-export CT-19/CT-20 shapes so non-venue qmn modules never import qmf.venue.
+from qmf.venue.blocking import (
+    RISK_REDUCING_KINDS,
+    AdmissionDisposition,
+    AdmissionResult,
+    ResolveObservation,
+    ResolveResolution,
+    StandingIntentDecision,
+    StandingIntentDisposition,
+    StandingIntentJournalEvent,
+    StandingProtectionIntent,
+    StreamBlockCause,
+    UnknownBlock,
+    UnknownGate,
+    is_risk_reducing,
+)
 from qmf.venue.commands import (
     BindingOutcome,
     Command,
@@ -20,6 +37,7 @@ from qmf.venue.commands import (
     CommandKind,
     CommandObservation,
     CompoundCommand,
+    JournalEvent,
     OrderParameters,
     OrderType,
     SubmissionOutcome,
@@ -31,9 +49,13 @@ from qmf.venue.connection import (
     ASYNC_CONFORMANCE_EXEMPTION,
     CTRADER_OPEN_API_PORT,
     ConnectionManager,
+    venue_command_stream,
+    venue_writer_id,
 )
 from qmf.venue.events import (
     ObservationKind,
+    Reconciliation,
+    ReconciliationReadback,
     ReconciliationVerdict,
     SubjectResolution,
 )
@@ -93,8 +115,11 @@ __all__ = [
     "FTR01_BLOCKED_KINDS",
     "FTR04_DISPOSITION",
     "REQUIRED_CONNECTION_CHECKS",
+    "RISK_REDUCING_KINDS",
     "TRANSPORT_LOCUS",
     "VOLUME_WIRE_SCALE_EXPONENT",
+    "AdmissionDisposition",
+    "AdmissionResult",
     "BindingOutcome",
     "BindingRevalidationState",
     "Command",
@@ -108,6 +133,7 @@ __all__ = [
     "ConnectionManager",
     "DataQualityJournalEvent",
     "FieldDefectKind",
+    "JournalEvent",
     "JournalMapping",
     "LiveCTraderClient",
     "MeasuredFactBundle",
@@ -116,11 +142,22 @@ __all__ = [
     "OrderType",
     "ParentAsyncExemptionDisposition",
     "PositionModel",
+    "Reconciliation",
+    "ReconciliationReadback",
     "ReconciliationVerdict",
+    "ResolveObservation",
+    "ResolveResolution",
+    "StandingIntentDecision",
+    "StandingIntentDisposition",
+    "StandingIntentJournalEvent",
+    "StandingProtectionIntent",
+    "StreamBlockCause",
     "SubjectResolution",
     "SubmissionOutcome",
     "SubmissionResult",
     "TimeInForce",
+    "UnknownBlock",
+    "UnknownGate",
     "UnknownTrigger",
     "VenueClientKind",
     "VenueClientPort",
@@ -134,7 +171,10 @@ __all__ = [
     "ctrader_static_declaration",
     "decode_volume",
     "ftr01_position_balance_blocked",
+    "is_risk_reducing",
     "resolve_transport_locus",
     "run_conformance_suite",
     "select_venue_client",
+    "venue_command_stream",
+    "venue_writer_id",
 ]
