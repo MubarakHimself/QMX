@@ -60,12 +60,10 @@ from qmn.venue import (
     StandingIntentDisposition,
     StandingIntentJournalEvent,
     StandingProtectionIntent,
-    StreamBlockCause,
     SubmissionOutcome,
     SubmissionResult,
     UnknownBlock,
     UnknownGate,
-    UnknownTrigger,
     is_risk_reducing,
     venue_command_stream,
 )
@@ -563,7 +561,20 @@ class CommandStreamUnknownBoundary:
             result = admitted.value
             if result.disposition is AdmissionDisposition.HELD_AS_STANDING_INTENT:
                 # Node law: held, not refused-and-done / retried / dropped.
-                assert result.standing_intent is not None
+                intent = result.standing_intent
+                if intent is None:
+                    return TypedRefusal(
+                        category=RefusalCategory.INVALID_INPUT,
+                        retryability=Retryability.NO,
+                        context={
+                            "field": "standing_intent",
+                            "reason": (
+                                "HELD_AS_STANDING_INTENT requires a standing protection "
+                                "intent"
+                            ),
+                            "command_fp1": result.command_fp1.value,
+                        },
+                    )
                 return Ok(
                     HeldProtectionAct(
                         command=command,
@@ -573,7 +584,7 @@ class CommandStreamUnknownBoundary:
                         disposition=HoldDisposition.HELD,
                         journaled_to_extent=False,
                         undeliverable=None,
-                        intent=result.standing_intent,
+                        intent=intent,
                         detail=(
                             "risk-non-increasing act held as standing protection intent; "
                             "re-decided when the UNKNOWN block clears — never refused, "
@@ -584,15 +595,16 @@ class CommandStreamUnknownBoundary:
             return Ok(result)
 
         # Storage failure journaling a standing intent: reserved extent fallback.
-        refusal = admitted
-        assert is_refusal(refusal)
         if (
             self.gate.stream_open
             or not is_risk_reducing(command.kind)
-            or refusal.category is not RefusalCategory.STORAGE_FAILURE
+            or admitted.category is not RefusalCategory.STORAGE_FAILURE
         ):
-            return refusal
-        return self._hold_via_extent_or_undeliverable(command, receive_instant)
+            return admitted
+        return cast(
+            "Result[AdmissionResult | HeldProtectionAct]",
+            self._hold_via_extent_or_undeliverable(command, receive_instant),
+        )
 
     def _hold_via_extent_or_undeliverable(
         self, command: Command, held_at: Instant

@@ -37,7 +37,6 @@ from qmn.order.protection import require_venue_resident_protective_stop
 from qmn.order.unknown import CommandStreamUnknownBoundary, HeldProtectionAct
 from qmn.venue import (
     AdmissionDisposition,
-    AdmissionResult,
     Command,
     CompoundCommand,
     SubmissionResult,
@@ -315,22 +314,21 @@ class OrderPath:
                     },
                     after_condition_descriptor="resolution",
                 )
-            if isinstance(gate_value, AdmissionResult):
-                if gate_value.disposition is not AdmissionDisposition.ADMITTED:
-                    if gate_value.refusal is not None:
-                        return gate_value.refusal
-                    return TypedRefusal(
-                        category=RefusalCategory.TRANSIENT_VENUE_FAILURE,
-                        retryability=Retryability.AFTER_CONDITION,
-                        context={
-                            "field": "command_stream",
-                            "reason": gate_value.detail,
-                            "disposition": gate_value.disposition.value,
-                            "outcome": "UNKNOWN",
-                            "never_rejection": True,
-                        },
-                        after_condition_descriptor="resolution",
-                    )
+            if gate_value.disposition is not AdmissionDisposition.ADMITTED:
+                if gate_value.refusal is not None:
+                    return gate_value.refusal
+                return TypedRefusal(
+                    category=RefusalCategory.TRANSIENT_VENUE_FAILURE,
+                    retryability=Retryability.AFTER_CONDITION,
+                    context={
+                        "field": "command_stream",
+                        "reason": gate_value.detail,
+                        "disposition": gate_value.disposition.value,
+                        "outcome": "UNKNOWN",
+                        "never_rejection": True,
+                    },
+                    after_condition_descriptor="resolution",
+                )
 
         consumed = self.ordinal_store.mark_submitted(command.ordering_ordinal)
         if is_refusal(consumed):
