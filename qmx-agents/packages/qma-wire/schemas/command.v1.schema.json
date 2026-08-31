@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qmx.local/qma-wire/schemas/command.v1.schema.json",
+  "title": "QMA wire command family (CT-40)",
+  "description": "Structural seed stub for the command message family. Seed verbs land with the wire epic.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["family", "name"],
+  "properties": {
+    "family": { "const": "command" },
+    "name": { "type": "string" },
+    "args": { "type": "object" }
+  }
+}

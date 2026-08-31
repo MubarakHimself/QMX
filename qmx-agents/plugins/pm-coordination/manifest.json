@@ -1,0 +1,13 @@
+{
+  "id": "pm-coordination",
+  "version": "0.1.0",
+  "qma_api": ">=0.1.0,<1.0.0",
+  "desk": "pm",
+  "dependencies": [],
+  "contributions": [],
+  "permissions": [],
+  "entrypoint": null,
+  "migrations": [],
+  "enabled": false,
+  "note": "PM desk coordination plugin (topology only). No contribution activated; halves meet only at qma-wire."
+}

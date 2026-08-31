@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qmx.local/qma-wire/schemas/envelope.v1.schema.json",
+  "title": "QMA wire envelope (CT-40)",
+  "description": "Structural seed stub for the wire envelope frame. Fields and validation land with the wire epic.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "type", "id", "producer_id", "scope_path", "payload"],
+  "properties": {
+    "v": { "type": "string", "description": "semver protocolVersion" },
+    "type": { "type": "string" },
+    "id": { "type": "string" },
+    "producer_id": { "type": "string" },
+    "correlation_id": { "type": "string" },
+    "scope_path": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "id"],
+        "properties": {
+          "kind": { "type": "string" },
+          "id": { "type": "string" }
+        }
+      }
+    },
+    "seq": { "type": "integer", "minimum": 0 },
+    "payload": { "type": "object" }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qmx.local/qma-wire/schemas/initialize.v1.schema.json",
+  "title": "QMA wire initialize handshake (CT-40)",
+  "description": "Structural seed stub for the MCP-style initialize handshake family.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["family", "protocolVersion"],
+  "properties": {
+    "family": { "const": "initialize" },
+    "protocolVersion": { "type": "string" },
+    "capabilities": { "type": "object" }
+  }
+}

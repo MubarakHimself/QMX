@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qmx.local/qma-wire/schemas/host_request.v1.schema.json",
+  "title": "QMA wire host_request bridge family (CT-40 / AD-14)",
+  "description": "Structural seed stub for the host_request bridge. Verb set is closed-and-addable in qma-wire.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["family", "verb"],
+  "properties": {
+    "family": { "const": "host_request" },
+    "verb": { "type": "string" },
+    "args": { "type": "object" }
+  }
+}

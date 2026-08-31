@@ -1,0 +1,24 @@
+[project]
+name = "qma-daemon"
+version = "0.1.0"
+description = "QMA sole runtime and sole writer. Scaffold starts no process and writes no durable state."
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "qma-core",
+    "qma-wire",
+    "qmf-core",
+]
+
+[build-system]
+requires = ["uv_build>=0.12,<0.13"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+# PEP 420 namespace submodule. Dot notation tells uv_build the module lives at
+# src/qma/daemon/ with NO src/qma/__init__.py anywhere in the distribution.
+module-name = "qma.daemon"
+
+[tool.uv.sources]
+qma-core = { workspace = true }
+qma-wire = { workspace = true }
+qmf-core = { path = "../../../packages/qmf-core", editable = true }

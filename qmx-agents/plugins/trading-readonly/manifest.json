@@ -1,0 +1,13 @@
+{
+  "id": "trading-readonly",
+  "version": "0.1.0",
+  "qma_api": ">=0.1.0,<1.0.0",
+  "desk": "trading",
+  "dependencies": [],
+  "contributions": [],
+  "permissions": [],
+  "entrypoint": null,
+  "migrations": [],
+  "enabled": false,
+  "note": "Trading desk read-only plugin (topology only). No contribution activated; halves meet only at qma-wire."
+}

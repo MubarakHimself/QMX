@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qmx.local/qma-wire/schemas/event.v1.schema.json",
+  "title": "QMA wire event family (CT-40)",
+  "description": "Structural seed stub for the durable event stream family. Seed noun.verb events land with the wire epic.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["family", "name"],
+  "properties": {
+    "family": { "const": "event" },
+    "name": { "type": "string" },
+    "body": { "type": "object" }
+  }
+}

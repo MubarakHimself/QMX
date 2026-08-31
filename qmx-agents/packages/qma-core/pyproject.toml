@@ -1,0 +1,20 @@
+[project]
+name = "qma-core"
+version = "0.1.0"
+description = "QMA definitions only: ontology, ports, plugin contribution surface, and refusal variants. Depends solely on qmf-core."
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "qmf-core",
+]
+
+[build-system]
+requires = ["uv_build>=0.12,<0.13"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+# PEP 420 namespace submodule. Dot notation tells uv_build the module lives at
+# src/qma/core/ with NO src/qma/__init__.py anywhere in the distribution.
+module-name = "qma.core"
+
+[tool.uv.sources]
+qmf-core = { path = "../../../packages/qmf-core", editable = true }

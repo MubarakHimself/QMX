@@ -1,0 +1,94 @@
+# QMA uv-workspace root (qmx-agents).
+#
+# Nested beside the parent QMX/QMF workspace: own SemVer ladder in lockstep with
+# QMF, package version display-only provenance (AR-Q01, AR-Q11; DEC-0335).
+# Members are the three QMA packages only; qma-ui-contract is a deferred stub
+# outside the member set (GAP-0081; AR-Q08). Desk plugins live under plugins/
+# as topology only.
+
+[project]
+name = "qmx-agents"
+version = "0.1.0"
+description = "QMX agentic system (QMA) — nested uv workspace for qma-core, qma-wire, and qma-daemon"
+requires-python = ">=3.14,<3.15"
+dependencies = []
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.uv.workspace]
+members = ["packages/qma-core", "packages/qma-wire", "packages/qma-daemon"]
+
+[tool.uv.sources]
+qma-core = { workspace = true }
+qma-wire = { workspace = true }
+qma-daemon = { workspace = true }
+# Parent QMF roster package — path edge into the enclosing QMX workspace.
+qmf-core = { path = "../packages/qmf-core", editable = true }
+
+[dependency-groups]
+dev = [
+    "ruff==0.16.5",
+    "pyright==1.1.411",
+    "pytest>=9,<10",
+    "pytest-cov>=7,<8",
+    "poethepoet==0.48.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["packages", "tests"]
+pythonpath = [
+    "packages/qma-core/src",
+    "packages/qma-wire/src",
+    "packages/qma-daemon/src",
+    "../packages/qmf-core/src",
+]
+
+[tool.ruff]
+line-length = 100
+extend-exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "S", "C4", "SIM", "RUF", "PL"]
+ignore = [
+    "PLW1510",
+    "S603",
+    "RUF002",
+    "PLR2004",
+    "PLR0911",
+    "PLR0912",
+    "PLR0913",
+    "PLR0915",
+    "PLR0917",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"packages/*/tests/*" = ["S101", "S105", "S106", "S107", "PLC0415"]
+"tests/*" = ["S101", "S105", "S106", "S107", "PLC0415"]
+"packages/*/examples/*" = ["S101"]
+"examples/*" = ["S101"]
+
+[tool.pyright]
+include = ["packages", "tests", "examples"]
+exclude = ["**/node_modules", "**/__pycache__", "**/.*", "packages/qma-ui-contract"]
+extraPaths = [
+    "packages/qma-core/src",
+    "packages/qma-wire/src",
+    "packages/qma-daemon/src",
+    "../packages/qmf-core/src",
+]
+typeCheckingMode = "strict"
+pythonVersion = "3.14"
+pythonPlatform = "Windows"
+
+[tool.poe.tasks]
+fmt = "ruff format packages tests examples"
+fmt-check = "ruff format --check packages tests examples"
+lint = "ruff check packages tests examples"
+# python -m: direct `pyright` console script can be blocked by host App Control.
+types = "python -m pyright"
+test = "pytest packages tests --cov=qma --cov-branch --cov-report=term-missing --cov-fail-under=0"
+
+[tool.poe.tasks.check]
+sequence = ["fmt-check", "lint", "types", "test"]
+default_item_type = "ref"
