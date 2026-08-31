@@ -79,8 +79,12 @@ class VenueClientPort(Protocol):
         """CT-18 capability verification / observe-profile readiness gate."""
         ...
 
-    def submit(self, command: Command) -> Result[SubmissionResult]:
-        """Submit one CT-19 command; every well-formed path yields a four-outcome result."""
+    def submit(self, command: Command | object) -> Result[SubmissionResult]:
+        """Submit one CT-19 command; every well-formed path yields a four-outcome result.
+
+        Implementations also accept :class:`~qmf.venue.commands.CompoundCommand` so the
+        FTR-02 block can be asserted through the same port surface.
+        """
         ...
 
     def observations(self) -> Result[Sequence[Mapping[str, object]]]:

@@ -8,7 +8,9 @@ Story 24.2 adds CT-18 verify-or-refuse at connection time (D008). Story 24.3
 adds the live cTrader client: record-before-interpret, exact scale decode, and
 FTR-01-blocked position/balance read-backs. Story 24.6 re-exports the UNKNOWN
 stream-gate shapes so ``qmn.order`` can enforce the exact ``(VenueId, account)``
-boundary without importing ``qmf.venue`` (QMX-F062).
+boundary without importing ``qmf.venue`` (QMX-F062). Story 24.8 adds reconnect
+gap-recovery, the TN-21 replay adapter, and the shared three-implementation
+port-contract suite.
 """
 
 from __future__ import annotations
@@ -65,11 +67,14 @@ from qmf.venue.observation import REQUIRED_CONNECTION_CHECKS
 
 from qmn.venue.conformance import (
     CONFORMANCE_CASES,
+    PORT_CONTRACT_CAPABILITY_KEYS,
     ConformanceCase,
     ConformanceDouble,
     PositionModel,
+    compare_port_contract_shapes,
     compound_command_acceptance_blocked,
     run_conformance_suite,
+    run_port_contract_suite,
 )
 from qmn.venue.disposition import (
     ASYNC_EXEMPTION_MODULE,
@@ -95,6 +100,18 @@ from qmn.venue.port import (
     VenueClientSelection,
     select_venue_client,
 )
+from qmn.venue.reconnect import (
+    ReceiveFrontier,
+    ReconnectGapRecovery,
+    ReconnectPhase,
+    ReconnectReport,
+    RecoveredObservation,
+)
+from qmn.venue.replay import (
+    REPLAY_SUBMIT_REFUSAL_CATEGORY,
+    ReplayAdapter,
+    replay_command_attempt_refused,
+)
 from qmn.venue.verify import (
     DATA_QUALITY_EVENT_TYPE,
     BindingRevalidationState,
@@ -116,6 +133,8 @@ __all__ = [
     "DATA_QUALITY_EVENT_TYPE",
     "FTR01_BLOCKED_KINDS",
     "FTR04_DISPOSITION",
+    "PORT_CONTRACT_CAPABILITY_KEYS",
+    "REPLAY_SUBMIT_REFUSAL_CATEGORY",
     "REQUIRED_CONNECTION_CHECKS",
     "RISK_REDUCING_KINDS",
     "TRANSPORT_LOCUS",
@@ -146,9 +165,15 @@ __all__ = [
     "PositionModel",
     "ProtectionAmendment",
     "ProtectionSide",
+    "ReceiveFrontier",
     "Reconciliation",
     "ReconciliationReadback",
     "ReconciliationVerdict",
+    "ReconnectGapRecovery",
+    "ReconnectPhase",
+    "ReconnectReport",
+    "RecoveredObservation",
+    "ReplayAdapter",
     "ResolveObservation",
     "ResolveResolution",
     "StandingIntentDecision",
@@ -169,6 +194,7 @@ __all__ = [
     "VenueFactVerification",
     "VenueFactVerifier",
     "WireKind",
+    "compare_port_contract_shapes",
     "compound_command_acceptance_blocked",
     "conformance_measured_facts",
     "ct13_journal_event_type",
@@ -176,8 +202,10 @@ __all__ = [
     "decode_volume",
     "ftr01_position_balance_blocked",
     "is_risk_reducing",
+    "replay_command_attempt_refused",
     "resolve_transport_locus",
     "run_conformance_suite",
+    "run_port_contract_suite",
     "select_venue_client",
     "venue_command_stream",
     "venue_writer_id",
