@@ -4,7 +4,9 @@ Every other ``qmn`` module receives :class:`VenueClientPort` and the CT-19/CT-20
 shapes re-exported here; only this subpackage may import ``qmf.venue`` (DEC-0241,
 DEC-0228). Story 24.1 lands the port, the FEAT-0023 conformance double, the
 FTR-04 parent-disposition record, and the credential-free conformance suite.
-Story 24.2 adds CT-18 verify-or-refuse at connection time (D008).
+Story 24.2 adds CT-18 verify-or-refuse at connection time (D008). Story 24.3
+adds the live cTrader client: record-before-interpret, exact scale decode, and
+FTR-01-blocked position/balance read-backs.
 """
 
 from __future__ import annotations
@@ -45,6 +47,17 @@ from qmn.venue.disposition import (
     ParentAsyncExemptionDisposition,
     resolve_transport_locus,
 )
+from qmn.venue.live import (
+    CT13_SEVEN_EVENT_TYPES,
+    FTR01_BLOCKED_KINDS,
+    VOLUME_WIRE_SCALE_EXPONENT,
+    JournalMapping,
+    LiveCTraderClient,
+    WireKind,
+    ct13_journal_event_type,
+    decode_volume,
+    ftr01_position_balance_blocked,
+)
 from qmn.venue.port import (
     VenueClientKind,
     VenueClientPort,
@@ -67,11 +80,14 @@ __all__ = [
     "ASYNC_CONFORMANCE_EXEMPTION",
     "ASYNC_EXEMPTION_MODULE",
     "CONFORMANCE_CASES",
+    "CT13_SEVEN_EVENT_TYPES",
     "CTRADER_OPEN_API_PORT",
     "DATA_QUALITY_EVENT_TYPE",
+    "FTR01_BLOCKED_KINDS",
     "FTR04_DISPOSITION",
     "REQUIRED_CONNECTION_CHECKS",
     "TRANSPORT_LOCUS",
+    "VOLUME_WIRE_SCALE_EXPONENT",
     "BindingRevalidationState",
     "Command",
     "CommandKind",
@@ -81,6 +97,8 @@ __all__ = [
     "ConnectionManager",
     "DataQualityJournalEvent",
     "FieldDefectKind",
+    "JournalMapping",
+    "LiveCTraderClient",
     "MeasuredFactBundle",
     "ObservationKind",
     "ParentAsyncExemptionDisposition",
@@ -95,9 +113,13 @@ __all__ = [
     "VenueClientSelection",
     "VenueFactVerification",
     "VenueFactVerifier",
+    "WireKind",
     "compound_command_acceptance_blocked",
     "conformance_measured_facts",
+    "ct13_journal_event_type",
     "ctrader_static_declaration",
+    "decode_volume",
+    "ftr01_position_balance_blocked",
     "resolve_transport_locus",
     "run_conformance_suite",
     "select_venue_client",
