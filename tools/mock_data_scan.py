@@ -73,7 +73,7 @@ ROOT = Path(__file__).resolve().parent.parent
 # Shipped product-source roots. ``qmb`` and ``qml`` arrive in later epics; naming
 # them now means the gate covers them the day they land. A root that does not
 # exist is skipped.
-SCAN_ROOTS: tuple[str, ...] = ("packages", "extensions", "qmb", "qml")
+SCAN_ROOTS: tuple[str, ...] = ("packages", "extensions", "qmb", "qml", "qmn")
 
 # Trees where constructed data is legitimate, plus the usual machine noise.
 SKIP_DIRS: frozenset[str] = frozenset(

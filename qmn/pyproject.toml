@@ -1,0 +1,24 @@
+[project]
+name = "qmn"
+version = "0.1.0"
+description = "QMX trading node (code name qmn). Application-layer composition root; never a roster package and never a CLI."
+requires-python = ">=3.14,<3.15"
+# SemVer is display-only provenance (DEC-0186) — composition_fp is identity.
+# Story 24.1 lands the venue boundary only: qmf-core + the sanctioned qmf-venue
+# import at qmn.venue. Later stories widen the declared closure.
+dependencies = [
+    "qmf-core",
+    "qmf-venue",
+]
+
+[build-system]
+requires = ["uv_build>=0.12,<0.13"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+# Top-level import qmn — not a qmf.* PEP 420 namespace submodule.
+module-name = "qmn"
+
+[tool.uv.sources]
+qmf-core = { workspace = true }
+qmf-venue = { workspace = true }

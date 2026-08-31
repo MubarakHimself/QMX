@@ -1,4 +1,4 @@
-"""The connection manager, the secret lifecycle, and injected-sink wiring (Story 8.3).
+"""The connection manager, the secret lifecycle, injected-sink wiring, and TLS transport.
 
 `COMP-QMF-VENUE`'s stateful heart: the connection manager is the sole owner of venue
 sessions and the single named component permitted to hold secret *values* in memory,
@@ -10,6 +10,11 @@ stream — and it calls the injected core sink protocols
 :class:`~qmf.core.RecordSink`) **synchronously**, so the writer that holds the
 ``WriterId`` sees every persistence failure (CT-21, AR-37, AR-38, AR-47; DEC-0136,
 DEC-0138).
+
+Story 24.1 lands the direct asyncio TLS Open API transport here (port 5035,
+length-prefixed ProtoMessage framing, injected proto tag, no Spotware SDK, no
+Twisted, no second event loop) under the named async-conformance exemption
+:data:`ASYNC_CONFORMANCE_EXEMPTION` = ``qmf.venue.connection`` (DEC-0196, DEC-0243).
 
 The discipline this module encodes:
 
@@ -43,6 +48,9 @@ frozen and immutable (DEC-0101, DEC-0113). Nothing imports ``qmf-venue`` (L30/DE
 
 from __future__ import annotations
 
+import asyncio
+import ssl
+import struct
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
@@ -75,15 +83,32 @@ from qmf.core import (
 )
 
 __all__ = [
+    "ASYNC_CONFORMANCE_EXEMPTION",
+    "CTRADER_OPEN_API_PORT",
     "AccountBinding",
     "BlockCause",
     "CommandPipeStatus",
     "ConnectionManager",
     "HealthReport",
     "PipeState",
+    "decode_framed_payload",
+    "encode_framed_payload",
     "venue_command_stream",
     "venue_writer_id",
 ]
+
+# Named AD-15/L8 async-conformance exemption for this module alone (DEC-0243). The
+# cTrader TLS socket lives here on the loop the trading node injects; if the parent
+# refuses the exemption, the same transport contract lands in ``qmn.venue.ctrader``.
+ASYNC_CONFORMANCE_EXEMPTION: Final[str] = "qmf.venue.connection"
+
+# cTrader Open API TLS port — demo and live share the port, not the host (DEC-0196).
+CTRADER_OPEN_API_PORT: Final[int] = 5035
+
+# Length-prefixed ProtoMessage framing: 4-byte big-endian length + payload.
+_FRAME_HEADER: Final[str] = ">I"
+_FRAME_HEADER_SIZE: Final[int] = struct.calcsize(_FRAME_HEADER)
+_MAX_FRAME_BYTES: Final[int] = 16 * 1024 * 1024
 
 # The separator that joins a VenueId and an AccountId into the command-stream token
 # carried in a venue WriterId's ``stream`` slot. A stable internal join, not a registry
@@ -95,6 +120,69 @@ _STREAM_SEP: Final[str] = "::"
 # store must succeed, or the operator must re-provision the credential. Stated at its point
 # of use per CT-21's rotation invariant, not a registry value (DEC-0136).
 _ROTATION_AFTER_CONDITION: Final[str] = "successful store or operator re-provision"
+
+
+def encode_framed_payload(payload: object) -> Result[bytes]:
+    """Length-prefix a ProtoMessage payload for the cTrader Open API wire (DEC-0196).
+
+    Framing is four big-endian bytes naming the payload length, then the payload itself.
+    A non-bytes payload or an oversized frame is an ``invalid input`` refusal.
+    """
+    if isinstance(payload, (bytes, bytearray)):
+        body = bytes(payload)
+    elif isinstance(payload, memoryview):
+        body = payload.tobytes()
+    else:
+        return _invalid(
+            "payload",
+            "framed wire payload is raw bytes (a compiled ProtoMessage), never text",
+            given=type(payload).__name__,
+        )
+    if len(body) > _MAX_FRAME_BYTES:
+        return _invalid(
+            "payload",
+            "framed payload exceeds the declared maximum frame size",
+            size=len(body),
+            max_size=_MAX_FRAME_BYTES,
+        )
+    return Ok(struct.pack(_FRAME_HEADER, len(body)) + body)
+
+
+def decode_framed_payload(frame: object) -> Result[bytes]:
+    """Decode one length-prefixed ProtoMessage frame into its payload bytes (DEC-0196)."""
+    if isinstance(frame, (bytes, bytearray)):
+        raw = bytes(frame)
+    elif isinstance(frame, memoryview):
+        raw = frame.tobytes()
+    else:
+        return _invalid(
+            "frame",
+            "a framed wire message is raw bytes",
+            given=type(frame).__name__,
+        )
+    if len(raw) < _FRAME_HEADER_SIZE:
+        return _invalid(
+            "frame",
+            "frame shorter than the 4-byte length prefix",
+            size=len(raw),
+        )
+    (length,) = struct.unpack(_FRAME_HEADER, raw[:_FRAME_HEADER_SIZE])
+    if length > _MAX_FRAME_BYTES:
+        return _invalid(
+            "frame",
+            "declared frame length exceeds the maximum frame size",
+            size=length,
+            max_size=_MAX_FRAME_BYTES,
+        )
+    body = raw[_FRAME_HEADER_SIZE:]
+    if len(body) != length:
+        return _invalid(
+            "frame",
+            "frame payload length does not match the length prefix",
+            declared=length,
+            actual=len(body),
+        )
+    return Ok(body)
 
 
 # --- refusal builders -------------------------------------------------------
@@ -380,10 +468,13 @@ class ConnectionManager:
         "_block",
         "_journal_sink",
         "_observation_sink",
+        "_proto_tag",
+        "_reader",
         "_record_sink",
         "_secret_store",
         "_secrets",
         "_sequencer",
+        "_writer",
         "_writer_id",
     )
 
@@ -395,6 +486,9 @@ class ConnectionManager:
     _secrets: dict[SecretRef, SecretValue]
     _block: PipeState | None
     _sequencer: WriterSequencer
+    _reader: asyncio.StreamReader | None
+    _writer: asyncio.StreamWriter | None
+    _proto_tag: int | None
 
     def __init__(
         self,
@@ -413,6 +507,9 @@ class ConnectionManager:
         self._secrets = {}
         self._block = None
         self._sequencer = WriterSequencer(writer_id)
+        self._reader = None
+        self._writer = None
+        self._proto_tag = None
 
     @classmethod
     def try_create(
@@ -688,6 +785,222 @@ class ConnectionManager:
         and the observation is recorded only through the injected sink, never a direct write.
         """
         return self._observation_sink.emit(observation)
+
+    # -- cTrader Open API TLS transport (DEC-0196, DEC-0243) -----------------
+
+    @property
+    def transport_open(self) -> bool:
+        """Whether a TLS Open API socket is currently held (boolean only)."""
+        return self._reader is not None and self._writer is not None
+
+    @property
+    def proto_tag(self) -> int | None:
+        """The injected Spotware proto release tag bound to the open transport, if any."""
+        return self._proto_tag
+
+    def attach_transport(
+        self,
+        reader: object,
+        writer: object,
+        *,
+        proto_tag: object,
+    ) -> Result[bool]:
+        """Attach an already-open TLS stream pair (test and composition-root seam).
+
+        Production callers normally use :meth:`connect_open_api`. Tests inject in-memory
+        streams so the credential-free gate never opens a network socket. The proto tag is
+        the injected ``registry:venue_protocol_artifact`` integer (pinned at 91); it is
+        never hardcoded here (DEC-0141, DEC-0196).
+        """
+        if not isinstance(reader, asyncio.StreamReader):
+            return _invalid(
+                "reader",
+                "transport attach requires an asyncio.StreamReader on the node's loop",
+                given=type(reader).__name__,
+            )
+        if not isinstance(writer, asyncio.StreamWriter):
+            return _invalid(
+                "writer",
+                "transport attach requires an asyncio.StreamWriter on the node's loop",
+                given=type(writer).__name__,
+            )
+        if isinstance(proto_tag, bool) or not isinstance(proto_tag, int) or proto_tag < 1:
+            return _invalid(
+                "proto_tag",
+                "the Spotware proto release tag is a positive integer injected from "
+                "registry:venue_protocol_artifact",
+                given=repr(proto_tag),
+            )
+        if self._reader is not None or self._writer is not None:
+            return _invalid(
+                "transport",
+                "a connection manager holds at most one Open API socket; close before reopen",
+            )
+        self._reader = reader
+        self._writer = writer
+        self._proto_tag = proto_tag
+        return Ok(True)
+
+    async def connect_open_api(
+        self,
+        host: object,
+        *,
+        proto_tag: object,
+        port: object = CTRADER_OPEN_API_PORT,
+        ssl_context: ssl.SSLContext | None = None,
+        server_hostname: str | None = None,
+    ) -> Result[bool]:
+        """Open a direct asyncio TLS socket to the cTrader Open API (DEC-0196).
+
+        Must be awaited on the single event loop the trading node injects — this method
+        never creates a loop, never starts a second connection manager, and imports
+        neither the Spotware SDK nor Twisted (DEC-0243, DEC-0196). Default port is
+        :data:`CTRADER_OPEN_API_PORT` (5035).
+        """
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return _invalid(
+                "event_loop",
+                "connect_open_api requires the node's running asyncio loop; "
+                "ConnectionManager never creates one",
+            )
+        if not isinstance(host, str) or host.strip() == "":
+            return _invalid(
+                "host",
+                "Open API host is a non-blank deployment host reference",
+                given=repr(host),
+            )
+        if isinstance(port, bool) or not isinstance(port, int) or port < 1 or port > 65535:
+            return _invalid(
+                "port",
+                "Open API port is a TCP port in 1..65535",
+                given=repr(port),
+            )
+        if isinstance(proto_tag, bool) or not isinstance(proto_tag, int) or proto_tag < 1:
+            return _invalid(
+                "proto_tag",
+                "the Spotware proto release tag is a positive integer injected from "
+                "registry:venue_protocol_artifact",
+                given=repr(proto_tag),
+            )
+        if self._reader is not None or self._writer is not None:
+            return _invalid(
+                "transport",
+                "a connection manager holds at most one Open API socket; close before reopen",
+            )
+        context = ssl_context if ssl_context is not None else ssl.create_default_context()
+        hostname = server_hostname if server_hostname is not None else host
+        try:
+            reader, writer = await asyncio.open_connection(
+                host,
+                port,
+                ssl=context,
+                server_hostname=hostname,
+            )
+        except OSError as exc:
+            return TypedRefusal(
+                category=RefusalCategory.TRANSIENT_VENUE_FAILURE,
+                retryability=Retryability.AFTER_CONDITION,
+                context={
+                    "field": "transport",
+                    "reason": "TLS open to the cTrader Open API failed",
+                    "host": host,
+                    "port": port,
+                    "error": type(exc).__name__,
+                },
+                after_condition_descriptor="network recovery or operator reconnect",
+            )
+        self._reader = reader
+        self._writer = writer
+        self._proto_tag = proto_tag
+        return Ok(True)
+
+    async def send_framed(self, payload: object) -> Result[bool]:
+        """Write one length-prefixed ProtoMessage frame on the open TLS socket."""
+        if self._writer is None:
+            return _invalid("transport", "no Open API socket is open on this connection manager")
+        framed = encode_framed_payload(payload)
+        if is_refusal(framed):
+            return framed
+        try:
+            self._writer.write(framed.value)
+            await self._writer.drain()
+        except OSError as exc:
+            return TypedRefusal(
+                category=RefusalCategory.TRANSIENT_VENUE_FAILURE,
+                retryability=Retryability.AFTER_CONDITION,
+                context={
+                    "field": "transport",
+                    "reason": "framed write failed on the Open API socket",
+                    "error": type(exc).__name__,
+                },
+                after_condition_descriptor="network recovery or operator reconnect",
+            )
+        return Ok(True)
+
+    async def recv_framed(self) -> Result[bytes]:
+        """Read one length-prefixed ProtoMessage frame from the open TLS socket."""
+        if self._reader is None:
+            return _invalid("transport", "no Open API socket is open on this connection manager")
+        try:
+            header = await self._reader.readexactly(_FRAME_HEADER_SIZE)
+            (length,) = struct.unpack(_FRAME_HEADER, header)
+            if length > _MAX_FRAME_BYTES:
+                return _invalid(
+                    "frame",
+                    "declared frame length exceeds the maximum frame size",
+                    size=length,
+                    max_size=_MAX_FRAME_BYTES,
+                )
+            body = await self._reader.readexactly(length)
+        except asyncio.IncompleteReadError:
+            return TypedRefusal(
+                category=RefusalCategory.TRANSIENT_VENUE_FAILURE,
+                retryability=Retryability.AFTER_CONDITION,
+                context={
+                    "field": "transport",
+                    "reason": "peer closed during framed read (disconnect)",
+                    "trigger": "disconnect",
+                },
+                after_condition_descriptor="network recovery or operator reconnect",
+            )
+        except OSError as exc:
+            return TypedRefusal(
+                category=RefusalCategory.TRANSIENT_VENUE_FAILURE,
+                retryability=Retryability.AFTER_CONDITION,
+                context={
+                    "field": "transport",
+                    "reason": "framed read failed on the Open API socket",
+                    "error": type(exc).__name__,
+                    "trigger": "transport-error",
+                },
+                after_condition_descriptor="network recovery or operator reconnect",
+            )
+        return Ok(body)
+
+    async def close_transport(self) -> Result[bool]:
+        """Close the Open API TLS socket if one is open. Idempotent."""
+        writer = self._writer
+        self._reader = None
+        self._writer = None
+        self._proto_tag = None
+        if writer is None:
+            return Ok(True)
+        try:
+            writer.close()
+            await writer.wait_closed()
+        except OSError as exc:
+            return TypedRefusal(
+                category=RefusalCategory.TRANSIENT_VENUE_FAILURE,
+                retryability=Retryability.NO,
+                context={
+                    "field": "transport",
+                    "reason": "TLS close failed",
+                    "error": type(exc).__name__,
+                },
+            )
+        return Ok(True)
 
     # -- health --------------------------------------------------------------
 

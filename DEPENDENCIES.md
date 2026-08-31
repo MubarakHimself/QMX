@@ -34,6 +34,13 @@ means adding its row here first.
   is one wheel — the pure library plus the `qmb` CLI — consuming the six
   backend `qmf-*` packages in lockstep and never `qmf-venue`. It pins
   `click==8.4.2` and `optuna==4.9.0`. (DEC-0159, DEC-0167, DEC-0168)
+- **`qmn`** is an application-layer product outside the seven-package roster,
+  on its **own SemVer ladder as display-only provenance** (never identity). It
+  is the trading node (code name only) and the **one sanctioned importer** of
+  `qmf-venue` at its `qmn.venue` subpackage (DEC-0186, DEC-0241). Story 24.1
+  declares `qmf-core` and `qmf-venue` only; it adds **no new third-party**
+  runtime — `protobuf==7.36.0` stays declared only in `qmf-venue`. It ships
+  **no console-script** entry point (DEC-0211, DEC-0220).
 - CPython **3.14** is pinned across every package (`.python-version`,
   per-package `requires-python`). (AR-04; DEC-0099)
 

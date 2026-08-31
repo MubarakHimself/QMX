@@ -13,7 +13,7 @@ Usage (the battery workflow provisions a pinned Vulture, then drives this script
 
     uv run --with vulture==2.14 python tools/vulture_gate.py \\
         --baseline qa/_trace/battery/vulture/gate-baseline-min80.txt \\
-        --min-confidence 80 -- packages extensions qml qmb tools
+        --min-confidence 80 -- packages extensions qml qmb qmn tools
 
 The baseline file's ``#`` comment and blank lines are ignored; only lines carrying an
 ``(NN% confidence)`` marker are counted, so the file can document its own provenance.

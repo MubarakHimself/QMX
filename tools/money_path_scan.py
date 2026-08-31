@@ -57,7 +57,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SELF = Path(__file__).resolve()
 
 # Shipped-source roots. Test trees are excluded (see module docstring).
-SCAN_ROOTS: tuple[str, ...] = ("packages", "extensions", "qml", "qmb", "tools")
+SCAN_ROOTS: tuple[str, ...] = ("packages", "extensions", "qml", "qmb", "qmn", "tools")
 SKIP_DIRS: frozenset[str] = frozenset(
     {
         "tests",

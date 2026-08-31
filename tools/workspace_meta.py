@@ -47,17 +47,22 @@ ROSTER_PACKAGES: frozenset[str] = frozenset(
 
 # The edge modules no *roster* package may depend on or import (AD-29..41 for
 # risk; the venue edge). They are leaves of the roster DAG. Applications may
-# consume qmf-risk; nothing consumes qmf-venue (DEC-0171).
+# consume qmf-risk; qmf-venue is consumed only by qmn.venue (DEC-0171, DEC-0241).
 EDGE_MODULES: frozenset[str] = frozenset({"qmf-venue", "qmf-risk"})
 VENUE_EDGE: str = "qmf-venue"
+# The one sanctioned importer of qmf-venue (DEC-0241). Import scans allow
+# qmf.venue only under this application's ``venue`` subpackage.
+SANCTIONED_VENUE_IMPORTER: str = "qmn"
 
 # Application-layer products live at the repo root (not packages/, not
 # extensions/). A missing directory is skipped so a later product can land.
-APPLICATION_ROOTS: tuple[str, ...] = ("qml", "qmb")
+APPLICATION_ROOTS: tuple[str, ...] = ("qml", "qmb", "qmn")
 
 # Expected workspace deps for application members. qml consumes qmf-core,
 # qmf-registry, and qmf-risk only (Story 11.1; DEC-0171). qmb consumes the six
-# backend qmf packages and never qmf-venue (Story 13.1; DEC-0169).
+# backend qmf packages and never qmf-venue (Story 13.1; DEC-0169). qmn is the
+# one sanctioned qmf-venue importer at its qmn.venue boundary (Story 24.1;
+# DEC-0241); Story 24.1 declares qmf-core + qmf-venue only.
 EXPECTED_APPLICATION_DEPS: dict[str, frozenset[str]] = {
     "qml": frozenset({"qmf-core", "qmf-registry", "qmf-risk"}),
     "qmb": frozenset(
@@ -70,6 +75,7 @@ EXPECTED_APPLICATION_DEPS: dict[str, frozenset[str]] = {
             "qmf-risk",
         }
     ),
+    "qmn": frozenset({"qmf-core", "qmf-venue"}),
 }
 
 # Application-layer workspace peers (not roster, not third-party). qmb hosts
@@ -77,12 +83,14 @@ EXPECTED_APPLICATION_DEPS: dict[str, frozenset[str]] = {
 EXPECTED_APPLICATION_PEERS: dict[str, frozenset[str]] = {
     "qml": frozenset(),
     "qmb": frozenset({"qml"}),
+    "qmn": frozenset(),
 }
 
 # Third-party runtime deps for application members (workspace qmf-* dropped).
 EXPECTED_APPLICATION_THIRD_PARTY: dict[str, frozenset[str]] = {
     "qml": frozenset(),
     "qmb": frozenset({"click", "optuna"}),
+    "qmn": frozenset(),
 }
 
 # The expected roster dependency map (workspace deps only). qmf-core depends on
@@ -109,6 +117,7 @@ class Member:
     dependencies: tuple[str, ...]
     is_extension: bool
     is_application: bool = False
+    version: str = "0.1.0"
 
     @property
     def is_roster(self) -> bool:
@@ -143,6 +152,7 @@ def _load_member(directory: Path, *, is_extension: bool, is_application: bool = 
     data = tomllib.loads(manifest.read_text(encoding="utf-8"))
     project = data.get("project", {})
     name = project.get("name", directory.name)
+    version = str(project.get("version", "0.1.0"))
     dependencies = tuple(_dep_name(spec) for spec in project.get("dependencies", []))
     module_name = data.get("tool", {}).get("uv", {}).get("build-backend", {}).get("module-name", "")
     return Member(
@@ -152,6 +162,7 @@ def _load_member(directory: Path, *, is_extension: bool, is_application: bool = 
         dependencies=dependencies,
         is_extension=is_extension,
         is_application=is_application,
+        version=version,
     )
 
 

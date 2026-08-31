@@ -50,8 +50,8 @@ FULL_BRANCH_MODULES: tuple[str, ...] = (
 )
 
 # Pull the package name out of a measured file's path: packages/<pkg>/...,
-# extensions/<pkg>/..., or an application root (qml/, qmb/).
-_PACKAGE_RE = re.compile(r"(?:packages|extensions)/([^/]+)/|(qml|qmb)/")
+# extensions/<pkg>/..., or an application root (qml/, qmb/, qmn/).
+_PACKAGE_RE = re.compile(r"(?:packages|extensions)/([^/]+)/|(qml|qmb|qmn)/")
 
 
 def _norm(path: str) -> str:

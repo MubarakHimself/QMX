@@ -98,7 +98,24 @@ def wheels_with_namespace_init(wheels: Sequence[Path]) -> list[str]:
     return offenders
 
 
-def check_member_in_isolation(member: Member, dist_dir: Path, work_dir: Path) -> None:
+def _workspace_constraints(members: Sequence[Member], path: Path) -> Path:
+    """Write a constraints file pinning every workspace member to its built version.
+
+    Unpinned workspace deps (e.g. ``qmb`` → ``qml``) would otherwise resolve a
+    same-named PyPI distribution over the local wheel; pinning keeps isolation
+    inside the built tree while third-party runtime deps still use the index.
+    """
+    lines = [f"{member.name}=={member.version}\n" for member in members]
+    path.write_text("".join(lines), encoding="utf-8")
+    return path
+
+
+def check_member_in_isolation(
+    member: Member,
+    dist_dir: Path,
+    work_dir: Path,
+    constraints: Path,
+) -> None:
     """Install ``member`` alone from ``dist_dir`` and import its module; raise on failure."""
     if not member.module_name:
         raise SmokeError(f"{member.name}: no build-backend module-name declared")
@@ -113,7 +130,9 @@ def check_member_in_isolation(member: Member, dist_dir: Path, work_dir: Path) ->
             str(_venv_python(venv)),
             "--find-links",
             str(dist_dir),
-            member.name,
+            "--constraint",
+            str(constraints),
+            f"{member.name}=={member.version}",
         ],
         what=f"{member.name} isolated install",
     )
@@ -143,8 +162,9 @@ def run_smoke(root: Path = ROOT) -> None:
                 "namespace hygiene: these wheels ship qmf/__init__.py (must be PEP 420 "
                 f"namespace submodules): {', '.join(offenders)}"
             )
+        constraints = _workspace_constraints(members, work_dir / "constraints.txt")
         for member in members:
-            check_member_in_isolation(member, dist_dir, work_dir)
+            check_member_in_isolation(member, dist_dir, work_dir, constraints)
 
 
 def main(root: Path = ROOT) -> int:

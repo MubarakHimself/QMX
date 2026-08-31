@@ -14,6 +14,7 @@ members = [
     "qmf-structure",
     "qmf-venue",
     "qml",
+    "qmn",
     "sssf-project",
 ]
 
@@ -1452,6 +1453,21 @@ requires-dist = [
 ]
 
 [[package]]
+name = "qmn"
+version = "0.1.0"
+source = { editable = "qmn" }
+dependencies = [
+    { name = "qmf-core" },
+    { name = "qmf-venue" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "qmf-core", editable = "packages/qmf-core" },
+    { name = "qmf-venue", editable = "packages/qmf-venue" },
+]
+
+[[package]]
 name = "readchar"
 version = "4.2.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1700,6 +1716,9 @@ qmb-lib = [
 qml-lib = [
     { name = "qml" },
 ]
+qmn-lib = [
+    { name = "qmn" },
+]
 scan = [
     { name = "skylos" },
 ]
@@ -1737,6 +1756,7 @@ indicators-talib = [{ name = "qmf-indicators", editable = "packages/qmf-indicato
 qa-suites = [{ name = "hypothesis", specifier = ">=6,<7" }]
 qmb-lib = [{ name = "qmb", editable = "qmb" }]
 qml-lib = [{ name = "qml", editable = "qml" }]
+qmn-lib = [{ name = "qmn", editable = "qmn" }]
 scan = [{ name = "skylos" }]
 store-engines = [{ name = "qmf-data", editable = "packages/qmf-data" }]
 venue-proto = [{ name = "qmf-venue", editable = "packages/qmf-venue" }]

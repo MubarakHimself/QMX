@@ -199,12 +199,16 @@ from qmf.venue.commands import (
     meet_outcomes,
 )
 from qmf.venue.connection import (
+    ASYNC_CONFORMANCE_EXEMPTION,
+    CTRADER_OPEN_API_PORT,
     AccountBinding,
     BlockCause,
     CommandPipeStatus,
     ConnectionManager,
     HealthReport,
     PipeState,
+    decode_framed_payload,
+    encode_framed_payload,
     venue_command_stream,
     venue_writer_id,
 )
@@ -299,6 +303,8 @@ from qmf.venue.proto import (
 
 __all__ = [
     "ACCESS_TOKEN_LIFETIME_CLASS",
+    "ASYNC_CONFORMANCE_EXEMPTION",
+    "CTRADER_OPEN_API_PORT",
     "FOUR_OUTCOME_LAW",
     "HEARTBEAT_BOUND_SECONDS",
     "HISTORICAL_RATE_LIMIT_PER_SECOND",
@@ -415,12 +421,14 @@ __all__ = [
     "command_id_mapping_is_injective_total",
     "compile_descriptor_set",
     "decode_execution_price",
+    "decode_framed_payload",
     "decode_market_data_price",
     "decode_money",
     "decode_timestamp",
     "derive_child_identity",
     "descriptor_set_digest",
     "detect_out_of_sequence",
+    "encode_framed_payload",
     "fold_order_state",
     "is_legal_transition",
     "is_risk_reducing",
