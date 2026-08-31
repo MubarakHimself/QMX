@@ -13,10 +13,37 @@ outcomes stay blocked on FTR-02.
 Story 24.6: UNKNOWN is enforced at the exact ``(VenueId, account)`` command-stream
 boundary (QMX-F062) — whole-stream block including protection, standing
 protection intents with reserved-extent fallback, and two-path resolve.
+
+Story 24.7: amend atomicity gates dynamic protection to the single-sided
+breakeven ratchet (or refuse-before-origination per Book policy); originated
+risk-non-increasing ``amend_protection`` is never suppressed by
+``amend_min_improvement`` and is journaled before dispatch; ``close_partial``
+and close-then-replace stay unsupported; the five CT-19 kinds remain closed
+(QMX-F063).
 """
 
 from __future__ import annotations
 
+from qmn.order.amend import (
+    AMEND_JOURNAL_KIND,
+    CT19_CLOSED_KINDS,
+    AmendAtomicity,
+    AmendJournalRecord,
+    AmendSequencePlan,
+    BookDynamicProtectionPolicy,
+    DynamicProtectionOrigin,
+    admit_risk_non_increasing_amend_protection,
+    ct19_kinds_are_closed,
+    enforce_closed_ct19_vocabulary,
+    gate_amend_protection,
+    is_breakeven_ratchet_amendment,
+    is_single_sided_amendment,
+    journal_amend_before_dispatch,
+    refuse_close_partial,
+    refuse_close_then_replace,
+    refuse_invented_amend_sequence,
+    resolve_amend_atomicity,
+)
 from qmn.order.identity import (
     VENUE_CLIENT_ID_PREFIX,
     CommandIdentityBinder,
@@ -66,7 +93,9 @@ from qmn.order.unknown import (
 )
 
 __all__ = [
+    "AMEND_JOURNAL_KIND",
     "COMMAND_ORDINAL_RECORD_CLASS",
+    "CT19_CLOSED_KINDS",
     "ENTRY_RELATIVE_FORM",
     "FTR02_COMPOUND_BLOCKED",
     "JOURNAL_SEQUENCE_RECORD_CLASS",
@@ -75,11 +104,16 @@ __all__ = [
     "UNDELIVERABLE_ALARM_CLASS",
     "VENUE_CLIENT_ID_PREFIX",
     "AdmissionClass",
+    "AmendAtomicity",
+    "AmendJournalRecord",
+    "AmendSequencePlan",
+    "BookDynamicProtectionPolicy",
     "CommandIdentityBinder",
     "CommandOrdinalHighWater",
     "CommandOrdinalStore",
     "CommandStreamUnknownBoundary",
     "ConnectionCommandPacer",
+    "DynamicProtectionOrigin",
     "HeldProtectionAct",
     "HoldDisposition",
     "JournalSequenceCursor",
@@ -94,11 +128,22 @@ __all__ = [
     "UnknownStreamRegistry",
     "WireHandoff",
     "admission_class_for",
+    "admit_risk_non_increasing_amend_protection",
     "compound_all_rejected_acceptance_blocked",
+    "ct19_kinds_are_closed",
     "decide_resolve_path",
+    "enforce_closed_ct19_vocabulary",
+    "gate_amend_protection",
+    "is_breakeven_ratchet_amendment",
+    "is_single_sided_amendment",
+    "journal_amend_before_dispatch",
     "local_queue_bound_refusal",
     "mint_venue_client_id",
+    "refuse_close_partial",
+    "refuse_close_then_replace",
+    "refuse_invented_amend_sequence",
     "require_venue_resident_protective_stop",
+    "resolve_amend_atomicity",
     "resolved_protective_stop_form",
     "unknown_never_rejection",
 ]

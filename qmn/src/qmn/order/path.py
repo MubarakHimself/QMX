@@ -10,6 +10,10 @@ on FTR-02 (DEC-0191, DEC-0224).
 Story 24.6: when an optional :class:`~qmn.order.unknown.CommandStreamUnknownBoundary`
 is bound, every submit is gated at the exact ``(VenueId, account)`` UNKNOWN
 stream boundary before pacer admission — UNKNOWN never becomes a rejection.
+
+Story 24.7: ``amend_protection`` is gated by measured amend atomicity, journaled
+before dispatch, never suppressed by ``amend_min_improvement``, and never
+emulated by an invented amend sequence; ``close_partial`` stays unsupported.
 """
 
 from __future__ import annotations
@@ -21,6 +25,7 @@ from typing import Final, cast
 from qmf.core import (
     Duration,
     Instant,
+    JournalSink,
     Ok,
     RefusalCategory,
     Result,
@@ -30,6 +35,14 @@ from qmf.core import (
     is_refusal,
 )
 
+from qmn.order.amend import (
+    AmendAtomicity,
+    BookDynamicProtectionPolicy,
+    DynamicProtectionOrigin,
+    gate_amend_protection,
+    journal_amend_before_dispatch,
+    resolve_amend_atomicity,
+)
 from qmn.order.identity import CommandIdentityBinder, mint_venue_client_id
 from qmn.order.ordinal import CommandOrdinalStore
 from qmn.order.pacer import ConnectionCommandPacer, PacerAdmission, WireHandoff
@@ -38,6 +51,7 @@ from qmn.order.unknown import CommandStreamUnknownBoundary, HeldProtectionAct
 from qmn.venue import (
     AdmissionDisposition,
     Command,
+    CommandKind,
     CompoundCommand,
     SubmissionResult,
     VenueClientPort,
@@ -94,6 +108,8 @@ class OrderPath:
     at most one durable attributable venue command per authorized intent.
     When ``unknown_boundary`` is bound, submit is gated at the exact
     ``(VenueId, account)`` UNKNOWN stream boundary (Story 24.6 / QMX-F062).
+    ``amend_atomicity`` and ``book_dynamic_protection_policy`` gate Story 24.7
+    amend semantics; an optional ``amend_journal`` journals before dispatch.
     """
 
     ordinal_store: CommandOrdinalStore
@@ -103,6 +119,11 @@ class OrderPath:
     forms_per_order_type: Mapping[str, object]
     submission_deadline_duration: Duration
     unknown_boundary: CommandStreamUnknownBoundary | None = None
+    amend_atomicity: AmendAtomicity = AmendAtomicity.UNMEASURED
+    book_dynamic_protection_policy: BookDynamicProtectionPolicy = (
+        BookDynamicProtectionPolicy.SINGLE_SIDED_BREAKEVEN_RATCHET
+    )
+    amend_journal: JournalSink[object] | None = None
     _sequencer_open: bool = False
 
     @classmethod
@@ -116,6 +137,11 @@ class OrderPath:
         forms_per_order_type: object,
         submission_deadline_duration: object,
         unknown_boundary: object = None,
+        amend_atomicity: object = AmendAtomicity.UNMEASURED,
+        book_dynamic_protection_policy: object = (
+            BookDynamicProtectionPolicy.SINGLE_SIDED_BREAKEVEN_RATCHET
+        ),
+        amend_journal: object = None,
     ) -> Result[OrderPath]:
         if not isinstance(ordinal_store, CommandOrdinalStore):
             return TypedRefusal(
@@ -198,6 +224,52 @@ class OrderPath:
                     "given": type(unknown_boundary).__name__,
                 },
             )
+        resolved_atomicity = resolve_amend_atomicity(amend_atomicity)
+        if isinstance(book_dynamic_protection_policy, BookDynamicProtectionPolicy):
+            policy = book_dynamic_protection_policy
+        elif isinstance(book_dynamic_protection_policy, str):
+            try:
+                policy = BookDynamicProtectionPolicy(
+                    book_dynamic_protection_policy.strip().lower()
+                )
+            except ValueError:
+                return TypedRefusal(
+                    category=RefusalCategory.INVALID_INPUT,
+                    retryability=Retryability.NO,
+                    context={
+                        "field": "book_dynamic_protection_policy",
+                        "reason": (
+                            "Book policy is single-sided-breakeven-ratchet or "
+                            "refuse-before-origination"
+                        ),
+                        "given": book_dynamic_protection_policy,
+                    },
+                )
+        else:
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "book_dynamic_protection_policy",
+                    "reason": "Book dynamic-protection policy is required",
+                    "given": repr(book_dynamic_protection_policy),
+                },
+            )
+        journal: JournalSink[object] | None
+        if amend_journal is None:
+            journal = None
+        elif isinstance(amend_journal, JournalSink):
+            journal = cast("JournalSink[object]", amend_journal)
+        else:
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "amend_journal",
+                    "reason": "amend_protection journals through a JournalSink or None",
+                    "given": type(amend_journal).__name__,
+                },
+            )
         return Ok(
             cls(
                 ordinal_store=ordinal_store,
@@ -209,6 +281,9 @@ class OrderPath:
                 ),
                 submission_deadline_duration=submission_deadline_duration,
                 unknown_boundary=boundary,
+                amend_atomicity=resolved_atomicity,
+                book_dynamic_protection_policy=policy,
+                amend_journal=journal,
             )
         )
 
@@ -245,13 +320,20 @@ class OrderPath:
         enqueued_at: object,
         now_mono: object,
         handed_off_at: object,
+        amend_origin: object = DynamicProtectionOrigin.BOT_PROPOSAL,
+        amend_min_improvement: object = None,
+        dual_side_requested: object = False,
+        amend_sequence: object = None,
     ) -> Result[OrderPathSubmission]:
         """Submit one Book-authorized command through the full TN-6 order path.
 
-        Steps: sequencer gate → protective-stop proof → pacer admit → identity
-        bind → wire handoff (deadline starts) → VenueClientPort.submit. Compound
-        commands stay FTR-02-blocked. No retry after handoff.
+        Steps: sequencer gate → amend atomicity / journal-before-dispatch →
+        protective-stop proof → pacer admit → identity bind → wire handoff
+        (deadline starts) → VenueClientPort.submit. Compound commands stay
+        FTR-02-blocked. No retry after handoff. ``amend_min_improvement`` is
+        accepted only to prove it never suppresses a risk-non-increasing amend.
         """
+        del amend_min_improvement  # origination policy only — never a path gate
         if isinstance(command, CompoundCommand):
             return compound_all_rejected_acceptance_blocked()
         if not isinstance(command, Command):
@@ -275,6 +357,42 @@ class OrderPath:
                 },
                 after_condition_descriptor="recover ordinal high-water then open_sequencer",
             )
+
+        # Story 24.7: amend atomicity + never invent a sequence; journal before dispatch.
+        if command.kind is CommandKind.AMEND_PROTECTION:
+            gated = gate_amend_protection(
+                command,
+                atomicity=self.amend_atomicity,
+                book_policy=self.book_dynamic_protection_policy,
+                origin=amend_origin,
+                dual_side_requested=dual_side_requested,
+                amend_sequence=amend_sequence,
+            )
+            if is_refusal(gated):
+                return gated
+            if self.amend_journal is not None:
+                if not isinstance(handed_off_at, Instant):
+                    return TypedRefusal(
+                        category=RefusalCategory.INVALID_INPUT,
+                        retryability=Retryability.NO,
+                        context={
+                            "field": "handed_off_at",
+                            "reason": (
+                                "amend_protection journals before dispatch at a "
+                                "wall Instant"
+                            ),
+                            "given": repr(handed_off_at),
+                        },
+                    )
+                journaled = journal_amend_before_dispatch(
+                    command,
+                    journal=self.amend_journal,
+                    journaled_at=handed_off_at,
+                    atomicity=self.amend_atomicity,
+                    origin=amend_origin,
+                )
+                if is_refusal(journaled):
+                    return journaled
 
         # Story 24.6: exact (VenueId, account) UNKNOWN boundary before dispatch.
         if self.unknown_boundary is not None:
