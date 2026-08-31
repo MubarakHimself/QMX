@@ -131,6 +131,7 @@ def test_initialize_and_family_schemas_load() -> None:
             "initialize",
         )
     )
+
     def _name_enum(schema_name: str) -> list[object]:
         props_obj = load_schema(schema_name)["properties"]
         assert isinstance(props_obj, dict)

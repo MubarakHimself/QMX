@@ -1,13 +1,43 @@
 """qma.wire — sole cross-boundary contract package.
 
 Envelope, command/query/event families, protocol version, initialize handshake,
-and the closed-and-addable ``host_request`` verb set. Owns no client
-implementation and no alternate cross-boundary contract (DEC-0304; AR-Q04).
-SemVer is display-only provenance in lockstep with the QMF workspace (AR-Q11).
+compatibility law, scoped attach/detach replay, and the closed-and-addable
+``host_request`` verb set. Owns no client implementation and no alternate
+cross-boundary contract (DEC-0304; AR-Q04). SemVer is display-only provenance
+in lockstep with the QMF workspace (AR-Q11).
 """
 
 from __future__ import annotations
 
+from qma.wire.attach import (
+    ATTACH_METHOD,
+    DETACH_METHOD,
+    AttachError,
+    AttachRequest,
+    AttachSubscription,
+    ClientAttachmentState,
+    DetachRequest,
+    ReplayCursor,
+    format_scope_key,
+    mint_replay_cursor,
+    validate_attach,
+)
+from qma.wire.compatibility import (
+    COMPATIBILITY_AUTHORITY,
+    DEPRECATION_MINORS_DEFAULT,
+    DEPRECATION_MINORS_REGISTRY_KEY,
+    CompatibilityError,
+    CompatibilityVerdict,
+    FamilyFormatDeclaration,
+    ProtocolVersion,
+    SchemaEvolutionProposal,
+    assert_sole_compatibility_authority,
+    evaluate_deprecation_removal,
+    evaluate_schema_evolution,
+    ignore_unknown_fields,
+    ignore_unknown_types,
+    parse_protocol_version,
+)
 from qma.wire.envelope import (
     CORRELATION_MISSING_ANNOTATION,
     JOURNAL_SEQ_FIELD,
@@ -76,7 +106,12 @@ from qma.wire.vocabulary import (
 )
 
 __all__ = [
+    "ATTACH_METHOD",
+    "COMPATIBILITY_AUTHORITY",
     "CORRELATION_MISSING_ANNOTATION",
+    "DEPRECATION_MINORS_DEFAULT",
+    "DEPRECATION_MINORS_REGISTRY_KEY",
+    "DETACH_METHOD",
     "FAMILY_CONTRACTS",
     "HOST_REQUEST_OWNING_AD",
     "HOST_REQUEST_VERBS",
@@ -96,7 +131,15 @@ __all__ = [
     "WIRE_PROTOCOL_VERSION",
     "WIRE_QUERIES",
     "WIRE_VOCABULARY_OWNER",
+    "AttachError",
+    "AttachRequest",
+    "AttachSubscription",
+    "ClientAttachmentState",
+    "CompatibilityError",
+    "CompatibilityVerdict",
+    "DetachRequest",
     "FamilyContract",
+    "FamilyFormatDeclaration",
     "HostRequestVerbError",
     "InitializeError",
     "InitializeParams",
@@ -104,6 +147,9 @@ __all__ = [
     "JsonRpcRequest",
     "JsonRpcResponse",
     "MessageFamily",
+    "ProtocolVersion",
+    "ReplayCursor",
+    "SchemaEvolutionProposal",
     "SchemaValidationError",
     "ScopePathError",
     "ScopeSegment",
@@ -116,18 +162,27 @@ __all__ = [
     "WireVocabularyError",
     "__version__",
     "assert_client_close_safe",
+    "assert_sole_compatibility_authority",
     "contract_for",
     "contract_for_type",
+    "evaluate_deprecation_removal",
+    "evaluate_schema_evolution",
     "family_of",
     "family_schema_name",
+    "format_scope_key",
+    "ignore_unknown_fields",
+    "ignore_unknown_types",
     "is_scope_prefix",
     "load_schema",
+    "mint_replay_cursor",
     "negotiate_initialize",
     "parse_host_request_verb",
+    "parse_protocol_version",
     "parse_scope_path",
     "parse_wire_type",
     "progress_is_authoritative",
     "snapshots_are_authoritative",
+    "validate_attach",
     "validate_family_payload",
     "validate_instance",
     "validate_wire_envelope_dict",
