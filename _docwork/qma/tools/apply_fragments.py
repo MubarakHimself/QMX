@@ -1,26 +1,31 @@
 #!/usr/bin/env python3
-"""apply_fragments.py — deterministic, re-runnable application of QMA increment fragments.
+r"""apply_fragments.py — deterministic, re-runnable application of QMA increment fragments.
 
 Usage:
-  python _docwork/qma/tools/apply_fragments.py --root <project-root> [--fragments DIR] [--only NAME] [--dry-run]
+  python _docwork/qma/tools/apply_fragments.py --root <project-root>
+      [--fragments DIR] [--only NAME] [--dry-run]
 
 Each fragment is a YAML file in _docwork/qma/fragments/ with the shape:
 
   target: docs/glossary.md          # path relative to --root
   ops:
-    - op: frontmatter_add           # add ids to a frontmatter LIST field (dedup; appended in given order)
+    - op: frontmatter_add           # add ids to a frontmatter LIST field
+                                    # (dedup; appended in given order)
       field: decisions
       ids: [DEC-0300, DEC-0301]
     - op: frontmatter_set           # set / overwrite a scalar frontmatter field
       field: verified
       value: '2026-08-29'
-    - op: insert_before_heading     # insert text before the FIRST line equal to `heading` (or matching `heading_regex`)
+    - op: insert_before_heading     # insert text before the FIRST line equal
+                                    # to `heading` (or matching `heading_regex`)
       heading: '## Retired or prohibited names'
       text: |
         ...
-    - op: insert_after_heading      # insert text after the heading line and its trailing blank lines / intro paragraphs
+    - op: insert_after_heading      # insert text after the heading line and
+                                    # its trailing blank lines / intro paragraphs
       heading: '## Reading order'
-      after_paragraphs: 0           # optional: skip N paragraphs after the heading before inserting (default 0)
+      after_paragraphs: 0           # optional: skip N paragraphs after the
+                                    # heading before inserting (default 0)
       text: |
         ...
     - op: append                    # append text at end of file (ensures one blank line before)
@@ -32,7 +37,8 @@ Each fragment is a YAML file in _docwork/qma/fragments/ with the shape:
     - op: replace_all               # replace every occurrence of a literal string (fails if 0)
       old: '...'
       new: '...'
-    - op: regex_replace             # Python regex replace; \1 / \g<1> backrefs; optional numeric bumps on groups
+    - op: regex_replace             # Python regex replace; \1 / \g<1> backrefs;
+                                    # optional numeric bumps on groups
       pattern: '^## Gap locator — (\d+) entries$'
       repl: '## Gap locator — \1 entries'
       count_add: [{group: 1, delta: 22}]
@@ -45,14 +51,16 @@ Each fragment is a YAML file in _docwork/qma/fragments/ with the shape:
         - term: Quant
           text: |
             The persistent named organizational actor ...
-    - op: yaml_append_items         # textual append of list items from a harvest file whose top-level key is `key`
+    - op: yaml_append_items         # textual append of list items from a harvest
+                                    # file whose top-level key is `key`
       key: ledger
       items_file: _docwork/qma/harvest/ledger-L1.yaml
 
-Every op is idempotent where possible: an insertion whose text already appears verbatim in the target is skipped;
-frontmatter_add skips ids already present; replace with `old` absent but `new` present is skipped; regex_replace
-skips when `skip_if` is present. The tool never touches a file it cannot fully apply: all ops for a target are
-computed in memory first.
+Every op is idempotent where possible: an insertion whose text already appears
+verbatim in the target is skipped; frontmatter_add skips ids already present;
+replace with `old` absent but `new` present is skipped; regex_replace skips when
+`skip_if` is present. The tool never touches a file it cannot fully apply: all
+ops for a target are computed in memory first.
 """
 import argparse
 import os

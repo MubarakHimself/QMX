@@ -30,7 +30,10 @@ def _briefs() -> list[Path]:
 def test_lane_briefs_exist() -> None:
     """The gate has something to guard: every epic lane ships a PLAN brief."""
     briefs = _briefs()
-    assert len(briefs) >= 23, f"expected the 23 per-epic lane briefs, found {len(briefs)}"
+    if len(briefs) < 23:
+        raise AssertionError(
+            f"expected the 23 per-epic lane briefs, found {len(briefs)}"
+        )
 
 
 def test_every_authority_path_named_in_a_brief_resolves() -> None:
@@ -49,12 +52,16 @@ def test_every_authority_path_named_in_a_brief_resolves() -> None:
             referenced.add(token)
             if not (_REPO_ROOT / token).exists():
                 missing.append(f"{brief.relative_to(_REPO_ROOT)} -> {token}")
-    assert referenced, "no brief names an authority path; the gate would be vacuous"
-    assert missing == [], (
-        "lane briefs name authority files that do not resolve in this worktree; "
-        "a lane must never proceed on a reconstructed taxonomy (QMX-F037, GAP-QA-01): "
-        + "; ".join(sorted(set(missing)))
-    )
+    if not referenced:
+        raise AssertionError(
+            "no brief names an authority path; the gate would be vacuous"
+        )
+    if missing:
+        raise AssertionError(
+            "lane briefs name authority files that do not resolve in this "
+            "worktree; a lane must never proceed on a reconstructed taxonomy "
+            "(QMX-F037, GAP-QA-01): " + "; ".join(sorted(set(missing)))
+        )
 
 
 def test_the_named_authorities_are_readable_and_nonempty() -> None:
@@ -64,5 +71,7 @@ def test_the_named_authorities_are_readable_and_nonempty() -> None:
         "_bmad-output/test-artifacts/test-design/QMX-handoff.md",
     ):
         path = _REPO_ROOT / token
-        assert path.is_file(), f"authority file missing: {token}"
-        assert len(path.read_text(encoding="utf-8")) > 1_000, f"authority file suspiciously small: {token}"
+        if not path.is_file():
+            raise AssertionError(f"authority file missing: {token}")
+        if len(path.read_text(encoding="utf-8")) <= 1_000:
+            raise AssertionError(f"authority file suspiciously small: {token}")
