@@ -5,10 +5,10 @@ type: adr
 status: ratified
 component: COMP-QMF-DATA
 depends_on: [COMP-QMF-DATA, COMP-QMF-DATA-STORE, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-BACKUP, COMP-QMF-CORE, COMP-QMF-REGISTRY]
-decisions: [DEC-0117, DEC-0118, DEC-0119, DEC-0120]
-sources: [DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0106, DEC-0109, DEC-0110, DEC-0114, EXT-2019, EXT-2020, EXT-2021, EXT-2022, EXT-2028, "_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md", "archive/qmf-3.txt"]
+decisions: [DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0188, DEC-0198, DEC-0241, DEC-0253]
+sources: [DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0106, DEC-0109, DEC-0110, DEC-0114, DEC-0188, DEC-0198, DEC-0241, DEC-0253, EXT-2019, EXT-2020, EXT-2021, EXT-2022, EXT-2028, "_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md", "_bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md", "archive/qmf-3.txt"]
 generated: 2026-08-20
-verified: 2026-08-20
+verified: 2026-08-29
 stale_after: 1y
 ---
 
@@ -65,3 +65,10 @@ Evidence outlives its tooling: a store library can break its own format and cost
 ## Architecture preflight
 
 Verdict: **reuse**. No new component, no authority shrink. COMP-QMF-DATA and its three seams — COMP-QMF-DATA-STORE, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-BACKUP — gain specified behavior inside authority they already held; COMP-QMF-REGISTRY gains a room and a ratified dependency without losing ownership of records or lineage; COMP-QMF-CORE is unchanged; COMP-DUKASCOPY, COMP-CTRADER, COMP-CALENDAR-FEED, and COMP-OBJECT-STORAGE remain external boundaries reached through the ingest and backup seams. Scheduling, retries, supervision, and UI stay outside QMF and belong to consuming applications.
+
+## Follow-up (2026-08-29, trading-node increment)
+
+This ADR is a point-in-time record and its 2026-08-20 decisions stand as written; the trading-node sitting of 2026-08-28 only narrows one ban at source and details the ratified topology for the node, changing nothing it decided.
+
+- **Dependency direction — narrowed at source, not here.** The flat ban ("nothing imports `qmf-venue`") is narrowed by L30's node annotation in `docs/constitution.md`: the trading node's composition root, through its `qmn.venue` subpackage, is the ONE sanctioned importer and wirer of `qmf-venue`, while `qmb` and `qml` keep their ban and every other edge stays a spine amendment (DEC-0241). The ratified two-machines-plus-a-bucket topology is otherwise unchanged and is now detailed for the node's VPS plane in [`components/trading-node.md`](../components/trading-node.md) and [`lenses/data/data-layer.md`](../lenses/data/data-layer.md) (DEC-0188, DEC-0198).
+- **Rooms and stores — an eighth room-role.** AD-19's seven room-roles gain an EIGHTH, `sealed-archive`, minted by the 2026-08-28 trading-node sitting and instantiated per world in the node's evidence tier under the same retention, backup and migration law as the other seven; it is the named target of the one-way evidence sync and is read by the replay import port and by the backup (DEC-0253, DEC-0188).

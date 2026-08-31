@@ -5,10 +5,10 @@ type: adr
 status: ratified
 component: COMP-QMF-VENUE
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-CTRADER]
-decisions: [DEC-0059, DEC-0060, DEC-0061, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0140, DEC-0141, DEC-0142]
+decisions: [DEC-0059, DEC-0060, DEC-0061, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0140, DEC-0141, DEC-0142, DEC-0186, DEC-0196, DEC-0210, DEC-0228, DEC-0240, DEC-0241, DEC-0242, DEC-0259]
 sources: [DEC-0059, DEC-0060, DEC-0061, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0140, DEC-0141, DEC-0142, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-venue-facts.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/.memlog.md]
 generated: 2026-08-20
-verified: 2026-08-20
+verified: 2026-08-29
 stale_after: 1y
 ---
 
@@ -50,6 +50,7 @@ Preflight verdict: reuse COMP-QMF-VENUE — the ratified design lands entirely i
 - The venue write path stays default-deny: qmf-venue emits through core-owned sink protocols injected at the root, creating no dependency edge; the connection manager is the sole owner of venue sessions and the sole holder of secret values in memory.
 - The design is ratified, but connectivity authorizes nothing on its own: no credential use, external connection, order submission, or live-money action follows from these docs. Implementation authorization arrives only through the factory pipeline.
 - Deferred by design, not omitted: order-path internals, the protection funnel, and flatten-authority assignment are node/risk territory (DEC-0142); GAP-0039 through GAP-0046 (risk sitting) stay open and untouched here.
+- **Update 2026-08-29 (trading-node documentation increment):** the DEC-0142 node boundary above is narrowed by the 2026-08-28 trading-node sitting, adopted in full (DEC-0259). The trading-node runtime material this ADR deferred — the order path, the protection funnel, startup semantics, and flatten-authority assignment — is now absorbed into `docs/` in its own component spec `components/trading-node.md` and in ADR-0019 (DEC-0186 through DEC-0210), no longer only a `tracker/trading-node-notes.md` pointer; it stays out of the `qmf-venue` and `qmf-risk` component specs, which still carry the contract surface only. Three venue-adjacent consequences of this ADR update at their own records: AD-28's "nothing imports qmf-venue" is narrowed by the node's L30 annotation making `qmn.venue` the sole sanctioned qmf-venue import boundary (DEC-0241, DEC-0196); the neutral `VenueClientPort` is node-minted, with realizing the seam inside qmf-venue recorded-not-applied for a later parent ruling (DEC-0228, DEC-0242); and ticket-006's cTrader trendbar price basis closes as measured-per-broker at first connection, confirming this ADR's option-3 ruling rather than pinning a value (DEC-0240).
 
 ## Blast radius
 

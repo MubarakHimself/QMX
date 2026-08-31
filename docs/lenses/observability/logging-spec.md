@@ -3,17 +3,17 @@ id: OBS-LOGGING-QMF-V1
 title: QMF V1 Logging and Journal Specification
 type: lens
 status: ratified
-depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP]
-decisions: [DEC-0022, DEC-0029, DEC-0030, DEC-0033, DEC-0035, DEC-0038, DEC-0042, DEC-0045, DEC-0048, DEC-0051, DEC-0052, DEC-0053, DEC-0055, DEC-0058, DEC-0059, DEC-0065, DEC-0096, DEC-0103, DEC-0106, DEC-0108, DEC-0109, DEC-0112, DEC-0114, DEC-0117, DEC-0118, DEC-0119, DEC-0126, DEC-0127, DEC-0129, DEC-0131, DEC-0136, DEC-0137, DEC-0138, DEC-0142, DEC-0143, DEC-0145, DEC-0150, DEC-0151, DEC-0157, DEC-0158]
-sources: [DEC-0106, DEC-0109, DEC-0112, DEC-0114, DEC-0117, DEC-0119, DEC-0126, DEC-0127, DEC-0129, DEC-0131, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _docwork/gaps.yaml, docs/architecture/dependencies.yaml, docs/contracts/ct-04-typed-refusal.yaml, docs/contracts/ct-05-version-fingerprint.yaml, docs/contracts/ct-06-registration.yaml, docs/contracts/ct-07-lineage-edge.yaml, docs/contracts/ct-08-gate-evidence.yaml, docs/contracts/ct-09-registry-persistence.yaml, docs/contracts/ct-10-source-observation.yaml, docs/contracts/ct-11-evidence-persistence.yaml, docs/contracts/ct-12-dataset-split.yaml, docs/contracts/ct-13-journal.yaml, docs/contracts/ct-14-backup-restore.yaml, docs/contracts/ct-15-external-source-adapter.yaml, docs/contracts/ct-16-indicator.yaml, docs/contracts/ct-17-causal-structure.yaml, docs/contracts/ct-18-venue-capabilities.yaml, docs/contracts/ct-19-venue-command.yaml, docs/contracts/ct-20-venue-event.yaml, docs/contracts/ct-21-venue-secret-session.yaml, docs/contracts/ct-22-book-charter.yaml, docs/contracts/ct-23-risk-evaluation.yaml, docs/contracts/ct-24-book-mode.yaml, docs/contracts/ct-25-risk-journal.yaml]
+depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP, COMP-QMN]
+decisions: [DEC-0022, DEC-0029, DEC-0030, DEC-0033, DEC-0035, DEC-0038, DEC-0042, DEC-0045, DEC-0048, DEC-0051, DEC-0052, DEC-0053, DEC-0055, DEC-0058, DEC-0059, DEC-0065, DEC-0096, DEC-0103, DEC-0106, DEC-0108, DEC-0109, DEC-0112, DEC-0114, DEC-0117, DEC-0118, DEC-0119, DEC-0126, DEC-0127, DEC-0129, DEC-0131, DEC-0136, DEC-0137, DEC-0138, DEC-0142, DEC-0143, DEC-0145, DEC-0150, DEC-0151, DEC-0157, DEC-0158, DEC-0187, DEC-0188, DEC-0189, DEC-0192, DEC-0194, DEC-0195, DEC-0198, DEC-0200, DEC-0202, DEC-0204, DEC-0208, DEC-0212, DEC-0236, DEC-0246, DEC-0247, DEC-0256]
+sources: [DEC-0106, DEC-0109, DEC-0112, DEC-0114, DEC-0117, DEC-0119, DEC-0126, DEC-0127, DEC-0129, DEC-0131, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _docwork/gaps.yaml, docs/architecture/dependencies.yaml, docs/contracts/ct-04-typed-refusal.yaml, docs/contracts/ct-05-version-fingerprint.yaml, docs/contracts/ct-06-registration.yaml, docs/contracts/ct-07-lineage-edge.yaml, docs/contracts/ct-08-gate-evidence.yaml, docs/contracts/ct-09-registry-persistence.yaml, docs/contracts/ct-10-source-observation.yaml, docs/contracts/ct-11-evidence-persistence.yaml, docs/contracts/ct-12-dataset-split.yaml, docs/contracts/ct-13-journal.yaml, docs/contracts/ct-14-backup-restore.yaml, docs/contracts/ct-15-external-source-adapter.yaml, docs/contracts/ct-16-indicator.yaml, docs/contracts/ct-17-causal-structure.yaml, docs/contracts/ct-18-venue-capabilities.yaml, docs/contracts/ct-19-venue-command.yaml, docs/contracts/ct-20-venue-event.yaml, docs/contracts/ct-21-venue-secret-session.yaml, docs/contracts/ct-22-book-charter.yaml, docs/contracts/ct-23-risk-evaluation.yaml, docs/contracts/ct-24-book-mode.yaml, docs/contracts/ct-25-risk-journal.yaml, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, docs/decisions/ADR-0019-trading-node.md]
 generated: 2026-08-18
-verified: 2026-08-20
+verified: 2026-08-29
 stale_after: 30d
 ---
 
 # QMF V1 Logging and Journal Specification
 
-Logs are not journals (DEC-0112). Operator and diagnostic **log** text renders timestamps as UTC ISO-8601 with an explicit `Z`; **journals** and every evidence stream store int64 UTC nanoseconds plus writer and sequence per the exact-time contract, with ISO-8601 permitted only as an additional display-only field excluded from identity (DEC-0112, DEC-0106). QMF V1 reserves CT-13 as the ratified journal boundary — N append streams, one per producing component — and CT-25 as an unwired future risk-evidence placeholder; neither is a runtime event bus or arbitrary application-log store. The operator log-level taxonomy, logger names, file paths, and query system belong to the full monitoring design at the node/ops sitting; this lens carries the binding convention only. [DEC-0112] [DEC-0042] [DEC-0048]
+Logs are not journals (DEC-0112). Operator and diagnostic **log** text renders timestamps as UTC ISO-8601 with an explicit `Z`; **journals** and every evidence stream store int64 UTC nanoseconds plus writer and sequence per the exact-time contract, with ISO-8601 permitted only as an additional display-only field excluded from identity (DEC-0112, DEC-0106). QMF V1 reserves CT-13 as the ratified journal boundary — N append streams, one per producing component — and CT-25 as an unwired future risk-evidence placeholder; neither is a runtime event bus or arbitrary application-log store. The operator log-level taxonomy, logger names, file paths, and query system for QMF-library components belong to the full monitoring design at the node/ops sitting; this lens carries the binding convention for them. The trading node (COMP-QMN, code name `qmn`) — the supervised runtime that hosts those components in production — closes that deferral: the 2026-08-28 node/ops sitting ratified the node's operator-log taxonomy, fields, levels, retention and reader, absorbed in the "Trading node log emission (COMP-QMN)" section of this lens (DEC-0200). [DEC-0112] [DEC-0042] [DEC-0048]
 
 ## Logs versus journals
 
@@ -56,6 +56,7 @@ Every row below also carries the global obligations: return typed refusals with 
 | COMP-QMF-DATA-STORE | Persistence outcomes for CT-09, CT-11, and CT-13 across the ratified Parquet/DuckDB/SQLite/JSONL stack. | Store-library exceptions are translated to `storage failure` refusals at the qmf-data boundary, never propagated; per-schema column layouts are per-contract detail (DEC-0109, DEC-0117). |
 | COMP-QMF-DATA-BACKUP | Owns the nightly, encrypted, versioned CT-14 transfer/restore evidence boundary. | The backup design is ratified — nightly, encrypted, versioned, off-machine with sample- and full-restore tests (DEC-0118); only the numeric RPO, RTO, retention, and validation cadence await the node/ops sitting. [DEC-0045] |
 | External components | CT-15 may carry ratified source responses; CT-14 and CT-18 through CT-21 are reserved boundaries. | QMF cannot specify or depend on provider-internal logs. |
+| COMP-QMN (trading node) | The seven AD-21 journal event types across its writer-scoped streams — the risk-domain writer `(machine, risk role, binding)`, the venue connection manager's `WriterId` `(machine, adapter role, VenueId, account)`, and a reserved `SUPERVISOR` `WriterId` for boot-attempt and lifecycle records — plus the five CT-25 Records projections and the CT-20 position and balance read-back observations, all resolved through the existing seven event types with no eighth type minted (DEC-0200, DEC-0246, DEC-0247, DEC-0236). | Operator logs are stdlib `logging` as JSON lines to journald, one line per record, and are **never** journals; the node log fields and the stdlib five levels are ratified; secret values are forbidden and only credential reference ids appear; retention is bounded by the operator-log retention window and the journald size cap. Full specification in the "Trading node log emission (COMP-QMN)" section of this lens (DEC-0200, DEC-0256). |
 
 ## Structured fields, levels, and journal events
 
@@ -63,7 +64,7 @@ The journal event vocabulary is ratified: seven event types (decision, order, fi
 
 The venue path binds two of those kinds to specific content (DEC-0138): first-connection and continuous verification **measurements and verification verdicts** journal as `data quality`; adapter-initiated state changes — **suspend-new, drain, session restart, throttle engaged, reconnect** — journal as `control action`. The CT-20 **cardinality law** binds at pointer level: exactly one journal event per recorded observation, per submission, and per outcome, with an exhaustive versioned (command kind × outcome) → event-type and (observation kind) → event-type mapping owned by CT-20; every venue outcome, `denied-locally` included, mints both an observation record and a journal event (DEC-0137). An unpersistable journal event or a partial multi-room write is a `storage failure` refusal that blocks the command stream. Journal records carry a **secret reference id only**, never a secret value (DEC-0136); the exhaustive field rosters remain per-contract documentation-time detail.
 
-The operator diagnostic log-level enum is not ratified — level and severity representation for operator logs belong to the full monitoring design at the node/ops sitting; the binding convention now is UTC ISO-8601 `Z` display text (DEC-0112). Every incompatible event or field meaning mints a new contract format version rather than silently changing (DEC-0103, DEC-0030).
+The operator diagnostic log-level enum is not ratified for QMF-library components — level and severity representation for operator logs run outside the node belong to the full monitoring design at the node/ops sitting, and the binding convention for them is UTC ISO-8601 `Z` display text (DEC-0112). For the trading node (COMP-QMN) that enum **is** ratified — the stdlib five levels, with a typed refusal at WARNING, an alarm at ERROR, and node stand-down or a clock halt at CRITICAL — in the "Trading node log emission (COMP-QMN)" section of this lens (DEC-0200). Every incompatible event or field meaning mints a new contract format version rather than silently changing (DEC-0103, DEC-0030).
 
 The journal event vocabulary is ratified (DEC-0119); the exhaustive per-event required-field lists, redaction rules, and query guarantees are per-contract documentation-time detail set after measured volume, not open foundation gaps.
 
@@ -71,7 +72,7 @@ The journal event vocabulary is ratified (DEC-0119); the exhaustive per-event re
 
 Journals persist as pinned JSONL in the journal room; the evidence stores are the ratified stack — Parquet (columnar time-series), DuckDB (rebuildable analytics views), SQLite (transactional metadata), JSONL (append streams) — each behind a QMF-owned contract with no database server (DEC-0117, superseding the earlier candidate-stack framing DEC-0047). Only raw-archive and journal formats are evidence-bearing; an analytics-engine format break costs a rebuild, never evidence (DEC-0117).
 
-Raw evidence and lineage are kept forever and never silently overwritten or discarded (DEC-0035, DEC-0045, DEC-0118). Journal trimming rules are set only after measured volume; the operator-log store, dashboard, and query service belong to the node/ops monitoring stack, unratified here. [DEC-0112]
+Raw evidence and lineage are kept forever and never silently overwritten or discarded (DEC-0035, DEC-0045, DEC-0118). Journal trimming rules are set only after measured volume. For QMF-library components run outside the node, the operator-log store, dashboard, and query service belong to the node/ops monitoring stack. For the trading node (COMP-QMN) they are ratified: JSON-lines logs to journald under a `SystemMaxUse` size cap and a configurable operator-log retention window, read by a separate zero-authority observability stack, specified in the "Trading node log emission (COMP-QMN)" section of this lens (DEC-0200, DEC-0212). [DEC-0112]
 
 ## Secret and sensitive-data handling
 
@@ -86,3 +87,57 @@ An external provider's internal log is not QMF evidence. Only a source-identifie
 ## Traceability requirement
 
 A trace follows ratified identities from source evidence into COMP-QMF-DATA's CT-10 boundary, then through derived output, CT-05 fingerprint, CT-07 lineage, and CT-13 journal streams, with `correlation_id` propagated across every package boundary to link one event across components (DEC-0112). Causal linkage across journal streams uses AD-16 typed edges, never timestamps (DEC-0119). CT-25 is the ratified, **defined-unwired** join surface — the pinned versioned projection join from venue-authored events (through the command record's content fingerprint) into the risk-authored binding identity — and cannot carry an active trace until its Data consumer is wired (DEC-0145). [DEC-0035] [DEC-0038] [DEC-0112]
+
+## Trading node log emission (COMP-QMN)
+
+The trading node (COMP-QMN, code name `qmn`) emits operator logs as stdlib `logging` with a JSON-lines formatter, one line per record, to stdout, captured by journald; **these logs are never journals** — a log line is diagnostic text and carries no CT-13 evidence weight, and no journal is ever written through the logger (DEC-0200, DEC-0112). This makes AD-14 concrete for the node, closing the operator-log deferral QMF V1 left to the node/ops sitting (DEC-0200). The node is one product with two run modes, `paper | live`; the code name `qmn` is an import name only, the operator having declined to name the product, so a product rename is mechanical (DEC-0202, DEC-0211).
+
+### Node log record fields
+
+Every node log record carries the field roster below; a record concerning a narrower subject also carries that subject's identity, and a typed refusal also carries the typed-refusal fields (DEC-0200).
+
+| Field | Meaning |
+|---|---|
+| `ts` | Emission instant as UTC ISO-8601 with an explicit `Z` at millisecond precision — the display convention for logs, never journal identity (DEC-0200, DEC-0112). |
+| `level` | One of the stdlib five (see levels below) (DEC-0200). |
+| `logger` | The emitting logger name (DEC-0200). |
+| `event` | The structured event key naming what happened (DEC-0200). |
+| `boot_epoch` | The boot epoch of the running node, so a line is attributable to one supervised run (DEC-0200, DEC-0189). |
+| `composition_fp` | The sealed composition fingerprint identifying which build emitted the line (DEC-0200, DEC-0187). |
+| `world` | The world the record concerns — `live` or `replay` (`simulated` is reserved-unusable in V1); the paired DEMO binding that carries paper mode is `world = live` with `role = demo`, and sandbox evidence is distinguished by `provenance = sandbox`, not by a world, so the discriminator between live and its paired demo is role and never world (DEC-0194, DEC-0195, DEC-0188). |
+| `stream` | The command stream the record concerns, identified by `VenueId` and an **opaque** account id — never a raw account number (DEC-0202, DEC-0136). |
+| seat / binding ids | Where the record concerns one seat or one binding, that seat's or binding's identity (DEC-0204). |
+| `correlation_id` | The linking annotation propagated across every package boundary; it never enters a pure value contract's signature and is excluded from journal identity (DEC-0112, DEC-0200). |
+| failure id | Where the record is a typed refusal, the typed-failure-id from the `FAILURES.md` failure-id enum, alongside the typed-refusal fields `category`, `retryability` and `after-condition` (DEC-0200, DEC-0208). |
+
+**Levels are the stdlib five** — DEBUG, INFO, WARNING, ERROR, CRITICAL. A typed refusal logs at WARNING; an alarm (a push-class event) logs at ERROR; node stand-down or a clock halt logs at CRITICAL (DEC-0200). An ERROR log line is only the log echo of an alarm — the push itself travels the closed alert allow-list, not the log stream, so a lost log line neither raises nor suppresses a notification (DEC-0200).
+
+### What a node log record must never carry
+
+A node log record **never** carries a secret value. A credential **reference** id is permitted and is the only form a secret ever takes in a log, matching the venue-evidence rule that logs, refusal context, health reports and metric labels carry a secret reference id only, never the value (DEC-0200, DEC-0136, DEC-0197). Account numbers appear only as opaque ids; the opaque-id-to-account mapping lives with the roster in the resolved node-config artifact and never in the log path (DEC-0202).
+
+### Retention
+
+Node log retention is bounded by two registry rows, both tagged `blocks-soak`, whose key names are minted at implementation: the operator-log retention window and the journald `SystemMaxUse` size cap; provisioning sets both (DEC-0200, DEC-0256). Because no log is evidence, trimming a log by either bound loses no CT-13 evidence (DEC-0112, DEC-0200).
+
+### The read-only journal namespace the observability stack reads
+
+The separate zero-authority observability stack reads the node's JSON-lines log stream through a **dedicated read-only journald namespace**, never the system journal — a system-wide log shipper would see every unit's output, the provisioning path's included, which is exactly what the node's secret-holder boundary forbids (DEC-0200, DEC-0212). Through that namespace the stack can read logs and scrape `/metrics`; it can never write to the node and holds no credential the node holds (DEC-0200, DEC-0197). The stack's full zero-authority footprint is specified in `metrics-and-alerts.md`.
+
+### The five Records streams mapped onto the seven journal event types
+
+The node's audit surface speaks the five legacy Records stream names, but they are **CT-25 projection names only** over AD-21's seven journal event types (decision, order, fill, risk transition, promotion, data quality, control action), resolved through CT-25's one versioned mapping table. The node mints **no second event catalog and no eighth journal type** (DEC-0200, DEC-0246). This is the one mapping table; it does not restate the seven-type journal contract, it reads through it.
+
+| Records stream (CT-25 projection name) | Journal event type(s) it reads | Selection rule |
+|---|---|---|
+| `veto_ledger` | decision | Decision events whose `outcome` is `refused-by-door` — the veto path (DEC-0200, DEC-0158). |
+| `trade_journal` | order, fill | Order and fill events joined through the command record's content fingerprint (DEC-0200, DEC-0145). |
+| `book_journal` | decision, risk transition, control action | The entity projection selected by Book identity (DEC-0200, DEC-0145). |
+| `ksa_audit_log` | control action | Control-action events of the protection-authority class plus their `suppressed` subtype (DEC-0200, DEC-0192). |
+| `correlation_ledger` | (`enacts` edges) | The `enacts` edge set linking enactment to intent — an edge projection, not an event stream (DEC-0200, DEC-0145). |
+
+Each projection is a **read**, never a writer; an entity is not a writer and mints no stream of its own (DEC-0145, DEC-0200). The venue **position and balance read-backs** join this same table as CT-20 observation **kinds** mapped onto the existing seven event types — `(position read-back) → observation` and `(balance read-back) → observation` — so the node adds observation kinds and no journal type, and reconciliation and equity derivation read them as ordinary observations rather than through any side channel (DEC-0247, DEC-0200).
+
+### The supervisor stream is evidence, not logs
+
+The node's boot-attempt records and lifecycle records — stand-down entered, `node_resurrect`, safe-point restart — are **evidence, not logs**. They are written under a reserved `SUPERVISOR` `WriterId`, never through the logger, and persist as append-only CT-13-class streams under `(instant, writer, sequence)` ordering in the node's state tree under `/var/lib/qmx/state` (DEC-0236, DEC-0187, DEC-0189). A boot-attempt record is minted at each supervised start so a crash-loop is itself evidence rather than a lost log line; a lifecycle record marks each node-state transition. The observability stack reads operator logs through its read-only namespace and reads this supervisor stream only as evidence, never as an operator log (DEC-0236, DEC-0200).

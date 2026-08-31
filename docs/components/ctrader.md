@@ -5,10 +5,10 @@ type: component-spec
 status: ratified
 component: COMP-CTRADER
 depends_on: []
-decisions: [DEC-0030, DEC-0031, DEC-0053, DEC-0059, DEC-0060, DEC-0061, DEC-0065, DEC-0105, DEC-0106, DEC-0107, DEC-0119, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0148, DEC-0158]
-sources: [DEC-0030, DEC-0031, DEC-0053, DEC-0059, DEC-0060, DEC-0061, DEC-0065, DEC-0105, DEC-0106, DEC-0107, DEC-0119, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0148, DEC-0158, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-venue-facts.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-time-research.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-primary-verification.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-rate-limits-research.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-tick-spot-mechanics-research.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-depth-and-connectivity-research.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/research-risk/ctrader-sltp-amend-research.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/spotware-org-inventory.md, docs/architecture/dependencies.yaml, docs/contracts/ct-15-external-source-adapter.yaml, docs/contracts/ct-18-venue-capabilities.yaml, docs/contracts/ct-19-venue-command.yaml, docs/contracts/ct-20-venue-event.yaml, docs/contracts/ct-21-venue-secret-session.yaml]
+decisions: [DEC-0030, DEC-0031, DEC-0053, DEC-0059, DEC-0060, DEC-0061, DEC-0065, DEC-0105, DEC-0106, DEC-0107, DEC-0119, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0148, DEC-0158, DEC-0191, DEC-0194, DEC-0196, DEC-0197, DEC-0207, DEC-0222, DEC-0240, DEC-0259]
+sources: [DEC-0030, DEC-0031, DEC-0053, DEC-0059, DEC-0060, DEC-0061, DEC-0065, DEC-0105, DEC-0106, DEC-0107, DEC-0119, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0148, DEC-0158, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-venue-facts.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-time-research.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-primary-verification.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-rate-limits-research.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-tick-spot-mechanics-research.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-depth-and-connectivity-research.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/research-risk/ctrader-sltp-amend-research.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/spotware-org-inventory.md, docs/architecture/dependencies.yaml, docs/contracts/ct-15-external-source-adapter.yaml, docs/contracts/ct-18-venue-capabilities.yaml, docs/contracts/ct-19-venue-command.yaml, docs/contracts/ct-20-venue-event.yaml, docs/contracts/ct-21-venue-secret-session.yaml, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, docs/components/trading-node.md]
 generated: 2026-08-18
-verified: 2026-08-20
+verified: 2026-08-29
 stale_after: 30d
 ---
 
@@ -32,7 +32,7 @@ This document records the ratified contract surface and venue facts; it does not
 |---|---|---|---|
 | Market-data source observations (ticks, bars, depth, gap-replay backfill, historical paging) | out via CT-10/CT-15 (ratified home; no adapter implemented) | [CT-15](../contracts/ct-15-external-source-adapter.yaml) | COMP-QMF-DATA-INGEST intake; no fifth contract, no new edge [DEC-0138] |
 | Capability declaration + per-account venue-observation profile | ratified design; no adapter implemented | [CT-18](../contracts/ct-18-venue-capabilities.yaml) | Owner: COMP-QMF-VENUE |
-| Venue command shape (five kinds) | ratified design; caller unassigned | [CT-19](../contracts/ct-19-venue-command.yaml) | Eventual caller: out-of-scope QMX application |
+| Venue command shape (five kinds) | ratified design; caller assigned to COMP-QMN | [CT-19](../contracts/ct-19-venue-command.yaml) | Caller: COMP-QMN ([trading-node.md](trading-node.md)) through the node-minted VenueClientPort; no adapter implemented (DEC-0191, DEC-0196) |
 | Event + reconciliation shape | ratified design; no adapter implemented | [CT-20](../contracts/ct-20-venue-event.yaml) | Owner: COMP-QMF-VENUE |
 | Secret / session seam | ratified design; no operation permitted | [CT-21](../contracts/ct-21-venue-secret-session.yaml) | Owner: COMP-QMF-VENUE |
 
@@ -119,11 +119,31 @@ cTrader's raw values are foreign evidence stored verbatim, never trusted as fram
 
 A cTrader value delivered as a **binary float is evidence, never identity**: it crosses AD-7's named boundary at receipt to a scaled integer at a per-value-class pinned target scale — execution price to the instrument's declared `digits`, money to the account's declared money exponent (an absent exponent being a refusal), market data to the declared wire scale — with a declared, identity-bearing rounding mode; the raw float is retained only as integrity-checked provenance and is never the value a consumer reads. [DEC-0141]
 
-### Node boundary
+### Node boundary (updated 2026-08-29)
 
-Trading-node runtime material stays out of this spec. The order path, protection funnel, startup semantics, and flatten-authority assignment are node and risk-sitting territory; anything discussed about the trading node is durably held in `tracker/trading-node-notes.md`, and this document references it as a pointer only. The trading-node order-path study and node corpus brief remain reference-only evidence. [DEC-0142]
+DEC-0142's tracker-pointer boundary is superseded: trading-node runtime material now lives in [`trading-node.md`](trading-node.md) (COMP-QMN) and [ADR-0019](../decisions/ADR-0019-trading-node.md). This spec still carries only the cTrader venue FACTS — what the venue does and what QMF measures at connection — while the order path, protection funnel, startup and recovery semantics, and the severity-effect assignment are the node's, ratified there (DEC-0142 superseded in part, DEC-0259). The trading-node order-path study and node corpus brief stay reference-only evidence.
 
 <!-- no-diagram: external system internals are outside QMF authority; only CT-15 and CT-18 through CT-21 are documented -->
+
+## Trading-node increment (2026-08-29)
+
+The trading node (`COMP-QMN`) is the runtime that wires this venue boundary, and the 2026-08-28 trading-node sitting fixed how the node integrates cTrader; QMF still does not own cTrader behavior, and the increment was ratified by operator delegation plus four direct rulings (DEC-0259). Order-path internals, the protection funnel and flatten authority remain node and risk-sitting territory (DEC-0142). See [COMP-QMN](trading-node.md) for the node's own spec.
+
+### Demo and live are distinct command streams, keyed by the roster
+
+Demo and live are separate hosts requiring two simultaneous connections, and at the node each `(VenueId, account)` is its **own command stream** with its own UNKNOWN block, allocated `WriterId`, journal sequence and monotone command ordinal — never a singleton account (DEC-0207, DEC-0196). Connections are keyed by `(venue, environment)`, one per pair the roster names, and the connection count is derived from the roster (DEC-0196, DEC-0207). Each broker is its own `VenueId` even on the same cTrader platform, so a second cTrader broker is another `VenueId` with its own symbols, boundaries and hours — the platform-versus-venue axis stays recorded, not modelled (DEC-0207).
+
+### One cTID credential or two, declared in the roster; refresh by credential reference
+
+Whether demo and live **share one cTID credential is a declared roster fact per credential reference**, verified at preflight — two credentials run two independent refreshers, one runs exactly one (DEC-0197, DEC-0207). Token **refresh is keyed by the credential reference and never by connection**: at most one refresh is in flight per credential reference, and every session sharing that credential is a reader of the rotated access token rather than a refresher (DEC-0197, DEC-0222). An authentication failure attributable to a rotation in flight is a retry-after-refresh condition for requests carrying no command identity only; a `place_order`, `amend_protection`, `cancel_order`, `close_position` or `close_all` meeting an authentication failure is never retried and takes the ordinary submission-deadline path (DEC-0197, DEC-0222).
+
+### The live connection senses and records only until its own baselines exist
+
+During the soak week the node runs the demo binding while the **live connection opens for sensing and recording only** — no live binding, no command stream open, no live roster binding minted — so the live-environment SQS baseline (keyed `(VenueId, environment, instrument)`) and the live-path rung baseline accumulate on the live environment while the machinery proves itself on the demo one; a demo-conditioned baseline never satisfies a `role = live` binding, and the live binding waits on its own baselines (DEC-0194, DEC-0196). A late Spotware approval or KYC therefore delays go-live and never the soak week (DEC-0194).
+
+### Trendbar basis measured per broker; maintenance windows fail closed for entries
+
+The trendbar price basis stays **measured per broker at first connection** and is never hardcoded: `registry:venue_trendbar_price_basis` carries no value, the adapter reconciles trendbar OHLC against explicitly-BID/ASK tick history and records the verified quote side or refuses bar evidence, and a continuous background monitor re-verifies (DEC-0240, DEC-0135). The only web evidence — a Spotware moderator on the official community forum stating trendbars are bid-based — is graded **SECONDARY** (a vendor moderator, not a documentation page) and changes nothing, because the corpus already refuses to hardcode it; until the reconciliation passes, every backtest-to-live comparison is built on **ticks rather than bars** and any bar-derived series is provisional (DEC-0240). Venue **maintenance windows are not a fourth control-window kind**: a down session or dead feed already fails closed for entries under L39's authorized narrowing of the sensing-outage rule, with no silent failover and the maintenance timestamp journaled `data quality` — the accepted consequence, a conscious divergence from the reviewer recommendation, is that an announced window does not proactively block entries ahead of the disconnect (DEC-0196).
 
 ## Configuration
 

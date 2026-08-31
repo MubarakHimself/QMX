@@ -1,0 +1,903 @@
+{
+ "findings": [
+  {
+   "file": "docs/components/trading-node.md",
+   "anchor": "Failure modes table, row \"FM-5 | Reconciliation read-back older than the lookback\"",
+   "severity": "critical",
+   "finding": "The operator affordance cell reads \"`resolve_unknown` may issue only from a reconciled read-back inside the lookback\" — it deletes the operator-attestation path, which is the ONLY path available in exactly the FM-5 case (an `out-of-lookback` read-back). As written, a stuck UNKNOWN under an out-of-lookback verdict has no exit at all, inverting the ratified rule.",
+   "evidence": "Spine TN-6 line 262: \"`resolve_unknown`, two paths with declared precedence... A read-back that yields an unambiguous `observed-accepted | observed-absent` resolves the UNKNOWN **automatically**; an ambiguous, absent or `out-of-lookback` read-back requires **operator attestation** through the powers channel, and only that second path carries a signer identity.\" Same in TN-10 step 6 (line 358). DEC-0195 and DEC-0258 both carry the two-path text verbatim; TN-17's CLOSED powers list includes \"`resolve_unknown` operator-attested\".",
+   "fix": "Replace the affordance cell with: \"an `out-of-lookback` read-back cannot resolve automatically — `resolve_unknown` is issued by OPERATOR ATTESTATION through the powers channel, against the per-command read-back detail the evidence channel serves; where the read-back cannot support attestation the door returns a typed refusal (DEC-0195) (DEC-0258).\""
+  },
+  {
+   "file": "docs/glossary.md",
+   "anchor": "### Reconciliation verdicts (line 594), final sentence",
+   "severity": "critical",
+   "finding": "\"…and `resolve_unknown` may be issued ONLY from a `reconciled` read-back INSIDE the lookback, so an `out-of-lookback` verdict is a distinct nameable state rather than a silent failure to reconcile\" — the operator-attestation path is deleted from the corpus's vocabulary authority, which every other page inherits. It also collapses the per-command \"unambiguous observed-accepted | observed-absent\" test into the reconciliation VERDICT `reconciled`, a verdict the spine says never clears an UNKNOWN.",
+   "evidence": "Spine TN-6 line 262 and TN-10 step 6 line 358 (two declared paths, attestation required for ambiguous/absent/out-of-lookback); spine TN-6 line 249: \"Only `resolve_unknown` clears it; a reconciliation verdict never does\". DEC-0258's own statement in _docwork/ledger.yaml carries both paths correctly.",
+   "fix": "Replace with: \"`resolve_unknown` has TWO paths: an unambiguous `observed-accepted | observed-absent` read-back inside the lookback resolves it AUTOMATICALLY; an ambiguous, absent or `out-of-lookback` read-back requires OPERATOR ATTESTATION through the powers channel (the only path carrying a signer identity), so `out-of-lookback` is a distinct nameable state rather than a dead end (DEC-0195, DEC-0258).\""
+  },
+  {
+   "file": "docs/lenses/ops/incident-playbook.md",
+   "anchor": "line 107, \"The node's reconciliation vocabulary is FOUR verdicts\"",
+   "severity": "critical",
+   "finding": "\"…and `resolve_unknown` may be issued only from a `reconciled` read-back INSIDE the lookback (DEC-0258)\" — the attestation path is missing from the operator-facing incident playbook, which is precisely the page an operator works a stuck UNKNOWN from. The page therefore tells the operator no remedy exists in the one case that needs one.",
+   "evidence": "Spine TN-10 step 6 line 358: \"an ambiguous, absent or `out-of-lookback` read-back requires operator attestation through the powers channel, and the evidence channel serves the outstanding set with its per-command read-back detail so the attestation is made against evidence rather than a count.\" TN-17's closed powers list carries `resolve_unknown` operator-attested.",
+   "fix": "Append: \"…automatically; an ambiguous, absent or `out-of-lookback` read-back is resolved by OPERATOR ATTESTATION through the powers channel against the per-command read-back detail the evidence channel serves, and where the read-back cannot support attestation the door returns a typed refusal (DEC-0195, DEC-0258).\""
+  },
+  {
+   "file": "docs/lenses/ops/incident-playbook.md",
+   "anchor": "\"**Stuck UNKNOWN** — the whole `(VenueId, account)` stream blocked\" table row (line 72)",
+   "severity": "major",
+   "finding": "The governing clause \"Unblock ONLY via `resolve_unknown` from a `reconciled` read-back INSIDE the lookback\" contradicts its own parenthetical \"(automatic where `observed-accepted` | `observed-absent` is unambiguous, else operator attestation through the powers channel)\": under the stated constraint the attestation case is unreachable, and attestation exists precisely for out-of-lookback and absent read-backs.",
+   "evidence": "Spine TN-6 line 262 — attestation is required exactly when the read-back is \"ambiguous, absent or `out-of-lookback`\", i.e. outside the constraint the row imposes.",
+   "fix": "Restate the governing clause as: \"Unblock ONLY via `resolve_unknown`, on two declared paths — automatic where the read-back inside the lookback is an unambiguous `observed-accepted | observed-absent`, and operator attestation through the powers channel where it is ambiguous, absent or out-of-lookback.\""
+  },
+  {
+   "file": "docs/components/qmf-risk.md",
+   "anchor": "line 179, \"The node's reconciliation vocabulary is FOUR verdicts\"",
+   "severity": "major",
+   "finding": "\"…so `resolve_unknown` issues only from a `reconciled` read-back inside the lookback and `out-of-lookback` is a nameable state rather than a silent failure to reconcile\" drops the operator-attestation path.",
+   "evidence": "Spine TN-6 line 262; TN-10 step 6 line 358; DEC-0195 and DEC-0258 statements both carry both paths.",
+   "fix": "Change to \"…so `resolve_unknown` issues automatically only from an unambiguous read-back inside the lookback, and by operator attestation through the powers channel where the read-back is ambiguous, absent or out-of-lookback\"."
+  },
+  {
+   "file": "docs/knowledge/traceability.md",
+   "anchor": "line 504, FEAT-0031 rule roll-up bullet (\"Startup, recovery and explained-drift doctrine\")",
+   "severity": "major",
+   "finding": "\"`resolve_unknown` only from a reconciled read-back inside the declared lookback\" drops the attestation path from the traceability roll-up the factory reads when scoping node stories.",
+   "evidence": "Spine TN-10 step 6 line 358; DEC-0195 statement in _docwork/ledger.yaml carries both paths.",
+   "fix": "Change to \"`resolve_unknown` on two declared paths — automatic from an unambiguous read-back inside the lookback, operator attestation through the powers channel otherwise\"."
+  },
+  {
+   "file": "docs/lenses/bugs/triage.md",
+   "anchor": "line 85, \"A command whose fate the venue has not confirmed\"",
+   "severity": "major",
+   "finding": "\"…and `resolve_unknown` may be issued only from a reconciled read-back inside the lookback (DEC-0258, DEC-0195)\" drops the attestation path, so a triager reading this page would classify a legitimate operator-attested out-of-lookback resolution as out of spec.",
+   "evidence": "Spine TN-6 line 262; DEC-0195 statement, boot step 6.",
+   "fix": "Append \"…automatically, and by operator attestation through the powers channel where the read-back is ambiguous, absent or out-of-lookback\"."
+  },
+  {
+   "file": "docs/contracts/ct-20-venue-event.yaml",
+   "anchor": "line 4, `version: 1` comment",
+   "severity": "minor",
+   "finding": "The version comment summarises the increment as \"…with the automatic resolve_unknown issued only from a reconciled read-back inside the lookback\", omitting the attestation path. The body of the same file (line 32) states both paths correctly, so the file contradicts itself at a glance.",
+   "evidence": "Same file line 32: \"the AUTOMATIC resolve_unknown is issued only from a reconciled read-back INSIDE THE LOOKBACK (an unambiguous observed-accepted | observed-absent), while an ambiguous, absent or out-of-lookback read-back requires operator attestation through the powers channel\"; spine TN-6 line 262.",
+   "fix": "Extend the version comment to \"…the automatic resolve_unknown issued only from an unambiguous read-back inside the lookback, operator attestation required otherwise\"."
+  },
+  {
+   "file": "_docwork/ledger.yaml",
+   "anchor": "DEC-0227 `statement:` (line 2227), \"Gate ruling 12 — a fixed qmx service account and three named secret holders\"",
+   "severity": "major",
+   "finding": "The ratified statement reads \"All four units run under a FIXED User=qmx service account\" and \"There are THREE NAMED SECRET HOLDERS and no others\" — both pre-GATE-2 counts. The FINAL spine states FIVE node units under `User=qmx` and FOUR named secret holders and no fifth. The rationale field amends the holder count but nothing amends the unit count, and docs/components/trading-node.md:284 cites (DEC-0227) directly beside \"a fixed `User=qmx` service account for all five node units\".",
+   "evidence": "Spine TN-16 line 502: \"a **fixed `User=qmx` service account** for all five node units — not `DynamicUser`\"; spine TN-12 line 433: \"**Four named secret holders on the VPS, and no fifth.** … The **observability STACK** … is the **DECLARED FOURTH** holder\"; assumption A42. DEC-0201's own statement in the same file already says \"FIVE node units\" and \"all five node units\".",
+   "fix": "Amend DEC-0227's statement to \"All FIVE node units run under a FIXED User=qmx service account, not DynamicUser\" and to \"There are FOUR NAMED SECRET HOLDERS and no fifth: the connection manager (venue session material), the backup unit (the payload key plus bucket credentials for one run), the observability path (the notification token), and the separate observability STACK under its own account (GATE-2 ruling 13, DEC-0236)\", keeping the existing EXTENDED note in the rationale."
+  },
+  {
+   "file": "docs/architecture/overview.md",
+   "anchor": "component-layer table, row \"`COMP-QMN` — trading node (code name `qmn`)\" (line 487)",
+   "severity": "major",
+   "finding": "The table renders the node's layer as `backend`, while docs/architecture/dependencies.yaml — which this same page calls \"the component and dependency registry\" — registers `layer: middleware` with an explicit written rationale. The two sibling application-layer rows in the same table (COMP-QMB, COMP-QML) both render `middleware`.",
+   "evidence": "dependencies.yaml line 166 `layer: middleware`, with notes: \"layer is middleware, the application-composition slot COMP-QMB and COMP-QML already occupy — it wires the middleware and backend parts and sits above them\"; overview.md line 495 \"`docs/architecture/dependencies.yaml` is the component and dependency registry\".",
+   "fix": "Change the cell to `middleware`, matching the registry entry's stated reasoning and its two sibling application-layer rows."
+  },
+  {
+   "file": "docs/changelog.md",
+   "anchor": "line 38, \"Touched docs:\" paragraph — \"[dependencies.yaml](architecture/dependencies.yaml) (COMP-QMN minted, layer backend, …)\"",
+   "severity": "major",
+   "finding": "The changelog describes the registry edit as minting COMP-QMN with \"layer backend\"; dependencies.yaml actually registers `layer: middleware`. The changelog misdescribes the file it is recording.",
+   "evidence": "dependencies.yaml line 166 `layer: middleware` plus its notes block explaining the choice.",
+   "fix": "Change to \"COMP-QMN minted, layer middleware (the application-composition slot COMP-QMB and COMP-QML occupy), edges to the QMF roster/qmb/qml/extensions with the `qmn.venue`-only qmf-venue edge, and nothing importing qmn\"."
+  },
+  {
+   "file": "docs/lenses/observability/metrics-and-alerts.md",
+   "anchor": "### `/health` — independent, provenance-stamped states",
+   "severity": "major",
+   "finding": "\"The states the node adopts from the PRD section 6 doctrine are **safety, execution readiness, connection, reconciliation, data freshness, and evidence persistence** … the node additionally reports **lifecycle** and **sync** as independent states\" — this invents an eighth `/health` state (\"evidence persistence\"), attributes it to PRD §6 which does not carry it, and misattributes `lifecycle` and `sync` as node additions when the PRD names them among its seven.",
+   "evidence": "prd.md:467-468: \"Safety, execution readiness, connection, reconciliation, data freshness, lifecycle, and sync are independent states that never collapse into one health color\" — seven states, no \"evidence persistence\". Spine TN-15 line 481 lists the same seven. DEC-0200's statement in _docwork/ledger.yaml: \"a /health read model of INDEPENDENT states (safety, execution readiness, connection, reconciliation, data freshness, lifecycle, sync)\". docs/components/trading-node.md:247 already lists the correct seven.",
+   "fix": "Replace with \"the seven independent states the node adopts from the PRD §6 doctrine are safety, execution readiness, connection, reconciliation, data freshness, lifecycle and sync (DEC-0238)\", and drop \"evidence persistence\" — an evidence-persistence failure is a silent-degradation ALERT class, not a `/health` state."
+  },
+  {
+   "file": "docs/lenses/observability/metrics-and-alerts.md",
+   "anchor": "### The `qmn_` metric families — table rows `seat`, `evidence channel`, `dead-man heartbeat`",
+   "severity": "minor",
+   "finding": "Three family groups are presented level with the ratified list that the spine's exported-family enumeration does not carry: `seat` (per-seat callback time), `evidence channel` (budget occupancy) and `dead-man heartbeat` (heartbeat emission).",
+   "evidence": "Spine TN-15 line 479 enumerates the exported signal families as clock; session; command streams; reconciliation; protection; latency; data; backup; process — nine, with no seat, evidence-channel or heartbeat family.",
+   "fix": "Either drop the three rows, or mark them explicitly as implementation-gate additions beyond the spine's nine families rather than presenting them as part of the ratified set."
+  },
+  {
+   "file": "docs/contracts/ct-21-venue-secret-session.yaml",
+   "anchor": "line 29, \"TRADING-NODE USAGE (2026-08-29): on the VPS there are THREE named secret holders and no others\"",
+   "severity": "minor",
+   "finding": "The annotation says \"THREE named secret holders and no others … plus the separate zero-authority observability stack … as the DECLARED FOURTH holder\" — self-contradictory, and the checkable claim (\"no others\") states the wrong count. The line-4 version comment repeats the same shape.",
+   "evidence": "Spine TN-12 line 433: \"**Four named secret holders on the VPS, and no fifth.**\"; assumption A42; docs/lenses/security/security-model.md:123 already says \"Four named secret holders exist on the VPS and no fifth\".",
+   "fix": "Restate as \"FOUR named secret holders on the VPS and NO FIFTH — the connection manager (venue session material), the backup unit (the CT-14 payload key plus object-storage credentials for one run), the observability path (the notification-channel token), and the separate zero-authority observability stack under its own service account\", and correct the line-4 version comment the same way."
+  },
+  {
+   "file": "docs/registry/variables.yaml",
+   "anchor": "`- name: venue_d1_reverification_cadence` (line 1338), `owner_scope: venue`",
+   "severity": "minor",
+   "finding": "`owner_scope: venue` asserts the VENUE declares the resolved value; the spine's registry mint table gives this row the owner scope \"node per venue\" — the node declares it, once per venue.",
+   "evidence": "Spine mint table line 747: \"| `venue_d1_reverification_cadence` | node per venue | blocks-role-live | TN-11 |\"; the file header defines owner_scope as \"who declares the resolved value: node | book | bot | bms | node-and-book | node-and-bms | node-and-ops | venue\".",
+   "fix": "Set `owner_scope: node` and keep \"declared per venue\" in `value:`/`notes:` (or add a documented `node-per-venue` member to the owner_scope enum in the header and use it)."
+  },
+  {
+   "file": "docs/components/trading-node.md",
+   "anchor": "Interfaces section, bullet \"**Unix-socket powers action channel** at `/run/qmn/powers.sock`\" (line 65)",
+   "severity": "minor",
+   "finding": "The ops-principal power list renames the power `notify_test` to the toolkit recipe name `node-notify-test`, conflating a `just node-…` DevOps recipe with a member of the CLOSED powers list. The same doc's TN-17 section (line 300) and the runbook both spell it `notify_test`.",
+   "evidence": "Spine TN-17 line 525: \"the **ops principal**, which may call ONLY `notify_test`, `restore_drill_run`, `config_validate`, `hub_publish` and the evidence reads\"; the recipe is separately named \"`just node-notify-test`\" in TN-15.",
+   "fix": "Change `node-notify-test` to `notify_test` in the ops-principal list; keep `just node-notify-test` only where the operations toolkit is described."
+  },
+  {
+   "file": "docs/components/trading-node.md",
+   "anchor": "Configuration table, row \"Loss thresholds\" (line 455)",
+   "severity": "minor",
+   "finding": "The row lists `registry:seat_loss_run_allowance` and `registry:seat_r_ceiling` under the node's blank-effect tag \"blocks-role-live + blocks-soak\". Neither is a node mint: the spine's mint table names `seat_loss_run_allowance` only as the divisor `bench_consecutive_loss_threshold` must be KEPT SEPARATE FROM, and never names `seat_r_ceiling` at all; both registry rows are pre-existing COMP-QMF-RISK / DEC-0154 rows carrying no owner_scope, value_status_required or blank_effect.",
+   "evidence": "Spine mint table line 734: \"| `qualifying_loss_threshold` q per family; `bench_consecutive_loss_threshold` per bot, kept separate from `seat_loss_run_allowance` | Book and bot | blocks-role-live + blocks-soak | TN-8 |\"; spine TN-25 line 661 lists `seat_loss_run_allowance` and `seat_r_ceiling` as AD-40-shaped derivations \"with no values here\"; variables.yaml lines 560 and 571 carry none of the node schema fields.",
+   "fix": "Drop the two keys from the tagged row (keeping \"kept separate from `seat_loss_run_allowance`\" as prose), or move them to a clearly-labelled inherited-not-node-minted line as the `holdout_months` row already does."
+  },
+  {
+   "file": "docs/components/trading-node.md",
+   "anchor": "Configuration table, row \"Benchmark\" (line 456)",
+   "severity": "minor",
+   "finding": "\"the design-load seat reference and per-benchmark regression thresholds (recorded at baseline, a multiple of measured variance) | node | blocks-soak\" invents a registry family the spine's mint table does not carry, names no key, and assigns a blank-effect tag no registry row holds.",
+   "evidence": "The spine's registry mint table (lines 724-758) contains no benchmark row; TN-23 line 628 treats the ~40-seat design reference as the pre-existing `variables.yaml:145` value (`registry:design_bot_concurrency`) and the regression threshold as \"stated when its baseline is recorded\", not as a registry mint.",
+   "fix": "Remove the row, or restate it as prose in the TN-23 section: \"the design-load seat reference is the existing `registry:design_bot_concurrency` row; each regression threshold is recorded with its baseline, never minted as a registry key.\""
+  },
+  {
+   "file": "docs/lenses/ops/runbook.md",
+   "anchor": "### The node's operations toolkit — the recipe table",
+   "severity": "minor",
+   "finding": "The table lists nine recipes and omits the on-demand HOST-LOSS RESTORE REHEARSAL recipe that TN-1 names in the toolkit list. The page documents the underlying `restore_drill_run` power (lines 61 and 117) but never gives the recipe a row, so the toolkit table is one recipe short of the spine's list.",
+   "evidence": "Spine TN-1 line 130: \"Install, switch and rollback, the secrets provisioning wizard, the data bootstrap, replay, config init / validate / explain, notify test, hub publish, and the host-loss restore rehearsal on demand are `just node-…` recipes\"; docs/components/trading-node.md:69 carries it as \"plus a `just node-…` recipe for the on-demand host-loss restore rehearsal\".",
+   "fix": "Add a table row for the host-loss-rehearsal recipe, authority column: \"Ops principal or operator; calls the `restore_drill_run` power — a power, not a timer (DEC-0198, DEC-0202)\"."
+  },
+  {
+   "file": "docs/lenses/ops/runbook.md",
+   "anchor": "### The node's operations toolkit, opening paragraph (line 39)",
+   "severity": "minor",
+   "finding": "The verbatim operator quote \"a very separate system, like how big tech teams work\" is attached to the `just node-…` operations toolkit; in the transcript it is said of the DevOps layer/lens as a whole, and nothing in docs/ carries that caveat.",
+   "evidence": "_docwork/node-transcript-scan.md D8: \"Verbatim, but in the transcript it is said of the DevOps layer or lens ('I don't think the development operations layer or lens needs to be part of QMX'), not of the deployment recipes. Spine R1 attaches it to the `just node-…` operations toolkit … both are downstream readings of one sentence about the DevOps lens as a whole.\" The changelog caveats the D9 quote but not this one.",
+   "fix": "Reattribute the quote to the DevOps lens (\"the operator's posture on the DevOps lens as a whole\"), or drop the quotation marks and keep the paraphrase."
+  },
+  {
+   "file": "docs/components/trading-node.md",
+   "anchor": "line 21, \"an OPERATIONS TOOLKIT of `just node-…` recipes … DevOps tooling, \\\"a very separate system, like how big tech teams work\\\"\"",
+   "severity": "minor",
+   "finding": "Second occurrence of the same relocated-referent quote: the verbatim sentence is attached to the deployment recipes, while the transcript says it of the DevOps layer/lens as a whole.",
+   "evidence": "_docwork/node-transcript-scan.md D8; the defect is recorded in the DEC-0259 rationale as a known transcript finding but is not caveated in this doc.",
+   "fix": "Reattribute to the DevOps lens, or drop the quotation marks and keep the paraphrase."
+  },
+  {
+   "file": "docs/components/trading-node.md",
+   "anchor": "line 19, \"The operator declined to rule the product name — \\\"That question is not for this layer\\\"\" (and the same at TN-1, line 99)",
+   "severity": "minor",
+   "finding": "The verbatim quote is attached to a refusal to rule the PRODUCT NAME; the transcript ties that sentence to the node-COMMAND half of the bundled Q1. The changelog carries the caveat but the component spec and ADR-0019 (line 36) present the inference as the operator's direct words with no note.",
+   "evidence": "_docwork/node-transcript-scan.md D9: \"The transcript ties the refusal explicitly to the node command half of the bundled Q1: 'things that you're asking about in the question, I think is it the node command? That question is not for this layer.' … The spine's reading — 'the operator declined to rule the name itself' — is a defensible inference, but it is an inference.\" docs/changelog.md line 26 already notes \"(the transcript ties this to the node-command half of the bundled question…)\".",
+   "fix": "Keep the recorded fact (the operator did not rule the product name) but either drop the quotation marks around that sentence or carry the changelog's caveat inline, as the transcript scan recommends."
+  },
+  {
+   "file": "docs/index.md",
+   "anchor": "line 26, Gap report bullet — \"deferred are … and the eight the 2026-08-28 trading-node increment minted\"",
+   "severity": "minor",
+   "finding": "All eight node gaps are grouped as \"deferred\", including GAP-0057, whose catalog status is `open` (non-blocking, cheap-veto).",
+   "evidence": "_docwork/gaps.yaml GAP-0057: `status: open`, `blocking: false`; docs/knowledge/traceability.md:346 \"GAP-0050 through GAP-0056 are `deferred` by the node sitting and GAP-0057 is a non-blocking `open` cheap-veto item\"; docs/gap-report.md labels the row \"*(non-blocking `open`, cheap-veto)*\".",
+   "fix": "Split the sentence: \"…deferred are GAP-0016/GAP-0017, GAP-0048/GAP-0049 and the node rows GAP-0050 through GAP-0056; GAP-0057 (a per-bot warm-up) is a non-blocking OPEN cheap-veto item whose recorded default is none in V1.\""
+  },
+  {
+   "file": "docs/components/qmf-risk.md",
+   "anchor": "\"The node's reconciliation vocabulary is FOUR verdicts\" — \"so resolve_unknown issues only from a reconciled read-back inside the lookback\"",
+   "severity": "critical",
+   "finding": "K1 propagation: states resolve_unknown has ONE path and omits the operator-attestation path entirely, so a stuck UNKNOWN outside the lookback reads as unresolvable.",
+   "evidence": "Spine TN-10 step 6: \"an unambiguous observed-accepted | observed-absent from the read-back resolves automatically and journals its evidence; an ambiguous, absent or out-of-lookback read-back requires operator attestation through the powers channel\"; ct-20-venue-event.yaml:32 already carries the desk-corrected two-path text (DEC-0258).",
+   "fix": "Replace with: \"so resolve_unknown has exactly two paths — AUTOMATIC from an unambiguous observed-accepted | observed-absent reconciled read-back inside the lookback, journaling its evidence, and OPERATOR ATTESTATION through the powers channel where the read-back is ambiguous, absent or out-of-lookback — and out-of-lookback is a nameable state\"."
+  },
+  {
+   "file": "docs/glossary.md",
+   "anchor": "\"reconciliation verdict\" entry — \"and resolve_unknown may be issued ONLY from a reconciled read-back INSIDE the lookback\"",
+   "severity": "critical",
+   "finding": "K1 propagation in the vocabulary authority every other doc defers to: the uncorrected one-path form of DEC-0258.",
+   "evidence": "Spine TN-10 step 6 (two paths, attestation through the powers channel); ct-20-venue-event.yaml:32, \"the AUTOMATIC resolve_unknown is issued only from a reconciled read-back INSIDE THE LOOKBACK ... while an ambiguous, absent or out-of-lookback read-back requires operator attestation through the powers channel\".",
+   "fix": "Replace the clause with: \"and resolve_unknown has two paths — AUTOMATIC from an unambiguous observed-accepted | observed-absent reconciled read-back inside the lookback, and OPERATOR ATTESTATION through the powers channel where the read-back is ambiguous, absent or out-of-lookback, the evidence channel serving the outstanding set with its per-command read-back detail so the attestation is made against evidence rather than a count\"."
+  },
+  {
+   "file": "docs/contracts/ct-21-venue-secret-session.yaml",
+   "anchor": "\"TRADING-NODE USAGE (2026-08-29): on the VPS there are THREE named secret holders and no others\"",
+   "severity": "critical",
+   "finding": "States a CLOSED set of three holders, contradicting the FINAL spine's amended count of four; it silently makes the observability stack's Grafana admin credential an undeclared holder and breaks the invariant the spine carves the wizard out to keep checkable. The note reproduces the superseded memlog line-46 gate ruling 12 instead of the GATE-2 amendment.",
+   "evidence": "Spine TN-12: \"Four named secret holders on the VPS, and no fifth. ... The observability STACK ... is the DECLARED FOURTH holder, holding its own Grafana admin credential and any log-shipper auth token\"; memlog line 46 says three, amended by the GATE-2 entry \"its own credentials a DECLARED FOURTH secret holder\" (brief §3 authority order 46→48→49→51); security-model.md:123 and runbook.md:223 both already say \"Four named secret holders ... and no fifth\" (DEC-0227, DEC-0197, DEC-0236).",
+   "fix": "Change \"THREE named secret holders and no others\" to \"FOUR named secret holders and no fifth\" and extend the list with the observability STACK as the DECLARED FOURTH holder (its own service account, own LoadCredentialEncrypted line, holding nothing the node holds), noting the provisioning wizard as a TRANSIENT workstation-only holder (DEC-0197, DEC-0227, DEC-0236)."
+  },
+  {
+   "file": "docs/components/qmf-core.md",
+   "anchor": "line 67, \"nothing imports `qmf-venue` (DEC-0138)\"",
+   "severity": "major",
+   "finding": "Untouched qmf-core spec restates the flat AD-28 import ban the increment narrowed at source; a builder reading it alone refuses the node's sanctioned wiring.",
+   "evidence": "constitution.md L30 now carries \"[Node annotation, 2026-08-29: the trading node (COMP-QMN, code name qmn) is the ONE sanctioned importer and wirer of qmf-venue. The writable boundary of that sanction is the node's qmn.venue subpackage ... qmb and qml keep their ban. (DEC-0241, DEC-0196)]\".",
+   "fix": "Replace \"nothing imports `qmf-venue` (DEC-0138)\" with \"nothing imports `qmf-venue` except the trading node's `qmn.venue` subpackage, the one sanctioned wiring point (DEC-0138, DEC-0241)\"."
+  },
+  {
+   "file": "docs/decisions/ADR-0007-venue-neutral-integration.md",
+   "anchor": "\"- **Node boundary (DEC-0142):** trading-node runtime material stays out of QMF documentation.\"",
+   "severity": "major",
+   "finding": "States as CURRENT a boundary the increment reversed — the order path, protection funnel, startup semantics and flatten-authority assignment are now absorbed into docs/ — with no dated follow-up, so the ADR reads as live guidance to keep node material out.",
+   "evidence": "DEC-0259 \"Trading-node spine TN-1..TN-25 adopted in full\"; docs/components/trading-node.md and ADR-0019 now hold that material; ADR-0018's \"Update 2026-08-21 (veto round)\" is the house pattern.",
+   "fix": "Append a dated follow-up at the end of Consequences recording: DEC-0142 superseded (node material now in components/trading-node.md, ADR-0019, DEC-0186..0210, DEC-0259); AD-28's \"nothing imports qmf-venue\" narrowed by L30's node annotation (DEC-0241, DEC-0196); VenueClientPort node-minted with realizing the seam in qmf-venue recorded-not-applied (DEC-0228, DEC-0242); ticket-006 trendbar basis closed as measured-per-broker (DEC-0240). Full text in _docwork/harvest/node/review-findings.md."
+  },
+  {
+   "file": "docs/scenarios/SCN-0005-uncertain-venue-submission.md",
+   "anchor": "\"Which effect fires at which severity stays node/trading-node authority, referenced only as a pointer (`tracker/trading-node-notes.md`), never absorbed here (DEC-0150) (DEC-0142).\"",
+   "severity": "major",
+   "finding": "A living golden scenario still routes the reader to a tracker file for the severity-effect assignment the increment absorbed into docs/ as the KSA effect matrix.",
+   "evidence": "DEC-0237 \"KSA vocabulary re-ratified into docs/ from the GitBook baseline; the effect matrix is node severity policy\"; TN-7 binds the matrix shape with blank/provisional-evidence cells blocking live money; GAP-0050 holds the VALUES.",
+   "fix": "Replace with: \"Which effect fires at which severity is the node's severity policy — the KSA trigger-to-level-to-effect matrix, whose SHAPE is ratified in docs/components/trading-node.md and whose VALUES stay open under GAP-0050 for pre-soak operator ratification through the settings surface, a blank or provisional-evidence cell blocking live money (DEC-0150, DEC-0193, DEC-0237).\""
+  },
+  {
+   "file": "docs/glossary.md",
+   "anchor": "\"reconciliation verdict\" entry — \"When reconciliation runs and what a verdict triggers are node/BMS authority, referenced only as a pointer (`tracker/trading-node-notes.md`), not QMF's to decide.\"",
+   "severity": "major",
+   "finding": "The glossary still routes to the tracker file for material this increment absorbed.",
+   "evidence": "DEC-0195/DEC-0259 — the node's reconciliation cadence (registry:reconciliation_cadence), the entries-only stand-down and the verdict consequences are ratified in docs/components/trading-node.md.",
+   "fix": "Replace with: \"When reconciliation runs and what a verdict triggers are the node's authority, ratified in docs/components/trading-node.md — cadence after every UNKNOWN, on every reconnect, at each accounting rollover and on a configurable periodic tick, startup reconciliation gating ENTRIES only (DEC-0195).\""
+  },
+  {
+   "file": "docs/contracts/ct-19-venue-command.yaml",
+   "anchor": "line 8, \"intended_consumers: [out-of-scope QMX application]  # the command caller; deliberately unassigned in QMF\"",
+   "severity": "major",
+   "finding": "Records the node as an out-of-scope, unassigned consumer — the exact \"outside scope\" phrasing the sitting reverses. The trading node is the registered command caller.",
+   "evidence": "docs/components/trading-node.md:43, \"Venue commands (five kinds; through the node-minted port) | out | CT-19 | COMP-QMF-VENUE (DEC-0191) (DEC-0196)\"; DEC-0186 registers COMP-QMN; TN-6 wires the order path through CT-19.",
+   "fix": "Change to: \"intended_consumers: [COMP-QMN]  # the command caller is the trading node's composition root, wiring qmf-venue through the node-minted VenueClientPort over the CT-19 shapes; no longer unassigned (DEC-0137, DEC-0191, DEC-0196)\"."
+  },
+  {
+   "file": "docs/contracts/ct-23-risk-evaluation.yaml",
+   "anchor": "line 8, \"intended_consumers: []  # ... the caller (the node/bot layer) is a node-boundary pointer, never named here — see tracker/trading-node-notes.md (DEC-0142)\"",
+   "severity": "major",
+   "finding": "The inbound risk-evaluation door has no named consumer and points at the tracker file, while the node doc names CT-23 as an in/out node interface and the seats mint CT-23 intents.",
+   "evidence": "docs/components/trading-node.md:47, \"Risk-evaluation door (Book-resolved intent → the order path) | in/out | CT-23 | COMP-QMF-RISK\"; line 344, seats \"returning zero-or-more CT-23 intents\"; DEC-0191, DEC-0259.",
+   "fix": "Change to: \"intended_consumers: [COMP-QMN]  # the Book (qmf-risk) is the RECEIVER and owner of this inbound door; the caller is the trading node's order path — QL-7 seats mint the intents and the node calls the door (DEC-0142 superseded in part 2026-08-29, DEC-0191)\"."
+  },
+  {
+   "file": "docs/contracts/ct-27-bms-definition.yaml",
+   "anchor": "\"the pointer is tracker/trading-node-notes.md (DEC-0150, DEC-0158)\" (invariant) and \"(pointer: tracker/trading-node-notes.md)\" (ksa_policy field note)",
+   "severity": "major",
+   "finding": "The untouched BMS-definition contract sends builders to the tracker file for the KSA trigger→level→effect matrix and severity-policy values — the material this increment ratified in docs/ (shape) and minted as a catalog gap (values).",
+   "evidence": "DEC-0192 closes the KSA matrix SHAPE (TN-7); DEC-0237 re-ratifies the KSA vocabulary with the effect matrix as node severity policy; gap-report.md, \"KSA effect-matrix values | ... Tracked as GAP-0050, never GAP-0015\".",
+   "fix": "In both lines replace the tracker pointer with \"the pointer is docs/components/trading-node.md — the matrix SHAPE is ratified there under TN-7 and its VALUES stay open as GAP-0050, pre-soak operator ratification through the settings surface, a blank or provisional-evidence cell blocking live money (DEC-0150, DEC-0158, DEC-0192, DEC-0237)\"."
+  },
+  {
+   "file": "docs/contracts/ct-19-venue-command.yaml",
+   "anchor": "\"Which effect fires at which severity stays node/trading-node authority, recorded in tracker/trading-node-notes.md and referenced here as a pointer\"",
+   "severity": "major",
+   "finding": "Stale tracker pointer on the flatten-authority invariant.",
+   "evidence": "DEC-0192/DEC-0237 ratify the KSA effect matrix as node severity policy in docs/components/trading-node.md; DEC-0259 adopts the spine into docs/.",
+   "fix": "Replace \"recorded in tracker/trading-node-notes.md and referenced here as a pointer, never specified as QMF contract surface\" with \"ratified in docs/components/trading-node.md as the node's KSA severity policy and referenced here as a pointer, never specified as QMF contract surface (values open under GAP-0050)\"."
+  },
+  {
+   "file": "docs/components/ctrader.md",
+   "anchor": "interface table row \"Venue command shape (five kinds) | ratified design; caller unassigned | CT-19 | Eventual caller: out-of-scope QMX application\"",
+   "severity": "major",
+   "finding": "A doc this increment TOUCHED (it gained the soak-week note at line 142) still records the command caller as unassigned and out of scope, while the same increment registered COMP-QMN as that caller and the sole sanctioned qmf-venue wirer.",
+   "evidence": "docs/components/trading-node.md:43 lists CT-19 as a node out interface; spine Dependency direction, \"The node's composition root is the one sanctioned importer and wirer of qmf-venue\" (DEC-0196, DEC-0241).",
+   "fix": "Status cell → \"ratified design; caller assigned to COMP-QMN\"; note cell → \"Caller: COMP-QMN (trading-node.md) through the node-minted VenueClientPort; no adapter implemented (DEC-0191, DEC-0196)\"."
+  },
+  {
+   "file": "docs/components/ctrader.md",
+   "anchor": "\"### Node boundary\" — \"Trading-node runtime material stays out of this spec. ... durably held in `tracker/trading-node-notes.md`, and this document references it as a pointer only. [DEC-0142]\"",
+   "severity": "major",
+   "finding": "The section survived the increment untouched and still declares node material off-limits and tracker-homed, three lines from a soak-week paragraph the increment added to the same file.",
+   "evidence": "DEC-0259 adopts TN-1..TN-25 into docs/; DEC-0186 registers COMP-QMN with its own spec; ctrader.md:142 already states the node's soak-week venue behaviour.",
+   "fix": "Rewrite as \"### Node boundary (updated 2026-08-29)\": DEC-0142's tracker-pointer boundary superseded; node runtime material lives in trading-node.md (COMP-QMN) and ADR-0019; this spec keeps only the cTrader venue FACTS. Full text in _docwork/harvest/node/review-findings.md."
+  },
+  {
+   "file": "docs/constitution.md",
+   "anchor": "\"**L39.** The exit-preservation invariant: ... no control kind whose effect is a blanket command-pipe block may be minted. (DEC-0150)\"",
+   "severity": "major",
+   "finding": "L39 is stated flat and un-annotated while the node spec names ONE standing exception — AD-27's per-command UNKNOWN block, which refuses EVERY command on the stream, protection commands included. A builder reading L39 alone treats that block as an illegal mint. L8 and L30 both received dated node annotations; L39 did not.",
+   "evidence": "docs/components/trading-node.md:143, \"THE ONE EXCEPTION is the parent's own: AD-27's per-command UNKNOWN block is not a control and not an entry-side block — while an UNKNOWN is outstanding on a (VenueId, account) stream EVERY command on that stream is refused, protection commands included ... only resolve_unknown clears it (DEC-0191) (DEC-0216)\".",
+   "fix": "Append a bracketed \"[Node annotation, 2026-08-29: ...]\" to L39 stating that every node-raised block is entries-only (a block that cannot be applied entry-side only is not minted) and that the ONE exception is the parent's own AD-27 UNKNOWN block, with the refused protective act standing as an AD-36 protection intent cleared only by resolve_unknown (DEC-0191, DEC-0221, DEC-0216)."
+  },
+  {
+   "file": "docs/constitution.md",
+   "anchor": "\"**L38.** Configurable means UI-editable at platform level: ... recorded numbers attached to configurable variables are evidence, never ratified constants. (DEC-0157)\"",
+   "severity": "major",
+   "finding": "The node minted a per-value ratification path — value-status ∈ blank | provisional-evidence | ratified, countersigned through the powers channel with an evidence citation — so a recorded number CAN now become ratified on the resolved config artifact. L38's closing clause reads as forbidding exactly that and carries no dated note.",
+   "evidence": "DEC-0254 \"value_status_required minted as a registry schema field; value-status lives on the resolved value [APPLIED]\"; DEC-0231; ADR-0019, \"the per-value value-status ... is countersigned through the powers channel with an evidence citation. A provisional-evidence value gating live money blocks role = live exactly as a blank does\".",
+   "fix": "Append a bracketed node annotation to L38: the registry gains value_status_required; the per-value status lives on the RESOLVED config artifact, never the registry row; a recorded number stays evidence in the registry and becomes ratified only by an operator countersign carrying an fp1 evidence citation; blank or provisional-evidence on a live-gating variable blocks role = live (DEC-0254, DEC-0231, DEC-0256)."
+  },
+  {
+   "file": "docs/architecture/overview.md",
+   "anchor": "\"The trading node (COMP-QMN) is classified at the **backend** layer\" and the layer-table row \"| `COMP-QMN` — trading node (code name `qmn`) | backend |\"",
+   "severity": "major",
+   "finding": "The overview declares COMP-QMN backend in two places while the registry registers it layer: middleware — the lane its application-layer siblings QMB and QML occupy. Backend is structurally impossible: the node depends on COMP-QMF-VENUE, COMP-QMB and COMP-QML (all middleware) and a backend→middleware edge is an upward edge validate_registry rejects.",
+   "evidence": "dependencies.yaml:163-167 \"kind: service / layer: middleware / roster_role: application\" and its own note \"layer is middleware, the application-composition slot COMP-QMB and COMP-QML already occupy — ... every depends_on edge runs downward or sideways\"; layer-conventions.md rule 4; validate_registry --root . reports OK against the middleware registration.",
+   "fix": "Prose: \"classified at the **middleware** layer as an application-layer consumer, the lane QMB and QML occupy\" and drop \"it is backend runtime, and\"; layer table: change the COMP-QMN row's layer cell from `backend` to `middleware`."
+  },
+  {
+   "file": "docs/index.md",
+   "anchor": "\"- [Operations runbook](lenses/ops/runbook.md) — records operational no-op gates because no runtime or command suite is ratified.\"",
+   "severity": "major",
+   "finding": "The front-door blurb still declares the runbook unratified while the increment rewrote that page with the node's ratified just node-… recipes, check mode, safe point, stand-down/resurrect and the VPS-loss runbook.",
+   "evidence": "DEC-0201/DEC-0211; runbook.md now carries \"just node-switch <commit>\", \"**Check mode** is the node's dry-run boot, defined once (DEC-0201)\" and the five checked-in systemd units.",
+   "fix": "Replace with: \"— records the ratified node operations surface: the just node-… operations toolkit (install, switch, rollback, secrets provisioning), check mode, the safe point, stand-down and resurrect, the VPS-loss runbook and the soak-week warm-up rider; every QMF-side gate stays a documented no-op until the factory wires it.\""
+  },
+  {
+   "file": "docs/index.md",
+   "anchor": "\"- [Security model](lenses/security/security-model.md) — defines trust and human-authority boundaries while credential handling remains unresolved.\"",
+   "severity": "major",
+   "finding": "Credential handling is no longer unresolved — the increment ratified the two-layer store, the named holders, the wizard, key custody and the privilege model on that page.",
+   "evidence": "DEC-0197 (two-layer store), DEC-0227 (fixed qmx account, named holders), DEC-0217/DEC-0252 (backup payload-key custody); security-model.md section \"Trading-node secret holders and the two-layer store (TN-12, gate ruling 12)\".",
+   "fix": "Replace \"while credential handling remains unresolved\" with \"and records the node's ratified credential handling: the two-layer VPS store, the named secret holders, the provisioning wizard, backup-key escrow, SO_PEERCRED peer principals and the privilege model\"."
+  },
+  {
+   "file": "docs/AGENTS.md",
+   "anchor": "\"**Default-deny dependency direction.**\" hard rule, closing sentence \"Applications still never import `qmf-venue`.\"",
+   "severity": "major",
+   "finding": "The agent entry point states the ban absolutely, which is now false — the trading node is an application and is the ONE sanctioned importer. A later bullet states the sanction, so AGENTS.md contradicts itself within five lines and an agent obeying \"hard rules\" refuses the node's own wiring.",
+   "evidence": "constitution L30 node annotation (DEC-0241, DEC-0196); AGENTS.md's own later bullet \"**qmn.venue is the one sanctioned importer and wirer of qmf-venue** (DEC-0241)\".",
+   "fix": "Replace with: \"Applications never import `qmf-venue` — with exactly ONE sanctioned exception, the trading node's `qmn.venue` subpackage (DEC-0241, see the node bullet below); qmb and qml keep their ban.\""
+  },
+  {
+   "file": "docs/AGENTS.md",
+   "anchor": "\"- **Ratified venue content** ... the four-command vocabulary and the four-outcome uncertainty law ... (AD-27, DEC-0137)\"",
+   "severity": "major",
+   "finding": "CT-19's vocabulary has been FIVE kinds since amend_protection was minted, and the node's order path depends on the fifth (risk-non-increasing amend_protection is an act the entry-side-only block must never refuse). An agent building from this line ships four kinds. Same stale count at docs/index.md:47 and docs/architecture/stack.md:142.",
+   "evidence": "SCN-0005, \"The command vocabulary is exactly **five** typed kinds — place_order, cancel_order, close_position, close_all, and amend_protection (DEC-0148)\"; ct-19-venue-command.yaml:19 same; trading-node.md:143 names risk-non-increasing amend_protection among acts a node block may never refuse (DEC-0221).",
+   "fix": "AGENTS.md: \"the five-command vocabulary (place_order, cancel_order, close_position, close_all, amend_protection)\" + DEC-0148 in the cite; make the same substitution at index.md:47 and stack.md:142."
+  },
+  {
+   "file": "docs/scenarios/SCN-0007-human-promotion.md",
+   "anchor": "\"## Then\" — \"only a human-controlled, signed promotion occurrence ... can authorize the boundary crossing\"",
+   "severity": "major",
+   "finding": "The golden scenario for the promotion boundary was left untouched and still presents promotion as ONE sufficient act, while R3 made promotion (a click that signs) and activation (a second, separate act) two acts with the precondition battery silent server-side and the pull refusing sandbox provenance. A builder wiring live-zone entry from this scenario ships a one-act path.",
+   "evidence": "DEC-0213 (R3); DEC-0205 (TN-20); glossary.md:30 \"Two distinct human-only acts in the trading node's live path ... never merged (DEC-0205, DEC-0213)\"; trading-node.md:23 \"promotion-then-activation as two acts (R3)\".",
+   "fix": "Append to \"Then\": promotion is the signed AD-18 card; activation is a second separate act through the powers channel that puts the artifact on the live path; the battery runs silently server-side against fresh state; a pull carrying provenance = sandbox is refused; L17 unchanged (DEC-0205, DEC-0213)."
+  },
+  {
+   "file": "docs/components/qmf-data-ingest.md",
+   "anchor": "\"### Tick and news-calendar recording\" — \"forward broker tick capture is a separate venue/application path that waits for the broker API application and connection\" and \"scheduling stays outside QMF\"",
+   "severity": "major",
+   "finding": "The untouched ingest spec still describes both the forward tick recorder and the news-calendar schedule as waiting on an unnamed application, when the increment assigned both to the node.",
+   "evidence": "DEC-0188 (TN-3), \"the VPS PLANE hosts ONE node process running the trading loop AND the live tick, bar and depth recording ... the connection manager's canonical sensing feed IS the recorder and a separate recorder process cannot hold it\"; DEC-0198/DEC-0214, the recorder \"re-homed from the Windows Scheduled Task\" onto qmn-news-calendar.timer with Forex Factory free as sole source; DEC-0201 names the five units.",
+   "fix": "Keep the QMF-side boundaries; add after \"connection\": \"That application is now named: the trading node (COMP-QMN) hosts the forward capture on its VPS plane, where the connection manager's canonical sensing feed IS the recorder; COMP-QMF-DATA-INGEST still takes no dependency on COMP-CTRADER (DEC-0053, DEC-0188).\"; and after \"scheduling stays outside QMF\": \"— it is the trading node's qmn-news-calendar.timer unit on a configurable refresh cadence, with Forex Factory's free weekly file the SOLE V1 source and no paid fallback (DEC-0198, DEC-0214) —\"."
+  },
+  {
+   "file": "docs/contracts/ct-11-evidence-persistence.yaml",
+   "anchor": "enums.room_role.values [ingest door … registry room] and the two \"the seven room-roles\" notes",
+   "severity": "major",
+   "finding": "The increment minted sealed-archive as AD-19's EIGHTH room role (applied in qmf-data.md, qmf-data-backup.md, ct-14, glossary, data lens) but CT-11 — the contract that says which room holds a stored artifact and requires room_role on every one — still enumerates seven, so nothing can be persisted or labelled in the evidence tier's sealed-archive room.",
+   "evidence": "DEC-0253 \"AD-19 gains an eighth room role, sealed-archive [APPLIED]\"; qmf-data.md:119 \"adds an EIGHTH room-role to AD-19's seven: sealed-archive, instantiated PER WORLD in the evidence tier under the same retention, backup and migration law\"; glossary \"sealed-archive room role — The eighth AD-19 room role\".",
+   "fix": "Add \"sealed-archive\" to enums.room_role.values; change both notes to \"the eight room-roles\"; extend the enum note naming sealed-archive as the eighth (the one-way sync's target and the replay import port's source, DEC-0253, DEC-0188); update the invariant \"Seven room-roles — …\" to \"Eight room-roles — …\"; record as a dated comment on version: 1 exactly as ct-14 did rather than inventing a format bump."
+  },
+  {
+   "file": "docs/contracts/ct-26-store-backup-input.yaml",
+   "anchor": "\"source_room_role: [\\\"ingest door\\\", … \\\"registry room\\\"]  # the seven room-roles\"",
+   "severity": "major",
+   "finding": "The ratified backup reads the sealed-archive room BY NAME, so the store-to-backup handoff must name it as a source — this enum forbids it, making the ratified nightly backup flow unexpressible in the contract that carries it.",
+   "evidence": "ct-14-backup-restore.yaml:24, \"The backup reads the evidence tier's sealed-archive role BY NAME: AD-19 gains an eighth room-role\"; data-layer.md:178, \"the backed-up room set is named — the immutable raw archive, every journal room, the registry room, and the evidence tier's sealed-archive role and research door, for every world (DEC-0198)\".",
+   "fix": "Add \"sealed-archive\" to source_room_role; change the comment to \"the eight room-roles; input draws from the evidence rooms — including the evidence tier's sealed-archive role, which the nightly backup reads by name — into the backup room (DEC-0117, DEC-0253, DEC-0198)\"; record the change as a dated comment on version: 1 following ct-14's treatment."
+  },
+  {
+   "file": "docs/components/qmf-data-store.md",
+   "anchor": "\"The store physically holds the seven room-roles — ingest door … registry room — each instantiated per world (DEC-0117)\", the diagram subgraph \"seven room-roles, per world\", and the intro \"physically persists the seven room-roles\"",
+   "severity": "major",
+   "finding": "The component that physically persists the rooms was never told about the eighth, so the store spec cannot account for the evidence tier's sealed-archive room the node syncs into, the replay port reads and the backup copies.",
+   "evidence": "DEC-0253 [APPLIED]; qmf-data.md:119; data-layer.md section \"The evidence tier and the sealed-archive eighth room role\".",
+   "fix": "Change all three occurrences to \"eight room-roles\", add sealed-archive to the enumerated list and the diagram subgraph, and append one sentence naming it the trading-node sitting's mint — per world in the evidence tier, the one-way sync's target, the replay import port's only source, a named member of the backed-up room set, under the same retention/backup/migration law (DEC-0253, DEC-0188, DEC-0198)."
+  },
+  {
+   "file": "docs/lenses/testing/test-strategy.md",
+   "anchor": "the CT-19 conformance row, \"Four-command-kind round-trip (place_order, cancel_order, close_position, close_all)\" and the status cell \"the command caller stays unassigned in QMF — node/risk territory (tracker/trading-node-notes.md)\"",
+   "severity": "major",
+   "finding": "The conformance row defining CT-19's test coverage omits amend_protection — the fifth kind the node's protection path depends on and the one act the entry-side-only block must never refuse — so the ratified suite would never exercise it; the status cell also still calls the caller unassigned and points at the tracker file.",
+   "evidence": "ct-19-venue-command.yaml:19 (\"exactly five kinds … and amend_protection\"); trading-node.md:143, a node block \"refuses place_order and any risk-increasing amend_protection and NOTHING ELSE, never … risk-non-increasing amend_protection\" (DEC-0221); trading-node.md:43 lists CT-19 as a node out interface (DEC-0191).",
+   "fix": "Row opening → \"Five-command-kind round-trip (place_order, cancel_order, close_position, close_all, amend_protection — including a risk-increasing versus risk-non-increasing amend, which the node's entry-side-only block treats differently) on qmf-core nouns\"; status cell → \"Ratified (DEC-0137, DEC-0148); the command caller is COMP-QMN, the trading node's order path through the node-minted VenueClientPort (DEC-0191, DEC-0196)\"."
+  },
+  {
+   "file": "docs/decisions/ADR-0016-data-rooms-splits-journal.md",
+   "anchor": "\"**Dependency direction.** … nothing imports `qmf-venue` or `qmf-risk`\"",
+   "severity": "minor",
+   "finding": "The ADR restates the flat ban with no dated note; it is also the doc fixing the two-machines-plus-a-bucket topology the node's TN-3 now details.",
+   "evidence": "constitution L30 node annotation (DEC-0241); spine TN-3 fixes the three planes, /var/lib/qmx trees and the evidence tier on that same topology (DEC-0188).",
+   "fix": "Append a dated follow-up: the ban is narrowed at source by L30's node annotation (qmn.venue the one sanctioned importer; qmb and qml keep their ban, DEC-0241), and the ratified topology is unchanged and now detailed for the node's VPS plane in components/trading-node.md and lenses/data/data-layer.md (DEC-0188, DEC-0198)."
+  },
+  {
+   "file": "docs/contracts/ct-20-venue-event.yaml",
+   "anchor": "line 26, \"when it runs and what a verdict triggers are node/BMS authority, recorded in tracker/trading-node-notes.md as a pointer, never specified here\"",
+   "severity": "minor",
+   "finding": "The original AD-27 note still names the tracker file as the home of node authority while the TRADING-NODE USAGE note added at line 32 already states the node's vocabulary from docs/.",
+   "evidence": "DEC-0259 (spine adopted into docs/); DEC-0195 (cadence and consequences ratified in the node component spec).",
+   "fix": "Keep the point-in-time sentence and extend the pointer: \"… never specified here (superseded 2026-08-29: that authority is now ratified in docs/components/trading-node.md — see the TRADING-NODE USAGE note below, DEC-0195, DEC-0259)\"."
+  },
+  {
+   "file": "docs/contracts/ct-31-control-window.yaml",
+   "anchor": "\"severity->window is a declared node mapping, not QMF contract surface (tracker/trading-node-notes.md pointer) (DEC-0152, DEC-0156)\"",
+   "severity": "minor",
+   "finding": "A doc the increment TOUCHED still carries the tracker pointer for a mapping the node spec now declares.",
+   "evidence": "DEC-0259; the node's control-window usage is ratified in docs/components/trading-node.md.",
+   "fix": "Replace \"(tracker/trading-node-notes.md pointer)\" with \"(pointer: docs/components/trading-node.md)\"."
+  },
+  {
+   "file": "docs/lenses/ops/incident-playbook.md",
+   "anchor": "\"never the trigger→level→effect matrix (DEC-0150), which stays in `tracker/trading-node-notes.md` (DEC-0142).\"",
+   "severity": "minor",
+   "finding": "A touched lens page still names the tracker file as the matrix's home.",
+   "evidence": "DEC-0192 (shape ratified in the node spec), GAP-0050 (values).",
+   "fix": "Replace \"which stays in `tracker/trading-node-notes.md` (DEC-0142)\" with \"whose SHAPE is ratified in components/trading-node.md and whose VALUES stay open as GAP-0050 (DEC-0192, DEC-0237)\"."
+  },
+  {
+   "file": "docs/decisions/ADR-0019-trading-node.md",
+   "anchor": "\"**Deferred rows.** Eight questions are carried deferred and none blocks V1: … and per-bot post-activation warm-up (GAP-0057).\"",
+   "severity": "minor",
+   "finding": "GAP-0057's catalog status is `open` (non-blocking, cheap-veto), not `deferred`, so the ADR mis-states the status of one of the eight.",
+   "evidence": "gap-report.md:21 \"GAP-0050 through GAP-0056 are deferred\"; gap-report.md:170 \"**GAP-0057** *(non-blocking `open`, cheap-veto)*\"; traceability.md:346 same split.",
+   "fix": "Change the opening to \"**Deferred rows.** Eight questions are carried and none blocks V1 — seven `deferred` (GAP-0050 through GAP-0056) plus one non-blocking `open` cheap-veto item (GAP-0057):\" and leave the list unchanged."
+  },
+  {
+   "file": "docs/constitution.md",
+   "anchor": "\"**L34.** … secret values live only in the adapter's connection manager for a session's lifetime …\"",
+   "severity": "minor",
+   "finding": "The node's ratified two-layer store means secret material now also exists at rest on the VPS (host-key-sealed systemd-creds plus AEAD state under the KEK) and the backup payload key is escrowed on the workstation — all outside the connection manager. The law needs the dated scoping note the node spec already assumes (\"References never values above the connection manager (L34 / AD-26)\").",
+   "evidence": "DEC-0197/DEC-0227 (two-layer store, named holders); DEC-0217/DEC-0252 (workstation-escrowed CT-14 payload key, never VPS-minted).",
+   "fix": "Append a bracketed node annotation to L34: the law governs secret VALUES in a live process (above the connection manager only references travel, still true on the node); secret MATERIAL at rest is a separate ratified layer — systemd-creds --with-key=host KEK plus AEAD ciphertext under /var/lib/qmx/state, workstation-escrowed backup payload key — with no plaintext ever reaching a repo, config artifact, journal, evidence, fingerprint or log (DEC-0197, DEC-0227, DEC-0217, DEC-0252)."
+  },
+  {
+   "file": "docs/contracts/ct-21-venue-secret-session.yaml",
+   "anchor": "line 4 version comment, \"trading-node increment 2026-08-29 adds node-usage notes only — the two-layer VPS store landed at the node sitting, three named secret …\"",
+   "severity": "minor",
+   "finding": "The version comment repeats the superseded three-holder count.",
+   "evidence": "Spine TN-12, \"Four named secret holders on the VPS, and no fifth\" (DEC-0236).",
+   "fix": "Change \"three named secret\" to \"four named secret\" in the version comment."
+  },
+  {
+   "file": "docs/knowledge/traceability.md",
+   "anchor": "\"| DEC-0227 | `ratified` | Gate ruling 12 | … [Security model](../lenses/security/security-model.md) (qmx service account, three secret holders) |\"",
+   "severity": "minor",
+   "finding": "The locator row labels DEC-0227 with the superseded count while the security-model page it points at says four.",
+   "evidence": "security-model.md:123, \"**Four named secret holders exist on the VPS and no fifth** (DEC-0227, DEC-0197, DEC-0236)\".",
+   "fix": "Change \"three secret holders\" to \"four secret holders\" in that row."
+  },
+  {
+   "file": "docs/index.md",
+   "anchor": "\"- [Test strategy](lenses/testing/test-strategy.md) — defines future test layers and gates without inventing a toolchain or coverage threshold.\"",
+   "severity": "minor",
+   "finding": "The node QA standard now names a concrete battery and a coverage floor on that page.",
+   "evidence": "DEC-0208 (QA standard, benchmarks, soak acceptance); test-strategy.md:151, \"The battery is Skylos (including its infrastructure-as-code scan of the systemd unit files), vulture, the four tier-1 scanners, the coverage floor, and the Linux CI lane pinned to ubuntu-24.04\".",
+   "fix": "Replace \"without inventing a toolchain or coverage threshold\" with \"and records the node's ratified QA standard — the deterministic battery, mutation testing on the node money-path modules, venue conformance and the soak acceptance checklist\"."
+  },
+  {
+   "file": "docs/index.md",
+   "anchor": "\"- [CT-19 — venue command](contracts/ct-19-venue-command.yaml) — defines the four-kind command vocabulary …\"",
+   "severity": "minor",
+   "finding": "The command vocabulary has been five kinds since amend_protection was minted; the node spec and security model both say five.",
+   "evidence": "SCN-0005 (\"exactly five typed kinds … DEC-0148\"); security-model.md:31 (\"a fixed **five-kind** vocabulary\"); trading-node.md:43 (\"Venue commands (five kinds …)\").",
+   "fix": "Change \"the four-kind command vocabulary\" to \"the five-kind command vocabulary\" and add DEC-0148 to the cite."
+  },
+  {
+   "file": "docs/index.md",
+   "anchor": "\"- [CT-23 — risk-evaluation door] … the caller is node-boundary and stays unassigned in QMF (DEC-0147).\"",
+   "severity": "minor",
+   "finding": "The caller is now assigned — the trading node's order path calls CT-23 and its seats mint the intents.",
+   "evidence": "trading-node.md:47 lists CT-23 as an in/out node interface; line 344, seats \"returning zero-or-more CT-23 intents\"; DEC-0191, DEC-0259.",
+   "fix": "Change to \"the caller is the trading node's order path (COMP-QMN), the Book (qmf-risk) the receiver (DEC-0147, DEC-0191)\"."
+  },
+  {
+   "file": "docs/index.md",
+   "anchor": "\"- [Gap report](gap-report.md) — … and the eight the 2026-08-28 trading-node increment minted — GAP-0050 …, GAP-0051 through GAP-0056 …, and GAP-0057 (a per-bot warm-up, cheap-veto default = none in V1)\"",
+   "severity": "minor",
+   "finding": "All eight are listed under \"deferred\" but GAP-0057's catalog status is `open`.",
+   "evidence": "gap-report.md:21 (\"GAP-0050 through GAP-0056 are deferred\"); gap-report.md:170 (\"**GAP-0057** *(non-blocking `open`, cheap-veto)*\").",
+   "fix": "Change \"and the eight the 2026-08-28 trading-node increment minted\" to \"and seven of the eight the 2026-08-28 trading-node increment minted\", and end the GAP-0057 clause with \"— carried non-blocking `open`, not deferred\"."
+  },
+  {
+   "file": "docs/architecture/overview.md",
+   "anchor": "\"`qmf-data` defines seven room-roles — …\" and the layer-table cell \"Seven room-roles, data policy, and public API\" (also docs/architecture/stack.md qmf-data row \"Seven room-roles, …\" and docs/lenses/data/data-layer.md heading \"## Seven room-roles per world\")",
+   "severity": "minor",
+   "finding": "Four count statements in docs the increment touched still say seven; data-layer.md contradicts itself by carrying a later section titled \"The evidence tier and the sealed-archive eighth room role\".",
+   "evidence": "DEC-0253 [APPLIED]; qmf-data.md:119 (\"adds an EIGHTH room-role to AD-19's seven: sealed-archive\").",
+   "fix": "Change each to \"eight room-roles\" (data-layer's heading to \"## Eight room-roles per world\"), adding \"and `sealed-archive` (the eighth, the node's evidence tier — DEC-0253)\" where the roles are enumerated."
+  },
+  {
+   "file": "docs/contracts/ct-09-registry-persistence.yaml",
+   "anchor": "\"The registry room is one of qmf-data's seven room-roles and is held under the same retention, backup, and migration law as every other evidence room (DEC-0117, DEC-0118, DEC-0120).\"",
+   "severity": "minor",
+   "finding": "The same stale count in the contract that homes the registry room.",
+   "evidence": "DEC-0253 [APPLIED] mints sealed-archive as the eighth AD-19 room role under the same law; qmf-data.md:119.",
+   "fix": "Change \"one of qmf-data's seven room-roles\" to \"one of qmf-data's eight room-roles\" and add \"(the eighth, `sealed-archive`, is the trading-node sitting's mint — DEC-0253)\"."
+  },
+  {
+   "file": "docs/decisions/ADR-0016-data-rooms-splits-journal.md",
+   "anchor": "\"**Rooms and stores.** `qmf-data` defines seven room-roles — …\"",
+   "severity": "minor",
+   "finding": "The AD-19 record is point-in-time and correctly stays as written, but needs the house dated follow-up naming the eighth role.",
+   "evidence": "DEC-0253 [APPLIED]; qmf-data.md:119.",
+   "fix": "Fold into the ADR-0016 dated follow-up: \"AD-19 gains an EIGHTH room-role, `sealed-archive`, minted by the 2026-08-28 trading-node sitting and instantiated per world in the node's evidence tier under the same retention, backup and migration law as the other seven (DEC-0253, DEC-0188).\""
+  },
+  {
+   "file": "docs/scenarios/SCN-0004-off-machine-backup.md",
+   "anchor": "\"Recoverability is claimed only through the ratified verify primitives — automated sample-restore tests plus a periodic full-restore rehearsal (DEC-0118) — never asserted from a snapshot alone.\"",
+   "severity": "minor",
+   "finding": "The golden scenario for the backup boundary still describes a generic \"periodic\" rehearsal, while the increment fixed the cadences and added a third drill plus the payload-key custody rule that makes the disaster case survivable.",
+   "evidence": "DEC-0252 [APPLIED]; data-layer.md:178, \"Three restore drills run, each with its own unit … a nightly sample restore (qmn-restore-sample.timer), a monthly full restore (qmn-restore-full.timer), and a host-loss restore rehearsal triggered by the operator's restore_drill_run power onto a clean host holding only the escrowed payload key (DEC-0198, DEC-0252)\"; DEC-0217.",
+   "fix": "Extend the sentence with the node's three drills (nightly sample, monthly full, host-loss rehearsal onto a clean host holding ONLY the workstation-escrowed CT-14 payload key, never VPS-minted) citing DEC-0198, DEC-0252, DEC-0217."
+  },
+  {
+   "file": "docs/knowledge/traceability.md",
+   "anchor": "\"| DEC-0142 | `ratified` | Node-material boundary | `tracker/trading-node-notes.md` (pointer only); [QMF Venue](../components/qmf-venue.md), Authority boundary |\"",
+   "severity": "minor",
+   "finding": "The locator row still sends a reader to the tracker file for node material with no supersession marker, while AGENTS.md already records the boundary as superseded in part.",
+   "evidence": "AGENTS.md:27, \"**Node-material boundary** (DEC-0142, superseded in part 2026-08-28): trading-node runtime material now lives in its own application-layer spec components/trading-node.md (COMP-QMN)\"; DEC-0259.",
+   "fix": "Change the navigation cell to point at components/trading-node.md and ADR-0019, marking DEC-0142's pointer-only boundary SUPERSEDED IN PART 2026-08-29 (DEC-0259) and tracker/trading-node-notes.md as history."
+  },
+  {
+   "file": "docs/decisions/ADR-0011-deferred-consumer-products.md",
+   "anchor": "\"## Consequences\" — \"QMF V1 exposes reusable contracts without pretending to be a complete trading node. Deferred products require later design sessions …\"",
+   "severity": "minor",
+   "finding": "The record of what stays deferred has never taken a dated follow-up, so a reader still sees the QML Bot library and backtesting as deferred and has no pointer to where MIS now lands.",
+   "evidence": "DEC-0090's realization is recorded in ADR-0018, not here; DEC-0259 adopts the node spine; DEC-0204 (TN-19) builds the MIS shadow-lane seam in V1 with labelers rule-based, and GAP-0051 carries MIS training and shadow rollout as a named follow-on epic.",
+   "fix": "Append a dated follow-up naming QMB (ADR-0017), QML (ADR-0018) and the node (ADR-0019) as realized homes, MIS still outside V1 with the node building only the SEAM (signal snapshot, shadow lane, comparison read model) and training under GAP-0051, the simulator and agentic organs still deferred with the agent/MCP door under GAP-0053 (DEC-0204, DEC-0259)."
+  },
+  {
+   "file": "docs/lenses/observability/logging-spec.md",
+   "anchor": "### Node log record fields — the `world` row",
+   "severity": "critical",
+   "finding": "The `world` log-field description invents world values that contradict the ratified world vocabulary: it lists \"`LIVE`, the paired demo world that carries paper mode, or a sandbox\". The paired demo binding is `world = live` with `role = demo`; there is no demo world, and `sandbox` is a provenance, not a world. A builder implementing this field literally mints a demo world and breaks the role-vs-world discriminator the live drift stand-down depends on.",
+   "evidence": "DEC-0194 (TN-9): \"the paper target is the paired demo account — role `demo`, `world = live`\". DEC-0195 (TN-10): \"THE DISCRIMINATOR IS ROLE, NEVER WORLD, because the demo binding carries `world = live` by AD-12 and keying the live drift stand-down on `world` would stand the soak down on the first demo-server quirk\". docs/components/qmf-data.md's room diagram fixes the set as `world = live` | `world = replay` plus `world = simulated` (reserved-unusable, write = policy rejection). Sandbox is `provenance = sandbox` (DEC-0188).",
+   "fix": "Replace the cell with: \"The world the record concerns — `live` or `replay` (`simulated` is reserved-unusable in V1); the paired DEMO binding that carries paper mode is `world = live` with `role = demo`, and sandbox evidence is distinguished by `provenance = sandbox`, not by a world (DEC-0194, DEC-0195, DEC-0188).\""
+  },
+  {
+   "file": "docs/lenses/ops/incident-playbook.md",
+   "anchor": "closing paragraph of the trading-node section: \"The node's reconciliation vocabulary is FOUR verdicts … and `resolve_unknown` may be issued only from a `reconciled` read-back INSIDE the lookback (DEC-0258)\"",
+   "severity": "critical",
+   "finding": "K1 propagation. The sentence states the one-path form of resolve_unknown and drops the operator-attestation path, so an `out-of-lookback` UNKNOWN reads as unresolvable — and it contradicts this same file's own \"Stuck UNKNOWN\" row, which states both paths correctly.",
+   "evidence": "DEC-0258 (desk-corrected): \"resolve_unknown clears an UNKNOWN automatically only from an unambiguous reconciled read-back inside the lookback, while an ambiguous, absent or out-of-lookback read-back requires operator attestation through the powers channel (the only path that carries a signer identity)\". Same in DEC-0195 (TN-10 step 6) and spine TN-10 line 262.",
+   "fix": "Replace with: \"…and `resolve_unknown` clears AUTOMATICALLY only from an unambiguous `reconciled` read-back INSIDE the lookback, while an ambiguous, absent or `out-of-lookback` read-back requires operator attestation through the powers channel (DEC-0258, DEC-0195).\""
+  },
+  {
+   "file": "docs/lenses/bugs/triage.md",
+   "anchor": "line 85, \"…and `resolve_unknown` may be issued only from a reconciled read-back inside the lookback (DEC-0258, DEC-0195)\"",
+   "severity": "critical",
+   "finding": "K1 propagation. The triage rule states the one-path form and omits operator attestation, so a stuck UNKNOWN outside the lookback triages as having no exit.",
+   "evidence": "DEC-0195 (TN-10 step 6): \"resolution of outstanding UNKNOWNs — automatic on an unambiguous `observed-accepted` or `observed-absent`, operator attestation through the powers channel on an ambiguous, absent or `out-of-lookback` read-back\"; DEC-0258 same.",
+   "fix": "Replace with: \"…and `resolve_unknown` issues automatically only from an unambiguous reconciled read-back inside the lookback, an ambiguous, absent or out-of-lookback read-back requiring operator attestation through the powers channel (DEC-0258, DEC-0195).\""
+  },
+  {
+   "file": "docs/components/trading-node.md",
+   "anchor": "failure-mode table row \"| FM-5 | Reconciliation read-back older than the lookback | … | `resolve_unknown` may issue only from a reconciled read-back inside the lookback | DEC-0258 |\"",
+   "severity": "critical",
+   "finding": "K1 propagation, and the row contradicts this doc's own TN-6 and TN-10 prose. FM-5 is precisely the out-of-lookback case, so the affordance names the one path that cannot apply to it.",
+   "evidence": "The same doc's TN-6 section: \"`resolve_unknown` has TWO PATHS with declared precedence … an ambiguous, absent or `out-of-lookback` read-back requires operator attestation through the powers channel and only that path carries a signer identity\" — matching DEC-0191, DEC-0195 and DEC-0258.",
+   "fix": "Change the affordance cell to \"operator-attested `resolve_unknown` through the powers channel, made against the per-command read-back detail the evidence channel serves (the automatic path needs an unambiguous reconciled read-back inside the lookback)\"."
+  },
+  {
+   "file": "docs/components/qmf-risk.md",
+   "anchor": "line 179, \"so `resolve_unknown` issues only from a `reconciled` read-back inside the lookback and `out-of-lookback` is a nameable state … (DEC-0258)\"",
+   "severity": "critical",
+   "finding": "K1 propagation. The operator-attestation path is missing, so the sentence makes an out-of-lookback UNKNOWN unresolvable — the opposite of the point it is making about `out-of-lookback` being a nameable state.",
+   "evidence": "DEC-0258 and DEC-0195 both declare two paths with precedence: automatic on an unambiguous observed-accepted/observed-absent read-back inside the lookback; operator attestation through the powers channel on an ambiguous, absent or out-of-lookback read-back.",
+   "fix": "\"…so `resolve_unknown` issues AUTOMATICALLY only from an unambiguous `reconciled` read-back inside the lookback and otherwise requires operator attestation through the powers channel, and `out-of-lookback` is a nameable state rather than a silent failure to reconcile (DEC-0258, DEC-0195).\""
+  },
+  {
+   "file": "docs/glossary.md",
+   "anchor": "the reconciliation read-back / verdict entry, closing clause \"…and `resolve_unknown` may be issued ONLY from a `reconciled` read-back INSIDE the lookback (DEC-0258)\"",
+   "severity": "critical",
+   "finding": "K1 propagation in the vocabulary authority every other doc defers to: the one-path form of resolve_unknown, contradicting TN-10 and the corrected ct-20 invariant.",
+   "evidence": "DEC-0195 (TN-10 step 6) and DEC-0258; docs/contracts/ct-20-venue-event.yaml already carries the corrected two-path text: \"the AUTOMATIC resolve_unknown is issued only from a reconciled read-back INSIDE THE LOOKBACK … while an ambiguous, absent or out-of-lookback read-back requires operator attestation through the powers channel\".",
+   "fix": "\"…and `resolve_unknown` issues AUTOMATICALLY only from an unambiguous `reconciled` read-back INSIDE the lookback, while an ambiguous, absent or `out-of-lookback` read-back requires operator attestation through the powers channel — so `out-of-lookback` is a distinct nameable state with its own named exit (DEC-0258, DEC-0195).\""
+  },
+  {
+   "file": "docs/AGENTS.md",
+   "anchor": "\"**Default-deny dependency direction.**\" bullet, last sentence \"Applications still never import `qmf-venue`.\"",
+   "severity": "major",
+   "finding": "Stale, unqualified, and contradicted both by the constitution as amended in this increment and by AGENTS.md's own new bullet a few lines down. An agent reading the default-deny bullet would refuse the node's one sanctioned import.",
+   "evidence": "DEC-0241 [APPLIED]: \"the trading node's composition root is the ONE sanctioned importer and wirer of qmf-venue … the writable boundary of that sanction is the `qmn.venue` SUBPACKAGE\"; docs/constitution.md L30 now carries the 2026-08-29 Node annotation saying exactly that; AGENTS.md itself adds \"**`qmn.venue` is the one sanctioned importer and wirer of qmf-venue** (DEC-0241)\".",
+   "fix": "Change to \"Applications still never import `qmf-venue` — with ONE sanctioned exception, the trading node's `qmn.venue` subpackage (DEC-0241); `qmb` and `qml` keep their ban.\" and add DEC-0241 to that bullet's cites."
+  },
+  {
+   "file": "docs/lenses/observability/metrics-and-alerts.md",
+   "anchor": "### `/health` — independent, provenance-stamped states",
+   "severity": "major",
+   "finding": "The /health state set is wrong: the doc says the PRD-adopted states are \"safety, execution readiness, connection, reconciliation, data freshness, and evidence persistence\" and that lifecycle and sync are reported \"additionally\". \"evidence persistence\" is an invented eighth state name, and the partition contradicts the seven-state set the component spec and the spine carry.",
+   "evidence": "DEC-0200: \"/health read model of INDEPENDENT states (safety, execution readiness, connection, reconciliation, data freshness, lifecycle, sync)\"; DEC-0238(d) adopts exactly those seven from PRD §6; spine TN-15 line 481 lists the same seven; docs/components/trading-node.md line 247 states them correctly. \"evidence persistence\" appears in no DEC and no other doc.",
+   "fix": "\"The `/health` states are the seven the node adopts from PRD section 6 — safety, execution readiness, connection, reconciliation, data freshness, lifecycle and sync — each independent and provenance-stamped (DEC-0200, DEC-0238).\" Drop \"evidence persistence\" and the \"additionally reports\" split."
+  },
+  {
+   "file": "docs/decisions/ADR-0019-trading-node.md",
+   "anchor": "## Architecture-preflight verdict, last sentence of \"**What shrinks: nothing.**\"",
+   "severity": "major",
+   "finding": "\"The `SessionTopology` connection-count relaxation and the stale `qmf-venue` README correction are `qmf-venue` increment items, documentation-only, changing no code (DEC-0244, DEC-0245)\" mislabels DEC-0244 as documentation-only. It is a code item, and the one the soak week depends on — labelling it documentation-only invites the epics to skip it.",
+   "evidence": "DEC-0244: \"APPLIED AS AN ITEM OF THE SAME qmf-venue INCREMENT THAT CARRIES THE TRANSPORT. SessionTopology ships required_connection_count = 2 as a ClassVar, which NO soak-week roster naming only the demo pair can satisfy. The relaxation: the connection count is DERIVED FROM THE ROSTER\"; its rationale: \"Without this the soak cannot start at all\". DEC-0245 by contrast is explicitly \"APPLIED AS A FACTORY CORRECTION ITEM, in documentation only … THE DOCUMENTATION INCREMENT DOES NOT EDIT CODE\".",
+   "fix": "Split the sentence: \"The `SessionTopology` connection-count relaxation is a CODE item of the same `qmf-venue` increment that carries the transport, and the soak cannot start without it (DEC-0244); the stale `qmf-venue` README correction is documentation-only and changes no code (DEC-0245).\""
+  },
+  {
+   "file": "docs/components/trading-node.md",
+   "anchor": "## Authority boundary, \"May:\" clause \"stamp all QMX-owned event times from the VPS OS clock under chrony and evaluate four clock bands as a per-decision-cycle precondition (DEC-0199) (DEC-0216)\"",
+   "severity": "minor",
+   "finding": "The cited DEC does not say that. DEC-0216 is the kill-line input series; the per-decision-cycle clock-band rule is DEC-0218. DEC-0216 belongs on the preceding kill-line clause, which cites only DEC-0193.",
+   "evidence": "ledger.yaml:2093-2094 — DEC-0216 \"Gate ruling 1 — the kill-line input series\". DEC-0218 \"Gate ruling 3 … The clock no-new-entry band is a per-decision-cycle precondition, never a standing action.\"",
+   "fix": "Change \"(DEC-0199) (DEC-0216)\" to \"(DEC-0199) (DEC-0218)\", and add \"(DEC-0216)\" to the kill-line clause \"run AD-33 through AD-41 … the kill line (`registry:kill_line_capital_floor`, which IS AD-40's `loss_floor`) … (DEC-0193)\"."
+  },
+  {
+   "file": "docs/components/trading-node.md",
+   "anchor": "## Authority boundary, \"May never:\" clause \"let a money boundary act as a flatten authority, read a currency out of a symbol, or open entries on a news-calendar revision that narrows an in-force window (DEC-0193) (DEC-0219)\"",
+   "severity": "minor",
+   "finding": "The cited DEC does not say that. DEC-0219 is the netting/hedging gate ruling and carries no money-boundary, currency-parsing or news-revision text.",
+   "evidence": "ledger.yaml:2129-2130 — DEC-0219 \"Gate ruling 4 — netting or hedging is a measured venue fact, never an assumption\". The money-boundary rule is DEC-0209 (TN-24(f)); the widen-or-add-only news-revision rule is DEC-0236 GATE-2 ruling 7.",
+   "fix": "Replace \"(DEC-0193) (DEC-0219)\" with \"(DEC-0193) (DEC-0209) (DEC-0236)\"."
+  },
+  {
+   "file": "docs/components/trading-node.md",
+   "anchor": "\"Node-minted and node-hosted seams\" → \"**Localhost HTTP evidence read channel** … (DEC-0202) (DEC-0230)\"",
+   "severity": "minor",
+   "finding": "The cited DEC does not say that. DEC-0230 is the SQS/signal-snapshot gate ruling and says nothing about the evidence channel or `evidence_channel_budget`.",
+   "evidence": "ledger.yaml:2261-2262 — DEC-0230 \"Gate ruling 15 — SQS reaches the door only inside the signal snapshot, and the baseline is keyed\". The channel is DEC-0202/DEC-0234; `evidence_channel_budget` is minted by DEC-0256.",
+   "fix": "Replace \"(DEC-0202) (DEC-0230)\" with \"(DEC-0202) (DEC-0234) (DEC-0256)\"."
+  },
+  {
+   "file": "docs/components/trading-node.md",
+   "anchor": "### TN-13, \"**Capacity is a declared dimension, not a metric**\" paragraph",
+   "severity": "minor",
+   "finding": "\"Hot rooms purge only after a verified off-host copy exists (verify-before-purge), under `registry:hot_room_retention_window`\" states only ONE of the two ratified purge preconditions, and contradicts the same doc's TN-3 section.",
+   "evidence": "DEC-0253 [APPLIED]: \"A hot-room purge has TWO preconditions and both must hold: a verified copy in sealed-archive AND a verified off-host copy.\" The same doc's TN-3 states both, as do docs/components/qmf-data.md, docs/contracts/ct-14-backup-restore.yaml and docs/lenses/performance/budgets.md.",
+   "fix": "\"Hot rooms purge only when BOTH a verified copy exists in the evidence tier's `sealed-archive` role AND a verified off-host copy exists (verify-before-purge), under `registry:hot_room_retention_window` … (DEC-0198) (DEC-0253).\""
+  },
+  {
+   "file": "docs/contracts/ct-20-venue-event.yaml",
+   "anchor": "the `version:` comment line, \"…the automatic resolve_unknown issued only from a reconciled read-back inside the lookback (DEC-0247, DEC-0248, DEC-0258)\"",
+   "severity": "minor",
+   "finding": "The version-comment summary carries only half the two-path resolve_unknown rule. The scoping word \"automatic\" keeps it technically true, but a reader of the comment alone never learns the attestation path exists. The file's own invariant states both paths correctly.",
+   "evidence": "DEC-0258: \"resolve_unknown clears an UNKNOWN automatically only from an unambiguous reconciled read-back inside the lookback, while an ambiguous, absent or out-of-lookback read-back requires operator attestation through the powers channel\"; DEC-0195 (TN-10 step 6) same.",
+   "fix": "Extend the comment to \"…with the automatic resolve_unknown issued only from an unambiguous reconciled read-back inside the lookback and operator attestation through the powers channel required for an ambiguous, absent or out-of-lookback read-back\"."
+  },
+  {
+   "file": "docs/contracts/ct-21-venue-secret-session.yaml",
+   "anchor": "invariant beginning \"TRADING-NODE USAGE (2026-08-29): on the VPS there are THREE named secret holders and no others\"",
+   "severity": "minor",
+   "finding": "Self-contradictory count that also contradicts the two other docs stating the same rule: the sentence says \"THREE … and no others\" and then adds \"plus the separate zero-authority observability stack … as the DECLARED FOURTH holder\".",
+   "evidence": "DEC-0197: \"FOUR NAMED SECRET HOLDERS exist on the VPS and no fifth\"; DEC-0236 GATE-2 ruling 13 added the stack as the declared fourth. docs/lenses/ops/runbook.md and docs/lenses/security/security-model.md both say \"Four named secret holders … and no fifth\".",
+   "fix": "Open the invariant with \"on the VPS there are FOUR named secret holders and no fifth — the connection manager …, the backup unit …, the observability path …, and the separate zero-authority observability stack under its own service account, holding nothing the node holds\"."
+  },
+  {
+   "file": "docs/changelog.md",
+   "anchor": "the \"Lens pages\" row, \"and [security/security-model.md](lenses/security/security-model.md) (three named secret holders; SO_PEERCRED; backup-key escrow; …)\"",
+   "severity": "minor",
+   "finding": "The row describes the security-model page as carrying three secret holders; the page carries four. The \"three\" is the pre-ruling gate-46 count carried forward from the job-spec summary.",
+   "evidence": "docs/lenses/security/security-model.md line 123: \"**Four named secret holders exist on the VPS and no fifth** (DEC-0227, DEC-0197, DEC-0236)\"; DEC-0197 says four and no fifth.",
+   "fix": "Change \"three named secret holders\" to \"four named secret holders (the observability stack as the declared fourth)\"."
+  },
+  {
+   "file": "docs/changelog.md",
+   "anchor": "the \"New component\" row (\"`kind: application`, `layer: backend`\") and the \"Touched docs\" paragraph (\"dependencies.yaml (COMP-QMN minted, layer backend, …)\")",
+   "severity": "minor",
+   "finding": "Both misstate the fields actually registered for COMP-QMN. `kind: application` is not a value validate_registry accepts, so leaving this as written invites a later agent to \"correct\" the manifest back to an invalid kind.",
+   "evidence": "docs/architecture/dependencies.yaml registers COMP-QMN as `kind: service`, `layer: middleware`, `roster_role: application`, with its note explaining both: \"kind is service — one long-lived systemd-supervised process\"; \"layer is middleware, the application-composition slot COMP-QMB and COMP-QML already occupy\".",
+   "fix": "Change both to \"`kind: service`, `layer: middleware`, `roster_role: application`\", and drop \"layer backend\" from the Touched-docs sentence."
+  },
+  {
+   "file": "docs/changelog.md",
+   "anchor": "the 2026-08-29 entry's \"| Gates | pending final gate run |\" row",
+   "severity": "minor",
+   "finding": "A `status: ratified` changelog entry left with an unfilled gate result, unlike every prior entry.",
+   "evidence": "The previous entry's row reads \"validate_ledger PASS; validate_registry PASS; validate_inventory PASS (house-accepted warnings…); check_citations PASS (house-accepted dead-DEC class); lint_docs CLEAN; lint_docs --strict CLEAN\". Re-run now: validate_ledger OK; validate_registry OK; validate_inventory OK (31 features, pre-existing warnings); check_citations OK (pre-existing dead-DEC warnings); lint_docs --strict clean.",
+   "fix": "Replace \"pending final gate run\" with the recorded results in the same form as the prior entry."
+  },
+  {
+   "file": "docs/architecture/overview.md",
+   "anchor": "line 204, \"The trading node (COMP-QMN) is classified at the **backend** layer as an application-layer consumer built ON QMF … it is backend runtime\"",
+   "severity": "minor",
+   "finding": "Contradicts the machine-readable registration this same increment wrote, and applies a layer claim to COMP-QMN that overview.md makes for neither sibling application-layer product.",
+   "evidence": "docs/architecture/dependencies.yaml registers COMP-QMN with `layer: middleware`, and its note explains \"layer is middleware, the application-composition slot COMP-QMB and COMP-QML already occupy — it wires the middleware and backend parts and sits above them\". COMP-QMB and COMP-QML are also `layer: middleware`.",
+   "fix": "\"…is classified at the **middleware** layer in the dependency manifest — the application-composition slot COMP-QMB and COMP-QML occupy — because it wires the middleware and backend parts and sits above them; its three doors are the contracts a Phase-3 desktop UI layer consumes later over an SSH tunnel (DEC-0186, DEC-0202).\""
+  },
+  {
+   "file": "docs/architecture/overview.md",
+   "anchor": "component-layer table row (line 487) \"| `COMP-QMN` — trading node (code name `qmn`) | backend | …\"",
+   "severity": "minor",
+   "finding": "The layer cell says `backend` while the manifest row says `middleware` and both sibling application-layer rows in the same table say `middleware`.",
+   "evidence": "docs/architecture/dependencies.yaml COMP-QMN carries `layer: middleware`; overview.md lines 485-486 give COMP-QMB and COMP-QML `middleware` in the same table.",
+   "fix": "Change the layer cell to `middleware`."
+  },
+  {
+   "file": "docs/gap-report.md",
+   "anchor": "\"Deferred by the trading-node sitting — 8\" table, GAP-0054 row, Deferring-DEC cell \"`DEC-0204`, `DEC-0226`\"",
+   "severity": "minor",
+   "finding": "DEC-0226 does not carry the seat-confinement deferral or any of the V1 containment controls the row lists.",
+   "evidence": "DEC-0226 is \"Gate ruling 11 — supervision mechanics and the definition of a safe point\" (doors bind before preflight, boot-attempt record, sd_notify, safe point) and mentions no seat, quarantine, `seat_reinstate` or slice-progress watch. Those come from DEC-0204 (TN-19) and DEC-0236 GATE-2 ruling 23; the deferral is recorded at DEC-0260 item 6.",
+   "fix": "Change the cell to \"`DEC-0204`, `DEC-0236`, `DEC-0260`\"."
+  },
+  {
+   "file": "docs/knowledge/traceability.md",
+   "anchor": "decision-locator row \"| DEC-0253 | `ratified` | Annotation AD-19 sealed-archive [APPLIED] | [Data layer](../lenses/data/data-layer.md); [Trading node](../components/trading-node.md), TN-3 |\"",
+   "severity": "minor",
+   "finding": "The named PRIMARY document for this APPLIED parent annotation is a file git does not track, so it reaches no clone and no factory checkout. The annotation itself is safely carried in tracked docs, but the locator (and two other tracked docs) point at the ignored path.",
+   "evidence": "`git check-ignore -v docs/lenses/data/data-layer.md` → \".gitignore:11:data/\"; `git ls-files -v` returns nothing for it — the whole `docs/lenses/data/` directory is ignored (pre-existing repo condition, not introduced here). The annotation IS carried at docs/components/qmf-data.md line 117-119 (\"adds an EIGHTH room-role to AD-19's seven\") and docs/contracts/ct-14-backup-restore.yaml. docs/components/trading-node.md's provenance footer and docs/lenses/performance/budgets.md also link to the ignored path.",
+   "fix": "Make the DEC-0253 locator read \"[qmf-data](../components/qmf-data.md), sealed-archive; [CT-14](../contracts/ct-14-backup-restore.yaml); [Trading node](../components/trading-node.md), TN-3\", and raise the `docs/lenses/data/` gitignore hit separately — either un-ignore that path (`!docs/lenses/data/`) or stop linking to it from tracked docs."
+  },
+  {
+   "file": "docs/lenses/testing/test-strategy.md",
+   "anchor": "### The soak acceptance gate (checklist), bullet \"**An injected residual on a non-live binding drives the entry stand-down, and only an operator `resume` after a fresh review clears it.**\" (line 182)",
+   "severity": "minor",
+   "finding": "The checklist item is unsatisfiable as written and contradicts the role-keyed drift rule stated elsewhere in the same increment: a non-live (demo) binding alarms and continues; it does not stand down. NOTE: the wording is spine-verbatim (TN-23, spine line 629), so this is a surfaced spine tension rather than an absorption error.",
+   "evidence": "DEC-0195 (TN-10): \"UNEXPLAINED DRIFT IS KEYED ON THE BINDING'S ROLE AND NEVER ON ITS WORLD: a `role = live` binding stands down FOR ENTRIES ONLY … while a `role = demo` binding alarms at the live severity class and continues whatever its world\" — carried verbatim in docs/components/trading-node.md TN-10 and in the incident-playbook's drift row.",
+   "fix": "Reword to \"An injected residual is proven to set `operator_review` and, on a `role = live` binding, to drive the ENTRIES-ONLY stand-down cleared only by an operator `resume` after a fresh review; on the soak's `role = demo` binding the same residual is proven to alarm at the live severity class and continue (DEC-0195)\", and record the spine-wording correction in docs/changelog.md's surfaced-corrections row."
+  },
+  {
+   "file": "docs/decisions/ADR-0019-trading-node.md",
+   "anchor": "## Consequences → \"**Deferred rows.**\" bullet, closing clause \"…the only warm-up the corpus carries is the deploy-level soak week (DEC-0194, DEC-0205)\"",
+   "severity": "minor",
+   "finding": "DEC-0205 does not carry that answer, and the same bullet calls GAP-0057 \"per-bot post-activation warm-up\" while the catalog and gap-report call it the post-PROMOTION warm-up.",
+   "evidence": "The question is closed in DEC-0213: \"there is no per-bot post-promotion warm-up in V1; the warm-up he remembers is the deploy-level first-deploy warm-up week of TN-9 (DEC-0194, R2)\"; GAP-0057's deferring DEC in the gap-report reads \"default `DEC-0259` (R3 `DEC-0213`)\". DEC-0205 (TN-20) states promotion/activation mechanics and says nothing about probation.",
+   "fix": "Cite \"(DEC-0194, DEC-0213)\" and rename the item \"per-bot post-promotion warm-up\"."
+  },
+  {
+   "file": "docs/lenses/ops/runbook.md",
+   "anchor": "### The node's operations toolkit — the recipe table (rows `just node-install` … `just node-hub-publish`, lines 43-51)",
+   "severity": "minor",
+   "finding": "The toolkit recipe set differs between docs: the runbook's table (introduced as \"Every node deployment and provisioning operation is a `just node-…` recipe\") has nine rows and omits the on-demand host-loss restore rehearsal, which the component spec, the overview and the glossary all include — and which has no recipe name anywhere.",
+   "evidence": "DEC-0186 enumerates the toolkit as \"install, switch and rollback, the secrets provisioning wizard, the data bootstrap, replay, config init / validate / explain, notify test, hub publish, and the host-loss restore rehearsal on demand\". docs/components/trading-node.md line 69 lists it only as \"plus a `just node-…` recipe for the on-demand host-loss restore rehearsal\"; the runbook's later prose calls the rehearsal \"NOT a timer, but the operator's `restore_drill_run` power\" and never as a recipe.",
+   "fix": "Add a `just node-restore-rehearsal` row to the runbook table (\"calls the operator-signed `restore_drill_run` power; ops principal or operator\" — DEC-0186, DEC-0198, DEC-0252) and use that same name in docs/components/trading-node.md's seams list, the overview and the glossary."
+  },
+  {
+   "file": "docs/AGENTS.md",
+   "anchor": "FAQ table row \"| How does an operator act on a live node? | …\"",
+   "severity": "minor",
+   "finding": "Uses \"a live node\" as a noun phrase in the very doc that states the ban on it.",
+   "evidence": "AGENTS.md's own bullet: \"**The trading node is ONE product with two modes `paper | live`** (DEC-0186). Never write 'paper node' or 'live node' as a separate product\"; DEC-0186 and DEC-0194 say the same.",
+   "fix": "\"How does an operator act on a running node?\" (or \"…on the node in `live` mode?\")."
+  },
+  {
+   "file": "docs/AGENTS.md",
+   "anchor": "YAML frontmatter `decisions:` list (and the same in docs/changelog.md, docs/glossary.md, docs/lenses/observability/logging-spec.md, docs/lenses/observability/metrics-and-alerts.md)",
+   "severity": "minor",
+   "finding": "Node DEC ids cited inline in the body are absent from the frontmatter `decisions` list in five touched Markdown docs.",
+   "evidence": "Body-cited but missing — AGENTS.md: DEC-0187, DEC-0190, DEC-0194, DEC-0204, DEC-0210, DEC-0255; changelog.md: DEC-0235; glossary.md: DEC-0226; logging-spec.md: DEC-0197, DEC-0211; metrics-and-alerts.md: DEC-0211, DEC-0259. The house shape (node-increment-brief §6) requires a complete `decisions` list; all eleven touched contract YAMLs already satisfy it, so only these five are short.",
+   "fix": "Add the listed ids to each file's frontmatter `decisions:` array (and to `sources:` where that file mirrors decisions into sources, as constitution.md and runbook.md do)."
+  },
+  {
+   "file": "_docwork/ledger.yaml",
+   "anchor": "DEC-0240 (\"Ticket 006 disposition — the trendbar price basis is measured per broker\"), last sentence of `rationale`",
+   "severity": "minor",
+   "finding": "K5 zombie count in a newly minted ledger entry: \"The measurement itself lands in TN-11 (DEC-0196) as one of the five first-connection checks…\". The FINAL spine's suite is SIX checks. Not propagated into docs/ — no doc says \"five first-connection checks\".",
+   "evidence": "DEC-0195: \"the FIRST-CONNECTION VERIFICATION SUITE of SIX verify-or-refuse checks — spot-timestamp unit, D1 boundary, bar-basis reconciliation, pip formula, money exponent, and amend atomicity\". DEC-0208's own rationale states it outright: \"The memlog's 'five first-connection checks' is superseded by the spine's six, the amend-atomicity measurement among them\". Spine TN-23 line 629 says \"**six** first-connection checks passed per instrument\".",
+   "fix": "Change \"one of the five first-connection checks\" to \"one of the six first-connection checks\" in DEC-0240's rationale."
+  }
+ ],
+ "reviewer_notes": [
+  "All 22 findings were appended to C:/Users/Mubarak/Desktop/QMX/_docwork/harvest/node/review-findings.md as they were derived (the file was empty at start — no prior partial run to continue from).\n\nKNOWN-ISSUE VERDICTS:\n- K1 (resolve_unknown two paths) — PROPAGATED WIDELY. Seven occurrences: docs/components/trading-node.md FM-5, docs/glossary.md:594, docs/lenses/ops/incident-playbook.md:107 and :72, docs/components/qmf-risk.md:179, docs/knowledge/traceability.md:504, docs/lenses/bugs/triage.md:85, plus the ct-20 version comment. The ledger (DEC-0195, DEC-0258) and ct-20's body (line 32) carry the correct two-path rule; every derived page dropped the attestation half. This is the single largest defect cluster in the increment and is operator-facing.\n- K2 (GAP-0002 for notification delivery) — CLEAN. No doc carries the bad cite; \"a second notification channel is deferred\" is carried at docs/lenses/observability/metrics-and-alerts.md:145 citing DEC-0200/DEC-0259 with no gap id.\n- K3 (GAP-0015 mis-cite) — CLEAN and well handled. Surfaced-not-propagated at docs/changelog.md:32, docs/gap-report.md:159, docs/knowledge/traceability.md:346, docs/components/trading-node.md:503; catalog GAP-0015 untouched.\n- K4 (GAP-0050..0057) — CLEAN in docs/gap-report.md (all eight rows correct, correct owners, correct statuses) and in ADR-0019 line 64. One minor status slip in docs/index.md (reported).\n- K5 (five node units; check mode binds the doors) — CLEAN everywhere in docs/ (trading-node.md:284, runbook:68, overview.md:136/378 \"four timer units\" + \"sixth checked-in unit\"; check mode consistently \"binds/runs the doors\" in runbook:53, glossary:138, trading-node.md:288). The ONE stale \"all four units\" survives in _docwork/ledger.yaml DEC-0227 (reported).\n- K6 (COMP-QMN kind/layer/roster_role) — no doc calls the node a library, a framework or a roster package; dependencies.yaml carries kind: service / layer: middleware / roster_role: application with a written rationale. But overview.md and changelog.md both say \"backend\", contradicting the registry (reported twice).\n- K7 (pre-existing \"engine\" wording) — honoured; I diffed added lines only. The only banned-word hits in NEW text are explicit negations (\"never a 'paper node'\", \"never an 'engine'\"), and the four \"engine\" hits in stack.md/logging-spec/overview are pre-existing. No bare \"stop-out\", no bare \"calendar\" (the one bare `calendar` token is a pre-existing Mermaid node id whose label reads \"COMP-CALENDAR-FEED — Forex Factory free weekly news-calendar feed\"), no \"timeframe\" outside the ban statement.\n- K8 (\"I know what you're talking about\") — CLEAN in docs/. The phrase appears only inside _docwork/ledger.yaml rationales (DEC-0212, DEC-0259) where it is explicitly recorded as the misattribution being corrected. docs/lenses/observability/metrics-and-alerts.md and docs/components/trading-node.md:253 correctly say only that the operator NAMED Prometheus and Grafana, which the transcript scan confirms is his.\n\nCOVERAGE CHECKED AND FOUND COMPLETE (no finding): the TN-23 soak checklist item by item against docs/components/trading-node.md:407 (every spine item present, including the six first-connection checks, the AD-37 compose pair, the injected synthetic kill-line breach, the narrowing-revision proof, the held-not-refused amend, the week's-end live-conditioned baselines, the (K,T) / exit-75 / node_resurrect trio, seat_reinstate, the host-loss rehearsal, the scratch-credstore boot, the ops-principal refusal, the countersign-with-citation, the dead-man's switch, the stack standing up for the whole week, the not-driving-slices baseline, bytes-per-day); the TN-24 closures — the spine has TEN, (a) through (j), not (a)-(k) as the lens brief said, and trading-node.md:413 correctly states \"(a) through (j), and no eleventh\"; the TN-8 node-minted value roster; the registry mint table row by row against variables.yaml (every one of the ~55 named keys exists, and every blank-effect tag matches the spine's table except the one owner_scope slip reported); the Deferred table row by row (the only spine row absent from the component spec's Deferred section — \"a second notification channel\" — is carried in the metrics lens instead, correctly); the Structural Seed subpackage list (carried in docs/knowledge/traceability.md:497 FEAT-0031, all 19 subpackages plus deploy/); the Stack table rows (all node rows present; the Spotware proto tag-91 row is pre-existing at stack.md:35); the closed powers list (identical in trading-node.md:302 and runbook:61); the five unit names and eleven recipe names (no invented names anywhere); the QA-debt story-id list; the A1-A47 cheap-veto register in the changelog (47 rows, A1/A10/A17/A26 RULED, A8 RETIRED); the four epochs in the glossary; the 44 new glossary entries against the spine's terms-to-add list (complete); the Records-streams to CT-13 projection bridge; the L30 constitution annotation; the ~50 ms watched-target treatment.\n\nNOT DEEPLY REVIEWED (out of the lens's named scope, left to the other reviewer): docs/components/calendar-feed.md, ctrader.md, object-storage.md, qmb.md, qml.md, qmf-data.md, qmf-data-backup.md, qmf-calendar-forex.md, and docs/lenses/testing/fixtures-and-scenarios.md beyond spot checks. I ran no lint.",
+  "PERIMETER lens complete. All 44 findings were appended live to C:/Users/Mubarak/Desktop/QMX/_docwork/harvest/node/review-findings.md as they were derived (outage-hardened); that file carries the same content with full untruncated fix text — prefer it over this summary where a fix is long (ADR-0007, ctrader.md Node boundary, the constitution annotations).\n\nKnown-issue results: K1 CONFIRMED in two docs (qmf-risk.md, glossary.md — both critical, both state the one-path resolve_unknown). K2 NOT propagated into docs/ — no doc carries the spine's \"GAP-0002 holds the delivery mechanics\" cite; gap-report and traceability handle notification delivery correctly. K3 handled correctly — the GAP-0015 mis-cite is recorded as a surfaced correction in changelog and gap-report, GAP-0015 untouched, KSA values at GAP-0050. K4 gap ids map correctly everywhere except the GAP-0057 status (called \"deferred\" in ADR-0019 and index.md — reported minor). K5 satisfied — runbook says \"five node units in all\", check mode is described as \"binds the doors\" in the runbook and \"runs the doors\" in trading-node.md/glossary; no \"four units\" or \"without opening the doors\" text exists. K6 the registry is right (kind: service, layer: middleware, roster_role: application, validate_registry OK) but overview.md contradicts it twice with \"backend\" — reported major; no doc calls the node a library or roster package. K7 respected — the only \"engine\"/\"kernel\"/\"exam\"/\"timeframe\"/\"plugin\" hits in docs/ are pre-existing or explicit negations/retired-alias entries; NO new banned-word occurrence exists in the node docs. K8 clear — no doc quotes \"I know what you're talking about\" as an operator familiarity claim; that phrase appears nowhere in docs/.\n\nOne authority note the desk should confirm rather than take from me: the brief §2 says \"three named holders\", but the FINAL spine TN-12 and the memlog's GATE-2 amendment both say FOUR (\"the observability STACK ... is the DECLARED FOURTH holder\"), and security-model.md, runbook.md and metrics-and-alerts.md all already say four. Under the brief's own authority order (memlog line 46 → 51, then the FINAL spine) FOUR is ratified, so ct-21 and the traceability row are the outliers — that is how I graded them.\n\nLargest single cluster: the sealed-archive eighth room role (DEC-0253, tagged APPLIED) reached the prose docs but not the machine-readable enums — ct-11's room_role values, ct-26's source_room_role, and qmf-data-store.md, the component that physically holds the rooms. As it stands, the ratified nightly backup (which reads sealed-archive by name) cannot be expressed in the contract that carries it.\n\nTooling run clean against the current tree: lint_docs --strict OK, validate_ledger OK, validate_registry OK, check_citations OK (only pre-existing dead-decision frontmatter warnings). None of the findings above is caught by those scripts.\n\nNot reported deliberately: the AD-9 five-role enum in qmf-core.md / ct-03 / ADR-0013 (the roles still exist; V1 simply does not use paper-validation and paper-benched, and the glossary, ct-24 and trading-node.md all state that correctly); ADR-0014's async statements (the qmf.venue.connection exemption sits inside qmf-venue, so \"COMP-QMF-VENUE is the only place async APIs may appear\" stays true); ADR-0015's promotion skeleton (activation is a node act, not a registry one — the gap is in SCN-0007, which I did report).",
+  "All 28 findings were appended incrementally to C:/Users/Mubarak/Desktop/QMX/_docwork/harvest/node/review-findings.md as `- [ledger-consistency] …` lines. That file is shared with other lens agents; when I first opened it, it was empty, and by the end it also held [spine-fidelity] and [perimeter] findings from concurrent seats.\n\nOVERLAPS with other lenses (dedupe before applying): the K1 resolve_unknown propagation in docs/components/trading-node.md FM-5, docs/components/qmf-risk.md and docs/glossary.md was independently found by the spine-fidelity/perimeter seats and graded critical there. The two K1 occurrences I found that no other seat had recorded are docs/lenses/ops/incident-playbook.md (closing paragraph) and docs/lenses/bugs/triage.md line 85 — five occurrences in total across the corpus.\n\nSCRIPTS (all clean; no error names a touched file, so no script-derived findings):\n- check_citations --root . → \"OK: citations valid\". Its WARNs are the pre-existing house-accepted dead-DEC class (DEC-0014/0015/0020/0023/0062/0063/0069/0071/0073/0077/0079/0082/0084/0085/0086/0093 etc.) on gap-report.md, qmb.md, qmf-risk.md, qmf-registry.md and the ADRs — all present at HEAD, none introduced here.\n- lint_docs --root . --strict → \"OK: docs lint clean\".\n- validate_ledger → OK; validate_registry → OK; validate_inventory → OK (31 features; only pre-existing FEAT-0008/0009 ordering warnings and the uncovered-ratified-decision warning).\n- All eleven touched contract YAMLs plus dependencies.yaml and variables.yaml parse, and every node DEC cited in their new text is in their `decisions:` list.\n\nKNOWN-ISSUE CHECKS, results:\n- K1 — 5 propagations found (above); ct-20's invariant is correct, only its version comment is short.\n- K2 — NOT propagated. The \"second notification channel is deferred\" row lands correctly in docs/lenses/observability/metrics-and-alerts.md line 145 citing (DEC-0200, DEC-0259); the spine's wrong \"GAP-0002 holds the delivery mechanics\" cite appears nowhere in docs/.\n- K3 — handled correctly and surfaced: gap-report.md (\"Surfaced correction — the GAP-0015 mis-cite (not propagated)\"), changelog.md surfaced-corrections row, traceability.md, trading-node.md Deferred (\"tracked as GAP-0050 (never GAP-0015)\"). GAP-0015 itself untouched.\n- K4 — every GAP-0050..GAP-0057 mapping is correct in gap-report.md, traceability.md, AGENTS.md, index.md and trading-node.md; GAP-0057 is `open`/cheap-veto everywhere.\n- K5 — correct: \"FIVE node units\" plus `qmx-observability.service` as a sixth non-node unit in trading-node.md and runbook.md; check mode \"binds the doors, runs the config compile, the fingerprint, the seal … never opens a sequencer\". One residual \"five first-connection checks\" zombie survives in DEC-0240's rationale (reported) but reached no doc.\n- K6 — COMP-QMN is registered `kind: service`, `layer: middleware`, `roster_role: application`; no doc calls it a library or roster package. Three docs still assert `backend`/`kind: application` (reported).\n- K7 — honoured: no NEW banned-word occurrence in any added line. The only hits are AGENTS.md's own rule statement (the tolerated negation) and pre-existing \"analytics-engine views (DuckDB)\" in untouched prose.\n- K8 — clean. No doc quotes \"I know what you're talking about\"; metrics-and-alerts.md says correctly that \"the operator named Prometheus and Grafana himself and required the tracking, being explicit that the DevOps posture was delegated to the agent\". The spliced promotion quote, the reconstructed dedicated-page quote, the \"focus on live trading\" paraphrase and \"QMF is portable\" are absent from docs/ (verified by grep).\n\nZOMBIE SWEEP — all clean: no \"qmn command\", \"Door 2\", node CLI door, \"paper node\", 2-day soak, paid fallback slot, three verdicts, five first-connection checks, or single blended residual anywhere in docs/. The pacer bucket is correctly owned by the CONNECTION and explicitly NOT by the command-stream object; the VenueClientPort is selected by `(world, VenueId)` and never by VenueId alone in every doc that names it.\n\nCROSS-DOC CHECKS THAT PASSED: four reconciliation verdicts everywhere; the transport increment lands in qmf-venue's ConnectionManager with the `qmn.venue.ctrader` fallback and \"the epics may not choose\" in every doc; promotion and activation always two acts; the soak always one full unattended week; the observability stack always mandatory-and-zero-authority (never described as optional); timer/unit names (`qmn.service`, `qmn-news-calendar.timer`, `qmn-backup.timer`, `qmn-restore-sample.timer`, `qmn-restore-full.timer`, `qmx-observability.service`) spelled identically everywhere; every stack pin in docs/architecture/stack.md matches the spine's Stack table exactly; the registry mint table's 50 new rows and the retro-tagged pre-existing rows carry blank-effect tags matching the spine mint table row for row, with `value:` always `declared-per-X` / `evidence-only` and never a ratified constant; docs/index.md's \"104 files: 68 Markdown, 36 YAML\" is accurate; gap-report's 57/45-answered arithmetic is correct.\n\nONE NON-LENS OBSERVATION worth escalating separately: `docs/lenses/data/data-layer.md` carries substantial node content (the evidence tier, the sealed-archive eighth room role, the replay import port, the `/var/lib/qmx` trees) but is matched by `.gitignore:11:data/` and is untracked, so it is in no clone. It is not in the increment's stated touched-doc list yet was clearly written by it, and three tracked docs link to it."
+ ],
+ "fixes": [
+  {
+   "applied": [
+    "F1 [minor] docs/changelog.md Lens-pages row: 'three named secret holders' -> 'four named secret holders (the observability stack as the declared fourth)'. Verified against DEC-0197 ('FOUR NAMED SECRET HOLDERS exist on the VPS and no fifth', observability stack as declared fourth) and the changelog's own A42 register row.",
+    "F2 [minor] docs/changelog.md 'New component' row: '`kind: application`, `layer: backend`' -> '`kind: service`, `layer: middleware`, `roster_role: application`' with the parenthetical corrected to the application-composition-slot rationale. Verified: validate_registry VALID_KINDS = [service, library, middleware, store, ui, external, process] (no 'application'), and dependencies.yaml actually registers COMP-QMN as kind: service / layer: middleware / roster_role: application with a notes block explaining both.",
+    "F3 [minor] docs/changelog.md Gates row: 'pending final gate run' -> 'validate_ledger PASS; validate_registry PASS; validate_inventory PASS (31 features; pre-existing house-accepted warnings — the FEAT-0009 contracts-before-consumers ordering and the uncovered-ratified-DEC class); check_citations PASS (pre-existing house-accepted dead-DEC class); lint_docs CLEAN; lint_docs --strict CLEAN', matching the prior entry's form. Results re-run and confirmed.",
+    "F4 [major] docs/changelog.md Touched-docs paragraph: 'COMP-QMN minted, layer backend, edges...' -> 'COMP-QMN minted, layer middleware (the application-composition slot COMP-QMB and COMP-QML occupy), edges...'. Verified against dependencies.yaml layer: middleware.",
+    "F5 [critical] docs/lenses/bugs/triage.md line 85: replaced 'resolve_unknown may be issued only from a reconciled read-back inside the lookback (DEC-0258, DEC-0195)' with 'resolve_unknown issues automatically only from an unambiguous reconciled read-back inside the lookback, an ambiguous, absent or out-of-lookback read-back requiring operator attestation through the powers channel (DEC-0258, DEC-0195)'. Verified against DEC-0195 boot step 6 and DEC-0258 (both carry the two-path form incl. operator attestation).",
+    "F6 [major] docs/lenses/bugs/triage.md line 85: addressed by the same single edit as F5 — the replacement already restores the operator-attestation path for ambiguous/absent/out-of-lookback read-backs, so no separate append was needed.",
+    "F7 [minor] docs/registry/variables.yaml venue_d1_reverification_cadence: owner_scope 'venue' -> 'node' (spine mint-table line 747 gives owner scope 'node per venue'; the enum has no 'node-per-venue' member, so option (a) chosen), and notes extended to state the node declares the resolved value once per venue (value already 'declared-per-venue').",
+    "F8 [major] docs/contracts/ct-11-evidence-persistence.yaml: added 'sealed-archive' to enums.room_role.values; changed all four 'seven room-roles' references (purpose, invariant, room_role field note, enum note) to 'eight'; invariant renamed 'Seven room-roles' -> 'Eight room-roles' with sealed-archive described (one-way-sync target, read by replay import port and backup); enum note extended naming sealed-archive as the eighth; added DEC-0188 and DEC-0253 to the decisions list; recorded a dated 2026-08-29 note on the version:1 comment exactly as ct-14 did (no format bump). Verified against DEC-0253 (APPLIED, AD-19 gains eighth room role) and DEC-0188 (sealed-archive as sync target)."
+   ],
+   "no_change_needed": [],
+   "lint": "\"lint_docs.py --root . --strict: OK, docs lint clean. check_citations.py --root .: OK, citations valid — the only warnings are the pre-existing house-accepted dead-DEC class (qmf-risk.md, ADR-0010/0015/0017/0018, SCN-0012), none naming my four files. validate_ledger OK; validate_registry OK; validate_inventory OK (31 features, pre-existing warnings only). Both owned YAML files (ct-11-evidence-persistence.yaml, variables.yaml) parse under yaml.safe_load. Banned-word scan of my edited prose: clean — the grep hits are all pre-existing untouched lines using the tolerated negation idiom ('never an engine', 'the bare word \\\"timeframe\\\" retired', storage-engine references).\""
+  },
+  {
+   "applied": [
+    "[critical] incident-playbook.md line 107 (findings 1 and 2, same sentence, merged): replaced the one-path 'resolve_unknown may be issued only from a reconciled read-back INSIDE the lookback' with both declared paths — automatic only from an unambiguous reconciled read-back inside the lookback, and operator attestation through the powers channel (against the per-command read-back detail the evidence channel serves) for an ambiguous/absent/out-of-lookback read-back, with a typed refusal where the read-back cannot support attestation (DEC-0258, DEC-0195). Confirmed by DEC-0258 and DEC-0195 step 6.",
+    "[major] incident-playbook.md line 72 (Stuck UNKNOWN row, finding 3): restated the governing clause as two declared paths — automatic where the inside-lookback read-back is an unambiguous observed-accepted|observed-absent, and operator attestation through the powers channel where it is ambiguous, absent or out-of-lookback — removing the self-contradiction where the inside-lookback constraint made the attestation case unreachable; kept the trailing 'adapter never self-clears' clause and its citations (DEC-0191, DEC-0209, DEC-0221, DEC-0236, DEC-0258). Confirmed by DEC-0195 step 6.",
+    "[minor] incident-playbook.md line 36 (finding 4): replaced 'which stays in tracker/trading-node-notes.md (DEC-0142)' with 'whose SHAPE is ratified in components/trading-node.md and whose VALUES stay open as GAP(GAP-0050) (DEC-0192, DEC-0237)'; added DEC-0237 to the frontmatter decisions list (DEC-0192 already present). Confirmed by DEC-0237 (SHAPE closed by TN-7/DEC-0192, VALUES open under GAP-0050).",
+    "[minor] ct-20-venue-event.yaml line 4 version comment (findings 5 and 6, same comment, merged): extended the resolve_unknown summary to carry both paths — automatic only from an unambiguous reconciled read-back inside the lookback AND operator attestation through the powers channel required for an ambiguous/absent/out-of-lookback read-back; citations unchanged (DEC-0247, DEC-0248, DEC-0258). YAML still parses.",
+    "[minor] ct-20-venue-event.yaml line 26 invariant (finding 7): appended a dated supersession to the tracker pointer — 'superseded 2026-08-29: that authority is now ratified in docs/components/trading-node.md, see the TRADING-NODE USAGE note below' — preserving the original point-in-time sentence and citations, and added DEC-0195, DEC-0259 to both the inline cite and the decisions list. Confirmed by DEC-0259 (spine adopted into docs/) and DEC-0195. YAML still parses.",
+    "[major] ct-27-bms-definition.yaml (finding 10): in BOTH the ksa_policy invariant (line 26) and the ksa_policy template_section note (line 33) replaced the tracker/trading-node-notes.md pointer with 'docs/components/trading-node.md — the matrix SHAPE is ratified there under TN-7 and its VALUES stay open as GAP-0050, pre-soak operator ratification through the settings surface, a blank or provisional-evidence cell blocking live money'; added DEC-0192, DEC-0237 to the two inline cites and to the decisions list. Confirmed by DEC-0192 (matrix SHAPE) and DEC-0237 (GAP-0050 VALUES, pre-soak, blank/provisional blocks live). YAML still parses.",
+    "[minor] ADR-0016 (finding 8): appended a single dated '## Follow-up (2026-08-29, trading-node increment)' section at the end of the immutable point-in-time ADR, first bullet recording that the flat 'nothing imports qmf-venue' ban is narrowed at source by L30's node annotation (qmn.venue the one sanctioned importer; qmb and qml keep their ban, DEC-0241) and the ratified topology is unchanged, now detailed for the node's VPS plane in components/trading-node.md and lenses/data/data-layer.md (DEC-0188, DEC-0198). Added DEC-0188/DEC-0198/DEC-0241/DEC-0253 to decisions and sources, bumped verified to 2026-08-29.",
+    "[minor] ADR-0016 (finding 9): second bullet of the same dated follow-up records AD-19 gaining an EIGHTH room-role, sealed-archive, minted by the 2026-08-28 trading-node sitting, instantiated per world in the node's evidence tier under the same retention/backup/migration law as the other seven, and read by the replay import port and the backup (DEC-0253, DEC-0188). Confirmed by DEC-0253.",
+    "[minor] SCN-0004-off-machine-backup.md 'Then' section (finding 11): extended the recoverability sentence with the node's THREE restore drills — nightly sample (qmn-restore-sample.timer), monthly full (qmn-restore-full.timer), and the host-loss restore_drill_run rehearsal onto a clean host holding ONLY the workstation-escrowed CT-14 payload key (never VPS-minted), the one drill that can prove disaster recovery (DEC-0198, DEC-0252, DEC-0217). Added those DECs to decisions/sources, added components/trading-node.md and the NODE spine to sources, bumped verified to 2026-08-29."
+   ],
+   "no_change_needed": [],
+   "lint": "Both validators pass clean on the whole tree (exit 0). 'python lint_docs.py --root . --strict' -> 'OK: docs lint clean'; 'python check_citations.py --root .' -> 'OK: citations valid'. No error names any of my five files. YAML parseability re-verified for ct-20-venue-event.yaml and ct-27-bms-definition.yaml via yaml.safe_load (both OK). Banned-word grep over all five files returns none. Frontmatter decisions lists kept complete for every DEC id newly cited in each body: incident-playbook +DEC-0237; ct-20 +DEC-0195,+DEC-0259; ct-27 +DEC-0192,+DEC-0237; ADR-0016 +DEC-0188,+DEC-0198,+DEC-0241,+DEC-0253; SCN-0004 +DEC-0198,+DEC-0217,+DEC-0252. GAP-0050 confirmed present in _docwork/gaps.yaml. ADR-0016 kept immutable except the dated end follow-up; ct-20 line 26 point-in-time pointer preserved with an appended dated supersession rather than a deletion."
+  },
+  {
+   "applied": [
+    "ct-21-venue-secret-session.yaml line 29 invariant (minor+minor+critical, same defect): changed 'THREE named secret holders and no others ... plus ... DECLARED FOURTH' to 'FOUR named secret holders and no fifth', listing the connection manager, backup unit, observability path, and the separate zero-authority observability stack (under its own distinct non-qmx account); kept the User=qmx clause accurate to the three node holders. Matches spine TN-12 line 433 and DEC-0197/DEC-0227/DEC-0236(ruling 13).",
+    "ct-21-venue-secret-session.yaml line 4 version comment: 'three named secret holders plus the separate observability stack as a declared fourth' -> 'four named secret holders and no fifth (the separate zero-authority observability stack the declared fourth)'.",
+    "ct-21-venue-secret-session.yaml frontmatter: added DEC-0236 to the decisions list (now cited by the corrected invariant). YAML re-validated with yaml.safe_load.",
+    "constitution.md L39: appended a dated [Node annotation, 2026-08-29] stating every node-raised block is entries-only and a block that cannot be applied entry-side only is not minted, with the ONE exception being the parent's AD-27 per-command UNKNOWN block (AD-36's one non-control block) whose refused protective act stands as a journaled protection intent cleared only by resolve_unknown. Cited DEC-0191, DEC-0221, DEC-0236 (NOT the finding's suggested DEC-0216, which is the kill-line input series and does not support the statement).",
+    "constitution.md L38: appended a dated node annotation that the registry gains value_status_required while the per-value value-status lives on the RESOLVED config artifact, a recorded number stays evidence and becomes ratified only by an operator countersign made through the powers channel and refused without the variable's fp1 evidence citation, and blank/provisional-evidence on a live-gating variable blocks role = live. Cited DEC-0254, DEC-0231, DEC-0256.",
+    "constitution.md L34: appended a dated node annotation that the law governs secret VALUES in a live process while secret MATERIAL at rest is a separate ratified layer (systemd-creds --with-key=host KEK plus AEAD ciphertext at /var/lib/qmx/state; workstation-escrowed CT-14 backup payload key), with no plaintext ever reaching a repo/config artifact/journal/evidence/fingerprint/log. Cited DEC-0197, DEC-0227, DEC-0217, DEC-0252.",
+    "constitution.md frontmatter: added DEC-0191, DEC-0197, DEC-0217, DEC-0221, DEC-0227, DEC-0231, DEC-0236, DEC-0252, DEC-0254, DEC-0256 to both the decisions and sources lists to keep them complete for the new body citations.",
+    "gap-report.md GAP-0054 Deferring-DEC cell: '`DEC-0204`, `DEC-0226`' -> '`DEC-0204`, `DEC-0236`, `DEC-0260`'. DEC-0226 is Gate ruling 11 (supervision mechanics / safe point) and carries none of the seat-confinement controls or the deferral; the containment controls are DEC-0204 (TN-19) and DEC-0236 (GATE-2 ruling 23), and the deferral is recorded at DEC-0260 item 6. All three already present in the frontmatter enumeration.",
+    "qmf-data-ingest.md 'Tick and news-calendar recording': named the trading node (COMP-QMN) as the now-assigned owner of forward tick capture on its VPS plane (connection manager's canonical sensing feed IS the recorder), while preserving the no-dependency-on-COMP-CTRADER boundary and that this seam owns no scheduled lifecycle (DEC-0053, DEC-0188); and named the news-calendar recorder's schedule as the node's qmn-news-calendar.timer on a configurable refresh cadence with Forex Factory free the sole V1 source and no paid fallback (DEC-0198, DEC-0214). Added DEC-0188/DEC-0198/DEC-0214 to frontmatter decisions, added the NODE spine to sources, and bumped verified to 2026-08-29."
+   ],
+   "no_change_needed": [],
+   "lint": "python C:/Users/Mubarak/.claude/skills/documentation-factory/scripts/lint_docs.py --root . --strict -> 'OK: docs lint clean'. python C:/Users/Mubarak/.claude/skills/documentation-factory/scripts/check_citations.py --root . -> 'OK: citations valid'. No errors name my files. The only check_citations WARNs are pre-existing dead-decision enumerations (gap-report.md:7 frontmatter and unrelated lines 230/236/237/238/239/245, plus other seats' files) that I did not touch and did not introduce. ct-21 YAML re-validated with python yaml.safe_load -> 'ct-21 YAML OK'. Banned-word scan of my edited prose is clean (the engine/kernel/exam/minimal core/timeframe matches are all pre-existing gap-report rows that quote the retired words in the tolerated negation idiom, none on lines I edited)."
+  },
+  {
+   "applied": [
+    "docs/glossary.md — Reconciliation verdicts entry (findings 1+2+3, critical, one sentence): replaced the one-path 'resolve_unknown may be issued ONLY from a reconciled read-back INSIDE the lookback' with the two-path form — clears an UNKNOWN AUTOMATICALLY only from an unambiguous `observed-accepted | observed-absent` read-back inside the lookback, while an ambiguous, absent or `out-of-lookback` read-back requires OPERATOR ATTESTATION through the powers channel (the only path carrying a signer identity), the evidence channel serving the outstanding set with per-command detail; added that a reconciliation verdict never clears an UNKNOWN by itself and that out-of-lookback has its own named exit (DEC-0195, DEC-0258, both already in frontmatter). Verified against DEC-0258 statement and DEC-0195 step 6.",
+    "docs/glossary.md — Reconciliation verdicts entry (finding 4, major): replaced 'When reconciliation runs and what a verdict triggers are node/BMS authority, referenced only as a pointer (tracker/trading-node-notes.md), not QMF's to decide' with the absorbed rule — the node's authority, ratified in docs/components/trading-node.md, cadence after every UNKNOWN, on every reconnect, at each accounting rollover and on a configurable periodic tick, startup reconciliation gating ENTRIES only (DEC-0195, in frontmatter).",
+    "docs/lenses/ops/runbook.md — operations-toolkit paragraph (finding 7, minor): reattributed the verbatim operator quote 'a very separate system, like how big tech teams work' from the just node-… recipes to the operator's posture on the DevOps lens as a whole (node-transcript-scan.md D8 relocated referent), keeping DEC-0186/DEC-0211.",
+    "docs/lenses/ops/runbook.md — operations-toolkit recipe table (findings 5+6, minor): added a `just node-restore-rehearsal` row (calls the operator-signed restore_drill_run power to run the on-demand host-loss restore rehearsal; a power, not a timer; authority: ops principal or operator) per DEC-0186's toolkit enumeration; cited DEC-0198, DEC-0252, DEC-0202 and added DEC-0252 to the frontmatter decisions list. Cross-doc propagation of the recipe name to trading-node.md / overview.md / glossary is out of my ownership (other seats).",
+    "docs/lenses/observability/logging-spec.md — Node log record fields, `world` row (finding 8, critical): replaced the invented values 'LIVE, the paired demo world that carries paper mode, or a sandbox' with the ratified vocabulary — `live` or `replay` (`simulated` reserved-unusable in V1); the paired DEMO binding is `world = live` with `role = demo`; sandbox evidence is `provenance = sandbox`, not a world; the discriminator is role never world (DEC-0194, DEC-0195, DEC-0188). Added DEC-0188, DEC-0194, DEC-0195 to the frontmatter decisions list.",
+    "docs/scenarios/SCN-0007-human-promotion.md — 'Then' section (finding 8, major): appended a paragraph making the node live-path crossing TWO human-only acts — promotion (signed AD-18 card, operator principal, powers channel) plus a SEPARATE activation act journaled as its own CT-24 transition (approval never equals exposure), the precondition battery running silently server-side, the node-initiated pull refusing any `provenance = sandbox` artifact, and constitution L17 (human-only promotion) unchanged (DEC-0205, DEC-0213). Added DEC-0205, DEC-0213 to frontmatter decisions, added COMP-QMN to depends_on, bumped verified to 2026-08-29.",
+    "docs/decisions/ADR-0011-deferred-consumer-products.md — appended a dated '## Follow-up (2026-08-29)' note (finding 9, minor) naming realized homes QMB (ADR-0017), QML (ADR-0018) and the trading node (ADR-0019, adopted by DEC-0259); MIS still outside V1 with the node building only the SEAM (signal snapshot, shadow lane, comparison read model; labelers rule-based) and training + shadow rollout under GAP-0051 (DEC-0204); Simulator and agentic organs still deferred, agent/MCP door under GAP-0053. Original 2026-08-18 decision left immutable; added DEC-0204, DEC-0259 to frontmatter decisions and bumped verified to 2026-08-29."
+   ],
+   "no_change_needed": [],
+   "lint": "python C:/Users/Mubarak/.claude/skills/documentation-factory/scripts/lint_docs.py --root . --strict => 'OK: docs lint clean' (zero errors). python C:/Users/Mubarak/.claude/skills/documentation-factory/scripts/check_citations.py --root . => 'OK: citations valid' (zero errors). YAML frontmatter of all five edited files parses via yaml.safe_load. None of the check_citations dead-decision WARNs name any file I own \\u2014 they are all pre-existing in other seats' files (gap-report.md, qmb.md, qmf-data-store.md, qmf-registry.md, qmf-risk.md, ADR-0010, ADR-0015, ADR-0017, ADR-0018, SCN-0012). All 10 findings verified as holding against _docwork/ledger.yaml (DEC-0186..DEC-0260) and node-transcript-scan.md; none was a false finding, so no_change_needed is empty. GAP-0051 and GAP-0053 confirmed blocking=false before citing."
+  },
+  {
+   "applied": [
+    "Finding 1 + Finding 4 [major] (same sentence) — docs/AGENTS.md, 'Default-deny dependency direction' hard-rule bullet: changed the absolute 'Applications still never import qmf-venue.' to 'Applications never import qmf-venue — with exactly ONE sanctioned exception, the trading node's qmn.venue subpackage (DEC-0241, see the node bullet below); qmb and qml keep their ban.' Verified against DEC-0241 [APPLIED] (qmn.venue is the ONE sanctioned qmf-venue importer/wirer) and constitution.md L30's 2026-08-29 Node annotation. One edit satisfies both duplicate findings.",
+    "Finding 2 [minor] — docs/AGENTS.md FAQ 'Where answers live' table: 'How does an operator act on a live node?' -> 'How does an operator act on a running node?'. Verified against DEC-0186/DEC-0194 and AGENTS.md's own bullet banning 'live node' as a separate product.",
+    "Finding 5 [major] — docs/AGENTS.md 'Ratified venue content': 'the four-command vocabulary' -> 'the five-command vocabulary (place_order, cancel_order, close_position, close_all, amend_protection)' with DEC-0148 added to the cite; kept the four-OUTCOME law unchanged. Verified against DEC-0148, ct-19:19, SCN-0005. (The same stale count at docs/index.md:47 and docs/architecture/stack.md:142 is owned by other seats — not touched.)",
+    "Finding 3 [minor] — frontmatter decisions completeness, for my two Markdown files only: docs/AGENTS.md gained DEC-0187, DEC-0190, DEC-0194, DEC-0204, DEC-0210, DEC-0255; docs/lenses/observability/metrics-and-alerts.md gained DEC-0211, DEC-0259. (changelog.md, glossary.md, logging-spec.md in the same finding are owned by other seats — not touched.) Pre-existing non-node narrative citations e.g. superseding/resolving DEC-0056/0067/0070/0123/0125/0147 were left as-is, per the finding's node-DEC scope and no-scope-widening.",
+    "Finding 6 + Finding 7 [major] (same section) — docs/lenses/observability/metrics-and-alerts.md '/health' section: replaced the wrong six-state-plus-two split naming the invented 'evidence persistence' with the correct seven independent states 'safety, execution readiness, connection, reconciliation, data freshness, lifecycle and sync', and added that an evidence-persistence failure is a silent-degradation ALERT class, not a /health state. Verified against DEC-0200, DEC-0238(d), spine TN-15, PRD section 6 (prd.md:467-468) and trading-node.md:247. One edit satisfies both duplicate findings.",
+    "Finding 8 [minor] — docs/lenses/observability/metrics-and-alerts.md qmn_ metric-families table: marked the three extra rows (seat, evidence channel, dead-man heartbeat) explicitly as implementation-gate additions 'beyond the spine's nine ratified qmn_ families (clock, session, command streams, reconciliation, protection, latency, data, backup, process), not part of the ratified set', rather than deleting the DEC-cited rows. Verified against spine TN-15 exported-family enumeration (nine) and DEC-0200.",
+    "Finding 9 [major] — docs/contracts/ct-19-venue-command.yaml line 8: intended_consumers '[out-of-scope QMX application]' -> '[COMP-QMN]  # the command caller is the trading node's composition root, wiring qmf-venue through the node-minted VenueClientPort over the CT-19 shapes; no longer unassigned (DEC-0137, DEC-0191, DEC-0196)'. Added DEC-0191 to the contract's decisions list. Verified against trading-node.md:43, DEC-0186 (registers COMP-QMN), TN-6/DEC-0191, TN-11/DEC-0196. YAML still parses.",
+    "Finding 10 [major] — docs/contracts/ct-19-venue-command.yaml flatten-authority invariant: replaced 'recorded in tracker/trading-node-notes.md and referenced here as a pointer, never specified as QMF contract surface' with 'ratified in docs/components/trading-node.md as the node's KSA severity policy and referenced here as a pointer, never specified as QMF contract surface (values open under GAP-0050)'. Verified against DEC-0192/DEC-0237 (matrix is node severity policy in trading-node.md) and DEC-0259/GAP-0050 (values open). GAP-0050 exists in gaps.yaml. YAML still parses.",
+    "Finding 11 [major] — docs/scenarios/SCN-0005-uncertain-venue-submission.md 'Then' section: replaced the tracker pointer with 'Which effect fires at which severity is the node's severity policy — the KSA trigger-to-level-to-effect matrix, whose SHAPE is ratified in docs/components/trading-node.md and whose VALUES stay open under GAP-0050 for pre-soak operator ratification through the settings surface, a blank or provisional-evidence cell blocking live money'. Added DEC-0193 and DEC-0237 to frontmatter decisions and bumped verified 2026-08-20 -> 2026-08-29. Verified against DEC-0237, TN-7/DEC-0192, GAP-0050.",
+    "Finding 12 [minor] — docs/contracts/ct-31-control-window.yaml provider-impact invariant: '(tracker/trading-node-notes.md pointer)' -> '(pointer: docs/components/trading-node.md)'. DEC-0259 already in the contract's decisions list. Verified against DEC-0259. YAML still parses."
+   ],
+   "no_change_needed": [],
+   "lint": "Both required validators pass with exit 0 after the edits. python lint_docs.py --root . --strict => 'OK: docs lint clean' (no error naming any of my five files). python check_citations.py --root . => exit 0, 'OK: citations valid' (only WARN lines are dead-decision-context notices on ADR-0010, ADR-0018 and SCN-0012, none of which I own). Both edited YAML contracts (ct-19-venue-command.yaml, ct-31-control-window.yaml) load cleanly under yaml.safe_load. GAP-0050 referenced inline in ct-19 and SCN-0005 exists in _docwork/gaps.yaml; all newly-cited DEC ids (DEC-0148, DEC-0191, DEC-0193, DEC-0196, DEC-0237, DEC-0241, plus the added frontmatter ids) exist in _docwork/ledger.yaml. No banned words introduced."
+  },
+  {
+   "applied": [
+    "docs/index.md line 26 (findings 1 & 7, gap-report bullet): both target the same line and the same defect (GAP-0057 grouped under 'deferred' though its catalog status is `open`). Reconciled into one edit — 'the eight ... minted' → 'seven of the eight ... minted', enumerating GAP-0050 and GAP-0051–GAP-0056 as deferred and splitting out 'the eighth, GAP-0057 (a per-bot warm-up), is carried non-blocking `open`, not deferred, its recorded cheap-veto default = none in V1'. Verified: gaps.yaml GAP-0057 status=open/blocking=false.",
+    "docs/index.md line 142 (finding 2, Operations runbook blurb, major): replaced 'records operational no-op gates because no runtime or command suite is ratified' with the ratified node operations surface (just node-… toolkit — install/switch/rollback/secrets provisioning, check mode, safe point, stand-down and resurrect, VPS-loss runbook, soak-week warm-up rider; QMF-side gates stay documented no-ops). Verified: DEC-0201, DEC-0211.",
+    "docs/index.md line 144 (finding 3, Security model blurb, major): replaced 'while credential handling remains unresolved' with the node's ratified credential handling (two-layer VPS store, named secret holders, provisioning wizard, backup-key escrow, SO_PEERCRED peer principals, privilege model). Verified: DEC-0197, DEC-0227, DEC-0217, DEC-0252.",
+    "docs/index.md line 146 (finding 4, Test strategy blurb, minor): replaced 'without inventing a toolchain or coverage threshold' with the node's ratified QA standard (deterministic battery, mutation testing on node money-path modules, venue conformance, soak acceptance checklist). Verified: DEC-0208.",
+    "docs/index.md line 81 (finding 5, CT-19 blurb, minor): 'four-kind command vocabulary' → 'five-kind command vocabulary'; cite '(DEC-0137)' → '(DEC-0137, DEC-0148)'. Verified: DEC-0148 (amend_protection = the fifth kind), ct-19-venue-command.yaml ('exactly five typed command kinds'), spine. DEC-0148 already in frontmatter.",
+    "docs/index.md line 85 (finding 6, CT-23 blurb, minor): 'the caller is node-boundary and stays unassigned in QMF (DEC-0147)' → 'the caller is the trading node's order path (COMP-QMN), the Book (qmf-risk) the receiver (DEC-0147, DEC-0191)'. Added DEC-0191 to the frontmatter decisions list. Verified: DEC-0191 (the CT-23 Book door in the node order path), DEC-0259; trading-node.md lists CT-23 as a node interface.",
+    "docs/components/qmf-risk.md line 179 (findings 8, 9 & 10 — same K1 defect, critical/major/critical): the reconciliation-verdict sentence dropped the operator-attestation path, making an out-of-lookback UNKNOWN read as unresolvable. Rewrote to two paths: 'resolve_unknown issues AUTOMATICALLY only from an unambiguous reconciled read-back inside the lookback and otherwise requires operator attestation through the powers channel'; cite '(DEC-0258)' → '(DEC-0258, DEC-0195)' and added DEC-0195 to the frontmatter decisions list. Verified: DEC-0195, DEC-0258, spine TN-10 step 6 and TN-6.",
+    "_docwork/ledger.yaml DEC-0240 rationale (finding 11, minor, K5 zombie count): 'one of the five first-connection checks' → 'one of the six first-connection checks'. Verified: DEC-0195 (six verify-or-refuse checks), DEC-0208 rationale (memlog's five superseded by the spine's six), spine TN-23 line 629 ('six first-connection checks'). YAML re-validated (parses).",
+    "_docwork/ledger.yaml DEC-0227 title + statement (finding 12, major, pre-GATE-2 counts): 'All four units run under a FIXED User=qmx service account' → 'All FIVE node units ...'; 'THREE NAMED SECRET HOLDERS and no others: ...' → 'FOUR NAMED SECRET HOLDERS and no fifth: the connection manager, the backup unit, the observability path, and the separate observability STACK under its own account (GATE-2 ruling 13, DEC-0236)'; title 'three named secret holders' → 'four named secret holders' for coherence with the amended statement; existing EXTENDED note in rationale kept. Verified: spine TN-16 line 502 (five node units under User=qmx), TN-12 line 433 (four named holders, observability stack the declared fourth), DEC-0201, A42; trading-node.md:284 cites DEC-0227 beside 'five node units'. YAML re-validated (parses).",
+    "docs/decisions/ADR-0007-venue-neutral-integration.md (finding 13, major): point-in-time ADR kept immutable — appended a dated '- **Update 2026-08-29 (trading-node documentation increment):**' bullet at the end of Consequences (house pattern from ADR-0018), recording that DEC-0142's boundary is narrowed (node material now in components/trading-node.md and ADR-0019, DEC-0186..DEC-0210, DEC-0259; L30 annotation DEC-0241/DEC-0196; VenueClientPort node-minted with seam-in-qmf-venue recorded-not-applied DEC-0228/DEC-0242; ticket-006 trendbar basis measured-per-broker DEC-0240). Added those DECs to the frontmatter decisions list, bumped verified to 2026-08-29. Omitted the finding's 'Full text in review-findings.md' pointer (unverifiable file; substance captured in the note).",
+    "docs/components/qmf-data-store.md (finding 14, major): the store spec knew nothing of the eighth room role. Changed all four 'seven room-roles' occurrences (intro line 17, CT-09 sentence line 34, behavior line 40, diagram subgraph label) to 'eight room-roles' — line 34 corrected too for internal coherence since the finding's own fix requires it; added 'sealed-archive' to the enumerated list and to the mermaid subgraph with its CT-26 backup edge; appended one sentence naming it the 2026-08-28 node sitting's mint (per-world evidence-tier role, one-way sync target, replay import port's only source, backed-up room member, same retention/backup/migration law). Added DEC-0188/DEC-0198/DEC-0253 to frontmatter decisions and the NODE spine to sources, bumped verified to 2026-08-29. Verified: DEC-0253 [APPLIED], DEC-0188, DEC-0198."
+   ],
+   "no_change_needed": [],
+   "lint": "Both linters pass on my files. `python lint_docs.py --root . --strict` → 'OK: docs lint clean'. `python check_citations.py --root .` → 'OK: citations valid'. The check_citations WARN lines are all pre-existing dead-decision citations in frontmatter/sources lists (e.g. qmf-data-store.md:23 DEC-0037 in the untouched 'May never' paragraph; qmf-risk.md:9 sources list DEC-0069/0071/0077/0079/0093 which the body cites as dead) — none introduced by these edits, and none are errors. Every DEC newly cited by my edits (DEC-0148, DEC-0191, DEC-0195, DEC-0186/0196/0210/0228/0240/0241/0242/0259, DEC-0188/0198/0253) is a live ratified decision present in the frontmatter decisions list of its file. ledger.yaml re-validated as parseable YAML after both edits. No banned words introduced."
+  },
+  {
+   "applied": [
+    "Finding 1 (overview.md, Layer-view prose): COMP-QMN reclassified backend -> middleware. Verified against dependencies.yaml (COMP-QMN layer: middleware, with the 'wires the middleware and backend parts and sits above them' rationale) and DEC-0186/DEC-0259; validate_registry reports OK against the middleware registration, and layer-conventions rule 4 makes backend structurally impossible (COMP-QMN depends_on the middleware siblings qmf-venue, qmb, qml, so a backend->middleware edge is an upward edge). Reworded the sentence and dropped 'it is backend runtime, and'.",
+    "Finding 2 (overview.md, component-index table cell, COMP-QMN row): layer cell changed backend -> middleware to match the registry and the two sibling application-layer rows (COMP-QMB, COMP-QML both middleware).",
+    "Finding 3 (overview.md, component-index table, COMP-QMN row): same table-cell backend -> middleware fix as finding 2; confirmed against dependencies.yaml line 166 (layer: middleware) and overview.md's own line 495 naming dependencies.yaml the component/dependency registry.",
+    "Finding 4 (overview.md, both prose and table): applied as the combined prose rewrite (middleware, 'the application-composition lane COMP-QMB and COMP-QML occupy', dropped 'it is backend runtime') and the table-cell backend -> middleware change.",
+    "Finding 5 (overview.md, room-role count): changed 'seven room-roles' -> 'eight room-roles' in the 'Data rooms per world' prose (enumeration now adds `sealed-archive` with DEC-0253) and in the COMP-QMF-DATA component-index cell ('Eight room-roles, data policy, and public API'). Verified against DEC-0253 [APPLIED] and the sibling qmf-data.md (lines 17/119) which already carry the eighth role. Only overview.md occurrences touched; stack.md and data-layer.md named in the finding are other seats' files. Added DEC-0253 to overview.md frontmatter decisions + sources.",
+    "Finding 6 (ADR-0019, Architecture-preflight verdict): split the sentence that mislabeled DEC-0244 as documentation-only. Now 'The SessionTopology connection-count relaxation is a CODE item of the same qmf-venue increment that carries the transport, and the soak cannot start without it (DEC-0244); the stale qmf-venue README correction is documentation-only and changes no code (DEC-0245).' Verified: DEC-0244 relaxes SessionTopology's required_connection_count ClassVar (code, 'Without this the soak cannot start at all'); DEC-0245 is explicitly documentation-only.",
+    "Finding 7 (ADR-0019, Consequences 'Deferred rows' bullet): renamed 'per-bot post-activation warm-up' -> 'per-bot post-promotion warm-up' and changed the closing citation (DEC-0194, DEC-0205) -> (DEC-0194, DEC-0213). Verified: DEC-0213 carries the answer ('no per-bot post-promotion warm-up in V1'), DEC-0205 covers promotion/activation mechanics only; gap-report GAP-0057 is titled the post-promotion warm-up (default DEC-0259, R3 DEC-0213).",
+    "Finding 8 (ADR-0019, same 'Deferred rows' bullet): corrected the status framing from 'Eight questions are carried deferred' to 'Eight questions are carried ... seven `deferred` (GAP-0050 through GAP-0056) plus one non-blocking `open` cheap-veto item (GAP-0057)'. Verified against DEC-0259 ('seven deferred and one non-blocking open cheap-veto item') and gap-report.md (GAP-0050-0056 deferred; GAP-0057 non-blocking open). Findings 7 and 8 applied as one combined edit to the bullet.",
+    "Finding 9 (ctrader.md, Interfaces table, CT-19 row): status 'ratified design; caller unassigned' -> 'ratified design; caller assigned to COMP-QMN'; note 'Eventual caller: out-of-scope QMX application' -> 'Caller: COMP-QMN (trading-node.md) through the node-minted VenueClientPort; no adapter implemented (DEC-0191, DEC-0196)'. Verified against trading-node.md (CT-19 listed as a node 'out' interface) and DEC-0196/DEC-0191. Added DEC-0191 to ctrader.md frontmatter decisions.",
+    "Finding 10 (ctrader.md, '### Node boundary' section): rewrote to '### Node boundary (updated 2026-08-29)' recording DEC-0142's tracker-pointer boundary as superseded in part; node runtime material now lives in trading-node.md (COMP-QMN) and ADR-0019, this spec keeps only the cTrader venue FACTS, order path/protection funnel/startup/severity-effect assignment remain the node's (DEC-0142 superseded in part, DEC-0259). Used the full text supplied in _docwork/harvest/node/review-findings.md. DEC-0259/DEC-0142 already in frontmatter.",
+    "Finding 11 (ct-23-risk-evaluation.yaml, intended_consumers): 'intended_consumers: []' -> 'intended_consumers: [COMP-QMN]' with the comment updated to name the trading node's order path as caller and mark DEC-0142 superseded in part (DEC-0191). Verified against trading-node.md (CT-23 in/out interface; QL-7 seats return zero-or-more CT-23 intents) and dependencies.yaml (COMP-QMN interfaces include CT-23). Added DEC-0142 and DEC-0191 to the contract's decisions list to keep it complete for every cited DEC; YAML re-parses cleanly.",
+    "Finding 12 (ct-09-registry-persistence.yaml, room-role count): changed 'one of qmf-data's seven room-roles' -> 'one of qmf-data's eight room-roles (the eighth, `sealed-archive`, is the trading-node sitting's mint - DEC-0253)' in the invariant (line 18), and fixed the identical stale count in the schema room_role field ('seven AD-19 room-roles' -> 'eight AD-19 room-roles (DEC-0117, DEC-0253)') so the file stays internally consistent. Verified against DEC-0253 [APPLIED] and qmf-data.md:119. Added DEC-0253 to the contract's decisions list; YAML re-parses cleanly."
+   ],
+   "no_change_needed": [],
+   "lint": "clean - lint_docs.py --root . --strict reports 'OK: docs lint clean'; check_citations.py --root . reports 'OK: citations valid' (only unrelated WARN lines for ADR-0018 and SCN-0012, neither owned by this seat); both edited contract YAMLs (ct-23, ct-09) pass python yaml.safe_load; validate_registry reports 'OK: registry valid'. All 12 findings applied across the 5 owned files; no banned words introduced."
+  },
+  {
+   "applied": [
+    "trading-node.md FM-5 failure-mode row (F1+F6, same row, critical): rewrote the operator-affordance cell from the false automatic-only path to operator-attested resolve_unknown through the powers channel against the per-command read-back the evidence channel serves, with a typed refusal where the read-back cannot support attestation; Cites -> 'DEC-0195, DEC-0258'. Verified vs spine TN-6/TN-10 and DEC-0195/DEC-0258 (two-path rule).",
+    "trading-node.md Authority-boundary 'May:' clause (F2, minor): clock-band clause re-cited (DEC-0199) (DEC-0218) [DEC-0218 = Gate ruling 3, the per-decision-cycle clock band]; moved (DEC-0216) [Gate ruling 1 = kill-line input series] onto the kill-line/values clause. Verified vs DEC-0216/DEC-0218 titles+statements.",
+    "trading-node.md 'May never:' money-boundary clause (F3, minor): replaced (DEC-0193) (DEC-0219) with (DEC-0193) (DEC-0209) (DEC-0236); DEC-0219 is the netting/hedging gate ruling, the money-boundary/flatten rule is DEC-0209 and the widen-or-add-only news-revision rule is DEC-0236. Verified vs statements. DEC-0219 still cited elsewhere (lines 147/165/393/439).",
+    "trading-node.md Localhost HTTP evidence read channel bullet (F4, minor): replaced (DEC-0202) (DEC-0230) with (DEC-0202) (DEC-0234) (DEC-0256); DEC-0230 is the SQS/signal-snapshot ruling, the channel is DEC-0202/DEC-0234 and evidence_channel_budget is minted by DEC-0256. Verified DEC-0234 statement carries the evidence-channel-localhost text and DEC-0256 mints the budget. DEC-0230 still cited elsewhere.",
+    "trading-node.md TN-13 'Capacity is a declared dimension' paragraph (F5, minor): purge rule now states BOTH preconditions (verified sealed-archive copy AND verified off-host copy) matching TN-3, qmf-data.md and ct-14; added (DEC-0253). Verified vs DEC-0253 [APPLIED].",
+    "trading-node.md Unix-socket powers channel bullet, Interfaces (F7, minor): renamed the ops-principal power node-notify-test -> notify_test (the recipe name conflated with the CLOSED powers-list member); recipe just node-notify-test left intact at the operations-toolkit bullet. Verified vs spine TN-17 line 525.",
+    "trading-node.md Configuration 'Loss thresholds' row (F8, minor): dropped non-mint keys registry:seat_loss_run_allowance and registry:seat_r_ceiling from the tagged row, keeping bench_consecutive_loss_threshold as 'kept separate from the money-ladder divisor seat_loss_run_allowance' as prose; matches spine mint table line 734 (seat_r_ceiling appears nowhere in the spine).",
+    "trading-node.md Configuration 'Benchmark' row (F9, minor): the row invented a non-existent registry family with a blocks-soak tag no row holds; restated as an inherited (not node-minted) row pointing at the existing registry:design_bot_concurrency plus baseline-recorded regression thresholds, owner '-', effect 'recorded-at-baseline (DEC-0208)'. Matches spine TN-23/line 628; prose already carried at line 405.",
+    "trading-node.md line 21 'a very separate system...' quote (F10, minor): dropped the quotation marks and added an inline caveat that the transcript says it of the DevOps layer as a whole, not the recipes. Verified vs node-transcript-scan.md D8.",
+    "trading-node.md lines 19 and 99 'That question is not for this layer' quote (F11, minor): removed the verbatim quotation at both sites and replaced with a paraphrase caveated to the node-command half of the bundled question. Verified vs node-transcript-scan.md D9.",
+    "traceability.md DEC-0253 locator row (F12, minor): repointed the primary from the gitignored docs/lenses/data/data-layer.md to tracked carriers [qmf-data.md, sealed-archive], [CT-14], [Trading node, TN-3]. Confirmed data-layer.md is ignored (.gitignore:11:data/) and the annotation is carried in qmf-data.md L117-121 and ct-14. NOTE: raising the docs/lenses/data/ gitignore hit itself is a repo-config change outside my owned files.",
+    "traceability.md line 504 FEAT-0031 rule roll-up (F13, major): resolve_unknown clause changed from single-path ('only from a reconciled read-back inside the declared lookback') to the two declared paths (automatic vs operator attestation). Verified vs DEC-0195/spine TN-10 step 6.",
+    "traceability.md DEC-0227 locator row (F14, minor): 'three secret holders' -> 'four secret holders' to match the page it points at (security-model.md L123, 'Four named secret holders exist on the VPS and no fifth', DEC-0227/DEC-0197/DEC-0236).",
+    "traceability.md DEC-0142 locator row (F15, minor): navigation now points at components/trading-node.md (COMP-QMN) and ADR-0019 and marks the pointer-only boundary SUPERSEDED IN PART 2026-08-29 (DEC-0259), with tracker/trading-node-notes.md flagged as history. Verified vs docs/AGENTS.md L27 and DEC-0259.",
+    "test-strategy.md soak-gate checklist bullet (F16, minor): reworded the injected-residual item from the unsatisfiable 'non-live binding drives the entry stand-down' to the role-keyed rule (role=live -> entries-only stand-down cleared by operator resume; the soak's role=demo binding alarms at the live severity class and continues), cited (DEC-0195); added DEC-0195 to frontmatter. Verified vs DEC-0195 (drift keyed on role). NOTE: recording the spine-wording correction in docs/changelog.md is another seat's file.",
+    "test-strategy.md CT-19 conformance row (F17, major): row opening 'Four-command-kind' -> 'Five-command-kind' adding amend_protection (risk-increasing vs risk-non-increasing, treated differently by the node's entry-side-only block); status cell now 'Ratified (DEC-0137, DEC-0148); the command caller is COMP-QMN, the trading node's order path through the node-minted VenueClientPort (DEC-0191, DEC-0196)'. Added DEC-0191, DEC-0196 to frontmatter (DEC-0148 already present). Verified vs ct-19 (five kinds), DEC-0148, DEC-0191, DEC-0196.",
+    "qmf-core.md line 67 (F18, major): 'nothing imports qmf-venue (DEC-0138)' narrowed to 'nothing imports qmf-venue except the trading node's qmn.venue subpackage, the one sanctioned wiring point (DEC-0138, DEC-0241)'; added DEC-0241 to frontmatter. Verified vs DEC-0241 [APPLIED] (L30 qmn.venue sanctioned boundary).",
+    "ct-26-store-backup-input.yaml (F19, major): added 'sealed-archive' to the source_room_role enum (seven -> eight room-roles) with a comment noting the nightly backup reads it by name; appended a dated 2026-08-29 absorption note to the version:1 comment (mirroring ct-14); added DEC-0198, DEC-0253 to the decisions list. YAML re-validated with yaml.safe_load. Verified vs ct-14:24, data-layer.md:178, trading-node.md TN-3, DEC-0117/DEC-0253/DEC-0198."
+   ],
+   "no_change_needed": [],
+   "lint": "Clean for all five owned files. `python .../lint_docs.py --root . --strict` -> 'OK: docs lint clean'. `python .../check_citations.py --root .` -> 'OK: citations valid' (all WARN lines name other seats' files: gap-report.md, qmb.md, qmf-data-store.md, qmf-registry.md, qmf-risk.md, ADR-0010/0015/0017/0018, SCN-0012 — pre-existing dead-decision-citation notices, none in my files). ct-26 YAML re-validated with python yaml.safe_load -> 'ct-26 YAML OK'. Frontmatter decisions lists kept complete for every DEC newly cited in the body (added DEC-0241 to qmf-core.md; DEC-0191/DEC-0195/DEC-0196 to test-strategy.md; DEC-0198/DEC-0253 to ct-26; traceability.md and trading-node.md already carried all cited ids). No banned words introduced. Out-of-scope items belonging to other seats' files, left untouched and flagged: the docs/changelog.md surfaced-corrections rows (F16 spine-wording note) and the docs/lenses/data/ gitignore hit (F12)."
+  }
+ ]
+}

@@ -1,7 +1,7 @@
 id: CT-24
 name: Book mode and binding-transition contract
 status: ratified
-version: 1  # first minted format version; the shape is spine-ratified (AD-35/AD-29), corpus signed off by the operator 2026-08-21 (DEC-0149, DEC-0143)
+version: 1  # first minted format version; the shape is spine-ratified (AD-35/AD-29), corpus signed off by the operator 2026-08-21 (DEC-0149, DEC-0143); 2026-08-29 trading-node absorption: the node's disposition + state_carry usage, the paired-demo / paper-epoch usage, the deliberate demo-role collapse and the seat_reinstate CT-24 transition recorded — usage notes only, no format change (DEC-0194, DEC-0251)
 owner: COMP-QMF-RISK
 consumers: []  # consumer-blind by design: transition records and mode folds are qmf-core value types wrapped into registry records by the composition root; no package imports qmf-risk under default-deny (DEC-0143, DEC-0149)
 active_consumers: []
@@ -10,7 +10,7 @@ wiring_status: defined-unwired  # AD-35/AD-29 ratify the transition-record surfa
 caller_status: unassigned  # the mode flip is an operator-ratified act and a clocked mechanical clear; the issuer is the node/operator, QMF carries the record (DEC-0149)
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0149, DEC-0143, DEC-0150, DEC-0157, DEC-0158, DEC-0041]
+decisions: [DEC-0149, DEC-0143, DEC-0150, DEC-0157, DEC-0158, DEC-0041, DEC-0194, DEC-0207, DEC-0219, DEC-0251, DEC-0259]
 prohibitions: [DEC-0069]  # dead: paper Bot twins stay dead — no Bot twins ever, BENCHED is a bot-seat word only (DEC-0069 cited as dead; DEC-0149)
 gaps: []  # GAP-0041 answered by AD-35 (DEC-0149); GAP-0005 answered by minting format version 1; GAP-0018 answered by DEC-0115, GAP-0019 answered by DEC-0116 — none live here
 purpose: "The append-only binding-transition record that carries a Book between its two modes LIVE and PAPER: every transition is a dated change of the Book's execution binding minting a new binding epoch (never a new Book), current mode is a read-time fold over the transition stream under AD-36's fold contract, and the paper-routing target, paper epochs, and return-to-live rules are governed here — while control actions ride a separate CT-30 stream so 'is this Book live now' folds one stream in every build (DEC-0149, DEC-0143, DEC-0150)."
@@ -27,6 +27,9 @@ invariants:
   - "Paper money is frozen evidence: the paper starting balance is a Book/family-scoped configurable UI-editable default (recorded evidence, non-authoritative, no spine value), sized for data-collection realism, frozen at flip, and never hand-adjusted; paper P&L never becomes Treasury cash, never crosses the money boundary, and never buys a seat (DEC-0149, DEC-0157)."
   - "A reset is not an adjustment: it mints a new paper epoch record — operator-signed, dated, carrying a fresh declared balance and a lineage edge to the epoch it follows — as an AD-16 treasury boundary-event record kind (paper_epoch_reset); the running balance is never mutated, append-only holds, and 'reset' can never become a back door to hand-adjustment (DEC-0149, DEC-0158)."
   - "Return to live is automatic only where the clearing cause is itself clocked and mechanical; anything touching real money — a kill-line stand-down returning, a first entry into live — requires an operator signature (AD-18), and paper performance never authorizes a return (DEC-0149, DEC-0041)."
+  - "Trading-node usage (no format change): the trading node is the first system to mint bindings at runtime, so it is the first CT-24 consumer to exercise disposition and state_carry live. Each trigger kind's disposition is fixed by AD-35's invariant, not by the author — scheduled_news, black_swan, a protection window, a dead zone and the kill switch are market-risk blocks and blocks-paper, while a kill-line stand-down and a benched seat are capital-or-authority blocks and routes-to-paper — and state_carry rides EVERY binding the node mints (a paper flip, a kill-line stand-down return, an activation, a BMS re-version, and any config version whose diff touches a Book- or BMS-identity-bearing field), mandatory and non-defaultable per counter, carry legal only under a human-signed carries-ledger edge (DEC-0251, DEC-0194, DEC-0207)."
+  - "Trading-node usage (no format change): the node's paper target is the paired demo account — role demo, world = live — carrying its own BMS instance linked by the typed pairing record, and a paper reset mints an operator-signed paper_epoch treasury boundary record; in V1 the finer AD-9 roles paper-validation and paper-benched are deliberately NOT used, so Book-mode PAPER evidence and benched-seat evidence share one role-scoped namespace and are told apart by the routing reason on the execution-target record rather than by namespace — a later split is a role addition, never a re-write (DEC-0194, DEC-0251)."
+  - "Trading-node usage (no format change): seat quarantine and its operator-signed exit seat_reinstate are each their own CT-24 binding-transition — a quarantined seat is entered automatically on a seat-callback deadline, exception or memory-ceiling breach and left ONLY by the operator-signed seat_reinstate power, never inferred from a restart, a new boot epoch, a config version or the absence of further breaches — and seat_reinstate is a CT-24 transition, never a CT-30 resume (DEC-0251)."
 schema:
   type: binding-transition-record  # a dated, append-only mode-change record over the Book's execution binding; current mode is the read-time fold over the stream, never a stored field (DEC-0149, DEC-0150)
   fields:

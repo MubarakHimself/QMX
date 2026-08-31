@@ -1,0 +1,366 @@
+# variables-qma.yaml — AD-26 configurable-variable registry rows for the QMX agentic system (QMA).
+# Seat D9. Source: SRC-13 ARCHITECTURE-SPINE.md#AD-26 and DEC-0325 (the full AD-26 variable set).
+# generated 2026-08-29, verified 2026-08-29. Row shape mirrors docs/registry/variables.yaml
+# `qmb_governor_cpu_budget`: name, symbol, value, formula, units, type, component, decision,
+# configurable, notes. Every AD-26 variable is ui-editable, so configurable: true (DEC-0325);
+# a variable's SCOPE (AD-26 closed vocabulary) and its home (registry | named record type) are
+# recorded in notes, since the registry row shape carries no scope column. A spine default is the
+# value; a registry-homed value with no spine default uses the house declared-per-installation
+# descriptor and a record-homed value uses declared-per-<scope>. Appended into
+# docs/registry/variables.yaml by fragment registry-variables.yaml (op yaml_append_items).
+variables:
+  # QMA AD-26 set (DEC-0325). Three job-spec names are NOT spine-registered and mint no row per
+  # DEC-0325: bus.sticky_limit and routine.budget_hint were removed from AD-26 by memlog L132 as
+  # unowned (no owning AD, subsystem, units or default); journal.retention_* has no spine referent
+  # because the event journal is never trimmed and mints no trim threshold (AD-8, AD-23).
+  - name: quant.quiet_hours
+    symbol: null
+    value: declared-per-quant
+    formula: null
+    units: schedule
+    type: declaration
+    component: COMP-QMA-DAEMON
+    decision: DEC-0319
+    configurable: true
+    notes: "A daily interval plus its IANA zone gating a Quant's wakes; scope quant. Record-homed: home is the Quant record WakePolicy (AD-20); an operator-principal Quant record write moves it, never a variable.set (DEC-0325). No spine default (DEC-0319, DEC-0325)."
+
+  - name: quant.max_wakes_per_window
+    symbol: null
+    value: declared-per-quant
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0319
+    configurable: true
+    notes: "The cap on a Quant's wakes per window; scope quant. Record-homed: home is the Quant record WakePolicy (AD-20), moved by the operator-principal Quant record write (DEC-0325). No spine default (DEC-0319, DEC-0325)."
+
+  - name: hook.timeout_before
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMA-DAEMON
+    decision: DEC-0309
+    configurable: true
+    notes: "The before-phase hook timeout span, measured from a recorded UTC instant with no zone (AD-10). Registry-homed: set by an operator-principal variable.set recording a variable.set journal event (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0309, DEC-0325)."
+
+  - name: hook.timeout_after
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMA-DAEMON
+    decision: DEC-0309
+    configurable: true
+    notes: "The after-phase hook timeout span, measured from a recorded UTC instant with no zone (AD-10). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0309, DEC-0325)."
+
+  - name: hook.timeout_control
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMA-DAEMON
+    decision: DEC-0309
+    configurable: true
+    notes: "The phase-less-control hook timeout span for the two blocking controls `agent_stop` (timeout resolves to observe) and `review_required` (timeout resolves to deny), measured from a recorded UTC instant with no zone (AD-10). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0309, DEC-0325)."
+
+  - name: mission.ask_timeout
+    symbol: null
+    value: declared-per-mission
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMA-DAEMON
+    decision: DEC-0311
+    configurable: true
+    notes: "The Mission ask timeout; scope mission. Record-homed: home is the Mission approval_route (AD-10, AD-12), moved by the operator-principal Mission record write (DEC-0325). No spine default (DEC-0311, DEC-0325)."
+
+  - name: mission.on_timeout
+    symbol: null
+    value: declared-per-mission
+    formula: null
+    units: enum
+    type: enum
+    component: COMP-QMA-DAEMON
+    decision: DEC-0311
+    configurable: true
+    notes: "The Mission on-timeout disposition, closed enum values deny and escalate; scope mission. Record-homed: home is the Mission approval_route (AD-10, AD-12), moved by the operator-principal Mission record write (DEC-0325). No spine default (DEC-0311, DEC-0325)."
+
+  - name: wire.deprecation_minors
+    symbol: null
+    value: 2
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-WIRE
+    decision: DEC-0304
+    configurable: true
+    notes: "The number of minor versions a deprecated wire message family stays served (AD-5), default 2. Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly) (DEC-0304, DEC-0325)."
+
+  - name: wire.dedup_window
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMA-DAEMON
+    decision: DEC-0305
+    configurable: true
+    notes: "The daemon dedup-cursor window over the durable wire stream (AD-5, AD-6). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0305, DEC-0325)."
+
+  - name: rlm.depth_cap
+    symbol: null
+    value: 2
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0313
+    configurable: true
+    notes: "The RLM kernel recursion depth cap (AD-14), default 2 (the depth-2 cap). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly) (DEC-0313, DEC-0325). RLM depth above 2 is deferred (GAP-0080)."
+
+  - name: rlm.fanout_cost_ceiling_usd
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: "money(numeraire)"
+    type: money
+    component: COMP-QMA-DAEMON
+    decision: DEC-0313
+    configurable: true
+    notes: "The USD ceiling per 800-variant RLM aggregation, distinct from continuation.budget (AD-14, AD-26); scope desk. Registry-homed: set by an operator-principal variable.set (AD-24). No spine default (DEC-0313, DEC-0325)."
+
+  - name: telemetry.retention_window
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMA-DAEMON
+    decision: DEC-0322
+    configurable: true
+    notes: "The telemetry-store retention window (AD-23); telemetry is not the ledger and not the journal. Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default; the window value is deferred (GAP-0089) (DEC-0322, DEC-0325)."
+
+  - name: telemetry.trim_event_count
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0322
+    configurable: true
+    notes: "The telemetry-store trim threshold measured in event count (AD-23). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0322, DEC-0325)."
+
+  - name: telemetry.trim_disk_bytes
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: bytes
+    type: quantity
+    component: COMP-QMA-DAEMON
+    decision: DEC-0322
+    configurable: true
+    notes: "The telemetry-store trim threshold measured in on-disk size (AD-23). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0322, DEC-0325)."
+
+  - name: mailbox.delivery_trim_event_count
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0319
+    configurable: true
+    notes: "The mailbox delivery-projection trim threshold measured in event count (AD-20); the mailbox and its delivery projection are bounded non-evidence streams. Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0319, DEC-0325)."
+
+  - name: mailbox.delivery_trim_disk_bytes
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: bytes
+    type: quantity
+    component: COMP-QMA-DAEMON
+    decision: DEC-0319
+    configurable: true
+    notes: "The mailbox delivery-projection trim threshold measured in on-disk size (AD-20). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0319, DEC-0325)."
+
+  - name: mailbox.delivery_retention_window
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMA-DAEMON
+    decision: DEC-0319
+    configurable: true
+    notes: "The mailbox delivery-projection retention window (AD-20, AD-23); the mailbox delivery projection is one of the two bounded non-evidence streams a daemon job may trim, and only inside this registered AD-26 retention window. Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default; the window value is deferred (GAP-0089) (DEC-0319, DEC-0325)."
+
+  - name: environment.max_in_flight
+    symbol: null
+    value: 1
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0316
+    configurable: true
+    notes: "The ExecutionEnvironment concurrency cap (spine name max_in_flight), default 1; scope execution_environment. Record-homed: home is the ExecutionEnvironment declaration (AD-17); moved only by that declaration's operator-principal write command (AD-24, DEC-0325). Editability is a per-kind property of this one variable — AD-26 names one variable, max_in_flight: ui-editable for the local, docker, remote_container and browser kinds, and pinned to 1 and uneditable for the remote_host and desktop kinds, which may never exceed 1 (AD-17). No second registry key expresses the pin (DEC-0316, DEC-0325)."
+
+  - name: routine.max_concurrent
+    symbol: null
+    value: declared-per-routine
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0328
+    configurable: true
+    notes: "The Routine max-concurrent cap; scope routine. Record-homed: home is the Routine record (AD-29), moved by the operator-principal Routine record write (DEC-0325). No spine default (DEC-0328, DEC-0325)."
+
+  - name: continuation.max_consecutive
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0328
+    configurable: true
+    notes: "The cap on consecutive continuations before escalation (AD-29). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0328, DEC-0325)."
+
+  - name: continuation.budget
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0328
+    configurable: true
+    notes: "The continuation budget ceiling (AD-29), distinct from rlm.fanout_cost_ceiling_usd. Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0328, DEC-0325)."
+
+  - name: continuation.escalation_target
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: string
+    type: string
+    component: COMP-QMA-DAEMON
+    decision: DEC-0328
+    configurable: true
+    notes: "The escalation target for an exhausted continuation budget, the Agent's Quant mailbox (AD-29). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0328, DEC-0325)."
+
+  - name: store.backup_cadence
+    symbol: null
+    value: nightly
+    formula: null
+    units: schedule
+    type: enum
+    component: COMP-QMA-DAEMON
+    decision: DEC-0326
+    configurable: true
+    notes: "The store backup cadence, ratified nightly under the parent's already-ratified backup design (AD-27, parent AD-20, L18); encrypted, versioned, off-machine. Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). The backup DESTINATION and the encryption-key custody are deferred (GAP-0088), never the cadence (DEC-0326, DEC-0325)."
+
+  - name: store.sample_restore_test_cadence
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: schedule
+    type: enum
+    component: COMP-QMA-DAEMON
+    decision: DEC-0326
+    configurable: true
+    notes: "The sample-restore-test cadence (AD-27). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default; the cadence value is deferred (GAP-0088) (DEC-0326, DEC-0325)."
+
+  - name: store.full_restore_rehearsal_cadence
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: schedule
+    type: enum
+    component: COMP-QMA-DAEMON
+    decision: DEC-0326
+    configurable: true
+    notes: "The full-restore-rehearsal cadence (AD-27). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default; the cadence value is deferred (GAP-0088) (DEC-0326, DEC-0325)."
+
+  - name: proxy.allow_unauthenticated_loopback
+    symbol: null
+    value: true
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMA-DAEMON
+    decision: DEC-0314
+    configurable: true
+    notes: "Whether a loopback-bound model proxy (auth_mode none) may accept unauthenticated connections; closed enum true or false, default true (AD-15). Default true is a memlog assumption (L106), operator-overridable. Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly) (DEC-0314, DEC-0325)."
+
+  - name: deployment.model_family
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: enum
+    type: enum
+    component: COMP-QMA-DAEMON
+    decision: DEC-0314
+    configurable: true
+    notes: "The model-family assignment for a Deployment (AD-15); scope global (AD-26 pins none explicitly; `deployment` is not a member of AD-26's closed scope vocabulary). Registry-homed: the registered variable is the closed enum of allowed family values, set by an operator-principal variable.set (AD-24). The per-Deployment assignment is a field of the Deployment record, optional and operator-assigned under AD-15/AD-24 — not a second home of this variable; a plugin-contributed model_deployment registers with none. No spine-enumerated member list (DEC-0314, DEC-0325)."
+
+  - name: review_policy.families
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: enum
+    type: enum
+    component: COMP-QMA-DAEMON
+    decision: DEC-0314
+    configurable: true
+    notes: "The ReviewPolicy family enum (AD-15). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine-enumerated member list (DEC-0314, DEC-0325)."
+
+  - name: wire.remote_outbox_depth
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0305
+    configurable: true
+    notes: "The outbox depth for a remote worker dialing out to the daemon (AD-6). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0305, DEC-0325)."
+
+  - name: wire.remote_spool_bytes
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: bytes
+    type: quantity
+    component: COMP-QMA-DAEMON
+    decision: DEC-0305
+    configurable: true
+    notes: "The spool byte budget for a remote worker dialing out to the daemon (AD-6). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0305, DEC-0325)."
+
+  - name: deferred.finished_mission_trajectory_count
+    symbol: null
+    value: 50
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0322
+    configurable: true
+    notes: "The finished-Mission trajectory count that arms the self-improvement gate (AD-23, AD-26), default 50. Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). The self-improvement evaluation gates the variable feeds are deferred (GAP-0074) (DEC-0322, DEC-0325)."
+
+  - name: deferred.sandbox_refusal_count
+    symbol: null
+    value: 3
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0316
+    configurable: true
+    notes: "The consecutive Compute Router `NoEnvironment` refusal count that arms the deferred sandbox/compute-vendor revisit (AD-17, AD-26), default 3. Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). Sandbox and compute vendors are deferred (GAP-0075) (DEC-0316, DEC-0325)."

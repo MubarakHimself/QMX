@@ -1,0 +1,5 @@
+target: _docwork/ledger.yaml
+ops:
+  - op: yaml_append_items
+    key: ledger
+    items_file: _docwork/qma/harvest/ledger-L5.yaml

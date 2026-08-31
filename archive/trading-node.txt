@@ -1,0 +1,802 @@
+ ▐▛███▛█   Claude Code v2.1.251
+▝▜██████▀  Fable 5 · Claude Max
+  ▝▝ ▝▝    ~\Desktop\QMX
+
+
+❯ /effort                                                                       
+  ⎿  Set effort level to ultracode (this session only): xhigh + dynamic workflow
+     orchestration
+
+❯ /bmad-architecture You are the orchestrator for the next phase of QMX, my     
+algorithmic trading platform.                                                   
+The foundation is done and verified: 23 epics (QMF toolbox libraries, QMB       
+backtesting                                                                     
+application, QML bot-authoring library) merged on `integration`, an independent 
+QA phase                                                                        
+with 35 fix cards proven, Skylos + QA Battery CI green. Now we build the thing  
+that                                                                            
+actually trades: the **trading node**. Treat this as a one-shot: run the whole  
+sitting                                                                         
+autonomously, batch every genuinely open decision into at most two              
+AskUserQuestion rounds,                                                         
+and otherwise do not wait on me. I am non-technical; the corpus is my memory.   
+Your project                                                                    
+memory (MEMORY.md and its files) carries the standing rules and the current     
+state — read                                                                    
+it first.                                                                       
+                                                                                
+## Non-negotiables (from standing rulings — do not re-litigate)                 
+- BMad is planning-only. Implementation ships through the factory lanes; you    
+never write                                                                     
+  product code in this session. `main` moves only by my click.                  
+- CORPUS FIRST. Before asking me anything, dig `docs/` (decision ledger DEC-*,  
+contracts                                                                       
+  CT-*, constitution L1-L39, components, scenarios, glossary), `_bmad-output/`  
+(the                                                                            
+  architecture spines AD-1..41 / B-1..15 / QL-1..10 and their `.memlog.md`      
+files, the PRD —                                                                
+  its Phase 2 section IS the node, with the mined node doctrine folded in),     
+`_docwork/`,                                                                    
+  `tracker/trading-node-notes.md` (the standing node ledger),                   
+`tracker/tickets/006-*`, and                                                    
+  `workroom/reference/05-trading-node-primer.md` + the recovery lineage         
+addendum. Spawn                                                                 
+  your own discovery agents for this — you have every tool. Only what none of   
+it decides                                                                      
+  comes to me, dumbed down (plain words, a concrete example, ≤3 sentences, a    
+recommended                                                                     
+  option first).                                                                
+- Model tiers: you orchestrate; Opus 5 for synthesis/review seats; bulk-worker  
+for fan-out                                                                     
+  and mechanical stages; never Fable subagents; avoid Sonnet. Inside Workflow   
+scripts set                                                                     
+  the model/agentType explicitly on every agent() call.                         
+- Naming: it is "the trading node" — ONE product with two modes, paper and      
+live. Never a                                                                   
+  separate "paper node". Banned words stand: engine, kernel, plugins, exam,     
+minimal core.                                                                   
+- No UI in this phase. UI comes after the agentic system. Every operator-facing 
+control the                                                                     
+  node needs (promotion to live, kill switch, config edits, status) gets a      
+CLI/API door now                                                                
+  and a screen later; "configurable" still means UI-editable-by-design (L38),   
+so the config                                                                   
+  surface must be shaped for a UI that does not exist yet.                      
+- Paper before live: the first milestone is the node running paper mode on a    
+demo account                                                                    
+  for ~2 days under full logging/monitoring. Live money only after that soak.   
+- CREDENTIALS: never ask me to paste a secret into chat, a terminal command, a  
+`.env`, or                                                                      
+  any file (CT-21; the secret-scan gate fails the build). My cTrader Open API   
+credentials                                                                     
+  live in Windows Credential Manager under the `qmx/…` labels recorded in       
+memory                                                                          
+  (`qmx-broker-credentials-location`). The Spotware application (QMX-NODE) is   
+SUBMITTED                                                                       
+  and awaiting review; the access/refresh tokens do not exist yet. This sitting 
+needs NO                                                                        
+  broker access — do not block on the review; plan so the first live-connection 
+story can                                                                       
+  start the moment the tokens exist. Broker facts already known: IC Markets     
+(entity "Raw                                                                    
+  Trading Ltd"), cTrader demo account, Raw type, USD, 1:1000, swap-free         
+(Islamic) intended                                                              
+  for live; the admin-fee schedule and live KYC are still open operator items.  
+- Compaction survival: keep a `.memlog.md` in the sitting folder exactly like   
+the earlier                                                                     
+  spines did (every ruling, every assumption, every open item), update it as    
+you go, and                                                                     
+  re-read it first after any context loss.                                      
+                                                                                
+## What to produce, in order                                                    
+1. **Ground truth first (read-only inventory).** Before designing anything,     
+have an Opus                                                                    
+   seat inventory what ALREADY exists on `integration` that the node will       
+compose: qmf-venue                                                              
+   (cTrader protocol contracts, session state machine, UNKNOWN-is-a-state),     
+qmf-risk (Book/BMS                                                              
+   doors, control actions/windows, exit records), qmf-data (world rooms,        
+journals, seals,                                                                
+   backups, projections), qmf-calendar-forex, the `recorder/`, QMB's run loop / 
+execution                                                                       
+   ports / orchestrator / doors / host, QML's runtime protocol, and the QA      
+phase outputs under                                                             
+   `qa/_trace/` (findings still UNPROVEN, verification debt — some are          
+node-relevant). Output:                                                         
+   a "parts bin" table — exists-as-is / exists-needs-live-adapter /             
+does-not-exist. My belief                                                       
+   is ~60% of the node exists as parts; verify or correct that number with      
+evidence. The real                                                              
+   design question is adaptation: how the node composes QMF/QMB/QML rather than 
+rebuilding.                                                                     
+2. **`bmad-architecture` — the trading-node spine**, as a child spine of the    
+QMF spine (the                                                                  
+   way QMB and QML were sat), grounded on the corpus. It must cover, at         
+minimum:                                                                        
+   - The **overall system architecture**: what runs on which machine, what      
+connects to what,                                                               
+     what does what — Trading VPS (Linux) hosts the node; the desktop app is    
+Phase 3; cloud                                                                  
+     sandboxes for QMB/agents; the nightly backup bucket. State the process     
+topology, the                                                                   
+     data flows, and the trust boundaries explicitly; the documentation step    
+turns it into a                                                                 
+     C4 diagram later.                                                          
+   - The **live composition root**: the node is the place ambient time, broker  
+sessions and                                                                    
+     real money are allowed to exist; everything below it stays pure. Boot =    
+compose,                                                                        
+     fingerprint, seal (the three-tier composition ruling); promotion to live = 
+human-only.                                                                     
+   - Live-broker integration on IC Markets via cTrader Open API: session        
+lifecycle,                                                                      
+     reconnection, rate limits, UNKNOWN reconciliation, order/fill/position     
+reconciliation                                                                  
+     against qmf-venue's contracts, secrets as references never values (L34),   
+the SecretStore                                                                 
+     port fed from Credential Manager on my laptop and a                        
+systemd-credentials-class store on                                              
+     the VPS.                                                                   
+   - The bot→Book→BMS live pipeline, kill switch (global, stops paper too),     
+kill line                                                                       
+     (per-Book), news blackout (instrument-scoped), dead zones, SQS, breakeven  
+ratchet, bench                                                                  
+     rules — all per the ratified risk rulings; the node runs them, it does not 
+redefine them.                                                                  
+   - Paper mode as a Book-level state (a Book that cannot trade live trades a   
+paper account;                                                                  
+     no parallel paper twins; family-scoped paper balance).                     
+   - The **data layer, live side**: recording live ticks/bars into the live     
+world room via                                                                  
+     qmf-data journals, the calendar recorder, download-once history bootstrap  
+at first                                                                        
+     install, license tags, the 12-month research seal, nightly backup +        
+restore drill.                                                                  
+     Confirm the existing data layer covers this out of the box or name the     
+exact gaps.                                                                     
+   - Startup/recovery doctrine, explained drift, stand-down-alive, shadow lane, 
+evidence                                                                        
+     tiers, notification allow-list — the mined node doctrine in the PRD;       
+apply, don't reinvent.                                                          
+   - MIS (the ML ensembler): a seam only in V1 unless the corpus says           
+otherwise; ML training                                                          
+     stays quarterly-in-cloud, shadow rollout.                                  
+   - **Logging, monitoring and the DevOps lens** — first-class, not an          
+afterthought: operational                                                       
+     logs (AD-14) kept distinct from evidence journals; metrics; health checks; 
+alerting via                                                                    
+     the notification allow-list; log retention; the "explained drift" signals  
+as monitored                                                                    
+     quantities; deployment from ONE canonical checkout (the PRD's gating       
+DevOps success                                                                  
+     measure: out-of-box deploy, one-person operability); process supervision   
+(systemd or                                                                     
+     container — decide from the corpus and Skylos's IaC scanning); NTP/UTC     
+time discipline;                                                                
+     rollback; VPS hardening; secrets provisioning as a human-only wizard step; 
+the                                                                             
+     platform question (the tier-1 CI platform is currently pinned to Windows — 
+the node runs                                                                   
+     on Linux — rule the CI matrix).                                            
+   - The doors the later phases will plug into: the desktop app's               
+control/read-model surface                                                      
+     (two-channel console spine, settings scopes) and the agentic system's      
+seams ("veins not                                                               
+     organs") — designed now as API doors, built later.                         
+   - The QA standard carried forward: independent requirements-first tests,     
+mutation testing                                                                
+     on the money path, the permanent CI battery, plus a paper-mode soak test   
+as the acceptance                                                               
+     gate for the live milestone.                                               
+   Run the sitting with its reviewer gate                                       
+(rubric/adversarial/currency/reconcile/parent-                                  
+   consistency) and mark assumptions as cheap-veto items in the memlog, as      
+before.                                                                         
+3. **`/documentation-factory` change-mode absorption** of the node spine into   
+`docs/`: mint                                                                   
+   the DECs, the node component(s), ADRs, the overall C4 architecture and       
+deployment diagrams,                                                            
+   the ops/observability lens pages, glossary terms; keep `lint_docs --strict`  
+clean.                                                                          
+4. **`bmad-create-epics-and-stories` for the node** — a SMALL epic set (aim 5–8 
+epics), wave                                                                    
+   plan, paper-milestone epics first, routed for the Grok epic-factory lane     
+(fast workhorse);                                                               
+   validate with the usual validator workflow; record factory-time ruling items 
+explicitly.                                                                     
+   Sequence the live-connection story so it is the first thing unblocked by the 
+tokens.                                                                         
+5. **Hand-off**: a plain-words summary for me — the parts-bin verdict, the      
+topology in one                                                                 
+   paragraph, the epic list with the paper milestone marked, the cheap-veto     
+list explained in                                                               
+   plain words BEFORE any question, the human-only steps I must do myself       
+(finish the Spotware                                                            
+   sandbox token step once approved, VPS provisioning, live KYC, the swap-free  
+fee schedule in                                                                 
+   writing), the secrets wizard that reads Credential Manager and provisions    
+the VPS store, and                                                              
+   the exact command to start the Grok factory on the node epics. Then stop.    
+You do not launch                                                               
+   coding.                                                                      
+                                                                                
+## Things to check that I may not have thought about (verify, decide from       
+corpus, or ask)                                                                 
+- Package/product naming for the node inside the monorepo and its publishing    
+boundary.                                                                       
+- Whether the node consumes `main` (after my squash-merge) or `integration` as  
+its base.                                                                       
+- Time-zone and calendar edge cases at the live boundary (three calendars       
+ruling).                                                                        
+- Clock-drift detection between VPS and broker; what stand-down looks like on   
+drift.                                                                          
+- Partial fills, requotes, disconnect-mid-order, duplicate fills, position      
+mismatch on restart.                                                            
+- Where live secrets live on the VPS and how rotation works without code        
+changes (the refresh                                                            
+  token never expires and is the crown jewel; access tokens live ~30 days).     
+- Backup restore drill as a required, scheduled test, not a hope.               
+- What "explained drift" concretely measures on day one of paper mode.          
+- Alert fatigue: which notifications are allow-listed for the paper soak vs     
+live.                                                                           
+- A dry-run/replay mode for the node itself (replaying a recorded live day      
+through the                                                                     
+  live loop) as a regression tool.                                              
+- Resource footprint on the VPS (~40 bots at the 95th-percentile design load).  
+- The unproven/verification-debt items from the QA phase that touch node        
+territory.                                                                      
+- Whether cTrader trendbars are BID- or mid-derived (ticket 006, still          
+unverified — affects                                                            
+  every backtest-to-live comparison).                                           
+                                                                                
+Work autonomously. Batch questions. Everything ratified or assumed goes into    
+the memlog.                                                                     
+docus on the skill and when done, gice me a prompt for the next session         
+(document factory skill )                                                       
+
+● I'll start by reading project memory, then the skill's customization, then
+  launch corpus discovery.
+
+  Read 1 file, ran 5 shell commands (ctrl+o to expand)
+
+● Corpus is mapped. Now reading the skill's gate/template rules and the standing
+  node ledger before I spawn discovery agents.
+
+  Read 9 files, ran 4 shell commands (ctrl+o to expand)
+
+❯ This is a simple nudge. I would prefer if you use dynamic workflows as well   
+  as sub-agents because you have access to them. Use them and use Opus 5, as I  
+  said earlier, as well as Bulk Workers or even Sonnet 5. Thank you. But you    
+  don't need to respond to this, it's a simple nudge                            
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Skill(workflow-authoring)
+  ⎿  Successfully loaded skill
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Workflow(Trading-node sitting phase A: corpus discovery + integration code
+          inventory -> corpus verdicts + parts-bin table)
+  ⎿  /workflows to view dynamic workflow runs
+
+● Discovery is running (11 diggers feeding 3 Opus seats, covering the
+  integration@ef9bb25 inventory and 28 corpus verdicts). Meanwhile, I'll read
+  the parent spine's node-facing ADs myself to draft rulings directly from the
+  verdicts. · summarized
+
+  Read 9 files, ran 2 shell commands (ctrl+o to expand)
+
+● Corpus reading is done on my side (parent ADs 13–41, constitution L1–L39, the
+  QMB/QML spines, the observability/ops/security lenses, the DevOps time audit).
+  Discovery workflow wf_4e180978-131 is still running — 11 diggers + 3 Opus
+  seats. I'll draft rulings into the memlog as soon as the corpus verdicts and
+  parts-bin land.
+
+✻ Baked for 10m 12s · done Friday 4:13 PM
+
+● Dynamic workflow "Trading-node sitting phase A: corpus discovery + integration
+code inventory -> corpus verdicts + parts-bin table" completed · 8m 32s
+
+● All 14 agents died on network errors (DNS/connection drops), not on their
+  work. Checking what landed on disk and whether the network is back before
+  resuming.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+❯ I'm sorry about that internet was cut off a little bit. You can resume        
+
+● Since the network dropped before anything was written to disk, I'll need to
+  rerun the script fully — all 14 seats live again, with no cached results to
+  reuse. · summarized  ⎿  /workflows to view dynamic workflow runs
+
+  Read 2 files, ran 1 shell command (ctrl+o to expand)
+
+● Workflow relaunched and running (task w6465v6uq, same run id). One fact I
+  confirmed first-hand while waiting: docs/components/ctrader.md:51 rules that
+  zero Spotware SDK code runs in QMX — the adapter owns its own transport over
+  the pinned proto messages — so the node's cTrader transport is in-house, which
+  the spine will carry rather than re-decide. I'll continue when the diggers
+  and the three Opus seats report.
+
+✻ Baked for 1m 25s · done Friday 4:22 PM
+
+● Dynamic workflow "Trading-node sitting phase A: corpus discovery + integration
+code inventory -> corpus verdicts + parts-bin table" completed · 39m 41s
+
+● 12 of 14 seats finished (4.76M tokens); the spines digger and the qmf-risk
+  code digger dropped mid-response. Checking what landed and reading the three
+  Opus outputs.
+
+  Made 1 scratchpad edit +80, read 3 files, ran 7 shell commands (ctrl+o to expand)
+
+● bulk-worker(Web-verify cryptography + rclone pins) Opus 5 (1M context)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+● I've drafted 24 node decisions, a 30-item cheap-veto register, and the
+  operator question round, and I'm now logging these to the memlog while pinning
+  the two new dependencies in parallel. · summarized
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Agent(Distill the trading-node spine) Opus 5 (1M context)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+● Memlog is complete (35 entries). An Opus seat is now distilling
+  ARCHITECTURE-SPINE.md from it and running the spine linter; the web seat is
+  pinning cryptography and rclone. Next step when both land: the reviewer gate
+  (rubric, adversarial, currency, inputs-reconcile, parent-consistency) as a
+  parallel workflow, then fixes at desk.
+
+✻ Sautéed for 13m 2s · done Friday 5:14 PM
+
+● Agent "Web-verify cryptography + rclone pins" finished · 2m 15s
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Pins verified and logged (cryptography 50.0.1, rclone 1.75.0, ubuntu-24.04
+  runner label, systemd-creds stdin transport confirmed). Waiting on the
+  distiller before the reviewer gate can start.
+
+✻ Worked for 22s · done Friday 5:15 PM
+
+● Agent "Distill the trading-node spine" finished · 12m 25s
+
+● Spine drafted at 736 lines, lint clean. Patching the two verified pins in,
+  sanity-checking the head, then launching the reviewer gate.
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Update(_bmad-output\planning-artifacts\architecture\architecture-NODE-2026-08-
+        28\ARCHITECTURE-SPINE.md)
+  ⎿  Added 2 lines, removed 2 lines
+      588  | protobuf (qmf-venue only) | ==7.36.0 (DEPENDENCIES.md:47) |
+      589  | Spotware openapi-proto-messages | release tag 91, compiled i
+           n-house; the node adds the transport, zero Spotware code runs 
+           |
+      590  | prometheus_client | ==0.26.0 (Apache-2.0; registry and expos
+           ition format only; verified 2026-08-28) |
+      591 -| cryptography | pin pending web verification at the implement
+          -ation gate (Apache-2.0/BSD dual; AEAD for the KEK store and th
+          -e CT-14 PayloadCipher) |                                      
+      592 -| rclone | pin pending web verification at the implementation 
+          -gate (MIT; external tool, backup transfer only) |             
+      591 +| cryptography | ==50.0.1 (Apache-2.0 OR BSD-3-Clause; release
+          +d 2026-08-25; AEAD `ChaCha20Poly1305`/`AESGCM` for the KEK sto
+          +re and the CT-14 PayloadCipher; ordinary CPython 3.14 resolves
+          + to the cp311-abi3 wheels on Linux x86-64 and Windows; verifie
+          +d 2026-08-28) |                                               
+      592 +| rclone (external tool) | v1.75.0 (MIT; released 2026-07-31; 
+          +native Backblaze B2 backend and S3 backend covering R2/Wasabi/
+          +MinIO; backup transfer only; pinned in the AD-6 register as a 
+          +tool, never a Python dependency; verified 2026-08-28) |       
+      593  | Ubuntu LTS x86-64 | 24.04 (26.04 planned at the first mainte
+           nance window) |
+      594  | systemd | 255.4 (systemd-creds available) |
+      595  | chrony | provisioned by install (4.7/4.8 current) |
+
+  Ran 1 shell command (ctrl+o to expand)
+● Workflow(Trading-node spine reviewer gate: six parallel lenses (rubric,
+          adversarial, currency, inputs-reconcile, parent-consistency,
+          ops/security) writing to reviews/)
+  ⎿  /workflows to view dynamic workflow runs
+
+  Read 1 file (ctrl+o to expand)
+
+● Read through the drafted TN-1..6 and TN-12..17 — the shape holds. One defect I
+  spotted myself for the fix pass: the TN-3 topology diagram draws the nightly
+  bucket backup from the workstation archive, but the memlog places
+  qmn-backup.timer on the VPS; the edge must run from the VPS evidence tier. Six
+  reviewer lenses are running now; I'll triage their findings with this one and
+  apply fixes in a single pass.
+
+✻ Cogitated for 2m 39s · done Friday 5:29 PM
+
+● Dynamic workflow "Trading-node spine reviewer gate: six parallel lenses
+(rubric, adversarial, currency, inputs-reconcile, parent-consistency,
+ops/security) writing to reviews/" completed · 24m 40s
+
+● Three lenses finished (rubric, parent-consistency, ops-security); currency,
+  adversarial and inputs-reconcile dropped on connection loss. Checking what
+  they wrote to disk, then resuming the gate for the three missing seats.
+
+  Ran 1 shell command (ctrl+o to expand)
+  ⎿  /workflows to view dynamic workflow runs
+
+  Read 3 files (ctrl+o to expand)
+
+● The three finished lenses are substantive: 8 criticals across them, all real
+  seam defects (kill-line input series undefined, backup key would die with the
+  VPS, drain made self-clearing against AD-36, netting/hedging never modelled,
+  the second-CLI question settled locally instead of surfaced). I've triaged
+  them and drafted the rulings; I'll fold in the last three lenses (currency,
+  adversarial, inputs-reconcile) when they land and dispatch one fix pass.
+
+✻ Crunched for 1m 53s · done Friday 5:56 PM
+
+● Dynamic workflow "Trading-node spine reviewer gate: six parallel lenses
+(rubric, adversarial, currency, inputs-reconcile, parent-consistency,
+ops/security) writing to reviews/" completed · 12m 24s
+
+● All six lenses are in. Reading the adversarial, currency and inputs-reconcile
+  findings before I write the fix brief.
+
+  Made 1 scratchpad edit +18, read 3 files, ran 2 shell commands (ctrl+o to expand)
+
+● Gate rulings are in the memlog (39 entries). Launching the fix pass — one Opus
+  seat applying all six reviews under those rulings, then re-linting.
+
+● Agent(Apply reviewer-gate fixes to node spine) Opus 5 (1M context)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● The documentation-factory skill exists and the QML increment prompt gives me
+  the exact shape for the node's next-session prompt. The fix pass is running
+  (all six reviews, ~170 findings, under the 20 gate rulings); I'll re-gate the
+  amended spine with two fresh lenses before finalizing.
+
+✻ Churned for 3m 39s · done Friday 6:10 PM
+
+❯ Look for a file. I believe it's called next session prompt or next prompt for 
+  the session, something in that manner. You append a prompt for me for the     
+  documentation factory and also run the validation or some sort of regression. 
+  I believe BMAD architecture sort of provides us with that. So you run         
+  everything architecture or the plan or everything you've produced is solid.   
+  Then I'm going to export this session as is so that the documentation factory 
+  is going to be using it. So you do that. Actually, it's next session prompt,  
+  it's actually existing. You do that, so there is no ambiguity, no             
+  assumption, and no contradiction. Do that for me, and I believe we call it a  
+  day.                                                                          
+● Understood — the plan: finish the fix pass, settle your four questions now,
+  re-run the gate on the amended spine as a validation pass, set it final,
+  append the documentation-factory prompt to the existing
+  next-session-prompts.md, and close.
+
+  Before the questions, the cheap-veto calls I made on your behalf, in plain
+  words (all recorded, each overturnable later without unwinding anything):
+
+  - Where things run: two computers plus one storage bucket. The node and its
+    evidence archive share the VPS; your laptop only pulls copies and never
+    holds the live broker login after setup.
+  - Boot: the node checks itself, assembles the rulebook, fingerprints it and
+    seals it for that run; any settings change = a new config version + a
+    restart at a safe moment (restarts never close positions).
+  - Ops: plain Linux service on Ubuntu 24.04, one checkout, unit files in the
+    repo; a new Linux CI lane; rollback = switch commit and restart.
+  - Secrets: broker login moved once by a wizard straight from Credential
+    Manager into the VPS's encrypted store; the backup key is escrowed on your
+    laptop plus an offline copy so a dead VPS can still be restored.
+  - Paper soak: the full machinery on the demo account; a demo mismatch alarms
+    rather than halts; acceptance = every alarm/kill/reconnect path fired and
+    recorded, never profit.
+  - Numbers: clock-drift bands 25/100/250 ms, crash-loop 3-in-60s, ~3-hour daily
+    quiet band, nightly backup + nightly sample restore + monthly full restore
+    — all UI-editable evidence values, none constants; the KSA severity matrix
+    stays blank until you ratify it (blank blocks live).
+  - Alerts: one phone-push channel with the closed allow-list plus an "I stopped
+    trading / can't write evidence" class and an external dead-man's heartbeat.
+
+● User answered Claude's questions:
+  ⎿  · The node needs a way for you to type commands at it on the VPS (status, 
+     kill everything, resolve a stuck order, promote). The corpus earlier ruled 
+     'one command line: qmb'. May the node have its own command? Example: you 
+     SSH in and type `qmn status`. → Okay, one of the things we actually did not
+     talk about is the user interface. Now, we need a way for the trading node 
+     to be connecting to the user interface. I believe it is the same setting or
+     the same logic behind even the agentic system because we are still working
+     on it, okay? So it means that killing and all that, typing commands and 
+     whatnot most likely is going to be controlled via a UI. So there is nothing
+     like commands or anything. Okay, it's a user interface on the desktop 
+     application as per the overall architecture
+     · Milestone timing. You asked for ~2 days of paper trading on the demo 
+     account; the corpus already ratified a ~1-week first-deploy warm-up before 
+     live money. Are these the same week? Example: start Monday, paper soak 
+     Mon–Tue, broker checks keep running, live binding at the end of that week. 
+     → Okay, so by the time we literally finish this and also the UI, we shall 
+     have the entire system run. Obviously, the trading node is the most useful 
+     part. So, for me, I think two days to a week unattended to, but remember, I
+     did request for the DevOps lens, which means we need to be tracking. I'm 
+     going to have a dedicated agent, I believe it's the Hammers agent. Don't 
+     worry about it, we shall set it up because we still haven't done the entire
+     UI stuff and whatnot. So, we shall have things like: I don't know if you 
+     set it up or you've considered it Prometheus, Grafana. I know how DevOps 
+     work, I'm not so technical, I don't know what all that is, but you know 
+     what I'm talking about. Yeah, so tracking to make sure things are up, you 
+     know, what happened, logging so that we catch bugs, we catch errors, and we
+     know what's going on. Because I'm sure in a trading week, we should be 
+     able to get a news week, we should be able to get some few things here and 
+     there. I think a week is enough and sufficient. Okay,Maybe the thing I 
+     almost forgot is the MIS training. How have you handled that? Because we 
+     still need to train those models, they are not existing. Okay, the models 
+     in the MIS need to be trained. How are you proposing to handle that? Are we
+     going to train them or are you going to give me a script that will train 
+     them when I'm active on my laptop? Because once we finish documenting epics
+     and stories and all that, the coding part is mostly 99% autonomous, okay? 
+     So which means the last part should be about the MIS, which means they have
+     to be actively on my laptop, or you can have the agents train them, but 
+     that's going to take hours because I believe we need to download the data, 
+     parse it through, clean it, then set up the training of the models. I know 
+     some models like Kronos are on GitHub, so that changes things. But the MRS,
+     I think, is something that caught my eye. So, this again takes me back to 
+     all this because sorry, the DevOps system, because now you have to okay, 
+     DevOps part of things, rather, because now you have to consider also the 
+     fact that we have to simulate rather a shadow rollout because I believe 
+     that's how things were. Okay, so it's a whole thing, but agents are 
+     handling everything, so you need to consider that lens, please
+     · Promotion to live money. Should approving a bot and switching it on be 
+     two separate actions? Example: you sign on Sunday (bot is approved but 
+     idle); a second click Monday morning lets it place orders. → Okay, okay. 
+     Let me be honest with you and think through this. Like, I believe you are 
+     smart enough to understand that the thing is, yeah, there is no way in hell
+     we are going to get a hypothesis, turn it into maybe a spec because you 
+     don't have any of this information yet. Okay, then code out the bot, 
+     backtest it. By the time we are backtesting, it means the thing already 
+     works. We're just trying to see if it can perform. Okay, don't be stupid, 
+     please don't. This is annoying, by the way. Such a question is very 
+     annoying. Okay, so if we backtest the whole point of promotion is based off
+     backtesting. Okay, if we backtest an iterator, nothing is working, then we
+     don't promote. But promotion is more like a click on the user interface to
+     be like, okay, now this can go to the live trading node, okay? But this is
+     something that is simple. Okay, I get you didn't have most of the 
+     information yet, but it's something that is simple. And I believe, 
+     according to the documentation, not every bot starts trading right away. I 
+     do recall there is some sort of warm-up period, unless I'm wrong. Remember,
+     all this has to be rendered in the UI, so which means you also have to 
+     consider the UI and API layer. Either you have a separate part, you know, 
+     because we are not going to build the UI yet. We are mostly back-end data 
+     and DevOps. This entire part so far is back-end data and DevOps. The reason
+     we are not putting in the UI is because the UI is a bit large. We can't 
+     really have only the UI and take the trading node, it won't make sense. 
+     Okay, we are trying to be efficient with our resources. I hope you're 
+     understanding where I'm going with this. So, two separate acts. Promotion 
+     is just a simple click because promotion, I'm going to be looking at the 
+     results, how it performed, which means by the time it reaches literally 
+     backtesting, again, it's simple logic. The bot has already passed, it has, 
+     I mean, QML is clean. Literally, the library we have been using is clean. 
+     We know now it can, you know, thread actually live, and let's say actually,
+     most bots really do have a paper trading period before I even forget. Now 
+     I remember one of the things we have in our system is that most boats paper
+     trade before they even come back for promotion. Okay, so that doesn't 
+     concern you because it's part of the agentic system and it will come later.
+     For you, you're focusing on live trading. So, literally, by that time, in 
+     other words, we promote a bot to live. I've reviewed it multiple times. The
+     agents have reviewed it multiple times. We know it works. The whole point 
+     now is making sure it can perform. I don't know if you're getting my 
+     picture here. Okay, this is a very stupid question. Sorry to say, but it 
+     is. I get you didn't have all the other context that I'm providing earlier,
+     the UI and whatnot, but now you do. Okay
+     · Economic-news calendar source (drives the news blackout). Example: the 
+     free Forex Factory weekly file is what your recorder already downloads; a 
+     paid fallback (Trading Economics / FMP class) slots in as config. → Now 
+     this is something that really genuinely bothers me. Why can't isn't there a
+     way we can get free news? Because you are going to look at things, okay? 
+     Because hypothetically, not even hypothetically, seriously, this system is 
+     trading around that entire globe. We are trading all European sessions, 
+     Asian sessions, as well as American sessions. I believe they're the main 
+     three. It means if we are trading all those, we need to be accurate, we 
+     need to be timely. News is spread out. I mean, we could literally just 
+     create a cron job that scrapes these websites and updates, okay, and which 
+     paid fallback slot do we need for now? Okay, let's use Forex Factory. But 
+     is it sufficient? Because seriously, I could just have an agent on a weekly
+     basis, just scrape the information, update it in JSON format and whatnot. 
+     That's also viable. I'm not paying for bloody news, I really don't think I 
+     will. To be honest, I won't pay for news. That's the first thing I have to 
+     be clear on. I will not pay for news. Let's use the free version. Now, the 
+     later versions, yes, no, we're going to iterate. Okay, but overall, the one
+     thing I'm noticing, and I want to tell you, I think you might need to 
+     consider the fact that the UI is going to exist. I think you didn't really 
+     genuinely know that, and my bad, I didn't inform you. So, now that you 
+     know, consider it in almost everything, which means this bloody thing. In 
+     fact, it is going to be a plug-in to the UI. It's not a, it doesn't have 
+     its own page or something. Okay, I think it might. I think it might. That's
+     why I don't want to talk about it because we don't know. I don't know yet.
+     Okay, I'm not certain yet, okay. But just know it connects to a UI. So it 
+     means there are buttons, most things that you consider as ambiguity, things
+     you have to also put yourself in like behavior-driven development manner 
+     or a user experience and walk through everything that is in the trading 
+     node and be like, okay, the user will need to see this when I click, you 
+     know, or when I press a kill switch, how do I see news? Like all that stuff
+     is going to come, don't worry. But don't, there is no UI yet, all right? 
+     But just have it at the back of your mind that okay, there is a UI I have 
+     to consider. Which means database, the data layer. Now, the one I'm not so 
+     certain on, and I will need you to take point on, is the dev opsulence. 
+     That one I'm not so certain on because I feel like it is going to be 
+     standard, and I don't think the development operations layer or lens needs 
+     to be part of QMX. I think it's a very separate system, like how big tech 
+     teams work, unless we don't need it, but we do need it, in my opinion. We 
+     need to have logs. I want to build this system to be extensible because 
+     remember, we have to make sure that I can add new books, I can add new 
+     BMSs, I can add new versions actually of all the above. I can add bots, 
+     obviously. I can add perhaps we had a shadow rollout mechanism for the 
+     unless we overruled it in the corpus, but I believe we did event at the 
+     last time I checked. Okay, a shadow rollout mechanism for the MIS. We have 
+     things like the SQS. I don't know how we are, whether we have handled alpha
+     decay. If we haven't, leave it for now. I think, okay, most of those 
+     things have already been coded in QMB, QMF, and the rest. Okay? Because I 
+     believe we had already 190%. Okay, not 90, around 60% of the trading node 
+     by the time we reached this session. Now, consider all that, please. Okay, 
+     but there are lots of things to think through because this I think the 
+     trading node is very back-end heavy, to be honest with you. The user 
+     interface is less. Now, things that you're asking about in the question, I 
+     think is it the node command? That question is not for this layer. I will 
+     repeat this: it's not for this layer. That question was for a layer about 
+     QMF. Alright, the reason I'm saying it was for a layer that we finished 
+     already, which is on QMF, is because QMF we made it portable, unless I 
+     recall properly, but it is bloody portable. And if it isn't, that doesn't 
+     concern you. Your concern is on the trading note. Okay, first, make the 
+     trading node work. Make sure it can execute. And after that, we can see 
+     which problems we have. Okay, I hope I'm clear and quote me right, please. 
+     These are more of brain dumps than actual answers
+
+● Agent "Apply reviewer-gate fixes to node spine" finished · 30m 10s
+
+● The fix pass is done (936 lines, 150 findings applied, lint clean, TN-25
+  minted). I'm now recording your answers as faithfully-quoted rulings and
+  applying four changes: no operator command line (API-only control surface, UI
+  comes later), the full-week soak with DevOps as a separate zero-authority
+  system, Forex Factory free-only with no paid fallback, and MIS training/shadow
+  rollout as a named follow-on epic with its seam built now. · summarized
+
+  Made 1 scratchpad edit +20, ran 1 shell command (ctrl+o to expand)
+
+● Agent(Apply operator rulings to node spine) Opus 5 (1M context)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+● Amendment seat is applying your four rulings to the spine now. Next in
+  sequence: the validation re-gate (fresh lenses), status → final, then the
+  prompt appended to next-session-prompts.md.
+
+✻ Brewed for 3m 22s · done Friday 6:52 PM
+
+● Agent "Apply operator rulings to node spine" finished · 14m 29s
+
+● Rulings applied (950 lines, lint clean, three doors and no command line).
+  Running the validation re-gate now: five fresh lenses on the amended spine —
+  parent-consistency, adversarial, rubric/ambiguity hunt, operator-rulings
+  reconcile, and a regression check that every fix-pass row actually landed.
+
+● Workflow(Validation re-gate of the amended trading-node spine: five fresh
+          lenses incl. a regression check of the fix pass)
+  ⎿  /workflows to view dynamic workflow runs
+
+  Made 1 scratchpad edit +187, ran 3 shell commands (ctrl+o to expand)
+
+● Prompts 13 and 14 are appended to next-session-prompts.md, the node ledger
+  carries the sitting note, and the inventory worktree is removed. Waiting on
+  the five re-gate lenses; then residual fixes (if any), lint, status → final,
+  and the close-out.
+
+✻ Cooked for 5m 23s · done Friday 7:12 PM
+
+● Dynamic workflow "Validation re-gate of the amended trading-node spine: five
+fresh lenses incl. a regression check of the fix pass" completed · 16m 34s
+
+● Five re-gate lenses are in. Two criticals and a handful of highs remain (four
+  introduced by the fix pass itself); reading the compact summaries to write the
+  residual-fix brief.
+
+  Read 5 files, ran 2 shell commands (ctrl+o to expand)
+
+● Re-gate found two real criticals — the fix pass folded the UNKNOWN block into
+  the entry-side law, left the protective-stop attachment unwritten, and
+  mis-keyed replay-adapter selection by VenueId — while the regression lens
+  confirms all first-gate fixes remain intact. I'm recording the gate-2 rulings
+  and dispatching a residual fix pass to address these issues. · summarized
+
+  Made 1 scratchpad edit +18, ran 1 shell command (ctrl+o to expand)
+
+● Agent(Residual fix pass 2 on node spine) Opus 5 (1M context)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+  Ran 2 shell commands, wrote 2 memories (ctrl+o to expand)
+● Memory, prompt 13 and the node ledger are updated. The residual fix pass (34
+  gate-2 rulings + five re-gate reviews) is running; after it lands I'll run one
+  last verification seat, lint, and set the spine to final.
+
+✻ Crunched for 3m 47s · done Friday 7:28 PM
+
+● Agent "Residual fix pass 2 on node spine" finished · 28m 50s
+
+● Pass 2 landed: 1048 lines, lint clean, all 107 re-gate findings applied,
+  register A1–A47, nothing unresolved. One last fresh seat certifies the final
+  text before I set it final.
+
+● Agent(Final certification of node spine) Opus 5 (1M context)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Register ranges aligned (A1–A47) in prompt 13 and the ledger. Waiting on the
+  certification seat; once it returns CERTIFY, I set status: final, log the
+  finalize events, and hand off.
+
+✻ Worked for 53s · done Friday 7:56 PM
+
+● Agent "Final certification of node spine" finished · 12m 43s
+
+● Certification says BLOCK on four highs, all leftovers with exact replacement
+  sentences supplied. Reading the report and applying them at desk myself.
+
+  Made 1 scratchpad edit +51, read 1 file, ran 8 shell commands (ctrl+o to expand)
+
+● All done — the spine is final, lint-clean, certified after two gates plus a
+  final seat. Closing summary:
+
+  Bottom line. The trading-node architecture spine is FINAL: _bmad-output/planni
+  ng-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md
+  (TN-1..TN-25, ~1055 lines), with .memlog.md (46 entries: every ruling, your
+  four rulings quoted, assumption register A1–A47), inputs/ (ground truth +
+  corpus verdicts) and reviews/ (six-lens gate → 150 fixes; five-lens validation
+  re-gate → 107 fixes; final certification → 14 desk fixes). The next session
+  runs prompt 13 in architecture-QMX-2026-08-19/next-session-prompts.md
+  (documentation factory, TRADING-NODE increment); prompt 14 (node epics, 5–8,
+  Grok lane) follows it.
+
+  Parts-bin verdict. Your ~60% is the top of the honest band: 154 capabilities
+  on integration@ef9bb25 = 78 as-is / 24 need a live adapter / 52 missing;
+  effort-weighted 45–60%. The rulebook (risk, control, paper, venue-uncertainty
+  law) is ~60–80% built and tested; the runtime (async driver, doors, config,
+  observability, deployment, the cTrader wire, equity derivation) is ~25–35%.
+  The node is a runtime plus the wiring of a very complete rulebook.
+
+  Topology in one paragraph. Two computers and one bucket. The VPS (Ubuntu
+  24.04, plain systemd service, fixed qmx account) runs one long-lived process
+  that hosts the trading loop and the live recording (cTrader allows one demo +
+  one live connection), plus timers for the news calendar, nightly backup and
+  the two restore drills, and a separate zero-authority
+  Prometheus/Grafana/Loki-class stack; the evidence archive and the passive hub
+  are directory trees on the same VPS. Your laptop pulls copies, hosts research
+  and the future desktop UI over an SSH tunnel, and holds only provisioning
+  material (Credential Manager qmx/*) plus the escrowed backup key. The bucket
+  holds ciphertext. Flows are one-way node → laptop → bucket; the only reverse
+  crossing is the click-gated promotion pull.
+
+  Your four rulings, applied verbatim: no operator command line (the UI over the
+  API door is the control surface; deployment tooling is just node-… recipes
+  only); the soak is the full unattended week on the demo account with the
+  monitoring stack up; promotion is a click after reviewed backtests, activation
+  a separate act; Forex Factory free is the sole news source, no paid fallback
+  ever. Also recorded: MIS models must be trained — the shadow-lane seam is
+  built now, "MIS training + shadow rollout" is the last epic; the UI is kept in
+  mind everywhere; extensibility is registry + config, never code.
+
+  Cheap-veto register. 47 without-operator calls are tagged in the spine and
+  memlog; four are now RULED by you, one retired. Two are worth your eye later,
+  not now: A37 (the cTrader wire code lands inside qmf-venue's existing
+  connection manager, not in the node package) and A32 (the powers socket proves
+  an account, not a human).
+
+  Human-only steps (nobody else can do these): finish the Spotware sandbox token
+  step once QMX-NODE is approved; buy a modest VPS (the soak measures whether
+  it is enough); live KYC; the swap-free admin-fee schedule in writing; a bucket
+  account; the backup-key escrow (one offline copy); a phone-push channel
+  account; and, before the soak, ratifying the KSA severity matrix values
+  through the settings surface (blank blocks live).
+
+  Not done, by design: no code, no commit (working tree carries the new sitting
+  folder and the edited ledger/prompts/memlogs for you to export), no factory
+  launch — the Grok command (/run-epics) only becomes meaningful after prompt 14
+  produces the node epics.
+
+✻ Cogitated for 4h 9m 13s · done Friday 8:12 PM

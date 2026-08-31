@@ -1,12 +1,12 @@
 id: CT-14
 name: Off-machine backup boundary contract
 status: ratified
-version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
+version: 1  # first minted format version (DEC-0103; versioning-from-birth L15); 2026-08-29 trading-node absorption: payload-key custody resolved (workstation-escrowed), the two restore timers + host-loss rehearsal, the sealed-archive read target, the hot-room purge precondition and the VPS-loss runbook recorded — no format change (DEC-0197, DEC-0217, DEC-0252, DEC-0253)
 owner: COMP-QMF-DATA-BACKUP
 consumers: [COMP-OBJECT-STORAGE]
 layer_from: data
 layer_to: external
-decisions: [DEC-0118, DEC-0119, DEC-0117, DEC-0106, DEC-0109, DEC-0103]
+decisions: [DEC-0118, DEC-0119, DEC-0117, DEC-0106, DEC-0109, DEC-0103, DEC-0197, DEC-0198, DEC-0217, DEC-0252, DEC-0253, DEC-0259]
 gaps: []
 purpose: "Carry encrypted, versioned backup copies off-machine to object storage through QMF's backup/restore/verify primitives, while the backup schedule and its execution stay application/ops-owned."
 invariants:
@@ -18,8 +18,12 @@ invariants:
   - "Restored backups still enforce the 12-month seal: a read against restored data refuses sealed rows as a policy rejection exactly as a live read does (DEC-0119)."
   - "The backup room-role covers every room-role including the registry room, all under one retention, backup, and migration law and instantiated per world; a cross-world restore read is a policy-rejection refusal (DEC-0117)."
   - "Boundary failures return typed refusals: storage failure covers an unreachable bucket, a failed upload, or a corrupt copy; refusals are returned, never raised across the boundary (DEC-0109)."
-  - "Encryption is required; encryption key custody and the crypto dependency are named at the node/ops sitting -- a pointer carried here, not resolved by this contract (DEC-0118)."
+  - "Encryption is required, and the backup PAYLOAD-KEY custody is RESOLVED at the 2026-08-28 trading-node sitting: the payload key that decrypts every off-host copy is generated at provisioning ON THE WORKSTATION, escrowed in Windows Credential Manager under qmx/backup-payload-key plus one operator-held offline copy, and delivered to the VPS as a bootstrap credential -- never VPS-minted, the VPS-minted KEK protecting rotated venue-session material only; the crypto dependency is cryptography (PayloadCipher), and the registry row backup_payload_key_custody carries the escrow rule as its value rather than a blank (DEC-0118, DEC-0197, DEC-0217, DEC-0252)."
   - "Topology: the trading-node VPS records and syncs down, the workstation holds the working archive, and the bucket catches nightly copies (DEC-0118)."
+  - "Restore verification is THREE drills, resolved at the trading-node sitting, each its own unit so one timer never carries two cadences: a nightly SAMPLE restore right after the backup (qmn-restore-sample.timer, sharing the backup run's payload key), a monthly FULL restore into a scratch directory (qmn-restore-full.timer, an integrity test), and a HOST-LOSS RESTORE REHEARSAL that is not a timer but the operator-signed restore_drill_run power -- restore from the bucket onto a clean host holding nothing but the escrowed payload key, run once before the live milestone and after every rebuild, the only drill that exercises key availability and therefore the only one that MEASURES the full-DR recovery time objective; two RTO numbers are recorded apart and never conflated -- the integrity-restore RTO at the monthly rehearsal and the full-DR RTO at the host-loss rehearsal (DEC-0252, DEC-0198, DEC-0217)."
+  - "The backup reads the evidence tier's sealed-archive role BY NAME: AD-19 gains an eighth room-role, sealed-archive, instantiated per world under the same retention, backup and migration law as the other seven, the named target of the one-way evidence sync and read by both the backup and the replay import port; the backed-up room set is the immutable raw archive, every journal room, the registry room, and the sealed-archive role and research door, for every world, the processed room excluded unless a result label cites it (DEC-0253, DEC-0198)."
+  - "A hot-room purge has TWO preconditions and both must hold -- a verified copy in sealed-archive AND a verified off-host copy -- and every off-host copy is always a PREFIX OF A REAL STREAM, only journal segments sealed at a committed sequence boundary read from the running node, so a restored room never holds a torn record (DEC-0253, DEC-0198)."
+  - "A VPS-LOSS RUNBOOK is a required node artifact with its steps ordered: procure, bootstrap uv and CPython, provision, re-authorize cTrader because the stored refresh token is spent, restore with the escrowed payload key, then a replay check against a recorded day (DEC-0198, DEC-0217)."
 schema:
   type: off-machine-backup-copy  # an encrypted, versioned copy of a store's contents crossing to object storage
   fields:
@@ -34,4 +38,4 @@ schema:
   units:
     timestamps: int64-utc-ns
   nullability: "contract_format_version and world are required; null is prohibited in identity content -- an absent value is an omitted key (DEC-0108)."
-  node_ops_pointer: "Object-key layout, retention depth, RPO/RTO targets, and encryption key custody are named at the node/ops sitting (DEC-0118); not pinned by this contract."
+  node_ops_pointer: "Object-key layout, retention depth and RPO/RTO targets are deployment configuration named at the node/ops sitting; encryption key custody is now RESOLVED (a workstation-escrowed payload key under qmx/backup-payload-key plus one operator-held offline copy, never VPS-minted), and the object-storage provider is deployment configuration (recommendation Backblaze B2; alternatives R2, Wasabi) (DEC-0118, DEC-0197, DEC-0252)."

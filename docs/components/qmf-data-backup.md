@@ -5,10 +5,10 @@ type: component-spec
 status: ratified
 component: COMP-QMF-DATA-BACKUP
 depends_on: [COMP-QMF-DATA-STORE, COMP-OBJECT-STORAGE]
-decisions: [DEC-0103, DEC-0106, DEC-0109, DEC-0110, DEC-0113, DEC-0117, DEC-0118, DEC-0119, DEC-0045]
-sources: [_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, _docwork/gaps.yaml, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/contracts/ct-14-backup-restore.yaml, docs/contracts/ct-26-store-backup-input.yaml]
+decisions: [DEC-0103, DEC-0106, DEC-0109, DEC-0110, DEC-0113, DEC-0117, DEC-0118, DEC-0119, DEC-0045, DEC-0197, DEC-0198, DEC-0217, DEC-0252, DEC-0253, DEC-0259]
+sources: [_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, _docwork/gaps.yaml, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/contracts/ct-14-backup-restore.yaml, docs/contracts/ct-26-store-backup-input.yaml]
 generated: 2026-08-18
-verified: 2026-08-20
+verified: 2026-08-29
 stale_after: 30d
 ---
 
@@ -39,11 +39,19 @@ The backup primitive produces an encrypted, versioned copy and the application/o
 
 ### Verification and restore
 
-Verification is a first-class primitive: automated sample-restore tests plus a periodic full-restore rehearsal are part of the ratified design (DEC-0118). A restore never rewrites the only copy; each off-machine copy is a distinct version. Restored backups still enforce the 12-month seal — a read against restored data refuses sealed rows as a policy rejection exactly as a live read does (DEC-0119). Encryption is required; encryption key custody and the crypto dependency are named at the node/ops sitting — a pointer carried here, not resolved by this boundary (DEC-0118).
+Verification is a first-class primitive: automated sample-restore tests plus a periodic full-restore rehearsal are part of the ratified design (DEC-0118). A restore never rewrites the only copy; each off-machine copy is a distinct version. Restored backups still enforce the 12-month seal — a read against restored data refuses sealed rows as a policy rejection exactly as a live read does (DEC-0119). Encryption is required; the encryption key custody and the crypto dependency were NAMED at the 2026-08-28 trading-node sitting — the payload key is workstation-escrowed and `cryptography`'s `PayloadCipher` encrypts each copy — while this boundary itself still selects nothing (DEC-0118, DEC-0197, DEC-0252).
 
 ### Node/ops-owned numbers
 
 The design is ratified; the numbers are node/ops territory. Object-key layout, retention depth, the numeric recovery-point objective (`registry:backup_recovery_point_objective`), recovery-time objective (`registry:backup_recovery_time_objective`), retention period (`registry:backup_retention_period`), and verification cadence (`registry:restore_verification_cadence`) are named at the node/ops sitting (DEC-0118). No provider selection is baked into QMF: the object-storage target stays external and replaceable (DEC-0045).
+
+### Trading-node sitting: custody, timers, sealed-archive (2026-08-28)
+
+The node/ops numbers this boundary pointed at are now NAMED, at the 2026-08-28 trading-node sitting, without changing this boundary's primitives-only role. The backup PAYLOAD KEY is generated at provisioning ON THE WORKSTATION, escrowed in Windows Credential Manager under `qmx/backup-payload-key` plus one operator-held offline copy, and delivered to the VPS as a bootstrap credential — never VPS-minted, and the VPS-minted KEK protects rotated venue-session material only; `PayloadCipher` (the `cryptography` dependency) encrypts each versioned copy under that escrowed key (DEC-0197, DEC-0217, DEC-0252).
+
+Restore verification is THREE drills, each its own timer or power so one unit never carries two cadences: a nightly SAMPLE restore right after the backup (`qmn-restore-sample.timer`, sharing the backup run's payload key), a monthly FULL restore into a scratch directory (`qmn-restore-full.timer`, an integrity test), and a HOST-LOSS RESTORE REHEARSAL that is the operator-signed `restore_drill_run` power — restore from the bucket onto a clean host holding nothing but the escrowed payload key, run once before the live milestone and after every rebuild, and the only drill that MEASURES the full-DR recovery time objective. Two RTO numbers are recorded apart and never conflated: the integrity-restore RTO at the monthly rehearsal and the full-DR RTO at the host-loss rehearsal (DEC-0252, DEC-0198, DEC-0217).
+
+The backup reads the evidence tier's `sealed-archive` role BY NAME — AD-19's eighth room-role, instantiated per world under the same retention, backup and migration law as the other seven — copying the immutable raw archive, every journal room, the registry room, and the `sealed-archive` role and research door, for every world (the processed room excluded unless a result label cites it); every off-host copy is always a PREFIX OF A REAL STREAM, only journal segments sealed at a committed sequence boundary, and a hot-room purge requires both a verified copy in `sealed-archive` AND a verified off-host copy (DEC-0253, DEC-0198). A VPS-LOSS RUNBOOK is a required node artifact, its steps ordered: procure, bootstrap uv and CPython, provision, re-authorize cTrader because the stored refresh token is spent, restore with the escrowed key, then a replay check against a recorded day (DEC-0198, DEC-0217).
 
 ```mermaid
 sequenceDiagram

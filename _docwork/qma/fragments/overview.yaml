@@ -1,0 +1,134 @@
+target: docs/architecture/overview.md
+ops:
+- op: frontmatter_set
+  field: verified
+  value: '2026-08-29'
+- op: frontmatter_add
+  field: decisions
+  ids:
+  - DEC-0300
+  - DEC-0301
+  - DEC-0303
+  - DEC-0304
+  - DEC-0306
+  - DEC-0315
+  - DEC-0324
+  - DEC-0327
+  - DEC-0329
+  - DEC-0330
+  - DEC-0333
+  - DEC-0334
+  - DEC-0335
+  - DEC-0336
+  - DEC-0337
+  - DEC-0341
+  - DEC-0347
+- op: frontmatter_add
+  field: depends_on
+  ids:
+  - COMP-QMA-CORE
+  - COMP-QMA-WIRE
+  - COMP-QMA-DAEMON
+- op: regex_replace
+  pattern: ^(QMF V1 is a contracts-first Python toolbox.*?)\s*\((DEC-0008, [^)]*)\)\s*$
+  repl: |-
+    \1 A further named application-layer consumer, the **QMX agentic system (QMA)** — a daemon, the QMA SDK (QuantMind Agents) and a wire contract — is likewise specified: a single Python asyncio daemon that runs organizational agents (Quants) built ON the QMF backend, reaching the money path only as a candidate artifact a human promotes and never as an order, sizing decision, or binding, detailed under [Application-layer consumer — QMA (the QMX agentic system)](#application-layer-consumer--qma-the-qmx-agentic-system) below and in `docs/decisions/ADR-0020-qma-agentic-system.md`. (\2, DEC-0329, DEC-0330, DEC-0333)
+  all: false
+  skip_if: ADR-0020-qma-agentic-system.md`
+- op: regex_replace
+  pattern: '    qmx -->\|"composes QMF libraries; no runtime or live authority"\| qmf'
+  repl: |2-
+        qmx -->|"composes QMF libraries; no runtime or live authority"| qmf
+        qma_daemon["COMP-QMA-DAEMON — QMX agentic system<br/>daemon: Quants over the wire, no command line"]
+        qma_wire["COMP-QMA-WIRE<br/>qma-wire contract"]
+        qma_core["COMP-QMA-CORE<br/>qma-core definitions"]
+        operator -->|"drives Quants — later, via the UI"| qma_daemon
+        qma_daemon -->|"composes QMF read-and-calculate; no qmf-venue; money path is a candidate a human promotes (DEC-0341, DEC-0347)"| qmf
+        qma_daemon -.->|"CT-40 wire envelope"| qma_wire
+        qma_wire -.->|"depends on"| qma_core
+  all: false
+  skip_if: 'qma_daemon["COMP-QMA-DAEMON'
+- op: insert_before_heading
+  heading: '## Component index'
+  text: |
+    ## Application-layer consumer — QMA (the QMX agentic system)
+
+    The QMX agentic system is the third named application-layer consumer built on the QMF foundation: a **daemon plus the QMA SDK plus a wire contract** that runs organizational agents over the QMF backend, an application-layer product built ON QMF exactly as the other application-layer consumers are, never a QMF roster package and never a framework (DEC-0329, DEC-0335). **QMA — QuantMind Agents — is the SDK only**, never the name of the whole system; the Python namespace is `qma.*` with no blanket `qmx.` prefix, and the three packages are `qma-core` (definitions only, depends only on `qmf-core`, no parallel base minted for anything `qmf-core` defines), `qma-daemon` (the only process that runs anything and the sole writer), and `qma-wire` (the only cross-boundary contract package), with `qma-ui-contract` present only as a deferred stub (DEC-0330, DEC-0337, DEC-0300, DEC-0335). QMA is a contract hub in the same house style as QMF, so the two read as one system: every runtime concern enters through one of `qma-core`'s seven ports — MemoryProvider, ModelDeployment, ExecutionEnvironment, KnowledgeSource, ToolAdapter, ComputeProvider, and ContextCompiler — and every contribution is reversible and scoped (DEC-0335, DEC-0300).
+
+    The runtime is **one Python 3.14 asyncio daemon built WITH the QMF libraries** — L31 dispositive: there is no second daemon runtime and no QMF contract (exact money, exact time, `fp1`, typed refusals, registry records, `correlation_id`) is re-implemented across a language boundary; language-specific workers and non-Python clients, the future Rust UI included, attach over `qma-wire`, and the Analysis desk's RLM kernel is a persistent Python interpreter inside that worker's Docker container, supervised over a typed `host_request` bridge and never the daemon process (DEC-0334, DEC-0303). The build order ships the daemon, the data layer, the wire API, and DevOps first, and **a Quant reachable through models over the wire is the first milestone**; the UI and its extension SDK, contribution points, and packaging are deferred to a later UI phase (GAP-0081), while the daemon-to-UI wire contract and the configurable-variables registry are not deferred and bind now (DEC-0333). Deployment runs from the operator's UI and wire commands, never a QMA command line — QMB's `qmb` CLI stays the platform's single command-line surface — with the daemon on the operator's workstation by default, Docker workers on that host, and any remote Quant, Mission, or Worker dialing OUT to the daemon so no inbound port opens on the deployed side (DEC-0336).
+
+    QMA's dependency edges are exactly the default-deny dependency diagram: `qma-core` depends only on `qmf-core`; `qma-daemon` composes the QMF backend — `qmf-core`, `qmf-registry`, `qmf-data`, and `qmf-risk` — and reaches `qmf-registry` and `qmf-risk` **read-and-calculate only** — importing their value types, typed refusals, and pure calculation surfaces and writing only content-addressed dev-zone candidate artifacts, never a binding, Book, BMS, control-action, exit, priority, or promotion record — over a permitted surface enumerated default-deny in `qma-core`, the `qmf-data` edge drawn unnarrowed by AD-2; and **`qmf-venue` is importable by no QMA package, worker, or plugin** (DEC-0301, DEC-0347). L30's default-deny is roster-scoped (2026-08-21 annotation), so these read-and-calculate edges are application dependencies under L31, recorded as a declared reconciliation note, never an amendment of a parent by a child (DEC-0347). The organizational ontology is Desk to Role to Quant to Agent to Subagent, five Desks (Research, Trading, Development, Analysis, PM) and five Roles (Researcher, Trader, Developer, Analyst, Product Manager), with the opaque `ActorId` grammar `quant:<desk_slug>/<quant_slug>` (DEC-0306).
+
+    **Money path.** QMA's only output into the money path is a **candidate artifact a human promotes** — never a binding, a sizing decision, or an order (DEC-0324). There is no execution tool at any account role, "paper only" included, enforced as an act-level deny-list at the Tool Registry, and every environment, worker, browser, and computer-use profile is barred from reaching a venue, broker, exchange, or trading-node host by any means — the two halves of the money-path reachability barrier, so nothing above a bot touches the market (DEC-0341, DEC-0315, DEC-0327). Paper is an account role on a real venue, never a sandbox; risk, sizing, and live-trading authority stay with the GitBook and trading-node corpus, and QMA never mints them (DEC-0324).
+
+    QMA classifies at the **backend** layer as an application-layer consumer built ON QMF, outside QMF V1's own layers and not drawn in the QMF-scoped layer diagram (as the other consumers are not): the daemon is backend runtime, `qma-core` and `qma-wire` are backend libraries, and the wire contract is what a later desktop UI layer consumes over `qma-wire` (DEC-0335, DEC-0333).
+
+    ### QMA containers
+
+    In the diagram below, the arrows labelled **depends on** are package import edges — `qma-daemon` and `qma-wire` both depend inward on `qma-core`, and `qma-daemon` depends on `qma-wire`; the dotted arrow and the remaining labelled arrows are runtime interactions and governed data flows the daemon mediates, not import edges (DEC-0347).
+
+    ```mermaid
+    flowchart TB
+        operator([Operator])
+        ui["Desktop UI — deferred (GAP-0081)<br/>Rust client over the wire"]
+        subgraph consumer["Application-layer consumer — outside QMF V1"]
+            core["COMP-QMA-CORE<br/>qma-core — definitions only, depends only on qmf-core"]
+            wire["COMP-QMA-WIRE<br/>qma-wire — the only cross-boundary contract"]
+            daemon["COMP-QMA-DAEMON<br/>qma-daemon — one Python asyncio process, sole writer"]
+        end
+        subgraph qmf_backend["QMF backend — composed at the daemon's root"]
+            qmfcore["COMP-QMF-CORE"]
+            registry["COMP-QMF-REGISTRY<br/>read-and-calculate, default-deny surface"]
+            data["COMP-QMF-DATA"]
+            risk["COMP-QMF-RISK<br/>read-and-calculate, default-deny surface"]
+        end
+        workers["Docker workers + desk plugins<br/>research-* trading-* dev-* analysis-* pm-*"]
+        venue["COMP-QMF-VENUE<br/>importable by no QMA package, worker, or plugin"]
+
+        operator -->|"drives Quants — later, via the UI"| ui
+        ui -->|"JSON-RPC 2.0 / WebSocket + HTTP GET queries (CT-40)"| wire
+        daemon -->|"depends on — envelope, families, protocolVersion (CT-40)"| wire
+        daemon -->|"composes; imports value types + pure calc only"| qmf_backend
+        daemon -->|"depends on"| core
+        wire -->|"depends on"| core
+        workers -->|"attach over the wire; dial out to the daemon"| wire
+        daemon -.->|"candidate artifact a human promotes — never an order (DEC-0324)"| registry
+        daemon x--x venue
+    ```
+
+    ### QMA deployment
+
+    ```mermaid
+    flowchart TB
+        subgraph ws["Operator workstation — daemon host by default"]
+            daemon["COMP-QMA-DAEMON<br/>one asyncio process · sole writer · loopback bind by default"]
+            stores[("daemon stores<br/>event journal · three ledgers · staging · artifact · telemetry")]
+            dworkers["Docker workers on the host<br/>Analysis RLM kernel in its container"]
+        end
+        subgraph remote["Remote workspace — optional"]
+            rworker["deployed Quant / Mission / Worker<br/>dials OUT to the daemon — no inbound port"]
+        end
+        vps["Windows VPS — the one computer-use agent<br/>PLANNED, not provisioned (GAP-0070)"]
+        deny["Venue / broker / exchange / trading-node hosts<br/>code-declared deny-list — no allowlist may name them (DEC-0327)"]
+
+        daemon --> stores
+        daemon --> dworkers
+        rworker -->|"durable outbox; dial-out over qma-wire (DEC-0304)"| daemon
+        daemon -.->|"desktop ExecutionEnvironment registered only once provisioned"| vps
+        daemon x--x deny
+    ```
+- op: regex_replace
+  pattern: '\| `COMP-QML` — bot-authoring library \| middleware \| Application-layer bot-authoring library built ON QMF; authors CT-33/CT-34, defines the bot runtime protocol, owns the conformance gate; composes `qmf-core`, `qmf-registry`, `qmf-risk`, no venue edge — outside the roster and outside QMF V1 \| `docs/components/qml\.md` \|'
+  repl: |-
+    | `COMP-QML` — bot-authoring library | middleware | Application-layer bot-authoring library built ON QMF; authors CT-33/CT-34, defines the bot runtime protocol, owns the conformance gate; composes `qmf-core`, `qmf-registry`, `qmf-risk`, no venue edge — outside the roster and outside QMF V1 | `docs/components/qml.md` |
+    | `COMP-QMA-CORE` — qma-core | backend | Application-layer agentic-system definitions built ON QMF; the seven ports and the plugin contribution surface, depends only on `qmf-core`, no runtime — outside the roster and outside QMF V1 | `docs/components/qma-core.md` |
+    | `COMP-QMA-WIRE` — qma-wire | backend | Application-layer agentic-system wire contract built ON QMF; the CT-40 envelope, command/query/event families and `protocolVersion`, depends on `qma-core` and `qmf-core` — outside the roster and outside QMF V1 | `docs/components/qma-wire.md` |
+    | `COMP-QMA-DAEMON` — qma-daemon | backend | Application-layer agentic-system daemon built ON QMF; the one Python asyncio process and sole writer that runs Quants, composes the QMF backend read-and-calculate with no venue edge — outside the roster and outside QMF V1 | `docs/components/qma-daemon.md` |
+  all: false
+  skip_if: '| `COMP-QMA-CORE` — qma-core |'
+- op: regex_replace
+  pattern: 'The ratified spine at `_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE\.md` is the authoritative source for the paradigm, dependency direction, and invariants absorbed here\.'
+  repl: |-
+    The QMA contracts CT-40 through CT-51 are minted at format version 1 as ratified `defined-unwired` surface owned by COMP-QMA-CORE and COMP-QMA-WIRE, with no code in existence (DEC-0329, DEC-0335); CT-35 through CT-39 are unused. The ratified spine at `_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md` is the authoritative source for the paradigm, dependency direction, and invariants absorbed here.
+  all: false
+  skip_if: 'The QMA contracts CT-40 through CT-51'

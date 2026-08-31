@@ -1,0 +1,186 @@
+ledger:
+  # ── Cut outright — 20 dead DECs (DEC-0360..DEC-0379), spine Cut-table order ──
+  # Each is spine law per D21 (DEC-0329): anything on neither the Cut nor the
+  # Deferred table and not in D1..D23 is out of scope for v1; no Cut row is
+  # revived except by an explicit spine amendment. reason = the row's one reason
+  # verbatim from the spine Cut-outright table.
+  - id: DEC-0360
+    title: "Cut: a QMX agent protocol plus adapters hosting foreign agent runtimes"
+    statement: "The QMX agentic system would define a QMX agent protocol and ship adapters that host foreign agent runtimes (the Claude Agent SDK, OpenAI or LangGraph loops) inside QMA workers. This is CUT from v1: QMA owns its runtime bottom-up (AD-4, AD-14), and no foreign harness runs inside a QMA worker. The Deferred Claude-Agent-SDK hook-count row (GAP-0087) and the model-proxy foreign-harness shim (DEC-0370) both depend on this Cut and revive only if a spine amendment reverses it."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law; the Cut table and the Deferred table are exclusive (memlog L244), and the Cut table is spine law that no row revives except by amendment (DEC-0329)."
+    sources: [EXT-2400, EXT-2401]
+    component: null
+    tags: [cut, dead]
+    reason: "QMA owns its runtime bottom-up; nothing needs it to host foreign harnesses"
+  - id: DEC-0361
+    title: "Cut: extension trust tiers, marketplace or plugin store, install counts"
+    statement: "QMA would carry extension trust tiers, a marketplace or plugin store, and install counts for its plugins. This is CUT: QMA is a single-operator system with no third-party publishers, so there is no untrusted-extension problem for tiers, a store or install counts to solve."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law (DEC-0329)."
+    sources: [EXT-2400, EXT-2402]
+    component: null
+    tags: [cut, dead]
+    reason: "one operator, no third-party publishers, no untrusted-extension problem"
+  - id: DEC-0362
+    title: "Cut: a provides/requires/optional capability dependency solver"
+    statement: "QMA would run a provides/requires/optional capability dependency solver over its plugin set. This is CUT: a package-manager-style solver is unwarranted for a plugin set numbering in single digits (the five fixed desk plugins, AD-7); explicit registration at a composition root suffices (AD-21)."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law (DEC-0329)."
+    sources: [EXT-2400, EXT-2403]
+    component: null
+    tags: [cut, dead]
+    reason: "a package-manager solver for a plugin set numbering in single digits"
+  - id: DEC-0363
+    title: "Cut: the 20-service injectable context fabric"
+    statement: "QMA would provide a 20-service injectable context fabric (a large enumerated dependency-injection surface of context services). This is CUT: it is architecture by enumeration and most entries have no described consumer; the Context Compiler (AD-14) provides what a given invocation sees without a service fabric."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law (DEC-0329)."
+    sources: [EXT-2400, EXT-2404]
+    component: null
+    tags: [cut, dead]
+    reason: "architecture by enumeration; most entries have no described consumer"
+  - id: DEC-0364
+    title: "Cut: the eight-type memory taxonomy"
+    statement: "QMA would classify memory into an eight-type taxonomy (semantic, episodic, procedural and the rest). This is CUT: the taxonomy was never load-bearing and is superseded by one narrow memory definition plus provenance-gated candidates behind the MemoryProvider port (AD-18, admit / admission_confidence)."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law (DEC-0329)."
+    sources: [EXT-2400, EXT-2405]
+    component: null
+    tags: [cut, dead]
+    reason: "never load-bearing; superseded by one narrow definition plus provenance-gated candidates"
+  - id: DEC-0365
+    title: "Cut: the general-IDE lifecycle events (display, elicitation, config, cwd, directories)"
+    statement: "QMA would emit the general-IDE lifecycle events — display, elicitation, config, cwd and directories. This is CUT: that is multi-surface public-IDE plumbing; QMA fires only the hook events its authored graphs need (AD-10), not a general editor event bus."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law (DEC-0329)."
+    sources: [EXT-2400, EXT-2406]
+    component: null
+    tags: [cut, dead]
+    reason: "multi-surface public-IDE plumbing; QMA fires only what its authored graphs need"
+  - id: DEC-0366
+    title: "Cut: hot-module reload and reactive re-mount of live plugins"
+    statement: "QMA would support hot-module reload and reactive re-mount of live plugins. This is CUT: it is a developer nicety that runs against QMA's determinism requirement; QMA uses explicit reload instead, with reversible scoped contributions (AD-21)."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law (DEC-0329)."
+    sources: [EXT-2400, EXT-2407]
+    component: null
+    tags: [cut, dead]
+    reason: "a dev nicety against a determinism requirement; explicit reload instead"
+  - id: DEC-0367
+    title: "Cut: isolate/intercept and label-joined config scopes"
+    statement: "QMA would provide isolate/intercept and label-joined config scopes (multi-tenant overlay configuration machinery). This is CUT: QMA has one operator and one config, so the overlay machinery has nothing to isolate or label-join."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law (DEC-0329)."
+    sources: [EXT-2400, EXT-2408]
+    component: null
+    tags: [cut, dead]
+    reason: "multi-tenant overlay machinery; one operator, one config"
+  - id: DEC-0368
+    title: "Cut: relay, signing and public-messaging protocols as the bus transport"
+    statement: "QMA's Agent Bus would use relay, signing and public-messaging protocols as its transport. This is CUT: that is sovereign multi-tenant messaging for strangers; a single-operator daemon's durable, addressed, non-authoritative bus (AD-20) needs none of it."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law (DEC-0329)."
+    sources: [EXT-2400, EXT-2409]
+    component: null
+    tags: [cut, dead]
+    reason: "sovereign multi-tenant messaging for strangers; a single-operator daemon needs none"
+  - id: DEC-0369
+    title: "Cut: a shared account-level cloud computer with per-actor screens"
+    statement: "QMA would run a shared account-level cloud computer with per-actor screens. This is CUT: it is not a security boundary; Docker-per-worker (AD-17 ExecutionEnvironment) replaces it as the isolation mechanism."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law (DEC-0329)."
+    sources: [EXT-2400, EXT-2410]
+    component: null
+    tags: [cut, dead]
+    reason: "not a security boundary; Docker-per-worker replaces it"
+  - id: DEC-0370
+    title: "Cut: a foreign-harness shim in the model proxy (masquerading, model-identity spoofing)"
+    statement: "QMA's model proxy would carry a foreign-harness shim that masquerades or spoofs a model identity so a call appears to originate from a different harness. This is CUT: QMA owns its caller and records the true Deployment honestly (AD-15); it never spoofs a model identity. This Cut is paired with DEC-0360 (no foreign runtimes hosted)."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law (DEC-0329)."
+    sources: [EXT-2400, EXT-2411]
+    component: null
+    tags: [cut, dead]
+    reason: "QMA owns its caller and records the true deployment honestly"
+  - id: DEC-0371
+    title: "Cut: plaintext credential files as a source for any QMA-resolved secret"
+    statement: "QMA would read plaintext credential files in a home directory as a source for a QMA-resolved secret. This is CUT under L34: QMA handles references only, with values kept in the OS store through the Credential Broker (AD-24). A local-proxy Deployment's own provider credentials stay that proxy's custody outside QMA's namespace and are never read, copied, migrated or referenced by QMA (AD-15, AD-24)."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law (DEC-0329); binds L34 and pairs with DEC-0344 (a local proxy's own credentials stay outside QMA's namespace)."
+    sources: [EXT-2400, EXT-2412]
+    component: null
+    tags: [cut, dead]
+    reason: "L34: QMA handles references only, values in the OS store through the Credential Broker; a local-proxy Deployment's own provider credentials remain that proxy's custody outside QMA's namespace, never read, copied, migrated or referenced by QMA (AD-15, AD-24)"
+  - id: DEC-0372
+    title: "Cut: multi-tenant memory and knowledge machinery (orgs, projects, ACLs, sharing, webhooks, billing)"
+    statement: "QMA would carry multi-tenant memory and knowledge machinery — orgs, projects, ACLs, sharing, webhooks and billing. This is CUT: QMA keeps the memory/knowledge engine (AD-18, AD-19) but drops the tenancy, because there is a single operator."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law (DEC-0329)."
+    sources: [EXT-2400, EXT-2413]
+    component: null
+    tags: [cut, dead]
+    reason: "single operator; keep the engine, drop the tenancy"
+  - id: DEC-0373
+    title: "Cut: cloud service tiers, telemetry to a vendor, account slots, mobile clients"
+    statement: "QMA would offer cloud service tiers, vendor telemetry, account slots and mobile clients. This is CUT: the daemon is authoritative and local (AD-6, AD-25); there is no service tier, and telemetry stays behind the QMA-owned OTel export port (AD-23) rather than being shipped to a vendor sink."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law (DEC-0329)."
+    sources: [EXT-2400, EXT-2414]
+    component: null
+    tags: [cut, dead]
+    reason: "the daemon is authoritative and local; there is no service tier"
+  - id: DEC-0374
+    title: "Cut: permanent named specialist rosters"
+    statement: "QMA would keep permanent named specialist rosters (a fixed cast of always-on named worker agents). This is CUT: the operator flagged the overcooking himself, and QMA spawns worker templates on demand instead (AD-22 worker_template). Quants are the persistent named actors (AD-7); Workers are addressable execution slots, not a standing roster."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law (DEC-0329)."
+    sources: [EXT-2400, EXT-2415]
+    component: null
+    tags: [cut, dead]
+    reason: "the operator flagged the overcooking himself; worker templates spawned on demand instead"
+  - id: DEC-0375
+    title: "Cut: a Trading-desk execution tool, \"paper only\" included"
+    statement: "QMA would ship a Trading-desk execution tool, including a 'paper only' variant. This is CUT: QMA's money-path output is never an order; L36 puts nothing above a bot on the market, and paper is an account role on a real venue, not a sandbox. No execution tool exists at any account role. This Cut is the ground for the AD-16/AD-28 money-path reachability barrier (DEC-0341): the act-level deny-list refuses every order/binding/sizing/promotion act at the Tool Registry, and placement refuses any environment or edge that could reach the trading node."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law (DEC-0329); binds L36 and L39 and is enforced by AD-16 and AD-28 (DEC-0341)."
+    sources: [EXT-2400, EXT-2416]
+    component: null
+    tags: [cut, dead]
+    reason: "QMA's money-path output is never an order; L36 puts nothing above a bot on the market, and paper is an account role on a real venue"
+  - id: DEC-0376
+    title: "Cut: git-branch-per-parameter-mutation as the lineage mechanism"
+    statement: "QMA would use a git branch per parameter mutation as its lineage mechanism. This is CUT: QMA uses content-addressed resolved config for parameter lineage (AD-14 content-addressed candidates with lineage edges); git is used only when code changes, not for every parameter variant."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law (DEC-0329)."
+    sources: [EXT-2400, EXT-2417]
+    component: null
+    tags: [cut, dead]
+    reason: "content-addressed resolved config; git only when code changes"
+  - id: DEC-0377
+    title: "Cut: group chat as the primary coordination mechanism"
+    statement: "QMA would coordinate work through group chat as its primary mechanism. This is CUT: parallel workers synchronize through the Task Graph (AD-12), not chat; the Agent Bus (AD-20) is durable and addressed but non-authoritative and never the coordination substrate."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law (DEC-0329)."
+    sources: [EXT-2400, EXT-2418]
+    component: null
+    tags: [cut, dead]
+    reason: "parallel workers synchronize through the Task Graph, not chat"
+  - id: DEC-0378
+    title: "Cut: an eleven-entry loop registry as the organizing centre"
+    statement: "QMA would make an eleven-entry loop registry the organizing centre of its control model. This is CUT: the operator's last word (T-4954) enumerates graphs, not loops; the named cycles become authored, plugin-contributed Graph Templates (AD-13), and Loop is reduced to a node kind inside a Graph Template. Graphs, not loops, are the organizing centre."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law (DEC-0329); the graphs-over-loops disposition is DEC-0340."
+    sources: [EXT-2400, EXT-2419]
+    component: null
+    tags: [cut, dead]
+    reason: "the operator's last word enumerates graphs, not loops; the named cycles become authored Graph Templates"
+  - id: DEC-0379
+    title: "Cut: salvage from the deleted workroom/agentic-system-planning folder"
+    statement: "QMA would salvage material from the deleted workroom/agentic-system-planning folder. This is CUT: the operator deleted it and ruled it not an input; nothing from it enters the spine unless the transcript independently says the same thing. The folder is not an input to this documentation-factory pass either (operator ruling 2026-08-28) and nothing may cite it."
+    status: dead
+    rationale: "Cut outright at the QMA sitting under D21 spine law (DEC-0329); the fresh-start ruling is DEC-0332."
+    sources: [EXT-2400, EXT-2420]
+    component: null
+    tags: [cut, dead]
+    reason: "the operator deleted it and ruled it not an input; nothing enters unless the transcript says the same thing"

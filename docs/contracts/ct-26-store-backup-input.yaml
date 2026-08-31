@@ -1,12 +1,12 @@
 id: CT-26
 name: Store-to-backup input boundary
 status: ratified
-version: 1  # first minted format version (DEC-0103; versioning-from-birth L15)
+version: 1  # first minted format version (DEC-0103; versioning-from-birth L15); 2026-08-29 trading-node absorption: sealed-archive added as a source room-role the nightly backup reads by name (DEC-0253, DEC-0198)
 owner: COMP-QMF-DATA-STORE
 consumers: [COMP-QMF-DATA-BACKUP]
 layer_from: data
 layer_to: data
-decisions: [DEC-0118, DEC-0117, DEC-0113, DEC-0106, DEC-0109, DEC-0103]
+decisions: [DEC-0118, DEC-0117, DEC-0113, DEC-0106, DEC-0109, DEC-0103, DEC-0198, DEC-0253]
 gaps: []
 purpose: "Present a store's room contents to the backup primitive as a consistent, restorable input, without the store or the backup mutating evidence."
 invariants:
@@ -28,7 +28,7 @@ schema:
     - "record timestamps (int64-utc-ns) -- passed through verbatim (DEC-0106)"
   enums:
     world: [live, replay, simulated]  # simulated reserved-unusable in V1 (DEC-0110)
-    source_room_role: ["ingest door", "immutable raw archive", "processed", "journal", "split-governed research door", "backup", "registry room"]  # the seven room-roles; input draws from the evidence rooms into the backup room (DEC-0117)
+    source_room_role: ["ingest door", "immutable raw archive", "processed", "journal", "split-governed research door", "backup", "registry room", "sealed-archive"]  # the eight room-roles; input draws from the evidence rooms -- including the evidence tier's sealed-archive role, which the nightly backup reads by name -- into the backup room (DEC-0117, DEC-0253, DEC-0198)
     boundary_refusal_categories: [storage failure, policy rejection]  # subset of the seven (DEC-0109)
   units:
     timestamps: int64-utc-ns

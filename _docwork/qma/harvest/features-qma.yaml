@@ -1,0 +1,277 @@
+# features-qma.yaml — the seven QMA features FEAT-0040..0046 in the operator's build order.
+# Seat D9. Source: SRC-13 spine + BRIEF sections 6, 7, 8; SRC-15 build order. Row shape mirrors
+# _docwork/feature_inventory.yaml FEAT-0030. generated 2026-08-29, verified 2026-08-29.
+# Appended into _docwork/feature_inventory.yaml by fragment feature-inventory.yaml
+# (op yaml_append_items over key features). All size: multi-pass, status: planned; every
+# blocked_by edge carries a reason. Implementation authorization arrives only through the
+# factory pipeline; nothing here grants credential, order, promotion, live-money or destructive
+# authority (DEC-0329, DEC-0341).
+features:
+  - id: FEAT-0040
+    name: "qma-core — definitions package"
+    scope: >-
+      In: the qma-core package — the definitions-only foundation of the QMX
+      agentic system (QMA = QuantMind Agents, the SDK), depending only on
+      qmf-core with no parallel base of its own (AD-3), in the `qma.core`
+      namespace with no blanket `qmx.` prefix (DEC-0300, DEC-0337): the ontology
+      chain Desk -> Role -> Quant -> Agent -> Subagent with Session, Worker,
+      Mission, Task and Task Graph and the ActorId address grammar
+      quant:<desk_slug>/<quant_slug> over the five desk_slug values (AD-7,
+      DEC-0306); the seven ports (MemoryProvider, ModelDeployment,
+      ExecutionEnvironment, KnowledgeSource, ToolAdapter, ComputeProvider,
+      ContextCompiler) with singleton scope keys and multi points (AD-1); the
+      plugin contribution surface (PluginManifest, PluginContext, HookEvent,
+      HookResult, handle kinds, credential_ref) defined here and implemented in
+      the daemon; the QMA refusal variants of qmf-core's base (NoMemoryProvider,
+      NoEnvironment, SlugUnavailable, CursorScopeMismatch, NoEligibleReviewer,
+      NoEligibleDeployment, NonLoopbackProxy, UnauthenticatedProxy,
+      ProhibitedMoneyPathTool, UnknownHostRequest, ProvenanceShapeMismatch,
+      StaleSnapshot, OperatorPrincipalRequired, CredentialOutOfScope — the set
+      qma-core enumerates);
+      the default-deny enumeration of the permitted qmf-registry and qmf-risk
+      surfaces (AD-2, DEC-0347); and every closed vocabulary the SDK owns (hook
+      verbs, HookResult decisions, JobHandle states, Task and Mission states,
+      MessageKind, DeliveryState, ModelClass values, node kinds, variable
+      scopes, the three verbs admit/apply/promote). Out: any runtime, process,
+      thread, I/O or store (the daemon owns every runtime concern through a
+      core-defined port, DEC-0335); the wire envelope and transport (qma-wire);
+      qmf-venue in any form (DEC-0341, DEC-0347). Done: qma-core imports only
+      qmf-core; every port, refusal, handle kind and closed vocabulary the
+      daemon and wire consume is defined once here; and the permitted
+      qmf-registry/qmf-risk surface is enumerated default-deny so no undrawn
+      edge is reachable.
+    decisions: [DEC-0300, DEC-0301, DEC-0302, DEC-0306, DEC-0335, DEC-0337, DEC-0347]
+    components: [COMP-QMA-CORE]
+    blocked_by:
+      - id: FEAT-0005
+        reason: "qma-core depends only on qmf-core (AD-3, DEC-0300); its refusal variants extend qmf-core's base and its identity/serialization reuse (CT-04, CT-05) sit on the canonical serialization, fingerprint and typed-refusal substrate FEAT-0005 lands"
+    size: multi-pass
+    status: planned
+    notes: "The QMA spine AD-1..AD-29 is FINAL and adopted in full (validation dry 2026-08-29, DEC-0329); this feature covers implementing the definitions package, and implementation authorization still arrives only through the factory pipeline. qma-core mints no configurable values and runs nothing (DEC-0335). QMA = QuantMind Agents is the SDK only, never the whole system and never a framework (DEC-0330)."
+
+  - id: FEAT-0041
+    name: "qma-wire — envelope, families, schemas, protocol version, transport"
+    scope: >-
+      In: the qma-wire contract package (AD-5, DEC-0304) both the daemon and the
+      future UI import: the wire envelope (v, type, id, producer_id,
+      correlation_id, scope_path, seq, payload, with Session between Task and
+      Agent in scope_path); JSON-RPC 2.0 over WebSocket for commands and events
+      plus HTTP GET for queries; the initialize handshake with semver
+      protocolVersion, additive-only within a major and wire.deprecation_minors;
+      the command / query / event families and the 26-noun seed vocabulary;
+      wire.attach(scope, since_seq) / wire.detach / replay over the durable
+      event stream with seq and the dedup window; the host_request bridge family
+      (AD-14); principal classes on every authenticated connection and the
+      human-gate command list (AD-24); transport posture (loopback default, TLS
+      with recorded config otherwise, remote workers dial out and the daemon
+      never dials in, outbox depth and spool bytes); and the correlation_missing
+      carve-out. Out: any daemon-side state, store or execution (qma-daemon); the
+      qma-ui-contract beyond a deferred stub (GAP-0081, DEC-0333); the UI
+      extension SDK, contribution points and packaging (Deferred, DEC-0333).
+      Done: the envelope, families and schemas validate; the initialize
+      handshake negotiates protocolVersion additively within a major; attach /
+      detach / replay reproduce the durable stream from a since_seq cursor with
+      dedup; and remote workers reach the daemon by dialing out with no inbound
+      port on the deployed side.
+    decisions: [DEC-0304, DEC-0303, DEC-0336]
+    components: [COMP-QMA-WIRE]
+    blocked_by:
+      - id: FEAT-0040
+        reason: "qma-wire depends on qma-core (AD-5): the envelope and every command/query/event family carry qma-core-typed payloads and reuse core's typed-refusal shape (DEC-0304), so the definitions package must land first"
+    size: multi-pass
+    status: planned
+    notes: "The wire contract binds now while the UI is later (DEC-0333); it is the first milestone's reachability surface — a Quant is reached through models over the wire (SRC-15 build order). Ratified by the FINAL spine adopted 2026-08-29 (DEC-0329); implementation authorization arrives only through the factory pipeline."
+
+  - id: FEAT-0042
+    name: "qma-daemon substrate — journal, stores, hooks registry, Task Graph, store lifecycle"
+    scope: >-
+      In: the one Python 3.14 asyncio daemon substrate — the only process that
+      runs anything and the sole writer (AD-4, AD-6, AD-8; DEC-0334): the single
+      event journal, one connection, clock law and dedup cursor with the closed
+      store list — journal-derived projections (per-scope event streams,
+      mailboxes and delivery state, the operator approval queue, Task Graph
+      state, Session and Agent records, desk ledger views, the ledger
+      quarantine stream and the sixteen-member definition store) plus the
+      declared independent stores — and every fold's declared contract,
+      all persisted behind qmf-data sinks — JSONL append journals plus SQLite in
+      WAL mode — on the CT-13 durable journal-evidence contract FEAT-0012 lands,
+      the daemon their sole writer (AD-6, DEC-0305, DEC-0334); state ownership
+      and the single agent write path outside
+      AD-22 (AD-8); the Task Graph and Mission Compiler / Director (AD-12,
+      AD-13); the hooks registry with source bounds and mission-scoped
+      agent-authored hooks (AD-10, AD-11) as the single enforcement and control
+      surface (DEC-0339); the three control primitives Graph Template (authored,
+      versioned, stateless), Loop (a node kind with runtime-owned stopping
+      condition, budget and escalation) and Skill, with the Graph Template vs
+      Task Graph name split (AD-12, AD-13, DEC-0340); and store lifecycle,
+      versioning, migration, backup and restore per parent AD-20 / L18 (AD-27).
+      Out: the model proxy, Tool Registry, Credential Broker and reachability
+      barrier (FEAT-0043); execution environments and the QMB door (FEAT-0044);
+      the ledgers, Agent Bus, scheduler, memory/knowledge ports and telemetry
+      export (FEAT-0045); the plugin loader (FEAT-0046). Done: the daemon is the
+      sole writer of every store; every daemon-owned primitive ships its own
+      before/after hook events; the Task Graph runs authored stateless Graph
+      Templates as runtime Task Graph state; and store migrations run the
+      five-step order with a documented restore path.
+    decisions: [DEC-0305, DEC-0307, DEC-0308, DEC-0309, DEC-0310, DEC-0311, DEC-0312, DEC-0313, DEC-0326, DEC-0334, DEC-0338, DEC-0339, DEC-0340]
+    components: [COMP-QMA-CORE, COMP-QMA-DAEMON]
+    blocked_by:
+      - id: FEAT-0040
+        reason: "qma-daemon depends on qma-core (AD-2): the substrate implements the core-defined ports, HookEvent/HookResult, handle kinds and store contracts (DEC-0305, DEC-0339), so the definitions package must land first"
+      - id: FEAT-0041
+        reason: "every daemon primitive is driven and observed over the wire — commands, events and the durable seq stream (DEC-0304, DEC-0334); qma-daemon depends on qma-wire (AD-2), so the wire contract must land first"
+      - id: FEAT-0012
+        reason: "AD-2 draws the qma-daemon -> qmf-data edge un-narrowed — not a read-and-calculate edge like qmf-registry/qmf-risk; the daemon's journal, stores and store lifecycle persist behind qmf-data sinks with the daemon as sole writer (AD-6, DEC-0334) on the CT-13 durable journal-evidence contract shape FEAT-0012 lands, so that journal-evidence contract must exist before the substrate that writes through it (contracts before consumers)"
+    size: multi-pass
+    status: planned
+    notes: "One Python 3.14 asyncio daemon, no second daemon runtime and no contract re-implemented across a language boundary (L31, DEC-0334). Graphs, not loops, are the organizing centre and there is no Mission Template in v1 (DEC-0340). Ratified by the FINAL spine adopted 2026-08-29 (DEC-0329); implementation authorization arrives only through the factory pipeline."
+
+  - id: FEAT-0043
+    name: "model proxy + Tool Registry + permissions/Credential Broker + reachability barrier"
+    scope: >-
+      In: the daemon subsystems that make a Quant reachable through models over
+      the wire — THE FIRST MILESTONE LANDS HERE (SRC-15 build order): the model
+      proxy chain ModelClass -> Deployment -> Credential Broker with OpenCodex
+      as the first ModelDeployment behind the Deployment contract (not behind
+      the Broker), auth_mode none with a mandatory loopback bind,
+      proxy.allow_unauthenticated_loopback default true and model_family
+      optional, ReviewPolicy, and no account pooling (AD-15, AD-24; DEC-0314,
+      DEC-0344); the Tool Registry, capability ladder and the effective
+      capability set at spawn (AD-16, DEC-0315); permissions, the Credential
+      Broker allowlist and egress rule and secret references only (AD-24,
+      DEC-0323); and the money-path reachability barrier — the act-level
+      deny-list refusing every order, binding, sizing and promotion act at the
+      Tool Registry with its check_fn, and placement/registration refusing any
+      environment or edge that could reach the trading node (AD-16, AD-28;
+      DEC-0341, DEC-0327). Out: any execution tool at any account role, paper
+      only included (Cut, DEC-0341); any sizing rule, Book/BMS rule or
+      live-trading rule (risk authority stays with the GitBook and trading-node
+      corpus, DEC-0341); importing qmf-venue (DEC-0347); execution environments
+      and the QMB door (FEAT-0044). Done: a Quant is reachable through models
+      over the wire; the Trading desk is read-only; the act-level deny-list
+      refuses every money-path act at every account role; and QMA's only output
+      into the money path is a candidate artifact a human promotes outside QMA.
+    decisions: [DEC-0314, DEC-0315, DEC-0323, DEC-0327, DEC-0341, DEC-0344]
+    components: [COMP-QMA-CORE, COMP-QMA-DAEMON]
+    blocked_by:
+      - id: FEAT-0042
+        reason: "the model proxy, Tool Registry and Credential Broker are daemon subsystems on the journal, stores and hooks registry the substrate lands (DEC-0334, DEC-0339); the hooks registry is the single enforcement surface the deny-list rides"
+      - id: FEAT-0007
+        reason: "the reachability barrier's qmf-registry edge is read-and-calculate only over the surface enumerated default-deny in qma-core (DEC-0347); FEAT-0007 lands the qmf-registry read surface the daemon calculates against, never orchestrating through it"
+      - id: FEAT-0027
+        reason: "the reachability barrier's qmf-risk edge is read-and-calculate only over the surface enumerated default-deny in qma-core (DEC-0347); FEAT-0027 lands the qmf-risk Book/BMS/risk boundary the daemon reads and calculates against, wiring no execution act (DEC-0341)"
+    size: multi-pass
+    status: planned
+    notes: "The first milestone — a Quant reachable through models over the wire — completes here (DEC-0333, SRC-15). No execution tool exists at any account role, paper only included, and QMA never imports qmf-venue (DEC-0341, DEC-0347). Risk, sizing and live authority stay with the GitBook and trading-node corpus (L36, L39, operator standing ruling 2026-08-20); nothing here grants credential, order, promotion, live-money or destructive authority. Ratified by the FINAL spine adopted 2026-08-29 (DEC-0329); implementation authorization arrives only through the factory pipeline."
+
+  - id: FEAT-0044
+    name: "execution environments + Compute Router + JobHandle + RLM kernel + the QMB door (ExperimentSpec)"
+    scope: >-
+      In: the daemon's compute layer — ExecutionEnvironment / Compute Router /
+      JobHandle with max_in_flight and the RLM kernel supervision over
+      host_request (AD-14, AD-17; DEC-0313, DEC-0316): ExecutionEnvironment
+      declarations (kinds, network values, max_in_flight pinned to 1 and
+      uneditable for the remote_host and desktop kinds), the Compute Router
+      refusals, JobHandle states including unknown with attach/reattach and the
+      job-to-Task mapping, and the Analysis worker's persistent RLM kernel
+      interpreter with its depth-2 cap (rlm.depth_cap) and fanout cost ceiling
+      (rlm.fanout_cost_ceiling_usd); and the QMB door — ExperimentSpec
+      (content-addressed, lineage DAG edges, BacktestHandle / StrategyHandle,
+      the Experiment Ledger link, one job per environment) placed as an AD-17
+      job by the analysis-backtest plugin, a runtime interaction not a package
+      import (AD-25, DEC-0324). Out: any qmf-venue reachability or execution act
+      (DEC-0341, DEC-0347); a package import edge to qmb (the qmb door is job
+      placement, DEC-0347); RLM beyond the Analysis desk or depth above 2
+      (Deferred, GAP-0080); sandbox and compute vendors beyond the planned
+      Windows VPS (Deferred, GAP-0075, with Modal/Daytona/E2B rejected
+      outright); the Windows VPS itself, planned but not provisioned (GAP-0070).
+      Done: an ExecutionEnvironment declares its kind, network and max_in_flight;
+      the Compute Router refuses an over-cap or ineligible placement; a JobHandle
+      reattaches across daemon restart and maps to its Task; and the QMB door
+      runs one job per environment in world=replay through the Backtesting
+      Service adapter (DEC-0348).
+    decisions: [DEC-0313, DEC-0316, DEC-0324]
+    components: [COMP-QMA-CORE, COMP-QMA-DAEMON]
+    blocked_by:
+      - id: FEAT-0043
+        reason: "execution environments, the Compute Router and JobHandle spawn the Agents and tools the proxy, Tool Registry and permissions layer govern (DEC-0316); the effective capability set at spawn and the money-path reachability barrier must be in force before any placement runs (DEC-0341)"
+      - id: FEAT-0029
+        reason: "the QMB door places one job per environment through ExperimentSpec — an AD-17 job placement by the analysis-backtest plugin, a runtime interaction not a package import (DEC-0324, DEC-0347); FEAT-0029 lands the qmb run surface the ExperimentSpec drives, world=replay only"
+    size: multi-pass
+    status: planned
+    notes: "The Backtesting Service is the analysis-backtest plugin's daemon-half adapter, never a second backtesting engine (DEC-0348). No edge to qmf-venue or qmb is drawn — the qmb door is job placement, not a package import (DEC-0347). Ratified by the FINAL spine adopted 2026-08-29 (DEC-0329); implementation authorization arrives only through the factory pipeline."
+
+  - id: FEAT-0045
+    name: "ledgers / Agent Bus / scheduler + Routines / memory + knowledge ports / admission gate / telemetry export"
+    scope: >-
+      In: the daemon's coordination, memory and observability subsystems on the
+      substrate: the three ledgers with leases, the daemon-authored reassigned
+      and unknown_tail entries and desk views (AD-9, DEC-0308) — the Task Ledger
+      authored by the Agent holding the Task's dispatch_lease, a Quant Ledger
+      only for a desk's lead Quant, an Experiment Ledger per experiment, and
+      Research/Trading/Dev/Analysis/PM ledgers as read-time views (DEC-0338);
+      the Agent Bus, Mailbox, WakePolicy and dead_letter (AD-20, DEC-0319); the
+      scheduler, Routines and continuation budget/escalation (AD-29, DEC-0328);
+      the MemoryProvider port with admission-gated candidates (admit,
+      admission_confidence) and the NoMemoryProvider typed refusal (AD-18,
+      AD-22; DEC-0342); the KnowledgeSource port over the STRATS plain-file
+      corpus with CorpusSnapshot/Citation/Provenance and evidence_confidence
+      (AD-19, DEC-0343); the staging store and admission gate and role.set_base
+      (AD-22, DEC-0321); RefinementProposals applied out of the staging store,
+      never promoted (DEC-0345); and the telemetry store plus OTel export port,
+      telemetry being neither the ledger nor the journal (AD-23,
+      DEC-0322). Out: the no-in-house-memory-engine boundary — memory enters
+      only through the port (DEC-0342); an external memory backend behind the
+      eval (Hindsight, Deferred, GAP-0072); knowledge hybrid indexing (Deferred,
+      GAP-0073); self-improvement evaluation gates (Deferred, GAP-0074); Mission
+      reports (Deferred, GAP-0082). Done: the Task Ledger is authored by the
+      dispatch_lease holder and persisted by the daemon; memory candidates are
+      admitted (never promoted) and a bound-less provider returns
+      NoMemoryProvider; knowledge is read-only and provenance-carrying with the
+      two confidences never conflated; and telemetry exports through the OTel
+      port without becoming the ledger.
+    decisions: [DEC-0308, DEC-0317, DEC-0318, DEC-0319, DEC-0321, DEC-0322, DEC-0328, DEC-0342, DEC-0343, DEC-0345]
+    components: [COMP-QMA-CORE, COMP-QMA-DAEMON]
+    blocked_by:
+      - id: FEAT-0042
+        reason: "the three ledgers, Agent Bus, scheduler/Routines, memory and knowledge ports, admission gate and telemetry export are daemon subsystems on the journal, stores, leases and hooks registry the substrate lands (DEC-0305, DEC-0334, DEC-0342, DEC-0343); the sole-writer daemon persists every one"
+    size: multi-pass
+    status: planned
+    notes: "admit / apply / promote are three distinct acts: memory candidates are admitted, RefinementProposals are applied, and only a registered artifact is promoted into the live zone by a human OUTSIDE QMA (L17, DEC-0345). Ledgers are task-level: no global ledger and no per-desk/per-profile ledger store (DEC-0338). Ratified by the FINAL spine adopted 2026-08-29 (DEC-0329); implementation authorization arrives only through the factory pipeline."
+
+  - id: FEAT-0046
+    name: "plugin loader + the five desk plugin packs"
+    scope: >-
+      In: the plugin loader with reversible scopes and migration down /
+      forward_only and the plugin roster (AD-21, AD-1; DEC-0320, DEC-0300): a
+      PluginManifest declaring contribution points, cardinality, scope keys,
+      migrations and desk prefix; a PluginContext whose cardinality-typed
+      registration methods return disposers pushed onto a per-plugin async exit
+      stack so unload closes the scope LIFO; the load-refusal law (a missing
+      dependency or a second singleton binding is a hard startup error); and the
+      five desk plugin packs named by desk with prefix tokens research-*,
+      trading-*, dev-*, analysis-*, pm-* (DEC-0337) contributing tools, model
+      deployments, hooks, memory providers, knowledge sources, ledger views and
+      Routines through the core-defined contribution surface. Out: the deferred
+      UI extension SDK, contribution points, packaging and qma-ui-contract
+      beyond a stub (GAP-0081, DEC-0333); extension trust tiers, a marketplace
+      or install counts (Cut, DEC-0361); a provides/requires/optional capability
+      solver (Cut, DEC-0362); foreign-runtime adapters (Cut, DEC-0360); any
+      plugin reaching qmf-venue or an execution act (DEC-0341, DEC-0347). Done:
+      a plugin activates through a scoped context honoring AD-1 cardinality and
+      unloads LIFO with every contribution disposed; a forward_only plugin takes
+      operator confirmation and may be disabled but never rolled back; and a
+      desk plugin pack's tools face the reachability barrier and the effective
+      capability set at spawn.
+    decisions: [DEC-0320, DEC-0300]
+    components: [COMP-QMA-CORE, COMP-QMA-DAEMON]
+    blocked_by:
+      - id: FEAT-0043
+        reason: "the five desk plugin packs contribute tools, model deployments and hooks the proxy, Tool Registry and permissions layer govern (DEC-0320, DEC-0300); a plugin's tools face the money-path reachability barrier and the effective capability set at spawn (DEC-0341)"
+      - id: FEAT-0044
+        reason: "the analysis-backtest plugin's daemon-half adapter places qmb jobs through the ExecutionEnvironment / Compute Router / JobHandle surface (DEC-0320, DEC-0324); execution environments and the QMB door must exist before a plugin can place a job"
+      - id: FEAT-0045
+        reason: "the desk plugin packs contribute memory providers, knowledge sources, ledger views and Routines onto the ledgers, ports, admission gate and scheduler FEAT-0045 lands (DEC-0320); those subsystems must exist for a plugin to register into them"
+    size: multi-pass
+    status: planned
+    notes: "Plugins are reversible scoped contributions; DATA is the half LIFO cannot undo, so every migration declares a down or the manifest declares rollback forward_only (DEC-0320). plugin is adopted for a desk extension package in QMA prose; the parent ban stays in force for QMF/QMB/node prose (DEC-0346). Ratified by the FINAL spine adopted 2026-08-29 (DEC-0329); implementation authorization arrives only through the factory pipeline."

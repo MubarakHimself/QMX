@@ -1,0 +1,20 @@
+target: docs/lenses/observability/metrics-and-alerts.md
+ops:
+  - op: frontmatter_set
+    field: verified
+    value: '2026-08-29'
+  - op: frontmatter_add
+    field: decisions
+    ids: [DEC-0322, DEC-0334]
+  - op: frontmatter_add
+    field: depends_on
+    ids: [COMP-QMA-CORE, COMP-QMA-DAEMON]
+  - op: append
+    text: |
+      ## QMA telemetry export port
+
+      The QMX agentic system (QMA) keeps logs, traces, metrics, agent trajectories, and the event-replay stream **off the ledgers**: telemetry is a separate system with separate stores and separate contracts (DEC-0322). Logs, traces, metrics, and trajectories are harness-authored, never agent-authored, and QMA owns its own trace and metric record types; **OpenTelemetry conformance happens at the EXPORT PORT as a swappable adapter, never as an SDK imported into the daemon core** (the OpenTelemetry Python SDK is a pinned stack dependency behind that port, not a daemon import) (DEC-0322, DEC-0334). Every telemetry record carries the inherited `correlation_id` and the wire `id`, and routing decisions, token and cost usage, compute-job and log streams, tool-call traces, and agent trajectories are **telemetry, not evidence** — a ledger entry may carry a `trace_ref`, never the reverse (DEC-0322).
+
+      ### Back-pressure, the announcement exemption, and retention
+
+      Telemetry travelling from a remote worker rides the same durable outbox as evidence, and **under back-pressure telemetry is dropped BEFORE evidence**, never the reverse (DEC-0322). A telemetry append emits **no journal announcement** — the telemetry store is the one declared store the announcement law exempts, because a journal that is never trimmed may not grow with a stream that is bounded — so a telemetry record carries `occurred_at` and `recorded_at`, no `journal_seq`, and is ordered by `recorded_at` and its `correlation_id` alone (DEC-0322). The AD-6 event journal is evidence and is **kept forever** — no policy, cadence, or job trims it — and agent trajectories, which the event-replay stream reads alongside it, are retention-exempt until the deferred rows that revisit on them (the external memory backend GAP-0072, the self-improvement evaluation gates GAP-0074, and RLM beyond the Analysis desk GAP-0080) have been evaluated and recorded (DEC-0322). Only the two bounded non-evidence streams — the mailbox delivery projection and the telemetry store — may be trimmed by a daemon job, and only inside their AD-26-registered retention windows, each trim recorded with its window, its reason, and its `correlation_id`; a trim may never remove an unacked `Envelope` or an unanswered `approval_request`, which keeps an AD-13 `human_gate` from being deleted (DEC-0322). The trim window for the two bounded non-evidence streams is Deferred (GAP-0089).

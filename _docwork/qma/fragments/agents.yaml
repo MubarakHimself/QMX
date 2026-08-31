@@ -1,0 +1,51 @@
+target: docs/AGENTS.md
+ops:
+- op: frontmatter_set
+  field: verified
+  value: '2026-08-29'
+- op: frontmatter_add
+  field: decisions
+  ids:
+  - DEC-0329
+  - DEC-0330
+  - DEC-0331
+  - DEC-0333
+  - DEC-0334
+  - DEC-0335
+  - DEC-0337
+  - DEC-0341
+  - DEC-0345
+  - DEC-0346
+  - DEC-0347
+  - DEC-0349
+- op: regex_replace
+  pattern: ^(4\. The spec for every component you will touch in \[`docs/components/`\]\(components/\)\..*)$
+  repl: |-
+    \1 The QMX agentic system (QMA) adds three application-layer specs read after those: [`qma-core.md`](components/qma-core.md) (COMP-QMA-CORE, definitions only), [`qma-wire.md`](components/qma-wire.md) (COMP-QMA-WIRE, the wire contract), and [`qma-daemon.md`](components/qma-daemon.md) (COMP-QMA-DAEMON, the sole runtime).
+  all: false
+  skip_if: components/qma-daemon.md) (COMP-QMA-DAEMON
+- op: insert_before_heading
+  heading: '## Reading order'
+  text: |
+    - **Ratified QMA content** (build against it as the source of truth; see [`components/qma-daemon.md`](components/qma-daemon.md), [`components/qma-core.md`](components/qma-core.md), [`components/qma-wire.md`](components/qma-wire.md), and [ADR-0020](decisions/ADR-0020-qma-agentic-system.md)): the QMX agentic system is a daemon plus the QMA SDK (QuantMind Agents) plus a wire contract, an application-layer product built ON QMF, never a QMF roster package and never a framework; **QMA names the SDK only**, the Python namespace is `qma.*` with no blanket `qmx.` prefix, and the three packages are definitions-only `qma-core` (depends only on `qmf-core`), sole-writer runtime `qma-daemon`, and contract-only `qma-wire`, with `qma-ui-contract` a deferred stub (DEC-0329, DEC-0330, DEC-0335, DEC-0337). One Python 3.14 asyncio daemon is dispositive under L31 — no second runtime, no QMF contract re-implemented across a language boundary; workers and non-Python clients attach over the wire (DEC-0334). The build order is daemon, data layer, wire, and DevOps first, and a Quant reachable through models over the wire is the first milestone, while the UI extension SDK is deferred and the wire contract and variables registry bind now (DEC-0333). `qma-daemon` reaches `qmf-registry` and `qmf-risk` **read-and-calculate only** over a default-deny enumerated surface and never imports `qmf-venue`; L30 is roster-scoped, so these are application dependencies under L31 (DEC-0347). The persistent named organizational actor is the **Quant** (never Bot, never Steward) under the ontology Desk to Role to Quant to Agent to Subagent (DEC-0331). **Money path:** QMA's only output into the money path is a candidate artifact a human promotes — there is no execution tool at any account role, "paper only" included, and no environment, worker, browser, or computer-use profile may reach a venue, broker, exchange, or trading-node host; risk, sizing, and live authority stay with the GitBook and trading-node corpus (DEC-0341). `promote` is reserved for the human live-zone act outside QMA; memory candidates are **admitted** and refinement proposals **applied** (DEC-0345). Ratified under the sitting's I-draft-operator-ratifies mode with SRC-15 ordering the absorption; implementation authorization arrives only through the factory pipeline.
+- op: insert_before_heading
+  heading: '## Before changing anything'
+  text: |
+    - **QMA vocabulary scope** (DEC-0346, DEC-0337, DEC-0345). Within the QMX agentic system (QMA) — the `qma-core`, `qma-wire`, and `qma-daemon` specs, the QMA contracts, and the QMA sections of shared docs — `plugin` names a desk extension package and the qualified **"RLM kernel"** names the Analysis worker's persistent Python interpreter; both are adopted terms there, and the Python namespace is `qma.*` with no blanket `qmx.` prefix. The parent ban is unchanged for QMF, QMB, and node prose: say **extensions** not "plugins", backtesting is a **library** never an "engine", `exam` stays retired, and `kernel` stays a retired name for `qmf-core`. QMA's adoption scopes the ban's audience; it never lifts it. The three verbs stay distinct — memory candidates are **admitted**, refinement proposals **applied**, and only a human **promotes** an artifact into the live zone outside QMA.
+- op: replace_all
+  old: gap-report.md#dead-decisions--18
+  new: gap-report.md#dead-decisions--38
+- op: replace
+  old: |-
+    an application-layer product built on the workspace (QMB, QML) may consume qmf-risk (and any qmf-venue-free) contracts at its own composition root, per the ratified reading (DEC-0171, DEC-0184; QMB precedent DEC-0169).
+  new: |-
+    an application-layer product built on the workspace (QMB, QML, QMA) may consume qmf-risk (and any qmf-venue-free) contracts at its own composition root, per the ratified reading (DEC-0171, DEC-0184; QMB precedent DEC-0169; QMA's `qmf-registry`/`qmf-risk` edges are read-and-calculate only over a surface enumerated default-deny in `qma-core` (DEC-0347)).
+- op: replace
+  old: and the research-threshold sitting (GAP-0049).
+  new: |-
+    and the research-threshold sitting (GAP-0049); and the 22 QMA deferred rows GAP-0070–GAP-0091, each with its stated revisit condition and none blocking (DEC-0329).
+- op: regex_replace
+  pattern: '(The deferred items(?: —| \()\s*GAP-0016/GAP-0017, GAP-0048, GAP-0049)'
+  repl: \1, the QMA rows GAP-0070–GAP-0091
+  all: false
+  skip_if: the QMA rows GAP-0070–GAP-0091

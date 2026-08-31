@@ -6,7 +6,7 @@ owner: COMP-QMF-REGISTRY
 consumers: [COMP-QMF-DATA-STORE]
 layer_from: backend
 layer_to: data
-decisions: [DEC-0103, DEC-0106, DEC-0108, DEC-0109, DEC-0110, DEC-0114, DEC-0117, DEC-0118, DEC-0120]
+decisions: [DEC-0103, DEC-0106, DEC-0108, DEC-0109, DEC-0110, DEC-0114, DEC-0117, DEC-0118, DEC-0120, DEC-0253]
 gaps: []
 purpose: >-
   Persist qmf-registry records and CT-07 lineage edges through qmf-data's CT-11
@@ -15,7 +15,7 @@ purpose: >-
 invariants:
   - "The registry selects no graph database and no database server: records persist as per-kind versioned records and lineage as pinned JSONL edges (DEC-0114)."
   - "Registry records and lineage persist through qmf-data's CT-11 append-store contract — the single ratified inter-library edge qmf-registry to qmf-data — with stdlib-typed signatures at that boundary (DEC-0120)."
-  - "The registry room is one of qmf-data's seven room-roles and is held under the same retention, backup, and migration law as every other evidence room (DEC-0117, DEC-0118, DEC-0120)."
+  - "The registry room is one of qmf-data's eight room-roles (the eighth, `sealed-archive`, is the trading-node sitting's mint — DEC-0253) and is held under the same retention, backup, and migration law as every other evidence room (DEC-0117, DEC-0118, DEC-0120)."
   - "Rooms are instantiated per world; a read that crosses worlds is a policy-rejection refusal and a non-live world never writes the live evidence namespace (DEC-0117, DEC-0110)."
   - "The data layer owns physical persistence only; kinds, lineage semantics, gates, and identity remain qmf-registry business rules (DEC-0120, DEC-0114)."
   - "Persistence is append-only: records and edges are never rewritten in place, corrections append and supersede via CT-07 edges, and raw records plus lineage are kept forever (DEC-0114, DEC-0118)."
@@ -30,7 +30,7 @@ schema:
     record_payload: "a CT-06 per-kind versioned record, keyed by its fp1 stable id (fp1:sha256:<hex>)"
     edge_payload: "a CT-07 pinned-JSONL typed lineage edge"
     world: "room-instance selector; one of live, replay, simulated (DEC-0110)"
-    room_role: "registry room — one of qmf-data's seven AD-19 room-roles (DEC-0117)"
+    room_role: "registry room — one of qmf-data's eight AD-19 room-roles (DEC-0117, DEC-0253)"
     boundary_signatures: "stdlib-typed at the qmf-registry to qmf-data seam (DEC-0120)"
   enums:
     world: [live, replay, simulated]  # simulated reserved-unusable in V1 (DEC-0110)

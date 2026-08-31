@@ -1,0 +1,5 @@
+target: _docwork/gaps.yaml
+ops:
+  - op: yaml_append_items
+    key: gaps
+    items_file: _docwork/qma/harvest/gaps-L5.yaml

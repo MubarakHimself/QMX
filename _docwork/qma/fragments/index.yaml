@@ -1,0 +1,78 @@
+target: docs/index.md
+ops:
+- op: frontmatter_set
+  field: verified
+  value: '2026-08-29'
+- op: frontmatter_add
+  field: decisions
+  ids:
+  - DEC-0300
+  - DEC-0304
+  - DEC-0305
+  - DEC-0329
+  - DEC-0333
+  - DEC-0335
+  - DEC-0341
+  - DEC-0347
+- op: frontmatter_add
+  field: depends_on
+  ids:
+  - COMP-QMA-CORE
+  - COMP-QMA-WIRE
+  - COMP-QMA-DAEMON
+- op: frontmatter_add
+  field: sources
+  ids:
+  - _bmad-output/planning-artifacts/architecture/architecture-QMA-2026-08-28/ARCHITECTURE-SPINE.md
+- op: regex_replace
+  pattern: 'The corpus contains \d+ files: \d+ Markdown documents and \d+ YAML artifacts\.'
+  repl: 'The corpus contains 119 files: 71 Markdown documents and 48 YAML artifacts.'
+  all: false
+  skip_if: contains 119 files
+- op: regex_replace
+  pattern: ^(- \[Gap report\]\(gap-report\.md\) — .*)$
+  repl: |-
+    \1 The 2026-08-29 QMA increment added GAP-0070 through GAP-0091 as 22 deferred rows, each carrying its revisit condition.
+  all: false
+  skip_if: GAP-0070 through GAP-0091 as 22 deferred rows
+- op: regex_replace
+  pattern: |-
+    (and absorbed in ADR-00\d\d\. )(Their rationale is absorbed across the architecture-decision set below\.)
+  repl: |-
+    \1The 2026-08-28/29 QMA increment (spine AD-1 through AD-29, ledger DEC-0300 through DEC-0350 with DEC-0360 through DEC-0379 dead) minted the new application-layer components COMP-QMA-CORE, COMP-QMA-WIRE, and COMP-QMA-DAEMON — the QMX agentic system, a daemon plus the QMA SDK plus a wire contract built ON QMF and never a roster package — minting contracts CT-40 through CT-51 and scenarios SCN-0013 and SCN-0014, opening twenty-two deferred gaps GAP-0070 through GAP-0091, and absorbed in ADR-0020. \2
+  all: false
+  skip_if: and absorbed in ADR-0020
+- op: regex_replace
+  pattern: |-
+    - \[qmf-data ingest seam\]\(components/qmf-data-ingest\.md\) . specifies the active CT-15 source boundary and CT-10 production into qmf-data\.
+  all: false
+  skip_if: '- [QMA Core](components/qma-core.md)'
+  repl: |-
+    - [QMA Core](components/qma-core.md) — specifies COMP-QMA-CORE, the definitions-only agentic-system core built ON QMF (not a roster package): the seven runtime ports, the Desk-to-Role-to-Quant-to-Agent-to-Subagent ontology and `ActorId` grammar, the plugin contribution surface, the QMA refusal variants, and every closed agentic vocabulary; depends only on `qmf-core` (DEC-0300, DEC-0335).
+    - [QMA Wire](components/qma-wire.md) — specifies COMP-QMA-WIRE, the daemon-to-UI wire contract: the envelope, JSON-RPC 2.0 over WebSocket with HTTP GET queries, the `initialize` handshake and `protocolVersion`, the command/query/event families, attach/detach/replay, and the transport posture (DEC-0304, DEC-0333).
+    - [QMA Daemon](components/qma-daemon.md) — specifies COMP-QMA-DAEMON, the one Python asyncio process and sole writer: the event journal and closed store list, the Task Graph, hooks, the three ledgers, the model proxy and Tool Registry, execution environments and the RLM kernel, and the money-path reachability barrier (DEC-0305, DEC-0334, DEC-0341).
+    - [qmf-data ingest seam](components/qmf-data-ingest.md) — specifies the active CT-15 source boundary and CT-10 production into qmf-data.
+- op: insert_before_heading
+  heading: '## Architecture decisions'
+  text: |
+    - [CT-40 — QMA wire envelope](contracts/ct-40-qma-wire-envelope.yaml) — defines the wire envelope, the command/query/event families, the `initialize` handshake, `protocolVersion`, attach/detach/replay, the `host_request` family, dedup, and the connection's principal class (DEC-0304).
+    - [CT-41 — QMA hook event and result](contracts/ct-41-qma-hook-event-result.yaml) — defines `HookEvent` (the closed verb set plus the two phase-less controls) and `HookResult` (the six decisions with total precedence and the tagged-union fields) (DEC-0309, DEC-0310).
+    - [CT-42 — QMA plugin manifest and context](contracts/ct-42-qma-plugin-manifest-context.yaml) — defines `PluginManifest`, `PluginContext`, contribution cardinality and scope keys, migrations, the desk prefix, and the load-refusal law (DEC-0300, DEC-0320).
+    - [CT-43 — QMA memory provider](contracts/ct-43-qma-memory-provider.yaml) — defines the `MemoryProvider` port: `recall`, `propose`, `admit`, `MemoryCandidate`, `admission_confidence`, the `NoMemoryProvider` refusal, and the per-desk singleton (DEC-0317).
+    - [CT-44 — QMA knowledge source](contracts/ct-44-qma-knowledge-source.yaml) — defines `KnowledgeSource`, `CorpusSnapshot`, `Citation`, `Provenance`, `evidence_confidence`, literal and locator search, and the citation copy gate (DEC-0318).
+    - [CT-45 — QMA model deployment and broker](contracts/ct-45-qma-model-deployment-broker.yaml) — defines `ModelClassRequest`, `Deployment` with `auth_mode` and the optional `model_family`, routing policies, `ReviewPolicy`, and the `CredentialBroker` allowlist and egress rule (DEC-0314, DEC-0323).
+    - [CT-46 — QMA execution environment and job](contracts/ct-46-qma-execution-environment-job.yaml) — defines the `ExecutionEnvironment` declaration (kinds, `network` values, `max_in_flight`), `ComputeRequirement`, Compute Router refusals, and `JobHandle` states including `unknown` (DEC-0316).
+    - [CT-47 — QMA experiment spec](contracts/ct-47-qma-experiment-spec.yaml) — defines `ExperimentSpec`: content-addressed, lineage DAG edges, `BacktestHandle`/`StrategyHandle`, the Experiment Ledger link, and the qmb door (DEC-0316, DEC-0313).
+    - [CT-48 — QMA mailbox envelope](contracts/ct-48-qma-mailbox-envelope.yaml) — defines the mailbox `Envelope` (`MessageKind`, `DeliveryState`, `dead_letter`, the operator approval queue), `WakePolicy` fields, and the delivery projection (DEC-0319).
+    - [CT-49 — QMA routine](contracts/ct-49-qma-routine.yaml) — defines the `Routine` record: a Quant-owned scheduled trigger with caps, continuation budget, escalation target, and journal events (DEC-0328).
+    - [CT-50 — QMA refinement proposal](contracts/ct-50-qma-refinement-proposal.yaml) — defines `RefinementProposal`: the closed edit kinds, the staging store, validators, `apply`, and `role.overlay` versus `role.base` (DEC-0321).
+    - [CT-51 — QMA task ledger entry](contracts/ct-51-qma-task-ledger-entry.yaml) — defines the Task Ledger entry schema (`authored_by`, `dispatch_lease`, the daemon-authored `reassigned`/`unknown_tail` kinds) and the `TaskCompleted` structured append (DEC-0308).
+- op: insert_before_heading
+  heading: '## Golden scenarios'
+  text: |
+    - [ADR-0020 — QMA agentic system](decisions/ADR-0020-qma-agentic-system.md) — records the QMX agentic system as new application-layer components COMP-QMA-CORE, COMP-QMA-WIRE, and COMP-QMA-DAEMON: a daemon plus the QMA SDK plus a wire contract built ON QMF, definitions-only core, sole-writer daemon, contract-only wire, one Python asyncio runtime, the money-path reachability barrier, and no execution tool at any account role (AD-1 through AD-29; DEC-0300 through DEC-0350, with DEC-0360 through DEC-0379 dead).
+- op: insert_before_heading
+  heading: '## Active lenses'
+  text: |
+    - [SCN-0013 — Quant over the wire](scenarios/SCN-0013-quant-over-the-wire.md) — demonstrates the first milestone: a Quant reachable through models over the wire, from the `initialize` handshake and a wire command to the daemon's model-proxy routing and the durable event stream (DEC-0304, DEC-0314, DEC-0333).
+    - [SCN-0014 — money-path barrier](scenarios/SCN-0014-money-path-barrier.md) — demonstrates the money-path reachability barrier refusing an execution act at every account role, "paper only" included, at the Tool Registry and at environment placement (DEC-0341, DEC-0327).

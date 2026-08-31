@@ -1,0 +1,198 @@
+ledger:
+  - id: DEC-0329
+    title: "QMA spine AD-1..AD-29 adopted in full; the Cut-outright table is spine law (D21); every Deferred row and every memlog assumption is operator-overridable; validation closed dry 2026-08-29"
+    statement: "The QMA architecture spine — architecture-QMA-2026-08-28/ARCHITECTURE-SPINE.md, status FINAL (updated 2026-08-29), AD-1 through AD-29 with its Inherited Invariants, Consistency Conventions, Stack, Structural Seed, Capability->Architecture Map, Deferred (22 rows), Cut-outright (20 rows) and Vocabulary — is ADOPTED IN FULL as the v1 architecture of the QMX agentic system (daemon + QMA SDK + wire contract), a new application-layer consumer beside QMB and QML, on the operator's absorption order SRC-15 (2026-08-29, which outranks the sitting folder where they disagree, constitution L1). The spine was drafted under the sitting's 'I draft, operator ratifies' mode; the reviewer gate grew it from 26 to 29 ADs (AD-27 store lifecycle/backup/restore, AD-28 money-path reachability, AD-29 routines/continuation) and the multi-round validation pass closed verified=true dry=true remaining=0 on 2026-08-29 after six surgical divergence fixes (AD-6 telemetry carries no journal_seq; AD-11 validator also rejects verifier_ref; AD-22 role.base written only by an operator-principal role.set_base command + AD-24 gate; AD-9/AD-8 unknown_tail; AD-8 definition-store single agent write exception; AD-15/AD-10 model_family optional). Per D21 the Cut-outright table and the Deferred table (each with its stated revisit condition) are SPINE LAW: anything on neither table and not in D1..D23 is out of scope for v1, nothing in the Cut table is revived (DEC-0360..0379), and every Deferred row stays deferred with its stated revisit condition (GAP-0070..0091). RATIFICATION POSTURE: every absorbing ledger entry is status: ratified with authority: rider sources (the memlog and spine are rider material like every prior child spine) and every absorbing doc carries status: ratified so lint_docs --strict stays clean; yet every Deferred row and every memlog (assumption) entry — plus the five operator-flagged items (AD-15 account pooling, AD-15 loopback proxy, AD-25 planned Windows VPS, the word plugin, the AD-7 desk-level lead flag) — is OPERATOR-OVERRIDABLE in one line and surfaced in the changelog cheap-veto register (see veto-register.md). Nothing in the docs grants implementation, credential, order, promotion, live-money or destructive authority; that arrives only through the factory pipeline."
+    status: ratified
+    rationale: "The absorption is ordered by SRC-15 (a direct operator ruling of 2026-08-29) over a spine the sitting finalized and the validation pass closed dry on 2026-08-29; D21 makes the Deferred and Cut tables spine law, and the operator's meta-ruling of 2026-08-28 (decide, tag [ASSUMPTION], present for review — only money, vocabulary and irreversible scope reach him) is exactly why every assumption and every Deferred row is surfaced for a cheap veto rather than withheld. No ruling here authorizes implementation, which still ships only through the factory pipeline."
+    sources: [EXT-2360, EXT-2361, EXT-2384, EXT-2391, EXT-2392]
+    component: null
+    tags: [cross-cutting, architecture-spine, qma, adoption, d21, cheap-veto]
+
+  - id: DEC-0330
+    title: "QMA = QuantMind Agents, the SDK only; the system is 'the QMX agentic system' (daemon + SDK + wire); 'Quantum Mind' retired as a dictation error"
+    statement: "QMA expands to QuantMind Agents and names the SDK ONLY — never a framework and never the whole system. The system under design is 'the QMX agentic system' = the daemon + the QMA SDK + the daemon-to-UI wire contract, written in prose as 'the QMX agentic system (QMA)' where the shorthand is unambiguous. The Python namespace is qma.* (qma.core, qma.wire, qma.daemon), which the daemon and wire packages share; there is no blanket qmx. prefix anywhere, and QMX stays the platform name. 'Quantum Mind' (and 'Quantum Mind Agents') is a RETIRED name — a dictation error in older notes — and QMA as the name of the whole system is retired with it (operator correction 2026-08-28)."
+    status: ratified
+    rationale: "Operator ruling 2026-08-28 (memlog L10) then his explicit correction (memlog L20): QMA is the SDK's own name, QuantMind not Quantum Mind, and the abbreviation for the SYSTEM had drifted back and was re-narrowed. A vocabulary call the operator owns."
+    sources: [EXT-2362]
+    component: null
+    tags: [cross-cutting, naming, qma, quantmind-agents, retired-name]
+
+  - id: DEC-0331
+    title: "Quant replaces Bot for the persistent named organizational actor; Steward retired; ActorId grammar quant:<desk_slug>/<quant_slug>; Bot stays the platform's trading-strategy instance"
+    statement: "The persistent named organizational actor is a QUANT — a Role instantiated with a name, memory scope, missions, routines, preferences, a WakePolicy and a mailbox, plus a Quant Ledger opened only while it carries its desk's lead flag (AD-9). 'Quant' replaces the transcript's 'Bot' and the options-sheet's 'Steward' (both retired for the agentic actor). An Agent is a Quant's running instance and a Subagent is an Agent spawned by an Agent (never wider than its parent, no mailbox). The address grammar is ActorId = quant:<desk_slug>/<quant_slug>, with the five fixed desk_slug values research, trading, dev, analysis, pm; desk membership is a field on the Quant record, never parsed from the slug, and slugs are never reused. 'Bot' is never used for an agentic actor: it stays the platform's trading-strategy instance (L1 bots trade, AD-29/AD-33), and 'quant' is never used as an adjective."
+    status: ratified
+    rationale: "Operator ruling 2026-08-28 (memlog L24) with the options-sheet reconciliation (memlog L33) and AD-7: the operator needed a name distinct from the platform's Bot and chose the quant vocabulary; the ActorId grammar and the five desk slugs are the mechanical consequence."
+    sources: [EXT-2363]
+    component: null
+    tags: [cross-cutting, naming, quant, actorid, bot-collision]
+
+  - id: DEC-0332
+    title: "Fresh start: workroom/agentic-system-planning deleted and NOT an input; the transcript is a seed, not a spec; the system is multi-agent by design"
+    statement: "The agentic system is a FRESH START. The workroom/agentic-system-planning folder (a QMA Cordis kernel contract and paper research) was deleted by the operator to the Recycle Bin and is NOT an input; nothing may be salvaged from it, cited from it, or depended on unless the transcript says the same thing (Cut row: salvage from that folder is out). The ChatGPT design transcript is a SEED (brainstorming), not a spec — build on top of it and think, do not transcribe it. The system is MULTI-AGENT BY DESIGN: many agents at once, subagents spawned Claude-style, loops and graphs, and Task Graph coordination — group chat as the primary coordination mechanism is Cut, because parallel workers synchronize through the Task Graph, not chat."
+    status: ratified
+    rationale: "Operator directions 2026-08-28 (memlog L9 fresh start, L27 meta-ruling seed-not-spec / multi-agent) and the packet-delta cut of the loop re-centring; the Cut-outright table records both the salvage bar and the group-chat bar with their one reasons."
+    sources: [EXT-2364, EXT-2386, EXT-2388, EXT-2392]
+    component: null
+    tags: [cross-cutting, fresh-start, seed-not-spec, multi-agent, scope]
+
+  - id: DEC-0333
+    title: "Build priority: daemon, data layer, wire API and DevOps first; a Quant reachable through models over the wire is the first milestone; the UI and its extension SDK are Deferred while the wire contract and the variables registry bind now"
+    statement: "The build order (operator 2026-08-28, SRC-15) ships the daemon, the data layer, the wire API and DevOps FIRST, and a Quant reachable through models over the wire is the FIRST MILESTONE. The UI has not been started and is not planned soon, so the UI extension SDK, UI contribution points, UI plugin packaging and the qma-ui-contract package beyond a stub are DEFERRED to a later UI session (revisit once the daemon API is live and stable, GAP-0081). BUT the daemon-to-UI wire contract (AD-5) and the configurable-variables registry (AD-26) are NOT deferred and bind now: the API needs a client, the UI may be live by the time epics are coded, and both sides must bind to a fixed, versioned wire. The wire adopts the packet's 26-noun vocabulary (9 commands, 7 queries, 10 noun.verb events) only alongside AD-5's versioning rule (initialize handshake, semver protocolVersion additive-only within a major, wire.deprecation_minors)."
+    status: ratified
+    rationale: "Operator constraints 2026-08-28 (memlog L12 backend-first, L13 wire must be fixed and versioned now, L21 UI deferred with revisit condition) and SRC-15's build order; the packet-delta identified the missing wire versioning rule the spine supplies."
+    sources: [EXT-2365, EXT-2385, EXT-2387]
+    component: null
+    tags: [cross-cutting, build-order, first-milestone, ui-deferred, wire-binds-now]
+
+  - id: DEC-0334
+    title: "One Python 3.14 asyncio daemon — L31 dispositive; the QMA stack pins"
+    statement: "The daemon is ONE Python 3.14 asyncio process built WITH the QMF libraries — L31 dispositive: no second daemon runtime and no QMF contract re-implemented across a language boundary (exact money/time, fingerprints, typed refusals, registry records, correlation_id are imported, never re-derived, L31/DEC-0122); the hybrid escape hatch is language-specific workers and non-Python clients attaching over the wire, and the RLM kernel is a persistent Python interpreter inside the Analysis worker's Docker container supervised over the typed host_request bridge (AD-14), never the daemon process. The QMA stack pins (recorded in docs/architecture/stack.md, values by reference): CPython 3.14 daemon runtime; SQLite 3.50.4 bundled/WAL, below the 3.51.3 multi-writer floor BY DESIGN under AD-6's one-connection sole-writer rule (the floor binds only if sole-writer is relaxed); JSON-RPC 2.0; websockets 17.1; uv 0.12.7; ruff 0.16.5; pyright 1.1.411; pytest 9.1.1; poethepoet 0.48.0; duckdb 1.5.5 (rebuildable fold views only); Docker Engine 29.7.2 (29.6.1 installed, Docker Desktop/WSL2 host); OpenTelemetry Python SDK 1.44.0; OpenCodex 2.34.0 published / 2.31.0 installed; the JSON-Schema validator is [UNPINNED] (build-gate choice, stated not omitted); Hindsight v0.9.2 + pgvector 0.8.6 are DEFERRED (arrive only with the deferred memory provider)."
+    status: ratified
+    rationale: "Operator ruling 2026-08-28 D3 (memlog L36) with AD-4 and the re-verified Stack table (memlog L99, L134); L31 forbids re-implementing QMF contracts across a language boundary, which is what makes a single Python runtime dispositive rather than a preference."
+    sources: [EXT-2366, EXT-2367, EXT-2389]
+    component: COMP-QMA-DAEMON
+    tags: [daemon, python-3.14, l31, stack, one-runtime]
+
+  - id: DEC-0335
+    title: "Contract-hub house style: definitions-only qma-core, runtime-only qma-daemon, contract-only qma-wire; every runtime concern enters through a core-defined port"
+    statement: "QMA is a CONTRACT HUB in the same house style as QMF, so QMF and QMA read as one system: qma-core is DEFINITIONS-ONLY and depends only on qmf-core (its refusals are variants of qmf-core's typed base, and no parallel base is minted for anything qmf-core defines, AD-3); qma-daemon is the ONLY process that runs anything and the SOLE WRITER; qma-wire is the only cross-boundary contract package. Every runtime concern enters through a core-defined PORT, and the seven ports are MemoryProvider, ModelDeployment, ExecutionEnvironment, KnowledgeSource, ToolAdapter, ComputeProvider and ContextCompiler, each declaring a cardinality and (for singletons) a scope key at its contribution point (a second singleton binding is a hard startup error naming both plugin ids). Contributions are REVERSIBLE and SCOPED (every registration returns a disposer, AD-21). Plugins are named by desk with prefix tokens research-*, trading-*, dev-*, analysis-*, pm-* (AD-1, AD-2, options-sheet D1)."
+    status: ratified
+    rationale: "Operator ruling 2026-08-28 D1 (memlog L37) with AD-1/AD-2/AD-3 and the inherited platform conventions (memlog L15); the contract-hub split is the same paradigm the parent QMF spine uses, chosen so the two read as one system and no port has two owners."
+    sources: [EXT-2368, EXT-2388, EXT-2389]
+    component: COMP-QMA-CORE
+    tags: [contract-hub, ports, house-style, reversible, paradigm]
+
+  - id: DEC-0336
+    title: "Deployment envelope: workstation-default daemon, Docker workers on host, remote deploy dialing out through AD-17, UI-driven not a QMA command line; the trading-node VPS is untouched"
+    statement: "The daemon runs on the operator's WORKSTATION BY DEFAULT ('most or 90% of the time these agents are going to be working on my machine here, like most harnesses'); Docker workers run in that host by default; Quants, Missions and Workers are deployable to remote workspaces through AD-17's contract with remote workers DIALING OUT to the daemon (no inbound port on the deployed side — the daemon's own listener is the single inbound port, non-loopback only under TLS + an explicit recorded operator configuration, with an unauthenticated or plaintext non-loopback bind a hard startup refusal, AD-5). Deployment is driven from the operator's UI/wire commands, never a QMA command line: QMB's qmb CLI stays the platform's single command-line surface (DEC-0185 Ruling C). Mailboxes and the journal live in the daemon store wherever it runs; there is no external relay. The trading-node VPS is untouched (AD-28 barrier). The Windows VPS for the computer-use agent is PLANNED, registered when provisioned (GAP-0070)."
+    status: ratified
+    rationale: "Operator ruling 2026-08-28 D15 (memlog L38, supersedes the sheet's always-on-host lean) with AD-25/AD-5/AD-17; the daemon is authoritative and local, remote deployment is a first-class UI-driven capability of the contract, and QMB's CLI stays the sole command-line surface (DEC-0185)."
+    sources: [EXT-2369]
+    component: COMP-QMA-DAEMON
+    tags: [deployment, workstation-default, dial-out, no-cli, live-boundary]
+
+  - id: DEC-0337
+    title: "Namespace: qma.* for the SDK, daemon and wire; no blanket qmx. prefix anywhere; plugins and ledger views named by desk"
+    statement: "The SDK, daemon and wire share the qma.* namespace (qma.core, qma.wire, qma.daemon; packages qma-<name>, imports qma.<name>, PEP 420, no qma/__init__.py). There is NO blanket qmx. prefix anywhere — QMX stays the platform name and is never assumed as a subsystem prefix. Plugins and ledger views are named by DESK with the prefix tokens research-*, trading-*, dev-*, analysis-*, pm-*; the wire and ledger vocabulary is desk/domain-scoped, never blanket-prefixed."
+    status: ratified
+    rationale: "Operator ruling (transcript T-3968 'I don't like QMX because QMX is assuming the entire platform', register #73; memlog L18 candidate, L20/L26 ratified) with AD-1 and the Conventions Naming row; a naming call the operator owns and stated in his own words."
+    sources: [EXT-2370]
+    component: null
+    tags: [cross-cutting, namespace, no-qmx-prefix, desk-scoped]
+
+  - id: DEC-0338
+    title: "Ledgers are task-level: no global ledger and no per-desk/per-profile ledger store; Task Ledger, a lead-Quant Quant Ledger, an Experiment Ledger; desk ledgers are read-time views; Mission reports Deferred"
+    statement: "Ledgers are TASK-LEVEL. There is no global ledger and no per-desk/per-profile ledger STORE, and no remote agent appends to a desk-central ledger ('In an architectural sense, that does not make any sense'). The TASK LEDGER is one per Task for its whole life across every Agent, appended only by the Agent holding the Task's dispatch_lease through before_ledger_append and PERSISTED BY THE DAEMON (AD-6, AD-9); every entry carries attempt_no, authored_by and the model deployment; reassignment is a daemon-authored 'reassigned' entry incrementing attempt_no and 'unknown_tail' is the second daemon-authored entry kind (authored_by: daemon, no model). A QUANT LEDGER exists only for the desk's lead Quant (quant_ledger_lease), opened while the Quant carries its desk's lead flag and retained if the flag moves; it records desk-level work (missions opened/closed, delegation, escalation, standing decisions) and never restates another Task's ledger. An EXPERIMENT LEDGER is per experiment, appended by the registering Task's dispatch_lease holder. Research/Trading/Dev/Analysis/PM ledgers are read-time desk VIEWS (indexes by desk, quant, agent, mission, task, experiment, date) over the three stores, never stores. Mission reports (an agent-derived synthesis over a mission's task ledgers) are DEFERRED (GAP-0082, operator not yet certain). The daemon event journal is neither a ledger nor telemetry."
+    status: ratified
+    rationale: "Operator ledger rulings 2026-08-28 (memlog L22, granularity L25, follow-up L29) with AD-9; the TaskCompleted structured append (packet-delta KEEP) is what makes the task ledger the agent-authored institutional record the operator asked for."
+    sources: [EXT-2371, EXT-2385]
+    component: COMP-QMA-DAEMON
+    tags: [ledgers, task-level, quant-ledger, desk-views, mission-reports-deferred]
+
+  - id: DEC-0339
+    title: "Hooks on every primitive: every daemon-owned primitive ships its own before/after hook events; hooks are the single enforcement surface and the control surface, never optional; closed-and-addable registry"
+    statement: "Every daemon-owned PRIMITIVE ships its own before/after hook events (task create/complete, ledger append, memory write, skill write, artifact/experiment register, env create/remove, subagent spawn, message send, graph transition, session start/end, mission start/complete, plugin activate/deactivate, routine fire, tool, proposal stage/apply, hook register — twenty-three verbs paired before_<verb>/after_<verb>, plus exactly two phase-less blocking controls agent_stop and review_required). Hooks are the SINGLE ENFORCEMENT surface in the agent path and the control surface, NEVER an optional feature; the registry is CLOSED-AND-ADDABLE and every new daemon-owned primitive ships a before_<verb> gate AND an after_<verb> event (omitting an after_ is a spine amendment, never an author's judgment call). Phase law: before_* and the two controls may return deny/ask/defer/block_stop (allow is the nothing-returned resolution) while after_* returns only observe or (after_tool) updated_output; illegal decision-for-phase or an illegal HookResult field for the phase is refused AT REGISTRATION; hooks fail closed (timeout -> deny) with three carve-outs — before_ledger_append fails OPEN (L39), agent_stop resolves a timeout to observe, and every after_* timeout resolves to observe."
+    status: ratified
+    rationale: "Operator standing principle 2026-08-28 (memlog L30; his own words, EXT-2453: 'everything we create here, we have to have hooks for it') with the options-sheet D7 amendment (memlog L35) and AD-10/AD-11; hooks are how deterministic guards stop agents from being 'too well agentic', which is why they are the single enforcement surface rather than an optional feature."
+    sources: [EXT-2372, EXT-2385]
+    component: COMP-QMA-DAEMON
+    tags: [hooks, enforcement-surface, every-primitive, phase-law, closed-and-addable]
+
+  - id: DEC-0340
+    title: "Three control primitives — Graph Template (authored, versioned, stateless), Loop (a node kind with runtime-owned stopping condition/budget/escalation), Skill (Skill != Loop) — with the Graph Template vs Task Graph name split; graphs, not loops, are the organizing centre; no Mission Template in v1"
+    statement: "There are three control primitives: a GRAPH TEMPLATE is authored, plugin-contributed, versioned topology with NO runtime state (instantiating one emits Tasks only); a LOOP is an executable control cycle with a RUNTIME-owned stopping condition, budget and escalation, expressed as a node kind inside a Graph Template (a loop node emits exactly one Task per iteration, minted by the daemon); a SKILL is a reusable procedure/knowledge and Skill != Loop (a Skill may invoke a Loop, and a skill an overlay adds is knowledge, never a capability grant). The GRAPH TEMPLATE vs TASK GRAPH name split is load-bearing: the daemon's Task Graph is the ONLY place work state lives, so a plugin graph never holds node state beside the daemon's task state. GRAPHS, NOT LOOPS, are the organizing centre (the operator's last word, T-4954); loops are in-house and reach the registry only through AD-22; there is no Mission Template registry in v1 (GAP-0084), the Mission Compiler seeds from a Graph Template. Node kinds are closed: task, agent, loop, conditional, parallel_branch, join, approval_gate, human_gate, deterministic_script, artifact_dependency."
+    status: ratified
+    rationale: "Adopted by the sitting from the ChatGPT design transcript after the operator declined to re-answer D8 and directed it to the transcript (memlog L39), with AD-12/AD-13, the packet-delta cut of the 11-loop re-centring, and T-4954 ('we have to have a few graphs noted down, not loops'); the Graph Template vs Task Graph name split is the drafter's adversary fix, not an operator ruling (cheap-veto V9)."
+    sources: [EXT-2373, EXT-2386]
+    component: COMP-QMA-DAEMON
+    tags: [graph-template, loop, skill, task-graph-split, no-mission-template]
+
+  - id: DEC-0341
+    title: "No execution tool at any account role and the money-path reachability barrier"
+    statement: "There is NO execution tool at ANY account role, 'paper only' included. The Trading desk is READ-ONLY; 'paper only' is a real-venue account role and NEVER a sandbox — no rule, tool, environment, permission or test treats a paper account as a place where an act is safe because it is not live (AD-25). The act-level DENY-LIST refuses every order/binding/sizing/promotion act at the Tool Registry (order submit/amend/cancel/replace; open/close/reduce/hedge a position; set/amend protection; size/re-size/mint a sizing decision; create/amend/activate/stand-down/delete a bot-to-book binding; set a Book mode/seat state/Book/BMS parameter/priority rank/capital floor; arm/disarm a kill switch or node control action; transition any registry artifact between zones), refused at REGISTRATION with ProhibitedMoneyPathTool before check_fn, an MCP server advertising a prohibited tool refused whole, the deny-list being code not configuration (AD-16). The REACHABILITY BARRIER (AD-28) makes placement and registration refuse any environment or edge that could reach the trading node: every ExecutionEnvironment carries a required network field of none or allowlist (refused without an enumerated allowlist), venue/broker/exchange/trading-node hosts sit on a code-declared deny-list no allowlist may name, no worker image may contain or import qmf-venue or a broker/exchange SDK, remote_host and desktop may not name the trading-node VPS or any host carrying a trading credential, and the computer-use agent's browser profile carries no venue session or saved credential and may not be handed a venue login by any means. Nothing above a bot touches the market (L36)."
+    status: ratified
+    rationale: "AD-16/AD-25/AD-28 with the Cut row 16 (a Trading-desk execution tool, 'paper only' included) and L36/L39; QMA's money-path output is never an order, and the barrier is a refusal at placement or registration, never a hook deny."
+    sources: [EXT-2374, EXT-2390]
+    component: COMP-QMA-DAEMON
+    tags: [money-path, no-execution-tool, deny-list, reachability-barrier, paper-is-real]
+
+  - id: DEC-0342
+    title: "No memory engine in-house: memory enters through the MemoryProvider port with admission-gated candidates and a typed refusal when nothing is bound; Hindsight is the deferred first backend behind an eval"
+    statement: "QMA builds NO memory engine in-house. Memory enters through the qma-core MemoryProvider PORT (per-desk singleton) with admission-gated candidates: recall (token-budgeted), propose and admit, MemoryCandidate carrying a proposer ref, provenance, validation_state and the daemon-computed scalar admission_confidence (a proposing agent may never set, suggest or influence it, and a propose call carrying it is refused). Once a provider is bound, admission is the daemon's deterministic admission gate alone (the candidate written through before_memory_write, never a RefinementProposal, requiring no operator principal); with NO provider bound, recall returns the typed refusal NoMemoryProvider (AD-1) and candidates stage under AD-22 wrapped in a RefinementProposal. Hindsight (v0.9.2) is the deferred first backend admitted only behind a QMA-owned eval on real desk experience (GAP-0072; its Postgres+pgvector storage is the provider's isolated dependency, never the QMA journal). The no-database-server rule binds QMA's OWN evidence and metadata stores (journal, ledgers, artifact, staging, telemetry), never a provider's internal storage sitting behind a QMA-owned port."
+    status: ratified
+    rationale: "Adopted from transcript row 43 (ChatGPT-transcript row 43 adopted by the sitting, memlog L42 — no operator ruling behind it) with AD-18/AD-22 and the Deferred external-memory-backend row; prevents arbitrary agent text becoming trusted memory and memory becoming the ledger, while keeping the no-database-server rule from silently barring a provider's own storage."
+    sources: [EXT-2375]
+    component: COMP-QMA-DAEMON
+    tags: [memory, memoryprovider, admit, no-memory-provider, hindsight-deferred]
+
+  - id: DEC-0343
+    title: "Knowledge is a read-only, provenance-carrying corpus behind the KnowledgeSource port; two confidences never conflated; hybrid indexing Deferred"
+    statement: "Knowledge is a READ-ONLY, provenance-carrying corpus behind the qma-core KnowledgeSource PORT — the adapter over the STRATS plain-file library ingested unchanged, with CorpusSnapshot (a content-addressed tree digest), Citation (source_ref, snapshot_ref, locator) and Provenance (an opaque corpus-authored evidence label QMA stores and surfaces verbatim and never parses, plus a map of exactly six evidence_confidence dimensions whose keys are declared once per source in the adapter's confidence_dimensions manifest field and fixed for the source's life, a Citation key-set/count mismatch refused with ProvenanceShapeMismatch). Search is LITERAL and LOCATOR-BASED only (grep-class, no ranking, no embedding); on cite the daemon copies the cited bytes into the artifact store through before_artifact_register and Citations resolve against that copy (a retrieval against an uncopied snapshot returns StaleSnapshot). The two confidences are NEVER conflated: evidence_confidence on knowledge (six dims, never scalarized) vs admission_confidence on memory (one scalar), neither derived from the other. Hybrid/semantic indexing is DEFERRED (GAP-0073) until the corpus holds an ingestible file and STRATS layout/serialization/stable-id are ratified upstream."
+    status: ratified
+    rationale: "Adopted from transcript rows 47-48 (operator doubt resolved by the answer he did not refuse, memlog L43) with AD-19 and the Deferred knowledge-indexing row; the name-split law keeps knowledge from silently becoming memory and keeps QMX fields out of the STRATS library."
+    sources: [EXT-2376]
+    component: COMP-QMA-DAEMON
+    tags: [knowledge, knowledgesource, read-only, evidence-confidence, indexing-deferred]
+
+  - id: DEC-0344
+    title: "Model proxy chain ModelClass -> Deployment -> Credential Broker, OpenCodex behind the Deployment contract with auth_mode none + loopback bind, QMA never pools accounts, local-proxy credentials outside QMA's namespace"
+    statement: "The model proxy is the deterministic chain ModelClass -> Deployment -> Credential Broker (a load balancer, 'not another LLM deciding where prompts go'). The four ModelClass values are REASONING_HIGH, WORKHORSE_GENERAL, CODING_HIGH, FAST_CHEAP (SCREAMING_SNAKE); the requested class selects the candidate pool and the router never crosses a class boundary (needs{} plus min_context_tokens are the sole further filter; an empty pool returns NoEligibleDeployment naming the class and the unmet constraint). OpenCodex is the FIRST ModelDeployment implementation sitting BEHIND the Deployment contract, NOT behind the Broker. A local-proxy Deployment carries auth_mode none (no QMA secret value ever crosses into the proxy) and must bind LOOPBACK on the daemon host (NonLoopbackProxy otherwise); an unauthenticated loopback proxy is governed by the AD-26 configurable proxy.allow_unauthenticated_loopback (default true, ui-editable, a memlog assumption and operator-overridable, refused with UnauthenticatedProxy when false). QMA NEVER pools accounts: where pooling exists it is the operator's own proxy under his own account terms, QMA registers each proxy target as one logical Deployment and records the true deployment honestly. model_family is OPTIONAL on the Deployment record (assigned only by an operator command; an unassigned family is routable but ineligible for every ReviewPolicy comparison, NoEligibleReviewer). A local proxy's own provider credentials stay outside QMA's namespace, never read, copied, migrated or referenced by QMA; QMA-owned credentials resolve from Windows Credential Manager through the Credential Broker (L34), never ~/.opencodex."
+    status: ratified
+    rationale: "Adopted from transcript rows 51-56 with sheet lean A (memlog L41) and the validation-pass resolutions of the two assumption tags (memlog L105 local-proxy custody, L194 pooling, loopback default and optional model_family) — resolved from sources under the meta-ruling and surfaced as cheap vetoes V3/V4/V5 with AD-15/AD-24; OpenCodex sits behind the Deployment contract deliberately not the Broker, and the loopback-unauthenticated default is a surfaced assumption the operator can veto."
+    sources: [EXT-2377]
+    component: COMP-QMA-DAEMON
+    tags: [model-proxy, opencodex, modelclass, credential-broker, no-pooling]
+
+  - id: DEC-0345
+    title: "'promote' is reserved for the L17 live-zone act performed by a human outside QMA; memory candidates are admitted, RefinementProposals are applied; QMA mints no promotion or zone-transition command"
+    statement: "The three closed verbs are one act each, never interchanged. A memory candidate is ADMITTED — MemoryProvider operation admit, validation_state value admitted, scalar admission_confidence (AD-18). A RefinementProposal is APPLIED out of the staging store through before_proposal_apply, where AD-24's operator-principal check runs (AD-22). Only a registered artifact is PROMOTED into the live zone, by a HUMAN and OUTSIDE QMA (L17, AD-24, AD-25): QMA mints NO promotion or zone-transition command at all (AD-2 makes every qmf-registry zone-transition surface uncallable and AD-16 puts zone transition on the tool deny-list), and records only the resulting artifact ref. 'Promote' and 'promotion' never appear for memory or refinement anywhere in the spine or its projections."
+    status: ratified
+    rationale: "Resolved from sources under the operator's meta-ruling delegation 2026-08-28 (memlog L104, one of the three findings withheld at L102; a vocabulary call the operator owns and can overturn in one line, cheap-veto V7) with the Conventions 'Closed verbs' row and AD-18/AD-22/AD-24/AD-25; vocabulary the operator cares about, reserving one verb from carrying three meanings."
+    sources: [EXT-2378]
+    component: null
+    tags: [cross-cutting, closed-verbs, admit, apply, promote]
+
+  - id: DEC-0346
+    title: "Vocabulary adoption and scope reconciliation: 'plugin' and the qualified 'RLM kernel' adopted for QMA prose; the parent ban stays in force for QMF/QMB/node prose"
+    statement: "'plugin' (agentic sense) is the transcript's and the operator's own word for a desk extension package (AD-21) and is ADOPTED for QMA prose; 'kernel' appears only in the qualified phrase 'RLM kernel' — the Analysis worker's persistent Python interpreter (AD-14) — never bare, never for qmf-core and never for the Trading Node. The parent's ban STAYS IN FORCE for QMF/QMB/node prose: 'engine' stays banned for backtesting, 'exam' stays banned outright, and 'kernel' is a retired name for qmf-core/the Trading Node ('QMB is a library and a CLI, never an engine or kernel', docs/glossary.md); no constitution law bans 'plugin'. The adoption is recorded [ADOPTED 2026-08-28 - transcript vocabulary; parent ban is QMB-scoped]; QMA's adoption is NEVER presented as lifting the parent ban. The glossary and AGENTS.md carry the scoped note."
+    status: ratified
+    rationale: "SRC-15 settles memlog L102/L140/L182 (a withheld finding) and the operator meta-ruling closed it from sources (memlog L103, L205): the operator uses the word himself, the parent ban is QMB/QMF/node-scoped in docs/glossary.md, and the adoption is reversible if refused. A vocabulary call the operator owns."
+    sources: [EXT-2379]
+    component: null
+    tags: [cross-cutting, plugin, rlm-kernel, scope-reconciliation, parent-ban]
+
+  - id: DEC-0347
+    title: "Dependency direction for QMA: AD-2's diagram is the whole rule (undrawn edge = default-deny); qma-daemon reads-and-calculates qmf-registry and qmf-risk with an enumerated surface; qmf-venue importable by none; plugin halves meet only at qma-wire"
+    statement: "AD-2's dependency diagram is the WHOLE rule and an undrawn edge is DEFAULT-DENY. qma-daemon -> qmf-registry and qma-daemon -> qmf-risk are READ-AND-CALCULATE only, the permitted surfaces enumerated default-deny in qma-core; QMA may write only content-addressed dev-zone candidates through qmf-registry (AD-14) and may never construct a binding, Book, BMS, seat, control-action, exit/protection, priority-rank or promotion record, nor call a zone-transition surface. qmf-venue is importable by NO QMA package, worker or plugin. A plugin's daemon-half and worker-half meet ONLY at qma-wire (the daemon-half may depend on qma-wire and qma-core and never on qma-daemon; a non-plugin worker depends on qma-wire alone). L30's 2026-08-21 roster-scope annotation makes these APPLICATION dependencies under L31 (DEC-0171/DEC-0184 precedent), so QMA's read-and-calculate edges stand rather than being removed."
+    status: ratified
+    rationale: "AD-2 with the constitution L30 annotation and the memlog edge-narrowing (L60) and banned-vocabulary close (L103); L30 read as roster-internal keeps the read-and-calculate edges legal under L31, following the DEC-0171/DEC-0184 precedent, and default-deny makes qmf-venue and every undrawn edge unreachable."
+    sources: [EXT-2380, EXT-2389]
+    component: COMP-QMA-CORE
+    tags: [dependency-direction, default-deny, read-and-calculate, l30, qmf-venue]
+
+  - id: DEC-0348
+    title: "Retired names recorded; Backtesting Service is the analysis-backtest plugin's daemon-half adapter, never a second backtesting engine"
+    statement: "Retired names recorded (spine Vocabulary table): 'Quantum Mind' (dictation error) -> QuantMind Agents; 'Steward' (options-sheet draft) -> Quant; 'QMX Backtesting Framework' -> QMB; 'QMX Event Ledger' -> the event journal; 'Bot' in the agentic sense -> Quant (Bot stays the platform's trading-strategy instance); 'Context Engine' -> Context Compiler; 'Knowledge Base' -> Knowledge / KnowledgeSource; 'Kanban' -> Task Graph. The BACKTESTING SERVICE is the analysis-backtest plugin's daemon-half adapter that places one qmb job per environment and returns BacktestHandles, owning no scheduler, no parallelism and no run ledger — never a second backtesting engine and never QMA re-specifying QMB (which is owned elsewhere)."
+    status: ratified
+    rationale: "Spine Vocabulary table (Replaces column) with the Backtesting Service definition (memlog L128); recording the retired names keeps the projections from re-using a name the spine bars from interchange."
+    sources: [EXT-2381]
+    component: null
+    tags: [cross-cutting, retired-names, vocabulary, backtesting-service]
+
+  - id: DEC-0349
+    title: "The desk-level lead Quant is a persistent actor keeping a Quant Ledger; one lead flag per desk and the lead's mailbox as catch-all were inferred, never ruled, and are Deferred"
+    statement: "The desk-level lead Quant is a PERSISTENT ACTOR that keeps a Quant Ledger (opened while it carries its desk's lead flag and retained if the flag moves; a Quant that has never held the flag has no Quant Ledger) — ratified by reading the operator's follow-up ruling 'task-level ledgers CONFIRMED correct; desk-level quant ledgers OK' against the ledger-granularity item 'a desk-level lead quant keeps its own larger work ledger', plus his hierarchy words (memlog 2026-08-28). But ONE lead flag per desk and the lead's mailbox as the catch-all for undeliverable Envelopes were INFERRED, never ruled, and are DEFERRED (GAP-0071): until the operator rules both, a second lead flag on a desk is a HARD STARTUP ERROR and an undeliverable Envelope resolves to dead_letter (AD-20) rather than to the lead."
+    status: ratified
+    rationale: "Memlog L28 (open question), L29 (follow-up ruling), L63 (the [ASSUMPTION] tag), L133 (resolution: lead Quant exists) and L183 (narrowing: one-flag and catch-all inferred, moved to Deferred) with AD-7/AD-20; the persistent-actor existence is ratified while the two inferred details carry a cheap veto through GAP-0071."
+    sources: [EXT-2382]
+    component: COMP-QMA-CORE
+    tags: [lead-quant, lead-flag, dead-letter, gap-0071, inferred]
+
+  - id: DEC-0350
+    title: "Constitution touchpoints binding QMA (read-only, recorded in traceability)"
+    statement: "The constitution laws binding QMA read-only, recorded in traceability, are L17 (human live-zone promotion — AD-24 mechanism, AD-25 act outside QMA), L18 (raw evidence retained locally AND an off-machine backup — AD-27), L30 (roster scope annotation of 2026-08-21 — AD-2 read-and-calculate edges), L31 (built with QMF, no contract re-implemented across a language boundary — AD-4, AD-2), L33, L34 (OS secret store / Windows Credential Manager — AD-24), L35 (ADOPTED — a proposed transition may not write over an UNKNOWN job/task, its stream blocked until resolved, AD-12/AD-17), L36 (nothing above a bot touches the market — AD-16/AD-28), L38 (configurable = UI-editable — AD-26) and L39 (no hook decision blocks the recording of evidence — AD-5, AD-6, AD-9, AD-10, AD-21, AD-25, Conventions); plus the parent conventions rows of the Inherited Invariants table. QMA may not amend a parent by assertion — the only parent-facing records this pass writes are the L30 roster-scope reading re-applied to QMA (annotated at source 2026-08-21, cited not re-annotated), the vocabulary-scope reconciliation note for plugin / 'RLM kernel', and these constitution touchpoints in traceability."
+    status: ratified
+    rationale: "Spine Inherited Invariants table with the traceability fixes (memlog L274); the constitution binds QMA read-only and every touchpoint names the AD that discharges it, so a builder reading either the invariant or the AD finds the other."
+    sources: [EXT-2383]
+    component: null
+    tags: [cross-cutting, constitution-touchpoints, inherited, read-only, traceability]

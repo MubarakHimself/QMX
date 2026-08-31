@@ -1,0 +1,7 @@
+# Fragment: append FEAT-0040..0046 (the QMA build order) into the feature inventory.
+# Seat D9. Idempotent (yaml_append_items skips when FEAT-0040 is already present).
+target: _docwork/feature_inventory.yaml
+ops:
+  - op: yaml_append_items
+    key: features
+    items_file: _docwork/qma/harvest/features-qma.yaml

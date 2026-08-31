@@ -1,0 +1,59 @@
+id: CT-49
+name: QMA Routine (scheduled trigger) record contract
+status: ratified
+version: 1  # first minted format version; CT-49 realizes AD-29's Routine as a durable, Quant-owned daemon-state record, absorbed by the 2026-08-28/29 QMX agentic-system sitting (DEC-0328)
+owner: COMP-QMA-CORE  # the Routine record type is defined in qma-core (definitions only, depends only on qmf-core, AD-1); the daemon scheduler owns and runs the live records (DEC-0300, DEC-0328)
+consumers: []  # defined-unwired: no code imports this contract yet (DEC-0328)
+active_consumers: []
+intended_consumers: [COMP-QMA-DAEMON, COMP-QMA-WIRE]  # qma-daemon holds Routine records as declarative daemon state and its scheduler fires them; qma-wire carries the operator-principal create/edit commands and the before_routine_fire / after_routine_fire hook events (DEC-0328, DEC-0304)
+wiring_status: defined-unwired  # ratified surface; no code exists; a Routine record is written only by an operator-principal wire command, and no wiring is authorized from this doc (DEC-0328)
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0328, DEC-0325, DEC-0306, DEC-0304, DEC-0309, DEC-0311, DEC-0312, DEC-0323]
+gaps: []  # AD-29 is ruled outright; missed-fire catch-up is an operator-gated command, not a deferred question; the continuation ceilings this record references are AD-26 registry variables (DEC-0328, DEC-0325)
+purpose: >-
+  One Routine — a durable, Quant-owned scheduled trigger that makes unattended
+  work fire deterministically and never by an LLM's choice. It carries an id, the
+  owning Quant's `ActorId` (`quant:<desk_slug>/<quant_slug>`), a cron expression
+  or interval with an explicit IANA zone, the Goal it supplies to the Mission
+  Compiler, the fully-qualified `graph_template` id `<plugin_id>:<local_id>` the
+  Compiler expands, an enable flag and a max-concurrent cap — and nothing else. It
+  is declarative daemon state, never agent-authored, and UI-editable under AD-26.
+  On each firing the daemon scheduler — not an LLM — mints a fresh
+  `correlation_id`, fires `before_routine_fire` then `after_routine_fire`, and
+  instantiates a Mission through the Mission Compiler as a `machine` principal
+  with no authority an operator command lacks, able to answer no human gate.
+  Routines are the owning rule for the operator's first stated requirement, agents
+  that keep working while he is away, so no LLM decides when work fires and no
+  agent invents work after its budget runs out (DEC-0328).
+invariants:
+  - "A Routine is a durable, Quant-owned scheduled trigger and declarative daemon state: it is never agent-authored, and it is UI-editable under AD-26 through an operator-principal wire command (AD-24), never through the AD-22 admission pipeline — there is no `routine` edit kind, so no agent, hook, Role or Mission may propose, stage or apply one (DEC-0328, DEC-0323)."
+  - "The record carries exactly seven fields and no more: `id`, `owner_ref` (the owning Quant's `ActorId`, AD-7), `schedule` (a cron expression or interval with an explicit IANA zone, AD-6), `goal` (the Goal supplied to the Mission Compiler, AD-12), `graph_template_ref` (the fully-qualified `<plugin_id>:<local_id>` the Compiler expands, AD-13), `enabled` and `max_concurrent`; a Routine names a Graph Template, never a Task Graph, which is the daemon's runtime state (DEC-0328, DEC-0311, DEC-0312)."
+  - "Firing is deterministic and never an LLM decision: the daemon scheduler evaluates the `schedule` against `qmf-core`'s clock in the trigger's declared IANA zone, mints a fresh `correlation_id` (AD-5), fires `before_routine_fire` then `after_routine_fire` (AD-10), and instantiates a Mission through the Mission Compiler (AD-12) by expanding the named `graph_template` (AD-13); no component below the composition root reads the system clock (DEC-0328, DEC-0304, DEC-0309)."
+  - "A firing Routine is a `machine` principal (AD-24) with no authority an operator command lacks: it can answer no human gate, holds no execution authority, and the Mission it starts is instantiated with no authority an operator command lacks; a principal class is a property of an authenticated connection, so no Mission ever carries the `operator` class — a Routine is a scheduling surface, never a money-path surface (DEC-0328, DEC-0323)."
+  - "Missed fires while the daemon is down are recorded, not replayed: the scheduler mints no automatic backfill, and catch-up is an explicit operator-gated command on AD-24's human-gate command list, never a `machine`-principal action (DEC-0328, DEC-0323)."
+  - "The max-concurrent cap bounds how many Missions one Routine may run at once — the value `registry:routine.max_concurrent` (scope routine, homed on this record, ui-editable, AD-26) — and is moved only by this record's own operator-principal write, never by an agent, hook, Role or Mission (DEC-0328, DEC-0325)."
+  - "Continuation is a property of the Agent run, not of the Routine record: an Agent keeps working across ready Tasks in its Mission's Task Graph while `agent_stop` returns `block_stop`, bounded by `registry:continuation.max_consecutive`, `registry:continuation.budget` and `registry:continuation.escalation_target` (all AD-26 registry-homed); an Agent that exhausts its budget escalates to its Quant's mailbox and stops, and never invents work to fill the remainder (DEC-0328, DEC-0325)."
+  - "A disabled Routine (`enabled` false) holds its schedule but the scheduler mints no firing; the `graph_template_ref` is fully-qualified `<plugin_id>:<local_id>`, and a bare local id or an unresolvable template id is refused at the Mission Compiler, never expanded best-effort (DEC-0328, DEC-0312)."
+schema:
+  type: routine  # a durable daemon-state record: a Quant-owned scheduled trigger, declarative and never agent-authored (DEC-0328)
+  fields:
+    - "id: the Routine's own stable identity, a record's own `id` and never a `_ref`; the trigger is addressed by it on the wire and in the event journal (DEC-0328)"
+    - "owner_ref: the owning Quant's `ActorId` `quant:<desk_slug>/<quant_slug>` (AD-7); a conforming `_ref` cross-reference, needing no Conventions whitelist exception; a Routine is Quant-owned and fires as that Quant's `machine` principal (DEC-0328, DEC-0306)"
+    - "schedule: a cron expression or a fixed interval, each carrying an explicit IANA zone (AD-6); timestamps are persisted UTC through `qmf-core`'s clock via the daemon (DEC-0328)"
+    - "goal: the Goal the Routine supplies to the Mission Compiler (AD-12) on each firing (DEC-0328, DEC-0311)"
+    - "graph_template_ref: the fully-qualified `graph_template` id `<plugin_id>:<local_id>` the Mission Compiler expands (AD-13); a Graph Template is authored, versioned and stateless, and is never a Task Graph (DEC-0328, DEC-0312)"
+    - "enabled: the enable flag; a disabled Routine holds its schedule and the scheduler mints no firing (DEC-0328)"
+    - "max_concurrent: the max-concurrent cap on how many Missions this Routine may run at once — the AD-26 variable `registry:routine.max_concurrent` (scope routine, homed on this record, ui-editable), moved only by this record's own operator-principal write (DEC-0328, DEC-0325)"
+  enums:
+    - "firing hook events (closed, AD-10): before_routine_fire | after_routine_fire — the two phases the scheduler fires around each firing and the only routine hook events; `before_routine_fire` fails closed on timeout (`deny`) and `after_routine_fire` resolves a timeout to `observe` (DEC-0328, DEC-0309)"
+    - "principal class of a firing Routine: machine — one value of AD-24's closed principal-class vocabulary; a Routine holds no authority an operator command lacks and can answer no human gate, and the full principal-class set is enumerated on the connection in the qma-wire contract (CT-40) (DEC-0328, DEC-0323)"
+    - "missed-fire disposition (closed): recorded — missed fires while the daemon is down are recorded, never replayed; the only other disposition is an explicit operator-gated catch-up command (AD-24), which is not an automatic path (DEC-0328, DEC-0323)"
+    - "typed refusals on this contract's paths, variants of `qmf-core`'s base (CT-04): `OperatorPrincipalRequired` (a `machine` principal writing a Routine record or requesting a missed-fire catch-up) (DEC-0323, DEC-0328)"
+  units:
+    - "schedule: a cron expression or a fixed interval, each with an explicit IANA zone; every wall-clock policy states its zone and no component below the composition root reads the system clock (AD-6) (DEC-0328)"
+    - "max_concurrent is a count carried by `registry:routine.max_concurrent`; the Agent-run continuation ceilings are the registry variables `registry:continuation.max_consecutive` (count), `registry:continuation.budget` and `registry:continuation.escalation_target` (AD-26) — referenced by name, never restated as literals (DEC-0325)"
+  nullability:
+    - "per `fp1` null is prohibited and an absent value is an omitted key (parent AD-10): a Routine carries all of `id`, `owner_ref`, `schedule`, `goal`, `graph_template_ref`, `enabled` and `max_concurrent`; an absent required field is a load defect, never a best-effort read (DEC-0328)"
+    - "`graph_template_ref` is fully-qualified `<plugin_id>:<local_id>`; a bare local id or an unresolvable template id is refused, never expanded best-effort (DEC-0328, DEC-0312)"
+provenance_note: "CT-49 is newly minted by the 2026-08-28/29 QMX agentic-system architecture sitting (spine AD-29 Routines, scheduled triggers and continuation; realizing AD-5 correlation_id, AD-7 ActorId, AD-10 before_routine_fire / after_routine_fire, AD-12 Mission Compiler, AD-13 graph_template expansion, AD-24 machine principal and AD-26 the routine.max_concurrent and continuation configurables), absorbed into docs/ under SRC-15 (the operator's job-spec rider of 2026-08-29). Routines give unattended operation — the operator's first stated requirement — its owning rule, so no LLM decides when work fires and no agent invents work after its budget runs out (DEC-0328). Ratified as rider material; the QMA spine is FINAL and export-ready with validation closed dry 2026-08-29. The contract is defined-unwired: no code exists, and implementation authorization arrives only through the factory pipeline."

@@ -5,10 +5,10 @@ type: component-spec
 status: ratified
 component: COMP-QMF-DATA-INGEST
 depends_on: [COMP-QMF-CORE, COMP-QMF-DATA, COMP-DUKASCOPY, COMP-CALENDAR-FEED]
-decisions: [DEC-0103, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0117, DEC-0119, DEC-0135, DEC-0137, DEC-0138, DEC-0139, DEC-0038, DEC-0042, DEC-0051, DEC-0052, DEC-0053]
-sources: [_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, _docwork/gaps.yaml, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/contracts/ct-03-instrument-identity.yaml, docs/contracts/ct-04-typed-refusal.yaml, docs/contracts/ct-10-source-observation.yaml, docs/contracts/ct-15-external-source-adapter.yaml]
+decisions: [DEC-0103, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0117, DEC-0119, DEC-0135, DEC-0137, DEC-0138, DEC-0139, DEC-0038, DEC-0042, DEC-0051, DEC-0052, DEC-0053, DEC-0188, DEC-0198, DEC-0214]
+sources: [_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, _docwork/gaps.yaml, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/contracts/ct-03-instrument-identity.yaml, docs/contracts/ct-04-typed-refusal.yaml, docs/contracts/ct-10-source-observation.yaml, docs/contracts/ct-15-external-source-adapter.yaml]
 generated: 2026-08-18
-verified: 2026-08-20
+verified: 2026-08-29
 stale_after: 30d
 ---
 
@@ -43,9 +43,9 @@ Intake is idempotent keyed on `(source, source-native id, revision)`; a provider
 
 ### Tick and news-calendar recording
 
-Historical tick acquisition begins with Dukascopy-class evidence; forward broker tick capture is a separate venue/application path that waits for the broker API application and connection, so `COMP-QMF-DATA-INGEST` has no dependency on `COMP-CTRADER` (DEC-0053). Tick sources are separately identified (Dukascopy history versus the future broker feed); bid and ask are preserved with their source timestamps and are never merged; where two sources disagree, `corroborates` / `disagrees-with` typed edges keep the disagreement visible rather than merging it away (DEC-0119).
+Historical tick acquisition begins with Dukascopy-class evidence; forward broker tick capture is a separate venue/application path that waits for the broker API application and connection, so `COMP-QMF-DATA-INGEST` has no dependency on `COMP-CTRADER` (DEC-0053). That application is now named: the trading node (`COMP-QMN`) hosts the forward capture on its VPS plane, where the connection manager's canonical sensing feed IS the recorder and a separate recorder process cannot hold its own live connection; `COMP-QMF-DATA-INGEST` still takes no dependency on `COMP-CTRADER` and this seam continues to own no scheduled application lifecycle (DEC-0053, DEC-0188). Tick sources are separately identified (Dukascopy history versus the future broker feed); bid and ask are preserved with their source timestamps and are never merged; where two sources disagree, `corroborates` / `disagrees-with` typed edges keep the disagreement visible rather than merging it away (DEC-0119).
 
-The **news-calendar** recorder (a distinct concept from the market-hours calendar and the day-boundary calendar) keeps provider-native identity and revisions through the same idempotent `(source, source-native id, revision)` intake; scheduling stays outside QMF, and the legal archiving posture remains an open operator item, recorded not resolved (DEC-0119).
+The **news-calendar** recorder (a distinct concept from the market-hours calendar and the day-boundary calendar) keeps provider-native identity and revisions through the same idempotent `(source, source-native id, revision)` intake; scheduling stays outside QMF — it is the trading node's `qmn-news-calendar.timer` unit on a configurable refresh cadence, with Forex Factory's free weekly file the SOLE V1 source and no paid fallback ever (DEC-0198, DEC-0214) — and the legal archiving posture remains an open operator item, recorded not resolved (DEC-0119).
 
 ### Observation translation
 

@@ -1,0 +1,7 @@
+# Fragment: append the AD-26 QMA variable rows into the machine-readable registry.
+# Seat D9. Idempotent (yaml_append_items skips when the first row's name is already present).
+target: docs/registry/variables.yaml
+ops:
+  - op: yaml_append_items
+    key: variables
+    items_file: _docwork/qma/harvest/variables-qma.yaml

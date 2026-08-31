@@ -5,16 +5,16 @@ type: component-spec
 status: ratified
 component: COMP-QMF-DATA-STORE
 depends_on: []
-decisions: [DEC-0103, DEC-0108, DEC-0109, DEC-0110, DEC-0113, DEC-0114, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0030, DEC-0035, DEC-0038, DEC-0042, DEC-0044, DEC-0045, DEC-0046, DEC-0048]
-sources: [_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, _docwork/gaps.yaml, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/contracts/ct-09-registry-persistence.yaml, docs/contracts/ct-11-evidence-persistence.yaml, docs/contracts/ct-13-journal.yaml, docs/contracts/ct-26-store-backup-input.yaml]
+decisions: [DEC-0103, DEC-0108, DEC-0109, DEC-0110, DEC-0113, DEC-0114, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0030, DEC-0035, DEC-0038, DEC-0042, DEC-0044, DEC-0045, DEC-0046, DEC-0048, DEC-0188, DEC-0198, DEC-0253]
+sources: [_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, _docwork/gaps.yaml, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/contracts/ct-09-registry-persistence.yaml, docs/contracts/ct-11-evidence-persistence.yaml, docs/contracts/ct-13-journal.yaml, docs/contracts/ct-26-store-backup-input.yaml]
 generated: 2026-08-18
-verified: 2026-08-20
+verified: 2026-08-29
 stale_after: 30d
 ---
 
 # qmf-data Persistence Seam
 
-`COMP-QMF-DATA-STORE` is the dependency-free data-layer seam that physically persists the seven room-roles behind QMF-owned contracts, without owning their business meaning. Store engines — Parquet (columnar time-series), DuckDB (local analytics), SQLite (transactional metadata), and JSONL (append streams) — sit behind CT-09, CT-11, CT-13, and CT-26 with stdlib-typed boundary signatures, so an engine is swappable and there is no database server (DEC-0117, AD-19). The store is the stateful resource-owner of every stream it holds and follows one-writer-per-stream with unlimited readers (DEC-0113, AD-15).
+`COMP-QMF-DATA-STORE` is the dependency-free data-layer seam that physically persists the eight room-roles behind QMF-owned contracts, without owning their business meaning. Store engines — Parquet (columnar time-series), DuckDB (local analytics), SQLite (transactional metadata), and JSONL (append streams) — sit behind CT-09, CT-11, CT-13, and CT-26 with stdlib-typed boundary signatures, so an engine is swappable and there is no database server (DEC-0117, AD-19). The store is the stateful resource-owner of every stream it holds and follows one-writer-per-stream with unlimited readers (DEC-0113, AD-15).
 
 ## Authority boundary
 
@@ -31,17 +31,17 @@ May never: define registration, causality, split, holdout, journal-event, promot
 | Durable journal evidence | in | [CT-13](../contracts/ct-13-journal.yaml) | COMP-QMF-DATA, COMP-QMF-REGISTRY |
 | Store-to-Backup input | out | [CT-26](../contracts/ct-26-store-backup-input.yaml) | COMP-QMF-DATA-BACKUP |
 
-`COMP-QMF-REGISTRY` reaches the store through the single ratified inter-library edge `qmf-registry → qmf-data` (DEC-0120): its records and lineage land in the **registry room** — one of the seven room-roles — under the same retention, backup, and migration law as all other evidence (DEC-0117).
+`COMP-QMF-REGISTRY` reaches the store through the single ratified inter-library edge `qmf-registry → qmf-data` (DEC-0120): its records and lineage land in the **registry room** — one of the eight room-roles — under the same retention, backup, and migration law as all other evidence (DEC-0117).
 
 ## Behavior
 
 ### Room-roles behind swappable engines
 
-The store physically holds the seven room-roles — ingest door, immutable raw archive, processed, journal, split-governed research door, backup, and registry room — each instantiated per world (DEC-0117). Only the **immutable raw archive** and **journal** are evidence-bearing; processed data and DuckDB analytics views are rebuildable, so an engine format break costs a rebuild and never evidence, and analytics engine majors are pinned per release (DEC-0117, DEC-0103). Raw and processed time-series persist as Parquet; journal and registry lineage-edge streams persist as pinned JSONL (one fp1-canonical object per line, LF-terminated, append-with-fsync, size-rotated with a monotonic ordinal, per AD-16); transactional registry metadata persists as SQLite; local analytics as DuckDB views (DEC-0117, DEC-0114). `registry:local_store_engine` names the ratified engine set; each stays behind its QMF-owned contract (DEC-0117).
+The store physically holds the eight room-roles — ingest door, immutable raw archive, processed, journal, split-governed research door, backup, registry room, and sealed-archive — each instantiated per world (DEC-0117, DEC-0253). The eighth role, `sealed-archive`, is the 2026-08-28 trading-node sitting's mint (DEC-0253): instantiated per world in the evidence tier, it is the one-way evidence sync's target, the replay import port's only source, and a named member of the backed-up room set, held under the same retention, backup, and migration law as the other seven (DEC-0253, DEC-0188, DEC-0198). Only the **immutable raw archive** and **journal** are evidence-bearing; processed data and DuckDB analytics views are rebuildable, so an engine format break costs a rebuild and never evidence, and analytics engine majors are pinned per release (DEC-0117, DEC-0103). Raw and processed time-series persist as Parquet; journal and registry lineage-edge streams persist as pinned JSONL (one fp1-canonical object per line, LF-terminated, append-with-fsync, size-rotated with a monotonic ordinal, per AD-16); transactional registry metadata persists as SQLite; local analytics as DuckDB views (DEC-0117, DEC-0114). `registry:local_store_engine` names the ratified engine set; each stays behind its QMF-owned contract (DEC-0117).
 
 ```mermaid
 flowchart LR
-    subgraph rooms["seven room-roles, per world"]
+    subgraph rooms["eight room-roles, per world"]
       raw["immutable raw archive ★"]
       journal["journal ★"]
       processed["processed (rebuildable)"]
@@ -49,13 +49,15 @@ flowchart LR
       registry_room["registry room"]
       ingest["ingest door"]
       backup_room["backup"]
+      sealed["sealed-archive (evidence tier)"]
     end
     raw -->|CT-11| parquet["Parquet (columnar time-series)"]
     processed -->|CT-11| duckdb["DuckDB (rebuildable views)"]
     journal -->|CT-13| jsonl["JSONL (append streams)"]
     registry_room -->|CT-09| sqlite["SQLite (metadata) + JSONL (lineage edges)"]
     backup_room -->|CT-26| backupproc["COMP-QMF-DATA-BACKUP"]
-    note["★ = evidence-bearing (raw archive + journal only); engines swappable behind owned contracts; no database server"]
+    sealed -->|CT-26| backupproc
+    note["★ = evidence-bearing (raw archive + journal only); sealed-archive is the node sync target read by replay and backup; engines swappable behind owned contracts; no database server"]
 ```
 
 ### Identity, append-only, and one writer

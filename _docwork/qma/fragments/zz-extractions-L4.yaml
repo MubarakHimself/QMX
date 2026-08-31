@@ -1,0 +1,5 @@
+target: _docwork/extractions.yaml
+ops:
+  - op: yaml_append_items
+    key: extractions
+    items_file: _docwork/qma/harvest/extractions-L4.yaml

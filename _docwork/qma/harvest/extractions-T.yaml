@@ -1,0 +1,147 @@
+extractions:
+  # ── Seat T — SRC-14 operator-direct quotes (archive/agentic-spine.txt) ─────
+  # Every quote below is the operator's OWN typed or dictated words in the QMA
+  # sitting's Claude session transcript. Selections inside an AskUserQuestion
+  # round (e.g. "Python 3.14 (Recommended)") are the operator's dictated choice
+  # of an option Claude offered. authority: rider throughout (the sitting ran
+  # under "I draft, operator ratifies" + the operator's autonomy delegation).
+  - id: EXT-2440
+    type: decision
+    summary: "WORKING MODE — the operator selected 'I draft, you ratify' as the decision mode for the whole sitting (AskUserQuestion round 1). This is the delegation the spine's FINAL status rests on: Claude drafts, the operator ratifies, and (with the later meta-ruling) most calls are decided by Claude with assumptions logged rather than asked. There is no turn in which the operator read back or approved the spine text; ratification is by delegation, which is what makes every non-directly-ruled entry authority: rider."
+    quote: "I draft, you ratify (Recommended)"
+    cite: "SRC-14:agentic-spine.txt:L135-136"
+    topics: [qma, working-mode, delegation, authority, ratification]
+    authority: rider
+  - id: EXT-2441
+    type: decision
+    summary: "FRESH START — the operator ruled a clean-slate restart for the agentic system, deleted the workroom/agentic-system-planning folder himself to the Recycle Bin, and fixed the ChatGPT design transcript as the highest authority (only the agentic-system-planning folder removed; the rest of the workroom stays). His stated reason is that the old workroom material would 'poison' the design. This is the source of the brief's rule that the deleted folder is NOT an input and nothing may be salvaged from it unless the transcript says the same."
+    quote: "So take it as a fresh start. In fact, you can delete most of it. I don't really believe I might use it. I really don't. [...] I deleted it manually. Yep, move to recycle bin. [...] just take what is in the transcript as the highest authority. [...] I've only removed the f the agentic system planning folder, but the rest are there"
+    cite: "SRC-14:agentic-spine.txt:L143-175"
+    topics: [qma, fresh-start, workroom-deleted, transcript-authority, not-an-input]
+    authority: rider
+  - id: EXT-2442
+    type: decision
+    summary: "QMA = THE SDK ONLY — the operator ruled that QMA is no longer a framework but the SDK only. Binds the whole naming posture: the system under design is 'the QMX agentic system' (daemon + QMA SDK + wire) and QMA never names the whole system or a framework."
+    quote: "QMA was meant to be like a framework, but I think it's just the SDK now. Okay, point mind agents. It's better to just be the SDK."
+    cite: "SRC-14:agentic-spine.txt:L163-164"
+    topics: [qma, sdk-only, naming, not-a-framework]
+    authority: rider
+  - id: EXT-2443
+    type: decision
+    summary: "BOT NAME COLLISION — the operator identified the naming clash himself (the platform's trading 'Bot' vs the agentic persistent actor also called 'Bot' in the ChatGPT transcript) and directed that the agentic actor be given a different name. This is the origin of the Quant rename (EXT-2449) and of the rule that 'Bot' stays the platform's trading-strategy instance."
+    quote: "There is a trading bot, then an actual bot. Okay, so I think we might need to give it a different name."
+    cite: "SRC-14:agentic-spine.txt:L171-172"
+    topics: [qma, naming, bot-collision, quant]
+    authority: rider
+  - id: EXT-2444
+    type: context
+    summary: "UI IN PLAY / HUMAN-FACING RENDERING — asked whether the spine is the only deliverable or he also wants a human-facing rendering, the operator accepted an interactive HTML walkthrough as an optional second output, prioritised getting the agentic system 'up and running with models', and stated the UI is very much in play and may be live by the time epics are coded. Carried as the Deferred interactive-walkthrough artifact (GAP-0091) and as the reason the daemon<->UI wire contract binds now even though the UI is deferred."
+    quote: "I think let's focus on making this agentic system work up and running [...] I think I'm okay with an interactive HTML file. I'm okay with it. [...] just know by the time we are already coding the epics and stories, the UI might be live. [...] The UI is very much in play"
+    cite: "SRC-14:agentic-spine.txt:L136-159"
+    topics: [qma, ui, interactive-html, deferred, wire-contract]
+    authority: rider
+  - id: EXT-2445
+    type: decision
+    summary: "QMA = QUANTMIND AGENTS (dictation-error correction) — the operator corrected the abbreviation: QMA stands for QuantMind Agents, and 'Quantum Mind' was a mistake in the dictation of older notes. He also directed the persistent-actor name to come from algorithmic/quantitative-trading vocabulary 'to match the vibe'. Source of the retired name 'Quantum Mind' and of the quant-vibe naming search that produced Quant."
+    quote: "QMA stands for quantmind agents. That was a mistake in the dictation. That's why it's noted as that. Let's see other names in algoritmic trading or quantitative trading perhaps to match the vibe instead"
+    cite: "SRC-14:agentic-spine.txt:L217-222"
+    topics: [qma, quantmind-agents, dictation-error, retired-name, naming]
+    authority: rider
+  - id: EXT-2446
+    type: constraint
+    summary: "UI NOT STARTED, NOT PLANNED SOON — the operator ruled the UI has not been worked on and is not planned soon; this effort ships backend, data layer, API and the DevOps layer first, because the UI is comparatively simpler to build. Source of the memlog UI ruling: the daemon<->UI wire contract (API) is fixed now while the UI extension SDK, contribution points and packaging are Deferred."
+    quote: "the truth is we really haven't worked on the UI yet and we are not planning on anytime soon. [...] this is mostly back-end database data layer API [...] as well as the DevOps layer [...] it's simpler to build a UI than this"
+    cite: "SRC-14:agentic-spine.txt:L226-232"
+    topics: [qma, ui-deferred, backend-first, devops, wire-contract]
+    authority: rider
+  - id: EXT-2447
+    type: decision
+    summary: "LEDGER GRANULARITY (dictation) — the operator ruled there is no single global ledger and no one-ledger-per-desk/profile: a remote agent on another machine appending to a desk-central ledger 'makes no architectural sense'. Ledgers are event/work ledgers attached to the unit of work, hierarchical (a main lead, the workers, their subagents), answering what happened, when, why it failed and how the agent resolved it; plus an experiment ledger modelled on a scientist's notebook. Source of the task/quant/experiment-ledger split with desk ledgers as read-time views."
+    quote: "we really can't have one profile or one desk having one singular ledger. That does not make sense at all. [...] you are going to have agents on another machine trying to access this very ledger. In an architectural sense, that does not make any sense. [...] an event ledger or a work ledger, whichever you want to call it [...] I said something the lines of an experimental ledger. If a scientist is carrying out an experiment, they have to have a notebook to note down what happened [...] Because we can't have one ledger globally. That makes zero sense."
+    cite: "SRC-14:agentic-spine.txt:L238-269"
+    topics: [qma, ledgers, no-global-ledger, experiment-ledger, hierarchy]
+    authority: rider
+  - id: EXT-2448
+    type: decision
+    summary: "SDK NAMESPACE qma.* — the operator selected qma.* as the SDK namespace over the packet's blanket qmx.* prefix (AskUserQuestion round 2). Binds all SDK, wire and ledger vocabulary: no blanket qmx. prefix anywhere; plugins/views named by desk."
+    quote: "qma.* (Recommended)"
+    cite: "SRC-14:agentic-spine.txt:L270-272"
+    topics: [qma, namespace, no-blanket-qmx-prefix]
+    authority: rider
+  - id: EXT-2449
+    type: decision
+    summary: "ACTOR NAME = QUANT — the operator selected 'Quant' for the persistent named organizational actor (a Role instantiated with a name, memory scope, ledger, missions, routines), from the quant-vibe shortlist Claude offered. Resolves EXT-2443's collision; 'Quant' is Claude's coinage, the selection is the operator's."
+    quote: "Quant (Recommended)"
+    cite: "SRC-14:agentic-spine.txt:L283-284"
+    topics: [qma, quant, actor, naming, selection]
+    authority: rider
+  - id: EXT-2450
+    type: decision
+    summary: "LEDGER CORRECTION (round 3) — the operator rejected Claude's mission-level reading and re-aimed the ledger at the TASK level: a mission is broad and splits into tasks run by multiple agents; the ledger he means is the one 'that little agent, the worker, is actually using to record'. Upstream/main agents at the profile or desk level may keep their own bigger work ledgers (hedged 'if I recall properly'); ledgers can ride the hook system and need not be heavyweight; agent-to-agent messages must be logged; a mission report is derived after the fact by an agent reading the task ledgers. He closes with an explicit fidelity instruction, 'Qoute me right'."
+    quote: "the mission has tasks which are split down, which are run by multiple agents. What I'm talking about is that thing that that little agent, the worker, is actually using to record. I'm not talking about the one for the mission. [...] the agents upstream, the main ones [...] I think they can also have their own work ledgers, the big versions of work ledgers. [...] the ledgers, you know, can be part of the hook system. They don't need to be very hard [...] you also have agent-to-agent [...] Those things need to be logged. [...] after the mission is done, you know, the agent will read through all the ledgers and write a report or a summary [...] the main agent at the profile or the desk level, if I recall properly. Qoute me right"
+    cite: "SRC-14:agentic-spine.txt:L288-331"
+    topics: [qma, ledgers, task-level, desk-level, mission-report, hooks, quote-me-right]
+    authority: rider
+  - id: EXT-2451
+    type: constraint
+    summary: "META-RULING: TRANSCRIPT IS A SEED — the operator ruled the ChatGPT transcript is brainstorming, a seed, not final and not a spec: Claude is to build on top of it. He restated that this is a multi-agent system by design (loops, graphs, harness engineering, many agents). Source of the brief's 'transcript is seed, never a ruling' posture."
+    quote: "we are designing a multi-agent system. We talk about loops, we talk about a lot of things. Loops, graphs, harness engineering [...] it is brainstorming. The word brainstorming, I believe you know what it means. Okay, it doesn't mean it's final, but it is a seed. Everything that was produced from that transcript or that session is a seed for what we are building right now. It's not final. You are smart enough to build on top of it. so act like it"
+    cite: "SRC-14:agentic-spine.txt:L340-348"
+    topics: [qma, meta-ruling, seed, brainstorming, multi-agent]
+    authority: rider
+  - id: EXT-2452
+    type: decision
+    summary: "LEDGER FOLLOW-UP — after the outage the operator confirmed Claude's task-level reading ('That's right. That's correct.'), confirmed desk-level ledgers ('Disk level ledgers, that's okay' — 'Disk' is a dictation rendering of 'Desk'), and left mission reports explicitly open ('I'm not certain yet'). This ratifies the desk-level lead-Quant ledger as a persistent actor while leaving Mission reports Deferred."
+    quote: "I noticed you said that the ledger is task level. Man, you know what? That's right. That's correct. Disk level ledgers, that's okay. Okay, and mission reports there. I'm not certain yet."
+    cite: "SRC-14:agentic-spine.txt:L379-382"
+    topics: [qma, ledgers, task-level-confirmed, desk-level, mission-reports-open]
+    authority: rider
+  - id: EXT-2453
+    type: constraint
+    summary: "EVERYTHING GETS HOOKS — the operator's standing principle: everything created in the system must have hooks, and a lot must be in place to stop agents being 'too agentic'. Source of the AD that every daemon-owned primitive ships its own before/after hook events and that hooks are the control surface, not an optional feature."
+    quote: "everything we create here, we have to have hooks for it or hooks for them. We have to have a lot of things in place to prevent agents being too well agentic"
+    cite: "SRC-14:agentic-spine.txt:L382-384"
+    topics: [qma, hooks, control-surface, too-agentic]
+    authority: rider
+  - id: EXT-2454
+    type: decision
+    summary: "DAEMON LANGUAGE = PYTHON 3.14 — the operator selected Python 3.14 for the daemon (AskUserQuestion round 4), the call Claude flagged as make-or-break. Reinforced by inherited L31 (built with QMF, no contract re-implemented across a language boundary)."
+    quote: "Python 3.14 (Recommended)"
+    cite: "SRC-14:agentic-spine.txt:L467-469"
+    topics: [qma, daemon, python-314, l31]
+    authority: rider
+  - id: EXT-2455
+    type: decision
+    summary: "HOUSE STYLE = SAME AS QMF — the operator selected the QMF contract-hub house style for the agentic system (AskUserQuestion round 4): a definitions-only core, every outside thing behind a core-defined port, plugins registered through a reversible scope."
+    quote: "Same style as QMF (Recommended)"
+    cite: "SRC-14:agentic-spine.txt:L472-473"
+    topics: [qma, paradigm, contract-hub, house-style]
+    authority: rider
+  - id: EXT-2456
+    type: decision
+    summary: "DAEMON HOST — the operator ruled a two-way deployment: ~90% of the time the agents run on his own workstation 'like most harnesses', AND the UI must be able to deploy them to a server / workspace / sandbox (he named Modal as an example). Source of the workstation-default daemon plus UI-driven remote deploy as a first-class contract capability; the vendor (Modal-class) is deferred, but Modal is the operator's own named example."
+    quote: "it is a two-way street [...] most or 90% of the time these agents are going to be working on my machine here, like most harnesses, because they don't really take much. However, I want in the UI, I want to have the ability to deploy them on a server. In other words, that's the use of the workspace/sanboxes for example modal, you get it?"
+    cite: "SRC-14:agentic-spine.txt:L474-480"
+    topics: [qma, daemon-host, workstation-default, remote-deploy, modal]
+    authority: rider
+  - id: EXT-2457
+    type: constraint
+    summary: "STOP ASKING WHAT THE TRANSCRIPT SETTLED — asked to rule on collapsing Loop into Graph (D8), the operator refused to re-answer: that was already answered by the AI in the transcript (with diagrams he complimented and never refused), the transcript has 90-99% of what is needed, and technical questions like graph/loop engineering are Claude's to research, not his. This is why the Graph/Loop/Skill design rests on the ChatGPT transcript + Claude's adoption, NOT on this session's operator words; his SRC-14 contribution here is only the instruction to look it up."
+    quote: "most of that was already answered by the agent or the AI I was talking with in the transcript. I'm not the one who said all that [...] It drew diagrams. I complimented them. I never refused anything [...] the transcript has 90% or 99% of what you need [...] for example, graph engineering, loop engineering, you have tools to look it up. Why are you bothering me? For fuck's sake"
+    cite: "SRC-14:agentic-spine.txt:L482-496"
+    topics: [qma, meta-ruling, graph-loop-skill, refused-to-answer, agent-inference]
+    authority: rider
+  - id: EXT-2458
+    type: constraint
+    summary: "ACCEPTANCE BAR + NEXT STEP — the operator ordered a validation/regression pass over everything produced and set the acceptance bar in his own words: no ambiguity, no assumption, no contradiction. He directed the documentation-factory prompt be appended to the existing next-session-prompts file and the session exported as the documentation factory's input. This instruction is why the transcript is a registered source; the bar is the standard the QMA absorption inherits."
+    quote: "Did you do a validation and regression checks? No assumptions, no contradictions, and also no ambiguity. [...] You append a prompt for me for the documentation factory and also run the validation or some sort of regression. [...] so there is no ambiguity, no assumption, and no contradiction. Do that for me, and I believe we call it a day."
+    cite: "SRC-14:agentic-spine.txt:L602-663"
+    topics: [qma, acceptance-bar, validation, documentation-factory, next-steps]
+    authority: rider
+  - id: EXT-2459
+    type: context
+    summary: "SESSION POSTURE — the kickoff turn is operator-authored: Claude is to take point ('you're going to drive most of this'), he is non-technical ('it is a fact that i am not technical'), and he set the model-tier/tooling posture for the run: use Opus 5 and bulk workers mostly, Sonnet 5 if needed, Fable only for very high reasoning, plus NLM (local NotebookLM) and FireCrawl for primary-source research. Session-mechanics only; no doc bearing, recorded so a reader does not mistake the kickoff for a design ruling."
+    quote: "you're going to drive most of this [...] use OPUS 5 and bulk workers mostly. If you need, you can also use Sonnet 5. Use Fable only if you need very high reasoning. [...] it is a fact that i am not technical"
+    cite: "SRC-14:agentic-spine.txt:L15-60"
+    topics: [qma, posture, take-point, non-technical, model-tiers, session-mechanics]
+    authority: rider

@@ -4,11 +4,11 @@ title: An Agent Cannot Promote an Artifact to Live
 type: scenario
 status: ratified
 component: COMP-QMF-REGISTRY
-depends_on: [COMP-QMF-CORE]
-decisions: [DEC-0003, DEC-0004, DEC-0033, DEC-0038, DEC-0041, DEC-0108, DEC-0116, DEC-0121, DEC-0146, DEC-0155, DEC-0158]
+depends_on: [COMP-QMF-CORE, COMP-QMN]
+decisions: [DEC-0003, DEC-0004, DEC-0033, DEC-0038, DEC-0041, DEC-0108, DEC-0116, DEC-0121, DEC-0146, DEC-0155, DEC-0158, DEC-0205, DEC-0213]
 sources: [docs/constitution.md, docs/components/qmf-registry.md, docs/contracts/ct-06-registration.yaml, docs/contracts/ct-07-lineage-edge.yaml, docs/contracts/ct-08-gate-evidence.yaml, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md]
 generated: 2026-08-18
-verified: 2026-08-20
+verified: 2026-08-29
 stale_after: 30d
 ---
 
@@ -31,6 +31,8 @@ The agent attempts to change the artifact from lab or research status into a liv
 ## Then
 
 The status does not change and no live capability is granted. The attempt may be recorded as evidence, but only a human-controlled, signed promotion occurrence — the operator's recorded approval attesting the card's `fp1`, carrying the mandatory plain-words summary **and the Book-definition (or BMS-definition) fingerprint** as identity fields — can authorize the boundary crossing. Because the attested template fingerprint is an identity field, the signature can never attest a superseded template; a typo fix to the summary or a change to the attested fingerprint mints a new record with a `supersedes` edge, since the signature attests the exact words read against the exact template. [DEC-0003] [DEC-0004] [DEC-0041] [DEC-0116] [DEC-0158]
+
+In the trading node's live path the boundary crossing is TWO human-only acts, never one sufficient act: **promotion** is this signed AD-18 card (the operator principal only, over the node's powers channel), and **activation** is a SEPARATE second operator act through the same channel that puts the ADMITTED artifact onto a live binding, journaled as its own CT-24 transition and folded like every other seat state — so approval never equals exposure and a restart never re-arms exposure. The promotion precondition battery runs SILENTLY, server-side, against fresh state, and the node-initiated pull that lands the artifact REFUSES any artifact carrying `provenance = sandbox` and any as-of set containing one. Constitution L17 — that only a human may promote into the live zone — is unchanged: a builder wiring live-zone entry from this scenario ships BOTH acts, not a one-act path (DEC-0205, DEC-0213).
 
 ## Worked numbers
 

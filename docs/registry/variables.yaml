@@ -1,3 +1,31 @@
+# QMX variables registry — machine-readable schema for every configurable value.
+#
+# Per-variable schema fields: name, symbol, value, formula, units, type,
+# component, decision, configurable, notes; value: null requires a gap id.
+# Values are referenced by name from prose, never restated as literals (L38).
+#
+# NODE-INCREMENT SCHEMA ADDITIONS (2026-08-29; DEC-0254, DEC-0256, TN-18/DEC-0203):
+#   value_status_required — the registry is the SCHEMA HALF: this flag declares
+#     whether a variable may ever stand at provisional-evidence. The PER-VALUE
+#     value-status (blank | provisional-evidence | ratified) does NOT live here;
+#     it lives on the resolved node-config artifact's row for every value,
+#     Book-declared values included, the compiler propagating it onto generated
+#     fragments. A value-status countersign is a journaled powers-channel act
+#     under the operator principal, refused without the variable's evidence
+#     citation by fp1, one variable per call (DEC-0254, DEC-0202). A
+#     provisional-evidence value that gates live money blocks role=live exactly
+#     as a blank does; the soak gate requires at least a provisional-evidence
+#     value for everything a TN-23 checklist item exercises (DEC-0203, DEC-0208).
+#   owner_scope — who declares the resolved value: node | book | bot | bms |
+#     node-and-book | node-and-bms | node-and-ops | venue (DEC-0256).
+#   blank_effect — what an absent (blank) or provisional value costs, from the
+#     three-way partition blocks-boot | blocks-role-live | blocks-soak; a row may
+#     carry more than one, and blocks-soak is ALSO a generated property of any
+#     variable a TN-23 checklist item exercises (DEC-0203, DEC-0256).
+# Node-minted rows carry evidence values in notes only, never as a ratified
+# constant in value: (L38, DEC-0256). Alert-class membership is NOT a registry
+# row — FAILURES.md's notification-tier column is its sole home (DEC-0200,
+# DEC-0256).
 variables:
   - name: monetary_representation
     symbol: null
@@ -257,51 +285,56 @@ variables:
 
   - name: backup_recovery_point_objective
     symbol: null
-    value: null
+    value: evidence-only
     formula: null
     units: duration
     type: duration
     component: COMP-QMF-DATA
     decision: DEC-0118
     configurable: true
-    gap: GAP-0027
-    notes: "Backup design ratified (DEC-0118, AD-20); the numeric RPO is named at the node/ops sitting."
+    owner_scope: node-and-ops
+    value_status_required: true
+    blank_effect: [blocks-soak]
+    notes: "Backup design ratified (DEC-0118, AD-20); node-minted numeric (DEC-0256, DEC-0203), value-status-bearing on the node-config artifact and soak-blocking (TN-13/DEC-0198). GAP-0027 is closed by the node/ops sitting. Evidence value: RPO is 24 h by construction because the backup is a nightly VPS push (DEC-0198); measured and recorded at the soak, never a declared constant (L38)."
 
   - name: backup_recovery_time_objective
     symbol: null
-    value: null
+    value: superseded
     formula: null
     units: duration
     type: duration
     component: COMP-QMF-DATA
     decision: DEC-0118
     configurable: true
-    gap: GAP-0027
-    notes: "Backup design ratified (DEC-0118, AD-20); the numeric RTO is named at the node/ops sitting."
+    notes: "SUPERSEDED (DEC-0198, TN-13): the node splits one RTO into two measured numbers that are recorded apart and never conflated — backup_recovery_time_objective_integrity (the integrity-restore RTO measured at the monthly full-restore rehearsal) and backup_recovery_time_objective_full_dr (the full-DR RTO measured at the host-loss rehearsal, including VPS re-procurement, re-provisioning and key recovery). GAP-0027 is closed by the node/ops sitting. Row retained as history only; do not read as a live variable. Backup design origin: DEC-0118, AD-20."
 
   - name: backup_retention_period
     symbol: null
-    value: null
+    value: declared-per-node
     formula: null
     units: duration
     type: duration
     component: COMP-QMF-DATA
     decision: DEC-0118
     configurable: true
-    gap: GAP-0027
-    notes: "Backup design ratified (DEC-0118, AD-20); the numeric retention period is named at the node/ops sitting."
+    owner_scope: node-and-ops
+    value_status_required: true
+    blank_effect: [blocks-soak]
+    notes: "Backup design ratified (DEC-0118, AD-20); node-minted numeric (DEC-0256, DEC-0203), value-status-bearing on the node-config artifact and soak-blocking (TN-13/DEC-0198). GAP-0027 is closed by the node/ops sitting. The retention depth of the backup SET is configurable while evidence itself is retained forever (NFR-06); no declared spine constant (L38)."
 
   - name: restore_verification_cadence
     symbol: null
-    value: null
+    value: declared-per-node
     formula: null
     units: duration
     type: duration
     component: COMP-QMF-DATA
     decision: DEC-0118
     configurable: true
-    gap: GAP-0027
-    notes: "Backup design ratified (DEC-0118, AD-20) with automated sample-restore tests plus periodic full-restore rehearsal; the numeric cadence is named at the node/ops sitting."
+    owner_scope: node-and-ops
+    value_status_required: true
+    blank_effect: [blocks-soak]
+    notes: "Backup design ratified (DEC-0118, AD-20) with automated sample-restore tests plus periodic full-restore rehearsal; node-minted numeric (DEC-0256, DEC-0203), value-status-bearing on the node-config artifact and soak-blocking (TN-13/DEC-0198). GAP-0027 is closed by the node/ops sitting. The node runs three restore drills — a nightly sample restore (qmn-restore-sample.timer), a monthly full restore (qmn-restore-full.timer) and the on-demand host-loss rehearsal (restore_drill_run); no declared spine constant (L38)."
 
   - name: local_store_engine
     symbol: null
@@ -444,7 +477,10 @@ variables:
     component: COMP-QMF-RISK
     decision: DEC-0152
     configurable: true
-    notes: "The lead width of a news protection window is a configurable UI-editable CT-31 window variable with no spine value (DEC-0152, DEC-0157, AD-38). A window record is carried as two instants, never as this offset; the offset exists only as configuration the operator sets between sessions. The plus-or-minus-15-minute news buffer is on record as withdrawn — recorded evidence, non-authoritative, never a ratified constant. Supersedes the pair-scoped DEC-0072 framing: the instrument scoping survives, re-mechanised through per-instrument currency-exposure records, while the keep-paper-flowing lead is overridden — a news window blocks live and paper entries alike."
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "Node re-point (DEC-0256, DEC-0203): configurable node-scoped per severity, value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-8/DEC-0193, TN-18/DEC-0203). The lead width of a news protection window is a configurable UI-editable CT-31 window variable with no spine value (DEC-0152, DEC-0157, AD-38). A window record is carried as two instants, never as this offset; the offset exists only as configuration the operator sets between sessions. The plus-or-minus-15-minute news buffer is on record as withdrawn — recorded evidence, non-authoritative, never a ratified constant. Supersedes the pair-scoped DEC-0072 framing: the instrument scoping survives, re-mechanised through per-instrument currency-exposure records, while the keep-paper-flowing lead is overridden — a news window blocks live and paper entries alike."
 
   - name: news_blackout_after
     symbol: null
@@ -455,7 +491,10 @@ variables:
     component: COMP-QMF-RISK
     decision: DEC-0152
     configurable: true
-    notes: "The trailing width of a news protection window is a configurable UI-editable CT-31 window variable with no spine value (DEC-0152, DEC-0157, AD-38). A window record is carried as two instants, never as this offset; the offset exists only as configuration the operator sets between sessions. The plus-or-minus-15-minute news buffer is on record as withdrawn — recorded evidence, non-authoritative, never a ratified constant. Supersedes the pair-scoped DEC-0072 framing: the instrument scoping survives, re-mechanised through per-instrument currency-exposure records, while the keep-paper-flowing lead is overridden — a news window blocks live and paper entries alike."
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "Node re-point (DEC-0256, DEC-0203): configurable node-scoped per severity, value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-8/DEC-0193, TN-18/DEC-0203). The trailing width of a news protection window is a configurable UI-editable CT-31 window variable with no spine value (DEC-0152, DEC-0157, AD-38). A window record is carried as two instants, never as this offset; the offset exists only as configuration the operator sets between sessions. The plus-or-minus-15-minute news buffer is on record as withdrawn — recorded evidence, non-authoritative, never a ratified constant. Supersedes the pair-scoped DEC-0072 framing: the instrument scoping survives, re-mechanised through per-instrument currency-exposure records, while the keep-paper-flowing lead is overridden — a news window blocks live and paper entries alike."
 
   - name: spread_quality_sensor_formula
     symbol: SQS
@@ -499,7 +538,10 @@ variables:
     component: COMP-QMF-RISK
     decision: DEC-0154
     configurable: true
-    notes: "Leash_grammar variable, keyed per bot or bot family, minted by the B split (DEC-0154, AD-40) and given its bench semantics by DEC-0155 (AD-41): the count of consecutive qualifying_loss_exit closes at which a seat is benched. A qualifying_loss_exit is a virtual-position close whose realized_r <= -q (see qualifying_loss_threshold). Read as a read-time fold over the exit-record stream bounded by the binding epoch, never a mutable counter. Configurable UI-editable and strategy-family-dependent (DEC-0157). The recorded value of two for a scalper is evidence — non-authoritative, never a ratified spine constant."
+    owner_scope: bot
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "Node re-point (DEC-0256, DEC-0203): configurable bot-scoped, kept separate from the money-ladder divisor seat_loss_run_allowance; value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-8/DEC-0193, TN-18/DEC-0203). Leash_grammar variable, keyed per bot or bot family, minted by the B split (DEC-0154, AD-40) and given its bench semantics by DEC-0155 (AD-41): the count of consecutive qualifying_loss_exit closes at which a seat is benched. A qualifying_loss_exit is a virtual-position close whose realized_r <= -q (see qualifying_loss_threshold). Read as a read-time fold over the exit-record stream bounded by the binding epoch, never a mutable counter. Configurable UI-editable and strategy-family-dependent (DEC-0157). The recorded value of two for a scalper is evidence — non-authoritative, never a ratified spine constant."
 
   - name: qualifying_loss_threshold
     symbol: q
@@ -510,7 +552,10 @@ variables:
     component: COMP-QMF-RISK
     decision: DEC-0155
     configurable: true
-    notes: "The bench predicate threshold (DEC-0155, AD-41): a virtual-position close counts toward the bench only where realized_r <= -q. Per-family template variable, configurable UI-editable (DEC-0157). Breakevens never count under any q and are recorded as their own clustering-watch metric; scratches and partial losses do not count by default (a -0.15R scratch is not the damage the leash exists to stop); a forced flat or boundary flat counts only if it realized a qualifying loss. The default of approximately one R is recorded evidence honouring the operator's 'we only count losses at negative 1R' ruling — non-authoritative, a configuration the operator sets, never a number the spine invents."
+    owner_scope: book
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "Node re-point (DEC-0256, DEC-0203): configurable Book-scoped per family, value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-8/DEC-0193, TN-18/DEC-0203). The bench predicate threshold (DEC-0155, AD-41): a virtual-position close counts toward the bench only where realized_r <= -q. Per-family template variable, configurable UI-editable (DEC-0157). Breakevens never count under any q and are recorded as their own clustering-watch metric; scratches and partial losses do not count by default (a -0.15R scratch is not the damage the leash exists to stop); a forced flat or boundary flat counts only if it realized a qualifying loss. The default of approximately one R is recorded evidence honouring the operator's 'we only count losses at negative 1R' ruling — non-authoritative, a configuration the operator sets, never a number the spine invents."
 
   - name: seat_loss_run_allowance
     symbol: null
@@ -554,7 +599,10 @@ variables:
     component: COMP-QMF-RISK
     decision: DEC-0150
     configurable: true
-    notes: "The kill line: a per-Book capital floor whose breach automatically flattens that binding's scope and stands the Book down — a 3am breach never waits for the operator (DEC-0150, AD-36). It is THE SAME NUMBER as loss_floor in the sizing shape (loss_runway = book_capital - loss_floor): one value, one name, read by both the kill-line control and the R sizing ladder, never two floors that can drift apart (DEC-0154, AD-40). Money(numeraire) = USD in V1. Configurable UI-editable (DEC-0157); no ratified spine value. Distinct from the kill switch (the global black-swan authority) — the two are named apart and never interchanged."
+    owner_scope: book
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "Node re-point (DEC-0256, DEC-0203): a configurable node-run row whose resolved value and value-status live on the node-config artifact; blank or provisional-evidence blocks role=live, and it is soak-blocking because TN-23's checklist exercises it (TN-8/DEC-0193, TN-25/DEC-0210, TN-18/DEC-0203). kill_line_capital_floor IS AD-40's loss_floor — this is the canonical registry key and loss_floor is AD-40's prose name for the same row; the node mints no second name (DEC-0255). The kill line: a per-Book capital floor whose breach automatically flattens that binding's scope and stands the Book down — a 3am breach never waits for the operator (DEC-0150, AD-36). It is THE SAME NUMBER as loss_floor in the sizing shape (loss_runway = book_capital - loss_floor): one value, one name, read by both the kill-line control and the R sizing ladder, never two floors that can drift apart (DEC-0154, AD-40). Money(numeraire) = USD in V1. Configurable UI-editable (DEC-0157); no ratified spine value. Distinct from the kill switch (the global black-swan authority) — the two are named apart and never interchanged."
 
   - name: r_unit_price
     symbol: null
@@ -587,7 +635,10 @@ variables:
     component: COMP-QMF-RISK
     decision: DEC-0153
     configurable: true
-    notes: "Per-instrument-class hard-block threshold on the SQS score: at or above threshold passes, strictly below blocks (DEC-0153, AD-39). Instrument class is a dated instrument-metadata record (instrument_class), operator-declarable and correctable, never parsed from a symbol; no class record means blocked. Carried as an exact rational or scaled integer, configurable UI-editable (DEC-0157). Recorded corpus evidence, non-authoritative and never a default: per-class 0.60 / 0.55 / 0.45 / 0.65 / 0.50 — no ratified spine value."
+    owner_scope: node-and-book
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "Node re-point (DEC-0256, DEC-0203): configurable node-and-Book-scoped, value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-8/DEC-0193, TN-18/DEC-0203). Per-instrument-class hard-block threshold on the SQS score: at or above threshold passes, strictly below blocks (DEC-0153, AD-39). Instrument class is a dated instrument-metadata record (instrument_class), operator-declarable and correctable, never parsed from a symbol; no class record means blocked. Carried as an exact rational or scaled integer, configurable UI-editable (DEC-0157). Recorded corpus evidence, non-authoritative and never a default: per-class 0.60 / 0.55 / 0.45 / 0.65 / 0.50 — no ratified spine value."
 
   - name: sqs_hysteresis_band
     symbol: null
@@ -598,7 +649,10 @@ variables:
     component: COMP-QMF-RISK
     decision: DEC-0153
     configurable: true
-    notes: "The hysteresis band that must be re-crossed before an SQS hard block clears (DEC-0153, AD-39); composition order is contract surface, so an outlier-guarded sample is excluded from the re-crossing test. Carried as an exact rational or scaled integer, configurable UI-editable (DEC-0157). Recorded corpus evidence, non-authoritative: 0.05 — no ratified spine value."
+    owner_scope: node-and-book
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "Node re-point (DEC-0256, DEC-0203): configurable node-and-Book-scoped, value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-8/DEC-0193, TN-18/DEC-0203). The hysteresis band that must be re-crossed before an SQS hard block clears (DEC-0153, AD-39); composition order is contract surface, so an outlier-guarded sample is excluded from the re-crossing test. Carried as an exact rational or scaled integer, configurable UI-editable (DEC-0157). Recorded corpus evidence, non-authoritative: 0.05 — no ratified spine value."
 
   - name: sqs_outlier_guard_multiple
     symbol: null
@@ -609,7 +663,10 @@ variables:
     component: COMP-QMF-RISK
     decision: DEC-0153
     configurable: true
-    notes: "The outlier guard against the spread's own measured dispersion (DEC-0153, AD-39); a guarded sample is excluded from the hysteresis re-crossing test. Dimensionless, configurable UI-editable (DEC-0157). Recorded corpus evidence, non-authoritative: a 4-sigma guard — no ratified spine value."
+    owner_scope: node-and-book
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "Node re-point (DEC-0256, DEC-0203): configurable node-and-Book-scoped, value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-8/DEC-0193, TN-18/DEC-0203). The outlier guard against the spread's own measured dispersion (DEC-0153, AD-39); a guarded sample is excluded from the hysteresis re-crossing test. Dimensionless, configurable UI-editable (DEC-0157). Recorded corpus evidence, non-authoritative: a 4-sigma guard — no ratified spine value."
 
   - name: sqs_sample_cadence
     symbol: null
@@ -620,7 +677,10 @@ variables:
     component: COMP-QMF-RISK
     decision: DEC-0153
     configurable: true
-    notes: "The sampling cadence of the SQS live-spread channel (DEC-0153, AD-39): a tick/quote-sampled channel with a declared maximum age not exceeding the Book's decision_freshness_bound; a bar-sampled SQS is refused at the door, never blocked through. Configurable UI-editable (DEC-0157). Recorded corpus evidence, non-authoritative: per-quote — no ratified spine value."
+    owner_scope: node-and-book
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "Node re-point (DEC-0256, DEC-0203): configurable node-and-Book-scoped, value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-8/DEC-0193, TN-18/DEC-0203). The sampling cadence of the SQS live-spread channel (DEC-0153, AD-39): a tick/quote-sampled channel with a declared maximum age not exceeding the Book's decision_freshness_bound; a bar-sampled SQS is refused at the door, never blocked through. Configurable UI-editable (DEC-0157). Recorded corpus evidence, non-authoritative: per-quote — no ratified spine value."
 
   - name: sqs_baseline_conditioning
     symbol: null
@@ -631,7 +691,10 @@ variables:
     component: COMP-QMF-RISK
     decision: DEC-0153
     configurable: true
-    notes: "The declared conditioning of the SQS baseline (DEC-0153, AD-39): a named market-hours calendar identity plus session id (identity-bearing, entering the baseline's fingerprint) plus the baseline statistic (mean, median, or a stated quantile) as fingerprinted contract surface, never the bare word 'average'. The baseline is a fingerprinted INPUT artifact with its own lineage. Configurable UI-editable (DEC-0157); no ratified spine value."
+    owner_scope: node-and-book
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "Node re-point (DEC-0256, DEC-0203): configurable node-and-Book-scoped, value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-8/DEC-0193, TN-18/DEC-0203). The declared conditioning of the SQS baseline (DEC-0153, AD-39): a named market-hours calendar identity plus session id (identity-bearing, entering the baseline's fingerprint) plus the baseline statistic (mean, median, or a stated quantile) as fingerprinted contract surface, never the bare word 'average'. The baseline is a fingerprinted INPUT artifact with its own lineage. Configurable UI-editable (DEC-0157); no ratified spine value."
 
   - name: sqs_baseline_refit_schedule
     symbol: null
@@ -642,7 +705,10 @@ variables:
     component: COMP-QMF-RISK
     decision: DEC-0153
     configurable: true
-    notes: "The SQS baseline refit cadence (DEC-0153, AD-39): a refit mints a new baseline artifact with a supersedes edge; the configuration cites a refit-series identity plus the refit-policy fingerprint, so a refit under an unchanged policy does not fork identity while a change to the refit policy does — without that split a daily refit would fork the decay cohort daily. Configurable UI-editable (DEC-0157). Recorded corpus evidence, non-authoritative: daily and weekly refits — no ratified spine value."
+    owner_scope: node-and-book
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "Node re-point (DEC-0256, DEC-0203): configurable node-and-Book-scoped, value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-8/DEC-0193, TN-18/DEC-0203). The SQS baseline refit cadence (DEC-0153, AD-39): a refit mints a new baseline artifact with a supersedes edge; the configuration cites a refit-series identity plus the refit-policy fingerprint, so a refit under an unchanged policy does not fork identity while a change to the refit policy does — without that split a daily refit would fork the decay cohort daily. Configurable UI-editable (DEC-0157). Recorded corpus evidence, non-authoritative: daily and weekly refits — no ratified spine value."
 
   - name: sqs_staleness_horizon
     symbol: null
@@ -653,7 +719,10 @@ variables:
     component: COMP-QMF-RISK
     decision: DEC-0153
     configurable: true
-    notes: "The staleness horizon past which an SQS sample is treated as stale — a conservative sentinel: undefined, unreachable, stale, or refused means hard block, never a last-known-good value (DEC-0153, AD-39). Availability markers are enumerated ok | not_ready | unavailable | stale | refused, the configuration declaring which the door treats as a block (all but ok, by default). Configurable UI-editable (DEC-0157); no ratified spine value."
+    owner_scope: node-and-book
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "Node re-point (DEC-0256, DEC-0203): configurable node-and-Book-scoped, value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-8/DEC-0193, TN-18/DEC-0203). The staleness horizon past which an SQS sample is treated as stale — a conservative sentinel: undefined, unreachable, stale, or refused means hard block, never a last-known-good value (DEC-0153, AD-39). Availability markers are enumerated ok | not_ready | unavailable | stale | refused, the configuration declaring which the door treats as a block (all but ok, by default). Configurable UI-editable (DEC-0157); no ratified spine value."
 
   - name: decision_freshness_bound
     symbol: null
@@ -664,7 +733,10 @@ variables:
     component: COMP-QMF-RISK
     decision: DEC-0153
     configurable: true
-    notes: "A per-Book mandatory, non-defaultable maximum age on the evidence a live-money decision may read (DEC-0153, AD-39); the SQS live-spread channel's declared maximum sample age may not exceed it. Mandatory means no QMF default value exists — the Book must declare one. Configurable UI-editable (DEC-0157); no ratified spine value."
+    owner_scope: book
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "Node re-point (DEC-0256, DEC-0203): configurable Book-scoped, mandatory and non-defaultable; value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking, and it IS the heavy signal snapshot's maximum age with no second bound (TN-8/DEC-0193, TN-19/DEC-0204, TN-18/DEC-0203). A per-Book mandatory, non-defaultable maximum age on the evidence a live-money decision may read (DEC-0153, AD-39); the SQS live-spread channel's declared maximum sample age may not exceed it. Mandatory means no QMF default value exists — the Book must declare one. Configurable UI-editable (DEC-0157); no ratified spine value."
 
   - name: daily_dead_zone_width
     symbol: null
@@ -675,7 +747,10 @@ variables:
     component: COMP-QMF-RISK
     decision: DEC-0152
     configurable: true
-    notes: "The width of the daily_dead_zone protection window — the daily band in which no session is meaningfully in the market (DEC-0152, AD-38). Calendar-derived (market-hours calendar identity plus tzdata, never device or broker location) and therefore absent for 24/7 markets. Configurable UI-editable (DEC-0157). DISAGREEING recorded evidence, never merged: a one-hour table row ('OVERNIGHT | 19:00-20:00 | Dead zone') and Flow 9's approximately-three-hours prose — both QMX-discussion-layer, cited for the window definition only under the named corpus-precedence exemption (DEC-0156), non-authoritative and never a spine value."
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "Node re-point (DEC-0256, DEC-0203): configurable node-scoped, value-status-bearing on the node-config artifact; blank do-not-default blocks role=live and is soak-blocking, the disagreeing source figures recorded unmerged as evidence and never a default (TN-8/DEC-0193, TN-18/DEC-0203). The width of the daily_dead_zone protection window — the daily band in which no session is meaningfully in the market (DEC-0152, AD-38). Calendar-derived (market-hours calendar identity plus tzdata, never device or broker location) and therefore absent for 24/7 markets. Configurable UI-editable (DEC-0157). DISAGREEING recorded evidence, never merged: a one-hour table row ('OVERNIGHT | 19:00-20:00 | Dead zone') and Flow 9's approximately-three-hours prose — both QMX-discussion-layer, cited for the window definition only under the named corpus-precedence exemption (DEC-0156), non-authoritative and never a spine value."
 
   - name: session_handover_buffer_width
     symbol: null
@@ -686,7 +761,10 @@ variables:
     component: COMP-QMF-RISK
     decision: DEC-0152
     configurable: true
-    notes: "The width of the session_handover_buffer protection window — the pause around a session handover (DEC-0152, AD-38); a distinct kind from daily_dead_zone. Calendar-derived, absent for 24/7 markets. Configurable UI-editable (DEC-0157). Recorded evidence, non-authoritative: approximately 45 minutes is the operator's later recollection, explicitly not found in the corpus — never a spine value."
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "Node re-point (DEC-0256, DEC-0203): configurable node-scoped, value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-8/DEC-0193, TN-18/DEC-0203). The width of the session_handover_buffer protection window — the pause around a session handover (DEC-0152, AD-38); a distinct kind from daily_dead_zone. Calendar-derived, absent for 24/7 markets. Configurable UI-editable (DEC-0157). Recorded evidence, non-authoritative: approximately 45 minutes is the operator's later recollection, explicitly not found in the corpus — never a spine value."
 
   - name: session_handover_buffer_anchor
     symbol: null
@@ -697,7 +775,10 @@ variables:
     component: COMP-QMF-RISK
     decision: DEC-0152
     configurable: true
-    notes: "The mandatory anchor side of a session_handover_buffer window, one of pre-close | post-open | both (DEC-0152, AD-38). Mandatory field on every session_handover_buffer record; no QMF default. Configurable UI-editable (DEC-0157); no ratified spine value."
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "Node re-point (DEC-0256, DEC-0203): configurable node-scoped, value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-8/DEC-0193, TN-18/DEC-0203). The mandatory anchor side of a session_handover_buffer window, one of pre-close | post-open | both (DEC-0152, AD-38). Mandatory field on every session_handover_buffer record; no QMF default. Configurable UI-editable (DEC-0157); no ratified spine value."
 
   - name: window_forced_flat
     symbol: null
@@ -719,7 +800,10 @@ variables:
     component: COMP-QMF-RISK
     decision: DEC-0148
     configurable: true
-    notes: "The trigger point of the V1 move-to-breakeven ratchet — the only V1 dynamic SL/TP policy: one-directional, risk-reducing, never reset outward, per-Book (DEC-0148, AD-34). Carried as an exact rational; its unit-kind is a per-Book declaration. Configurable UI-editable (DEC-0157); no spine value. Richer policies (trailing, laddered targets) are later Book versions through the same declaration."
+    owner_scope: book
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "Node re-point (DEC-0256, DEC-0203): configurable Book-scoped, value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-8/DEC-0193, TN-18/DEC-0203). The trigger point of the V1 move-to-breakeven ratchet — the only V1 dynamic SL/TP policy: one-directional, risk-reducing, never reset outward, per-Book (DEC-0148, AD-34). Carried as an exact rational; its unit-kind is a per-Book declaration. Configurable UI-editable (DEC-0157); no spine value. Richer policies (trailing, laddered targets) are later Book versions through the same declaration."
 
   - name: breakeven_ratchet_offset
     symbol: null
@@ -730,7 +814,10 @@ variables:
     component: COMP-QMF-RISK
     decision: DEC-0148
     configurable: true
-    notes: "The offset of the V1 move-to-breakeven ratchet — where the protective stop lands once the ratchet triggers (DEC-0148, AD-34); risk-non-increasing measured against the frozen original_risk_distance. Carried as an exact rational; its unit-kind is a per-Book declaration. Configurable UI-editable (DEC-0157); no spine value."
+    owner_scope: book
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "Node re-point (DEC-0256, DEC-0203): configurable Book-scoped, value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-8/DEC-0193, TN-18/DEC-0203). The offset of the V1 move-to-breakeven ratchet — where the protective stop lands once the ratchet triggers (DEC-0148, AD-34); risk-non-increasing measured against the frozen original_risk_distance. Carried as an exact rational; its unit-kind is a per-Book declaration. Configurable UI-editable (DEC-0157); no spine value."
 
   - name: paper_starting_balance
     symbol: null
@@ -852,3 +939,1084 @@ variables:
     decision: DEC-0165
     configurable: true
     notes: "The severity of the AD-11 stale-evidence refusal raised when a run resolves a ref that a fresher registry as-of set shows superseded (DEC-0165, B-15). Configurable UI-editable (DEC-0157); no spine value. The as-of set itself is never configurable — a sweep freezes ONE as-of at batch admission for every trial."
+
+  # ===================================================================
+  # TRADING NODE (COMP-QMN) node-minted variables — the registry mint
+  # table (DEC-0256), each configurable, unit-kinded, owner-scoped,
+  # value-status-bearing and blank-effect tagged. Registry = schema half;
+  # the resolved value and its value-status live on the node-config
+  # artifact (TN-18/DEC-0203, DEC-0254). Evidence values live in notes,
+  # never in value: (L38).
+  # ===================================================================
+
+  # --- KSA severity policy (TN-7/DEC-0192) ---
+  - name: ksa_effect_matrix
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: enum
+    type: declaration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "The trigger-to-level-to-effect matrix is the node's severity policy (TN-7/DEC-0192, TN-8/DEC-0193): each cell declares an effect drawn only from CT-30's suspend_new | drain | flatten, a required typed scope, and the AD-36 satisfaction predicate scope-flat-at-reconciled-verdict | no-pending-orders-at-reconciled-verdict | never-auto. Value-status-bearing on the node-config artifact; a blank or provisional-evidence cell blocks role=live while paper may run, and it is soak-blocking (TN-18/DEC-0203). The legacy donor matrix is recorded as evidence only, never a default. The five levels GREEN | YELLOW | ORANGE | RED | BLACK and the four trigger classes are fixed vocabulary and are not this row."
+
+  - name: ksa_detector_posture
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: enum
+    type: enum
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live]
+    notes: "The inform-versus-pause posture of the automatic detectors, one of inform | pause, a UI-editable node setting (TN-7/DEC-0192, DEC-0049). Detectors act only through entry-blocking controls at the narrowest affected subject and never on positions or exits (L39). Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live (TN-18/DEC-0203)."
+
+  # --- News-calendar staleness precondition (TN-8/TN-13) ---
+  - name: news_calendar_max_staleness
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "The per-decision-cycle precondition that fails entries closed on a stale news calendar, so a silently dead news-calendar timer needs no signal of its own (TN-8/DEC-0193, TN-13/DEC-0198). Do-not-default. Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-18/DEC-0203)."
+
+  # --- Ratchet origination threshold (TN-8) ---
+  - name: amend_min_improvement
+    symbol: null
+    value: declared-per-book
+    formula: null
+    units: dimensionless-ratio
+    type: ratio
+    component: COMP-QMF-RISK
+    decision: DEC-0256
+    configurable: true
+    owner_scope: book
+    value_status_required: true
+    blank_effect: [blocks-role-live]
+    notes: "The breakeven ratchet's ORIGINATION threshold inside the Book exit_policy — an authoring rule that declares when the ratchet PROPOSES an amendment, and NEVER a command-path gate: no node component on the command path may refuse a risk-non-increasing amend_protection (TN-8/DEC-0193). Its unit-kind is a per-Book declaration. Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live (TN-18/DEC-0203)."
+
+  # --- Order-path / loop mechanisms, blocks-boot (TN-5/TN-6) ---
+  - name: submission_deadline
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-boot, blocks-soak]
+    notes: "The deadline after which an in-flight command mints an UNKNOWN; it STARTS AT WIRE HANDOFF, the moment the client transmits, never at command mint (TN-6/DEC-0191). A declared mechanism that cannot run without a value, so a blank refuses to compose (blocks-boot); soak-blocking because TN-23 exercises it (TN-18/DEC-0203). Value-status-bearing on the node-config artifact."
+
+  - name: local_queue_bound
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-boot, blocks-soak]
+    notes: "The bound on time awaiting pacer admission, a local queue measured and exported separately from the submission deadline; a breach is a typed refusal on the veto path naming the pacer as the refusing door, never an UNKNOWN and never a stream block (TN-6/DEC-0191). Blank refuses to compose (blocks-boot); soak-blocking (TN-18/DEC-0203). Value-status-bearing on the node-config artifact."
+
+  - name: max_slice_latency
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-boot, blocks-soak]
+    notes: "The bound on event-driven slice latency; a breach is a journaled data-quality record plus an entry-side-only no-new-entry band effect, never a silent skip and never a stand-down (TN-5/DEC-0190). Blank refuses to compose (blocks-boot); soak-blocking (TN-18/DEC-0203). Value-status-bearing on the node-config artifact."
+
+  - name: accumulator_bound
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-boot, blocks-soak]
+    notes: "The bound on the push-to-pull accumulator under a typed overflow rule: overflow NEVER drops an execution or system observation — market-data observations coalesce and the coalescing is journaled as data quality — and a bound that cannot be honoured without dropping an execution or system observation is a storage failure blocking entries only (TN-5/DEC-0190). An unbounded accumulator is an absent mechanism, so a blank refuses to compose (blocks-boot); soak-blocking (TN-18/DEC-0203). Value-status-bearing on the node-config artifact."
+
+  # --- Reconciliation / pacing / pool-and-health (TN-6/TN-22) ---
+  - name: reconciliation_lookback
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "The lookback window within which a reconciled read-back may resolve an UNKNOWN; a read-back out of this lookback resolves as out-of-lookback and needs operator attestation (TN-6/DEC-0191, TN-22/DEC-0207). Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-18/DEC-0203)."
+
+  - name: reconciliation_cadence
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "The cadence at which reconciliation read-backs run (TN-6/DEC-0191, TN-22/DEC-0207). Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-18/DEC-0203)."
+
+  - name: pacing_cadence
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "The pacing cadence of the submission pacer below the declared per-connection request ceilings (TN-6/DEC-0191, TN-22/DEC-0207). Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-18/DEC-0203)."
+
+  - name: backoff_cadence
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "The backoff cadence applied after a transient venue failure or a pacer refusal (TN-6/DEC-0191, TN-22/DEC-0207). Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-18/DEC-0203)."
+
+  - name: protective_reserve_capacity
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "The connection pacer's reserved minimum admission capacity for protective commands that no other issuer may consume, so a close_all never queues behind a gap replay (TN-6/DEC-0191, TN-22/DEC-0207). Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-18/DEC-0203)."
+
+  - name: pool_constants
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: count
+    type: declaration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "The pool sizing constants of the order path (a do-not-default family named at implementation, which may rename the key) (TN-6/DEC-0191, TN-22/DEC-0207). Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-18/DEC-0203)."
+
+  - name: health_constants
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: count
+    type: declaration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "The health-read-model thresholds of the /health independent states (a do-not-default family named at implementation, which may rename the key) (TN-6/DEC-0191, TN-15/DEC-0200). Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-18/DEC-0203)."
+
+  # --- Supervision / crash-loop / drain / watchdog, blocks-boot (TN-4/TN-16) ---
+  - name: node_crash_loop_max_boots
+    symbol: K
+    value: declared-per-node
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-boot, blocks-soak]
+    notes: "The crash-loop fold's boot count K: K unrequested boot attempts within node_crash_loop_window T enter node stand-down (TN-4/DEC-0189). StartLimitBurst MUST exceed K. Blank refuses to compose (blocks-boot); soak-blocking (TN-18/DEC-0203). Evidence value: 3 boots in 60 s. Value-status-bearing on the node-config artifact."
+
+  - name: node_crash_loop_window
+    symbol: T
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-boot, blocks-soak]
+    notes: "The crash-loop fold's window T counting unrequested boot attempts (TN-4/DEC-0189). StartLimitIntervalSec is at least T. Blank refuses to compose (blocks-boot); soak-blocking (TN-18/DEC-0203). Evidence value: 60 s (paired with K = 3 boots). Value-status-bearing on the node-config artifact."
+
+  - name: drain_window
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-boot, blocks-soak]
+    notes: "Bounds the safe point: a breach is a typed refusal rather than an indefinite hang, positions are never waited on (TN-4/DEC-0189). TimeoutStopSec is RENDERED from it into the unit file by node-install, never hand-authored, so a config change and a unit file can never disagree (TN-16/DEC-0201). Blank refuses to compose (blocks-boot); soak-blocking (TN-18/DEC-0203). Value-status-bearing on the node-config artifact."
+
+  - name: slice_watch_trip_multiple
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: dimensionless-ratio
+    type: ratio
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-boot]
+    notes: "The door layer's slice-progress watch trips when elapsed slice time exceeds seat_callback_deadline by this multiple, stopping the keepalive with WATCHDOG=trigger and letting systemd restart the node — safe because a restart never flattens and standing intents survive as folds (TN-19/DEC-0204, TN-4/DEC-0189). Blank refuses to compose (blocks-boot). Evidence value: 3. Value-status-bearing on the node-config artifact."
+
+  - name: shadow_lane_publish_bound
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-boot]
+    notes: "The publish bound for a candidate labeler on the shadow lane; a candidate that cannot publish inside it is DROPPED with a journaled data-quality record, never counted toward max_slice_latency (TN-19/DEC-0204). Blank refuses to compose (blocks-boot). Value-status-bearing on the node-config artifact."
+
+  - name: news_recorder_max_attempts
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-boot]
+    notes: "The news-calendar recorder's maximum attempts per timer firing, counted against the provider's roughly 2-downloads-per-5-minutes budget; a provider rate-limit or block response is journaled as data quality, alarmed on the silent-degradation class and NEVER retried inside the same firing (TN-13/DEC-0198). Blank refuses to compose (blocks-boot). Value-status-bearing on the node-config artifact."
+
+  - name: news_recorder_backoff
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-boot]
+    notes: "The news-calendar recorder's per-firing backoff between attempts, counted against the same provider budget as news_recorder_max_attempts (TN-13/DEC-0198). Blank refuses to compose (blocks-boot). Value-status-bearing on the node-config artifact."
+
+  - name: watchdog_interval
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-boot, blocks-soak]
+    notes: "The supervisor keepalive interval; WatchdogSec is RENDERED from it into the unit file by node-install, never hand-authored, so a config change and a unit file can never disagree (TN-4/DEC-0189, TN-16/DEC-0201). Blank refuses to compose (blocks-boot); soak-blocking (TN-18/DEC-0203). Value-status-bearing on the node-config artifact."
+
+  # --- Time discipline clock bands (TN-14/DEC-0199) ---
+  - name: clock_drift_warn
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "The ok-to-warn clock band, evaluated as a per-decision-cycle precondition and never a standing CT-30 action (TN-14/DEC-0199). Band numbers are evidence values recorded from the time audit and sized for roughly one-second decisions, never ratified constants (L38). Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-18/DEC-0203)."
+
+  - name: clock_drift_no_new_entry
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "The no-new-entry clock band: entry-side only per L39, refusing place_order and risk-increasing amends for that cycle and nothing else, pushing on the silent-degradation alert class in live as well as during the soak (TN-14/DEC-0199). Band numbers are evidence values, never ratified constants (L38). Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-18/DEC-0203)."
+
+  - name: clock_drift_halt
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "The halt clock band: enters the node stand-down lifecycle state that only an operator resurrect leaves (TN-14/DEC-0199, TN-4/DEC-0189). Band numbers are evidence values, never ratified constants (L38). Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-18/DEC-0203)."
+
+  - name: clock_unsynchronized_after
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "The horizon after which no time source for N minutes is treated as unsynchronized — a distinct state from measured drift (TN-14/DEC-0199). The number is an evidence value, never a ratified constant (L38). Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-18/DEC-0203)."
+
+  # --- Venue re-verification (TN-11/DEC-0196) ---
+  - name: venue_d1_reverification_cadence
+    symbol: null
+    value: declared-per-venue
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live]
+    notes: "The cadence of the continuous background monitor that re-verifies the venue's measured D1 boundary and trend-bar price basis per broker, and across DST transitions (TN-11/DEC-0196, DEC-0135). The NODE declares the resolved value, once per venue (spine mint-table owner scope 'node per venue'); the value is declared-per-venue and not asserted by the venue. Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live (TN-18/DEC-0203)."
+
+  # --- Backup numerics split and provider/custody (TN-12/TN-13) ---
+  - name: backup_recovery_time_objective_integrity
+    symbol: null
+    value: evidence-only
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node-and-ops
+    value_status_required: true
+    blank_effect: [blocks-soak]
+    notes: "The integrity-restore RTO, MEASURED at the monthly full-restore rehearsal (qmn-restore-full.timer) and recorded apart from the full-DR RTO, never conflated (TN-13/DEC-0198, TN-12/DEC-0197). RTO is measured and never declared. Evidence value only; value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203)."
+
+  - name: backup_recovery_time_objective_full_dr
+    symbol: null
+    value: evidence-only
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node-and-ops
+    value_status_required: true
+    blank_effect: [blocks-soak]
+    notes: "The full-DR RTO, MEASURED at the host-loss rehearsal (restore_drill_run) including VPS re-procurement, re-provisioning and key recovery, recorded apart from the integrity RTO and never conflated (TN-13/DEC-0198, TN-12/DEC-0197). RTO is measured and never declared. Evidence value only; value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203)."
+
+  - name: backup_object_storage_provider
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: string
+    type: string
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node-and-ops
+    value_status_required: true
+    blank_effect: [blocks-soak]
+    notes: "The S3-compatible object-storage bucket provider, deployment configuration with credentials by reference — the V1 ObjectStorage implementation is local staging plus rclone (TN-13/DEC-0198). Recommendation Backblaze B2; alternatives R2, Wasabi — recorded as evidence, never a ratified constant (L38). Value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203)."
+
+  - name: backup_payload_key_custody
+    symbol: null
+    value: workstation-escrowed
+    formula: null
+    units: string
+    type: string
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node-and-ops
+    value_status_required: true
+    blank_effect: [blocks-soak]
+    notes: "The CT-14 backup payload key custody RULE, carried as this row's value descriptor and NOT a blank (TN-12/DEC-0197, TN-13/DEC-0198): the payload key is workstation-minted, escrowed in Windows Credential Manager under qmx/backup-payload-key plus one offline copy, and NEVER VPS-minted — the host-loss rehearsal restores onto a clean host holding nothing but the escrowed key, the only drill that proves DR. Value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203)."
+
+  # --- Capacity and disk (TN-3/TN-13/TN-15/TN-16) ---
+  - name: hot_room_retention_window
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node-and-ops
+    value_status_required: true
+    blank_effect: [blocks-soak]
+    notes: "The retention window past which a hot room may be purged — but only when a verified copy exists in the sealed-archive room role AND a verified off-host copy exists, since the evidence tier shares the machine and a same-disk sync frees nothing by itself (TN-3/DEC-0188, TN-13/DEC-0198). Value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203)."
+
+  - name: disk_headroom_min
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: bytes
+    type: quantity
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node-and-ops
+    value_status_required: true
+    blank_effect: [blocks-soak]
+    notes: "The headroom threshold that mints a no-new-entry band BEFORE the disk-full block arrives and pushes on the silent-degradation class, so headroom is bounded by design rather than watched; it also sizes the reserved protection-intent extent so the headroom block trips first (TN-3/DEC-0188, TN-13/DEC-0198, TN-4/DEC-0189). Unit-kind bytes (a declared free-space floor). Value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203)."
+
+  - name: vps_disk_budget
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: bytes
+    type: declaration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node-and-ops
+    value_status_required: true
+    blank_effect: [blocks-soak]
+    notes: "The declared VPS disk budget whose line items are named and each separately capped: journald SystemMaxUse, room retention, backup staging, the per-commit trees under /opt/qmx with their declared prune depth, the reserved protection-intent extent under /var/lib/qmx/state, and /var/lib/qmx-observability with its own filesystem quota (TN-3/DEC-0188, TN-13/DEC-0198, TN-15/DEC-0200, TN-16/DEC-0201). Bytes-per-day of growth is MEASURED and recorded at the soak, never estimated. Value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203)."
+
+  # --- News-calendar source and refresh (TN-13/DEC-0198; R4/DEC-0214) ---
+  - name: news_calendar_provider_primary
+    symbol: null
+    value: forex-factory-free-weekly
+    formula: null
+    units: enum
+    type: enum
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live]
+    notes: "Forex Factory's free weekly file, the SOLE V1 news-calendar source, ruled by the operator (R4/DEC-0214, TN-13/DEC-0198): 'I will not pay for news' — there is NO paid fallback slot and none is ever minted anywhere. A later path is a second FREE source or an agent-scraped JSON delivered in the same CT-15 intake shape, which is an adapter and a config row and never a code path through the blackout. Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live (TN-18/DEC-0203)."
+
+  - name: news_calendar_refresh_cadence
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "The refresh cadence of the qmn-news-calendar.timer, configurable because all three sessions are traded and timeliness matters; a configured cadence that would breach the free feed's roughly 2-downloads-per-5-minutes limit is REFUSED at config compile rather than silently throttled (TN-13/DEC-0198). Evidence value: every 2 h and before each session open. Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-18/DEC-0203)."
+
+  # --- Operator log and journald (TN-15/DEC-0200) ---
+  - name: operator_log_retention_window
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node-and-ops
+    value_status_required: true
+    blank_effect: [blocks-soak]
+    notes: "The retention window for operator logs (stdlib JSON-lines to journald), set by provisioning (TN-15/DEC-0200). Key name minted at implementation, which may rename it. Its length is an evidence value, never a ratified constant (L38). Value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203). Operator logs are NOT journals: CT-13 journal evidence is never written through the logger."
+
+  - name: journald_size_cap
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: bytes
+    type: quantity
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node-and-ops
+    value_status_required: true
+    blank_effect: [blocks-soak]
+    notes: "The journald SystemMaxUse size cap on the operator-log stream, a named line item of vps_disk_budget (TN-15/DEC-0200, TN-3/DEC-0188). Key name minted at implementation, which may rename it. Value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203)."
+
+  # --- Liveness heartbeat (formerly the external dead-man's switch) (TN-15/DEC-0200) ---
+  - name: liveness_heartbeat_endpoint
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: string
+    type: string
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node-and-ops
+    value_status_required: true
+    blank_effect: [blocks-soak]
+    notes: "The off-VPS free-tier watcher endpoint the liveness heartbeat sends its outbound alive-ping to; the watcher alerts on a MISSING ping because a dead node cannot alarm about itself (TN-15/DEC-0200). Formerly dead_mans_switch_endpoint; renamed by the operator 2026-08-30 (DEC-0261) — notification only, zero authority, it can never stop entries, close positions or touch the node. Key name minted at implementation, which may rename it. Alert-class membership is NOT a registry row — FAILURES.md's notification-tier column is its sole home (DEC-0200, DEC-0256). Value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203)."
+
+  - name: liveness_heartbeat_cadence
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node-and-ops
+    value_status_required: true
+    blank_effect: [blocks-soak]
+    notes: "The cadence of the liveness heartbeat's outbound alive-ping (TN-15/DEC-0200). Formerly dead_mans_switch_cadence; renamed by the operator 2026-08-30 (DEC-0261) — notification only, zero authority. Key name minted at implementation, which may rename it. Value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203)."
+
+  - name: liveness_heartbeat_token_reference
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: string
+    type: string
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node-and-ops
+    value_status_required: true
+    blank_effect: [blocks-soak]
+    notes: "The credential REFERENCE for the liveness heartbeat token — a reference, never the secret value (TN-15/DEC-0200, TN-12/DEC-0197). Formerly dead_mans_switch_token_reference; renamed by the operator 2026-08-30 (DEC-0261) — notification only, zero authority. Key name minted at implementation, which may rename it. Value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203)."
+
+  # --- Evidence channel and governor budgets (TN-17/TN-19/TN-21/TN-23) ---
+  - name: evidence_channel_budget
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-soak]
+    notes: "The value behind the localhost HTTP evidence channel being 'budgeted' — the publish-never-act, authority-free read door serving status, health, journal projections and /metrics (TN-17/DEC-0202). The exact unit-kind (request rate or response size) is declared at implementation. Value-status-bearing on the node-config artifact; soak-blocking (TN-18/DEC-0203)."
+
+  - name: governor_cpu_budget
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-soak]
+    notes: "The CPU budget bounding the node's isolated stdlib process spawns — conformance Layer-2 runs, benchmark runs and replay runs — so a verdict stays host-independent (TN-19/DEC-0204, TN-21/DEC-0206, TN-23/DEC-0208). Distinct from QMB's qmb_governor_cpu_budget. Soak-blocking rather than merely live-blocking (TN-23/DEC-0208). Value-status-bearing on the node-config artifact (TN-18/DEC-0203)."
+
+  - name: governor_memory_budget
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: bytes
+    type: quantity
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-soak]
+    notes: "The memory budget bounding the node's isolated stdlib process spawns — conformance Layer-2 runs, benchmark runs and replay runs (TN-19/DEC-0204, TN-21/DEC-0206, TN-23/DEC-0208). Distinct from QMB's qmb_governor_memory_budget. Soak-blocking rather than merely live-blocking (TN-23/DEC-0208). Value-status-bearing on the node-config artifact (TN-18/DEC-0203)."
+
+  # --- Seat containment and bot-state cadence (TN-19/DEC-0204) ---
+  - name: seat_callback_deadline
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "The per-callback deadline enforced by the slice driver through the CancelToken at slice boundaries; a breach is a typed refusal plus automatic seat quarantine, never a stream failure and never a node restart. The door layer's slice-progress watch also reads it (TN-19/DEC-0204). Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-18/DEC-0203)."
+
+  - name: seat_memory_ceiling
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: bytes
+    type: quantity
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live, blocks-soak]
+    notes: "The per-seat memory ceiling enforced by LimitProbe; a breach is a typed refusal plus automatic seat quarantine, left only by the operator-signed seat_reinstate power (TN-19/DEC-0204). Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live and is soak-blocking (TN-18/DEC-0203)."
+
+  - name: bot_state_snapshot_cadence
+    symbol: null
+    value: declared-per-node
+    formula: null
+    units: enum
+    type: enum
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node
+    value_status_required: true
+    blank_effect: [blocks-role-live]
+    notes: "The slice cadence at which bot state under the BotStateScope tuple is snapshotted, restored only within the same tuple (TN-19/DEC-0204). Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live (TN-18/DEC-0203)."
+
+  # --- Accounting boundary (TN-25/DEC-0210) ---
+  - name: r_unit_price_recompute_cadence
+    symbol: null
+    value: declared-per-book
+    formula: null
+    units: enum
+    type: enum
+    component: COMP-QMF-RISK
+    decision: DEC-0256
+    configurable: true
+    owner_scope: book
+    value_status_required: true
+    blank_effect: [blocks-role-live]
+    notes: "The Book's declared cadence for re-deriving r_unit_price inside an accounting period; r_unit_price is fixed at period start and not recomputed as the budget drains intraday unless the Book declares another cadence, and it MUST declare one or two builds price the same intraday admission differently — absence is an invalid-input refusal at AD-32 Layer 1 (TN-25/DEC-0210). Recorded posture: period start only. Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live (TN-18/DEC-0203)."
+
+  - name: accounting_period_calendar_identity
+    symbol: null
+    value: declared-per-account
+    formula: null
+    units: string
+    type: string
+    component: COMP-QMN
+    decision: DEC-0256
+    configurable: true
+    owner_scope: node-and-bms
+    value_status_required: true
+    blank_effect: [blocks-role-live]
+    notes: "The account-scoped AD-8 day-boundary calendar identity the accounting period is named by — the rule that answers only which day an instant belongs to for evaluation — carried in-band on every TradingDate it produces, never substituted for a market-hours calendar and never a fixed offset from broker server time (TN-25/DEC-0210). Value-status-bearing on the node-config artifact; blank or provisional-evidence blocks role=live (TN-18/DEC-0203)."
+
+  # QMA AD-26 set (DEC-0325). Three job-spec names are NOT spine-registered and mint no row per
+  # DEC-0325: bus.sticky_limit and routine.budget_hint were removed from AD-26 by memlog L132 as
+  # unowned (no owning AD, subsystem, units or default); journal.retention_* has no spine referent
+  # because the event journal is never trimmed and mints no trim threshold (AD-8, AD-23).
+  - name: quant.quiet_hours
+    symbol: null
+    value: declared-per-quant
+    formula: null
+    units: schedule
+    type: declaration
+    component: COMP-QMA-DAEMON
+    decision: DEC-0319
+    configurable: true
+    notes: "A daily interval plus its IANA zone gating a Quant's wakes; scope quant. Record-homed: home is the Quant record WakePolicy (AD-20); an operator-principal Quant record write moves it, never a variable.set (DEC-0325). No spine default (DEC-0319, DEC-0325)."
+
+  - name: quant.max_wakes_per_window
+    symbol: null
+    value: declared-per-quant
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0319
+    configurable: true
+    notes: "The cap on a Quant's wakes per window; scope quant. Record-homed: home is the Quant record WakePolicy (AD-20), moved by the operator-principal Quant record write (DEC-0325). No spine default (DEC-0319, DEC-0325)."
+
+  - name: hook.timeout_before
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMA-DAEMON
+    decision: DEC-0309
+    configurable: true
+    notes: "The before-phase hook timeout span, measured from a recorded UTC instant with no zone (AD-10). Registry-homed: set by an operator-principal variable.set recording a variable.set journal event (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0309, DEC-0325)."
+
+  - name: hook.timeout_after
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMA-DAEMON
+    decision: DEC-0309
+    configurable: true
+    notes: "The after-phase hook timeout span, measured from a recorded UTC instant with no zone (AD-10). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0309, DEC-0325)."
+
+  - name: hook.timeout_control
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMA-DAEMON
+    decision: DEC-0309
+    configurable: true
+    notes: "The phase-less-control hook timeout span for the two blocking controls `agent_stop` (timeout resolves to observe) and `review_required` (timeout resolves to deny), measured from a recorded UTC instant with no zone (AD-10). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0309, DEC-0325)."
+
+  - name: mission.ask_timeout
+    symbol: null
+    value: declared-per-mission
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMA-DAEMON
+    decision: DEC-0311
+    configurable: true
+    notes: "The Mission ask timeout; scope mission. Record-homed: home is the Mission approval_route (AD-10, AD-12), moved by the operator-principal Mission record write (DEC-0325). No spine default (DEC-0311, DEC-0325)."
+
+  - name: mission.on_timeout
+    symbol: null
+    value: declared-per-mission
+    formula: null
+    units: enum
+    type: enum
+    component: COMP-QMA-DAEMON
+    decision: DEC-0311
+    configurable: true
+    notes: "The Mission on-timeout disposition, closed enum values deny and escalate; scope mission. Record-homed: home is the Mission approval_route (AD-10, AD-12), moved by the operator-principal Mission record write (DEC-0325). No spine default (DEC-0311, DEC-0325)."
+
+  - name: wire.deprecation_minors
+    symbol: null
+    value: 2
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-WIRE
+    decision: DEC-0304
+    configurable: true
+    notes: "The number of minor versions a deprecated wire message family stays served (AD-5), default 2. Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly) (DEC-0304, DEC-0325)."
+
+  - name: wire.dedup_window
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMA-DAEMON
+    decision: DEC-0305
+    configurable: true
+    notes: "The daemon dedup-cursor window over the durable wire stream (AD-5, AD-6). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0305, DEC-0325)."
+
+  - name: rlm.depth_cap
+    symbol: null
+    value: 2
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0313
+    configurable: true
+    notes: "The RLM kernel recursion depth cap (AD-14), default 2 (the depth-2 cap). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly) (DEC-0313, DEC-0325). RLM depth above 2 is deferred (GAP-0080)."
+
+  - name: rlm.fanout_cost_ceiling_usd
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: "money(numeraire)"
+    type: money
+    component: COMP-QMA-DAEMON
+    decision: DEC-0313
+    configurable: true
+    notes: "The USD ceiling per 800-variant RLM aggregation, distinct from continuation.budget (AD-14, AD-26); scope desk. Registry-homed: set by an operator-principal variable.set (AD-24). No spine default (DEC-0313, DEC-0325)."
+
+  - name: telemetry.retention_window
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMA-DAEMON
+    decision: DEC-0322
+    configurable: true
+    notes: "The telemetry-store retention window (AD-23); telemetry is not the ledger and not the journal. Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default; the window value is deferred (GAP-0089) (DEC-0322, DEC-0325)."
+
+  - name: telemetry.trim_event_count
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0322
+    configurable: true
+    notes: "The telemetry-store trim threshold measured in event count (AD-23). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0322, DEC-0325)."
+
+  - name: telemetry.trim_disk_bytes
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: bytes
+    type: quantity
+    component: COMP-QMA-DAEMON
+    decision: DEC-0322
+    configurable: true
+    notes: "The telemetry-store trim threshold measured in on-disk size (AD-23). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0322, DEC-0325)."
+
+  - name: mailbox.delivery_trim_event_count
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0319
+    configurable: true
+    notes: "The mailbox delivery-projection trim threshold measured in event count (AD-20); the mailbox and its delivery projection are bounded non-evidence streams. Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0319, DEC-0325)."
+
+  - name: mailbox.delivery_trim_disk_bytes
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: bytes
+    type: quantity
+    component: COMP-QMA-DAEMON
+    decision: DEC-0319
+    configurable: true
+    notes: "The mailbox delivery-projection trim threshold measured in on-disk size (AD-20). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0319, DEC-0325)."
+
+  - name: mailbox.delivery_retention_window
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: duration
+    type: duration
+    component: COMP-QMA-DAEMON
+    decision: DEC-0319
+    configurable: true
+    notes: "The mailbox delivery-projection retention window (AD-20, AD-23); the mailbox delivery projection is one of the two bounded non-evidence streams a daemon job may trim, and only inside this registered AD-26 retention window. Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default; the window value is deferred (GAP-0089) (DEC-0319, DEC-0325)."
+
+  - name: environment.max_in_flight
+    symbol: null
+    value: 1
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0316
+    configurable: true
+    notes: "The ExecutionEnvironment concurrency cap (spine name max_in_flight), default 1; scope execution_environment. Record-homed: home is the ExecutionEnvironment declaration (AD-17); moved only by that declaration's operator-principal write command (AD-24, DEC-0325). Editability is a per-kind property of this one variable — AD-26 names one variable, max_in_flight: ui-editable for the local, docker, remote_container and browser kinds, and pinned to 1 and uneditable for the remote_host and desktop kinds, which may never exceed 1 (AD-17). No second registry key expresses the pin (DEC-0316, DEC-0325)."
+
+  - name: routine.max_concurrent
+    symbol: null
+    value: declared-per-routine
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0328
+    configurable: true
+    notes: "The Routine max-concurrent cap; scope routine. Record-homed: home is the Routine record (AD-29), moved by the operator-principal Routine record write (DEC-0325). No spine default (DEC-0328, DEC-0325)."
+
+  - name: continuation.max_consecutive
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0328
+    configurable: true
+    notes: "The cap on consecutive continuations before escalation (AD-29). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0328, DEC-0325)."
+
+  - name: continuation.budget
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0328
+    configurable: true
+    notes: "The continuation budget ceiling (AD-29), distinct from rlm.fanout_cost_ceiling_usd. Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0328, DEC-0325)."
+
+  - name: continuation.escalation_target
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: string
+    type: string
+    component: COMP-QMA-DAEMON
+    decision: DEC-0328
+    configurable: true
+    notes: "The escalation target for an exhausted continuation budget, the Agent's Quant mailbox (AD-29). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0328, DEC-0325)."
+
+  - name: store.backup_cadence
+    symbol: null
+    value: nightly
+    formula: null
+    units: schedule
+    type: enum
+    component: COMP-QMA-DAEMON
+    decision: DEC-0326
+    configurable: true
+    notes: "The store backup cadence, ratified nightly under the parent's already-ratified backup design (AD-27, parent AD-20, L18); encrypted, versioned, off-machine. Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). The backup DESTINATION and the encryption-key custody are deferred (GAP-0088), never the cadence (DEC-0326, DEC-0325)."
+
+  - name: store.sample_restore_test_cadence
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: schedule
+    type: enum
+    component: COMP-QMA-DAEMON
+    decision: DEC-0326
+    configurable: true
+    notes: "The sample-restore-test cadence (AD-27). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default; the cadence value is deferred (GAP-0088) (DEC-0326, DEC-0325)."
+
+  - name: store.full_restore_rehearsal_cadence
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: schedule
+    type: enum
+    component: COMP-QMA-DAEMON
+    decision: DEC-0326
+    configurable: true
+    notes: "The full-restore-rehearsal cadence (AD-27). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default; the cadence value is deferred (GAP-0088) (DEC-0326, DEC-0325)."
+
+  - name: proxy.allow_unauthenticated_loopback
+    symbol: null
+    value: true
+    formula: null
+    units: null
+    type: enum
+    component: COMP-QMA-DAEMON
+    decision: DEC-0314
+    configurable: true
+    notes: "Whether a loopback-bound model proxy (auth_mode none) may accept unauthenticated connections; closed enum true or false, default true (AD-15). Default true is a memlog assumption (L106), operator-overridable. Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly) (DEC-0314, DEC-0325)."
+
+  - name: deployment.model_family
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: enum
+    type: enum
+    component: COMP-QMA-DAEMON
+    decision: DEC-0314
+    configurable: true
+    notes: "The model-family assignment for a Deployment (AD-15); scope global (AD-26 pins none explicitly; `deployment` is not a member of AD-26's closed scope vocabulary). Registry-homed: the registered variable is the closed enum of allowed family values, set by an operator-principal variable.set (AD-24). The per-Deployment assignment is a field of the Deployment record, optional and operator-assigned under AD-15/AD-24 — not a second home of this variable; a plugin-contributed model_deployment registers with none. No spine-enumerated member list (DEC-0314, DEC-0325)."
+
+  - name: review_policy.families
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: enum
+    type: enum
+    component: COMP-QMA-DAEMON
+    decision: DEC-0314
+    configurable: true
+    notes: "The ReviewPolicy family enum (AD-15). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine-enumerated member list (DEC-0314, DEC-0325)."
+
+  - name: wire.remote_outbox_depth
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0305
+    configurable: true
+    notes: "The outbox depth for a remote worker dialing out to the daemon (AD-6). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0305, DEC-0325)."
+
+  - name: wire.remote_spool_bytes
+    symbol: null
+    value: declared-per-installation
+    formula: null
+    units: bytes
+    type: quantity
+    component: COMP-QMA-DAEMON
+    decision: DEC-0305
+    configurable: true
+    notes: "The spool byte budget for a remote worker dialing out to the daemon (AD-6). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0305, DEC-0325)."
+
+  - name: deferred.finished_mission_trajectory_count
+    symbol: null
+    value: 50
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0322
+    configurable: true
+    notes: "The finished-Mission trajectory count that arms the self-improvement gate (AD-23, AD-26), default 50. Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). The self-improvement evaluation gates the variable feeds are deferred (GAP-0074) (DEC-0322, DEC-0325)."
+
+  - name: deferred.sandbox_refusal_count
+    symbol: null
+    value: 3
+    formula: null
+    units: count
+    type: count
+    component: COMP-QMA-DAEMON
+    decision: DEC-0316
+    configurable: true
+    notes: "The consecutive Compute Router `NoEnvironment` refusal count that arms the deferred sandbox/compute-vendor revisit (AD-17, AD-26), default 3. Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). Sandbox and compute vendors are deferred (GAP-0075) (DEC-0316, DEC-0325)."

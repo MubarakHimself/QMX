@@ -5,10 +5,10 @@ type: scenario
 status: ratified
 component: COMP-QMF-RISK
 depends_on: [COMP-QMF-CORE, COMP-QMF-DATA]
-decisions: [DEC-0152, DEC-0157, DEC-0156, DEC-0150, DEC-0119]
-sources: [docs/components/qmf-risk.md, docs/contracts/ct-31-control-window.yaml, docs/contracts/ct-10-source-observation.yaml, docs/contracts/ct-23-risk-evaluation.yaml, docs/registry/variables.yaml, _docwork/ledger.yaml, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md]
+decisions: [DEC-0152, DEC-0157, DEC-0156, DEC-0150, DEC-0119, DEC-0208]
+sources: [docs/components/qmf-risk.md, docs/components/trading-node.md, docs/contracts/ct-31-control-window.yaml, docs/contracts/ct-10-source-observation.yaml, docs/contracts/ct-23-risk-evaluation.yaml, docs/registry/variables.yaml, _docwork/ledger.yaml, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, docs/decisions/ADR-0019-trading-node.md]
 generated: 2026-08-18
-verified: 2026-08-20
+verified: 2026-08-29
 stale_after: 30d
 ---
 
@@ -38,10 +38,14 @@ At a decision instant a news window of an enabled kind is in force over one inst
 
 **Widen-never-shrink, forward-only.** A later revision may pull a start earlier for instants not yet passed or push an end later; it may never narrow, cancel, or retro-invalidate a window that has had effect. Enforcement is at read time, never at intake (intake keeps provider evidence verbatim and appends corrections): the effective window at decision instant T is the union of the bounds of every revision known at T, with any bound already passed frozen, so replay resolves the same window. Decisions already taken under an older revision stand and are tagged with it. [DEC-0152]
 
-**Fail closed, no live skip.** A failed calendar refresh, unknown coverage, or an uncertain window blocks; there is no live skip button. The operator's control is upstream configuration exercised between sessions, and a standing per-instrument exemption is a dated fingerprinted record consumed at compile time, never a click. Provider impact labels are stored verbatim; QMX mints no severity scale in V1, and severity-to-window is a declared node mapping, not QMF surface. [DEC-0152] [DEC-0156]
+**Fail closed, no live skip.** A failed news-calendar refresh, unknown coverage, or an uncertain window blocks; there is no live skip button. The operator's control is upstream configuration exercised between sessions, and a standing per-instrument exemption is a dated fingerprinted record consumed at compile time, never a click. Provider impact labels are stored verbatim; QMX mints no severity scale in V1, and severity-to-window is a declared node mapping, not QMF surface. [DEC-0152] [DEC-0156]
 
 **Evidence stays comparable.** Evidence produced while a window was in force links to the window record by a typed edge, and the active protection-window set enters the decay cohort key, so a news-heavy period is never compared against a quiet one and read as alpha decay. [DEC-0152]
 
 ## Worked numbers
 
 No before/after duration is authorized as a constant. `registry:news_blackout_before` and `registry:news_blackout_after` are configurable UI-editable variables with **no spine value**; a window record is carried as two instants, never as these offsets, which exist only as configuration the operator sets between sessions. The withdrawn plus-or-minus-15-minute news buffer is recorded evidence, non-authoritative, and never a ratified constant. An executable fixture reads the CT-31 window record (`window_bounds`, `window_kind`, `instrument_scope`, `feed_quadruple`, `reason_class`) and the resolved currency-exposure records, computing the effective window at a decision instant as the widen-never-shrink read-time fold — never from scenario-local literals. The recorder's intake key `(source, source-native id, revision)` is ratified per DEC-0119; the disagreeing `daily_dead_zone` widths (`registry:daily_dead_zone_width`) are recorded, never merged, and cited for the window definition only under the named corpus-precedence exemption (DEC-0156).
+
+## Wired by the trading node (2026-08-29)
+
+This golden scenario stays **defined-unwired** until the trading node (COMP-QMN, FEAT-0031) wires it: no integration or runtime proof of the news-window block exists until then, and the node is the sole application that supplies it (DEC-0208). The node runs the news-calendar recorder against Forex Factory's free weekly file — the sole V1 news-calendar source, with no paid fallback anywhere — and proves the block on its week-long unattended soak acceptance gate (DEC-0208). The soak checklist items that exercise this scenario: a news window and a dead zone block entries while an exit passes (proving the exit-preservation law); a **news-calendar revision that would narrow an in-force window is proven not to open entries before that window's declared end** (widen-and-add apply automatically, narrowing and removal do not); and SCN-0008 is wired and proven alongside the other three risk golden scenarios (DEC-0208). Nothing here grants order or live-money authority; that arrives only through the factory pipeline.

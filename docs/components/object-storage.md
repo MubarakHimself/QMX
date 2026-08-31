@@ -5,10 +5,10 @@ type: component-spec
 status: ratified
 component: COMP-OBJECT-STORAGE
 depends_on: []
-decisions: [DEC-0013, DEC-0045, DEC-0103, DEC-0106, DEC-0109, DEC-0117, DEC-0118, DEC-0119]
-sources: [_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, _docwork/gaps.yaml, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/contracts/ct-14-backup-restore.yaml]
+decisions: [DEC-0013, DEC-0045, DEC-0103, DEC-0106, DEC-0109, DEC-0117, DEC-0118, DEC-0119, DEC-0188, DEC-0197, DEC-0198, DEC-0217, DEC-0252, DEC-0259]
+sources: [_bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, _docwork/gaps.yaml, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/components/trading-node.md, docs/contracts/ct-14-backup-restore.yaml]
 generated: 2026-08-18
-verified: 2026-08-20
+verified: 2026-08-29
 stale_after: 30d
 ---
 
@@ -39,6 +39,20 @@ The provider remains external and replaceable; provider-specific object, acknowl
 The numeric recovery-point objective, recovery-time objective, retention depth, verification cadence, object-key layout, and provider selection are named at the node/ops sitting (DEC-0118); this boundary asserts none of them.
 
 <!-- no-diagram: the component is an external CT-14 object boundary; provider internals are outside QMF authority and the backup sequence is shown in COMP-QMF-DATA-BACKUP -->
+
+## Trading-node increment (2026-08-29)
+
+The trading node (`COMP-QMN`) is the runtime that pushes backups to this bucket, and the 2026-08-28 trading-node sitting fixed the backup transport, the payload-key custody and the restore drills that read the bucket; the bucket stays external and replaceable and the increment was ratified by operator delegation plus four direct rulings (DEC-0259). See [COMP-QMN](trading-node.md) for the node's own spec.
+
+### The bucket is the off-host backup target, pushed by the VPS via rclone
+
+The bucket is the off-host backup target: `qmn-backup.timer` runs nightly on the VPS and the V1 `ObjectStorage` implementation is local staging under `/var/lib/qmx/staging` plus **`rclone` to this S3-compatible bucket**, ciphertext only, **pushed by the VPS and never by the workstation** — a 24 h recovery-point objective cannot depend on a laptop being awake, and the bucket credential belongs where the timer runs (DEC-0198, DEC-0188). The provider is deployment configuration, never architecture: **Backblaze B2 is the recommendation**, with R2 and Wasabi as alternatives, and credentials are held by reference (DEC-0198). The copy is always a prefix of a real stream — the backup unit copies only journal segments sealed at a committed sequence boundary — so a restored room can never hold a torn record (DEC-0198).
+
+### Payload-key custody is on the workstation; the restore drills read the bucket
+
+The CT-14 backup **payload key that decrypts every off-host copy is generated at provisioning on the workstation**, escrowed in Windows Credential Manager under `qmx/backup-payload-key` plus one operator-held offline copy, and delivered to the VPS as a bootstrap credential — it is never VPS-minted, and the VPS-minted key-encryption key protects rotated session material only, so the backup does not die with the host it exists to survive (DEC-0252, DEC-0197, DEC-0217). `registry:backup_payload_key_custody` carries the escrow rule itself rather than a blank (DEC-0252).
+
+Three restore drills read this bucket, each measuring against the copies it holds (DEC-0252, DEC-0198): a **nightly sample restore** (`qmn-restore-sample.timer`) that pulls one file back and verifies its fingerprint; a **monthly full restore** (`qmn-restore-full.timer`) into a scratch directory, an integrity test and only that; and a **host-loss restore rehearsal**, the operator's `restore_drill_run` power, that restores from this bucket onto a clean host holding nothing but the escrowed payload key — the only drill that exercises key availability and therefore the only one that can prove disaster recovery. The integrity-restore recovery-time objective is measured at the monthly rehearsal and the full-DR objective at the host-loss rehearsal; RTO is measured, never declared (DEC-0198, DEC-0252).
 
 ## Configuration
 

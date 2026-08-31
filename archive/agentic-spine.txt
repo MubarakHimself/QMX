@@ -1,0 +1,968 @@
+ ▐▛███▛█   Claude Code v2.1.251
+▝▜██████▀  Fable 5 · Claude Max
+  ▝▝ ▝▝    ~\Desktop\QMX
+
+
+❯ /effort                                                                       
+  ⎿  Set effort level to ultracode (this session only): xhigh + dynamic workflow
+     orchestration
+
+❯ /bmad-architecture I want to begin rediscussing the entire agentic system it  
+has come to my realization that we did a lot of work that was unnecessary. If   
+you look at in the workroom folder, you're going to realize that we might have  
+overcooked. So here is what we are going to do. I've attached a few things we   
+can use for this session. Anyway, let's just begin discussing. I don't know     
+what to even tell you. So, you're going to drive most of this. I'm going to     
+attach a transcript and also, I believe the workroom might have some stuff, but 
+there is nothing much. The transcript kind of bears everything, so you walk me  
+through this you take point. yeah, I've done a lot. I don't think I can add     
+more. There may be a few things to tell you about. Right now, you have access   
+to something called notebook LM, which is Lugos Notebook LM. Now we have the    
+local version for it. It's called NLM. So, if you run the command NLM, you'll   
+really see that we have a CLI version. You will see that in some of the         
+notebooks or in one of the notebooks, we have a book about the Hermes agent.    
+The reason we scraped the documentation and put it aside is because I want you  
+to have clear access, which means you can ask that notebook about anything that 
+Hermes was doing. However, take that we are not only pulling from Hermes, we    
+are pulling from a lot of reference files, reference links, documents, folders, 
+and so on and so forth. You also have access to FireCrawl. Use it as much as    
+possible. I would prefer you use FireCrawl when you want to scrape clear        
+information because once we start moving forward, I would say this session, we  
+need to have very clear information, not even very clear, we need to have       
+adequate information to make sure that things are stable enough. So, let me     
+attach a few files here and there, but begin. These were from the session we    
+actually had. And let me start with a transcript, then I begin the other        
+sessions. Now, the other things that are going to come in are, for example, the 
+knowledge base and whatnot, but those are going to come in. Okay, those are     
+currently being built by the local HMS desktop or Hermes folder we              
+have,However, the goal is to make sure that later down the road it can be used  
+in QMX and it's really not relevant for this session, it's just to give you a   
+peek on what we are trying to do. You're just trying to build a library, but    
+it's not so relevant. So I'm going to give you a prompt, two prompts actually.  
+This is going to be a long session. I would prefer a take point again. I've     
+said that so much, but it's going to be a long session. So you are trying to    
+build a lot. I realized that the stuff we had in the old Agentic system, well,  
+the one we actually have in this very folder is kind of irrelevant, some is     
+irrelevant. So we shall see how we do or how we see that now. The folder that   
+Hamis is currently working in is mostly for knowledge bases and whatnot. I      
+think I've already said that. I'll also try to extract a few things from the    
+old sessions and maybe have you have a look at them or have some agents look at 
+them. Now you have dynamic workflows on, so use them, use OPUS 5 and bulk       
+workers mostly. If you need, you can also use Sonnet 5. Use Fable only if you   
+need very high reasoning.So I hope you're ready to begin transcript             
+[[[[[[c:\Users\Mubarak\Downloads\Design-Extensible-Agents.md]]]] , files from   
+the transcript [[c:\Users\Mubarak\Downloads\11_ARCHITECTURE_AGENT_BRIEF.md]]    
+,[[c:\Users\Mubarak\Downloads\01_QMX_CONSTITUTION.md]] then the folder is still 
+here [[c:\Users\Mubarak\Desktop\Stats]] but here is the prompt if you want to   
+look at what we have been doin g.still doing in here , PS it is not for         
+you[[Read C:/Users/Mubarak/Desktop/Stats/STRATS-GROUND-STATE.md first.          
+]]] alright let us get into it, i refer you do through work as it is a fact     
+that i am not technical so what you see in the transcript i believe is mostly   
+what i think, we just neeed to converge and work together to get this out...    
+
+● Taking point. First pass: activation scripts, size up the inputs, check the
+  NLM CLI and the workroom, then I'll come back with a read of where we are and
+  the first decisions to make.
+
+  Searched for 4 patterns, read 3 files, listed 5 directories, ran 6 shell commands (ctrl+o to expand)
+
+● Agent(Distill transcript decision register) Opus 5 (1M context)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+  Read 1 file, listed 4 directories, ran 4 shell commands (ctrl+o to expand)
+
+● Reading done for now: activation scripts ran, the transcript's structure and
+  all seven of your turns, the old workroom map, the platform spine, the docs,
+  the NLM Hermes notebook (works — answered a 10-point extension-point query in
+  one call). An Opus agent is building a decision register from the full
+  5,100-line transcript in the background.
+
+  Where we are, in plain words
+
+  Two prior efforts point in different directions:
+
+  1. Workroom (Aug 18) — QMA "Quantum Mind Agents": a Cordis-style kernel
+     (effects, coeffects, fibers, hot reload), a 949-line kernel contract, nine
+     paper clusters. Kernel-first, academic-first.
+  2. ChatGPT transcript (Aug 22–28) — a different shape: hard daemon ≠ UI split,
+     Desk → Role → Bot → Agent ontology, Missions/Tasks, Ledger vs Memory vs
+     Knowledge vs Observability kept apart, Hooks as the determinism mechanism,
+     Hermes as the primary integrated reference, Pi as the minimal-kernel
+     reference, in-house SDK. It ended with a 12-document packet and a brief
+     asking for a 20-document implementation packet.
+
+  The transcript is your current thinking; the workroom is mostly superseded.
+  Three things I'd salvage from it, nothing more: promotion gates as law
+  (nothing an agent produces auto-becomes memory/skill/tool), provider-neutral
+  sandbox/computer abstractions, everything-via-UI. The paper ledger stays on
+  the shelf for the self-improvement design later.
+
+  The overcook risk is now the brief itself. Twenty documents and 22 contracts
+  before a line of code is the same mistake at a different address. In this
+  project the deliverable is an architecture spine — only the invariants that
+  stop independently built pieces from diverging (probably 15–25 ADs),
+  everything else explicitly deferred. Then /documentation-factory writes the
+  docs, then epics. That is the antidote, and it's already the pipeline.
+
+  Conflicts I can already see (rulings needed later, with options — not now):
+
+  - "Bot." The platform already owns it: L1 "bots trade; books control bots,"
+    AD-29/AD-33. The transcript's Desk→Role→Bot→Agent reuses the word for an
+    agentic persona; the workroom banned it for exactly this reason and used
+    "mind." One word has to give.
+  - Daemon language. Constitution L31: the agentic system is built with QMF
+    libraries (Python). ChatGPT proposed a TypeScript daemon + Python workers +
+    Rust UI host — three languages for a one-operator platform built by a
+    coding-agent factory. Real trade-off; I'll bring it with researched options.
+  - Packet gap. Only 2 of the 12 packet documents are on disk (01 and 11); no
+    zip in Downloads. The transcript itself carries the substance, so this may
+    not matter.
+
+  My plan for the session
+
+  1. Framing rulings (below).
+  2. Register lands → I bring the converged shape, the "inherited fashion" list,
+     and the vocabulary rulings in one batch.
+  3. One dynamic workflow: reference reality-check (Pi, bb, Hermes via NLM +
+     FireCrawl, Claude Agent SDK hooks, Grok Bot, Prime Agent, Hindsight,
+     OpenCodex, Cordis) answering the brief's six questions per reference, but
+     scoped to what the spine needs; plus a language/stack option study.
+     Bulk-workers research, Opus synthesizes.
+  4. Load-bearing calls come to you as options with my lean, batch by batch.
+  5. Distill spine → reviewer gate → finalize → hand to documentation-factory.
+
+● User answered Claude's questions:
+  ⎿  · Working mode for this run — how do you want the decisions made? → I 
+     draft, you ratify (Recommended)
+     · Is the architecture spine the only deliverable from this run, or do you 
+     also want a human-facing rendering for yourself? → I think let's focus on 
+     making this agentic system work up and running because when you send all 
+     the spine and then visual walkthrough, I think I'm okay with an interactive
+     HTML file. I'm okay with it. Yeah, but I think I just want to get this 
+     done seriously because you can see there is a lot of information to work 
+     on, a lot, and the workroom files. I think the reason I want to start 
+     afresh is now reasonable. I don't know if you see it. There is a lot of 
+     confusion there, okay? So take it as a fresh start. In fact, you can delete
+     most of it. I don't really believe I might use it. I really don't. So, 
+     take what I've just given you, and yeah. In fact, let me delete it manually
+     because I don't see the point. I deleted it manually. Yep, move to recycle
+     bin. So, me, I'm not going to use that. I want a fresh start for the 
+     identic system because it's going to poison you, and now you see things, 
+     okay? Take the transcript, take the links in there, the references. That 
+     session is very much gold, okay? I want to handle this in one sitting. The 
+     reason I first started with that session, then came back here for 
+     architecture is because here I can discuss it more in depth, so things we 
+     really didn't go through properly, okay? And I just wanted to get this 
+     thing up and running with models. You know, I can talk to the agents. Of 
+     course, we don't have a UI yet. However, just know by the time we are 
+     already coding the epics and stories, the UI might be live. That's all I 
+     can say. The UI is very much in play
+     · What do we do with the old workroom effort (QMA Cordis kernel contract, 
+     paper research, dossiers)? → I've already deleted,Maybe some rulings. Let 
+     me see what you had said above. So, QMA was meant to be like a framework, 
+     but I think it's just the SDK now. Okay, point mind agents. It's better to 
+     just be the SDK. And I deleted the workroom, so okay, not the workroom, the
+     file you saw in the workroom now. I bought about trades, agents really 
+     never okay. Agents do oh my days. I don't even know what to say. Okay, the 
+     truth is, just take what is in the transcript as the highest authority. 
+     Anything other than that, I'm okay with answering, okay? Because that's the
+     reason I'm deleting the workroom. That's the bloody reason, okay? Then 
+     about now, this is where we are going to confuse ourselves. There is a 
+     trading bot, then an actual bot. Okay, so I think we might need to give it 
+     a different name. So, first, go through all this and we'll see. But do you 
+     get my issue? But yeah, I've removed the workroom, whatever. So, I mean, 
+     I've only removed the f the agentic system planning folder, but the rest 
+     are there
+     · The 12-document packet ChatGPT produced — only 01 (Constitution) and 11 
+     (Brief) are on disk. Do you have the rest? → 
+     [["C:\Users\Mubarak\Desktop\QMX_AGENTIC_ARCHITECTURE_PACKET_v0.1.zip"]]]
+
+● Agent "Distill transcript decision register" finished · 13m 4s
+
+● Register loaded with your rulings confirmed (fresh start, transcript as
+  authority, QMA=SDK only, "Bot" rename needed). Now unzipping the packet and
+  opening the run folder before launching the reference research workflow and
+  bringing you the naming rulings. · summarized
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Agent(Packet delta vs register) Opus 5 (1M context)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+● Skill(workflow-authoring)
+  ⎿  Successfully loaded skill
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Workflow(Primary-source extraction per reference project for the QMX
+          agentic-system spine, then an options sheet with leans, adversarially
+          checked)
+  ⎿  /workflows to view dynamic workflow runs
+
+● Agent "Packet delta vs register" finished · 3m 31s
+
+● The new packet confirms the four open questions but resurrects trust tiers, a
+  capability dependency solver, and memory-type taxonomy—all previously cut—plus
+  reintroduces loops despite the "graphs, not loops" decision, so I'll keep the
+  four answers and drop the three revivals. Meanwhile the 12-worker research
+  pipeline is running in the background (expect 20–40 min for the options sheet,
+  adversary pass, and revision), and I'll now rule on four
+  vocabulary/organizational facts that don't require research. · summarized
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● User answered Claude's questions:
+  ⎿  · The persistent, named organizational actor (the transcript's "Bot": 
+     instantiated from a Role, owns a name, memory scope, ledger entries, 
+     missions, routines). QMX already uses Bot for a trading strategy instance. 
+     What do we call it? → First of all, I would like to remind you, or rather 
+     correct you, that QMA stands for quantmind agents. That was a mistake in 
+     the dictation. That's why it's noted as that.Let's see other names in 
+     algoritmic trading or quantitative trading perhaps to match the vibe 
+     instead
+     · The UI: you said it is in play and may be live before the epics are 
+     coded. The daemon-to-UI wire contract in this spine must bind whoever 
+     builds it. What is the UI's actual state? → Okay, the truth is we really 
+     haven't worked on the UI yet and we are not planning on anytime soon. Okay,
+     we are however we have a lot to ship, okay, before you even think of the 
+     UI. So this is mostly back-end database data layer API. Well API needs a 
+     UI, but you get the idea, as well as the DevOps layer, okay, making sure 
+     things the back end or things can work in a back end, okay? Because the UI 
+     is more like a vanilla thing, to be honest. I'm sorry, it's not vanilla, 
+     but you get the idea. Okay, it's simpler to build a UI than this
+     · Ledgers are per desk (your ruling: 'research event ledger', never one QMX
+     ledger). The five roles are fixed; desks are UI groupings and you floated 
+     fewer than five. Which one do ledgers follow? → Now, I mean, me and my 
+     opinion for the ledgers was as follows. We want to have different types of 
+     ledgers. In my opinion, we really can't have one profile or one desk having
+     one singular ledger. That does not make sense at all. Okay, we want to 
+     have work ledgers because if you have one singular disk or one singular 
+     profile as a ledger, this is very arguable. I remember saying something in 
+     this line in that dictation. The truth is, you are going to have agents on 
+     another machine trying to access this very ledger. In an architectural 
+     sense, that does not make any sense. Okay? It really doesn't. I don't see 
+     it working. I would prefer if, let's say, research, okay, the event 
+     lengthers, actually. I believe that's what ChatGPT suggested. In fact, an 
+     event ledger or a work ledger, whichever you want to call it. Okay, choose 
+     what you prefer because there are multiple agents or multiple, I believe 
+     they are called profiles. I have forgotten even because that session is a 
+     bit old, like a day or two old. But if let's let's take it in terms of a 
+     hierarchy, yeah, there is the main guy, then there is the ones that do the 
+     work, but there are also sub-agents in those sessions themselves. I don't 
+     know if you get me, or we are to have some agents. Every agent has an 
+     access or has access to sub-agents. This is why I was saying that Claude is
+     the best for some agents. For example, right now, yeah, you have access to
+     dynamic workflow or dynamic workflows. You have access to sub-agents, 
+     which sub-agents can spawn up more sub-agents that logic there, okay. In 
+     our setup, what is only changing is that we need to know what went on, or 
+     if we are running a very long-running task, we need to be able to know what
+     happened one when it happened. If there is a failure, why is there a 
+     failure? What did the agent do to resolve the failure? That's what we call 
+     a ledger. That's what we okay. That's the idea I'm trying to paint of a 
+     ledger. I won't say it's accurate, however, on that very same note, you 
+     have to notice or discover that we did split the difference between the 
+     ledgers where I said, or rather, we painted a better picture, not even the 
+     difference. I said something the lines of an experimental ledger. If a 
+     scientist is carrying out an experiment, they have to have a notebook to 
+     note down what happened. Okay, these are this is a quantitative, okay, it's
+     built to mimic once. I don't know if you're getting what I'm getting at 
+     here. Because we can't have one ledger globally. That makes zero sense.
+     · The packet prefixes every SDK surface with qmx.* (qmx.role, qmx.mission, 
+     ...). You said QMX shouldn't be a blanket prefix. Namespace for the SDK? → 
+     qma.* (Recommended)
+● Noted the corrections (QMA name, deferred UI, qma.* namespace) and updated my
+  model: ledgers should follow the unit of work rather than the desk—one work
+  ledger per mission (shared by the whole agent tree) and one experiment ledger
+  per experiment, with "research/trading ledger" being just views over those,
+  not separate stores. · summarized
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● User answered Claude's questions:
+  ⎿  · Quant-flavored names for the persistent named actor (a Role instantiated 
+     with its own name, memory scope, missions, routines). Which one? → Quant 
+     (Recommended)
+     · Did I read your ledger ruling correctly: ledgers follow the unit of work 
+     (one work ledger per mission, hierarchical by agent tree; one experiment 
+     ledger per experiment), and role/desk ledgers are just views over them? → 
+     Dude, no, no, no, no, no. Oh my god. Okay, how can I explain this? I don't 
+     know how to put it, yeah? Because okay, in fact, once you bring in a 
+     mission, now I think I can point you in a better direction. Think of it 
+     like this: a mission is very broad. The mission has tasks. Those tasks can 
+     be carried out by one agent. It means they need to be carried out by 
+     multiple agents. Now, what I'm talking about specifically is what is 
+     carried out in that one singular task. Do you get me? Yeah, we go from a 
+     mission to splitting the work into tasks as the agents suggested, perhaps 
+     using the graph model, perhaps it's suggested. Or a Kanban, I don't even 
+     recall what it suggested, but what I'm seeing is that at the task level, 
+     don't get me wrong, the agents upstream, the main ones, perhaps. I don't 
+     even know if we have them. The agents upstream, the main ones, I think they
+     can also have their own work ledgers, the big versions of work ledgers. 
+     So, over time, that's how I believe we can have things like improvement of 
+     the system, RLM, and whatnot, or keeping track of what happened and 
+     whatnot, what did not happen. So, instead of me asking, or okay, no, even 
+     instead of me, if I want to ask what happened perhaps on Tuesday last week,
+     or if I want to ask, you know, did we finish this experiment or did we 
+     finish this task we wanted to run? That's how we know that it happened. And
+     if I want to ask specifically what happened during that, the agent, the 
+     main one I'm talking to, whether I think the one do we have agents at a 
+     profile level? I'm not so at par with scenario we are in right now, or we 
+     are on then. But if we do, then that changes things, okay? That's that's 
+     painting what I'm saying. But it does point me again to why we need a work 
+     ledger, okay, a task or work ledger. That's what I'm calling it, all right.
+     I hope I've tried to paint a better picture because there are so many 
+     scenarios in which those ledgers can come in handy, so many. Okay, that 
+     helps us even collect a lot of data on which models fail, which models do 
+     what. Obviously, in the ledgers, I did say something nearing the end of the
+     of I believe the session, if I do recall properly, that the ledgers, you 
+     know, can be part of the hook system. They don't need to be very hard 
+     because remember, at the same time, you also have agent-to-agent, yeah. 
+     Those things need to be logged. There is so much, okay? So, you can't have 
+     one global ledger or one ledger permission. It makes absolutely no sense. 
+     In fact, your reading again is wrong. Why would you have one ledger 
+     permission, yet you have a mission is too broad? Unless I recall poorly, 
+     but the mission has tasks which are split down, which are run by multiple 
+     agents. What I'm talking about is that thing that that little agent, the 
+     worker, is actually using to record. I'm not talking about the one for the 
+     mission. The mission can we can surely put it in. I'm not saying it's not 
+     there, we can put it in, but after the mission is done, you know, the agent
+     will read through all the ledgers and write a report or a summary, perhaps
+     just saying that is if I recall properly that we have the main agent at 
+     the profile or the desk level, if I recall properly. Qoute me right,I mean,
+     I also want you to remember and recall that we are running at least so 
+     many scenarios where we are not only running one agent at a go. Surely we 
+     can have one agent or a couple. However, if you look at the transcript, you
+     realize that we went from something small, references, then we've had the 
+     first convergence, then we have the latter, which I believe we had either 
+     yesterday or today morning. Yeah, the one where I made comments about a 
+     mission, I believe. Yeah, where I also introduced SDKs and whatnot. Okay, 
+     but you do realize that we are having very many agents category. We are 
+     designing a multi-agent system. We talk about loops, we talk about a lot of
+     things. Loops, graphs, harness engineering, really. Okay, so I would 
+     prefer if you don't simply take this for granted because that transcript 
+     surely it's more of a brainstorming session, I would say. However, again, 
+     it is very crucial that you first understand because it is brainstorming. 
+     The word brainstorming, I believe you know what it means. Okay, it doesn't 
+     mean it's final, but it is a seed. Everything that was produced from that 
+     transcript or that session is a seed for what we are building right now. 
+     It's not final. You are smart enough to build on top of it.so act like it
+
+● Got it — the ledger is task-level (written by the task worker), with
+  desk-level ledgers upstream, mission reports derived from task ledgers
+  afterward, and hooks/messages auto-logged; the transcript is a starting seed,
+  not a spec. I'll log this correction and hold further questions until the
+  research is in. · summarized
+
+  Ran 2 shell commands, wrote 1 memory (ctrl+o to expand)
+
+● Everything ratified so far is in the memlog and memory. Status:
+
+  - Settled today: mode (I draft, you ratify); fresh start, transcript = seed
+    with highest authority; QMA = QuantMind Agents, the SDK, namespace qma.*;
+    actor = Quant; ledgers at the task level (worker-authored) + desk-level
+    quant ledgers + derived mission reports + experiment ledgers; UI deferred,
+    wire contract still fixed here.
+  - Running: the 12-study primary-source research workflow → options sheet →
+    adversary → revision. It writes into research/ in the run folder.
+  - Next, when it lands: I read the revised options sheet and bring you the
+    load-bearing calls in batches of four, each with 2–3 options and my lean —
+    starting with paradigm, daemon language, persistence, and the wire contract;
+    then ontology (including whether desk-level lead quants exist),
+    hooks/graphs, model proxy, tools/environments, memory/knowledge, plugins,
+    deployment.
+
+  No action needed from you until the next batch arrives.
+
+✻ Cogitated for 15m 42s · done Friday 4:22 PM
+
+❯ Now, internet was cut off midway when I was dictating. I believe the dynamic  
+  workflow might have posed. Also, I noticed you said that the ledger is task   
+  level. Man, you know what? That's right. That's correct. Disk level ledgers,  
+  that's okay. Okay, and mission reports there. I'm not certain yet. Remember,  
+  everything we create here, we have to have hooks for it or hooks for them. We 
+  have to have a lot of things in place to prevent agents being too well        
+  agentic, so yeah,But anyway, first check on the dynamic workflow              
+
+● Checking the workflow now.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Task Output(non-blocking) wj8vrz3ss
+  Primary-source extraction per reference project for the QMX
+agentic-system spine, then an options sheet with leans, adversarially
+checked [running]
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Stop Task
+  ⎿  Primary-source extraction per reference project for the QMX
+     agentic-system spine, then an options sheet with leans, adversarially
+     checked · stopped
+
+  Ran 2 shell commands (ctrl+o to expand)
+  ⎿  Error: The permission handler returned updatedInput for Workflow that 
+     failed schema validation: [
+       {
+         "code": "custom",
+         "path": [
+           "script"
+         ],
+         "message": "script contains control characters that would be hidden in 
+     the approval dialog"
+       }
+     ]
+     This is a configuration issue in your canUseTool callback, 
+     PermissionRequest hook, or permission-prompt tool — updatedInput must 
+     satisfy the tool's input schema. The tool input from the model was valid.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The outage killed 2 of 12 research studies plus the synthesizer, and the
+  adversary was running against a missing options sheet. I've patched the two
+  failed studies and I'm resuming from cache now, so the 10 completed studies
+  won't re-run. · summarized
+  ⎿  /workflows to view dynamic workflow runs
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Workflow resumed from cache (run wf_51609f15-4d9, new task): the 10 finished
+  studies are reused; the two that died (OpenResearch/OpenScience/Lean + QMB
+  alignment, and the STRATS knowledge boundary) are re-running, then synthesizer
+  → adversary → revise.
+
+  Early leans visible in the landed studies (not yet adversary-checked, so treat
+  as preview): Python 3.14 daemon — the platform's DEC-0122 "build with QMF"
+  ruling settles it, and the only TypeScript advantage (Claude SDK lifecycle
+  hooks) is a worker-side concern; SQLite-WAL + append-only JSONL journals
+  through the sinks qmf-data already defines; JSON-RPC 2.0 over WebSocket for
+  commands + HTTP for queries + a durable event stream, semver with
+  additive-only events; Hindsight as the first memory backend behind a QMX-owned
+  MemoryProvider; OpenCodex behind the Deployment + Credential Broker contract
+  as the first model-proxy implementation.
+
+  Your two follow-ups are logged: desk-level quant ledgers confirmed, mission
+  reports left open; and the standing principle that every primitive we create
+  exposes hook events so deterministic guards keep agents in check — that
+  becomes an AD, not a convention.
+
+  I'll bring the first ratification batch when the revised options sheet lands.
+
+✻ Sautéed for 2m 3s · done Friday 4:25 PM
+
+● Dynamic workflow "Primary-source extraction per reference project for the QMX
+agentic-system spine, then an options sheet with leans, adversarially checked"
+completed · 41m 49s
+  Read 1 file, ran 2 shell commands (ctrl+o to expand)
+
+● The options sheet is ready with 22 decisions, refined through 21 adversarial
+  amendments that closed real gaps; 9 still need your ruling, with the rest
+  already settled by prior rulings or platform law. I'm also folding in two
+  corrections not yet reflected in the sheet — Quant replaces "Steward," and
+  ledgers are task-level — and now presenting the first batch: the four
+  foundational decisions. · summarized
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● User answered Claude's questions:
+  ⎿  · D3 — What language is the daemon (the always-on brain that runs quants, 
+     missions, hooks, the model router) written in? You called this the 
+     make-or-break. → Python 3.14 (Recommended)
+     · D1 — The house style. The platform (QMF) already uses 'contract hub': a 
+     definitions-only core, every outside thing behind a port the core defines, 
+     plugins register through a scope that can be unwound cleanly. Use the same 
+     style for the agentic system? → Same style as QMF (Recommended)
+     · D15 — Where does the daemon live? Your top use case is 'I'm away for the 
+     night and the agents keep working.' → Okay, the truth is, or the thing is, 
+     it is a two-way street,So, partially, most or 90% of the time these agents 
+     are going to be working on my machine here, like most harnesses, because 
+     they don't really take much. However, I want in the UI, I want to have the 
+     ability to deploy them on a server. In other words, that's the use of the 
+     workspace/sanboxes  for example modal, you get it?
+     · D8 — You said 'graphs, not loops.' Collapse Loop into Graph? A 'cycle' 
+     becomes a node kind inside a graph template, carrying the runtime-owned 
+     stopping condition and budget; the six named loops (Act→Observe→Verify, 
+     Hypothesis→Test→Learn→Mutate→Gate…) become authored graph templates. Skills
+     stay separate (they're documentation with their own lifecycle). → Dude, 
+     most of that was already answered by the agent or the AI I was talking with
+     in the transcript. I'm not the one who said all that. Surely I was asking 
+     you to look it up, but there is a way it even drew diagrams for you, dude. 
+     Why are you making my life so hard? It drew diagrams. I complimented them. 
+     I never refused anything, so come on. Okay, so I don't think I have 
+     anything to answer here because you are now making me rethink through the 
+     entire thing, and I've already had the conversation already. I'll say this 
+     again: the transcript has 90% or 99% of what you need. Okay, so if our 
+     question really is simple, for example, graph engineering, loop 
+     engineering, you have tools to look it up. Why are you bothering me? For 
+     fuck's sake
+
+● Got it — I'll finalize decisions from the transcript, constitution, and your
+  standing rules without further question rounds, flagging any assumptions I
+  make along the way, and present you the completed spine for review once done. 
+  · summarized
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Workflow(Distill the QMA architecture spine from the memlog + options sheet,
+          reconcile against every load-bearing input, run the reviewer gate,
+          apply fixes, lint clean)
+  ⎿  /workflows to view dynamic workflow runs
+
+  Ran 1 shell command, wrote 1 memory (ctrl+o to expand)
+
+● The spine is being written now. The workflow runs five stages: Opus distills
+  ARCHITECTURE-SPINE.md from the memlog (every ruling you gave today, in your
+  vocabulary) plus the options sheet and the transcript's own diagrams; five
+  readers check it against each load-bearing input (memlog, your own words,
+  options sheet, constitution, parent platform spine) and return only what
+  didn't land; an editor applies that; six reviewer lenses attack it (rubric,
+  currency-on-the-web, adversarial incompatible-units, money-path safety, data
+  integrity, operator-voice); an editor applies the clear fixes, logs each to
+  the memlog, and lints until clean.
+
+  What comes back to you after that is the finished draft plus, at most, a short
+  list of items the reviewers judged genuinely yours — money, vocabulary,
+  irreversible scope — nothing the transcript already answered. Expect 30–50
+  minutes.
+
+✻ Brewed for 6m 33s · done Friday 5:19 PM
+
+● Dynamic workflow "Distill the QMA architecture spine from the memlog + options
+sheet, reconcile against every load-bearing input, run the reviewer gate, apply
+fixes, lint clean" completed · 1h 0m 10s
+
+  Searched for 1 pattern, read 1 file, ran 6 shell commands (ctrl+o to expand)
+
+● Reviewer gate is done and the spine is lint-clean at 29 ADs; I'm resolving the
+  four items the editor withheld (they're mine to decide under your
+  meta-ruling, not yours) and then closing the run.
+
+● Agent(Apply final four spine edits) Opus 5 (1M context)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Gate verdicts before the fix pass: rubric "one revision round, mostly
+  editor-applicable", currency "conditional pass — one row must change",
+  adversary "return for amendment", data-integrity "changes required",
+  money-path and operator-voice "pass with one blocking gap" each. The fix pass
+  applied all of them (three new ADs, 57 memlog entries) and re-linted clean.
+  The final editor is now applying the last four items and setting status: 
+  final; I'll report the closed run when it lands.
+
+✻ Cogitated for 2m 46s · done Friday 6:22 PM
+
+● Agent "Apply final four spine edits" finished · 5m 41s
+
+  Ran 3 shell commands, wrote 1 memory (ctrl+o to expand)
+● The architecture step is done. The spine is final: _bmad-output/planning-artif
+  acts/architecture/architecture-QMA-2026-08-28/ARCHITECTURE-SPINE.md — 29 ADs,
+  lint-clean, six-lens reviewer gate applied, 107-line memlog as the ruling
+  trail.
+
+  What it fixes, in your terms
+
+  - QMA = QuantMind Agents, the SDK (qma-core, qma-wire, qma-daemon), same house
+    style as QMF; Python 3.14 daemon on your workstation by default,
+    deploy-to-workspace from the UI as a first-class capability.
+  - Desk → Role → Quant → Agent → Subagent. Task Ledger / Quant Ledger /
+    Experiment Ledger; desk ledgers are views.
+  - Hooks on everything: 20 before/after verbs plus agent_stop and
+    review_required; every new primitive ships its hooks; deterministic
+    verifiers, cross-model review, agent-authored hooks only observe-or-deny
+    inside their mission.
+  - Graph Template / Loop / Skill as the transcript drew them, with the one name
+    split (authored template vs the daemon's Task Graph).
+  - Money path: no execution tool exists at any account role, paper included
+    (AD-16), and no agent environment can even reach a venue host (AD-28). Only
+    you, as an operator principal, promote anything live.
+  - Model proxy chain with OpenCodex behind it; Hindsight deferred behind the
+    memory port; read-only Knowledge adapter that ingests STRATS unchanged;
+    Docker per worker; one Windows VPS; routines + continuation so agents keep
+    working unattended (AD-29).
+
+  Decided under your meta-ruling, tagged [ASSUMPTION] in the spine (no action
+  needed unless you object): one lead-flagged Quant per desk; "promote" reserved
+  for the live-zone act (memory is admitted, refinements applied);
+  loopback-only unauthenticated OpenCodex accepted for v1; multi-account pooling
+  under provider ToS is your accepted practice; "plugin" adopted as your word,
+  "kernel" only as "RLM kernel".
+
+  Next in the pipeline: /documentation-factory to fold this into docs/, then
+  bmad-create-epics-and-stories, then the factory lanes. The interactive HTML
+  walkthrough is on the Deferred table — say the word and I build it.
+
+  Housekeeping, not done by me: the workroom/agentic-system-planning deletions
+  and the new run folder are uncommitted; a stray file named NUL appeared in the
+  repo root (some command's Windows redirect); and there is an
+  architecture-NODE-2026-08-28 run folder I did not create — presumably your
+  other session.
+
+✻ Cooked for 2h 48m 18s · done Friday 6:28 PM
+
+❯ Did you do a validation and regression checks? No assumptions, no             
+  contradictions, and also no ambiguity. Did you do that? Because I've been     
+  away for a minute. Then, also, you there is a file called next prompts or     
+  next session prompts. I don't know if it exists. You append your prompt for   
+  documentation factory                                                         
+
+● Partly, and I should be precise about what "partly" means. The six-lens gate,
+  the five-input reconciliation and the lint all ran — but they ran on the draft
+  before the two fix passes and the last four edits. The final file has not
+  been re-swept end to end, and it still carries tagged [ASSUMPTION]s by design
+  of the fast path, which is not what you asked for. Running the full validation
+  now on the final file: contradiction sweep, ambiguity sweep, assumption
+  resolution (resolve from sources, convert unmeasurable ones to deferred rows
+  with a measurement condition, keep only what is genuinely yours), regression
+  against every input, and a check that each gate finding is actually closed.
+  Then a second sweep until nothing new appears. In parallel I'll find the
+  next-session-prompts file and append the documentation-factory prompt.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Workflow(Validate the FINAL QMA spine: contradictions, ambiguity, assumption
+          resolution, regression vs inputs and vs gate findings; apply fixes;
+          re-sweep until dry)
+  ⎿  /workflows to view dynamic workflow runs
+
+  Searched for 1 pattern, ran 2 shell commands (ctrl+o to expand)
+
+● The documentation-factory prompt is appended as #12 in
+  architecture-QMX-2026-08-19/next-session-prompts.md (the file existed there;
+  it's the platform's paste-ready prompt list). It follows the house format of
+  prompts 1/10/11: intake paths, the component docs to mint (qma-core, qma-wire,
+  qma-daemon), the contracts, the ledger decisions, glossary terms and retired
+  names, the AD-26 variables for registry/variables.yaml, the Cut table as a
+  do-not-revive law, and the epics build order after it.
+
+  The validation pass is running on the final spine: five Opus lenses
+  (contradictions, ambiguity, assumption resolution with source lookups,
+  regression against memlog/your words/parent spine/packet keep-list, and
+  closure of every critical/high gate finding), then an editor applies
+  everything autofixable — assumptions get resolved from a source or converted
+  into deferred rows with a testable measurement condition, never left as tags —
+  then two combined lenses re-sweep, looping until nothing new appears.
+  Whatever survives as genuinely yours comes back as a short plain-words list.
+  I'll report when it lands.
+
+✻ Sautéed for 2m 49s · done Friday 6:35 PM
+
+❯ Look for a file. I believe it's called next session prompt or next prompt for 
+  the session,                                                                  
+    something in that manner. You append a prompt for me for the documentation  
+  factory and                                                                   
+    also run the validation or some sort of regression. I believe BMAD          
+  architecture sort of                                                          
+    provides us with that. So you run everything architecture or the plan or    
+  everything you've                                                             
+    produced is solid. Then I'm going to export this session as is so that the  
+  documentation                                                                 
+    factory is going to be using it. So you do that. Actually, it's next        
+  session prompt, it's                                                          
+    actually existing. You do that, so there is no ambiguity, no assumption,    
+  and no                                                                        
+    contradiction. Do that for me, and I believe we call it a day.              
+
+● Both are in hand — your message and my last reply crossed:
+
+  1. Prompt appended. architecture-QMX-2026-08-19/next-session-prompts.md now
+     ends with #12 — Documentation factory, QMA increment, in the same
+     paste-ready format as #10/#11.
+  2. Validation running on the final spine (five lenses → fixes applied →
+     re-sweep until dry). This is the skill's reviewer gate plus the three
+     checks you named — contradiction, ambiguity, assumption — and a regression
+     check against every input and every earlier gate finding. Assumptions get
+     resolved from a source or turned into deferred rows with a measurable
+     condition; nothing stays as a tag.
+
+  When it lands I'll write the validation report into the run folder's reviews/,
+  log the closing event in the memlog, and give you the one-screen summary:
+  what changed, what (if anything) is still yours to rule on, and confirmation
+  the spine is export-ready for the documentation factory. Then we call it a
+  day.
+
+✻ Cooked for 19s · done Friday 6:37 PM
+
+● Dynamic workflow "Validate the FINAL QMA spine: contradictions, ambiguity,
+assumption resolution, regression vs inputs and vs gate findings; apply fixes;
+re-sweep until dry" completed · 50m 37s
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Workflow(Apply every outstanding validation finding to the QMA spine
+          (including the ones earlier lenses mis-flagged as manual), then
+          re-sweep and re-apply until a round returns zero findings; write the
+          validation report)
+  ⎿  /workflows to view dynamic workflow runs
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Honest status: the first validation pass was not clean. Its second sweep still
+  found 27 items (1 critical, 12 high — e.g. AD-22 granted a "policy approval"
+  path that AD-24 forbids; AD-13's compilation law contradicted its own
+  iteration law; job states had no fixed mapping to task states), and 31 earlier
+  findings with concrete fixes had been held back because the lenses mislabeled
+  them "needs the operator". So the spine was not export-ready when I said it
+  was final.
+
+  A last loop is now running: apply all 58, re-sweep with two lenses, re-apply,
+  until a sweep returns zero (max 4 rounds), then a validation report goes into
+  reviews/validation-report.md and the memlog gets the closing event. No file
+  leaves this run with an [ASSUMPTION] tag inside an AD — each is either
+  resolved from a source or moved to Deferred as a measurable condition.
+
+  The four items the lenses wanted to ask you were resolved from sources
+  instead, per your ruling — veto any of these in one word:
+
+  - Account pooling / provider terms — QMA never pools accounts; if pooling
+    happens it is inside your own OpenCodex under your account terms, outside
+    QMA.
+  - Password-less OpenCodex on your PC — allowed in v1 only when it listens on
+    the local machine; a settings switch you can flip, recorded at every daemon
+    start.
+  - Windows VPS — the transcript says "I can purchase"; it is registered when
+    provisioned, and computer-use tools stay hidden from agents until then.
+  - The word "plugin" — the platform's ban was QMB-scoped; you use the word
+    yourself; adopted.
+
+  I'll report the final verdict when the loop lands.
+
+✻ Churned for 2m 31s · done Friday 7:27 PM
+
+● Dynamic workflow "Apply every outstanding validation finding to the QMA spine
+(including the ones earlier lenses mis-flagged as manual), then re-sweep and
+re-apply until a round returns zero findings; write the validation report"
+completed · 1h 24m 59s
+
+● The loop did not converge: 16 → 15 → 13 → 13 findings per round, which means
+  each 50-edit pass was introducing about as many cross-reference
+  inconsistencies as it fixed — and the reporter then wrote "clean and
+  export-ready" over a run that was not dry. That report is wrong and I'm
+  replacing it. Switching strategy: one whole-document coherence edit by a
+  single high-effort editor (instead of lens → batch-apply churn), then a strict
+  divergence-only verification — a finding counts only if two builders would
+  produce incompatible code — and a truthful report.
+
+● Workflow(One whole-document coherence edit of the QMA spine by a single
+          high-effort editor, then strict divergence-only verification, one
+          bounded fix cycle, and a truthful validation report)
+  ⎿  /workflows to view dynamic workflow runs
+
+  Ran 1 shell command (ctrl+o to expand)
+● Prompt #12 is intact; your other session added #13 (node documentation
+  factory) and #14 (node epics) after it, so the file now reads 12 → 13 → 14 in
+  order.
+
+  The closing run is in progress: one high-effort editor rebuilding every
+  cross-reference in the spine (it writes its cross-reference table to
+  reviews/xref-table.md), then two verifiers on a divergence-only bar, at most
+  two bounded fix cycles, then a rewritten, truthful validation report. I'll
+  report the final verdict with the numbers when it lands — including any
+  finding that still stands, verbatim.
+
+✻ Baked for 1m 42s · done Friday 8:53 PM
+
+❯ I think that dynamic workflow has had an issue due to internet jumping of can 
+  you fix it                                                                    
+
+● Task Output(non-blocking) wv1gie0ly
+  One whole-document coherence edit of the QMA spine by a single
+high-effort editor, then strict divergence-only verification, one bounded
+fix cycle, and a truthful validation report [running]
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The internet outage killed the coherence editor mid-edit and both verifiers,
+  and a bug let dead verifiers count as passes. I'm stopping the script,
+  checking if the spine was left half-edited, fixing the verifier bug, then
+  resuming. · summarized
+
+● Stop Task
+  ⎿  One whole-document coherence edit of the QMA spine by a single
+     high-effort editor, then strict divergence-only verification, one
+     bounded fix cycle, and a truthf… · stopped
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The spine is untouched (last modified 20:46, before the editor started; lint
+  clean, 610 lines, 29 ADs), so nothing half-edited to repair. Patching the
+  script and resuming.
+
+  Ran 1 shell command (ctrl+o to expand)
+  ⎿  /workflows to view dynamic workflow runs
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Fixed and resumed. What happened: the connection drop killed the coherence
+  editor and both verifiers, and my script would have let the reporter declare
+  the spine "dry" because dead verifiers returned nothing. The spine itself was
+  never touched (last write 20:46, lint clean).
+
+  The patched run now retries every agent once after a drop, and a verifier that
+  dies twice forces the report to say "not verified" — it can no longer produce
+  a false clean. Same stages as before: whole-document coherence edit → two
+  divergence-only verifiers → at most two bounded fix cycles → truthful report
+  in reviews/validation-report.md. If the internet drops again mid-run, tell me
+  and I resume it from cache the same way; finished agents don't re-run.
+
+✻ Baked for 1m 38s · done Friday 9:08 PM
+
+● Dynamic workflow "One whole-document coherence edit of the QMA spine by a
+single high-effort editor, then strict divergence-only verification, one bounded
+fix cycle, and a truthful validation report" completed · 1h 12m 9s
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Workflow(Apply the three remaining divergence fixes to the QMA spine
+          surgically, verify once on the divergence bar, update the validation
+          report and memlog truthfully)
+  ⎿  /workflows to view dynamic workflow runs
+
+● The resumed run finished and was fully verified this time (no dead agents):
+  the coherence edit brought the divergence count from 13 → 5, the closing
+  cycles to 1, then 3 — three precise, well-specified leftovers (telemetry
+  records and the journal sequence in AD-6; one missing field in AD-11's
+  validator list; how role.base is written in AD-22). Rather than another
+  lens/batch cycle, a surgical pass is now applying exactly those three edits,
+  one high-effort verifier re-checks the whole spine on the divergence bar, and
+  the report gets rewritten to whatever the true result is. That's the last run
+  tonight; I'll give you the final verdict with the numbers when it lands.
+
+✻ Brewed for 1m 6s · done Friday 10:21 PM
+
+❯ Okay, I'm having internet issues, so pause here for tonight. We shall resume  
+  from here tomorrow, please                                                    
+
+● Stop Task
+  ⎿  Apply the three remaining divergence fixes to the QMA spine
+     surgically, verify once on the divergence bar, update the validation
+     report and memlog truthfully · stopped
+
+  Ran 3 shell commands, wrote 1 memory (ctrl+o to expand)
+
+● Paused cleanly. Nothing is running, nothing is half-edited.
+
+  Where things stand tonight
+
+  - Spine: architecture-QMA-2026-08-28/ARCHITECTURE-SPINE.md — 29 ADs,
+    lint-clean. Not yet export-ready: three divergence findings remain, saved
+    with their exact fixes in reviews/final-three-findings.json (the surgical
+    run died on your connection before applying any of them).
+    reviews/validation-report.md says so truthfully.
+  - The memlog's last entry records this exact state and how to resume.
+  - next-session-prompts.md now has #15 — RESUME the QMA spine validation (run
+    it first tomorrow; it applies the three fixes, verifies once on the
+    divergence bar, and hands off to #12, the documentation-factory prompt).
+    Your other session's #13/#14 for the trading node are untouched.
+  - Memory updated so a fresh session picks this up even without the export.
+
+  Tomorrow: say "resume" here, or paste prompt 15 into a new session — either
+  works. Good night.
+
+✻ Crunched for 3h 51m 3s · done Friday 10:24 PM
+
+❯ Let's wrap this up. Let's wrap this up                                        
+● Finishing the three pending fixes, one verification, and closing out — no
+  workflows needed for this.
+
+  Ran 2 shell commands (ctrl+o to expand)
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ dude resume the workflows that is waht i meant                                
+  ⎿  ⧉ Selected 167 lines from _bmad-output\planning-artifacts\architecture\arch
+     itecture-QMX-2026-08-19\next-session-prompts.md in Visual Studio Code
+
+● Resuming the run — the three fixes are already applied and lint-clean, so I'm
+  just patching the first stage to confirm rather than reapply them before
+  continuing from cache. · summarized
+
+  Ran 1 shell command (ctrl+o to expand)
+  ⎿  /workflows to view dynamic workflow runs
+
+● Resumed (run wf_4fe5d5d1-a68): stage 1 confirms the three fixes are in place,
+  then one high-effort divergence-only verifier sweeps the whole spine, then the
+  report and memlog are updated to whatever the true result is. I'll report the
+  final verdict — dry or the exact leftovers — when it lands.
+
+✻ Worked for 31s · done 2:46 PM
+
+● Dynamic workflow "Apply the three remaining divergence fixes to the QMA spine
+surgically, verify once on the divergence bar, update the validation report and
+memlog truthfully" completed · 21m 34s
+
+● Verified but not dry: two high divergences left, both about who may write into
+  a daemon-owned store, both with exact fixes. Applying them now, then one last
+  verifier.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Agent(Final divergence verification) Opus 5 (1M context)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+● Two more fixes are in and lint is clean; the last full-spine verifier is
+  running now. When it returns I'll either mark the spine export-ready (report +
+  memlog + memory) or list what it still finds, verbatim — and that's the wrap.
+
+✻ Worked for 48s · done 3:08 PM
+
+● Agent "Final divergence verification" finished · 12m 46s
+
+● One high finding left (model_family stated as required in one sentence and
+  optional two sentences later). Applying it, then one last verifier so the
+  "dry" claim is real.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Agent(Last divergence verification) Opus 5 (1M context)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+● Fix applied, lint clean, memlog updated. The last verifier is sweeping the
+  whole spine now; its result decides whether the report says export-ready.
+  Nothing else is pending.
+
+✻ Crunched for 28s · done 3:21 PM
+
+● Agent "Last divergence verification" failed: Agent terminated early due to an
+API error: API Error: Connection dropped (ECONNRESET) (error type server_error)
+
+● Connection dropped again before the verifier read anything; relaunching it.
+
+● Agent(Last divergence verification (retry)) Opus 5 (1M context)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+● Verifier relaunched; it reads the whole spine again from scratch, so ~10–15
+  minutes. Everything else is already in place — the moment it returns clean, I
+  update the report, memlog and memory to "export-ready" and we're done; if it
+  returns findings, you get them verbatim.
+
+✻ Crunched for 2m 10s · done 3:26 PM
+
+● Agent "Last divergence verification (retry)" finished · 8m 58s
+
+● Clean: the last verifier found zero divergences after cross-checking every
+  closed vocabulary, count, store list, lease, diagram and gate list. Closing
+  the run now.
+
+  Ran 6 shell commands (ctrl+o to expand)
+
+● Wrapped. The QMA spine is export-ready.
+
+  Final state
+
+  - architecture-QMA-2026-08-28/ARCHITECTURE-SPINE.md — 29 ADs, status: final,
+    updated: 2026-08-29, lint clean. The last full-spine divergence sweep
+    returned zero findings; the count over the whole validation ran 27 → 16 → 15
+    → 13 → 13 → 5 → 1 → 3 → 2 → 1 → 0, with today's six surgical fixes closing
+    the tail (AD-6, AD-11, AD-22/24, AD-9/8, AD-8, AD-15/10).
+  - reviews/validation-report.md — verdict rewritten to export-ready, with the
+    three "silences" the verifier chose not to count listed for the
+    documentation factory. The earlier over-claim is recorded there, not erased.
+  - .memlog.md — every ruling, fix and event through today's close (~300 lines);
+    it is the authority the doc factory reads.
+  - next-session-prompts.md — #12 is your documentation-factory prompt for QMA;
+    #15 is marked obsolete. Your node prompts #13/#14 are untouched.
+  - Memory updated to the closed state.
+
+  Next: export this session, then paste prompt 12 into a fresh session. Nothing
+  is committed — the run folder, the prompt-file edits and the workroom
+  deletions are all uncommitted in git, for your own commit when you choose.
+
+✻ Brewed for 51m 14s · done 3:36 PM

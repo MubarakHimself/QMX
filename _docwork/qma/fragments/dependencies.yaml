@@ -1,0 +1,7 @@
+# Fragment: append the three QMA components into the dependency graph.
+# Seat D9. Idempotent (yaml_append_items skips when COMP-QMA-CORE is already present).
+target: docs/architecture/dependencies.yaml
+ops:
+  - op: yaml_append_items
+    key: components
+    items_file: _docwork/qma/harvest/dependencies-qma.yaml

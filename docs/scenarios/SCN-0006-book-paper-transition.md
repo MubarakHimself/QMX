@@ -5,10 +5,10 @@ type: scenario
 status: ratified
 component: COMP-QMF-RISK
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA]
-decisions: [DEC-0149, DEC-0143, DEC-0150, DEC-0157, DEC-0158, DEC-0041, DEC-0115]
-sources: [docs/components/qmf-risk.md, docs/contracts/ct-24-book-mode.yaml, docs/contracts/ct-28-book-binding.yaml, docs/contracts/ct-23-risk-evaluation.yaml, docs/registry/variables.yaml, _docwork/ledger.yaml, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md]
+decisions: [DEC-0149, DEC-0143, DEC-0150, DEC-0157, DEC-0158, DEC-0041, DEC-0115, DEC-0205, DEC-0208]
+sources: [docs/components/qmf-risk.md, docs/components/trading-node.md, docs/contracts/ct-24-book-mode.yaml, docs/contracts/ct-28-book-binding.yaml, docs/contracts/ct-23-risk-evaluation.yaml, docs/registry/variables.yaml, _docwork/ledger.yaml, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, docs/decisions/ADR-0019-trading-node.md]
 generated: 2026-08-18
-verified: 2026-08-20
+verified: 2026-08-29
 stale_after: 30d
 ---
 
@@ -49,3 +49,7 @@ Routing is separated from binding. The per-intent `execution_target` is resolved
 ## Worked numbers
 
 No account count, transition delay, or balance is a ratified constant. The paper starting balance is `registry:paper_starting_balance` — a Book/family-scoped configurable UI-editable default with no spine value; the concrete figure frozen at flip is recorded evidence, non-authoritative, and is captured on the paper epoch record, never restated as a spine value. An executable fixture reads the CT-24 transition fields (`mode`, `transition_instant`, `trigger_kind`, `disposition`, `paper_target_ref`, `paper_epoch_ref`, `operator_signature`) and the resolved per-intent `execution_target`, computing current mode as the read-time fold over the transition stream rather than from any stored field. This scenario depends on the registry keys `registry:paper_starting_balance` and `registry:state_carry`; if either changes, recompute the fixture from the transition and binding records rather than from scenario-local literals.
+
+## Wired by the trading node (2026-08-29)
+
+This golden scenario stays **defined-unwired** until the trading node (COMP-QMN, FEAT-0031) wires it: no integration or runtime proof of the paper transition exists until then, and the node is the sole application that supplies it (DEC-0208). The node proves it as items on its week-long unattended soak acceptance gate — the machinery-proof checklist, not a performance claim (DEC-0208). The soak checklist items that exercise this scenario: a connectivity escalation on the live connection is proven **not** to block paper routing to the paired demo stream; a restart with a standing intent re-decides it and **does not re-arm a Book the operator left in `PAPER`**; and SCN-0006 is wired and proven alongside the other three risk golden scenarios (DEC-0208). Activation is a second, separate operator act, so approval never equals exposure and a restart never re-arms exposure (DEC-0205). Nothing here grants order, promotion, activation, or live-money authority; that arrives only through the factory pipeline.

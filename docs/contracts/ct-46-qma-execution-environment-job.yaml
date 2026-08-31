@@ -1,0 +1,74 @@
+id: CT-46
+name: QMA execution environment and JobHandle contract
+status: ratified
+version: 1  # first minted format version; CT-46 realizes the QMA sitting's AD-17 (execution environments, compute placement, JobHandle) with AD-14's async-spawn handle, AD-12's Task-state mapping, AD-28's network law and AD-25's desktop deferral (DEC-0316, DEC-0313, DEC-0311, DEC-0327, DEC-0324); validation closed dry 2026-08-29
+owner: COMP-QMA-CORE  # a core definition (AD-1): ExecutionEnvironment, ComputeRequirement, JobHandle and their refusals are declared in qma-core and implemented by the daemon's Compute Router, the sole process that runs anything (DEC-0335, DEC-0316)
+consumers: []  # defined-unwired: no code exists; the Compute Router realizes this contract at runtime through a core-defined port (DEC-0316, DEC-0335)
+active_consumers: []
+intended_consumers: [COMP-QMA-DAEMON]  # the daemon's Compute Router places every ComputeRequirement, mints every environment_lease, resolves every JobHandle and applies the JobHandle->Task-state mapping; agents reach it only through the wire and never name a machine or a vendor (DEC-0316)
+wiring_status: defined-unwired  # ratified surface; no code exists; environments and jobs reach the daemon store through the AD-6 journal under the AD-1 port pattern; no wiring is authorized from this doc (DEC-0316, DEC-0335)
+layer_from: backend
+layer_to: backend
+decisions: [DEC-0316, DEC-0313, DEC-0311, DEC-0324, DEC-0325, DEC-0327, DEC-0350, DEC-0319, DEC-0323, DEC-0335, DEC-0336, DEC-0341]
+gaps: [GAP-0070, GAP-0075, GAP-0078]  # GAP-0070 the planned-not-provisioned Windows VPS desktop environment; GAP-0075 sandbox/compute vendors beyond local Docker (Modal/Daytona/E2B rejected outright); GAP-0078 the browser stack for browser-heavy missions
+purpose: >-
+  One contract for where QMA work runs and how a running job is referenced: the
+  `ExecutionEnvironment` declaration (kind, provider ref, image, mounts,
+  environment allowlist, capabilities, required `network` field and lifecycle),
+  the `ComputeRequirement` an agent declares, the Compute Router's placement and
+  its typed `NoEnvironment` refusal, and the `JobHandle` — a job id plus a closed
+  state vocabulary including the mandatory `unknown` state — with its `submit`,
+  `JobHandle.attach`, `wait`, `JobHandle.reattach`, `wake`, `cancel` and `stream`
+  operations and the fixed, total, daemon-applied mapping onto AD-12's Task
+  states. The environment is a declared allowlist and never a control channel;
+  agents name a requirement, never a machine or a vendor; and an outcome that is
+  not known resolves to `unknown` and blocks its slot until an explicit recorded
+  resolution — QMA adopts the L35 discipline (DEC-0350) so no component retries,
+  assumes an outcome or invents terminal state.
+invariants:
+  - "CT-46 realizes AD-17 (execution environments, compute placement, JobHandle) with AD-14's async-spawn handle: an `ExecutionEnvironment` is a qma-core declaration and the Compute Router in the daemon is the only component that places jobs, mints leases or resolves handles; agents declare a `ComputeRequirement` and reach the router only over the wire, never naming a machine or a vendor (DEC-0316, DEC-0313, DEC-0335)."
+  - "An `ExecutionEnvironment` declares a `kind` of exactly one of `local`, `docker`, `remote_container`, `remote_host`, `browser` or `desktop`, plus a provider ref, image, mounts, an environment-variable allowlist, capabilities, a required `network` field and a lifecycle of `ephemeral` or `persistent`; the environment is a declared allowlist, never a control channel, and `docker`-per-worker, `ephemeral`, is the default with no shared dirty filesystem (DEC-0316)."
+  - "The `network` field is required and closed to `none` or `allowlist` (AD-28): `none` is the default-deny posture and an `allowlist` enumerates permitted destinations; placement and registration refuse any environment or edge that could reach the money path (the trading node), so no QMA workload runs where it could reach a live or writable trading surface (DEC-0327, DEC-0316)."
+  - "Lease law: an `ExecutionEnvironment` instance grants at most one `environment_lease` per slot — distinct from AD-9's per-Task `dispatch_lease` and never named bare — unless its declaration sets `max_in_flight` (registry:environment.max_in_flight, default 1); the Compute Router queues the rest; the `remote_host` and `desktop` kinds may never exceed one and pin `max_in_flight` to 1 as `uneditable`; an `unknown` job holds its `environment_lease` until an explicit recorded resolution (DEC-0316, DEC-0325)."
+  - "An agent declares a `ComputeRequirement` — cpu, memory, disk, optional gpu, capabilities needed, timeout, max memory and isolation — and the Compute Router places it; agents never know the machine or the vendor, and a `ComputeRequirement` naming a `kind` no registered environment provides returns the typed refusal `NoEnvironment` (CT-04) naming that kind — AD-25's unprovisioned `desktop` is the v1 case (GAP-0070) (DEC-0316, DEC-0324)."
+  - "`JobHandle` carries a job id and a `state` of exactly one of `queued`, `running`, `done`, `failed`, `cancelled`, `aborted` or `unknown` (AD-12's spelling), with the operations `submit` (queues and returns immediately), `JobHandle.attach`, `wait`, `JobHandle.reattach`, `wake`, `cancel` and `stream`; `wake` resolves to the owning Quant's mailbox at submit time and stores that owner on the handle (DEC-0316, DEC-0319)."
+  - "Terminal `JobHandle` states are exactly `done`, `failed`, `cancelled` and `aborted`; `queued`, `running` and `unknown` are non-terminal; `cancelled` means terminated by an explicit `cancel` command; `aborted` means terminated by the environment or supervisor without a cancel — OOM kill, container stop, image or mount failure — where non-completion is KNOWN; and an outcome that is not known resolves to `unknown` and never to `aborted` (DEC-0316)."
+  - "The mapping onto AD-12's Task states is fixed, total and applied by the daemon alone: `queued` and `running` -> `running`, `done` -> `done`, `failed` -> `failed`, `aborted` -> `failed` with the abort reason recorded, `cancelled` -> `cancelled`, `unknown` -> `unknown`; no other pairing is legal, `aborted` never becomes `cancelled`, and JobHandle state and Task state remain two distinct closed vocabularies neither of which borrows the other's values (DEC-0316, DEC-0311)."
+  - "UNKNOWN is mandatory (L35 adopted, DEC-0350): a timeout, a lost supervisor or an unreachable environment resolves to `unknown` and never to `failed`; an `unknown` job holds one of its environment's `max_in_flight` `environment_lease` slots and blocks placement into that slot — the whole environment where `max_in_flight` is 1 — until an explicit recorded resolution; no component retries, assumes an outcome or invents terminal state (DEC-0316, DEC-0350)."
+  - "The UNKNOWN resolution is a human-gate command accepted only from an `operator` principal and refused from a `machine` principal with the typed refusal `OperatorPrincipalRequired`; no headless, scripted, scheduled or agent-initiated path resolves an `unknown` job (DEC-0323, DEC-0316)."
+  - "Deploying a Quant, a Mission or a Worker to a remote workspace or sandbox is a first-class, UI-driven capability of the wire contract from v1 with the vendor deferred; remote workers dial OUT to the daemon and the daemon never dials in, and no inbound port is opened on the deployed side (DEC-0336, DEC-0316)."
+  - "This contract mints no scheduling authority, no parallelism and no execution act: the Compute Router places one job per lease and holds no money-path capability; a `JobHandle` never addresses a live or writable money-path record, and no environment `kind`, `network` value or capability grants an order, a binding, a sizing decision or a promotion (AD-16, AD-28) (DEC-0327, DEC-0341)."
+schema:
+  type: qma-execution-environment-and-jobhandle  # a qma-core port surface: the ExecutionEnvironment declaration, the ComputeRequirement, the Compute Router placement and refusal, and the JobHandle reference with its state machine and Task-state mapping (DEC-0316)
+  fields:
+    - "execution_environment.kind: exactly one of local | docker | remote_container | remote_host | browser | desktop — the closed environment kind vocabulary (DEC-0316)"
+    - "execution_environment.provider_ref: the provider reference for the environment; agents never read it and never name a vendor (DEC-0316)"
+    - "execution_environment.image: the container or host image the environment declares (DEC-0316)"
+    - "execution_environment.mounts: the declared mount set; there is no shared dirty filesystem across ephemeral workers (DEC-0316)"
+    - "execution_environment.environment_allowlist: the allowlist of environment variables the environment exposes — a declared allowlist, never a control channel (DEC-0316)"
+    - "execution_environment.capabilities: the capabilities the environment provides, matched against a ComputeRequirement's declared needs (DEC-0316)"
+    - "execution_environment.network: required, one of none | allowlist (AD-28); none is default-deny and allowlist enumerates permitted destinations; no value may reach the money path (DEC-0327)"
+    - "execution_environment.lifecycle: one of ephemeral | persistent; docker-per-worker ephemeral is the default (DEC-0316)"
+    - "execution_environment.max_in_flight: registry:environment.max_in_flight (default 1), ui-editable per declaration; editability is a per-kind property of this one variable — the remote_host and desktop kinds are pinned to 1 and uneditable (AD-26 names one variable, max_in_flight) (DEC-0316, DEC-0325)"
+    - "compute_requirement: cpu, memory, disk, optional gpu, capabilities needed, timeout, max memory and isolation — what an agent declares; the Compute Router places it and the agent never knows the machine or the vendor (DEC-0316)"
+    - "job_handle.job_id: the durable id of a submitted job (DEC-0316)"
+    - "job_handle.state: one of queued | running | done | failed | cancelled | aborted | unknown — the closed JobHandle state vocabulary (DEC-0316)"
+    - "job_handle.owner: the owning Quant's ActorId, resolved from `wake` at submit time and stored on the handle so a wake reaches that Quant's mailbox (DEC-0316, DEC-0319)"
+    - "job_handle.operations: submit, JobHandle.attach, wait, JobHandle.reattach, wake, cancel, stream — attach and reattach are the JobHandle axis, distinct from the wire session's wire.attach/wire.detach (DEC-0316)"
+  enums:
+    - "execution_environment.kind: local | docker | remote_container | remote_host | browser | desktop — closed; remote_host and desktop may never exceed one lease and the desktop kind is unprovisioned in v1 (GAP-0070) (DEC-0316, DEC-0324)"
+    - "network: none | allowlist — required; none is default-deny (AD-28); no value reaches the money path (DEC-0327)"
+    - "lifecycle: ephemeral | persistent — ephemeral is the docker-per-worker default (DEC-0316)"
+    - "job_handle.state: queued | running | done | failed | cancelled | aborted | unknown — terminal states are done, failed, cancelled, aborted; non-terminal are queued, running, unknown (DEC-0316)"
+    - "job_handle -> task state mapping (fixed, total, daemon-applied): queued->running, running->running, done->done, failed->failed, aborted->failed (abort reason recorded), cancelled->cancelled, unknown->unknown; no other pairing is legal and aborted never becomes cancelled (DEC-0316, DEC-0311)"
+    - "typed refusals on this contract's paths, variants of `qmf-core`'s base (CT-04): `NoEnvironment` (a ComputeRequirement naming a kind no registered environment provides, naming that kind); `OperatorPrincipalRequired` (an UNKNOWN resolution attempted by a machine principal) (DEC-0316, DEC-0323)"
+  units:
+    - "environment.max_in_flight is a dimensionless count (registry:environment.max_in_flight, default 1, ui-editable); the remote_host and desktop kinds are pinned to 1 and uneditable as a per-kind property of this one variable (AD-26 names one variable, max_in_flight) (DEC-0316, DEC-0325)"
+    - "compute_requirement.cpu, memory, disk, max memory and gpu are capacity quantities the Compute Router matches against an environment's capabilities; timeout is a span from a recorded UTC instant (DEC-0316)"
+    - "job ids and owner ActorIds are opaque qma-core-typed values; a JobHandle carries no money or R value of its own (DEC-0316)"
+  nullability:
+    - "gpu is the one optional field of a ComputeRequirement; cpu, memory, disk, capabilities, timeout, max memory and isolation are mandatory (DEC-0316)"
+    - "every ExecutionEnvironment declares a network value — an absent network is a registration defect, never a permissive default (AD-28, DEC-0327)"
+    - "a JobHandle always carries exactly one state from the closed vocabulary; an outcome that is not known is the value `unknown`, never an absent or null state (DEC-0316)"
+    - "the owner is stored on the handle at submit time and is never null; a job with no resolvable owning Quant is a submission defect, not a wakeless job (DEC-0316, DEC-0319)"
+provenance_note: "CT-46 is newly minted by the 2026-08-28 QMX agentic-system (QMA) architecture sitting, realizing AD-17 (execution environments, compute placement, JobHandle) with AD-14's async-spawn `JobHandle`, AD-12's Task-state mapping, AD-28's `network` law and AD-25's planned-not-provisioned `desktop` environment (DEC-0316, DEC-0313, DEC-0311, DEC-0327, DEC-0324). The mandatory-UNKNOWN discipline is inherited from constitution L35 (DEC-0350) and the single-`qmb`-door Backtesting Service keeps QMB the sole backtesting path — a library and a CLI, never a second backtest governor and never re-specified by QMA. The contract is `defined-unwired`: no code exists, and it grants no scheduling, execution, order, binding, sizing or promotion authority at any account role. Ratified as rider material under SRC-15; spine FINAL, validation closed dry 2026-08-29; implementation authorization arrives only through the factory pipeline."

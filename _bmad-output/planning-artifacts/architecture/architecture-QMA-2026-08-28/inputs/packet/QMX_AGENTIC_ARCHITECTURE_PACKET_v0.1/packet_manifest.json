@@ -1,0 +1,31 @@
+{
+  "packet": "QMX Agentic Architecture Packet",
+  "version": "0.1-working-baseline",
+  "status": "working",
+  "documents": [
+    "00_README.md",
+    "01_QMX_CONSTITUTION.md",
+    "02_REFERENCE_EXTRACTION_MATRIX.md",
+    "03_DAEMON_UI_BOUNDARY.md",
+    "04_AGENT_ONTOLOGY.md",
+    "05_PLUGIN_ARCHITECTURE.md",
+    "06_RUNTIME_SDK_SURFACES.md",
+    "07_MISSIONS_GRAPHS_LOOPS_HOOKS.md",
+    "08_CONTEXT_MEMORY_KNOWLEDGE_LEDGER.md",
+    "09_MODEL_PROXY_TOOLS_COMPUTE.md",
+    "10_UI_EXTENSION_MODEL.md",
+    "11_ARCHITECTURE_AGENT_BRIEF.md"
+  ],
+  "core_principles": [
+    "daemon_ui_separation",
+    "qmx_owned_sdk_contracts",
+    "deterministic_infrastructure",
+    "purpose_built_quant_workflows",
+    "extensible_plugins",
+    "role_bot_agent_separation",
+    "ledger_separate_from_observability",
+    "context_memory_knowledge_separation",
+    "provider_neutral_compute",
+    "reference_engineering_not_cloning"
+  ]
+}

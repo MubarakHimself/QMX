@@ -1,7 +1,7 @@
 id: CT-30
 name: Control-action contract
 status: ratified
-version: 1  # first minted format version; the control-action law is spine-ratified (AD-36/AD-37), corpus signed off by the operator 2026-08-21 (DEC-0150, DEC-0151)
+version: 1  # first minted format version; the control-action law is spine-ratified (AD-36/AD-37), corpus signed off by the operator 2026-08-21 (DEC-0150, DEC-0151); 2026-08-29 trading-node absorption: per-effect-matrix-cell satisfaction predicates, the node_resurrect AD-21 event subtype, and the seat_reinstate CT-24 pointer recorded — no format change (DEC-0249, DEC-0250)
 owner: COMP-QMF-RISK
 consumers: []  # consumer-blind by design: control-action records are qmf-core value types wrapped into registry records by the composition root; dispatch reaches the venue through qmf-core-defined sink protocols, so no package imports qmf-risk under default-deny (DEC-0150, DEC-0143)
 active_consumers: []
@@ -10,7 +10,7 @@ wiring_status: defined-unwired  # AD-36/AD-37 ratify the contract surface; no co
 caller_status: unassigned  # actions are issued by the operator, Book policy, the protection authority, a venue-delegated authority, or the adapter itself; the node owns the issuers, QMF carries the contract, the scopes, the refusals and the evidence (DEC-0150)
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0150, DEC-0151, DEC-0147, DEC-0158, DEC-0143, DEC-0149]
+decisions: [DEC-0150, DEC-0151, DEC-0147, DEC-0158, DEC-0143, DEC-0149, DEC-0192, DEC-0218, DEC-0249, DEC-0250, DEC-0251, DEC-0259]
 gaps: []  # AD-36 closes the flatten-authority leftover and kill-switch seam; AD-37 closes GAP-0046; no still-open gap applies. The node's trigger->level->effect severity matrix is node material, not a QMF gap (DEC-0150)
 purpose: "The typed control-action contract: a bounded set of protection and lifecycle actions — suspend_new, drain, flatten, resume — each issued by a named authority at a resolved subject scope, journaled before dispatch as a standing intent, arbitrated at exactly one point per (VenueId, account) command stream by a BMS-declared rank, with the exit-preservation invariant guaranteeing no control action of any authority at any scope may ever block a risk-reducing act (DEC-0150, DEC-0151)."
 invariants:
@@ -33,6 +33,9 @@ invariants:
   - "Veto accounting is symmetric to suppression accounting: a door refusal (an intent refused before it was ever authorized) stays on the veto path and mints a decision event carrying the refusing-door identity, the would-have-been action fingerprint and the controlling evidence fingerprint; CT-32 carries veto counts by door alongside suppression counts by authority, so neither our arbitration nor our doors ever read as decay (DEC-0150)."
   - "The (action kind x issuing authority) -> close-reason mapping is a pinned versioned table shared with CT-29, never per implementer: kill_line_flat is minted apart from protection_forced_flat (the kill-switch class) because AD-36 rules the kill line and the kill switch two different things, and window_forced_flat, boundary_flat, hold_time_force_flat, protection_amendment_fill and operator_close each map through the same table (DEC-0147, DEC-0150)."
   - "Which effect fires at which severity is node authority: QMF carries the contract, the scopes, the refusals and the evidence; it never carries the trigger->level->effect matrix — that severity policy lives in the trading node (tracker/trading-node-notes.md pointer) (DEC-0150)."
+  - "The trading node DECLARES a satisfaction predicate PER KSA effect-matrix cell rather than leaving 'when is this control satisfied' to whichever implementation lands first: AD-36's predicates hold verbatim as the floor — suspend_new and drain are never-auto, flatten is scope-flat-at-reconciled-verdict — the no-pending-orders-at-reconciled-verdict predicate is EXPRESSIBLE in a cell so a cell that needs it can say so, and a protection transition counts as ENFORCED only after the account's connections have quiesced and drained; never-auto is the predicate any human-only action carries (DEC-0250, DEC-0192, DEC-0218)."
+  - "Node stand-down is a NODE LIFECYCLE STATE and not a CT-30 control, and its operator-signed exit journals under AD-21's control action EVENT type as the declared node subtype node_resurrect (operator signer, global scope) — the pattern AD-21 already licenses for the sealed-period final look. NO CT-30 action kind is minted for it: this contract's action-kind vocabulary is addable-never-redefined and the node adds nothing to it (a real CT-30 kind would need never-auto as its satisfaction predicate and a row in the pinned (kind x authority) -> close-reason table, which this increment does not propose) (DEC-0249, DEC-0218)."
+  - "Seat quarantine and its operator-signed exit seat_reinstate are each their own CT-24 binding-transition and never a CT-30 action or a CT-30 resume: a seat enters quarantined automatically on a seat-callback deadline, exception or memory-ceiling breach and leaves it ONLY by the operator-signed seat_reinstate power, never inferred from a restart, a new boot epoch, a config version or the absence of further breaches (DEC-0251)."
 schema:
   type: control-action-record  # a typed action record whose outcome is an observation and a journal event; a standing intent is the read-time fold over the stream, never a stored field (DEC-0150)
   fields:
