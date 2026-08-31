@@ -91,6 +91,8 @@ fmt = "ruff format packages tests examples"
 fmt-check = "ruff format --check packages tests examples"
 lint = "ruff check packages tests examples"
 # python -m: direct `pyright` console script can be blocked by host App Control.
+# `poe.exe` itself is also blocked under this nested .venv (os error 4551); after
+# `uv sync` run `python scripts/ensure_poe_shim.py` so `uv run poe` uses poe.cmd.
 types = "python -m pyright"
 test = "pytest packages tests --cov=qma --cov-branch --cov-report=term-missing --cov-fail-under=0"
 

@@ -261,6 +261,9 @@ exclude = "adws/adw_data"
 # qa/ is the independent verification corpus (OR-10 / skylos exclude twin): not
 # shipped code; SSSF `ruff check .` must not own its thousands of assert-S101 hits.
 # _docwork/ is documentation-factory scratch (skylos twin) — same ruling.
+# tests/ and examples/ at the worktree root are empty path anchors so the nested
+# qmx-agents quality command `ruff check packages tests examples` (run from this
+# CWD via `uv run --project qmx-agents …`) does not E902 on missing paths.
 extend-exclude = [
     "adws/adw_data",
     "recorder",
@@ -268,6 +271,8 @@ extend-exclude = [
     "qmx-agents",
     "qa",
     "_docwork",
+    "tests",
+    "examples",
 ]
 line-length = 100
 

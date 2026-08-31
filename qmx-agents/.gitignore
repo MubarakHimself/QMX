@@ -1,4 +1,9 @@
-.venv/
+# Ignore the venv tree, but keep the Device Guard-safe poe.cmd shim tracked.
+# (A parent `.venv/` rule would block re-include; un-ignore via `.venv/*`.)
+.venv/*
+!.venv/Scripts/
+.venv/Scripts/*
+!.venv/Scripts/poe.cmd
 __pycache__/
 *.pyc
 .pytest_cache/
