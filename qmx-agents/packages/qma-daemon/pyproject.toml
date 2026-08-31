@@ -7,6 +7,9 @@ dependencies = [
     "qma-core",
     "qma-wire",
     "qmf-core",
+    "qmf-registry",
+    "qmf-data",
+    "qmf-risk",
 ]
 
 [build-system]
@@ -22,3 +25,6 @@ module-name = "qma.daemon"
 qma-core = { workspace = true }
 qma-wire = { workspace = true }
 qmf-core = { path = "../../../packages/qmf-core", editable = true }
+qmf-registry = { path = "../../../packages/qmf-registry", editable = true }
+qmf-data = { path = "../../../packages/qmf-data", editable = true }
+qmf-risk = { path = "../../../packages/qmf-risk", editable = true }

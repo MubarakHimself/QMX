@@ -30,9 +30,7 @@ SLUG_MIN_LEN: Final[int] = 2
 SLUG_MAX_LEN: Final[int] = 32
 
 # Lower-case only; length enforced separately so error messages stay precise.
-SLUG_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"^[a-z0-9](?:[a-z0-9_-]{0,30}[a-z0-9])?$"
-)
+SLUG_PATTERN: Final[re.Pattern[str]] = re.compile(r"^[a-z0-9](?:[a-z0-9_-]{0,30}[a-z0-9])?$")
 
 _ACTOR_ID_PATTERN: Final[re.Pattern[str]] = re.compile(
     r"^quant:([a-z0-9](?:[a-z0-9_-]{0,30}[a-z0-9])?)/"
@@ -42,11 +40,7 @@ _ACTOR_ID_PATTERN: Final[re.Pattern[str]] = re.compile(
 
 def is_valid_slug_form(slug: str) -> bool:
     """True when ``slug`` is already lower-case and 2..32 characters."""
-    return (
-        isinstance(slug, str)
-        and SLUG_MIN_LEN <= len(slug) <= SLUG_MAX_LEN
-        and SLUG_PATTERN.fullmatch(slug) is not None
-    )
+    return SLUG_MIN_LEN <= len(slug) <= SLUG_MAX_LEN and SLUG_PATTERN.fullmatch(slug) is not None
 
 
 def validate_slug_form(slug: object, *, slug_kind: str) -> Result[str]:

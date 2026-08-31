@@ -137,8 +137,19 @@ class ProhibitedMoneyPathTool(QmaRefusal):
     CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.POLICY_REJECTION
 
     @classmethod
-    def of(cls, *, tool_id: str) -> ProhibitedMoneyPathTool:
-        return cls.create(context={"tool_id": tool_id})
+    def of(
+        cls,
+        *,
+        tool_id: str,
+        matched_act: str | None = None,
+        plugin_id: str | None = None,
+    ) -> ProhibitedMoneyPathTool:
+        context: dict[str, object] = {"tool_id": tool_id}
+        if matched_act is not None:
+            context["matched_act"] = matched_act
+        if plugin_id is not None:
+            context["plugin_id"] = plugin_id
+        return cls.create(context=context)
 
 
 class UnknownHostRequest(QmaRefusal):

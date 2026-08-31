@@ -95,7 +95,7 @@ def authorize_creation(
     """Accept only ``desk.create`` / ``quant.create`` from an operator principal."""
     if isinstance(act, CreationAct):
         resolved_act = act
-    elif isinstance(act, str) and act in CREATION_ACTS:
+    elif act in CREATION_ACTS:
         resolved_act = CreationAct(act)
     else:
         return OperatorPrincipalRequired.of(

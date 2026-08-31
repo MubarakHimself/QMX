@@ -116,8 +116,8 @@ def scan_forbidden_runtime_calls(root: Path) -> tuple[str, ...]:
     """Return ``qma-core`` source paths that appear to run or write."""
     hits: list[str] = []
     for path in _iter_py_files(root):
-        # This module holds the forbidden sets and performs the scan itself.
-        if path.name == "boundaries.py":
+        # Boundary scanners hold the forbidden sets / path walks themselves.
+        if path.name in {"boundaries.py", "dependencies.py"}:
             continue
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))

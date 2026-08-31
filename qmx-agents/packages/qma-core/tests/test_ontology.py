@@ -50,9 +50,7 @@ def test_ontology_chain_and_work_vocabulary() -> None:
 
 
 def test_desk_slugs_exactly_five_and_shared_with_plugin_prefixes() -> None:
-    assert frozenset(
-        {"research", "trading", "dev", "analysis", "pm"}
-    ) == DESK_SLUG_VALUES
+    assert frozenset({"research", "trading", "dev", "analysis", "pm"}) == DESK_SLUG_VALUES
     assert DESK_PREFIX_TOKENS == DESK_SLUG_VALUES
     assert MANIFEST_DESK_PREFIXES == DESK_PREFIX_TOKENS
     assert set(DeskSlug) == {
@@ -62,9 +60,10 @@ def test_desk_slugs_exactly_five_and_shared_with_plugin_prefixes() -> None:
         DeskSlug.ANALYSIS,
         DeskSlug.PM,
     }
-    assert frozenset(
-        {"Researcher", "Trader", "Developer", "Analyst", "Product Manager"}
-    ) == ROLE_DISPLAY_NAMES
+    assert (
+        frozenset({"Researcher", "Trader", "Developer", "Analyst", "Product Manager"})
+        == ROLE_DISPLAY_NAMES
+    )
     assert set(DESK_DISPLAY_NAMES.values()) == {
         "Research",
         "Trading",
@@ -291,16 +290,19 @@ def test_retirement_keeps_actor_id_stable_and_reserves_slug() -> None:
 def test_profile_is_presentation_only() -> None:
     profile = Profile(display_name="Labs", desk_slugs=(DeskSlug.RESEARCH, DeskSlug.DEV))
     assert profile.display_name == "Labs"
-    assert frozenset(
-        {
-            "daemon_state",
-            "identity_segment",
-            "index",
-            "filter",
-            "permission_key",
-            "routing_key",
-        }
-    ) == PROFILE_FORBIDDEN_USES
+    assert (
+        frozenset(
+            {
+                "daemon_state",
+                "identity_segment",
+                "index",
+                "filter",
+                "permission_key",
+                "routing_key",
+            }
+        )
+        == PROFILE_FORBIDDEN_USES
+    )
     for use in PROFILE_FORBIDDEN_USES:
         with pytest.raises(OntologyError, match="presentation-only"):
             assert_profile_presentation_only(use)

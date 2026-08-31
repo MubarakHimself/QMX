@@ -23,8 +23,13 @@ members = ["packages/qma-core", "packages/qma-wire", "packages/qma-daemon"]
 qma-core = { workspace = true }
 qma-wire = { workspace = true }
 qma-daemon = { workspace = true }
-# Parent QMF roster package — path edge into the enclosing QMX workspace.
+# Parent QMF roster packages — path edges into the enclosing QMX workspace.
+# Daemon may declare qmf-registry / qmf-data / qmf-risk (read-and-calculate);
+# qmf-venue stays undeclared and import-banned (DEC-0347).
 qmf-core = { path = "../packages/qmf-core", editable = true }
+qmf-registry = { path = "../packages/qmf-registry", editable = true }
+qmf-data = { path = "../packages/qmf-data", editable = true }
+qmf-risk = { path = "../packages/qmf-risk", editable = true }
 
 [dependency-groups]
 dev = [

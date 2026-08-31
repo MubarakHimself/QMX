@@ -1,8 +1,9 @@
-"""Structural-seed smoke for qma-core (Story 40.1 / 40.2)."""
+"""Structural-seed smoke for qma-core (Story 40.1 / 40.2 / 40.6)."""
 
 from __future__ import annotations
 
 import qma.core
+import qma.core.barriers
 import qma.core.ontology
 import qma.core.plugins
 import qma.core.ports
@@ -20,3 +21,4 @@ def test_subpackages_importable() -> None:
     assert qma.core.plugins.__doc__
     assert qma.core.refusals.__doc__
     assert qma.core.vocabulary.__doc__
+    assert qma.core.barriers.__doc__

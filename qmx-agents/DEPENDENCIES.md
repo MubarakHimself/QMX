@@ -33,8 +33,14 @@ dependency means adding its row here first. Shape matches the parent QMF
 | Name | Version | Licence | Used by | Why |
 |---|---|---|---|---|
 | qmf-core | path `../packages/qmf-core` (editable) | (workspace) | `qma-core` (and transitively `qma-wire`, `qma-daemon`) | Parent definitions-only roster package: typed refusals, `fp1`, money, time, ids. Sole declared dependency of `qma-core` (DEC-0335, DEC-0302). |
-| qma-core | workspace | (workspace) | `qma-wire`, `qma-daemon` | QMA definitions package (ontology, ports, plugin surface, refusals). |
+| qmf-registry | path `../packages/qmf-registry` (editable) | (workspace) | `qma-daemon` only | Read-and-calculate parent edge; surfaces enumerated default-deny in `qma-core`. One write: content-addressed dev-zone candidate (DEC-0347). |
+| qmf-data | path `../packages/qmf-data` (editable) | (workspace) | `qma-daemon` only | AD-2 diagram edge (unnarrowed by AD-2); daemon composition root (DEC-0347). |
+| qmf-risk | path `../packages/qmf-risk` (editable) | (workspace) | `qma-daemon` only | Read-and-calculate parent edge; value types, typed refusals, pure calculation only — no write (DEC-0347). |
+| qma-core | workspace | (workspace) | `qma-wire`, `qma-daemon` | QMA definitions package (ontology, ports, plugin surface, refusals, barriers). |
 | qma-wire | workspace | (workspace) | `qma-daemon` | Sole cross-boundary contract package (DEC-0304, DEC-0347). |
+
+`qmf-venue` is **not** a declared dependency of any QMA package, worker, or plugin
+and remains import-banned (DEC-0301, DEC-0347).
 
 ## Runtime dependencies
 
