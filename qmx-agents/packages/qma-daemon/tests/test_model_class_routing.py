@@ -238,6 +238,7 @@ def test_core_assign_model_family_helper_matches_registry_gate() -> None:
         principal=PrincipalClass.MACHINE,
         allowed_families=("alpha",),
     )
+    assert is_refusal(refused)
     assert OperatorPrincipalRequired.matches(refused)
     ok = assign_model_family(
         record,
