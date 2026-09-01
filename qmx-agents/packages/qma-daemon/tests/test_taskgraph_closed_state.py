@@ -15,7 +15,9 @@ from qma.daemon import CompileRequest, MissionCompiler, TaskGraphDispatcher
 from qma.daemon.envs import ExecutionEnvironmentRegistry
 from qma.daemon.taskgraph import (
     JobHandleEvidence,
+    MissionRecord,
     ProposedTransition,
+    TaskRecord,
     compute_mission_state,
     validate_proposed_transition,
 )
@@ -41,7 +43,7 @@ class _EnvStub:
 def _compile_and_dispatch(
     *,
     with_environment: bool = True,
-) -> tuple[TaskGraphDispatcher, object, object]:
+) -> tuple[TaskGraphDispatcher, MissionRecord, TaskRecord]:
     owner = _quant()
     compiler = MissionCompiler(known_quant_actor_ids={owner.actor_id.value})
     compiled = compiler.compile(
