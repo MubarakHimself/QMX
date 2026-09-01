@@ -13,6 +13,8 @@ stand-down-alive, watchdog/slice-progress, requested-restart exit 75, and the
 SIGTERM/UNKNOWN shutdown contract. Story 25.14 evaluates light/heavy four-bound
 claims over assembled definitions at Compose and refuses contradictions before
 Seal — child modules never self-approve the effective composition class.
+Story 25.16 proves host concurrency and backpressure under deterministic load
+without inventing capacity numbers; seat concurrency is Story 26.19.
 Child modules and doors never restamp, never hold a registry cache, and never
 persist lineage.
 """
@@ -50,6 +52,16 @@ from qmn.host.boot_ceremony import (
     run_boot_ceremony,
     run_check_mode,
     supervisor_writer_is_reserved,
+)
+from qmn.host.concurrency import (
+    CONCURRENCY_SURFACE,
+    SEAT_CONCURRENCY_OWNED_BY,
+    BoundCrossingKind,
+    BoundCrossingRecord,
+    ConcurrencyLoad,
+    ConcurrencyProofReport,
+    InjectedBounds,
+    prove_host_concurrency,
 )
 from qmn.host.light_heavy import (
     CHILD_MODULES_MAY_SELF_APPROVE,
@@ -147,6 +159,7 @@ __all__ = [
     "COMPOSITION_OCCURRENCE_FORMAT_VERSION",
     "COMPOSITION_OCCURRENCE_KIND",
     "COMPOSITION_ROOT_SURFACE",
+    "CONCURRENCY_SURFACE",
     "DOMAIN_BACKGROUND_THREADS_ALLOWED",
     "DOOR_BIND_FAILURE_EXIT_CODE",
     "DOOR_LOCAL_REGISTRY_CACHE",
@@ -164,12 +177,15 @@ __all__ = [
     "REGISTRY_MINT_SURFACE",
     "REQUESTED_RESTART_EXIT_CODE",
     "REQUESTED_RESTART_REASON",
+    "SEAT_CONCURRENCY_OWNED_BY",
     "SUPERVISION_SURFACE",
     "SUPERVISOR_ROLE",
     "SUPERVISOR_STREAM",
     "WORKLOAD_KINDS",
     "BootAttemptRecord",
     "BootCeremonyOutcome",
+    "BoundCrossingKind",
+    "BoundCrossingRecord",
     "BoundSupervisorDoors",
     "CarriesLedgerEdgeRequest",
     "CommandFate",
@@ -180,11 +196,14 @@ __all__ = [
     "CompositionFingerprintInputs",
     "CompositionLineageReceipt",
     "CompositionRootRegistry",
+    "ConcurrencyLoad",
+    "ConcurrencyProofReport",
     "CrashLoopFold",
     "CrashLoopVerdict",
     "DrainOutcome",
     "FourBoundDeclaration",
     "InMemoryBootAttemptSink",
+    "InjectedBounds",
     "LifecycleState",
     "LifecycleSupervisor",
     "NotifyTransport",
@@ -224,6 +243,7 @@ __all__ = [
     "persist_composition_lineage",
     "persist_explicit_lineage_edge",
     "preflight_checks_for_mode",
+    "prove_host_concurrency",
     "reserved_supervisor_writer",
     "resolve_composition_classes",
     "run_boot_ceremony",
