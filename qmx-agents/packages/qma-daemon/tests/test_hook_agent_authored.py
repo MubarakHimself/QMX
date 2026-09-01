@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
+from typing import cast
+
 from qma.core.plugins.hooks import HookEvent, HookResult, HookSource, build_hook_result
 from qma.core.vocabulary.enums import HookResultDecision
 from qma.daemon.hooks import (
@@ -156,7 +159,7 @@ def test_permissions_exact_intersection_refuses_silent_narrow() -> None:
 
     narrow = intersect_permissions_exact(["a", "extra"], ["a", "b"])
     assert is_refusal(narrow)
-    assert "extra" in narrow.context["given"]
+    assert "extra" in cast(Sequence[object], narrow.context["given"])
 
     registrar = _registrar()
     _approve_basic(registrar)
@@ -211,7 +214,7 @@ def test_agent_authored_hook_result_only_decision_and_reason() -> None:
     for field, result in cases:
         bad = assert_agent_authored_hook_result(result)
         assert is_refusal(bad), field
-        assert field in bad.context["given"]
+        assert field in cast(Sequence[object], bad.context["given"])
 
 
 def test_registration_passes_before_hook_register_journals_and_folds() -> None:
@@ -269,7 +272,8 @@ def test_named_wire_query_exposes_registration() -> None:
     assert is_ok(answered)
     assert answered.value["query"] == "list_mission_hooks"
     assert answered.value["count"] == 1
-    assert answered.value["hooks"][0]["registration_id"] == "reg-q"
+    hooks = cast(Sequence[Mapping[str, object]], answered.value["hooks"])
+    assert hooks[0]["registration_id"] == "reg-q"
     assert answered.value["fold"] == HOOK_REGISTRATIONS_FOLD
 
 
@@ -287,13 +291,18 @@ def test_mission_end_invokes_disposer_and_removes_hook() -> None:
             registration_id="reg-end",
         )
     )
-    assert registrar.list_mission_hooks("mission-a").value["count"] == 1
+    listed_before = registrar.list_mission_hooks("mission-a")
+    assert is_ok(listed_before)
+    assert listed_before.value["count"] == 1
 
     ended = registrar.end_mission("mission-a")
     assert is_ok(ended)
     assert ended.value["hooks_remaining"] == 0
-    assert "reg-end" in ended.value["removed_registration_ids"]
-    assert registrar.list_mission_hooks("mission-a").value["count"] == 0
+    removed = cast(Sequence[object], ended.value["removed_registration_ids"])
+    assert "reg-end" in removed
+    listed_after = registrar.list_mission_hooks("mission-a")
+    assert is_ok(listed_after)
+    assert listed_after.value["count"] == 0
     assert registrar.folded_under_mission("mission-a") == ()
 
     # Handler is gone — dispatch yields empty-handler allow, not the agent observe.
