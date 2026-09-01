@@ -299,11 +299,16 @@ def is_forbidden_image_token(token: object) -> str | None:
     lowered = token.strip().casefold()
     image_name = lowered.split("@", 1)[0]
     segment = image_name.rsplit("/", 1)[-1].split(":", 1)[0]
+    # Exact hits beat hyphen/underscore aliases; frozenset walk order is unstable.
+    if lowered in FORBIDDEN_IMAGE_TOKENS:
+        return lowered
+    if segment in FORBIDDEN_IMAGE_TOKENS:
+        return segment
     dotted = lowered.replace("-", ".").replace("_", ".")
     for forbidden in FORBIDDEN_IMAGE_TOKENS:
         f = forbidden.casefold()
         f_dot = f.replace("-", ".").replace("_", ".")
-        if f in {lowered, segment} or dotted == f_dot:
+        if dotted == f_dot:
             return forbidden
         if lowered.startswith((f + ".", f + "-", f + "_")):
             return forbidden
