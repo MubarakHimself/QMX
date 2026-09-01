@@ -10,12 +10,12 @@ together and refuses before Seal.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final, TypeVar, cast
 
-from qmf.core import AccountRole, Ok, Result, World, is_refusal
+from qmf.core import AccountRole, Ok, Result, TypedRefusal, World, is_refusal
 from qmf.risk.control_rank import ControlRankTable
 from qmf.risk.control_window import RATIFIED_WINDOW_KINDS, WindowKind
 
@@ -64,14 +64,12 @@ LAYER1_CHECKS: Final[tuple[str, ...]] = (
 _T = TypeVar("_T")
 
 
-def _failure(refusal: Result[object], *, failure_id: str) -> Result[object]:
+def _failure(refusal: TypedRefusal, *, failure_id: str) -> TypedRefusal:
     """Stamp a Compose failure id onto a typed refusal."""
-    if not is_refusal(refusal):
-        return refusal
     context = dict(refusal.context)
     context.setdefault("failure_id", failure_id)
     context.setdefault("refuses_before_seal", True)
-    return type(refusal)(
+    return TypedRefusal(
         category=refusal.category,
         retryability=refusal.retryability,
         context=context,
@@ -305,7 +303,7 @@ def _token_set(value: object, field: str) -> Result[frozenset[str]]:
             failure_id="compose.risk_population",
         )
     tokens: list[str] = []
-    for item in cast("Sequence[object]", tuple(value)):
+    for item in cast("Iterable[object]", value):
         token = clean_token(item)
         if token is None:
             return invalid(

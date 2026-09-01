@@ -234,7 +234,7 @@ def _require_duration(value: object, field: str) -> Duration | TypedRefusal:
     return value
 
 
-def refuse_invented_window_minutes(minutes: object) -> Result[None]:
+def refuse_invented_window_minutes(minutes: object) -> TypedRefusal:
     """Refuse constructing a window from bare minute offsets (DEC-0152)."""
     return invalid(
         "window_bounds",

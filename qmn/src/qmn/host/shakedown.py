@@ -24,6 +24,7 @@ from qmf.core import (
     Money,
     Ok,
     Result,
+    TypedRefusal,
     VenueId,
     World,
     is_refusal,
@@ -100,7 +101,7 @@ _ALLOWED_SHAKEDOWN_ROLES: Final[frozenset[AccountRole]] = frozenset(
 )
 
 
-def refuse_shakedown_as_performance_proof(**extra: object) -> Result[None]:
+def refuse_shakedown_as_performance_proof(**extra: object) -> TypedRefusal:
     """Shakedown evidence is for the human signature, never a performance proof."""
     return policy(
         "shakedown",
@@ -113,7 +114,7 @@ def refuse_shakedown_as_performance_proof(**extra: object) -> Result[None]:
     )
 
 
-def refuse_invented_soak_or_ksa_number(**extra: object) -> Result[None]:
+def refuse_invented_soak_or_ksa_number(**extra: object) -> TypedRefusal:
     """FTR-07: shakedown invents no soak duration or KSA matrix values."""
     return policy(
         "invented-value",
