@@ -25,6 +25,7 @@ from qma.core.plugins.hooks import (
     HookPhase,
     HookResult,
     HookSource,
+    assert_hook_result_phase_law,
     build_hook_event,
     build_hook_result,
 )
@@ -64,6 +65,7 @@ __all__ = [
     "PluginRosterEntry",
     "assert_core_definitions_only",
     "assert_handle_kind_not_money_path",
+    "assert_hook_result_phase_law",
     "assert_no_daemon_import",
     "build_hook_event",
     "build_hook_result",

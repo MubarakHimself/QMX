@@ -11,7 +11,11 @@ from enum import StrEnum
 from typing import Any
 
 from qma.core.vocabulary.enums import HookResultDecision
-from qma.core.vocabulary.hooks import parse_hook_event_name
+from qma.core.vocabulary.hooks import (
+    assert_decision_legal_for_event,
+    assert_fields_legal_for_event,
+    parse_hook_event_name,
+)
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
 
 __all__ = [
@@ -19,6 +23,7 @@ __all__ = [
     "HookPhase",
     "HookResult",
     "HookSource",
+    "assert_hook_result_phase_law",
     "build_hook_event",
     "build_hook_result",
 ]
@@ -120,3 +125,32 @@ def build_hook_result(
         ledger_entry=dict(ledger_entry) if ledger_entry is not None else None,
         verifier_ref=verifier_ref,
     )
+
+
+def assert_hook_result_phase_law(event: str, result: HookResult) -> HookResult:
+    """Refuse a HookResult whose decision or fields violate the phase law.
+
+    ``updated_input`` / ``updated_output`` may ride only an ``allow``.
+    ``injected_context`` reaches the Context Compiler, never the ledger.
+    """
+    name = parse_hook_event_name(event)
+    assert_decision_legal_for_event(name, result.decision)
+    present: list[str] = []
+    if result.updated_input is not None:
+        present.append("updated_input")
+    if result.updated_output is not None:
+        present.append("updated_output")
+    if result.injected_context is not None:
+        present.append("injected_context")
+    if result.ledger_entry is not None:
+        present.append("ledger_entry")
+    if result.verifier_ref is not None:
+        present.append("verifier_ref")
+    assert_fields_legal_for_event(name, present)
+    if result.decision is not HookResultDecision.ALLOW and (
+        result.updated_input is not None or result.updated_output is not None
+    ):
+        raise VocabularyError(
+            "updated_input and updated_output ride allow only (FR-Q31; CT-41; AD-10)"
+        )
+    return result

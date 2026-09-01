@@ -1,15 +1,16 @@
-"""Mandatory daemon hook registry (AD-10; FR-Q30; CT-41; DEC-0309, DEC-0339).
+"""Mandatory daemon hook registry (AD-10; FR-Q30/FR-Q31; CT-41; DEC-0309, DEC-0339).
 
 Hooks are the single enforcement and control surface — never optional. Every
 daemon-owned primitive ships ``before_<verb>`` and ``after_<verb>``; the only
 phase-less blocking controls are ``agent_stop`` and ``review_required``. An
 agent-reachable write into a daemon-owned store passes that primitive's
-``before_*`` gate with no bypass path.
+``before_*`` gate with no bypass path. Registration validates the phase law
+so an illegal decision or field never reaches runtime resolution.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Final, TypeVar, cast
@@ -19,6 +20,7 @@ from qma.core.plugins.hooks import (
     HookPhase,
     HookResult,
     HookSource,
+    assert_hook_result_phase_law,
     build_hook_event,
     build_hook_result,
 )
@@ -26,8 +28,12 @@ from qma.core.vocabulary.enums import HookControl, HookResultDecision, HookVerb
 from qma.core.vocabulary.hooks import (
     HOOK_CONTROLS,
     HOOK_VERBS,
+    empty_result_decision_for_event,
+    legal_decisions_for_event,
+    legal_fields_for_event,
     most_restrictive_hook_result,
     parse_hook_event_name,
+    validate_registration_phase_law,
 )
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
 from qmf.core import Ok, Result, is_ok
@@ -44,6 +50,7 @@ __all__ = [
     "assert_no_bypass_write_path",
     "default_empty_hook_result",
     "event_names_for_verb",
+    "resolve_parallel_hook_results",
 ]
 
 
@@ -89,10 +96,20 @@ class HookRegistryEntry:
     verb: HookVerb | None = None
     control: HookControl | None = None
 
+    @property
+    def legal_decisions(self) -> frozenset[HookResultDecision]:
+        return legal_decisions_for_event(self.event)
+
+    @property
+    def legal_fields(self) -> frozenset[str]:
+        return legal_fields_for_event(self.event)
+
     def to_payload(self) -> Mapping[str, object]:
         payload: dict[str, object] = {
             "event": self.event,
             "phase": self.phase.value,
+            "legal_decisions": tuple(sorted(d.value for d in self.legal_decisions)),
+            "legal_fields": tuple(sorted(self.legal_fields)),
         }
         if self.verb is not None:
             payload["verb"] = self.verb.value
@@ -139,12 +156,25 @@ def default_empty_hook_result(event: str) -> HookResult:
     """Resolution when no handler returns a result (FR-Q31 empty-result law).
 
     ``before_*`` and ``after_tool`` resolve to ``allow``; phase-less controls
-    and every other ``after_*`` resolve to ``observe``.
+    and every other ``after_*`` resolve to ``observe``. Never a null decision.
     """
     name = parse_hook_event_name(event)
-    if name.startswith("before_") or name == "after_tool":
-        return build_hook_result(HookResultDecision.ALLOW, reason="empty_handler")
-    return build_hook_result(HookResultDecision.OBSERVE, reason="empty_handler")
+    decision = empty_result_decision_for_event(name)
+    return build_hook_result(decision, reason="empty_handler")
+
+
+def resolve_parallel_hook_results(results: Sequence[HookResult]) -> HookResult:
+    """Most-restrictive-wins under total precedence; observe does not participate."""
+    if not results:
+        raise VocabularyError(
+            "parallel resolution requires at least one HookResult; "
+            "use default_empty_hook_result for missing handlers (FR-Q31)"
+        )
+    winner = most_restrictive_hook_result(tuple(item.decision for item in results))
+    for item in results:
+        if item.decision is winner:
+            return item
+    return build_hook_result(winner)
 
 
 def assert_no_bypass_write_path() -> None:
@@ -177,16 +207,25 @@ def _build_v1_entries() -> tuple[HookRegistryEntry, ...]:
 _V1_ENTRIES: Final[tuple[HookRegistryEntry, ...]] = _build_v1_entries()
 
 
+@dataclass(frozen=True, slots=True)
+class _HandlerRecord:
+    source: HookSource
+    handler: HookHandler
+    decisions: frozenset[HookResultDecision]
+    fields: frozenset[str]
+
+
 @dataclass
 class HookRegistry:
-    """Closed-and-addable v1 hook registry owned by the daemon (FR-Q30).
+    """Closed-and-addable v1 hook registry owned by the daemon (FR-Q30/FR-Q31).
 
     Initialized with the full twenty-three before_/after_ pairs plus the two
     phase-less controls. Unknown verbs and incomplete pairs are refused.
+    Registration validates the phase law for declared decisions and fields.
     """
 
-    _handlers: dict[str, list[tuple[HookSource, HookHandler]]] = field(
-        default_factory=dict[str, list[tuple[HookSource, HookHandler]]]
+    _handlers: dict[str, list[_HandlerRecord]] = field(
+        default_factory=dict[str, list[_HandlerRecord]]
     )
     _entries: tuple[HookRegistryEntry, ...] = field(default=_V1_ENTRIES, init=False)
     _by_event: Mapping[str, HookRegistryEntry] = field(init=False)
@@ -310,14 +349,30 @@ class HookRegistry:
             )
         return Ok(resolved)
 
+    def permitted_decisions(self, event: str) -> Result[frozenset[HookResultDecision]]:
+        """Inspect the phase-law decision set for a registered event."""
+        resolved = self.resolve_event(event)
+        if not is_ok(resolved):
+            return cast(Result[frozenset[HookResultDecision]], resolved)
+        return Ok(legal_decisions_for_event(resolved.value))
+
+    def permitted_fields(self, event: str) -> Result[frozenset[str]]:
+        """Inspect the phase-gated fields legal for a registered event."""
+        resolved = self.resolve_event(event)
+        if not is_ok(resolved):
+            return cast(Result[frozenset[str]], resolved)
+        return Ok(legal_fields_for_event(resolved.value))
+
     def register_handler(
         self,
         event: str,
         handler: HookHandler,
         *,
         source: HookSource | str = HookSource.PLUGIN,
+        decisions: Iterable[HookResultDecision | str] | None = None,
+        fields: Iterable[str] | None = None,
     ) -> Result[Disposer]:
-        """Attach a handler to a registered event. Unknown events are refused."""
+        """Attach a handler; illegal decisions/fields are refused at registration."""
         resolved = self.resolve_event(event)
         if not is_ok(resolved):
             return cast(Result[Disposer], resolved)
@@ -326,8 +381,25 @@ class HookRegistry:
             src = source if isinstance(source, HookSource) else parse_closed(HookSource, source)
         except VocabularyError as exc:
             return invalid_input("source", str(exc), given=repr(source))
+        try:
+            declared_decisions, declared_fields = validate_registration_phase_law(
+                name,
+                decisions=decisions,
+                fields=fields,
+            )
+        except VocabularyError as exc:
+            return policy_rejection(
+                "phase_law",
+                str(exc),
+                given=name,
+            )
         bucket = self._handlers.setdefault(name, [])
-        record = (src, handler)
+        record = _HandlerRecord(
+            source=src,
+            handler=handler,
+            decisions=declared_decisions,
+            fields=declared_fields,
+        )
         bucket.append(record)
 
         def dispose() -> None:
@@ -368,15 +440,26 @@ class HookRegistry:
         handlers = self._handlers.get(name, ())
         if not handlers:
             return Ok(default_empty_hook_result(name))
-        decisions: list[HookResult] = []
-        for _src, handler in handlers:
-            decisions.append(handler(hook_event))
-        winner = most_restrictive_hook_result(tuple(d.decision for d in decisions))
-        # Prefer the first result carrying the winning decision (stable).
-        for item in decisions:
-            if item.decision is winner:
-                return Ok(item)
-        return Ok(build_hook_result(winner))
+        collected: list[HookResult] = []
+        for record in handlers:
+            raw = record.handler(hook_event)
+            try:
+                validated = assert_hook_result_phase_law(name, raw)
+            except VocabularyError as exc:
+                return policy_rejection(
+                    "phase_law",
+                    str(exc),
+                    given=name,
+                )
+            if validated.decision not in record.decisions:
+                return policy_rejection(
+                    "phase_law",
+                    f"handler returned {validated.decision.value!r} outside its "
+                    f"registered decision set for {name!r} (FR-Q31; AD-10)",
+                    given=validated.decision.value,
+                )
+            collected.append(validated)
+        return Ok(resolve_parallel_hook_results(collected))
 
     def evaluate_primitive(
         self,

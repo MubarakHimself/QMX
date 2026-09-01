@@ -132,6 +132,9 @@ def test_hook_result_total_precedence() -> None:
     assert hook_result_rank("ask") < hook_result_rank("allow")
     assert hook_result_rank("allow") < hook_result_rank("observe")
     assert most_restrictive_hook_result(("allow", "deny", "observe")) is HookResultDecision.DENY
+    # observe never participates when a non-observe decision is present.
+    assert most_restrictive_hook_result(("observe", "allow")) is HookResultDecision.ALLOW
+    assert most_restrictive_hook_result(("observe", "observe")) is HookResultDecision.OBSERVE
 
 
 def test_handle_and_work_states() -> None:
