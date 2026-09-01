@@ -19,7 +19,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from types import ModuleType
-from typing import Final, Literal
+from typing import Final, Literal, cast
 
 __all__ = [
     "INSTALL_RECIPE",
@@ -118,7 +118,7 @@ def load_render_values(path: Path | None) -> dict[str, object]:
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise ValueError("render values must be a JSON object")
-    return data
+    return cast("dict[str, object]", data)
 
 
 def build_install_plan(
