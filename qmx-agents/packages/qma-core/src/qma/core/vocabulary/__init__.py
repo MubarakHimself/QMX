@@ -33,6 +33,7 @@ from qma.core.vocabulary.enums import (
     RefinementEditKind,
     RoutingPolicy,
     TaskMissionState,
+    VariableEditability,
     VariableScope,
 )
 from qma.core.vocabulary.handles import (
@@ -95,6 +96,7 @@ __all__ = [
     "RefinementEditKind",
     "RoutingPolicy",
     "TaskMissionState",
+    "VariableEditability",
     "VariableScope",
     "VocabularyError",
     "assert_handle_kind_not_money_path",

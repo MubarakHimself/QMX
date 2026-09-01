@@ -6,7 +6,8 @@ mode, written for someone who was not in the design room. Epic 42 opens this
 register: Story 42.1 delivers the sole-writer persistence substrate (FR-1,
 FR-2); Story 42.2 delivers the authoritative journal, closed store list, and
 announcement law (FR-3 through FR-5); Story 42.3 delivers durable-clock and
-fold-contract enforcement (FR-6 through FR-9).
+fold-contract enforcement (FR-6 through FR-9); Story 42.4 delivers store-class
+ownership and the governed variable registry (FR-10 through FR-13).
 
 ### FR-1: A second daemon or writer is refused at the persistence boundary
 
@@ -135,3 +136,59 @@ fold-contract enforcement (FR-6 through FR-9).
 - **Notification tier:** silent-log (caller receives the typed refusal).
 - **Product-user affordance:** announcement-bound evidence always carries its
   journal sequence; telemetry carries times only.
+
+### FR-10: An unknown AD-8 store class has no ownership row
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `StoreOwnershipRegistry.get` / `assert_complete` accept only
+  the eight FR-Q26 classes (journal, ledger, memory, knowledge, artifacts,
+  context, telemetry, staging); each row requires writer, crossing, and
+  retention, with context invocation-only (FR-Q26; AD-8).
+- **Auto-recovery / retry:** none — inventing a store class is a spine change.
+- **Visible degraded state:** no ownership rule is handed out.
+- **Notification tier:** operator-visible (miswired persistence class).
+- **Product-user affordance:** only the eight ratified store classes own state.
+  Context is never durable; journal, ledgers, artifacts, staging, and ledger
+  quarantine keep durable posture.
+
+### FR-11: A definition-store change outside RefinementProposal / hook exception is refused
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `accept_definition_store_proposal` accepts only closed AD-22
+  edit kinds (no `variable`); `ProposalGate.promote_refused` refuses promote;
+  `register_mission_scoped_hook_exception` allows only
+  `before_hook_register` observe-or-deny Mission hooks (FR-Q26; AD-8, AD-11,
+  AD-22).
+- **Auto-recovery / retry:** none — stage a RefinementProposal or use the sole
+  Mission-scoped hook exception.
+- **Visible degraded state:** no definition-store write occurs.
+- **Notification tier:** operator-visible (agent / plugin attempt).
+- **Product-user affordance:** agents propose refinements; operators apply them.
+  Promote is a human live-zone act outside QMA.
+
+### FR-12: `variable.set` is refused for uneditable, record-homed, or non-operator callers
+
+- **Failure class:** `policy rejection` / `OperatorPrincipalRequired` (CT-04).
+- **Detection:** `GovernedVariableRegistry.variable_set` requires an `operator`
+  principal via AD-24 human-gate authorization, refuses `uneditable` and
+  record-homed rows, and records a `variable.set` journal event only on success
+  (FR-Q36; AD-24, AD-26).
+- **Auto-recovery / retry:** none — use the owning record's operator write
+  command for record-homed values, or present an operator principal.
+- **Visible degraded state:** registry values and journal unchanged.
+- **Notification tier:** operator-visible (unauthorized or illegal set).
+- **Product-user affordance:** only an operator sets registry-homed variables.
+  Record-homed values move with their record; uneditable rows are constants.
+
+### FR-13: Agent / hook / Role / Mission configuration writes are refused
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** there is no `variable` `RefinementEditKind`;
+  `refuse_non_operator_route` and proposal validation refuse every non-operator
+  configuration-write path (FR-Q36; AD-26).
+- **Auto-recovery / retry:** none — configuration changes go through
+  `variable.set` (registry-homed) or the owning record's operator command.
+- **Visible degraded state:** no value change; no alternate write path opens.
+- **Notification tier:** operator-visible (agent / automation attempt).
+- **Product-user affordance:** agents cannot edit operating limits. Operators
+  own every registered number's write path.

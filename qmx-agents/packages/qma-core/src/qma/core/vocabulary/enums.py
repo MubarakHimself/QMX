@@ -25,6 +25,7 @@ __all__ = [
     "RefinementEditKind",
     "RoutingPolicy",
     "TaskMissionState",
+    "VariableEditability",
     "VariableScope",
 ]
 
@@ -255,6 +256,17 @@ class VariableScope(StrEnum):
     PLUGIN = "plugin"
     EXECUTION_ENVIRONMENT = "execution_environment"
     ROUTINE = "routine"
+
+
+class VariableEditability(StrEnum):
+    """Exactly one editability flag per registered variable (AD-26; DEC-0325).
+
+    ``ui-editable`` means configurable in the platform UI. ``uneditable`` is a
+    recorded constant — never a ``variable.set`` target.
+    """
+
+    UI_EDITABLE = "ui-editable"
+    UNEDITABLE = "uneditable"
 
 
 class GraphArtifactKind(StrEnum):

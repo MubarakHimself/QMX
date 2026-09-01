@@ -49,10 +49,11 @@ from qma.core.vocabulary import (
 
 
 def test_every_closed_vocabulary_declares_owning_ad() -> None:
-    assert len(CLOSED_VOCABULARIES) >= 19
+    assert len(CLOSED_VOCABULARIES) >= 20
     names = {entry.name for entry in CLOSED_VOCABULARIES}
     assert "hook_verb" in names
     assert "governed_act" in names
+    assert "variable_editability" in names
     for entry in CLOSED_VOCABULARIES:
         assert entry.owning_ad.startswith("AD-")
         assert entry.decision.startswith("DEC-")

@@ -25,6 +25,7 @@ from qma.core.vocabulary.enums import (
     RefinementEditKind,
     RoutingPolicy,
     TaskMissionState,
+    VariableEditability,
     VariableScope,
 )
 
@@ -74,6 +75,7 @@ CLOSED_VOCABULARIES: Final[tuple[ClosedVocabulary, ...]] = (
     ClosedVocabulary("network_policy", "AD-28", NetworkPolicy, "DEC-0327"),
     ClosedVocabulary("refinement_edit_kind", "AD-22", RefinementEditKind, "DEC-0321"),
     ClosedVocabulary("variable_scope", "AD-26", VariableScope, "DEC-0325"),
+    ClosedVocabulary("variable_editability", "AD-26", VariableEditability, "DEC-0325"),
     ClosedVocabulary("graph_artifact_kind", "AD-13", GraphArtifactKind, "DEC-0312"),
     ClosedVocabulary("governed_act", "AD-18", GovernedAct, "DEC-0345"),
 )
