@@ -2,6 +2,8 @@
 
 Compilation applies roster → BMS → Book → node-defaults with value-status rows.
 There is no invocation or operator-CLI override layer (DEC-0203, DEC-0211).
+Story 25.19 / TN-22 composes roster-driven multi-account and multi-broker
+runtime keys from eligibility rows — never a venue/account singleton.
 """
 
 from __future__ import annotations
@@ -42,33 +44,73 @@ from qmn.config.registry_catalog import (
     VALUE_STATUS_REQUIRED_ROWS,
     rows_by_name,
 )
+from qmn.config.roster import (
+    ADDING_BROKER_REQUIRES_CORE_CODE_CHANGE,
+    HAS_DEFAULT_VENUE_ACCOUNT_SINGLETON,
+    ROSTER_SURFACE,
+    STATE_CARRY_COUNTERS,
+    AccountBindingDecl,
+    BindingRuntimeKey,
+    BookBindingDecl,
+    CommandStreamPlan,
+    CommandStreamRuntimeKey,
+    ConnectionRuntimeKey,
+    PacerBucketPlan,
+    PositionModelDecl,
+    RosterRuntimeComposition,
+    SensingOnlyDecl,
+    SensingOnlyPlan,
+    StateCarryChoice,
+    ThrottleScope,
+    compose_roster_runtime,
+    streams_independent,
+    writer_streams_from_composition,
+)
 from qmn.config.toolkit import config_explain, config_init, config_validate, explain_rows
 
 CONFIG_SURFACE: Final[str] = "qmn.config"
 
 __all__ = [
+    "ADDING_BROKER_REQUIRES_CORE_CODE_CHANGE",
     "COMPILE_LAYERS",
     "COMPONENT_COUNTS",
     "CONFIG_SURFACE",
     "EXPECTED_BLANK_EFFECT_COUNTS",
     "EXPECTED_ROW_COUNT",
+    "HAS_DEFAULT_VENUE_ACCOUNT_SINGLETON",
     "HAS_INVOCATION_OVERRIDE_LAYER",
     "LIVENESS_HEARTBEAT_NAMES",
     "NODE_CONFIG_ARTIFACT_NAME",
     "NODE_CONFIG_CLASS",
     "NODE_CONFIG_FORMAT_VERSION",
     "RETIRED_DEAD_MANS_SWITCH_NAMES",
+    "ROSTER_SURFACE",
     "RUNTIME_FOLD_KEYS",
+    "STATE_CARRY_COUNTERS",
     "VALUE_STATUSES",
     "VALUE_STATUS_BLANK",
     "VALUE_STATUS_PROVISIONAL",
     "VALUE_STATUS_RATIFIED",
     "VALUE_STATUS_REQUIRED_ROWS",
+    "AccountBindingDecl",
+    "BindingRuntimeKey",
+    "BookBindingDecl",
+    "CommandStreamPlan",
+    "CommandStreamRuntimeKey",
+    "ConnectionRuntimeKey",
+    "PacerBucketPlan",
+    "PositionModelDecl",
     "ResolvedNodeConfig",
     "ResolvedValueRow",
+    "RosterRuntimeComposition",
+    "SensingOnlyDecl",
+    "SensingOnlyPlan",
+    "StateCarryChoice",
+    "ThrottleScope",
     "blank_effect_coverage",
     "compile_layers",
     "compile_node_config",
+    "compose_roster_runtime",
     "config_explain",
     "config_init",
     "config_validate",
@@ -79,5 +121,7 @@ __all__ = [
     "provisional_live_gates_like_blank",
     "refuse_unknown_compile_layer",
     "rows_by_name",
+    "streams_independent",
     "validate_registry_row_schema",
+    "writer_streams_from_composition",
 ]
