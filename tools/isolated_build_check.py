@@ -29,6 +29,7 @@ isolated-build``.
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import tempfile
@@ -104,9 +105,51 @@ def _workspace_constraints(members: Sequence[Member], path: Path) -> Path:
     Unpinned workspace deps (e.g. ``qmb`` → ``qml``) would otherwise resolve a
     same-named PyPI distribution over the local wheel; pinning keeps isolation
     inside the built tree while third-party runtime deps still use the index.
+
+    The write is exclusive and no-follow: a planted symlink at ``path`` or a
+    path that resolves outside its parent is refused rather than followed
+    (SKY-D324).
     """
-    lines = [f"{member.name}=={member.version}\n" for member in members]
-    path.write_text("".join(lines), encoding="utf-8")
+    data = "".join(f"{member.name}=={member.version}\n" for member in members).encode(
+        "utf-8"
+    )
+    contain_within = path.parent
+    try:
+        resolved = Path(os.path.realpath(path))
+        root_real = Path(os.path.realpath(contain_within))
+    except OSError as exc:
+        raise SmokeError(
+            f"constraints: could not resolve path {path} ({type(exc).__name__})"
+        ) from exc
+    if path.is_symlink() or not resolved.is_relative_to(root_real):
+        raise SmokeError(
+            "constraints: refusing to follow a symlink or write outside the "
+            f"work directory ({path})"
+        )
+    try:
+        # getattr keeps the "O_NOFOLLOW" token on this open so SKY-D324 sees
+        # the no-follow flag; Windows has no O_NOFOLLOW (value 0).
+        fd = os.open(  # skylos: ignore[SKY-D215] contained, no-follow, exclusive create
+            path,
+            os.O_CREAT | os.O_EXCL | os.O_WRONLY | getattr(os, "O_NOFOLLOW", 0),
+            0o600,
+        )
+    except OSError as exc:
+        raise SmokeError(
+            f"constraints: exclusive no-follow create failed for {path} "
+            f"({type(exc).__name__})"
+        ) from exc
+    try:
+        view = memoryview(data)
+        offset = 0
+        while offset < len(view):
+            offset += os.write(fd, view[offset:])
+    except OSError as exc:
+        raise SmokeError(
+            f"constraints: write failed for {path} ({type(exc).__name__})"
+        ) from exc
+    finally:
+        os.close(fd)
     return path
 
 
