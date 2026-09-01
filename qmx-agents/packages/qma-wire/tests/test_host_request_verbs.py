@@ -12,6 +12,7 @@ from qma.core.vocabulary import (
 )
 from qma.wire import (
     HOST_REQUEST_OWNING_AD,
+    HOST_REQUEST_PRIMITIVE_MAP,
     HOST_REQUEST_VERBS,
     HOST_REQUEST_VOCABULARY_OWNER,
     HostRequestVerbError,
@@ -29,6 +30,9 @@ def test_ownership_declared_in_wire_and_mirrored_in_core() -> None:
 
 def test_invented_host_request_verb_rejected() -> None:
     assert isinstance(HOST_REQUEST_VERBS, frozenset)
+    assert HOST_REQUEST_VERBS == frozenset(HOST_REQUEST_PRIMITIVE_MAP)
+    assert "subagent_spawn" in HOST_REQUEST_VERBS
+    assert parse_host_request_verb("subagent_spawn") == "subagent_spawn"
     with pytest.raises(HostRequestVerbError):
         parse_host_request_verb("invented_spawn")
     with pytest.raises(HostRequestVerbError):

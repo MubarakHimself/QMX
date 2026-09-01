@@ -111,24 +111,41 @@ class WireVocabularyError(ValueError):
     """Raised when a wire type is not a member of the closed packet vocabulary."""
 
 
+def _host_request_family(wire_type: str) -> MessageFamily | None:
+    """Lazy lookup so host_request verbs ride as command/query types (AD-14)."""
+    # Lazy: host_request → envelope → vocabulary; top-level import would cycle.
+    from qma.wire.host_request import host_request_type_family  # noqa: PLC0415
+
+    return host_request_type_family(wire_type)
+
+
 def family_of(wire_type: str) -> MessageFamily:
     """Return the message family for a closed vocabulary member."""
     try:
         return _TYPE_TO_FAMILY[wire_type]
-    except KeyError as exc:
+    except KeyError:
+        host_family = _host_request_family(wire_type)
+        if host_family is not None:
+            return host_family
         raise WireVocabularyError(
             f"{wire_type!r} is not a member of the closed qma-wire vocabulary "
             f"(owner={WIRE_VOCABULARY_OWNER})"
-        ) from exc
+        ) from None
 
 
 def parse_wire_type(value: object) -> str:
-    """Accept only a type declared in the closed-and-addable packet vocabulary."""
+    """Accept only a type declared in the closed-and-addable packet vocabulary.
+
+    The packet seed (26 nouns) plus closed-and-addable ``host_request`` verbs
+    (AD-14) are accepted; host_request verbs ride as command or query types.
+    """
     if not isinstance(value, str) or not value:
         raise WireVocabularyError(f"{value!r} is not a wire message type")
-    if value not in _TYPE_TO_FAMILY:
-        raise WireVocabularyError(
-            f"{value!r} is not a member of the closed qma-wire vocabulary "
-            f"(owner={WIRE_VOCABULARY_OWNER})"
-        )
-    return value
+    if value in _TYPE_TO_FAMILY:
+        return value
+    if _host_request_family(value) is not None:
+        return value
+    raise WireVocabularyError(
+        f"{value!r} is not a member of the closed qma-wire vocabulary "
+        f"(owner={WIRE_VOCABULARY_OWNER})"
+    )

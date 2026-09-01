@@ -13,6 +13,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Final, cast
 
+from qma.wire.host_request import HOST_REQUEST_VERBS
 from qma.wire.vocabulary import (
     WIRE_COMMANDS,
     WIRE_EVENTS,
@@ -233,11 +234,26 @@ def validate_family_payload(wire_type: object, payload: object) -> Result[Mappin
         name = parse_wire_type(wire_type)
     except ValueError as exc:
         return _invalid("type", str(exc), given=repr(wire_type))
-    family = family_of(name)
-    schema_name = family_schema_name(family)
     mapped = _as_object_map(payload)
     if mapped is None:
         return _invalid("payload", "family payload must be an object")
+
+    # host_request verbs ride as command/query types but validate against the
+    # host_request bridge schema (AD-14), not the seed command/query enums.
+    if name in HOST_REQUEST_VERBS:
+        host_body: dict[str, object] = dict(mapped)
+        if host_body.get("family") != "host_request":
+            host_body = {
+                "family": "host_request",
+                "verb": name,
+                "args": dict(mapped),
+            }
+        elif "verb" not in host_body:
+            host_body = {**host_body, "verb": name}
+        return validate_instance(host_body, "host_request")
+
+    family = family_of(name)
+    schema_name = family_schema_name(family)
     body: dict[str, object] = {"family": family.value, "name": name}
     if family is MessageFamily.EVENT:
         body["body"] = dict(mapped)

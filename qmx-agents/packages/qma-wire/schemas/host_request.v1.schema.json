@@ -2,13 +2,53 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://qmx.local/qma-wire/schemas/host_request.v1.schema.json",
   "title": "QMA wire host_request bridge family (CT-40 / AD-14)",
-  "description": "host_request bridge family. Verb set is closed-and-addable under qma-wire ownership (AD-14; DEC-0313); membership is qma.wire.host_request.HOST_REQUEST_VERBS.",
+  "description": "RLM kernel host_request bridge. Verb set is closed-and-addable under qma-wire ownership (AD-14; DEC-0313). Every host call is a qma-wire command or query carrying the Task scope_path and correlation_id. Each verb maps to exactly one daemon-owned primitive and its before_* hook; unmapped verbs return UnknownHostRequest. Async spawn returns JobHandle under registry:rlm.depth_cap. Membership is qma.wire.host_request.HOST_REQUEST_VERBS.",
   "type": "object",
   "additionalProperties": false,
   "required": ["family", "verb"],
   "properties": {
     "family": { "const": "host_request" },
-    "verb": { "type": "string", "minLength": 1 },
-    "args": { "type": "object" }
+    "verb": {
+      "type": "string",
+      "minLength": 1,
+      "enum": [
+        "subagent_spawn",
+        "env_create",
+        "message_send",
+        "tool",
+        "ledger_append",
+        "artifact_register",
+        "experiment_register",
+        "memory_write",
+        "graph_transition"
+      ]
+    },
+    "daemon_primitive": { "type": "string", "minLength": 1 },
+    "before_hook": { "type": "string", "minLength": 1 },
+    "wire_family": { "type": "string", "enum": ["command", "query"] },
+    "returns_job_handle": { "type": "boolean" },
+    "args": { "type": "object" },
+    "job_handle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["job_id", "state", "correlation_id"],
+      "properties": {
+        "job_id": { "type": "string", "minLength": 1 },
+        "state": {
+          "type": "string",
+          "enum": ["queued", "running", "done", "failed", "cancelled", "aborted", "unknown"]
+        },
+        "correlation_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "refusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["variant", "verb"],
+      "properties": {
+        "variant": { "const": "UnknownHostRequest" },
+        "verb": { "type": "string", "minLength": 1 }
+      }
+    }
   }
 }
