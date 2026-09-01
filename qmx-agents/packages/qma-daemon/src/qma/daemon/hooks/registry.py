@@ -26,6 +26,7 @@ from qma.core.plugins.hooks import (
 )
 from qma.core.vocabulary.enums import HookControl, HookResultDecision, HookVerb
 from qma.core.vocabulary.hooks import (
+    BEFORE_LEDGER_APPEND_EVENT,
     HOOK_CONTROLS,
     HOOK_VERBS,
     empty_result_decision_for_event,
@@ -36,6 +37,17 @@ from qma.core.vocabulary.hooks import (
     validate_registration_phase_law,
 )
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
+from qma.daemon.hooks.ledger_gate import (
+    LedgerAppendGateResult,
+    LedgerQuarantineStream,
+    evaluate_before_ledger_append,
+)
+from qma.daemon.hooks.timeouts import (
+    HookTimeoutResolution,
+    HookTimeoutTelemetrySink,
+    resolve_hook_timeout,
+    timeout_registry_key_for_event,
+)
 from qmf.core import Ok, Result, is_ok
 from qmf.data.store.refusals import invalid_input, policy_rejection
 
@@ -222,6 +234,7 @@ class HookRegistry:
     Initialized with the full twenty-three before_/after_ pairs plus the two
     phase-less controls. Unknown verbs and incomplete pairs are refused.
     Registration validates the phase law for declared decisions and fields.
+    Fail-closed timeouts cite only ``registry:hook.timeout_*`` keys (FR-Q32).
     """
 
     _handlers: dict[str, list[_HandlerRecord]] = field(
@@ -229,6 +242,12 @@ class HookRegistry:
     )
     _entries: tuple[HookRegistryEntry, ...] = field(default=_V1_ENTRIES, init=False)
     _by_event: Mapping[str, HookRegistryEntry] = field(init=False)
+    _timeout_telemetry: HookTimeoutTelemetrySink = field(
+        default_factory=HookTimeoutTelemetrySink
+    )
+    _ledger_quarantine: LedgerQuarantineStream = field(
+        default_factory=LedgerQuarantineStream
+    )
 
     def __post_init__(self) -> None:
         by_event = {entry.event: entry for entry in self._entries}
@@ -250,6 +269,16 @@ class HookRegistry:
             )
             raise RuntimeError(msg)
         assert_no_bypass_write_path()
+
+    @property
+    def timeout_telemetry(self) -> HookTimeoutTelemetrySink:
+        """Telemetry sink for fail-closed hook timeout records (FR-Q32)."""
+        return self._timeout_telemetry
+
+    @property
+    def ledger_quarantine(self) -> LedgerQuarantineStream:
+        """Durable quarantine stream for refused ledger appends (FR-Q32; L39)."""
+        return self._ledger_quarantine
 
     @property
     def event_names(self) -> frozenset[str]:
@@ -422,18 +451,30 @@ class HookRegistry:
         payload: Mapping[str, object] | None = None,
         source: HookSource | str = HookSource.PLUGIN,
         matcher: str | None = None,
+        timed_out: bool = False,
+        correlation_id: str | None = None,
     ) -> Result[HookResult]:
-        """Fire handlers for one registered event and resolve most-restrictive."""
+        """Fire handlers for one registered event and resolve most-restrictive.
+
+        When ``timed_out`` is true, the phase-specific fail rule resolves the
+        decision without running handlers (FR-Q32).
+        """
         resolved = self.resolve_event(event)
         if not is_ok(resolved):
             return cast(Result[HookResult], resolved)
         name = resolved.value
+        if timed_out:
+            timeout = self.resolve_timeout(name, correlation_id=correlation_id)
+            if not is_ok(timeout):
+                return cast(Result[HookResult], timeout)
+            return Ok(timeout.value.result)
         try:
             hook_event = build_hook_event(
                 name,
                 source=source,
                 payload=payload,
                 matcher=matcher,
+                timeout_key=timeout_registry_key_for_event(name),
             )
         except VocabularyError as exc:
             return invalid_input("event", str(exc), given=name)
@@ -460,6 +501,61 @@ class HookRegistry:
                 )
             collected.append(validated)
         return Ok(resolve_parallel_hook_results(collected))
+
+    def resolve_timeout(
+        self,
+        event: str,
+        *,
+        correlation_id: str | None = None,
+    ) -> Result[HookTimeoutResolution]:
+        """Resolve a timed-out hook under the phase fail rule (FR-Q32; CT-41)."""
+        resolved = self.resolve_event(event)
+        if not is_ok(resolved):
+            return cast(Result[HookTimeoutResolution], resolved)
+        return Ok(
+            resolve_hook_timeout(
+                resolved.value,
+                correlation_id=correlation_id,
+                telemetry=self._timeout_telemetry,
+            )
+        )
+
+    def evaluate_ledger_append(
+        self,
+        entry: Mapping[str, object],
+        *,
+        dispatch_lease_holder: str | None,
+        timed_out: bool = False,
+        source: HookSource | str = HookSource.MISSION,
+        correlation_id: str | None = None,
+    ) -> Result[LedgerAppendGateResult]:
+        """Run ``before_ledger_append`` as a validating gate (FR-Q32; L39).
+
+        Well-formed evidence from the lease holder cannot be denied. Schema-
+        invalid or outside-lease denies quarantine the entry and never discard.
+        """
+        attempted: HookResult | None = None
+        if not timed_out:
+            dispatched = self.dispatch(
+                BEFORE_LEDGER_APPEND_EVENT,
+                payload={"entry": dict(entry)},
+                source=source,
+                correlation_id=correlation_id,
+            )
+            if not is_ok(dispatched):
+                return cast(Result[LedgerAppendGateResult], dispatched)
+            attempted = dispatched.value
+        return Ok(
+            evaluate_before_ledger_append(
+                entry,
+                dispatch_lease_holder=dispatch_lease_holder,
+                timed_out=timed_out,
+                attempted_result=attempted,
+                quarantine=self._ledger_quarantine,
+                telemetry=self._timeout_telemetry,
+                correlation_id=correlation_id,
+            )
+        )
 
     def evaluate_primitive(
         self,

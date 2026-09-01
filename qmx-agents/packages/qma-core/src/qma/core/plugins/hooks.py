@@ -48,14 +48,18 @@ class HookSource(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class HookEvent:
-    """A daemon-owned hook invocation envelope."""
+    """A daemon-owned hook invocation envelope.
+
+    ``timeout_key`` cites a ``registry:hook.timeout_*`` key only — never a
+    numeric timeout constant (FR-Q32; CT-41; DEC-0309).
+    """
 
     event: str
     phase: HookPhase
     source: HookSource
     payload: Mapping[str, Any]
     matcher: str | None = None
-    timeout_ms: int | None = None
+    timeout_key: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,7 +89,7 @@ def build_hook_event(
     source: HookSource | str,
     payload: Mapping[str, Any] | None = None,
     matcher: str | None = None,
-    timeout_ms: int | None = None,
+    timeout_key: str | None = None,
 ) -> HookEvent:
     """Construct a HookEvent after validating the closed event name."""
     name = parse_hook_event_name(event)
@@ -96,7 +100,7 @@ def build_hook_event(
         source=resolved_source,
         payload=dict(payload or {}),
         matcher=matcher,
-        timeout_ms=timeout_ms,
+        timeout_key=timeout_key,
     )
 
 

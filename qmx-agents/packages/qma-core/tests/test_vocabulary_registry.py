@@ -117,6 +117,22 @@ def test_hook_verbs_and_controls() -> None:
     assert parse_hook_event_name("before_ledger_append") == "before_ledger_append"
 
 
+def test_timeout_decision_fail_closed_carve_outs() -> None:
+    from qma.core.vocabulary.hooks import (
+        HOOK_TIMEOUT_REASON,
+        timeout_decision_for_event,
+    )
+
+    assert HOOK_TIMEOUT_REASON == "hook_timeout"
+    assert timeout_decision_for_event("before_tool") is HookResultDecision.DENY
+    assert timeout_decision_for_event("before_memory_write") is HookResultDecision.DENY
+    assert timeout_decision_for_event("before_ledger_append") is HookResultDecision.ALLOW
+    assert timeout_decision_for_event("agent_stop") is HookResultDecision.OBSERVE
+    assert timeout_decision_for_event("after_tool") is HookResultDecision.OBSERVE
+    assert timeout_decision_for_event("after_ledger_append") is HookResultDecision.OBSERVE
+    assert timeout_decision_for_event("review_required") is HookResultDecision.DENY
+
+
 def test_hook_result_total_precedence() -> None:
     assert HOOK_RESULT_PRECEDENCE == (
         HookResultDecision.BLOCK_STOP,

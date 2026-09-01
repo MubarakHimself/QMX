@@ -9,10 +9,12 @@ from qma.core.vocabulary.enums import HookControl, HookResultDecision, HookVerb
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
 
 __all__ = [
+    "BEFORE_LEDGER_APPEND_EVENT",
     "HOOK_CONTROLS",
     "HOOK_EVENT_NAMES",
     "HOOK_RESULT_FIELDS",
     "HOOK_RESULT_PRECEDENCE",
+    "HOOK_TIMEOUT_REASON",
     "HOOK_VERBS",
     "assert_decision_legal_for_event",
     "assert_fields_legal_for_event",
@@ -23,8 +25,13 @@ __all__ = [
     "legal_fields_for_event",
     "most_restrictive_hook_result",
     "parse_hook_event_name",
+    "timeout_decision_for_event",
     "validate_registration_phase_law",
 ]
+
+# Fail-closed timeout reason (FR-Q32; CT-41; DEC-0309). Never a free-form string.
+HOOK_TIMEOUT_REASON: Final[str] = "hook_timeout"
+BEFORE_LEDGER_APPEND_EVENT: Final[str] = "before_ledger_append"
 
 HOOK_VERBS: Final[tuple[HookVerb, ...]] = tuple(HookVerb)
 HOOK_CONTROLS: Final[tuple[HookControl, ...]] = tuple(HookControl)
@@ -145,6 +152,21 @@ def empty_result_decision_for_event(event: str) -> HookResultDecision:
     if name.startswith("before_") or name == "after_tool":
         return HookResultDecision.ALLOW
     return HookResultDecision.OBSERVE
+
+
+def timeout_decision_for_event(event: str) -> HookResultDecision:
+    """Phase-specific fail rule when a hook times out (FR-Q32; CT-41; DEC-0309).
+
+    Fail-closed default is ``deny``. Carve-outs: ``before_ledger_append`` allows
+    (evidence preservation), ``agent_stop`` and every ``after_*`` observe.
+    ``review_required`` stays fail-closed ``deny``.
+    """
+    name = parse_hook_event_name(event)
+    if name == BEFORE_LEDGER_APPEND_EVENT:
+        return HookResultDecision.ALLOW
+    if name == HookControl.AGENT_STOP.value or name.startswith("after_"):
+        return HookResultDecision.OBSERVE
+    return HookResultDecision.DENY
 
 
 def assert_decision_legal_for_event(
