@@ -21,6 +21,7 @@ from qma.core.vocabulary import (
     TASK_EMITTING_NODE_KINDS,
     TASK_MISSION_NONTERMINAL_STATES,
     TASK_MISSION_TERMINAL_STATES,
+    AskOnTimeout,
     DeliveryState,
     ExecutionEnvironmentKind,
     GovernedAct,
@@ -39,6 +40,7 @@ from qma.core.vocabulary import (
     PrincipalClass,
     RefinementEditKind,
     RoutingPolicy,
+    SessionAutonomy,
     TaskMissionState,
     VariableScope,
     VocabularyError,
@@ -263,6 +265,12 @@ def test_message_model_routing_principal() -> None:
         "fill_first",
     }
     assert {member.value for member in PrincipalClass} == {"operator", "machine"}
+    assert {member.value for member in SessionAutonomy} == {
+        "interactive",
+        "semi",
+        "autonomous",
+    }
+    assert {member.value for member in AskOnTimeout} == {"deny", "escalate"}
     assert may_convert_principal("operator", "operator") is True
     assert may_convert_principal("machine", "operator") is False
     assert_no_principal_conversion("machine", "machine")

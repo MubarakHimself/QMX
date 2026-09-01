@@ -1,7 +1,23 @@
-"""Closed-and-addable hook registry and HookResult (AD-10, AD-11; FR-Q30/FR-Q31/FR-Q32)."""
+"""Closed-and-addable hook registry and HookResult (AD-10, AD-11; FR-Q30–FR-Q33)."""
 
 from __future__ import annotations
 
+from qma.daemon.hooks.controls import (
+    APPROVAL_REQUEST_JOURNAL_EVENT,
+    ASK_ESCALATION_EXHAUSTED_REASON,
+    ASK_TIMEOUT_KEY,
+    NO_INTERACTIVE_AUTHORITY_REASON,
+    ON_TIMEOUT_KEY,
+    ApprovalRequestRecord,
+    ApprovalTargetKind,
+    AskOutcome,
+    AskSuspension,
+    ControlOutcomeController,
+    DeferOutcome,
+    DeferParking,
+    OperatorApprovalQueueProjection,
+    resolve_ask_route,
+)
 from qma.daemon.hooks.ledger_gate import (
     DAEMON_AUTHORED_ENTRY_KINDS,
     LEDGER_ENTRY_REQUIRED_FIELDS,
@@ -41,6 +57,9 @@ from qma.daemon.hooks.timeouts import (
 
 __all__ = [
     "AGENT_REACHABLE_WRITE_VERBS",
+    "APPROVAL_REQUEST_JOURNAL_EVENT",
+    "ASK_ESCALATION_EXHAUSTED_REASON",
+    "ASK_TIMEOUT_KEY",
     "BYPASS_WRITE_PATHS",
     "DAEMON_AUTHORED_ENTRY_KINDS",
     "DAEMON_OWNED_HOOK_VERBS",
@@ -49,7 +68,16 @@ __all__ = [
     "HOOK_TIMEOUT_CONTROL_KEY",
     "HOOK_TIMEOUT_KEYS",
     "LEDGER_ENTRY_REQUIRED_FIELDS",
+    "NO_INTERACTIVE_AUTHORITY_REASON",
+    "ON_TIMEOUT_KEY",
     "PHASE_LESS_CONTROLS",
+    "ApprovalRequestRecord",
+    "ApprovalTargetKind",
+    "AskOutcome",
+    "AskSuspension",
+    "ControlOutcomeController",
+    "DeferOutcome",
+    "DeferParking",
     "HookRegistry",
     "HookRegistryEntry",
     "HookTimeoutResolution",
@@ -58,6 +86,7 @@ __all__ = [
     "LedgerAppendGateResult",
     "LedgerQuarantineRecord",
     "LedgerQuarantineStream",
+    "OperatorApprovalQueueProjection",
     "PrimitiveInvocation",
     "annotate_ledger_entry",
     "assert_no_bypass_write_path",
@@ -67,6 +96,7 @@ __all__ = [
     "is_dispatch_lease_holder",
     "is_exempt_ledger_author",
     "is_well_formed_ledger_entry",
+    "resolve_ask_route",
     "resolve_hook_timeout",
     "resolve_parallel_hook_results",
     "timeout_registry_key_for_event",

@@ -7,6 +7,7 @@ from enum import StrEnum
 from typing import Final
 
 from qma.core.vocabulary.enums import (
+    AskOnTimeout,
     DeliveryState,
     ExecutionEnvironmentKind,
     GovernedAct,
@@ -24,6 +25,7 @@ from qma.core.vocabulary.enums import (
     PrincipalClass,
     RefinementEditKind,
     RoutingPolicy,
+    SessionAutonomy,
     TaskMissionState,
     VariableEditability,
     VariableScope,
@@ -69,6 +71,8 @@ CLOSED_VOCABULARIES: Final[tuple[ClosedVocabulary, ...]] = (
     ClosedVocabulary("model_class", "AD-15", ModelClass, "DEC-0314"),
     ClosedVocabulary("routing_policy", "AD-15", RoutingPolicy, "DEC-0314"),
     ClosedVocabulary("principal_class", "AD-24", PrincipalClass, "DEC-0323"),
+    ClosedVocabulary("session_autonomy", "AD-14", SessionAutonomy, "DEC-0313"),
+    ClosedVocabulary("ask_on_timeout", "AD-10", AskOnTimeout, "DEC-0309"),
     ClosedVocabulary("memory_validation_state", "AD-18", MemoryValidationState, "DEC-0317"),
     ClosedVocabulary("node_kind", "AD-13", NodeKind, "DEC-0312"),
     ClosedVocabulary("execution_environment_kind", "AD-17", ExecutionEnvironmentKind, "DEC-0316"),

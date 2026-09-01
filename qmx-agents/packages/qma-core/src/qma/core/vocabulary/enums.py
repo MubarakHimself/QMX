@@ -14,6 +14,7 @@ __all__ = [
     "TASK_EMITTING_NODE_KINDS",
     "TASK_MISSION_NONTERMINAL_STATES",
     "TASK_MISSION_TERMINAL_STATES",
+    "AskOnTimeout",
     "DeliveryState",
     "ExecutionEnvironmentKind",
     "GovernedAct",
@@ -31,6 +32,7 @@ __all__ = [
     "PrincipalClass",
     "RefinementEditKind",
     "RoutingPolicy",
+    "SessionAutonomy",
     "TaskMissionState",
     "VariableEditability",
     "VariableScope",
@@ -254,6 +256,24 @@ class PrincipalClass(StrEnum):
 
     OPERATOR = "operator"
     MACHINE = "machine"
+
+
+class SessionAutonomy(StrEnum):
+    """Session autonomy axis values (AD-14; DEC-0313).
+
+    Durable Session record axis only — attachment is never persisted.
+    """
+
+    INTERACTIVE = "interactive"
+    SEMI = "semi"
+    AUTONOMOUS = "autonomous"
+
+
+class AskOnTimeout(StrEnum):
+    """Mission ``on_timeout`` disposition for an ``ask`` (AD-10; DEC-0309)."""
+
+    DENY = "deny"
+    ESCALATE = "escalate"
 
 
 class MemoryValidationState(StrEnum):

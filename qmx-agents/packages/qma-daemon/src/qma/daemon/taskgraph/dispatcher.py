@@ -174,6 +174,10 @@ class TaskGraphStore:
         self._dispatch_leases.pop(task_id, None)
         self._environment_leases.pop(task_id, None)
 
+    def release_environment_lease(self, task_id: str) -> bool:
+        """Release ``environment_lease`` only; retain ``dispatch_lease`` (FR-Q33)."""
+        return self._environment_leases.pop(task_id, None) is not None
+
     def find_task(self, task_id: str) -> tuple[TaskGraph, TaskRecord] | None:
         for graph in self._by_graph_id.values():
             task = graph.task_by_id(task_id)
