@@ -49,8 +49,9 @@ def test_all_seven_kinds_enter_one_registry() -> None:
                 check_fn=(lambda: False) if kind is ToolKind.COMPUTER_USE else None,
             )
         )
-        assert registry.get(tool_id) is not None
-        assert registry.get(tool_id).kind is kind
+        entry = registry.get(tool_id)
+        assert entry is not None
+        assert entry.kind is kind
     assert len(registry.catalog()) == 7
 
 
