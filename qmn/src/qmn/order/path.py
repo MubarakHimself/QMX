@@ -616,7 +616,7 @@ class OrderPath:
 
         # Past handoff: never retry — a failed submit is terminal for this mint.
         if self.command_journal is not None:
-            def _submit(_payload: Mapping[str, object]) -> Result[object]:
+            def _submit(_payload: Mapping[str, object]) -> Result[SubmissionResult]:
                 del _payload
                 return self.client.submit(command)
 

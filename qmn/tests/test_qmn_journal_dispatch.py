@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from types import MappingProxyType
 from typing import TypeVar
 
@@ -228,10 +229,10 @@ def test_apply_settings_edit_journals_before_config_change() -> None:
 
     from qmf.core import Ok
 
-    def apply(payload: object) -> Result[object]:
-        assert isinstance(payload, dict) or hasattr(payload, "get")
-        applied.append(str(payload["variable"]))
-        return Ok(MappingProxyType({"applied": True, "variable": payload["variable"]}))
+    def apply(payload: Mapping[str, object]) -> Result[object]:
+        variable = payload["variable"]
+        applied.append(str(variable))
+        return Ok(MappingProxyType({"applied": True, "variable": variable}))
 
     receipt = _ok(
         apply_settings_edit(

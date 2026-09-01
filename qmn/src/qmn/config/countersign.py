@@ -23,6 +23,7 @@ from qmn.config.compiler import (
 )
 from qmn.journal_dispatch import (
     CallableDispatcher,
+    JournalBeforeDispatchReceipt,
     WriteBoundary,
     enact_settings,
     passthrough_dispatch,
@@ -39,7 +40,7 @@ def apply_settings_edit(
     operator_signature: object,
     config_version: object = None,
     boundary: object = WriteBoundary.ATOMIC,
-) -> Result[object]:
+) -> Result[JournalBeforeDispatchReceipt]:
     """Journal a settings edit before the resolved config is applied."""
     name = clean_token(variable)
     if name is None:

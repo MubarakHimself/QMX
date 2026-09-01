@@ -299,7 +299,7 @@ def apply_treasury_boundary(
                 return written
             return Ok(SinkAck(detail={"complete": True, "partial": False}))
 
-    def _apply_cash(_payload: object) -> Result[TreasuryBoundaryAct]:
+    def _apply_cash(_payload: Mapping[str, object]) -> Result[TreasuryBoundaryAct]:
         del _payload
         row = ledger.append_boundary(
             cash_delta=act.cash_delta,

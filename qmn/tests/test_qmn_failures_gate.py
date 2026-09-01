@@ -151,8 +151,10 @@ def test_missing_duplicate_and_orphan_rows_fail() -> None:
             designed_ids=frozenset({"clock.band.warn", "storage.partial_write"}),
         )
         assert is_refusal(missing)
-        assert "storage.partial_write" in missing.context.get("missing_emitted", ()) or (
-            "storage.partial_write" in missing.context.get("missing_designed", ())
+        missing_emitted = missing.context.get("missing_emitted")
+        missing_designed = missing.context.get("missing_designed")
+        assert missing_emitted == ("storage.partial_write",) or missing_designed == (
+            "storage.partial_write",
         )
 
         orphan_path = Path(tmp) / "orphan.md"
@@ -163,7 +165,7 @@ def test_missing_duplicate_and_orphan_rows_fail() -> None:
             designed_ids=frozenset(),
         )
         assert is_refusal(orphan)
-        assert "not.a.designed.failure" in orphan.context.get("orphan", ())
+        assert orphan.context.get("orphan") == ("not.a.designed.failure",)
 
 
 def test_blank_nfr11_field_fails_completeness() -> None:

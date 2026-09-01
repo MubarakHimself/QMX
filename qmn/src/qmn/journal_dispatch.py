@@ -16,7 +16,7 @@ from collections.abc import Callable, Mapping, MutableSequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Final, Protocol, cast
+from typing import Final, Generic, Protocol, TypeVar, cast
 
 from qmf.core import (
     JournalSink,
@@ -62,6 +62,8 @@ __all__ = [
     "journal_before_effect",
     "passthrough_dispatch",
 ]
+
+_T = TypeVar("_T")
 
 JOURNAL_DISPATCH_SURFACE: Final[str] = "qmn.journal_dispatch"
 LOG_ONLY_PATH_PERMITTED: Final[bool] = False
@@ -163,16 +165,16 @@ class RecordingEffectDispatcher:
 
 
 @dataclass
-class CallableDispatcher:
+class CallableDispatcher(Generic[_T]):
     """Wrap a callable as an :class:`EffectDispatcher`."""
 
-    fn: Callable[[Mapping[str, object]], Result[object]]
+    fn: Callable[[Mapping[str, object]], Result[_T]]
     trace: HappensBeforeTrace | None = None
     calls: MutableSequence[Mapping[str, object]] = field(
         default_factory=list[Mapping[str, object]]
     )
 
-    def dispatch(self, payload: Mapping[str, object], /) -> Result[object]:
+    def dispatch(self, payload: Mapping[str, object], /) -> Result[_T]:
         if self.trace is not None:
             self.trace.record("dispatch")
         self.calls.append(payload)
@@ -335,7 +337,8 @@ def journal_before_effect(
             },
         )
 
-    applied = dispatcher.dispatch(body)
+    effect = cast("EffectDispatcher", dispatcher)
+    applied = effect.dispatch(body)
     if is_refusal(applied):
         return applied
     if not is_ok(applied):

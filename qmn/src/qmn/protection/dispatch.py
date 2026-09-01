@@ -60,6 +60,7 @@ from qmf.risk.control_rank import (
 
 from qmn.journal_dispatch import (
     CallableDispatcher,
+    JournalBeforeDispatchReceipt,
     WriteBoundary,
     journal_before_effect,
     passthrough_dispatch,
@@ -842,7 +843,7 @@ class StreamProtectionDispatcher:
         *,
         journal: object,
         dispatcher: object,
-    ) -> Result[object]:
+    ) -> Result[PersistedProtectiveIntent] | Result[JournalBeforeDispatchReceipt]:
         """Journal a protective act, then dispatch. Storage failure never dispatches."""
         if not isinstance(record, ControlActionRecord):
             return invalid(
