@@ -1,4 +1,4 @@
-"""Mission Compiler, Task Graph state, and dispatcher (AD-12, AD-13; FR-Q27, FR-Q28)."""
+"""Mission Compiler, Task Graph state, and dispatcher (AD-12, AD-13; FR-Q27–FR-Q29)."""
 
 from __future__ import annotations
 
@@ -15,6 +15,23 @@ from qma.daemon.taskgraph.dispatcher import (
     TaskGraphStore,
     TaskTransitionResult,
     validate_proposed_transition,
+)
+from qma.daemon.taskgraph.execution import (
+    DAEMON_CONTRIBUTED_GRAPH_TEMPLATES,
+    DEFERRED_GRAPH_EXCLUSIONS,
+    MISSION_TEMPLATE_REGISTRY,
+    ControlPrimitive,
+    LoopNodeState,
+    Skill,
+    assert_template_not_interchanged,
+    deterministic_task_id,
+    emits_task,
+    holds_dispatch_lease,
+    loop_state_from_node_config,
+    mint_loop_iteration_task,
+    node_carries_ledger,
+    validate_graph_template_topology,
+    validate_no_daemon_graph_template,
 )
 from qma.daemon.taskgraph.records import (
     MISSION_DIRECTOR_ROLE,
@@ -39,18 +56,24 @@ from qma.daemon.taskgraph.state import (
 )
 
 __all__ = [
+    "DAEMON_CONTRIBUTED_GRAPH_TEMPLATES",
+    "DEFERRED_GRAPH_EXCLUSIONS",
     "MISSION_DIRECTOR_ROLE",
+    "MISSION_TEMPLATE_REGISTRY",
     "RESERVED_APPROVAL_ROUTE_OPERATOR",
     "CompileRequest",
     "CompileResult",
+    "ControlPrimitive",
     "DispatchDecision",
     "DispatchLease",
     "GraphTemplate",
     "GraphTemplateCatalog",
     "JobHandleEvidence",
+    "LoopNodeState",
     "MissionCompiler",
     "MissionRecord",
     "ProposedTransition",
+    "Skill",
     "TaskGraph",
     "TaskGraphDispatcher",
     "TaskGraphNode",
@@ -58,11 +81,20 @@ __all__ = [
     "TaskLedger",
     "TaskRecord",
     "TaskTransitionResult",
+    "assert_template_not_interchanged",
     "compute_mission_state",
     "derive_mission_desk",
+    "deterministic_task_id",
+    "emits_task",
+    "holds_dispatch_lease",
+    "loop_state_from_node_config",
+    "mint_loop_iteration_task",
+    "node_carries_ledger",
     "task_state_from_job_handle",
     "validate_approval_route",
+    "validate_graph_template_topology",
     "validate_never_dispatched_cancel",
+    "validate_no_daemon_graph_template",
     "validate_proposed_transition",
     "validate_terminal_evidence",
     "validate_unique_terminal",

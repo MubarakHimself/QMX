@@ -43,17 +43,40 @@ class GraphTemplate:
     """Authored, plugin-contributed, versioned, stateless topology (AD-13).
 
     Never interchanged with a Task Graph. Addressed ``<plugin_id>:<local_id>``.
+    A run never mutates an instance; nodes/edges are frozen snapshots.
     """
 
     qualified_id: str
     version: str
     nodes: tuple[Mapping[str, object], ...] = ()
     edges: tuple[Mapping[str, object], ...] = ()
+    artifact_kind: GraphArtifactKind = GraphArtifactKind.GRAPH_TEMPLATE
 
     def __post_init__(self) -> None:
         if ":" not in self.qualified_id:
             msg = "graph_template id must be fully-qualified <plugin_id>:<local_id> (AD-13; FR-Q29)"
             raise ValueError(msg)
+        if self.artifact_kind is not GraphArtifactKind.GRAPH_TEMPLATE:
+            msg = "Graph Template artifact_kind must be graph_template, never task_graph"
+            raise ValueError(msg)
+        # Freeze contribution maps so a run cannot mutate authored topology.
+        frozen_nodes = tuple(MappingProxyType(dict(node)) for node in self.nodes)
+        frozen_edges = tuple(MappingProxyType(dict(edge)) for edge in self.edges)
+        object.__setattr__(self, "nodes", frozen_nodes)
+        object.__setattr__(self, "edges", frozen_edges)
+
+    def to_payload(self) -> Mapping[str, object]:
+        return MappingProxyType(
+            {
+                "qualified_id": self.qualified_id,
+                "version": self.version,
+                "artifact_kind": self.artifact_kind.value,
+                "nodes": [dict(n) for n in self.nodes],
+                "edges": [dict(e) for e in self.edges],
+                "stateless": True,
+                "runtime_state": None,
+            }
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -239,16 +262,34 @@ class MissionRecord:
 
 @dataclass(frozen=True, slots=True)
 class TaskGraphNode:
-    """Daemon-evaluated Task Graph node carrying node state (AD-13)."""
+    """Daemon-evaluated Task Graph node carrying node state (AD-13).
+
+    Non-emitting kinds hold neither ``dispatch_lease`` nor a ledger.
+    """
 
     id: str
     kind: NodeKind
     state: TaskMissionState = TaskMissionState.PENDING
     config: Mapping[str, object] = field(default_factory=dict[str, object])
 
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "config", MappingProxyType(dict(self.config)))
+
     @property
     def emits_task(self) -> bool:
         return self.kind in {NodeKind.TASK, NodeKind.AGENT, NodeKind.LOOP}
+
+    @property
+    def holds_dispatch_lease(self) -> bool:
+        return self.emits_task
+
+    @property
+    def carries_ledger(self) -> bool:
+        return self.emits_task
+
+    @property
+    def is_daemon_evaluated(self) -> bool:
+        return not self.emits_task
 
 
 @dataclass(frozen=True, slots=True)
@@ -288,6 +329,29 @@ class TaskGraph:
             graph_template_ref=self.graph_template_ref,
             state=self.state,
         )
+
+    def append_task(self, task: TaskRecord) -> TaskGraph:
+        """Attach a newly minted Task (e.g. a loop iteration) without mutation."""
+        if self.task_by_id(task.id) is not None:
+            msg = f"Task {task.id!r} already present on Task Graph {self.id!r}"
+            raise ValueError(msg)
+        return TaskGraph(
+            id=self.id,
+            mission_id=self.mission_id,
+            nodes=self.nodes,
+            tasks=(*self.tasks, task),
+            artifact_kind=self.artifact_kind,
+            graph_template_ref=self.graph_template_ref,
+            state=(
+                self.state if self.state is not TaskMissionState.PENDING else TaskMissionState.READY
+            ),
+        )
+
+    def node_by_id(self, node_id: str) -> TaskGraphNode | None:
+        for node in self.nodes:
+            if node.id == node_id:
+                return node
+        return None
 
     def to_payload(self) -> Mapping[str, object]:
         return MappingProxyType(

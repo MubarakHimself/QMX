@@ -19,6 +19,7 @@ from qma.core.vocabulary.enums import (
     NodeKind,
     TaskMissionState,
 )
+from qma.daemon.taskgraph.execution import validate_graph_template_topology
 from qma.daemon.taskgraph.records import (
     MISSION_DIRECTOR_ROLE,
     RESERVED_APPROVAL_ROUTE_OPERATOR,
@@ -84,7 +85,13 @@ class CompileResult:
 
 
 class GraphTemplateCatalog:
-    """In-memory definition-store stand-in for plugin-contributed templates."""
+    """In-memory definition-store stand-in for plugin-contributed templates.
+
+    Registration validates topology (back-edges refused) and refuses any
+    daemon-claimed template id. Stored templates are the authored, versioned,
+    stateless artifacts — a run never mutates or interchanges them with a
+    Task Graph (AD-13; FR-Q29).
+    """
 
     def __init__(self) -> None:
         self._templates: dict[str, GraphTemplate] = {}
@@ -96,7 +103,11 @@ class GraphTemplateCatalog:
                 "duplicate graph_template registration refused",
                 given=template.qualified_id,
             )
-        self._templates[template.qualified_id] = template
+        validated = validate_graph_template_topology(template)
+        if not is_ok(validated):
+            return validated
+        # Store the validated authored template; never a Task Graph projection.
+        self._templates[template.qualified_id] = validated.value
         return Ok(template.qualified_id)
 
     def get(self, qualified_id: str) -> GraphTemplate | None:
@@ -104,6 +115,9 @@ class GraphTemplateCatalog:
 
     def __contains__(self, qualified_id: object) -> bool:
         return isinstance(qualified_id, str) and qualified_id in self._templates
+
+    def ids(self) -> tuple[str, ...]:
+        return tuple(sorted(self._templates))
 
 
 def validate_approval_route(
@@ -371,9 +385,7 @@ class MissionCompiler:
             intent = intent_raw if isinstance(intent_raw, str) else f"execute:{node_id_raw}"
             ac_raw = raw.get("acceptance_criteria", ())
             if isinstance(ac_raw, Sequence) and not isinstance(ac_raw, (str, bytes)):
-                acceptance = tuple(
-                    str(item) for item in cast("Sequence[object]", ac_raw)
-                )
+                acceptance = tuple(str(item) for item in cast("Sequence[object]", ac_raw))
             else:
                 acceptance = ()
             refs_raw = raw.get("refs", ())

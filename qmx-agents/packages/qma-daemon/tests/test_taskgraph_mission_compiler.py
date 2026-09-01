@@ -346,8 +346,7 @@ def test_dispatcher_grants_dispatch_lease_and_evaluates_environment() -> None:
     assert decision2.value.environment_lease.provider_id == "local-docker"
 
 
-def test_back_edge_in_template_refused_at_compile() -> None:
-    owner = _quant()
+def test_back_edge_in_template_refused_at_registration() -> None:
     catalog = GraphTemplateCatalog()
     template = GraphTemplate(
         qualified_id="dev-factory:cycle",
@@ -361,20 +360,10 @@ def test_back_edge_in_template_refused_at_compile() -> None:
             {"from": "b", "to": "a"},
         ),
     )
-    assert is_ok(catalog.register(template))
-    compiler = MissionCompiler(
-        templates=catalog,
-        known_quant_actor_ids={owner.actor_id.value},
-    )
-    refused = compiler.compile(
-        CompileRequest(
-            goal=Goal(text="cyclic"),
-            owner=owner,
-            graph_template_ref="dev-factory:cycle",
-            require_decomposition_reasoning=False,
-        )
-    )
+    # AD-13 / FR-Q29: back-edges are refused at registration (not best-effort).
+    refused = catalog.register(template)
     assert is_refusal(refused)
+    assert "dev-factory:cycle" not in catalog
 
 
 def test_scaffold_exports_compiler_and_dispatcher() -> None:
