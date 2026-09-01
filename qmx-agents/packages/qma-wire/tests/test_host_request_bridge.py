@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 from qma.core.refusals import UnknownHostRequest
 from qma.core.vocabulary import HOOK_EVENT_NAMES, JobHandleState
 from qma.wire import (
@@ -258,7 +260,8 @@ def test_schemas_and_examples_preserve_bridge_requirements() -> None:
 
     refusal_example = examples[2]
     assert refusal_example["family"] == "host_request"
-    assert refusal_example["refusal"]["variant"] == "UnknownHostRequest"
+    refusal_body = cast(dict[str, object], refusal_example["refusal"])
+    assert refusal_body["variant"] == "UnknownHostRequest"
 
     assert is_ok(
         validate_family_payload(
