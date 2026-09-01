@@ -7,7 +7,9 @@ register: Story 42.1 delivers the sole-writer persistence substrate (FR-1,
 FR-2); Story 42.2 delivers the authoritative journal, closed store list, and
 announcement law (FR-3 through FR-5); Story 42.3 delivers durable-clock and
 fold-contract enforcement (FR-6 through FR-9); Story 42.4 delivers store-class
-ownership and the governed variable registry (FR-10 through FR-13).
+ownership and the governed variable registry (FR-10 through FR-13); Story 42.5
+delivers versioned-store migration, backup, and controlled restoration (FR-14
+through FR-17).
 
 ### FR-1: A second daemon or writer is refused at the persistence boundary
 
@@ -192,3 +194,57 @@ ownership and the governed variable registry (FR-10 through FR-13).
 - **Notification tier:** operator-visible (agent / automation attempt).
 - **Product-user affordance:** agents cannot edit operating limits. Operators
   own every registered number's write path.
+
+### FR-14: Unknown or newer `store_schema_version` refuses open
+
+- **Failure class:** `storage failure` / `StoreVersionMismatch` (CT-04).
+- **Detection:** journal marker and SQLite `daemon_meta.store_schema_version`
+  are validated at `PersistenceSubstrate.open` / `SingleSqliteWriter.start`
+  before records are read; a stamp other than the known version is refused,
+  naming the store and both versions (FR-Q37; AD-27; FM-17).
+- **Auto-recovery / retry:** none — never read optimistically and never
+  silently upgrade; run a five-step migration into a distinct destination.
+- **Visible degraded state:** the substrate never opens; no durable reads or
+  writes proceed against the mismatched store.
+- **Notification tier:** operator-visible (startup / open refusal).
+- **Product-user affordance:** this store's schema is newer or unknown to this
+  daemon build. Restore from backup or migrate with the matching build.
+
+### FR-15: In-place migration of the only copy is refused
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `DaemonStoreLifecycle.migrate` requires a destination root
+  distinct from the source (documented restore path) and runs preflight →
+  backup first → dry-run → migrate → verify in order (FR-Q37; AD-27).
+- **Auto-recovery / retry:** none — choose a distinct migrate destination.
+- **Visible degraded state:** source store untouched; no migrate write occurs.
+- **Notification tier:** operator-visible (ops / migration tooling).
+- **Product-user affordance:** migrations never rewrite the only copy. Back up
+  first, migrate into a replacement root, then verify.
+
+### FR-16: Sample/full restore into the live store is refused
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** sample-restore and full-restore rehearsal require a scratch
+  root distinct from the live root and cite only
+  `registry:store.sample_restore_test_cadence` /
+  `registry:store.full_restore_rehearsal_cadence` (FR-Q37; AD-27).
+- **Auto-recovery / retry:** none — point scratch at an isolated location.
+- **Visible degraded state:** live store untouched; no recoverability claim.
+- **Notification tier:** operator-visible (ops / rehearsal tooling).
+- **Product-user affordance:** rehearsals restore into scratch and record
+  verified evidence. Live restore is a separate operator act.
+
+### FR-17: Live-store restore from a machine principal or background job is refused
+
+- **Failure class:** `OperatorPrincipalRequired` / `policy rejection` (CT-04).
+- **Detection:** `DaemonStoreLifecycle.restore_live` authorizes
+  `store.restore_live` as an AD-24 human-gate command, refuses
+  `as_background_job=True`, and records a `store.restore_live` journal event
+  on success (FR-Q37; AD-24, AD-27). GAP-0088 deferred items stay exclusions.
+- **Auto-recovery / retry:** none — present an operator principal over the
+  wire; never schedule live restore as a daemon job.
+- **Visible degraded state:** live store unchanged; no restore receipt.
+- **Notification tier:** operator-visible (unauthorized restore attempt).
+- **Product-user affordance:** only an operator restores the live store, and
+  the act is journaled. Background automation cannot do it.

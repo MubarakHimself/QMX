@@ -5,8 +5,9 @@ event journal, SQLite store, and artifact store through qmf-data sinks. The
 authoritative journal (FR-Q23–FR-Q25) allocates global ``journal_seq``, enforces
 the closed store list, announcement law, durable-clock stamps, and v1 fold
 contracts. Store-class ownership (FR-Q26) and the governed variable registry
-(FR-Q36) bind write paths and configurable numbers. SemVer is display-only
-provenance in lockstep with the QMF workspace (AR-Q11).
+(FR-Q36) bind write paths and configurable numbers. Store lifecycle (FR-Q37)
+covers versioned migration, encrypted backup, and controlled restoration.
+SemVer is display-only provenance in lockstep with the QMF workspace (AR-Q11).
 """
 
 from __future__ import annotations
@@ -26,11 +27,13 @@ from qma.daemon.persistence import (
     PersistenceStartupEvidence,
     PersistenceSubstrate,
 )
+from qma.daemon.persistence.lifecycle import DaemonStoreLifecycle
 from qma.daemon.staging import ProposalGate
 
 __all__ = [
     "AuthoritativeJournal",
     "DaemonClock",
+    "DaemonStoreLifecycle",
     "FoldContract",
     "FoldContractRegistry",
     "FoldMetadata",

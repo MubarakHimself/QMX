@@ -18,7 +18,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TypeVar, cast
 
-from qmf.core import Ok, Result
+from qma.daemon.persistence.schema import (
+    KNOWN_STORE_SCHEMA_VERSION,
+    SQLITE_META_SCHEMA_KEY,
+    ensure_sqlite_schema_version,
+)
+from qmf.core import Ok, Result, TypedRefusal, is_refusal
 from qmf.data.store.refusals import policy_rejection, storage_failure
 
 __all__ = ["SingleSqliteWriter", "SqliteStartupEvidence"]
@@ -34,6 +39,7 @@ class SqliteStartupEvidence:
     db_path: str
     journal_mode: str
     thread_name: str
+    store_schema_version: int = KNOWN_STORE_SCHEMA_VERSION
 
 
 class SingleSqliteWriter:
@@ -52,6 +58,8 @@ class SingleSqliteWriter:
         )
         self._started = threading.Event()
         self._start_error: BaseException | None = None
+        self._schema_refusal: TypedRefusal | None = None
+        self._store_schema_version: int = KNOWN_STORE_SCHEMA_VERSION
 
     @property
     def db_path(self) -> Path:
@@ -78,6 +86,8 @@ class SingleSqliteWriter:
                 f"could not open the sole writable SQLite connection: {self._start_error}",
                 context={"field": "sqlite_writer", "db": str(self._db_path)},
             )
+        if self._schema_refusal is not None:
+            return self._schema_refusal
         if self._conn is None:
             return storage_failure(
                 "sole writable SQLite connection failed to start",
@@ -104,6 +114,7 @@ class SingleSqliteWriter:
             db_path=str(self._db_path),
             journal_mode=mode,
             thread_name=self._thread.name,
+            store_schema_version=self._store_schema_version,
         )
 
     def _run(self) -> None:
@@ -121,6 +132,28 @@ class SingleSqliteWriter:
                 "INSERT OR REPLACE INTO daemon_meta (key, value) VALUES (?, ?)",
                 ("sqlite_version", sqlite3.sqlite_version),
             )
+            row = conn.execute(
+                "SELECT value FROM daemon_meta WHERE key = ?",
+                (SQLITE_META_SCHEMA_KEY,),
+            ).fetchone()
+            existing = None if row is None else str(row[0])
+
+            def _stamp(version: int) -> None:
+                conn.execute(
+                    "INSERT OR REPLACE INTO daemon_meta (key, value) VALUES (?, ?)",
+                    (SQLITE_META_SCHEMA_KEY, str(version)),
+                )
+
+            gated = ensure_sqlite_schema_version(
+                read_value=existing,
+                write_value=_stamp,
+            )
+            if is_refusal(gated):
+                conn.close()
+                self._schema_refusal = gated
+                self._started.set()
+                return
+            self._store_schema_version = gated.value
             conn.commit()
             self._conn = conn
             self._thread_id = threading.get_ident()
@@ -184,6 +217,16 @@ class SingleSqliteWriter:
         if not rows:
             return sqlite3.sqlite_version
         return str(rows[0][0])
+
+    def recorded_store_schema_version(self) -> int:
+        """The ``store_schema_version`` stamped into daemon_meta at open."""
+        rows = self.execute(
+            "SELECT value FROM daemon_meta WHERE key = ?",
+            (SQLITE_META_SCHEMA_KEY,),
+        )
+        if not rows:
+            return self._store_schema_version
+        return int(rows[0][0])
 
     def connection_count_evidence(self) -> int:
         """Always 1 while open — the sole writable connection in this writer."""

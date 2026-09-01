@@ -19,6 +19,7 @@ from qma.daemon.persistence.fold import (
     open_fold_views,
 )
 from qma.daemon.persistence.lock import DaemonWriterLock, WriterLockToken
+from qma.daemon.persistence.schema import ensure_journal_schema_version
 from qma.daemon.persistence.sqlite_writer import SingleSqliteWriter, SqliteStartupEvidence
 from qmf.core import Ok, Result, World, WriterId, is_ok, is_refusal
 from qmf.data import EvidenceStore
@@ -133,7 +134,13 @@ class PersistenceSubstrate:
                 lock.release()
                 return world_bundle
 
-            sqlite_path = resolved / "daemon" / "daemon.sqlite"
+            daemon_dir = resolved / "daemon"
+            journal_schema = ensure_journal_schema_version(daemon_dir)
+            if is_refusal(journal_schema):
+                lock.release()
+                return journal_schema
+
+            sqlite_path = daemon_dir / "daemon.sqlite"
             sqlite = SingleSqliteWriter(sqlite_path)
             sqlite_started = sqlite.start()
             if is_refusal(sqlite_started):
