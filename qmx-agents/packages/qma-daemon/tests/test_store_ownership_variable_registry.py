@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
+from typing import cast
 
 import pytest
 from qma.core.refusals import OperatorPrincipalRequired
@@ -326,8 +328,9 @@ def test_operator_variable_set_records_journal_event(tmp_path: Path) -> None:
         rows = journal.read_all()
         assert is_ok(rows)
         assert rows.value[0]["event"] == "variable.set"
-        assert rows.value[0]["payload"]["name"] == "rlm.depth_cap"
-        assert rows.value[0]["payload"]["value"] == 1
+        payload = cast("Mapping[str, object]", rows.value[0]["payload"])
+        assert payload["name"] == "rlm.depth_cap"
+        assert payload["value"] == 1
     finally:
         journal.close()
         substrate.close()

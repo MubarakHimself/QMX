@@ -83,7 +83,7 @@ class TaskRecord:
     mission_id: str
     owner: ActorId
     intent: str
-    inputs: Mapping[str, object] = field(default_factory=dict)
+    inputs: Mapping[str, object] = field(default_factory=dict[str, object])
     refs: tuple[str, ...] = ()
     acceptance_criteria: tuple[str, ...] = ()
     state: TaskMissionState = TaskMissionState.PENDING
@@ -222,7 +222,7 @@ class TaskGraphNode:
     id: str
     kind: NodeKind
     state: TaskMissionState = TaskMissionState.PENDING
-    config: Mapping[str, object] = field(default_factory=dict)
+    config: Mapping[str, object] = field(default_factory=dict[str, object])
 
     @property
     def emits_task(self) -> bool:

@@ -68,11 +68,11 @@ def validate_store_schema_version(
     An unknown or newer stamp is refused — never read optimistically and never
     silently upgraded (FR-Q37; AD-27).
     """
-    if not isinstance(stamped, int) or isinstance(stamped, bool) or stamped < 1:
+    if isinstance(stamped, bool) or stamped < 1:
         return refuse_unknown_store_schema(
             store=store,
             expected_schema_version=known,
-            store_schema_version=int(stamped) if isinstance(stamped, int) else -1,
+            store_schema_version=-1 if isinstance(stamped, bool) else stamped,
         )
     if stamped != known:
         return refuse_unknown_store_schema(

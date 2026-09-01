@@ -173,7 +173,7 @@ class FoldContractRegistry:
     Registration commits metadata only; materialization stays on first write.
     """
 
-    _registered: dict[str, FoldContract] = field(default_factory=dict)
+    _registered: dict[str, FoldContract] = field(default_factory=dict[str, FoldContract])
 
     @property
     def v1_fold_ids(self) -> frozenset[str]:

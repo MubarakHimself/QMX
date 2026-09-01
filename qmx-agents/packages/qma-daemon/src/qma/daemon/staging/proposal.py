@@ -13,7 +13,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Final, Literal
+from typing import Final, Literal, cast
 from uuid import uuid4
 
 from qma.core.refusals import OperatorPrincipalRequired
@@ -63,7 +63,7 @@ class ProposalEdit:
     kind: RefinementEditKind
     operation: EditOperation
     target_id: str
-    content: Mapping[str, object] = field(default_factory=dict)
+    content: Mapping[str, object] = field(default_factory=dict[str, object])
     reference: str | None = None
     path: str | None = None
 
@@ -120,7 +120,8 @@ def _parse_edit(raw: object) -> Result[ProposalEdit]:
             "a RefinementProposal edit is a mapping with kind, operation, and id (FR-Q26; AD-22)",
             given=repr(type(raw).__name__),
         )
-    kind_raw = raw.get("kind")
+    body = cast("Mapping[str, object]", raw)
+    kind_raw = body.get("kind")
     if isinstance(kind_raw, str) and kind_raw == "variable":
         return policy_rejection(
             "refinement_edit_kind",
@@ -139,35 +140,35 @@ def _parse_edit(raw: object) -> Result[ProposalEdit]:
             kind=repr(kind_raw),
             detail=str(exc),
         )
-    operation = raw.get("operation")
+    operation = body.get("operation")
     if operation not in {"create", "update", "delete"}:
         return invalid_input(
             "operation",
             "edit operation is create | update | delete",
             given=repr(operation),
         )
-    target_id = raw.get("id")
+    target_id = body.get("id")
     if not isinstance(target_id, str) or target_id.strip() == "":
         return invalid_input(
             "id",
             "each edit names a non-empty target definition id",
             given=repr(target_id),
         )
-    path = raw.get("path")
+    path = body.get("path")
     if kind is RefinementEditKind.ROLE and path == "role.base":
         return policy_rejection(
             "role_base",
             "role.base is written only by an operator-principal role.set_base; "
             "the proposal pipeline accepts only role.overlay (FR-Q26; AD-22)",
         )
-    content = raw.get("content", {})
+    content = body.get("content", {})
     if not isinstance(content, Mapping):
         return invalid_input(
             "content",
             "edit content is a mapping",
             given=repr(type(content).__name__),
         )
-    reference = raw.get("reference")
+    reference = body.get("reference")
     if reference is not None and not isinstance(reference, str):
         return invalid_input(
             "reference",
@@ -175,12 +176,13 @@ def _parse_edit(raw: object) -> Result[ProposalEdit]:
             given=repr(reference),
         )
     path_s = path if isinstance(path, str) else None
+    content_map = cast("Mapping[str, object]", content)
     return Ok(
         ProposalEdit(
             kind=kind,
-            operation=operation,  # type: ignore[arg-type]
+            operation=cast("EditOperation", operation),
             target_id=target_id,
-            content=MappingProxyType(dict(content)),
+            content=MappingProxyType(dict(content_map)),
             reference=reference if isinstance(reference, str) else None,
             path=path_s,
         )
@@ -340,7 +342,9 @@ def register_mission_scoped_hook_exception(
 class ProposalGate:
     """In-memory staging gate for RefinementProposal accept / apply."""
 
-    _staged: dict[str, RefinementProposal] = field(default_factory=dict)
+    _staged: dict[str, RefinementProposal] = field(
+        default_factory=dict[str, RefinementProposal]
+    )
 
     def accept(
         self,

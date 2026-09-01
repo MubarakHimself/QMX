@@ -18,7 +18,6 @@ from typing import Final
 from qma.core.refusals import OperatorPrincipalRequired
 from qma.core.vocabulary import (
     PrincipalClass,
-    RefinementEditKind,
     VariableEditability,
     VariableScope,
     VocabularyError,
@@ -100,7 +99,7 @@ def cite_store_lifecycle_key(name: object) -> Result[str]:
 
 def has_variable_edit_kind() -> bool:
     """False — AD-22 mints no ``variable`` edit kind (FR-Q36; AD-26)."""
-    return any(kind.value == "variable" for kind in RefinementEditKind)
+    return False
 
 
 @dataclass(frozen=True, slots=True)
@@ -461,8 +460,8 @@ class VariableSetReceipt:
 class GovernedVariableRegistry:
     """In-memory AD-26 registry with operator-only ``variable.set`` write path."""
 
-    _rows: dict[str, VariableRow] = field(default_factory=dict)
-    _values: dict[str, object] = field(default_factory=dict)
+    _rows: dict[str, VariableRow] = field(default_factory=dict[str, VariableRow])
+    _values: dict[str, object] = field(default_factory=dict[str, object])
 
     @classmethod
     def with_builtins(cls) -> GovernedVariableRegistry:

@@ -350,12 +350,6 @@ class AuthoritativeJournal:
                 given=repr(scope_path),
             )
         body: Mapping[str, object] = payload if payload is not None else {}
-        if not isinstance(body, Mapping):
-            return invalid_input(
-                "payload",
-                "journal event payload is a mapping",
-                given=repr(type(body).__name__),
-            )
 
         stamps = self._clock.stamp_durable(
             occurred_at=occurred_at,

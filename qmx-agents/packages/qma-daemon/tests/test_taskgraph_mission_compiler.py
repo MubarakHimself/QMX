@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import cast
+
 from qma.core.ontology import ActorId, DeskSlug, Goal, Quant, RoleName
 from qma.core.refusals import NoEnvironment
 from qma.core.vocabulary.enums import (
@@ -300,10 +303,12 @@ def test_dispatcher_grants_dispatch_lease_and_evaluates_environment() -> None:
     )
     assert is_ok(decision)
     payload = decision.value.to_payload()
-    assert payload["dispatch_lease"]["lease"] == "dispatch_lease"
-    assert payload["dispatch_lease"]["holder_agent_id"] == "agent-worker-1"
+    dispatch_lease = cast("Mapping[str, object]", payload["dispatch_lease"])
+    assert dispatch_lease["lease"] == "dispatch_lease"
+    assert dispatch_lease["holder_agent_id"] == "agent-worker-1"
     assert payload["environment_available"] is False
-    assert payload["environment_refusal"]["variant"] == "NoEnvironment"
+    env_refusal_payload = cast("Mapping[str, object]", payload["environment_refusal"])
+    assert env_refusal_payload["variant"] == "NoEnvironment"
     assert payload["synchronization"] == "task_graph"
     assert decision.value.task.state is TaskMissionState.RUNNING
     env_refusal = decision.value.environment_refusal

@@ -226,7 +226,7 @@ class SingleSqliteWriter:
         )
         if not rows:
             return self._store_schema_version
-        return int(rows[0][0])
+        return int(str(rows[0][0]))
 
     def connection_count_evidence(self) -> int:
         """Always 1 while open — the sole writable connection in this writer."""

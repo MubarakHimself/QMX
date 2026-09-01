@@ -227,7 +227,9 @@ class StoreDeclaration:
 class StoreRegistry:
     """In-memory registry of declared closed stores; schemas materialize later."""
 
-    _declarations: dict[str, StoreDeclaration] = field(default_factory=dict)
+    _declarations: dict[str, StoreDeclaration] = field(
+        default_factory=dict[str, StoreDeclaration]
+    )
 
     @property
     def closed_list(self) -> frozenset[str]:

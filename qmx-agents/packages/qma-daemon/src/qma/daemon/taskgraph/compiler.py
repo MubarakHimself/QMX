@@ -11,7 +11,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from hashlib import sha256
 from types import MappingProxyType
-from typing import Final
+from typing import Final, cast
 
 from qma.core.ontology import ActorId, Goal, Quant
 from qma.core.vocabulary.enums import (
@@ -117,7 +117,7 @@ def validate_approval_route(
     """
     if route is None:
         return Ok(None)
-    if not isinstance(route, str) or not route:
+    if not route:
         return invalid_input(
             "approval_route",
             "approval_route must be the reserved operator value or an ActorId",
@@ -371,16 +371,22 @@ class MissionCompiler:
             intent = intent_raw if isinstance(intent_raw, str) else f"execute:{node_id_raw}"
             ac_raw = raw.get("acceptance_criteria", ())
             if isinstance(ac_raw, Sequence) and not isinstance(ac_raw, (str, bytes)):
-                acceptance = tuple(str(item) for item in ac_raw)
+                acceptance = tuple(
+                    str(item) for item in cast("Sequence[object]", ac_raw)
+                )
             else:
                 acceptance = ()
             refs_raw = raw.get("refs", ())
             if isinstance(refs_raw, Sequence) and not isinstance(refs_raw, (str, bytes)):
-                refs = tuple(str(item) for item in refs_raw)
+                refs = tuple(str(item) for item in cast("Sequence[object]", refs_raw))
             else:
                 refs = ()
             inputs_raw = raw.get("inputs", {})
-            inputs = dict(inputs_raw) if isinstance(inputs_raw, Mapping) else {}
+            inputs: dict[str, object] = (
+                dict(cast("Mapping[str, object]", inputs_raw))
+                if isinstance(inputs_raw, Mapping)
+                else {}
+            )
             worker_template = raw.get("worker_template")
             worker_ref = worker_template if isinstance(worker_template, str) else None
             agent_role = "pinned_agent" if node_kind is NodeKind.AGENT else None

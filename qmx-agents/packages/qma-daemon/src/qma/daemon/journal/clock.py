@@ -209,21 +209,21 @@ class DaemonClock:
                     recorded_at=recorded_ns,
                 )
             )
-        if isinstance(occurred_at, int) and not isinstance(occurred_at, bool):
-            instant = Instant.try_create(occurred_at)
-            if is_refusal(instant):
-                return instant
-            return Ok(
-                DurableTimestamps(
-                    occurred_at=instant.value.value_ns,
-                    recorded_at=recorded_ns,
-                )
+        if isinstance(occurred_at, bool):
+            return invalid_input(
+                "occurred_at",
+                "occurred_at is an Instant or int64 UTC nanoseconds from qmf-core's "
+                "clock vocabulary (FR-Q25; AD-6)",
+                given=repr(occurred_at),
             )
-        return invalid_input(
-            "occurred_at",
-            "occurred_at is an Instant or int64 UTC nanoseconds from qmf-core's "
-            "clock vocabulary (FR-Q25; AD-6)",
-            given=repr(occurred_at),
+        instant = Instant.try_create(occurred_at)
+        if is_refusal(instant):
+            return instant
+        return Ok(
+            DurableTimestamps(
+                occurred_at=instant.value.value_ns,
+                recorded_at=recorded_ns,
+            )
         )
 
     def stamp_evidence_record(
@@ -260,7 +260,7 @@ class DaemonClock:
                     "an announcement-bound durable record includes its "
                     "announcement journal_seq (FR-Q25; AD-6)",
                 )
-            if not isinstance(journal_seq, int) or isinstance(journal_seq, bool) or journal_seq < 1:
+            if isinstance(journal_seq, bool) or journal_seq < 1:
                 return invalid_input(
                     "journal_seq",
                     "journal_seq is a positive int allocated by the authoritative "

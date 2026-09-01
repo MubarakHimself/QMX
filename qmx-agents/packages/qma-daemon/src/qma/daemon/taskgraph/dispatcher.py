@@ -68,9 +68,11 @@ class DispatchDecision:
 class TaskGraphStore:
     """In-memory Task Graph projection keyed by mission / graph id (AD-12)."""
 
-    _by_graph_id: dict[str, TaskGraph] = field(default_factory=dict)
-    _by_mission_id: dict[str, str] = field(default_factory=dict)
-    _dispatch_leases: dict[str, DispatchLease] = field(default_factory=dict)
+    _by_graph_id: dict[str, TaskGraph] = field(default_factory=dict[str, TaskGraph])
+    _by_mission_id: dict[str, str] = field(default_factory=dict[str, str])
+    _dispatch_leases: dict[str, DispatchLease] = field(
+        default_factory=dict[str, DispatchLease]
+    )
 
     def materialize(self, graph: TaskGraph) -> TaskGraph:
         """Persist the compiled Task Graph projection for its Mission."""

@@ -190,7 +190,7 @@ class LiveRestoreReceipt:
     live_root: str
     source_copy_version: int
     stores_restored: tuple[str, ...]
-    journal: object | None = None
+    journal: JournalAppendReceipt | None = None
 
 
 class _XorCipher:
