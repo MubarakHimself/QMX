@@ -18,7 +18,9 @@ without inventing capacity numbers; seat concurrency is Story 26.19.
 Story 26.11 admits the assembled runtime risk graph at Compose (cardinalities
 and referential integrity together) and runs the technical demo shakedown
 without a live binding — evidence for the human signature, never performance
-proof (FTR-07).
+proof (FTR-07). Story 26.14 is the D010 runtime risk gate: one executable pass
+over the composition root that wires CT-22/23/24/25/27/28/29/30/31/32, fails
+unwired import-only contracts, and never treats paper profit as proof.
 Child modules and doors never restamp, never hold a registry cache, and never
 persist lineage.
 """
@@ -128,6 +130,22 @@ from qmn.host.risk_population import (
     WindowRecord,
     admit_runtime_risk_population,
 )
+from qmn.host.runtime_risk_gate import (
+    MANUAL_OBSERVATION_IS_PROOF,
+    PAPER_PROFIT_IS_PROOF,
+    REQUIRED_RISK_CONTRACTS,
+    RUNTIME_RISK_GATE_SURFACE,
+    RUNTIME_RISK_SCENARIOS,
+    RiskContractWiring,
+    RuntimeRiskCoverageReport,
+    RuntimeRiskGateInputs,
+    RuntimeRiskGateReport,
+    evaluate_runtime_risk_coverage,
+    qmn_production_src_root,
+    refuse_manual_observation_as_proof,
+    refuse_paper_profit_as_proof,
+    run_runtime_risk_gate,
+)
 from qmn.host.shakedown import (
     SHAKEDOWN_EXERCISES,
     SHAKEDOWN_FOR_HUMAN_SIGNATURE,
@@ -206,14 +224,19 @@ __all__ = [
     "LAYER1_CHECKS",
     "LIGHT_HEAVY_SURFACE",
     "LINEAGE_PERSIST_SURFACE",
+    "MANUAL_OBSERVATION_IS_PROOF",
     "MISMATCH_REFUSES_BEFORE_SEAL",
     "NODE_RESURRECT_SUBTYPE",
     "OCCURRENCE_LINEAGE_EDGE_TYPE",
     "OPERATOR_PRINCIPAL",
+    "PAPER_PROFIT_IS_PROOF",
     "REGISTRY_MINT_SURFACE",
     "REQUESTED_RESTART_EXIT_CODE",
     "REQUESTED_RESTART_REASON",
+    "REQUIRED_RISK_CONTRACTS",
     "RISK_POPULATION_SURFACE",
+    "RUNTIME_RISK_GATE_SURFACE",
+    "RUNTIME_RISK_SCENARIOS",
     "SEAT_CONCURRENCY_OWNED_BY",
     "SHAKEDOWN_EXERCISES",
     "SHAKEDOWN_FOR_HUMAN_SIGNATURE",
@@ -259,6 +282,10 @@ __all__ = [
     "RecordingNotifyTransport",
     "ResolvedCompositionClasses",
     "ResurrectReceipt",
+    "RiskContractWiring",
+    "RuntimeRiskCoverageReport",
+    "RuntimeRiskGateInputs",
+    "RuntimeRiskGateReport",
     "RuntimeRiskGraph",
     "SafePointSnapshot",
     "ScopeRecord",
@@ -288,6 +315,7 @@ __all__ = [
     "composition_cite_set",
     "compute_composition_fp",
     "continues_performance_edge",
+    "evaluate_runtime_risk_coverage",
     "evaluate_safe_point",
     "evaluate_workload_claim",
     "guard_synchronous_placement",
@@ -301,13 +329,17 @@ __all__ = [
     "persist_explicit_lineage_edge",
     "preflight_checks_for_mode",
     "prove_host_concurrency",
+    "qmn_production_src_root",
     "refuse_invented_soak_or_ksa_number",
+    "refuse_manual_observation_as_proof",
+    "refuse_paper_profit_as_proof",
     "refuse_shakedown_as_performance_proof",
     "reserved_supervisor_writer",
     "resolve_composition_classes",
     "run_boot_ceremony",
     "run_check_mode",
     "run_demo_shakedown",
+    "run_runtime_risk_gate",
     "sd_notify",
     "supervision_process_model",
     "supervisor_writer_is_reserved",

@@ -537,3 +537,35 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Product-user affordance:** Preflight refused boot. Read `read_failure_detail`
   and the preflight-status view on the evidence channel, repair the cause,
   then resurrect from the operator principal over the powers channel.
+
+### FR-35: Runtime risk contract importable but unwired
+
+- **Failure class:** policy rejection
+- **Detection:** the D010 runtime risk gate finds a required CT-22/23/24/25/27/28/29/30/31/32
+  path that is importable from qmf-risk but not called through the node
+  composition root (`risk_gate.unwired_contract`).
+- **Auto-recovery / retry:** none — wire the missing runtime path and re-run
+  the gate. Import-only surface is not proof.
+- **Visible degraded state:** the runtime risk gate refuses; soak is blocked;
+  no live role opens on an unwired risk contract.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** A risk contract is defined but not wired into
+  the node. The gate names the missing runtime path and traceability ID.
+  Inspect `read_failure_detail` on the evidence channel; do not treat paper
+  profit as a substitute.
+
+### FR-36: Paper profit or manual observation offered as risk-gate proof
+
+- **Failure class:** policy rejection
+- **Detection:** the D010 runtime risk gate is handed a paper-profit figure or
+  a manual observation as proof (`risk_gate.paper_profit` /
+  `risk_gate.manual_observation`). Measurement publishes and never acts
+  (CT-32); paper P&L never becomes treasury cash.
+- **Auto-recovery / retry:** none — re-run the gate against the conformance
+  double, injected clock, and seeded fixtures only.
+- **Visible degraded state:** the gate refuses; no soak or live claim is
+  minted from profit or observation.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** Paper profit and eyeballing the books cannot
+  prove the runtime risk gate. Run the executable composition-root path.
+  Inspect `read_failure_detail` on the evidence channel.
