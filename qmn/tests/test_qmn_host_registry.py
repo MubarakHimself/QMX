@@ -299,7 +299,11 @@ def test_only_host_mints_through_registrar_seam() -> None:
                 if not isinstance(node, ast.ImportFrom) or not node.module:
                     continue
                 module = node.module
-                if module.startswith("qmf.registry") or module == "qmn.host.registry_mint":
+                if (
+                    module.startswith("qmf.registry")
+                    or module == "qmn.host.registry_mint"
+                    or module == "qmn.host.lineage_persist"
+                ):
                     violations.append(f"{path.relative_to(_QMN_SRC)}: imports {module}")
     assert violations == [], f"child/door registry mint surface leak: {violations}"
 
