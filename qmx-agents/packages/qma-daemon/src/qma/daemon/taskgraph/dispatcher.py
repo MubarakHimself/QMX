@@ -1,9 +1,10 @@
 """Deterministic Task Graph scheduler and dispatcher (AD-12; FR-Q27, FR-Q28).
 
-Decides where, when, who, and dependencies; grants ``dispatch_lease``; evaluates
-``environment_lease`` through the core ExecutionEnvironment port registry.
-Applies closed Task/Mission state with JobHandle-evidenced terminal outcomes.
-Parallel workers synchronize through the Task Graph, never chat.
+Decides where, when, who, and dependencies; grants ``dispatch_lease``; places
+work through the Compute Router which mints one ``environment_lease`` per
+available slot. Applies closed Task/Mission state with JobHandle-evidenced
+terminal outcomes. Parallel workers synchronize through the Task Graph, never
+chat.
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ from qma.core.vocabulary.enums import (
     is_task_mission_terminal,
 )
 from qma.daemon.envs.registry import EnvironmentLease, ExecutionEnvironmentRegistry
+from qma.daemon.envs.router import ComputeRouter, PlacementDecision, QueuedPlacement
 from qma.daemon.taskgraph.records import (
     MISSION_DIRECTOR_ROLE,
     DispatchLease,
@@ -57,6 +59,7 @@ class DispatchDecision:
     environment_lease: EnvironmentLease | None
     environment_refusal: NoEnvironment | None
     task_graph: TaskGraph
+    queued_placement: QueuedPlacement | None = None
 
     @property
     def environment_available(self) -> bool:
@@ -76,6 +79,8 @@ class DispatchDecision:
                 "variant": "NoEnvironment",
                 "kind": self.environment_refusal.context.get("kind"),
             }
+        if self.queued_placement is not None:
+            payload["queued_placement"] = dict(self.queued_placement.to_payload())
         return MappingProxyType(payload)
 
 
@@ -111,16 +116,13 @@ class TaskGraphStore:
     _by_graph_id: dict[str, TaskGraph] = field(default_factory=dict[str, TaskGraph])
     _by_mission_id: dict[str, str] = field(default_factory=dict[str, str])
     _missions: dict[str, MissionRecord] = field(default_factory=dict[str, MissionRecord])
-    _dispatch_leases: dict[str, DispatchLease] = field(
-        default_factory=dict[str, DispatchLease]
-    )
+    _dispatch_leases: dict[str, DispatchLease] = field(default_factory=dict[str, DispatchLease])
     _environment_leases: dict[str, EnvironmentLease] = field(
         default_factory=dict[str, EnvironmentLease]
     )
-    _job_handles: dict[str, JobHandleEvidence] = field(
-        default_factory=dict[str, JobHandleEvidence]
-    )
+    _job_handles: dict[str, JobHandleEvidence] = field(default_factory=dict[str, JobHandleEvidence])
     _dispatched: set[str] = field(default_factory=set[str])
+    slot_router: ComputeRouter | None = None
 
     def materialize(self, graph: TaskGraph) -> TaskGraph:
         """Persist the compiled Task Graph projection for its Mission."""
@@ -173,10 +175,20 @@ class TaskGraphStore:
     def release_leases(self, task_id: str) -> None:
         self._dispatch_leases.pop(task_id, None)
         self._environment_leases.pop(task_id, None)
+        self._release_router_slot(task_id)
 
     def release_environment_lease(self, task_id: str) -> bool:
         """Release ``environment_lease`` only; retain ``dispatch_lease`` (FR-Q33)."""
-        return self._environment_leases.pop(task_id, None) is not None
+        released = self._environment_leases.pop(task_id, None) is not None
+        self._release_router_slot(task_id)
+        return released
+
+    def _release_router_slot(self, task_id: str) -> None:
+        if self.slot_router is None or self.slot_router.is_unknown(task_id):
+            return
+        promoted = self.slot_router.release(task_id)
+        if is_ok(promoted) and promoted.value is not None and promoted.value.lease is not None:
+            self.record_environment_lease(promoted.value.lease)
 
     def find_task(self, task_id: str) -> tuple[TaskGraph, TaskRecord] | None:
         for graph in self._by_graph_id.values():
@@ -240,12 +252,18 @@ class TaskGraphDispatcher:
         *,
         store: TaskGraphStore | None = None,
         environments: ExecutionEnvironmentRegistry | None = None,
+        router: ComputeRouter | None = None,
         default_environment_kind: ExecutionEnvironmentKind | str = ExecutionEnvironmentKind.DOCKER,
     ) -> None:
         self._store = store if store is not None else TaskGraphStore()
         self._environments = (
             environments if environments is not None else ExecutionEnvironmentRegistry()
         )
+        self._router = (
+            router if router is not None else ComputeRouter(environments=self._environments)
+        )
+        if self._store.slot_router is None:
+            self._store.slot_router = self._router
         self._default_kind = (
             default_environment_kind.value
             if isinstance(default_environment_kind, ExecutionEnvironmentKind)
@@ -259,6 +277,10 @@ class TaskGraphDispatcher:
     @property
     def environments(self) -> ExecutionEnvironmentRegistry:
         return self._environments
+
+    @property
+    def router(self) -> ComputeRouter:
+        return self._router
 
     def materialize(
         self,
@@ -324,14 +346,13 @@ class TaskGraphDispatcher:
             )
 
         kind = environment_kind if environment_kind is not None else self._default_kind
-        env_result = self._environments.evaluate_environment_lease(
-            task_id=task.id,
-            kind=kind,
-        )
+        env_result = self._router.place_job(task_id=task.id, kind=kind)
         env_lease: EnvironmentLease | None = None
         env_refusal: NoEnvironment | None = None
+        queued: QueuedPlacement | None = None
         if is_ok(env_result):
-            env_lease = env_result.value
+            env_lease = env_result.value.lease
+            queued = env_result.value.queued
         elif is_refusal(env_result) and NoEnvironment.matches(env_result):
             env_refusal = (
                 env_result
@@ -363,6 +384,7 @@ class TaskGraphDispatcher:
                 environment_lease=env_lease,
                 environment_refusal=env_refusal,
                 task_graph=updated_graph,
+                queued_placement=queued,
             )
         )
 
@@ -435,8 +457,7 @@ class TaskGraphDispatcher:
         if self._store.was_dispatched(task_id):
             return policy_rejection(
                 "task_state",
-                "Task was dispatched; cancel requires terminal JobHandle evidence "
-                "(FR-Q28; AD-12)",
+                "Task was dispatched; cancel requires terminal JobHandle evidence (FR-Q28; AD-12)",
                 task_id=task_id,
             )
         if self._store.job_handle_for(task_id) is not None:
@@ -492,6 +513,7 @@ class TaskGraphDispatcher:
             return validated
 
         new_state = validated.value
+        previous_handle = self._store.job_handle_for(task.id)
         self._store.record_job_handle(evidence)
         updated = task.with_state(new_state)
         # Record abort reason on the Task Ledger when aborted → failed.
@@ -526,6 +548,9 @@ class TaskGraphDispatcher:
             )
 
         retain = evidence.state is JobHandleState.UNKNOWN
+        was_unknown = (
+            previous_handle is not None and previous_handle.state is JobHandleState.UNKNOWN
+        )
         if retain:
             # unknown holds both leases until explicit recorded resolution.
             if self._store.lease_for(task.id) is None:
@@ -535,9 +560,27 @@ class TaskGraphDispatcher:
                     "(FR-Q28; AD-12)",
                     task_id=task.id,
                 )
+            if self._router.lease_for(task.id) is not None:
+                held = self._router.hold_unknown(task.id)
+                if is_refusal(held):
+                    return held
             dispatch_retained = True
             env_retained = self._store.environment_lease_for(task.id) is not None
+        elif was_unknown:
+            if self._router.is_unknown(task.id):
+                resolved_slot = self._router.resolve_unknown(task.id, recorded=True)
+                if is_refusal(resolved_slot):
+                    return resolved_slot
+                self._record_promoted_lease(resolved_slot.value)
+            self._store.release_leases(task.id)
+            dispatch_retained = False
+            env_retained = False
         elif is_task_mission_terminal(new_state):
+            if self._router.lease_for(task.id) is not None:
+                released_slot = self._router.release(task.id)
+                if is_refusal(released_slot):
+                    return released_slot
+                self._record_promoted_lease(released_slot.value)
             self._store.release_leases(task.id)
             dispatch_retained = False
             env_retained = False
@@ -594,6 +637,11 @@ class TaskGraphDispatcher:
         # Temporarily treat as non-terminal current for unique-terminal check:
         # unknown is non-terminal, so validate_terminal_evidence is correct.
         return self.apply_job_handle_evidence(evidence)
+
+    def _record_promoted_lease(self, decision: PlacementDecision | None) -> None:
+        if decision is None or decision.lease is None:
+            return
+        self._store.record_environment_lease(decision.lease)
 
     def mission_state_for(self, mission_id: str) -> Result[TaskMissionState]:
         """Compute Mission state from its Tasks (never from a JobHandle)."""

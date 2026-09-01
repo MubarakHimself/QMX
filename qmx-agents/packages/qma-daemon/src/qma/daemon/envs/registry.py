@@ -29,6 +29,7 @@ from qma.core.ports.execution import (
     ExecutionEnvironment,
     ExecutionEnvironmentDeclaration,
     WorkerImageManifest,
+    resolve_max_in_flight,
 )
 from qma.core.refusals import NoEnvironment, ProhibitedReachability
 from qma.core.vocabulary.enums import EnvironmentLifecycle, ExecutionEnvironmentKind
@@ -121,6 +122,7 @@ def _coerce_declaration(
         ),
         carries_trading_credential=bool(getattr(environment, "carries_trading_credential", False)),
         running_node=bool(getattr(environment, "running_node", False)),
+        max_in_flight=getattr(environment, "max_in_flight", None),
     )
     if not isinstance(parsed, Ok):
         return parsed
@@ -305,6 +307,37 @@ class ExecutionEnvironmentRegistry:
     def kinds(self) -> frozenset[str]:
         return frozenset(self._by_kind)
 
+    def max_in_flight_for(self, kind: ExecutionEnvironmentKind | str) -> Result[int]:
+        """Declared ``registry:environment.max_in_flight`` for a bound kind."""
+        token = _kind_token(kind)
+        stored = self._declarations.get(token)
+        if stored is None:
+            return NoEnvironment.of(kind=token)
+        return resolve_max_in_flight(stored.kind, stored.max_in_flight)
+
+    def replace_declaration(
+        self,
+        declaration: ExecutionEnvironmentDeclaration,
+    ) -> Result[str]:
+        """Replace a bound declaration after capacity/surface validation."""
+        token = declaration.kind.value
+        if token not in self._by_kind:
+            return NoEnvironment.of(kind=token)
+        barrier = validate_execution_environment_declaration(
+            declaration,
+            stage="registration",
+            kind=declaration.kind,
+        )
+        if not isinstance(barrier, Ok):
+            return barrier
+        stored = barrier.value
+        self._declarations[token] = stored
+        if stored.provider_ref:
+            self._provider_ids[token] = stored.provider_ref
+        if stored.profile is not None:
+            self._profiles[token] = stored.profile
+        return Ok(token)
+
     def evaluate_environment_lease(
         self,
         *,
@@ -312,11 +345,10 @@ class ExecutionEnvironmentRegistry:
         kind: ExecutionEnvironmentKind | str,
         host: str | None = None,
     ) -> Result[EnvironmentLease]:
-        """Issue an ``environment_lease`` or refuse at placement.
+        """Eligibility probe: ``NoEnvironment`` or reachability, no occupancy.
 
-        Unbound kinds return ``NoEnvironment``. A reachability hit returns
-        ``ProhibitedReachability`` rather than a hook deny. Does not mint
-        durable placement state — Epic 45 owns slot governance.
+        Slot occupancy, queuing, and unknown-hold are owned by
+        ``ComputeRouter`` (FR-Q49).
         """
         if not task_id:
             return invalid_input("task_id", "environment_lease requires a task_id")
@@ -405,5 +437,9 @@ class ExecutionEnvironmentRegistry:
                 "ordinary_worker": (
                     ordinary.is_docker_per_worker() if ordinary is not None else False
                 ),
+                "max_in_flight": {
+                    kind: declaration.max_in_flight
+                    for kind, declaration in self._declarations.items()
+                },
             }
         )

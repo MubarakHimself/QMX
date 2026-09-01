@@ -24,6 +24,7 @@ from qma.core.ports.execution import (
     WorkerImageManifest,
     is_control_channel_env_name,
     parse_environment_mount,
+    resolve_max_in_flight,
 )
 from qma.core.refusals.variants import ProhibitedReachability
 from qma.core.vocabulary.enums import (
@@ -748,6 +749,9 @@ def validate_declaration_surface(
                 kind=kind_token,
                 matched=matched,
             )
+    capacity = resolve_max_in_flight(declaration.kind, declaration.max_in_flight)
+    if not isinstance(capacity, Ok):
+        return capacity
     return Ok(declaration)
 
 
@@ -759,6 +763,8 @@ def _vocabulary_refusal_reason(exc: VocabularyError) -> str:
         return "invalid_mount"
     if "environment-variable" in message:
         return "invalid_env_var"
+    if "max_in_flight" in message:
+        return "invalid_max_in_flight"
     return "invalid_kind"
 
 
@@ -779,6 +785,7 @@ def parse_declaration(
     image_packages: Sequence[str] = (),
     image_imports: Sequence[str] = (),
     profile: ComputerUseProfile | None = None,
+    max_in_flight: object = None,
     stage: StageName = "registration",
 ) -> Result[ExecutionEnvironmentDeclaration]:
     """Parse then validate a declaration; invented closed values are refusals."""
@@ -821,6 +828,7 @@ def parse_declaration(
             image_packages=image_packages,
             image_imports=image_imports,
             profile=profile,
+            max_in_flight=max_in_flight,
         )
     except VocabularyError as exc:
         reason = _vocabulary_refusal_reason(exc)

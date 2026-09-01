@@ -15,22 +15,31 @@ from qma.core.vocabulary.enums import (
     EnvironmentLifecycle,
     ExecutionEnvironmentKind,
     NetworkPolicy,
+    VariableEditability,
 )
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
+from qmf.core import Ok, Result
+from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 
 __all__ = [
     "CONTROL_CHANNEL_ENV_NAMES",
     "DECLARATION_SURFACE_FIELDS",
+    "ENVIRONMENT_MAX_IN_FLIGHT_DEFAULT",
+    "ENVIRONMENT_MAX_IN_FLIGHT_KEY",
     "MOUNT_MODES",
     "ORDINARY_WORKER_IMAGE",
     "ORDINARY_WORKER_PROVIDER_REF",
+    "PINNED_SINGLE_SLOT_KINDS",
     "ComputerUseProfile",
     "EnvironmentMount",
     "ExecutionEnvironment",
     "ExecutionEnvironmentDeclaration",
     "WorkerImageManifest",
     "is_control_channel_env_name",
+    "is_pinned_single_slot_kind",
+    "max_in_flight_editability",
     "parse_environment_mount",
+    "resolve_max_in_flight",
 ]
 
 
@@ -50,6 +59,16 @@ MOUNT_MODES: Final[frozenset[str]] = frozenset({"ro", "rw"})
 
 ORDINARY_WORKER_PROVIDER_REF: Final[str] = "local-docker"
 ORDINARY_WORKER_IMAGE: Final[str] = "qma-worker:isolated"
+
+# Record-homed AD-26 row; default and pinned-kind ceiling are the registered value.
+ENVIRONMENT_MAX_IN_FLIGHT_KEY: Final[str] = "registry:environment.max_in_flight"
+ENVIRONMENT_MAX_IN_FLIGHT_DEFAULT: Final[int] = 1
+PINNED_SINGLE_SLOT_KINDS: Final[frozenset[ExecutionEnvironmentKind]] = frozenset(
+    {
+        ExecutionEnvironmentKind.REMOTE_HOST,
+        ExecutionEnvironmentKind.DESKTOP,
+    }
+)
 
 # Env-var names that would turn the allowlist into a control channel (AD-17).
 CONTROL_CHANNEL_ENV_NAMES: Final[frozenset[str]] = frozenset(
@@ -76,6 +95,101 @@ class ExecutionEnvironment(Protocol):
 
     Cardinality: singleton, scope key ``kind`` (see ``PORT_CONTRACTS``).
     """
+
+
+def _kind_value(kind: ExecutionEnvironmentKind | str) -> ExecutionEnvironmentKind:
+    if isinstance(kind, ExecutionEnvironmentKind):
+        return kind
+    return parse_closed(ExecutionEnvironmentKind, kind)
+
+
+def is_pinned_single_slot_kind(kind: ExecutionEnvironmentKind | str) -> bool:
+    """True when ``remote_host`` / ``desktop`` pin capacity to one slot (FR-Q49)."""
+    try:
+        return _kind_value(kind) in PINNED_SINGLE_SLOT_KINDS
+    except VocabularyError:
+        return False
+
+
+def max_in_flight_editability(
+    kind: ExecutionEnvironmentKind | str,
+) -> VariableEditability:
+    """Per-kind editability of ``registry:environment.max_in_flight`` (AD-26).
+
+    One variable: ``ui-editable`` for local, docker, remote_container and
+    browser; pinned and ``uneditable`` for remote_host and desktop. No second
+    registry key expresses the pin.
+    """
+    if is_pinned_single_slot_kind(kind):
+        return VariableEditability.UNEDITABLE
+    return VariableEditability.UI_EDITABLE
+
+
+def _max_in_flight_refusal(reason: str, **ctx: object) -> TypedRefusal:
+    context: dict[str, object] = {
+        "field": "max_in_flight",
+        "reason": reason,
+        "registry_key": ENVIRONMENT_MAX_IN_FLIGHT_KEY,
+    }
+    context.update(ctx)
+    return TypedRefusal(
+        category=RefusalCategory.POLICY_REJECTION,
+        retryability=Retryability.NO,
+        context=context,
+    )
+
+
+def resolve_max_in_flight(
+    kind: ExecutionEnvironmentKind | str,
+    declared: object = None,
+) -> Result[int]:
+    """Resolve declaration capacity from ``registry:environment.max_in_flight``.
+
+    Pinned kinds may never exceed the registered single-slot ceiling.
+    """
+    try:
+        resolved_kind = _kind_value(kind)
+    except VocabularyError as exc:
+        return _max_in_flight_refusal("invalid_kind", given=repr(kind), matched=str(exc))
+    if declared is None:
+        value = ENVIRONMENT_MAX_IN_FLIGHT_DEFAULT
+    elif isinstance(declared, bool) or not isinstance(declared, int):
+        return _max_in_flight_refusal(
+            "invalid_max_in_flight",
+            kind=resolved_kind.value,
+            given=repr(declared),
+        )
+    elif declared < ENVIRONMENT_MAX_IN_FLIGHT_DEFAULT:
+        return _max_in_flight_refusal(
+            "invalid_max_in_flight",
+            kind=resolved_kind.value,
+            given=declared,
+        )
+    else:
+        value = declared
+    if resolved_kind in PINNED_SINGLE_SLOT_KINDS and value != ENVIRONMENT_MAX_IN_FLIGHT_DEFAULT:
+        return _max_in_flight_refusal(
+            "max_in_flight_pinned",
+            kind=resolved_kind.value,
+            given=value,
+            pinned=ENVIRONMENT_MAX_IN_FLIGHT_DEFAULT,
+            editability=VariableEditability.UNEDITABLE.value,
+        )
+    return Ok(value)
+
+
+def _parse_max_in_flight(value: object) -> int:
+    if value is None:
+        return ENVIRONMENT_MAX_IN_FLIGHT_DEFAULT
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise VocabularyError(
+            f"{value!r} is not a positive count for {ENVIRONMENT_MAX_IN_FLIGHT_KEY}"
+        )
+    if value < ENVIRONMENT_MAX_IN_FLIGHT_DEFAULT:
+        raise VocabularyError(
+            f"{value!r} is not a positive count for {ENVIRONMENT_MAX_IN_FLIGHT_KEY}"
+        )
+    return value
 
 
 def _tuple_of_str(values: Sequence[str] | tuple[str, ...] | None) -> tuple[str, ...]:
@@ -218,7 +332,9 @@ class ExecutionEnvironmentDeclaration:
     and ``desktop`` is ``host`` or ``provider_ref``. Lifecycle is ``ephemeral``
     or ``persistent``; docker-per-worker ephemeral is the ordinary default.
     The environment-variable allowlist is declarative names, never a control
-    channel.
+    channel. Slot capacity is the record-homed
+    ``registry:environment.max_in_flight`` value (default 1); ``remote_host``
+    and ``desktop`` pin that one variable to 1 as ``uneditable``.
     """
 
     kind: ExecutionEnvironmentKind
@@ -236,6 +352,7 @@ class ExecutionEnvironmentDeclaration:
     image_packages: tuple[str, ...] = ()
     image_imports: tuple[str, ...] = ()
     profile: ComputerUseProfile | None = None
+    max_in_flight: int = ENVIRONMENT_MAX_IN_FLIGHT_DEFAULT
 
     @classmethod
     def isolated(
@@ -292,6 +409,7 @@ class ExecutionEnvironmentDeclaration:
         image_packages: Sequence[str] = (),
         image_imports: Sequence[str] = (),
         profile: ComputerUseProfile | None = None,
+        max_in_flight: object = None,
     ) -> ExecutionEnvironmentDeclaration:
         """Parse closed kind/network/lifecycle; invented values fail as ``VocabularyError``."""
         if isinstance(kind, ExecutionEnvironmentKind):
@@ -327,6 +445,7 @@ class ExecutionEnvironmentDeclaration:
             image_packages=_tuple_of_str(image_packages),
             image_imports=_tuple_of_str(image_imports),
             profile=profile,
+            max_in_flight=_parse_max_in_flight(max_in_flight),
         )
 
     def image_manifest(self) -> WorkerImageManifest:
@@ -372,4 +491,13 @@ class ExecutionEnvironmentDeclaration:
             "capabilities": self.capabilities,
             "network": self.network.value,
             "lifecycle": self.lifecycle.value,
+        }
+
+    def capacity(self) -> Mapping[str, object]:
+        """Record-homed ``registry:environment.max_in_flight`` view (FR-Q49)."""
+        return {
+            "max_in_flight": self.max_in_flight,
+            "registry_key": ENVIRONMENT_MAX_IN_FLIGHT_KEY,
+            "editability": max_in_flight_editability(self.kind).value,
+            "pinned_single_slot": is_pinned_single_slot_kind(self.kind),
         }
