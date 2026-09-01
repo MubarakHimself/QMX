@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://qmx.local/qma-wire/schemas/initialize.v1.schema.json",
   "title": "QMA wire initialize handshake (CT-40)",
-  "description": "MCP-style initialize params over JSON-RPC 2.0. Negotiates semver protocolVersion and capabilities; producer_id is assigned in the result.",
+  "description": "MCP-style initialize params over JSON-RPC 2.0. Negotiates semver protocolVersion and capabilities; producer_id is assigned in the result. credential_ref is the broker reference only — never a resolved secret (FR-Q17).",
   "type": "object",
   "additionalProperties": false,
   "required": ["protocolVersion"],
@@ -17,6 +17,18 @@
       "type": "string",
       "minLength": 1,
       "description": "Optional client-hint producer_id; server assigns the stable value in the result"
+    },
+    "credential_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Credential-Broker reference that authenticated the connection before protocol bytes; never a secret value"
     }
-  }
+  },
+  "examples": [
+    {
+      "protocolVersion": "1.0.0",
+      "capabilities": { "commands": true },
+      "credential_ref": "cred://models/openai"
+    }
+  ]
 }

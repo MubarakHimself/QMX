@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Final, cast
 
+from qma.wire.auth import authenticate_before_protocol
 from qma.wire.vocabulary import MessageFamily, family_of, parse_wire_type
 from qmf.core.refusal import (
     Ok,
@@ -231,9 +232,15 @@ def negotiate_initialize(
 
 @dataclass(slots=True)
 class WireConnection:
-    """Per-connection handshake state. Family messages require completed initialize."""
+    """Per-connection handshake state. Family messages require completed initialize.
+
+    Authentication by credential reference must complete before protocol bytes
+    (initialize and family messages). The connection stores only the reference.
+    """
 
     _initialized: bool = False
+    _authenticated: bool = False
+    _credential_ref: str | None = None
     _producer_id: str | None = None
     _protocol_version: str | None = None
     _capabilities: Mapping[str, object] = field(default_factory=_empty_caps)
@@ -241,6 +248,14 @@ class WireConnection:
     @property
     def initialized(self) -> bool:
         return self._initialized
+
+    @property
+    def authenticated(self) -> bool:
+        return self._authenticated
+
+    @property
+    def credential_ref(self) -> str | None:
+        return self._credential_ref
 
     @property
     def producer_id(self) -> str | None:
@@ -254,8 +269,22 @@ class WireConnection:
     def capabilities(self) -> Mapping[str, object]:
         return self._capabilities
 
+    def authenticate(self, credential_ref: object) -> Result[str]:
+        """Authenticate before protocol bytes; store only the credential reference."""
+        session = authenticate_before_protocol(credential_ref)
+        if not isinstance(session, Ok):
+            return session
+        self._authenticated = True
+        self._credential_ref = str(session.value.credential_ref)
+        return Ok(self._credential_ref)
+
     def begin_initialize(self, request: Mapping[str, object]) -> Result[JsonRpcRequest]:
         """Parse a JSON-RPC initialize request; refuse non-initialize methods pre-gate."""
+        if not self._authenticated:
+            return _policy(
+                "authentication",
+                "a Credential-Broker-resolved credential must authenticate before protocol bytes",
+            )
         if request.get("jsonrpc") != JSONRPC_VERSION:
             return _invalid("jsonrpc", "JSON-RPC version must be 2.0")
         method = request.get("method")
@@ -296,6 +325,11 @@ class WireConnection:
         request_id: str | int = 1,
     ) -> Result[JsonRpcResponse]:
         """Finish the handshake and unlock family messages on this connection."""
+        if not self._authenticated:
+            return _policy(
+                "authentication",
+                "a Credential-Broker-resolved credential must authenticate before protocol bytes",
+            )
         negotiated = negotiate_initialize(
             params,
             server_capabilities=server_capabilities,

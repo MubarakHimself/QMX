@@ -2,10 +2,12 @@
 
 Envelope, command/query/event families, protocol version, initialize handshake,
 compatibility law, scoped attach/detach replay, command idempotency on
-``producer_id``+``id``, correlation provenance, and the closed-and-addable
-``host_request`` verb set. Owns no client implementation and no alternate
-cross-boundary contract (DEC-0304; AR-Q04). SemVer is display-only provenance
-in lockstep with the QMF workspace (AR-Q11).
+``producer_id``+``id``, correlation provenance, the closed-and-addable
+``host_request`` verb set, listener bind posture, pre-protocol credential-ref
+authentication, dial-out reachability, and the durable remote outbox spool.
+Owns no client implementation and no alternate cross-boundary contract
+(DEC-0304; AR-Q04). SemVer is display-only provenance in lockstep with the QMF
+workspace (AR-Q11).
 """
 
 from __future__ import annotations
@@ -22,6 +24,12 @@ from qma.wire.attach import (
     format_scope_key,
     mint_replay_cursor,
     validate_attach,
+)
+from qma.wire.auth import (
+    FORBIDDEN_SECRET_SURFACE_KEYS,
+    AuthenticatedWireSession,
+    assert_no_secret_on_wire_surface,
+    authenticate_before_protocol,
 )
 from qma.wire.compatibility import (
     COMPATIBILITY_AUTHORITY,
@@ -95,6 +103,30 @@ from qma.wire.initialize import (
     WireConnection,
     negotiate_initialize,
 )
+from qma.wire.listener import (
+    DEFAULT_BIND_HOST,
+    ListenerBindConfig,
+    ListenerPosture,
+    is_loopback_host,
+    validate_listener_startup,
+)
+from qma.wire.outbox import (
+    REMOTE_OUTBOX_DEPTH_REGISTRY_KEY,
+    REMOTE_SPOOL_BYTES_REGISTRY_KEY,
+    UNKNOWN_TAIL_KIND,
+    OutboxBounds,
+    OutboxEntry,
+    RemoteOutbox,
+    UnknownTailRecord,
+)
+from qma.wire.reachability import (
+    DAEMON_DIAL_DIRECTION,
+    REMOTE_DIAL_DIRECTION,
+    DeployedSideConfig,
+    ReachabilityPosture,
+    validate_deployed_side,
+    validate_remote_dial_out,
+)
 from qma.wire.schemas import (
     SCHEMA_DIR,
     SCHEMA_FILES,
@@ -128,16 +160,22 @@ __all__ = [
     "COMPATIBILITY_AUTHORITY",
     "CORRELATION_MINT_ORIGINS",
     "CORRELATION_MISSING_ANNOTATION",
+    "DAEMON_DIAL_DIRECTION",
     "DEDUP_WINDOW_REGISTRY_KEY",
+    "DEFAULT_BIND_HOST",
     "DEPRECATION_MINORS_DEFAULT",
     "DEPRECATION_MINORS_REGISTRY_KEY",
     "DETACH_METHOD",
     "FAMILY_CONTRACTS",
+    "FORBIDDEN_SECRET_SURFACE_KEYS",
     "HOST_REQUEST_OWNING_AD",
     "HOST_REQUEST_VERBS",
     "HOST_REQUEST_VOCABULARY_OWNER",
     "JOURNAL_SEQ_FIELD",
     "JSONRPC_VERSION",
+    "REMOTE_DIAL_DIRECTION",
+    "REMOTE_OUTBOX_DEPTH_REGISTRY_KEY",
+    "REMOTE_SPOOL_BYTES_REGISTRY_KEY",
     "SCHEMA_DIR",
     "SCHEMA_FILES",
     "SCOPE_KIND_ORDER",
@@ -146,6 +184,7 @@ __all__ = [
     "SEED_QUERY_COUNT",
     "SEED_VOCABULARY_COUNT",
     "SUPPORTED_PROTOCOL_VERSIONS",
+    "UNKNOWN_TAIL_KIND",
     "WIRE_COMMANDS",
     "WIRE_EVENTS",
     "WIRE_PROTOCOL_VERSION",
@@ -154,6 +193,7 @@ __all__ = [
     "AttachError",
     "AttachRequest",
     "AttachSubscription",
+    "AuthenticatedWireSession",
     "ClientAttachmentState",
     "CommandDedupCursor",
     "CompatibilityError",
@@ -161,6 +201,7 @@ __all__ = [
     "CorrelationAdmission",
     "CorrelationMintOrigin",
     "DedupVerdict",
+    "DeployedSideConfig",
     "DetachRequest",
     "FamilyContract",
     "FamilyFormatDeclaration",
@@ -171,13 +212,20 @@ __all__ = [
     "InitializeResult",
     "JsonRpcRequest",
     "JsonRpcResponse",
+    "ListenerBindConfig",
+    "ListenerPosture",
     "MessageFamily",
+    "OutboxBounds",
+    "OutboxEntry",
     "ProtocolVersion",
+    "ReachabilityPosture",
+    "RemoteOutbox",
     "ReplayCursor",
     "SchemaEvolutionProposal",
     "SchemaValidationError",
     "ScopePathError",
     "ScopeSegment",
+    "UnknownTailRecord",
     "WireCommand",
     "WireConnection",
     "WireEnvelope",
@@ -189,7 +237,9 @@ __all__ = [
     "admit_correlation",
     "assert_client_close_safe",
     "assert_copied_verbatim",
+    "assert_no_secret_on_wire_surface",
     "assert_sole_compatibility_authority",
+    "authenticate_before_protocol",
     "contract_for",
     "contract_for_type",
     "copy_correlation_id",
@@ -201,6 +251,7 @@ __all__ = [
     "idempotency_key_from_envelope",
     "ignore_unknown_fields",
     "ignore_unknown_types",
+    "is_loopback_host",
     "is_scope_prefix",
     "load_schema",
     "mint_correlation_id",
@@ -214,8 +265,11 @@ __all__ = [
     "propagate_correlation",
     "snapshots_are_authoritative",
     "validate_attach",
+    "validate_deployed_side",
     "validate_family_payload",
     "validate_instance",
+    "validate_listener_startup",
+    "validate_remote_dial_out",
     "validate_wire_envelope_dict",
 ]
 
