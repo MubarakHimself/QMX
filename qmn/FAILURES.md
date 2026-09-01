@@ -111,7 +111,7 @@ designed failure; every typed refusal the node can emit belongs here.
   check mode skips this gate.
 - **Visible degraded state:** node cannot trade; stand-down-alive after doors
   bind; unsynchronized intervals recorded as explicit no-entry data-gaps.
-- **Notification tier:** silent-degradation (clock / sync).
+- **Notification tier:** silent-degradation
 - **Product-user affordance:** The VPS clock is not synchronized. Fix chrony
   sources, confirm `chronyc waitsync`, then resurrect after a clean preflight.
 
@@ -136,7 +136,7 @@ designed failure; every typed refusal the node can emit belongs here.
   only (L39); exits and protection remain enactable.
 - **Visible degraded state:** `place_order` and risk-increasing amends refused
   for the cycle; protection/exits preserved.
-- **Notification tier:** silent-degradation (does not switch off at go-live).
+- **Notification tier:** silent-degradation
 - **Product-user affordance:** The node stopped accepting new entries because
   clock drift crossed the no-new-entry band. Open positions stay protected;
   restore chrony sync and wait for the next ok/warn cycle.
@@ -150,7 +150,7 @@ designed failure; every typed refusal the node can emit belongs here.
   stand-down-alive (`StandDownTrigger.CLOCK_HALT`).
 - **Visible degraded state:** stand-down-alive; entries refused; exits and
   protection preserved; doors keep serving.
-- **Notification tier:** silent-degradation + stand-down alarm.
+- **Notification tier:** silent-degradation; protection-escalation
 - **Product-user affordance:** Clock discipline halted the node. Fix time sync,
   then resurrect from the operator principal over the powers channel.
 
@@ -163,6 +163,70 @@ designed failure; every typed refusal the node can emit belongs here.
   legal with the node stopped; the window is an explicit no-entry data-gap.
 - **Visible degraded state:** suspect window journaled; no-entry until cleared
   by a stopped-node step and fresh sync.
-- **Notification tier:** silent-degradation.
+- **Notification tier:** silent-degradation
 - **Product-user affordance:** The host clock stepped or paused. Stop the node
   before any clock step, record the gap, resync, then restart.
+
+### FR-13: Money-boundary sweep
+
+- **Failure class:** money boundary
+- **Detection:** a treasury `sweep` act is journaled on the money-boundary
+  stream (`money.boundary.sweep`).
+- **Auto-recovery / retry:** none — money-boundary acts are operator-signed and
+  never auto-retry.
+- **Visible degraded state:** n/a — the act itself is the event; trading posture
+  is unchanged by the notification.
+- **Notification tier:** money-boundary
+- **Product-user affordance:** A capital sweep completed. Confirm the journaled
+  amount against the destination account; no trading control is implied.
+
+### FR-14: Money-boundary re-seed
+
+- **Failure class:** money boundary
+- **Detection:** a treasury `re_seed` act is journaled on the money-boundary
+  stream (`money.boundary.re_seed`).
+- **Auto-recovery / retry:** none — operator-signed; never auto-retry.
+- **Visible degraded state:** n/a — notification only; ledger already records
+  the re-seed.
+- **Notification tier:** money-boundary
+- **Product-user affordance:** A capital re-seed completed. Confirm the
+  journaled amount; the notification authorizes nothing further.
+
+### FR-15: Money-boundary refund (dormant V1)
+
+- **Failure class:** money boundary
+- **Detection:** a treasury `refund` act would journal on the money-boundary
+  stream (`money.boundary.refund`); the act is dormant in V1 and cannot fire.
+- **Auto-recovery / retry:** n/a — dormant; no automatic path exists.
+- **Visible degraded state:** n/a — dormant.
+- **Notification tier:** money-boundary
+- **Product-user affordance:** Refund is reserved and dormant in V1. No refund
+  alert can fire until a later story activates the act.
+
+### FR-16: Kill-switch / KSA escalation
+
+- **Failure class:** protection escalation
+- **Detection:** KSA level escalates or the global kill-switch engages
+  (`protection.ksa.escalation` / `protection.kill_switch`).
+- **Auto-recovery / retry:** none — only an operator `de_escalate` /
+  `resurrect` path leaves the escalated state.
+- **Visible degraded state:** entry-side (and severity-policy) effects per the
+  KSA matrix; exits and standing protection continue per L39.
+- **Notification tier:** protection-escalation
+- **Product-user affordance:** Protection escalated. Review the KSA level and
+  journal; de-escalate or resurrect only from the operator principal.
+
+### FR-17: Supervision fail-closed / node stand-down
+
+- **Failure class:** protection escalation
+- **Detection:** supervisor enters stand-down-alive for crash-loop, preflight
+  refusal, or other fail-closed trigger (`supervision.fail_closed` /
+  `lifecycle.stand_down`).
+- **Auto-recovery / retry:** none — restart alone never clears stand-down;
+  only operator `resurrect`.
+- **Visible degraded state:** stand-down-alive; doors keep serving; entries
+  refused; exits and protection preserved.
+- **Notification tier:** protection-escalation
+- **Product-user affordance:** The node stood down fail-closed. Inspect the
+  stand-down trigger, fix the cause, then resurrect from the operator
+  principal.
