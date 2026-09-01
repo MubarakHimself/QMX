@@ -55,9 +55,17 @@ class Desk:
 
 @dataclass(frozen=True, slots=True)
 class Role:
-    """Declarative, stateless behavioral contract (close to a system prompt)."""
+    """Declarative, stateless behavioral contract (close to a system prompt).
+
+    A per-Role permission policy is part of the Role contract and is the
+    permission ceiling for Agents of this Role (FR-Q44; AD-24).
+    """
 
     name: RoleName
+    permission_policy: frozenset[str] = frozenset()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "permission_policy", frozenset(self.permission_policy))
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,11 +88,28 @@ class Quant:
 
 @dataclass(frozen=True, slots=True)
 class Agent:
-    """Running reasoning or execution instance under a Session."""
+    """Running reasoning or execution instance under a Session.
+
+    ``effective_tool_ids`` and ``effective_permissions`` are the spawn-time
+    snapshots — recorded verbatim and never recomputed for a running Agent
+    (FR-Q43; AD-16).
+    """
 
     id: str
     owner: ActorId
     session_id: str
+    effective_tool_ids: frozenset[str] = frozenset()
+    effective_permissions: frozenset[str] = frozenset()
+    capabilities_frozen: bool = True
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "effective_tool_ids", frozenset(self.effective_tool_ids))
+        object.__setattr__(
+            self,
+            "effective_permissions",
+            frozenset(self.effective_permissions),
+        )
+        object.__setattr__(self, "capabilities_frozen", True)
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,6 +120,18 @@ class Subagent:
     parent_agent_id: str
     owner: ActorId
     session_id: str
+    effective_tool_ids: frozenset[str] = frozenset()
+    effective_permissions: frozenset[str] = frozenset()
+    capabilities_frozen: bool = True
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "effective_tool_ids", frozenset(self.effective_tool_ids))
+        object.__setattr__(
+            self,
+            "effective_permissions",
+            frozenset(self.effective_permissions),
+        )
+        object.__setattr__(self, "capabilities_frozen", True)
 
 
 @dataclass(frozen=True, slots=True)

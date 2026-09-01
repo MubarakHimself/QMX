@@ -7,6 +7,16 @@ singleton declares an explicit scope key.
 
 from __future__ import annotations
 
+from qma.core.ports.capabilities import (
+    CAPABILITY_NARROWING_ORDER,
+    EffectiveCapabilitySet,
+    RoleBase,
+    RoleOverlay,
+    assert_skill_is_not_capability_grant,
+    compute_effective_capabilities,
+    validate_overlay_against_base,
+    validate_proposed_grant_against_ceiling,
+)
 from qma.core.ports.cardinality import (
     CONTEXT_COMPILER_SCOPE_KEY,
     MULTI_CONTRIBUTION_POINTS,
@@ -49,6 +59,18 @@ from qma.core.ports.model import (
     select_reviewer,
     unmet_constraint_for,
 )
+from qma.core.ports.permissions import (
+    AGENT_PATH_ENFORCEMENT_EVENTS,
+    PermissionMode,
+    PermissionPolicy,
+    assert_agent_path_enforcement_event,
+    check_plugin_permissions_at_load,
+    compute_effective_permissions,
+    deny_binds_under_mode,
+    is_agent_path_enforcement_event,
+    narrow_permissions,
+    resolve_enforcement_decision,
+)
 from qma.core.ports.tools import (
     LEAF_BLOCKED_TOOL_TAGS,
     TOOL_ADAPTER_WRITE_COMMAND,
@@ -79,7 +101,9 @@ RUNTIME_PORT_TYPES: tuple[type, ...] = (
 )
 
 __all__ = [
+    "AGENT_PATH_ENFORCEMENT_EVENTS",
     "AUTH_MODE_NONE",
+    "CAPABILITY_NARROWING_ORDER",
     "CONTEXT_COMPILER_SCOPE_KEY",
     "LEAF_BLOCKED_TOOL_TAGS",
     "LOCAL_PROXY_ADAPTERS",
@@ -98,6 +122,7 @@ __all__ = [
     "ComputeProvider",
     "ContextCompiler",
     "DeploymentRecord",
+    "EffectiveCapabilitySet",
     "ExecutionEnvironment",
     "KnowledgeSource",
     "MemoryProvider",
@@ -105,9 +130,13 @@ __all__ = [
     "ModelClassRequest",
     "ModelDeployment",
     "NeedsFlags",
+    "PermissionMode",
+    "PermissionPolicy",
     "PortContract",
     "PortError",
     "ReviewPolicy",
+    "RoleBase",
+    "RoleOverlay",
     "RoutingDecision",
     "ToolAdapter",
     "ToolAdapterBinding",
@@ -115,15 +144,24 @@ __all__ = [
     "ToolKind",
     "ToolRecord",
     "ToolsetRecord",
+    "assert_agent_path_enforcement_event",
+    "assert_skill_is_not_capability_grant",
     "assign_model_family",
     "capabilities_for",
+    "check_plugin_permissions_at_load",
+    "compute_effective_capabilities",
+    "compute_effective_permissions",
     "default_rung_for_kind",
+    "deny_binds_under_mode",
     "eligible_pool",
     "has_qma_wire_schema",
+    "is_agent_path_enforcement_event",
     "is_local_proxy_deployment",
+    "narrow_permissions",
     "narrow_toolset_ids",
     "qualified_contribution_id",
     "require_singleton_scope_key",
+    "resolve_enforcement_decision",
     "resolve_model_request",
     "select_from_eligible",
     "select_lowest_capable",
@@ -133,5 +171,7 @@ __all__ = [
     "unmet_constraint_for",
     "validate_contribution_point",
     "validate_multi_contribution_key",
+    "validate_overlay_against_base",
+    "validate_proposed_grant_against_ceiling",
     "write_tool_adapter_binding",
 ]

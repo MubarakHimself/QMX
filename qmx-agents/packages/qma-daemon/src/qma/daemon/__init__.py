@@ -12,6 +12,12 @@ SemVer is display-only provenance in lockstep with the QMF workspace (AR-Q11).
 
 from __future__ import annotations
 
+from qma.daemon.capabilities import (
+    AGENT_PATH_ENFORCEMENT_EVENTS,
+    AgentCapabilityStore,
+    PermissionPolicyEnforcer,
+    spawn_agent,
+)
 from qma.daemon.hooks import (
     AGENT_REACHABLE_WRITE_VERBS,
     BYPASS_WRITE_PATHS,
@@ -41,8 +47,10 @@ from qma.daemon.taskgraph import (
 )
 
 __all__ = [
+    "AGENT_PATH_ENFORCEMENT_EVENTS",
     "AGENT_REACHABLE_WRITE_VERBS",
     "BYPASS_WRITE_PATHS",
+    "AgentCapabilityStore",
     "AuthoritativeJournal",
     "CompileRequest",
     "DaemonClock",
@@ -53,6 +61,7 @@ __all__ = [
     "GovernedVariableRegistry",
     "HookRegistry",
     "MissionCompiler",
+    "PermissionPolicyEnforcer",
     "PersistenceStartupEvidence",
     "PersistenceSubstrate",
     "ProposalGate",
@@ -61,6 +70,7 @@ __all__ = [
     "TaskGraphDispatcher",
     "__version__",
     "order_by_announcement_journal_seq",
+    "spawn_agent",
 ]
 
 # Display-only provenance — never identity content (AR-Q11; DEC-0335).

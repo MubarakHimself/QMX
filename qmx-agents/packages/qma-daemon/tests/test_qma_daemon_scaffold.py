@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import qma.daemon
 import qma.daemon.bus
+import qma.daemon.capabilities
 import qma.daemon.context
 import qma.daemon.envs
 import qma.daemon.hooks
@@ -33,6 +34,7 @@ def test_structural_modules_importable() -> None:
         qma.daemon.taskgraph,
         qma.daemon.ledgers,
         qma.daemon.hooks,
+        qma.daemon.capabilities,
         qma.daemon.bus,
         qma.daemon.scheduler,
         qma.daemon.staging,
