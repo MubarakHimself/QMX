@@ -106,6 +106,27 @@ Preserved from the factory stamp; the merge gate runs `ruff check .`,
 |---|---|---|---|
 | uv_build | `>=0.12,<0.13` | Apache-2.0 OR MIT | Per-package build backend; produces the `qmf.*` PEP 420 namespace wheels with no `qmf/__init__.py`. |
 
+## External tools (not Python dependencies)
+
+Pinned tools and container images the VPS / ops toolkit invoke. They never
+enter a `pyproject.toml` dependency list. Observability images run as
+**process-isolated containers** under `qmn/deploy/observability/` only — the
+sole VPS surface allowed to use containers — and are never linked into `qmn`
+(DEC-0200, DEC-0212, AR-83). Grafana/Loki/Promtail are AGPL; that licence
+binds those container processes alone. The operator named Prometheus and
+Grafana (DEC-0212); floating tags are forbidden.
+
+| Name | Version | Licence | Used by | Why |
+|---|---|---|---|---|
+| just | `v1.58.0` | CC0-1.0 | ops toolkit | `just node-…` recipe runner (Story 25.12; DEC-0201). |
+| docker-ce (engine) | `28.3.3` | Apache-2.0 | observability stack only | Container runtime for `qmx-observability.service`; node stays uncontainerised (Story 25.17; DEC-0201). |
+| docker compose plugin | `2.39.2` | Apache-2.0 | observability stack only | Runs the checked-in `compose.yml` under `qmn/deploy/observability/` (Story 25.17). |
+| rclone | `v1.75.0` | MIT | backup unit | Off-machine CT-14 transfer (DEC-0198). |
+| prom/prometheus | `v3.5.5` | Apache-2.0 | observability compose | Scrapes loopback `/metrics`; LTS pin (Story 25.17; DEC-0200). |
+| grafana/grafana | `13.1.4` | AGPL-3.0-only | observability compose | Operator-named dashboard UI; process-isolated container (Story 25.17; DEC-0212). |
+| grafana/loki | `3.7.7` | AGPL-3.0-only | observability compose | Operator-log store under `/var/lib/qmx-observability` (Story 25.17; DEC-0200). |
+| grafana/promtail | `3.6.11` | AGPL-3.0-only | observability compose | Reads `LogNamespace=qmn` only — never the system journal (Story 25.17; DEC-0200). |
+
 ## Permitted but not yet added
 
 Recorded so their licences and homes are pre-cleared; add the row's version and

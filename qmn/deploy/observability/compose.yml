@@ -1,0 +1,91 @@
+# Zero-authority observability stack (TN-15 / DEC-0200 / DEC-0212 / AR-83).
+# Containers permitted HERE ONLY. The trading node is a plain systemd service
+# and must run and pass with this stack stopped. network_mode: host with every
+# listen address bound to 127.0.0.1 — no public inbound authority path.
+#
+# Image tags are pinned (never floating). Pins are registered in DEPENDENCIES.md.
+
+name: qmx-observability
+
+x-pinned-images:
+  # Mirrors CONTAINER_IMAGES in stack.py — keep in lockstep.
+  prometheus: &img_prometheus prom/prometheus:v3.5.5
+  grafana: &img_grafana grafana/grafana:13.1.4
+  loki: &img_loki grafana/loki:3.7.7
+  promtail: &img_promtail grafana/promtail:3.6.11
+
+services:
+  prometheus:
+    image: *img_prometheus
+    network_mode: host
+    user: "65534:65534"
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/var/lib/qmx-observability/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --web.listen-address=127.0.0.1:9090
+      - --web.enable-lifecycle
+      - --web.external-url=http://127.0.0.1:9090
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - /var/lib/qmx-observability/prometheus:/var/lib/qmx-observability/prometheus
+    environment:
+      TZ: UTC
+    # Scrapes 127.0.0.1:8787/metrics (evidence channel) only — never acts.
+
+  loki:
+    image: *img_loki
+    network_mode: host
+    user: "10001:10001"
+    restart: unless-stopped
+    command:
+      - -config.file=/etc/loki/loki.yml
+    volumes:
+      - ./loki/loki.yml:/etc/loki/loki.yml:ro
+      - /var/lib/qmx-observability/loki:/var/lib/qmx-observability/loki
+    environment:
+      TZ: UTC
+
+  promtail:
+    image: *img_promtail
+    network_mode: host
+    restart: unless-stopped
+    command:
+      - -config.file=/etc/promtail/promtail.yml
+    volumes:
+      - ./promtail/promtail.yml:/etc/promtail/promtail.yml:ro
+      - /var/lib/qmx-observability/promtail:/var/lib/qmx-observability/promtail
+      # Read-only journal namespace for LogNamespace=qmn (never the system journal).
+      - /var/log/journal:/var/log/journal:ro
+      - /run/log/journal:/run/log/journal:ro
+      - /etc/machine-id:/etc/machine-id:ro
+    environment:
+      TZ: UTC
+      JOURNAL_NAMESPACE: qmn
+    # Holds no node credential; log-shipper-token is stack-local if ever used.
+
+  grafana:
+    image: *img_grafana
+    network_mode: host
+    user: "472:472"
+    restart: unless-stopped
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - /var/lib/qmx-observability/grafana:/var/lib/grafana
+      # Fourth secret holder — Grafana admin only; nothing the node holds.
+      - /run/credentials/qmx-observability.service:/run/credentials/qmx-observability.service:ro
+    environment:
+      TZ: UTC
+      GF_SERVER_HTTP_ADDR: 127.0.0.1
+      GF_SERVER_HTTP_PORT: "3000"
+      GF_SERVER_ROOT_URL: http://127.0.0.1:3000
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/credentials/qmx-observability.service/grafana-admin
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"

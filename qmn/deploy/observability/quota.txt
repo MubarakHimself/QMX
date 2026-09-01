@@ -1,0 +1,16 @@
+# Filesystem quota declaration for the observability stack (DEC-0200 / DEC-0256).
+#
+# path:    /var/lib/qmx-observability
+# owner:   qmxobs:qmxobs
+# unit:    qmx-observability.service
+# account: qmxobs (distinct non-qmx service account)
+#
+# /var/lib/qmx-observability is a named line item of registry:vps_disk_budget
+# and carries its OWN filesystem quota so the stack can never consume the
+# headroom registry:disk_headroom_min protects. The numeric quota is an
+# evidence value recorded at soak / provisioning — never a ratified constant
+# and never invented here (L38 / DEC-0111).
+#
+# node-install creates the tree, applies ownership, and sets the quota from
+# the resolved config artifact. This file is the checked-in declaration the
+# IaC scan and Story 25.17 acceptance gate look for.

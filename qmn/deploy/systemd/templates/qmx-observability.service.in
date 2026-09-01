@@ -34,6 +34,9 @@ LoadCredentialEncrypted=grafana-admin
 LoadCredentialEncrypted=log-shipper-token
 
 Environment=TZ=UTC
+# CREDENTIALS_DIRECTORY is set by systemd for LoadCredentialEncrypted.
+# Compose mounts /run/credentials/qmx-observability.service read-only.
+Environment=JOURNAL_NAMESPACE=qmn
 
 [Install]
 WantedBy=multi-user.target

@@ -63,6 +63,9 @@ def _load_sibling(module_name: str, path: Path) -> ModuleType:
 _boundary = _load_sibling("qmn_deploy_boundary", _DEPLOY_ROOT / "boundary.py")
 _network = _load_sibling("qmn_deploy_network", _DEPLOY_ROOT / "network.py")
 _units = _load_sibling("qmn_deploy_units", _DEPLOY_ROOT / "systemd" / "units.py")
+_obs = _load_sibling(
+    "qmn_deploy_obs_stack", _DEPLOY_ROOT / "observability" / "stack.py"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -297,19 +300,61 @@ def build_install_plan(
         InstallStep(
             kind="journald",
             target="SystemMaxUse",
-            detail="journald limits + observability read-only journal namespace",
+            detail=(
+                "journald limits + read-only LogNamespace="
+                f"{_obs.JOURNAL_NAMESPACE} for qmxobs"
+            ),
             check_mode_only=check_only,
         )
     )
+    runtime = _obs.CONTAINER_RUNTIME_PIN
+    steps.append(
+        InstallStep(
+            kind="bootstrap",
+            target="container-runtime",
+            detail=(
+                f"pin {runtime['engine']}=={runtime['engine_version']} "
+                f"+ compose plugin=={runtime['compose_plugin_version']} "
+                "(observability stack only)"
+            ),
+            check_mode_only=check_only,
+        )
+    )
+    steps.append(
+        InstallStep(
+            kind="compose",
+            target=str((root / "observability" / _obs.COMPOSE_FILE_NAME).as_posix()),
+            detail=(
+                "checked-in observability compose with pinned images; "
+                "loopback listeners; zero node authority"
+            ),
+            check_mode_only=check_only,
+        )
+    )
+    steps.append(
+        InstallStep(
+            kind="quota",
+            target=VAR_LIB_QMX_OBS,
+            detail=(
+                "filesystem quota on observability storage for "
+                f"{_units.OBSERVABILITY_SERVICE_ACCOUNT}"
+            ),
+            check_mode_only=check_only,
+        )
+    )
+
+    obs_inspection = _obs.inspect_stack_tree(root / "observability")
+    obs_findings = obs_inspection.findings
 
     notes = (
         "DevOps only — never a trading control",
         f"principal={_boundary.OPS_PRINCIPAL_NAME}",
         "check mode plans only; apply requires ops-principal sudo on the VPS",
         "do not SSH to Contabo from CI or developer workstations for this story",
+        "observability stack is optional to node operation (DEC-0212)",
     )
 
-    ok = not unit_findings and not network_findings
+    ok = not unit_findings and not network_findings and not obs_findings
     rendered_names = frozenset(rendered)
     expected_node = {
         "qmn.service",
@@ -329,6 +374,10 @@ def build_install_plan(
         ok = False
         unit_findings = unit_findings + tuple(
             f"missing template render: {m}" for m in sorted(missing)
+        )
+    if obs_findings:
+        unit_findings = unit_findings + tuple(
+            f"observability: {finding}" for finding in obs_findings
         )
 
     return InstallPlan(

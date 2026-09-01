@@ -52,10 +52,15 @@ LoadCredentialEncrypted=venue-refresh-token
 LoadCredentialEncrypted=venue-ctid-accounts
 LoadCredentialEncrypted=notification-token
 
+# Dedicated operator-log journal namespace read by the observability stack
+# (Promtail) — never the system journal (DEC-0200 / DEC-0212).
+LogNamespace=qmn
+
 Environment=TZ=UTC
 Environment=QMX_ROOT=/opt/qmx/current
 Environment=QMX_STATE=/var/lib/qmx
 Environment=QMN_POWERS_SOCKET=/run/qmn/powers.sock
+Environment=QMN_EVIDENCE_BIND=127.0.0.1:8787
 
 [Install]
 WantedBy=multi-user.target

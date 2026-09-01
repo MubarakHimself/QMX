@@ -1,0 +1,83 @@
+{
+  "annotations": { "list": [] },
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Backup age / last drill outcome",
+      "id": 1,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        { "expr": "qmn_backup_age_seconds", "legendFormat": "backup_age", "refId": "A" },
+        { "expr": "qmn_backup_last_drill_outcome", "legendFormat": "last_drill", "refId": "B" },
+        { "expr": "qmn_backup_measured_rto_seconds", "legendFormat": "measured_rto", "refId": "C" }
+      ],
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Reconciliation verdict age / residuals",
+      "id": 2,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        { "expr": "qmn_reconcile_age_seconds", "legendFormat": "age", "refId": "A" },
+        { "expr": "qmn_reconcile_quantity_residual", "legendFormat": "qty_residual", "refId": "B" },
+        { "expr": "qmn_reconcile_cash_residual", "legendFormat": "cash_residual", "refId": "C" }
+      ],
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Liveness heartbeat emissions (notification only)",
+      "id": 3,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        { "expr": "rate(qmn_liveness_heartbeat_emissions_total[5m])", "legendFormat": "alive-ping/s", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Evidence-channel budget occupancy",
+      "id": 4,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        { "expr": "qmn_evidence_channel_budget_occupancy", "legendFormat": "budget_occupancy", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "type": "logs",
+      "title": "Operator logs (journal namespace qmn)",
+      "id": 5,
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "{job=\"qmn-operator-logs\", namespace=\"qmn\"}",
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": null }
+        }
+      ],
+      "options": { "showTime": true, "wrapLogMessage": true, "enableLogDetails": true }
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["qmn", "health", "zero-authority", "seed"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "QMN health / process / logs (seed)",
+  "uid": "qmn-health-process-seed",
+  "version": 1,
+  "description": "Health, backup, reconciliation, liveness, and Loki operator-log seed. Zero authority — visibility only (DEC-0200)."
+}

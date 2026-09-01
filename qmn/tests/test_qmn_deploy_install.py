@@ -144,6 +144,7 @@ def test_credential_scoping_and_host_key_seal_contract(
     obs = rendered["qmx-observability.service"]
     assert "LoadCredentialEncrypted=grafana-admin" in obs
     assert "venue-client" not in obs
+    assert "LogNamespace=qmn" in rendered["qmn.service"]
 
     plan = install_mod.build_install_plan(
         mode="check",
@@ -206,12 +207,24 @@ def test_node_install_check_mode_plan(
     assert plan.principal == boundary_mod.OPS_PRINCIPAL_NAME == "ops"
     assert plan.mode == "check"
     kinds = {s.kind for s in plan.steps}
-    assert {"bootstrap", "account", "tree", "unit", "sync", "credstore", "network"} <= kinds
+    assert {
+        "bootstrap",
+        "account",
+        "tree",
+        "unit",
+        "sync",
+        "credstore",
+        "network",
+        "compose",
+        "quota",
+    } <= kinds
     assert any(s.detail == "uv sync --frozen" for s in plan.steps)
     assert any(s.target == "/opt/qmx" for s in plan.steps)
     assert any(s.target == "/var/lib/qmx/rooms" for s in plan.steps)
     assert any(s.target == "/run/qmn/powers.sock" for s in plan.steps)
     assert any(s.target == "qmx-observability.service" for s in plan.steps)
+    assert any(s.target == "container-runtime" for s in plan.steps)
+    assert any(s.target == "/var/lib/qmx-observability" for s in plan.steps if s.kind == "quota")
     assert all(s.check_mode_only for s in plan.steps)
 
     out = tmp_path / "plan.json"

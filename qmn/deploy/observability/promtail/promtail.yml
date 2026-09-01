@@ -1,0 +1,44 @@
+# Promtail — reads the dedicated qmn journal namespace only (DEC-0200).
+# Never tails the system journal for secret-holder isolation. Holds no
+# credential the node holds.
+
+server:
+  http_listen_address: 127.0.0.1
+  http_listen_port: 9080
+  grpc_listen_address: 127.0.0.1
+  grpc_listen_port: 0
+
+positions:
+  filename: /var/lib/qmx-observability/promtail/positions.yaml
+
+clients:
+  - url: http://127.0.0.1:3100/loki/api/v1/push
+    backoff_config:
+      min_period: 500ms
+      max_period: 5m
+      max_retries: 10
+
+scrape_configs:
+  - job_name: qmn-journal-namespace
+    journal:
+      # Recurses /var/log/journal including LogNamespace=qmn trees
+      # (<machine-id>.qmn/). Matches restrict to the node unit — never
+      # provisioning, backup, or other secret-holder units.
+      path: /var/log/journal
+      max_age: 168h
+      labels:
+        job: qmn-operator-logs
+        namespace: qmn
+        authority: none
+      matches: _SYSTEMD_UNIT=qmn.service
+    relabel_configs:
+      - source_labels: ["__journal__systemd_unit"]
+        target_label: unit
+      - source_labels: ["__journal_priority_keyword"]
+        target_label: level
+      - source_labels: ["__journal_syslog_identifier"]
+        target_label: syslog_identifier
+      # Drop anything that somehow escaped the match (defence in depth).
+      - source_labels: ["unit"]
+        regex: "qmn\\.service"
+        action: keep

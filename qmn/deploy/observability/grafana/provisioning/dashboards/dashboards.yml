@@ -1,0 +1,14 @@
+# Dashboard provider — loads versioned dashboard-as-code seeds.
+apiVersion: 1
+
+providers:
+  - name: qmn-seeds
+    orgId: 1
+    folder: QMN
+    type: file
+    disableDeletion: true
+    updateIntervalSeconds: 60
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

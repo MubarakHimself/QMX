@@ -1,0 +1,129 @@
+{
+  "annotations": { "list": [] },
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Evidence /metrics scrape",
+      "id": 1,
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "up{job=\"qmn\"}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "orange" }, "1": { "text": "UP", "color": "green" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "orange", "value": null }, { "color": "green", "value": 1 }] }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "type": "timeseries",
+      "title": "Clock family (qmn_clock_*)",
+      "id": 2,
+      "gridPos": { "h": 8, "w": 12, "x": 6, "y": 0 },
+      "targets": [
+        { "expr": "qmn_clock_chrony_offset_seconds", "legendFormat": "chrony_offset", "refId": "A" },
+        { "expr": "qmn_clock_sync_age_seconds", "legendFormat": "sync_age", "refId": "B" },
+        { "expr": "qmn_clock_venue_skew_seconds", "legendFormat": "venue_skew", "refId": "C" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Process (RSS / loop lag / slice)",
+      "id": 3,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "targets": [
+        { "expr": "qmn_process_rss_bytes", "legendFormat": "rss_bytes", "refId": "A" },
+        { "expr": "qmn_process_loop_lag_seconds", "legendFormat": "loop_lag", "refId": "B" },
+        { "expr": "qmn_process_slice_latency_seconds", "legendFormat": "slice_latency", "refId": "C" }
+      ],
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Session reconnects / heartbeat age",
+      "id": 4,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        { "expr": "rate(qmn_session_reconnects_total[5m])", "legendFormat": "reconnects/s", "refId": "A" },
+        { "expr": "qmn_session_heartbeat_age_seconds", "legendFormat": "heartbeat_age", "refId": "B" }
+      ],
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Command UNKNOWN outstanding / age",
+      "id": 5,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        { "expr": "qmn_command_unknown_outstanding", "legendFormat": "unknown_outstanding", "refId": "A" },
+        { "expr": "qmn_command_unknown_age_seconds", "legendFormat": "unknown_age", "refId": "B" }
+      ],
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Latency rungs (no budgets until baselines exist)",
+      "id": 6,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum by (le, rung) (rate(qmn_latency_rung_seconds_bucket[5m])))", "legendFormat": "p95 {{rung}}", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Data freshness / disk headroom",
+      "id": 7,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "targets": [
+        { "expr": "qmn_data_feed_staleness_seconds", "legendFormat": "feed_staleness", "refId": "A" },
+        { "expr": "qmn_data_news_calendar_age_seconds", "legendFormat": "news_age", "refId": "B" },
+        { "expr": "qmn_data_disk_headroom_bytes", "legendFormat": "disk_headroom", "refId": "C" }
+      ],
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Protection KSA level / standing intents",
+      "id": 8,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "targets": [
+        { "expr": "qmn_protection_ksa_level", "legendFormat": "ksa {{scope}}", "refId": "A" },
+        { "expr": "qmn_protection_standing_intent_count", "legendFormat": "standing_intents", "refId": "B" }
+      ],
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["qmn", "zero-authority", "seed"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "QMN overview (seed — no invented thresholds)",
+  "uid": "qmn-overview-seed",
+  "version": 1,
+  "description": "Starter dashboard-as-code seed. Panels render exported qmn_ families only; no numeric trading budgets (DEC-0200 / DEC-0111)."
+}

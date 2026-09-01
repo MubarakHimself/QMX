@@ -24,4 +24,7 @@ Hardening contract (DEC-0227 / NFR-14):
   Credentials sealed with systemd-creds encrypt --with-key=host (never auto)
 
 qmx-observability.service runs as User=qmxobs with ReadWritePaths under
-/var/lib/qmx-observability and holds zero node authority.
+/var/lib/qmx-observability and holds zero node authority. It starts the
+checked-in compose file under qmn/deploy/observability/ (Story 25.17).
+qmn.service sets LogNamespace=qmn so Promtail reads a dedicated journal
+namespace rather than the system journal.

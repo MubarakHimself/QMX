@@ -1,0 +1,33 @@
+# Prometheus scrape config — zero-authority consumer (DEC-0200).
+# Scrapes the node's evidence-channel /metrics on loopback only.
+# No remote_write, no Alertmanager authority path into the node.
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    stack: qmx-observability
+    authority: none
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  - job_name: qmn
+    metrics_path: /metrics
+    scheme: http
+    static_configs:
+      - targets:
+          # Must match EVIDENCE_METRICS_SCRAPE in stack.py / the node's bind.
+          - 127.0.0.1:8787
+        labels:
+          component: qmn
+          door: evidence_http
+
+  - job_name: prometheus
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - 127.0.0.1:9090
+        labels:
+          component: observability-prometheus

@@ -1,0 +1,33 @@
+# Alert-rule seeds for the observability stack (DEC-0200).
+# Presence / scrape-health only — no numeric trading thresholds, no panel
+# budgets, and no authority path into the node. Push alerts still leave the
+# node through FAILURES.md's closed allow-list; these rules are engineer
+# visibility inside Grafana/Prometheus.
+
+groups:
+  - name: qmn-scrape-visibility
+    rules:
+      - alert: QmnMetricsTargetDown
+        expr: up{job="qmn"} == 0
+        for: 2m
+        labels:
+          severity: visibility
+          authority: none
+        annotations:
+          summary: "Node /metrics scrape is down"
+          description: >-
+            Prometheus cannot scrape the evidence-channel /metrics target.
+            The node may still be healthy; this loses visibility only
+            (DEC-0200 / DEC-0212).
+
+      - alert: ObservabilityPrometheusDown
+        expr: up{job="prometheus"} == 0
+        for: 2m
+        labels:
+          severity: visibility
+          authority: none
+        annotations:
+          summary: "Observability Prometheus self-scrape is down"
+          description: >-
+            The zero-authority stack cannot see itself. Trading behavior is
+            unchanged; restore the stack for visibility only.

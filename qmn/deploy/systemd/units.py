@@ -279,6 +279,10 @@ def inspect_unit_text(name: str, text: str) -> UnitInspection:
             findings.append("WatchdogSec missing")
         if POWERS_SOCKET_PATH not in text:
             findings.append("powers socket path not referenced")
+        if _setting(text, "LogNamespace") != "qmn":
+            findings.append(
+                "qmn.service must set LogNamespace=qmn for the observability stack"
+            )
 
     # Credential-consuming units: only LoadCredentialEncrypted, never plaintext
     # LoadCredential for secret material; seal flag is provision-time.
