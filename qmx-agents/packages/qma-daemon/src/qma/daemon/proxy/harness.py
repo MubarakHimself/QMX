@@ -167,8 +167,10 @@ def execute_quant_model_request(
         chain=chain,
     )
     # Telemetry must never grow a secret field — surface check by construction.
-    assert "secret" not in telemetry.to_dict()
-    assert "credential_value" not in telemetry.to_dict()
+    telemetry_payload = telemetry.to_dict()
+    if "secret" in telemetry_payload or "credential_value" in telemetry_payload:
+        msg = "routing telemetry must not carry secret or credential_value fields"
+        raise RuntimeError(msg)
 
     return Ok(
         ModelHarnessResult(

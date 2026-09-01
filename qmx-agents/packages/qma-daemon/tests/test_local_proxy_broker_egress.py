@@ -6,6 +6,7 @@ import pytest
 from qma.core.barriers import (
     ALLOWED_CREDENTIAL_REF_PREFIXES,
     OUT_OF_SCOPE_CREDENTIAL_REF_PREFIXES,
+    CredentialAllowlistError,
     assert_allowlist_not_widenable,
     is_credential_ref_allowed,
 )
@@ -28,6 +29,7 @@ from qma.core.refusals import (
     UnauthenticatedProxy,
 )
 from qma.core.vocabulary.enums import ModelClass, PrincipalClass
+from qma.core.vocabulary.registry import VocabularyError
 from qma.daemon.proxy import (
     WINDOWS_CREDENTIAL_MANAGER_BACKEND,
     AdapterLayerCaller,
@@ -86,8 +88,9 @@ def test_non_loopback_proxy_refused() -> None:
     assert outcome.context["address"] == "10.0.0.8:8080"
 
     registry = DeploymentRegistry()
-    assert is_refusal(registry.register(record))
-    assert NonLoopbackProxy.matches(registry.register(record))
+    registered = registry.register(record)
+    assert is_refusal(registered)
+    assert NonLoopbackProxy.matches(registered)
 
 
 def test_unauthenticated_proxy_gated_by_registry_variable() -> None:
@@ -146,7 +149,7 @@ def test_startup_evidence_records_proxies_and_setting() -> None:
 
 
 def test_local_proxy_rejects_qma_credential_ref_and_wrong_auth_mode() -> None:
-    with pytest.raises(Exception):
+    with pytest.raises(VocabularyError):
         DeploymentRecord(
             deployment_id="bad-auth",
             model_class=ModelClass.FAST_CHEAP,
@@ -181,7 +184,7 @@ def test_credential_allowlist_is_code_declared_and_default_deny() -> None:
 
     assert OUT_OF_SCOPE_CREDENTIAL_REF_PREFIXES
     assert_allowlist_not_widenable()
-    with pytest.raises(Exception):
+    with pytest.raises(CredentialAllowlistError):
         assert_allowlist_not_widenable(ALLOWED_CREDENTIAL_REF_PREFIXES | {"cred://venue/"})
 
 
@@ -214,7 +217,7 @@ def test_broker_exact_reference_windows_backend_and_out_of_scope() -> None:
     class OtherBackend:
         backend_id = "hashicorp_vault"
 
-        def read_exact(self, credential_ref: str):  # noqa: ANN001
+        def read_exact(self, credential_ref: str):
             raise AssertionError("must not be called")
 
     with pytest.raises(ValueError, match="sole v1"):
@@ -229,7 +232,7 @@ def test_broker_backend_rejects_enumeration_surfaces() -> None:
     class ListingBackend:
         backend_id = WINDOWS_CREDENTIAL_MANAGER_BACKEND
 
-        def read_exact(self, credential_ref: str):  # noqa: ANN001
+        def read_exact(self, credential_ref: str):
             return None
 
         def enumerate(self) -> list[str]:
@@ -251,7 +254,7 @@ def test_hook_payloads_exclude_secrets_by_schema() -> None:
     )
     assert is_refusal(refused)
 
-    with pytest.raises(Exception):
+    with pytest.raises(VocabularyError):
         build_hook_result("allow", updated_input={"secret": "nope"})
 
     ok = build_hook_result(
@@ -315,5 +318,9 @@ def test_milestone_harness_opencodex_over_wire_preserves_provenance() -> None:
     wire = value.to_wire()
     assert wire["correlation_id"] == "corr-milestone-44-2"
     assert "secret" not in wire
-    assert "secret" not in wire["routing"]
-    assert wire["model"]["credential_crossed"] is False
+    routing = wire["routing"]
+    assert isinstance(routing, dict)
+    assert "secret" not in routing
+    model = wire["model"]
+    assert isinstance(model, dict)
+    assert model["credential_crossed"] is False

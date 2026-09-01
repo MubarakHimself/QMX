@@ -37,7 +37,7 @@ Each fragment is a YAML file in _docwork/qma/fragments/ with the shape:
     - op: replace_all               # replace every occurrence of a literal string (fails if 0)
       old: '...'
       new: '...'
-    - op: regex_replace             # Python regex replace; \1 / \g<1> backrefs;
+    - op: regex_replace             # Python regex replace; \1 / \\g<1> backrefs;
                                     # optional numeric bumps on groups
       pattern: '^## Gap locator — (\d+) entries$'
       repl: '## Gap locator — \1 entries'
@@ -97,7 +97,7 @@ def op_frontmatter_add(text, field, ids):
         raise FragmentError('no frontmatter')
     lines = fm.split('\n')
     for i, line in enumerate(lines):
-        m = re.match(r'^({}):\s*\[(.*)\]\s*$'.format(re.escape(field)), line)
+        m = re.match(rf'^({re.escape(field)}):\s*\[(.*)\]\s*$', line)
         if m:
             existing = [x.strip() for x in m.group(2).split(',') if x.strip()]
             for x in ids:
@@ -105,8 +105,8 @@ def op_frontmatter_add(text, field, ids):
                     existing.append(x)
             lines[i] = '{}: [{}]'.format(field, ', '.join(existing))
             return join_frontmatter('\n'.join(lines), body)
-        if re.match(r'^{}:\s*$'.format(re.escape(field)), line):
-            raise FragmentError('frontmatter field {} is a block list; only flow lists are supported'.format(field))
+        if re.match(rf'^{re.escape(field)}:\s*$', line):
+            raise FragmentError(f'frontmatter field {field} is a block list; only flow lists are supported')
     ins = '{}: [{}]'.format(field, ', '.join(ids))
     for i, line in enumerate(lines):
         if line.startswith('status:'):
@@ -124,12 +124,12 @@ def op_frontmatter_set(text, field, value):
     lines = fm.split('\n')
     sval = str(value)
     if isinstance(value, str) and re.match(r'^\d{4}-\d{2}-\d{2}$', value):
-        sval = "'{}'".format(value)
+        sval = f"'{value}'"
     for i, line in enumerate(lines):
-        if re.match(r'^{}:'.format(re.escape(field)), line):
-            lines[i] = '{}: {}'.format(field, sval)
+        if re.match(rf'^{re.escape(field)}:', line):
+            lines[i] = f'{field}: {sval}'
             return join_frontmatter('\n'.join(lines), body)
-    lines.append('{}: {}'.format(field, sval))
+    lines.append(f'{field}: {sval}')
     return join_frontmatter('\n'.join(lines), body)
 
 
@@ -152,7 +152,7 @@ def op_insert_before_heading(text, heading, ins, heading_regex=None):
     lines = text.split('\n')
     i = _find_heading(lines, heading, heading_regex)
     if i is None:
-        raise FragmentError('heading not found: %r' % (heading or heading_regex))
+        raise FragmentError(f'heading not found: {heading or heading_regex!r}')
     block = ins.rstrip('\n') + '\n\n'
     new = lines[:i] + block.split('\n')[:-1] + lines[i:]
     return '\n'.join(new), 'inserted'
@@ -164,7 +164,7 @@ def op_insert_after_heading(text, heading, ins, after_paragraphs=0, heading_rege
     lines = text.split('\n')
     i = _find_heading(lines, heading, heading_regex)
     if i is None:
-        raise FragmentError('heading not found: %r' % (heading or heading_regex))
+        raise FragmentError(f'heading not found: {heading or heading_regex!r}')
     j = i + 1
     while j < len(lines) and lines[j].strip() == '':
         j += 1
@@ -193,12 +193,12 @@ def op_replace(text, old, new, all_=False):
     if n == 0:
         if new and new in text:
             return text, 'skipped (already replaced)'
-        raise FragmentError('replace: old text not found: {!r}'.format(old[:80]))
+        raise FragmentError(f'replace: old text not found: {old[:80]!r}')
     if not all_ and n > 1:
         raise FragmentError(
-            'replace: old text occurs {} times (must be unique): {!r}'.format(n, old[:80])
+            f'replace: old text occurs {n} times (must be unique): {old[:80]!r}'
         )
-    return text.replace(old, new), 'replaced {}'.format(n)
+    return text.replace(old, new), f'replaced {n}'
 
 
 def op_regex_replace(text, pattern, repl, count_add=None, all_=True, skip_if=None, flags='M'):
@@ -209,7 +209,7 @@ def op_regex_replace(text, pattern, repl, count_add=None, all_=True, skip_if=Non
         fl |= {'M': re.M, 'I': re.I, 'S': re.S}.get(ch, 0)
     rx = re.compile(pattern, fl)
     if not rx.search(text):
-        raise FragmentError('regex_replace: pattern not found: {!r}'.format(pattern[:100]))
+        raise FragmentError(f'regex_replace: pattern not found: {pattern[:100]!r}')
     bumps = count_add or []
     if isinstance(bumps, dict):
         bumps = [bumps]
@@ -228,14 +228,14 @@ def op_regex_replace(text, pattern, repl, count_add=None, all_=True, skip_if=Non
         return backref.sub(expand, repl)
 
     new, n = rx.subn(_sub, text, count=0 if all_ else 1)
-    return new, 'regex replaced {}'.format(n)
+    return new, f'regex replaced {n}'
 
 
 def op_glossary_insert_sorted(text, section_heading, entries):
     lines = text.split('\n')
     start = _find_heading(lines, section_heading)
     if start is None:
-        raise FragmentError('section heading not found: {!r}'.format(section_heading))
+        raise FragmentError(f'section heading not found: {section_heading!r}')
     end = len(lines)
     for j in range(start + 1, len(lines)):
         if lines[j].startswith('## '):
@@ -282,7 +282,7 @@ def op_glossary_insert_sorted(text, section_heading, entries):
         new_section.pop()
     new_section.append('')
     new_lines = lines[:start + 1] + new_section + lines[end:]
-    return '\n'.join(new_lines), 'inserted {}'.format(added)
+    return '\n'.join(new_lines), f'inserted {added}'
 
 
 def op_yaml_append_items(text, key, items_path):
@@ -290,22 +290,22 @@ def op_yaml_append_items(text, key, items_path):
         src = f.read().replace('\r\n', '\n')
     data = yaml.safe_load(src)
     if not isinstance(data, dict) or key not in data or not isinstance(data[key], list):
-        raise FragmentError('items file {} has no top-level list {!r}'.format(items_path, key))
-    m = re.search(r'^{}:\s*\n'.format(re.escape(key)), src, re.M)
+        raise FragmentError(f'items file {items_path} has no top-level list {key!r}')
+    m = re.search(rf'^{re.escape(key)}:\s*\n', src, re.M)
     if not m:
-        raise FragmentError('items file {}: cannot find textual key line {!r}'.format(items_path, key))
+        raise FragmentError(f'items file {items_path}: cannot find textual key line {key!r}')
     body = src[m.end():].rstrip('\n') + '\n'
     first = data[key][0] if data[key] else None
     if isinstance(first, dict):
         fid = first.get('id') or first.get('name')
-        if fid and re.search(r'^\s*-\s*(id|name):\s*{}\s*$'.format(re.escape(str(fid))), text, re.M):
+        if fid and re.search(rf'^\s*-\s*(id|name):\s*{re.escape(str(fid))}\s*$', text, re.M):
             return text, 'skipped (present)'
     tdata = yaml.safe_load(text)
     if not isinstance(tdata, dict) or key not in tdata:
-        raise FragmentError('target has no top-level key {!r}'.format(key))
+        raise FragmentError(f'target has no top-level key {key!r}')
     out = text.rstrip('\n') + '\n\n' + body
     yaml.safe_load(out)
-    return out, 'appended {} items'.format(len(data[key]))
+    return out, f'appended {len(data[key])} items'
 
 
 def apply_fragment(root, frag, dry):
@@ -335,24 +335,24 @@ def apply_fragment(root, frag, dry):
             notes.append('insert_after {!r}: {}'.format(op.get('heading') or op.get('heading_regex'), n))
         elif kind == 'append':
             text, n = op_append(text, op['text'])
-            notes.append('append: {}'.format(n))
+            notes.append(f'append: {n}')
         elif kind == 'replace':
             text, n = op_replace(text, op['old'], op['new'])
-            notes.append('replace: {}'.format(n))
+            notes.append(f'replace: {n}')
         elif kind == 'replace_all':
             text, n = op_replace(text, op['old'], op['new'], all_=True)
-            notes.append('replace_all: {}'.format(n))
+            notes.append(f'replace_all: {n}')
         elif kind == 'regex_replace':
             text, n = op_regex_replace(text, op['pattern'], op['repl'], op.get('count_add'), bool(op.get('all', True)), op.get('skip_if'), op.get('flags', 'M'))
-            notes.append('regex_replace: {}'.format(n))
+            notes.append(f'regex_replace: {n}')
         elif kind == 'glossary_insert_sorted':
             text, n = op_glossary_insert_sorted(text, op['section_heading'], op['entries'])
-            notes.append('glossary: {}'.format(n))
+            notes.append(f'glossary: {n}')
         elif kind == 'yaml_append_items':
             text, n = op_yaml_append_items(text, op['key'], os.path.join(root, op['items_file']))
             notes.append('yaml_append {}: {}'.format(op['key'], n))
         else:
-            raise FragmentError('unknown op {!r}'.format(kind))
+            raise FragmentError(f'unknown op {kind!r}')
     if text != original and not dry:
         out = text.replace('\n', '\r\n') if crlf else text
         with open(target, 'w', encoding='utf-8', newline='') as f:
@@ -378,7 +378,7 @@ def main():
             try:
                 frag = yaml.safe_load(f)
             except Exception as e:
-                print('FAIL {}: yaml parse error: {}'.format(fn, e))
+                print(f'FAIL {fn}: yaml parse error: {e}')
                 failures += 1
                 continue
         try:
@@ -390,7 +390,7 @@ def main():
         except Exception as e:
             print('FAIL {} -> {}: unexpected {}: {}'.format(fn, frag.get('target'), type(e).__name__, e))
             failures += 1
-    print('{} fragment(s), {} failure(s)'.format(len(files), failures))
+    print(f'{len(files)} fragment(s), {failures} failure(s)')
     sys.exit(1 if failures else 0)
 
 

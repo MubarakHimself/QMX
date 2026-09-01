@@ -66,7 +66,7 @@ class CredentialBackend(Protocol):
 class MemoryCredentialBackend:
     """In-memory exact-reference backend for tests — never enumerates."""
 
-    _values: MutableMapping[str, str] = field(default_factory=dict)
+    _values: MutableMapping[str, str] = field(default_factory=dict[str, str])
     backend_id: str = WINDOWS_CREDENTIAL_MANAGER_BACKEND
 
     def put(self, credential_ref: str, secret: str) -> None:
@@ -134,7 +134,7 @@ class CredentialBroker:
         self,
         credential_ref: object,
         *,
-        caller: AdapterLayerCaller,
+        caller: object,
     ) -> Result[EgressFrame]:
         """Resolve a reference into an adapter-layer egress frame (FR-Q45/FR-Q46).
 

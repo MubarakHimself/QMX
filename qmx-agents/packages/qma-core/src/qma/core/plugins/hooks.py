@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Final
 
+from qma.core.plugins.secret_schema import assert_no_secret_in_hook_payloads
 from qma.core.vocabulary.enums import HookResultDecision
 from qma.core.vocabulary.hooks import (
     assert_decision_legal_for_event,
@@ -17,6 +18,7 @@ from qma.core.vocabulary.hooks import (
     parse_hook_event_name,
 )
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
+from qmf.core import is_refusal
 
 __all__ = [
     "FORBIDDEN_HOOK_IMPLEMENTATION_KINDS",
@@ -171,9 +173,6 @@ def build_hook_result(
     verifier_ref: str | None = None,
 ) -> HookResult:
     """Construct a HookResult after validating the closed decision vocabulary."""
-    from qma.core.plugins.secret_schema import assert_no_secret_in_hook_payloads
-    from qmf.core import is_refusal
-
     resolved = parse_closed(HookResultDecision, decision)
     if resolved is HookResultDecision.OBSERVE and (
         updated_input is not None or updated_output is not None

@@ -16,9 +16,9 @@ from qma.core.refusals.variants import CredentialOutOfScope
 __all__ = [
     "ALLOWED_CREDENTIAL_REF_PREFIXES",
     "CREDENTIAL_ALLOWLIST_OWNER",
+    "OUT_OF_SCOPE_CREDENTIAL_REF_PREFIXES",
     "CredentialAllowlistCategory",
     "CredentialAllowlistError",
-    "OUT_OF_SCOPE_CREDENTIAL_REF_PREFIXES",
     "assert_allowlist_not_widenable",
     "classify_credential_ref",
     "is_credential_ref_allowed",
