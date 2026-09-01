@@ -14,7 +14,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Final, cast
+from typing import Final
 
 from qma.core.refusals import OperatorPrincipalRequired
 from qma.core.vocabulary import (
@@ -136,8 +136,8 @@ def is_daemon_job_trim(
 
 
 def refuse_principal_impersonation(
-    source: PrincipalClass | str,
-    target: PrincipalClass | str,
+    source: object,
+    target: object,
 ) -> Result[PrincipalClass]:
     """Refuse any attempt to acquire, borrow, or impersonate another class."""
     parsed_source = parse_principal_class(source)
@@ -352,7 +352,7 @@ def authorize_wire_command(
     if args is None:
         frozen_args = MappingProxyType({})
     else:
-        frozen_args = MappingProxyType(dict(cast("Mapping[str, object]", args)))
+        frozen_args = MappingProxyType(dict(args))
 
     return Ok(
         AuthorizedWireCommand(

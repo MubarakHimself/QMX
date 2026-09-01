@@ -160,6 +160,7 @@ def test_machine_human_gate_returns_operator_principal_required() -> None:
     # Seed aliases also refuse machine.
     for alias in ("install_enable_plugin", "approve_hook_action"):
         refused = authorize_wire_command(alias, PrincipalClass.MACHINE)
+        assert is_refusal(refused), alias
         assert OperatorPrincipalRequired.matches(refused)
 
 
@@ -196,6 +197,7 @@ def test_daemon_job_trims_exempt_from_human_gate() -> None:
         trim_stream="telemetry",
         inside_retention_window=False,
     )
+    assert is_refusal(refused)
     assert OperatorPrincipalRequired.matches(refused)
 
 
@@ -210,6 +212,7 @@ def test_non_human_gate_allows_machine() -> None:
 
 def test_machine_cannot_impersonate_or_acquire_operator() -> None:
     refused = refuse_principal_impersonation("machine", "operator")
+    assert is_refusal(refused)
     assert OperatorPrincipalRequired.matches(refused)
 
     same = refuse_principal_impersonation("machine", "machine")
@@ -221,6 +224,7 @@ def test_machine_cannot_impersonate_or_acquire_operator() -> None:
         Ok,
     )
     escalate = conn.authenticate("cred://worker/w1", principal_class="operator")
+    assert is_refusal(escalate)
     assert OperatorPrincipalRequired.matches(escalate)
     assert conn.principal_class is PrincipalClass.MACHINE
 
