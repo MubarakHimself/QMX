@@ -23,7 +23,7 @@ from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from types import ModuleType
-from typing import Final, Literal
+from typing import Final, Literal, cast
 
 __all__ = [
     "COMMIT_SHA_RE",
@@ -182,14 +182,15 @@ def load_deployment_record(path: Path) -> DeploymentRecord:
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise ValueError("deployment record must be a JSON object")
-    commit = data.get("commit")
-    config_version = data.get("config_version")
+    record = cast("dict[str, object]", data)
+    commit = record.get("commit")
+    config_version = record.get("config_version")
     if not isinstance(commit, str) or not isinstance(config_version, str):
         raise ValueError("deployment record requires commit and config_version")
-    previous_commit = data.get("previous_commit")
-    previous_config = data.get("previous_config_version")
-    recipe = data.get("recipe", SWITCH_RECIPE)
-    check_ok = data.get("check_mode_ok", True)
+    previous_commit = record.get("previous_commit")
+    previous_config = record.get("previous_config_version")
+    recipe = record.get("recipe", SWITCH_RECIPE)
+    check_ok = record.get("check_mode_ok", True)
     return DeploymentRecord(
         commit=_normalize_commit(commit),
         config_version=config_version,
