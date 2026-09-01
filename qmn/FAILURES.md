@@ -73,3 +73,31 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Product-user affordance:** The node refused to boot because a systemd unit
   would run as your operator account. Move that unit off the operator UID and
   restart; automation must never share the operator principal.
+
+### FR-6: Evidence channel budget exhausted
+
+- **Failure class:** policy rejection
+- **Detection:** `DoorRuntime.evidence_reads` reaches
+  `evidence_channel_budget` (unit: request-count-per-boot-epoch) on an evidence
+  read (`qmn.doors.library._consume_budget`).
+- **Auto-recovery / retry:** none within the boot epoch — budget resets on the
+  next boot epoch after a supervised restart.
+- **Visible degraded state:** further evidence GETs refuse; powers channel
+  unaffected; node keeps serving.
+- **Notification tier:** operator-visible (evidence refusal on the wire).
+- **Product-user affordance:** The evidence channel hit its per-boot request
+  budget. Reduce scrape rate or raise `evidence_channel_budget`, then restart
+  at a safe point if a higher budget is required.
+
+### FR-7: Stale evidence cited for a powers call
+
+- **Failure class:** stale evidence
+- **Detection:** `enact_power` compares caller `evidence_knowledge_time_ns` to
+  the runtime's current `knowledge_time_ns`; a lagging stamp refuses.
+- **Auto-recovery / retry:** after-condition — re-read evidence, then retry the
+  powers call with the fresh knowledge-time.
+- **Visible degraded state:** no act runs; requested is not journaled as
+  enforced; refusal shape identical on the Python API and powers door.
+- **Notification tier:** operator-visible (powers refusal).
+- **Product-user affordance:** The UI or recipe used an outdated evidence
+  snapshot. Refresh status/health from the evidence channel and retry.

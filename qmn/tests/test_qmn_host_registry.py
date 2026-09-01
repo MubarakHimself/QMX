@@ -308,6 +308,7 @@ def test_only_host_mints_through_registrar_seam() -> None:
 
 
 def test_doors_have_no_registry_cache_or_identity_function() -> None:
+    """Doors may stamp a sealed composition_fp onto evidence (TN-17) but never mint."""
     doors = _QMN_SRC / "doors"
     for path in sorted(doors.rglob("*.py")):
         text = path.read_text(encoding="utf-8")
@@ -315,4 +316,5 @@ def test_doors_have_no_registry_cache_or_identity_function() -> None:
         assert "KindRegistry" not in text
         assert "fingerprint(" not in text
         assert "registry_mint" not in text
-        assert "composition_fp" not in text
+        assert "compute_composition_fp" not in text
+        assert "CompositionRootRegistry" not in text

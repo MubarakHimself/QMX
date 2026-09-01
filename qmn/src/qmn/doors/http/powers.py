@@ -19,7 +19,8 @@ from typing import Final, Protocol, cast
 
 from qmf.core.refusal import Ok, Result, is_refusal
 
-from qmn.doors.http._refuse import clean_token, invalid, policy
+from qmn.doors._refuse import clean_token, invalid, policy
+from qmn.doors.catalog import CLOSED_POWERS, OPERATOR_ONLY_POWERS, OPS_ALLOWED_POWERS
 
 __all__ = [
     "AGENT_SIGNER_PREFIXES",
@@ -28,6 +29,7 @@ __all__ = [
     "OPERATOR_PRINCIPAL",
     "OPS_ALLOWED_POWERS",
     "OPS_PRINCIPAL",
+    "POWERS_DOOR",
     "POWERS_SOCKET_MODE",
     "POWERS_SOCKET_OWNER",
     "POWERS_SOCKET_PATH",
@@ -52,6 +54,7 @@ __all__ = [
 ]
 
 POWERS_TRANSPORT_SURFACE: Final[str] = "qmn.doors.http.powers"
+POWERS_DOOR: Final[str] = "powers_unix"
 
 POWERS_SOCKET_PATH: Final[str] = "/run/qmn/powers.sock"
 POWERS_SOCKET_OWNER: Final[str] = "qmx:qmxops"
@@ -62,45 +65,6 @@ OPERATOR_PRINCIPAL: Final[str] = "operator"
 OPS_PRINCIPAL: Final[str] = "ops"
 # Closed principal set — agent is never a member (QMX-F045 / DEC-0234).
 PRINCIPAL_SET: Final[frozenset[str]] = frozenset({OPERATOR_PRINCIPAL, OPS_PRINCIPAL})
-
-# Ops principal may call only these powers (plus evidence reads on the other door).
-OPS_ALLOWED_POWERS: Final[frozenset[str]] = frozenset(
-    {
-        "notify_test",
-        "restore_drill_run",
-        "config_validate",
-        "hub_publish",
-    }
-)
-
-# Operator-only powers refused to ops BY THE TRANSPORT before handler dispatch.
-OPERATOR_ONLY_POWERS: Final[frozenset[str]] = frozenset(
-    {
-        "resurrect",
-        "resume",
-        "de_escalate",
-        "resolve_unknown",
-        "flatten",
-        "kill_switch_escalate",
-        "paper_flip",
-        "paper_epoch_reset",
-        "promotion_sign",
-        "activation",
-        "config_version_activate",
-        "seat_reinstate",
-        "state_carry",
-        "carries_ledger",
-        "continues_performance",
-        "value_status_countersign",
-        "sealed_period_final_look",
-        "settings_edit",
-        "secrets_is_set",
-        "attestation",
-        "countersign",
-    }
-)
-
-CLOSED_POWERS: Final[frozenset[str]] = OPS_ALLOWED_POWERS | OPERATOR_ONLY_POWERS
 
 # Claimed-signer prefixes that prove a non-human actor (QMX-F045).
 AGENT_SIGNER_PREFIXES: Final[tuple[str, ...]] = (
