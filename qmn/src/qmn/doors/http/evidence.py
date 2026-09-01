@@ -129,7 +129,12 @@ def handle_evidence_request(
 def render_evidence_http(
     result: Result[Mapping[str, object]],
 ) -> Mapping[str, object]:
-    """Transport rendering: values and refusals become JSON evidence bodies."""
+    """Transport rendering: values and refusals become JSON evidence bodies.
+
+    ``/metrics`` carries Prometheus text in ``exposition`` with
+    ``http_content_type`` so a scraper reads the existing evidence listener
+    without a library-spawned server thread.
+    """
     if is_refusal(result):
         return MappingProxyType(
             {
@@ -142,4 +147,10 @@ def render_evidence_http(
         )
     body: dict[str, object] = dict(result.value)
     body.setdefault("http_status", 200)
+    if body.get("capability") == "read_metrics" and "exposition" in body:
+        content_type = body.get("content_type")
+        if isinstance(content_type, str) and content_type:
+            body["http_content_type"] = content_type
+        body["http_body"] = body["exposition"]
+        body["scrape_format"] = "prometheus"
     return MappingProxyType(body)

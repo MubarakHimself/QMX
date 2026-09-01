@@ -11,6 +11,7 @@ dependencies = [
     "qmf-registry",
     "qmf-venue",
     "qmb",
+    "prometheus-client==0.26.0",
 ]
 
 [build-system]

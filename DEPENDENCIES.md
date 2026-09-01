@@ -38,9 +38,10 @@ means adding its row here first.
   on its **own SemVer ladder as display-only provenance** (never identity). It
   is the trading node (code name only) and the **one sanctioned importer** of
   `qmf-venue` at its `qmn.venue` subpackage (DEC-0186, DEC-0241). Story 24.1
-  declares `qmf-core` and `qmf-venue` only; it adds **no new third-party**
-  runtime — `protobuf==7.36.0` stays declared only in `qmf-venue`. It ships
-  **no console-script** entry point (DEC-0211, DEC-0220).
+  declared `qmf-core` and `qmf-venue`; Story 25.10 adds
+  `prometheus-client==0.26.0` for registry and exposition format only (no
+  library HTTP server thread). `protobuf==7.36.0` stays declared only in
+  `qmf-venue`. It ships **no console-script** entry point (DEC-0211, DEC-0220).
 - CPython **3.14** is pinned across every package (`.python-version`,
   per-package `requires-python`). (AR-04; DEC-0099)
 
@@ -54,6 +55,7 @@ means adding its row here first.
 | protobuf | `==7.36.0` | BSD-3-Clause | `qmf-venue` (roster) | The Protobuf **runtime** for the venue transport. qmf-venue owns its own transport: the Spotware `openapi-proto-messages` release (integer tag **91**, `registry:venue_protocol_artifact`) is compiled **in-house** from its proto message definitions (data, not code) via `google.protobuf`, and **zero Spotware code runs** — the OpenApiPy SDK is reference-only (its pinned Twisted reactor is platform-imposing → rejected below). Declared only in `packages/qmf-venue/pyproject.toml`; never crosses a boundary signature and never leaks a compiled message into `qmf-core`. (Story 8.2; AR-43, DEC-0141) |
 | click | `==8.4.2` | BSD-3-Clause | `qmb` (off-roster app) | The `qmb` CLI door. Declared only in `qmb/pyproject.toml`; a major bump is a contract-versioning event (`registry:qmb_cli_pin`). (Story 13.1; DEC-0168) |
 | optuna | `==4.9.0` | MIT | `qmb` (off-roster app) | The default TPE-class sampler adapter. Declared only in `qmb/pyproject.toml`; adapters run `n_jobs=1` (fan-out is the orchestrator's); a major bump is a contract-versioning event (`registry:qmb_sampler_pin`). (Story 13.1; DEC-0168, DEC-0161) |
+| prometheus-client | `==0.26.0` | Apache-2.0 | `qmn` (off-roster app) | Metric registry and Prometheus exposition format for the node's `qmn_` signal families. Declared only in `qmn/pyproject.toml`; used as registry + text exposition only — the evidence door serves `/metrics` and no library-spawned server thread exists. (Story 25.10; TN-15 / DEC-0200) |
 
 `qmf-data` is the first roster package to declare runtime outside-dependencies —
 `pyarrow` and `duckdb`, the CT-11/CT-09 store engines (Parquet + DuckDB; SQLite and

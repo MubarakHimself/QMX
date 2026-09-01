@@ -23,6 +23,11 @@ from qmn.doors.wire import (
     WIRE_FORMAT_VERSION,
     refusal_wire_shape,
 )
+from qmn.observability.health import (
+    IndependentHealthReport,
+    aggregate_health,
+)
+from qmn.observability.metrics import NodeMetricsRegistry, build_node_metrics
 
 _OPS_PRINCIPAL: Final[str] = "ops"
 
@@ -120,6 +125,10 @@ class DoorRuntime:
     )
     projections: Mapping[str, object] = field(default_factory=dict[str, object])
     metrics: Mapping[str, object] = field(default_factory=dict[str, object])
+    metrics_registry: NodeMetricsRegistry | None = None
+    health_report: IndependentHealthReport | None = None
+    requested_protection: Mapping[str, object] = field(default_factory=dict[str, object])
+    enforced_protection: Mapping[str, object] = field(default_factory=dict[str, object])
     failures: Mapping[str, Mapping[str, object]] = field(
         default_factory=dict[str, Mapping[str, object]]
     )
@@ -144,6 +153,16 @@ class DoorRuntime:
         )
         object.__setattr__(self, "projections", MappingProxyType(dict(self.projections)))
         object.__setattr__(self, "metrics", MappingProxyType(dict(self.metrics)))
+        object.__setattr__(
+            self,
+            "requested_protection",
+            MappingProxyType(dict(self.requested_protection)),
+        )
+        object.__setattr__(
+            self,
+            "enforced_protection",
+            MappingProxyType(dict(self.enforced_protection)),
+        )
         frozen_failures = {
             key: MappingProxyType(dict(value)) for key, value in self.failures.items()
         }
@@ -225,26 +244,22 @@ def read_health(runtime: object) -> Result[Mapping[str, object]]:
     budget = _consume_budget(view.value)
     if is_refusal(budget):
         return budget
-    states = {
-        name: {
-            "state": state,
-            "authority_source": view.value.authority_source,
-            "source_time_ns": view.value.source_time_ns,
-            "receive_time_ns": view.value.receive_time_ns,
-            "watermark_ns": view.value.watermark_ns,
-        }
-        for name, state in view.value.health_states.items()
-    }
-    return Ok(
-        stamp_evidence(
-            view.value,
-            {
-                "capability": "read_health",
-                "states": states,
-                "collapsed_global_colour": False,
-            },
+    report = view.value.health_report
+    if report is None:
+        overrides = dict(view.value.health_states)
+        overrides.setdefault("lifecycle", view.value.lifecycle)
+        report = aggregate_health(
+            authority_source=view.value.authority_source,
+            source_time_ns=view.value.source_time_ns,
+            receive_time_ns=view.value.receive_time_ns,
+            watermark_ns=view.value.watermark_ns,
+            component_states=overrides,
+            requested_protection=view.value.requested_protection,
+            enforced_protection=view.value.enforced_protection,
         )
-    )
+    body = dict(report.as_mapping())
+    body["capability"] = "read_health"
+    return Ok(stamp_evidence(view.value, body))
 
 
 def read_projections(runtime: object) -> Result[Mapping[str, object]]:
@@ -325,25 +340,35 @@ def read_failure_detail(runtime: object, failure_id: object) -> Result[Mapping[s
 
 
 def read_metrics(runtime: object) -> Result[Mapping[str, object]]:
-    """Metrics exposition payload for the evidence listener."""
+    """Prometheus-class metrics exposition for the evidence listener.
+
+    Uses ``prometheus_client`` as registry + text format only. Never spawns a
+    library HTTP server thread — the evidence door serves ``/metrics``.
+    """
     view = _as_runtime(runtime)
     if is_refusal(view):
         return view
     budget = _consume_budget(view.value)
     if is_refusal(budget):
         return budget
-    return Ok(
-        stamp_evidence(
-            view.value,
-            {
-                "capability": "read_metrics",
-                "metrics": dict(view.value.metrics),
-                "evidence_reads": view.value.evidence_reads,
-                "evidence_channel_budget": view.value.evidence_channel_budget,
-                "evidence_channel_budget_unit": EVIDENCE_CHANNEL_BUDGET_UNIT,
-            },
-        )
+    registry = view.value.metrics_registry
+    if registry is None:
+        registry = build_node_metrics()
+        occupancy = 0.0
+        if view.value.evidence_channel_budget > 0:
+            occupancy = view.value.evidence_reads / view.value.evidence_channel_budget
+        registry.set_gauge("qmn_evidence_channel_budget_occupancy", occupancy)
+    payload = dict(registry.as_evidence_payload())
+    payload.update(
+        {
+            "capability": "read_metrics",
+            "metrics": dict(view.value.metrics),
+            "evidence_reads": view.value.evidence_reads,
+            "evidence_channel_budget": view.value.evidence_channel_budget,
+            "evidence_channel_budget_unit": EVIDENCE_CHANNEL_BUDGET_UNIT,
+        }
     )
+    return Ok(stamp_evidence(view.value, payload))
 
 
 def enact_power(
