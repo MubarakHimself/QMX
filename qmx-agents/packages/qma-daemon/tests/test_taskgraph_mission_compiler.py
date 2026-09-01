@@ -306,7 +306,9 @@ def test_dispatcher_grants_dispatch_lease_and_evaluates_environment() -> None:
     assert payload["environment_refusal"]["variant"] == "NoEnvironment"
     assert payload["synchronization"] == "task_graph"
     assert decision.value.task.state is TaskMissionState.RUNNING
-    assert NoEnvironment.matches(decision.value.environment_refusal)
+    env_refusal = decision.value.environment_refusal
+    assert env_refusal is not None
+    assert NoEnvironment.matches(env_refusal)
 
     # Registered provider may issue the environment_lease.
     populated = ExecutionEnvironmentRegistry()

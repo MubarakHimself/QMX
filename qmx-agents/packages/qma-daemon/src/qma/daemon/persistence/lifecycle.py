@@ -31,6 +31,7 @@ from qma.daemon.journal.variables import (
     STORE_SAMPLE_RESTORE_TEST_CADENCE_KEY,
     cite_store_lifecycle_key,
 )
+from qma.daemon.persistence.schema import refuse_unknown_store_schema
 from qma.wire.principals import authorize_wire_command
 from qmf.core import Ok, Result, Retryability, is_refusal, unpersistable
 from qmf.data.backup import (
@@ -122,9 +123,7 @@ class StoreSnapshot:
     @classmethod
     def from_bytes(cls, payload: bytes) -> StoreSnapshot:
         body = json.loads(payload.decode("utf-8"))
-        records = tuple(
-            MappingProxyType(dict(row)) for row in body.get("records", ())
-        )
+        records = tuple(MappingProxyType(dict(row)) for row in body.get("records", ()))
         return cls(
             store=str(body["store"]),
             schema_version=int(body["schema_version"]),
@@ -318,8 +317,6 @@ class DaemonStoreLifecycle:
             return preflight
         snap = preflight.value
         if snap.schema_version != known_schema_version:
-            from qma.daemon.persistence.schema import refuse_unknown_store_schema
-
             return refuse_unknown_store_schema(
                 store=store,
                 expected_schema_version=known_schema_version,
@@ -395,8 +392,7 @@ class DaemonStoreLifecycle:
         if tuple(stages) != MIGRATION_SEQUENCE:
             return policy_rejection(
                 "migration",
-                "migration must complete all five parent steps in order "
-                "(FR-Q37; AD-27)",
+                "migration must complete all five parent steps in order (FR-Q37; AD-27)",
                 stages=tuple(stage.value for stage in stages),
             )
 
@@ -431,8 +427,7 @@ class DaemonStoreLifecycle:
         if cited.value != STORE_BACKUP_CADENCE_KEY:
             return policy_rejection(
                 "backup_cadence",
-                "backup cadence is read only through registry:store.backup_cadence "
-                "(FR-Q37; AD-27)",
+                "backup cadence is read only through registry:store.backup_cadence (FR-Q37; AD-27)",
                 given=cited.value,
             )
         if set(snapshots) != set(DAEMON_OWNED_DURABLE_BACKUP_STORES):
@@ -542,8 +537,7 @@ class DaemonStoreLifecycle:
         if cited.value != required_cadence:
             return policy_rejection(
                 "restore_cadence",
-                f"{kind} cadence is read only through {required_cadence} "
-                "(FR-Q37; AD-27)",
+                f"{kind} cadence is read only through {required_cadence} (FR-Q37; AD-27)",
                 given=cited.value,
             )
         scratch = Path(scratch_root).resolve()
@@ -626,9 +620,6 @@ class DaemonStoreLifecycle:
 
         Never accepted as a background job (FR-Q37; AD-24, AD-27).
         """
-        # Local import avoids persistence ↔ journal circular import at package load.
-        from qma.daemon.journal.authoritative import JournalAppendReceipt as _JournalAppendReceipt
-
         if as_background_job:
             return policy_rejection(
                 "live_restore",
@@ -670,14 +661,13 @@ class DaemonStoreLifecycle:
             if snap.to_bytes() != exp.to_bytes():
                 return policy_rejection(
                     "live_restore",
-                    "live restore payload does not match expected snapshot "
-                    "(FR-Q37; AD-27)",
+                    "live restore payload does not match expected snapshot (FR-Q37; AD-27)",
                     store=store,
                 )
             _write_snapshot(live, snap)
             restored_names.append(store)
 
-        append: _JournalAppendReceipt | None = None
+        append: JournalAppendReceipt | None = None
         if journal is not None:
             recorded = journal.append_event(
                 LIVE_RESTORE_EVENT,

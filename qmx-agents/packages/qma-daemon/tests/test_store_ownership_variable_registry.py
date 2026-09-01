@@ -57,12 +57,10 @@ def _test_clock(*, boot: str = "boot-42-4", n: int = 64) -> DataDrivenClock:
     return DataDrivenClock(boot_epoch_id=boot, wall_instants=walls, monotonic_ns=monos)
 
 
-def _open_journal(tmp_path: Path, *, boot: str = "boot-42-4") -> tuple[
-    PersistenceSubstrate, AuthoritativeJournal
-]:
-    substrate_result = PersistenceSubstrate.open(
-        tmp_path, machine="test-host", boot_epoch_id=boot
-    )
+def _open_journal(
+    tmp_path: Path, *, boot: str = "boot-42-4"
+) -> tuple[PersistenceSubstrate, AuthoritativeJournal]:
+    substrate_result = PersistenceSubstrate.open(tmp_path, machine="test-host", boot_epoch_id=boot)
     assert is_ok(substrate_result), substrate_result
     substrate = substrate_result.value
     journal_result = AuthoritativeJournal.bind(substrate, clock=_test_clock(boot=boot))
@@ -77,7 +75,7 @@ def test_eight_store_classes_each_have_writer_crossing_retention() -> None:
     registry = StoreOwnershipRegistry()
     registered = registry.register_defaults()
     assert set(registered) == EIGHT_STORE_CLASSES
-    assert EIGHT_STORE_CLASSES == {
+    assert {
         "journal",
         "ledger",
         "memory",
@@ -86,7 +84,7 @@ def test_eight_store_classes_each_have_writer_crossing_retention() -> None:
         "context",
         "telemetry",
         "staging",
-    }
+    } == EIGHT_STORE_CLASSES
     complete = registry.assert_complete()
     assert is_ok(complete)
     for name, rule in complete.value.items():
@@ -289,11 +287,11 @@ def test_closed_variable_scope_vocabulary() -> None:
 
 
 def test_store_lifecycle_cited_by_registry_key_never_copied() -> None:
-    assert STORE_LIFECYCLE_KEYS == {
+    assert {
         STORE_BACKUP_CADENCE_KEY,
         STORE_SAMPLE_RESTORE_TEST_CADENCE_KEY,
         STORE_FULL_RESTORE_REHEARSAL_CADENCE_KEY,
-    }
+    } == STORE_LIFECYCLE_KEYS
     for key in STORE_LIFECYCLE_KEYS:
         cited = cite_store_lifecycle_key(key)
         assert is_ok(cited)

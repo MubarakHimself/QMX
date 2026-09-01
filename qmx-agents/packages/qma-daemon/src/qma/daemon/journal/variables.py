@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Final
 
+from qma.core.refusals import OperatorPrincipalRequired
 from qma.core.vocabulary import (
     PrincipalClass,
     RefinementEditKind,
@@ -23,7 +24,6 @@ from qma.core.vocabulary import (
     VocabularyError,
     parse_closed,
 )
-from qma.core.refusals import OperatorPrincipalRequired
 from qma.daemon.journal.authoritative import AuthoritativeJournal, JournalAppendReceipt
 from qma.wire.principals import authorize_wire_command
 from qmf.core import Ok, Result, is_refusal
@@ -53,9 +53,7 @@ REGISTRY_HOME: Final[str] = "registry"
 
 # Cite by key — never copy a registry value into code (FR-Q36; AD-26).
 STORE_BACKUP_CADENCE_KEY: Final[str] = "registry:store.backup_cadence"
-STORE_SAMPLE_RESTORE_TEST_CADENCE_KEY: Final[str] = (
-    "registry:store.sample_restore_test_cadence"
-)
+STORE_SAMPLE_RESTORE_TEST_CADENCE_KEY: Final[str] = "registry:store.sample_restore_test_cadence"
 STORE_FULL_RESTORE_REHEARSAL_CADENCE_KEY: Final[str] = (
     "registry:store.full_restore_rehearsal_cadence"
 )
@@ -174,7 +172,11 @@ def _row(
 
 
 def builtin_qma_variable_rows() -> tuple[VariableRow, ...]:
-    """QMA AD-26 rows shipped in v1 (DEC-0325). Defaults cite declarations, not copies of unresolved values where the spine left none."""
+    """QMA AD-26 rows shipped in v1 (DEC-0325).
+
+    Defaults cite declarations, not copies of unresolved values where the spine
+    left none.
+    """
     daemon = "COMP-QMA-DAEMON"
     wire = "COMP-QMA-WIRE"
     g = VariableScope.GLOBAL
@@ -570,8 +572,7 @@ class GovernedVariableRegistry:
         if row.editability is VariableEditability.UNEDITABLE:
             return policy_rejection(
                 "variable_set",
-                "a variable.set naming an uneditable variable is refused "
-                "(FR-Q36; AD-26)",
+                "a variable.set naming an uneditable variable is refused (FR-Q36; AD-26)",
                 name=row.name,
                 editability=row.editability.value,
             )

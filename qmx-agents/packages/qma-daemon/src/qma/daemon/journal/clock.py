@@ -14,7 +14,7 @@ from types import MappingProxyType
 from typing import Final, Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from qmf.core import Clock, Duration, Instant, Ok, Result, is_refusal
+from qmf.core import Clock, Duration, Instant, Ok, Result, TypedRefusal, is_refusal
 from qmf.data.store.refusals import invalid_input, policy_rejection
 
 __all__ = [
@@ -87,7 +87,7 @@ class DurationPolicy:
         return start.value.add_duration(self.span)
 
 
-def refuse_host_local_time(*, attempted: object = None) -> Result[object]:
+def refuse_host_local_time(*, attempted: object = None) -> TypedRefusal:
     """Refuse any host-local time read (FR-Q25; AD-6).
 
     Components obtain time only from the daemon's injected ``qmf-core`` clock.
@@ -100,7 +100,7 @@ def refuse_host_local_time(*, attempted: object = None) -> Result[object]:
     )
 
 
-def refuse_worker_evidence_timestamp(*, attempted: object = None) -> Result[object]:
+def refuse_worker_evidence_timestamp(*, attempted: object = None) -> TypedRefusal:
     """Refuse a worker-authored evidence timestamp (FR-Q25; AD-6).
 
     The daemon records evidence time; workers may not stamp their own evidence.
@@ -117,8 +117,7 @@ def _resolve_iana_zone(iana_zone: object) -> Result[ZoneInfo]:
     if not isinstance(iana_zone, str) or iana_zone.strip() == "":
         return invalid_input(
             "iana_zone",
-            "a wall-clock policy carries an explicit non-empty IANA zone "
-            "(FR-Q25; AD-6)",
+            "a wall-clock policy carries an explicit non-empty IANA zone (FR-Q25; AD-6)",
             given=repr(iana_zone),
         )
     try:
@@ -201,9 +200,7 @@ class DaemonClock:
         recorded_ns = recorded.value.value_ns
 
         if occurred_at is None:
-            return Ok(
-                DurableTimestamps(occurred_at=recorded_ns, recorded_at=recorded_ns)
-            )
+            return Ok(DurableTimestamps(occurred_at=recorded_ns, recorded_at=recorded_ns))
 
         if isinstance(occurred_at, Instant):
             return Ok(
@@ -247,9 +244,7 @@ class DaemonClock:
             return refuse_worker_evidence_timestamp(attempted=worker_authored_timestamp)
         for banned in ("occurred_at", "recorded_at"):
             if banned in record:
-                return refuse_worker_evidence_timestamp(
-                    attempted={banned: record[banned]}
-                )
+                return refuse_worker_evidence_timestamp(attempted={banned: record[banned]})
 
         stamps = self.stamp_durable(occurred_at=occurred_at)
         if is_refusal(stamps):
@@ -281,9 +276,7 @@ class DaemonClock:
             )
         return Ok(out)
 
-    def wall_clock_policy(
-        self, kind: object, iana_zone: object
-    ) -> Result[WallClockPolicy]:
+    def wall_clock_policy(self, kind: object, iana_zone: object) -> Result[WallClockPolicy]:
         """Build a wall-clock policy that carries an explicit IANA zone."""
         kind_result = _try_wall_clock_kind(kind)
         if is_refusal(kind_result):
@@ -292,9 +285,7 @@ class DaemonClock:
         if is_refusal(zone):
             return zone
         # _resolve_iana_zone already validated a non-empty str.
-        return Ok(
-            WallClockPolicy(kind=kind_result.value, iana_zone=str(iana_zone))
-        )
+        return Ok(WallClockPolicy(kind=kind_result.value, iana_zone=str(iana_zone)))
 
     def evaluate_wall_clock_policy(
         self, policy: WallClockPolicy, *, at: Instant | None = None

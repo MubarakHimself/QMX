@@ -34,12 +34,10 @@ def _test_clock(*, boot: str = "boot-1", n: int = 64) -> DataDrivenClock:
     return DataDrivenClock(boot_epoch_id=boot, wall_instants=walls, monotonic_ns=monos)
 
 
-def _open_journal(tmp_path: Path, *, boot: str = "boot-1") -> tuple[
-    PersistenceSubstrate, AuthoritativeJournal
-]:
-    substrate_result = PersistenceSubstrate.open(
-        tmp_path, machine="test-host", boot_epoch_id=boot
-    )
+def _open_journal(
+    tmp_path: Path, *, boot: str = "boot-1"
+) -> tuple[PersistenceSubstrate, AuthoritativeJournal]:
+    substrate_result = PersistenceSubstrate.open(tmp_path, machine="test-host", boot_epoch_id=boot)
     assert is_ok(substrate_result), substrate_result
     substrate = substrate_result.value
     journal_result = AuthoritativeJournal.bind(substrate, clock=_test_clock(boot=boot))
@@ -84,11 +82,11 @@ def test_journal_seq_is_sole_total_order_per_scope_seq_is_derived(tmp_path: Path
         assert c.value.scope_seq == 2
 
         # journal_seq is global; scope seq is a derived projection index.
-        assert [a.value.record.journal_seq, b.value.record.journal_seq, c.value.record.journal_seq] == [
-            1,
-            2,
-            3,
-        ]
+        assert [
+            a.value.record.journal_seq,
+            b.value.record.journal_seq,
+            c.value.record.journal_seq,
+        ] == [1, 2, 3]
         projected = journal.scope_projection(desk)
         assert is_ok(projected)
         assert [seq for seq, _ in projected.value] == [1, 2, 3]
@@ -102,22 +100,18 @@ def test_closed_store_list_accepts_only_declared_vocabulary(tmp_path: Path) -> N
     substrate, journal = _open_journal(tmp_path)
     try:
         assert len(DEFINITION_STORE_MEMBERS) == 16
-        assert CLOSED_PROJECTIONS | CLOSED_INDEPENDENT_STORES | frozenset(
-            DEFINITION_STORE_MEMBERS
-        ) == CLOSED_STORE_NAMES
+        assert (
+            CLOSED_PROJECTIONS | CLOSED_INDEPENDENT_STORES | frozenset(DEFINITION_STORE_MEMBERS)
+            == CLOSED_STORE_NAMES
+        )
 
         for name in sorted(CLOSED_STORE_NAMES):
             declared = journal.declare_store(name)
             assert is_ok(declared), name
             assert declared.value.materialized is False
             assert declared.value.fold_metadata.ordering_key == "journal_seq"
-            assert (
-                declared.value.fold_metadata.equal_instant_disposition
-                == "ascending_journal_seq"
-            )
-            assert (
-                declared.value.fold_metadata.knowledge_time_bound == "as_of_recorded_at"
-            )
+            assert declared.value.fold_metadata.equal_instant_disposition == "ascending_journal_seq"
+            assert declared.value.fold_metadata.knowledge_time_bound == "as_of_recorded_at"
 
         refused = journal.declare_store("shadow_cache")
         assert is_refusal(refused)

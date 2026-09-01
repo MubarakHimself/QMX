@@ -11,6 +11,7 @@ A machine principal may not acquire, delegate, borrow, cache, or impersonate
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
@@ -150,10 +151,8 @@ def refuse_principal_impersonation(
     dst = parsed_target.value
     if may_convert_principal(src, dst):
         return Ok(src)
-    try:
+    with contextlib.suppress(VocabularyError):
         assert_no_principal_conversion(src, dst)
-    except VocabularyError:
-        pass
     return OperatorPrincipalRequired.of(
         command="principal.impersonate",
         principal_class=src.value,
@@ -349,10 +348,7 @@ def authorize_wire_command(
         )
 
     frozen_args: Mapping[str, object]
-    if args is None:
-        frozen_args = MappingProxyType({})
-    else:
-        frozen_args = MappingProxyType(dict(args))
+    frozen_args = MappingProxyType({}) if args is None else MappingProxyType(dict(args))
 
     return Ok(
         AuthorizedWireCommand(

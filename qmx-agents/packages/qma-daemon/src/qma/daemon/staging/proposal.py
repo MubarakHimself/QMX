@@ -16,6 +16,7 @@ from types import MappingProxyType
 from typing import Final, Literal
 from uuid import uuid4
 
+from qma.core.refusals import OperatorPrincipalRequired
 from qma.core.vocabulary import (
     GovernedAct,
     GovernedActTarget,
@@ -25,7 +26,6 @@ from qma.core.vocabulary import (
     parse_closed,
     validate_governed_act,
 )
-from qma.core.refusals import OperatorPrincipalRequired
 from qma.wire.principals import authorize_wire_command
 from qmf.core import Ok, Result, is_refusal
 from qmf.data.store.refusals import invalid_input, policy_rejection
@@ -117,8 +117,7 @@ def _parse_edit(raw: object) -> Result[ProposalEdit]:
     if not isinstance(raw, Mapping):
         return invalid_input(
             "edit",
-            "a RefinementProposal edit is a mapping with kind, operation, and id "
-            "(FR-Q26; AD-22)",
+            "a RefinementProposal edit is a mapping with kind, operation, and id (FR-Q26; AD-22)",
             given=repr(type(raw).__name__),
         )
     kind_raw = raw.get("kind")

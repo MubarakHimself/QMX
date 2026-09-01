@@ -13,7 +13,7 @@ import threading
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Final, Literal
+from typing import Final, Literal, cast
 
 from qma.daemon.journal.clock import (
     DaemonClock,
@@ -30,7 +30,7 @@ from qma.daemon.journal.stores import (
     announce_event_for_store,
 )
 from qma.daemon.persistence.substrate import PersistenceSubstrate
-from qma.wire.envelope import ScopeSegment, parse_scope_path
+from qma.wire.envelope import ScopePathError, ScopeSegment, parse_scope_path
 from qmf.core import (
     Clock,
     Fingerprint,
@@ -131,8 +131,7 @@ def _coerce_fingerprint(value: object) -> Result[Fingerprint]:
         return Fingerprint.try_create(value)
     return invalid_input(
         "record_fp1",
-        "an evidence announcement carries the record's fp1:sha256:<hex> fingerprint "
-        "(FR-Q24; AD-6)",
+        "an evidence announcement carries the record's fp1:sha256:<hex> fingerprint (FR-Q24; AD-6)",
         given=repr(value),
     )
 
@@ -240,11 +239,12 @@ class AuthoritativeJournal:
             raw_scope = row.get("scope_path")
             if isinstance(raw_scope, list):
                 try:
-                    segments = parse_scope_path(raw_scope)
-                except Exception:
-                    continue
-                key = _scope_key(segments)
-                scope_seq[key] = scope_seq.get(key, 0) + 1
+                    segments = parse_scope_path(cast("list[object]", raw_scope))
+                except ScopePathError:
+                    segments = None
+                if segments is not None:
+                    key = _scope_key(segments)
+                    scope_seq[key] = scope_seq.get(key, 0) + 1
         return Ok((max_seq + 1 if max_seq >= _FIRST_JOURNAL_SEQ else _FIRST_JOURNAL_SEQ, scope_seq))
 
     @property
@@ -505,9 +505,7 @@ class AuthoritativeJournal:
         """Read the single journal stream in durable append order."""
         return self._journal.read_stream(DAEMON_JOURNAL_STREAM, for_world=self._world)
 
-    def scope_projection(
-        self, scope_path: object
-    ) -> Result[list[tuple[int, dict[str, object]]]]:
+    def scope_projection(self, scope_path: object) -> Result[list[tuple[int, dict[str, object]]]]:
         """Filtered per-scope projection with derived ``seq`` (not ``journal_seq``).
 
         Returns ``(scope_seq, row)`` pairs in ``journal_seq`` order for rows whose
@@ -515,7 +513,7 @@ class AuthoritativeJournal:
         """
         try:
             wanted = parse_scope_path(scope_path)
-        except Exception as exc:
+        except ScopePathError as exc:
             return invalid_input(
                 "scope_path",
                 f"scope_path must obey the fixed ancestor order: {exc}",
@@ -530,12 +528,12 @@ class AuthoritativeJournal:
             raw_scope = row.get("scope_path", [])
             try:
                 row_scope = parse_scope_path(raw_scope)
-            except Exception:
+            except ScopePathError:
+                row_scope = None
+            if row_scope is None:
                 continue
             # Prefix filter: include events at or under the requested scope.
-            if wanted and (
-                len(row_scope) < len(wanted) or row_scope[: len(wanted)] != wanted
-            ):
+            if wanted and (len(row_scope) < len(wanted) or row_scope[: len(wanted)] != wanted):
                 continue
             scope_seq += 1
             projected.append((scope_seq, row))
