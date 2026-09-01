@@ -10,7 +10,8 @@ FTR-01-blocked position/balance read-backs. Story 24.6 re-exports the UNKNOWN
 stream-gate shapes so ``qmn.order`` can enforce the exact ``(VenueId, account)``
 boundary without importing ``qmf.venue`` (QMX-F062). Story 24.8 adds reconnect
 gap-recovery, the TN-21 replay adapter, and the shared three-implementation
-port-contract suite.
+port-contract suite. Story 24.9 re-exports subject-terminal resolution and
+records TN-24i requote / deep-history edge dispositions.
 """
 
 from __future__ import annotations
@@ -57,11 +58,15 @@ from qmf.venue.connection import (
     venue_writer_id,
 )
 from qmf.venue.events import (
+    InboundVenueEvent,
     ObservationKind,
     Reconciliation,
     ReconciliationReadback,
     ReconciliationVerdict,
     SubjectResolution,
+    SubjectTerminalOutcome,
+    VenueNativeIdentity,
+    resolve_subject_terminal,
 )
 from qmf.venue.observation import REQUIRED_CONNECTION_CHECKS
 
@@ -82,6 +87,17 @@ from qmn.venue.disposition import (
     TRANSPORT_LOCUS,
     ParentAsyncExemptionDisposition,
     resolve_transport_locus,
+)
+from qmn.venue.edge import (
+    COMPANION_SOURCE_IMPLEMENTATION_FORBIDDEN,
+    DEEP_HISTORY_NODE_SOURCE,
+    REQUOTE_OUTCOME_TYPE_FORBIDDEN,
+    DeepHistorySourceRole,
+    RequoteMapping,
+    companion_source_implementation_allowed,
+    deep_history_source_inventory,
+    map_requote,
+    requote_error_map_row,
 )
 from qmn.venue.live import (
     CT13_SEVEN_EVENT_TYPES,
@@ -127,15 +143,18 @@ from qmn.venue.verify import (
 __all__ = [
     "ASYNC_CONFORMANCE_EXEMPTION",
     "ASYNC_EXEMPTION_MODULE",
+    "COMPANION_SOURCE_IMPLEMENTATION_FORBIDDEN",
     "CONFORMANCE_CASES",
     "CT13_SEVEN_EVENT_TYPES",
     "CTRADER_OPEN_API_PORT",
     "DATA_QUALITY_EVENT_TYPE",
+    "DEEP_HISTORY_NODE_SOURCE",
     "FTR01_BLOCKED_KINDS",
     "FTR04_DISPOSITION",
     "PORT_CONTRACT_CAPABILITY_KEYS",
     "REPLAY_SUBMIT_REFUSAL_CATEGORY",
     "REQUIRED_CONNECTION_CHECKS",
+    "REQUOTE_OUTCOME_TYPE_FORBIDDEN",
     "RISK_REDUCING_KINDS",
     "TRANSPORT_LOCUS",
     "VOLUME_WIRE_SCALE_EXPONENT",
@@ -153,7 +172,9 @@ __all__ = [
     "ConformanceDouble",
     "ConnectionManager",
     "DataQualityJournalEvent",
+    "DeepHistorySourceRole",
     "FieldDefectKind",
+    "InboundVenueEvent",
     "JournalEvent",
     "JournalMapping",
     "LiveCTraderClient",
@@ -174,6 +195,7 @@ __all__ = [
     "ReconnectReport",
     "RecoveredObservation",
     "ReplayAdapter",
+    "RequoteMapping",
     "ResolveObservation",
     "ResolveResolution",
     "StandingIntentDecision",
@@ -182,6 +204,7 @@ __all__ = [
     "StandingProtectionIntent",
     "StreamBlockCause",
     "SubjectResolution",
+    "SubjectTerminalOutcome",
     "SubmissionOutcome",
     "SubmissionResult",
     "TimeInForce",
@@ -193,16 +216,22 @@ __all__ = [
     "VenueClientSelection",
     "VenueFactVerification",
     "VenueFactVerifier",
+    "VenueNativeIdentity",
     "WireKind",
+    "companion_source_implementation_allowed",
     "compare_port_contract_shapes",
     "compound_command_acceptance_blocked",
     "conformance_measured_facts",
     "ct13_journal_event_type",
     "ctrader_static_declaration",
     "decode_volume",
+    "deep_history_source_inventory",
     "ftr01_position_balance_blocked",
     "is_risk_reducing",
+    "map_requote",
     "replay_command_attempt_refused",
+    "requote_error_map_row",
+    "resolve_subject_terminal",
     "resolve_transport_locus",
     "run_conformance_suite",
     "run_port_contract_suite",

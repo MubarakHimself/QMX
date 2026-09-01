@@ -14,11 +14,15 @@ stream boundary before pacer admission — UNKNOWN never becomes a rejection.
 Story 24.7: ``amend_protection`` is gated by measured amend atomicity, journaled
 before dispatch, never suppressed by ``amend_min_improvement``, and never
 emulated by an invented amend sequence; ``close_partial`` stays unsupported.
+
+Story 24.9: a subject command whose subject is absent or already terminal before
+handoff resolves without submission (never a naked close); a post-submit venue
+terminal race is disposed via :func:`~qmn.order.terminal.resolve_node_close_against_subject`.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final, cast
 
@@ -47,12 +51,18 @@ from qmn.order.identity import CommandIdentityBinder, mint_venue_client_id
 from qmn.order.ordinal import CommandOrdinalStore
 from qmn.order.pacer import ConnectionCommandPacer, PacerAdmission, WireHandoff
 from qmn.order.protection import require_venue_resident_protective_stop
+from qmn.order.terminal import (
+    Ct29VenueCloseReason,
+    TerminalSubjectDisposition,
+    resolve_node_close_against_subject,
+)
 from qmn.order.unknown import CommandStreamUnknownBoundary, HeldProtectionAct
 from qmn.venue import (
     AdmissionDisposition,
     Command,
     CommandKind,
     CompoundCommand,
+    SubjectResolution,
     SubmissionResult,
     VenueClientPort,
     compound_command_acceptance_blocked,
@@ -62,6 +72,7 @@ __all__ = [
     "FTR02_COMPOUND_BLOCKED",
     "OrderPath",
     "OrderPathSubmission",
+    "OrderPathTerminalResolution",
     "compound_all_rejected_acceptance_blocked",
 ]
 
@@ -97,6 +108,23 @@ class OrderPathSubmission:
     handoff: WireHandoff
     result: SubmissionResult
     protective_stop_form: str
+    terminal_disposition: TerminalSubjectDisposition | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class OrderPathTerminalResolution:
+    """Subject command resolved without wire handoff (TN-24j pre-submission half)."""
+
+    command: Command
+    disposition: TerminalSubjectDisposition
+
+    @property
+    def submitted(self) -> bool:
+        return False
+
+    @property
+    def is_naked_close(self) -> bool:
+        return self.disposition.is_naked_close
 
 
 @dataclass
@@ -324,14 +352,18 @@ class OrderPath:
         amend_min_improvement: object = None,
         dual_side_requested: object = False,
         amend_sequence: object = None,
-    ) -> Result[OrderPathSubmission]:
+        subject_present_at_submission: object = None,
+        subject_observations: object = None,
+        venue_close_reason: object = Ct29VenueCloseReason.VENUE_LIQUIDATION,
+    ) -> Result[OrderPathSubmission | OrderPathTerminalResolution]:
         """Submit one Book-authorized command through the full TN-6 order path.
 
-        Steps: sequencer gate → amend atomicity / journal-before-dispatch →
-        protective-stop proof → pacer admit → identity bind → wire handoff
-        (deadline starts) → VenueClientPort.submit. Compound commands stay
-        FTR-02-blocked. No retry after handoff. ``amend_min_improvement`` is
-        accepted only to prove it never suppresses a risk-non-increasing amend.
+        Steps: sequencer gate → subject-terminal pre-handoff gate (Story 24.9) →
+        amend atomicity / journal-before-dispatch → protective-stop proof →
+        pacer admit → identity bind → wire handoff (deadline starts) →
+        VenueClientPort.submit. Compound commands stay FTR-02-blocked. No retry
+        after handoff. ``amend_min_improvement`` is accepted only to prove it
+        never suppresses a risk-non-increasing amend.
         """
         del amend_min_improvement  # origination policy only — never a path gate
         if isinstance(command, CompoundCommand):
@@ -357,6 +389,53 @@ class OrderPath:
                 },
                 after_condition_descriptor="recover ordinal high-water then open_sequencer",
             )
+
+        # Story 24.9: subject absent/terminal before handoff → without submission.
+        if subject_present_at_submission is not None or subject_observations is not None:
+            if not isinstance(handed_off_at, Instant):
+                return TypedRefusal(
+                    category=RefusalCategory.INVALID_INPUT,
+                    retryability=Retryability.NO,
+                    context={
+                        "field": "handed_off_at",
+                        "reason": (
+                            "subject-terminal pre-handoff gate compares against "
+                            "the handoff Instant as submit stamp"
+                        ),
+                        "given": repr(handed_off_at),
+                    },
+                )
+            present = (
+                True
+                if subject_present_at_submission is None
+                else subject_present_at_submission
+            )
+            observations: Sequence[object] | tuple[()] = (
+                ()
+                if subject_observations is None
+                else cast("Sequence[object]", subject_observations)
+            )
+            gated = resolve_node_close_against_subject(
+                command,
+                observations=observations,
+                submit_stamp=handed_off_at,
+                subject_present_at_submission=present,
+                venue_close_reason=venue_close_reason,
+            )
+            if is_refusal(gated):
+                return gated
+            if (
+                is_ok(gated)
+                and gated.value.resolution is SubjectResolution.RESOLVE_WITHOUT_SUBMISSION
+            ):
+                return Ok(
+                    OrderPathTerminalResolution(
+                        command=command,
+                        disposition=gated.value,
+                    )
+                )
+            # SUPERSEDED_BY_TERMINAL_SUBJECT is a post-submit named outcome —
+            # resolve via resolve_node_close_against_subject after observations land.
 
         # Story 24.7: amend atomicity + never invent a sequence; journal before dispatch.
         if command.kind is CommandKind.AMEND_PROTECTION:

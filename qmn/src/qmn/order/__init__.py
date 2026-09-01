@@ -20,6 +20,12 @@ risk-non-increasing ``amend_protection`` is never suppressed by
 ``amend_min_improvement`` and is journaled before dispatch; ``close_partial``
 and close-then-replace stay unsupported; the five CT-19 kinds remain closed
 (QMX-F063).
+
+Story 24.9: duplicate fills dedup by venue-native deal/execution identity
+(TN-24b); node-close vs venue-terminal races resolve as named
+``rejected-by-venue (superseded-by-terminal-subject)`` with CT-29 venue
+authority, never UNKNOWN; absent/terminal subjects resolve without submission
+(TN-24j).
 """
 
 from __future__ import annotations
@@ -43,6 +49,14 @@ from qmn.order.amend import (
     refuse_close_then_replace,
     refuse_invented_amend_sequence,
     resolve_amend_atomicity,
+)
+from qmn.order.fills import (
+    DATA_QUALITY_EVENT_TYPE,
+    DUPLICATE_FILL_ALARM_CLASS,
+    AccountFillStore,
+    DurableFill,
+    FillIngestDisposition,
+    FillIngestResult,
 )
 from qmn.order.identity import (
     VENUE_CLIENT_ID_PREFIX,
@@ -69,12 +83,22 @@ from qmn.order.path import (
     FTR02_COMPOUND_BLOCKED,
     OrderPath,
     OrderPathSubmission,
+    OrderPathTerminalResolution,
     compound_all_rejected_acceptance_blocked,
 )
 from qmn.order.protection import (
     ENTRY_RELATIVE_FORM,
     require_venue_resident_protective_stop,
     resolved_protective_stop_form,
+)
+from qmn.order.terminal import (
+    CLOSING_AUTHORITY_VENUE,
+    CT29_VENUE_INITIATED_CLOSE,
+    CT29_VENUE_LIQUIDATION,
+    SUPERSEDED_BY_TERMINAL_SUBJECT,
+    Ct29VenueCloseReason,
+    TerminalSubjectDisposition,
+    resolve_node_close_against_subject,
 )
 from qmn.order.unknown import (
     OPERATOR_PRINCIPAL,
@@ -94,15 +118,22 @@ from qmn.order.unknown import (
 
 __all__ = [
     "AMEND_JOURNAL_KIND",
+    "CLOSING_AUTHORITY_VENUE",
     "COMMAND_ORDINAL_RECORD_CLASS",
     "CT19_CLOSED_KINDS",
+    "CT29_VENUE_INITIATED_CLOSE",
+    "CT29_VENUE_LIQUIDATION",
+    "DATA_QUALITY_EVENT_TYPE",
+    "DUPLICATE_FILL_ALARM_CLASS",
     "ENTRY_RELATIVE_FORM",
     "FTR02_COMPOUND_BLOCKED",
     "JOURNAL_SEQUENCE_RECORD_CLASS",
     "OPERATOR_PRINCIPAL",
     "PACER_DOOR",
+    "SUPERSEDED_BY_TERMINAL_SUBJECT",
     "UNDELIVERABLE_ALARM_CLASS",
     "VENUE_CLIENT_ID_PREFIX",
+    "AccountFillStore",
     "AdmissionClass",
     "AmendAtomicity",
     "AmendJournalRecord",
@@ -113,17 +144,23 @@ __all__ = [
     "CommandOrdinalStore",
     "CommandStreamUnknownBoundary",
     "ConnectionCommandPacer",
+    "Ct29VenueCloseReason",
+    "DurableFill",
     "DynamicProtectionOrigin",
+    "FillIngestDisposition",
+    "FillIngestResult",
     "HeldProtectionAct",
     "HoldDisposition",
     "JournalSequenceCursor",
     "OrderPath",
     "OrderPathSubmission",
+    "OrderPathTerminalResolution",
     "PacerAdmission",
     "ProtectionIntentExtent",
     "ReadbackClarity",
     "ResolveDecision",
     "ResolvePath",
+    "TerminalSubjectDisposition",
     "UndeliverableProtectionIntent",
     "UnknownStreamRegistry",
     "WireHandoff",
@@ -144,6 +181,7 @@ __all__ = [
     "refuse_invented_amend_sequence",
     "require_venue_resident_protective_stop",
     "resolve_amend_atomicity",
+    "resolve_node_close_against_subject",
     "resolved_protective_stop_form",
     "unknown_never_rejection",
 ]
