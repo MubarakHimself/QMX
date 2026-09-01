@@ -12,10 +12,9 @@ from __future__ import annotations
 import zipfile
 from pathlib import Path
 
+import isolated_build_check as ibc
 import pytest
 from workspace_meta import Member
-
-import isolated_build_check as ibc
 
 
 def _make_wheel(path: Path, names: list[str]) -> Path:
@@ -62,7 +61,9 @@ def test_clean_namespace_submodule_wheel_passes(tmp_path: Path) -> None:
 
 def test_workspace_constraints_writes_pins(tmp_path: Path) -> None:
     members = [_member("qmf-core", "0.1.0"), _member("qmb", "0.2.0")]
-    path = ibc._workspace_constraints(members, tmp_path / "constraints.txt")
+    path = ibc._workspace_constraints(  # pyright: ignore[reportPrivateUsage]
+        members, tmp_path / "constraints.txt"
+    )
     assert path.read_text(encoding="utf-8") == "qmf-core==0.1.0\nqmb==0.2.0\n"
 
 
@@ -72,7 +73,7 @@ def test_workspace_constraints_refuses_symlink(tmp_path: Path) -> None:
     link = tmp_path / "constraints.txt"
     _try_symlink(link, outside)
     with pytest.raises(ibc.SmokeError, match="symlink"):
-        ibc._workspace_constraints([_member()], link)
+        ibc._workspace_constraints([_member()], link)  # pyright: ignore[reportPrivateUsage]
     assert outside.read_text(encoding="utf-8") == "do-not-overwrite\n"
 
 
@@ -80,5 +81,6 @@ def test_workspace_constraints_refuses_existing_path(tmp_path: Path) -> None:
     path = tmp_path / "constraints.txt"
     path.write_text("stale\n", encoding="utf-8")
     with pytest.raises(ibc.SmokeError, match="exclusive no-follow create failed"):
-        ibc._workspace_constraints([_member()], path)
+        ibc._workspace_constraints([_member()], path)  # pyright: ignore[reportPrivateUsage]
     assert path.read_text(encoding="utf-8") == "stale\n"
+
