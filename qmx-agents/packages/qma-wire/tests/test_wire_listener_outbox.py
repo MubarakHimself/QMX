@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 from qma.wire import (
     DAEMON_DIAL_DIRECTION,
@@ -130,7 +131,7 @@ def test_credential_ref_authenticates_before_protocol_no_secret_on_surface() -> 
     secretish = authenticate_before_protocol("secret=literally-a-value")
     assert is_refusal(secretish)
 
-    envelope_with_secret = {
+    envelope_with_secret: dict[str, object] = {
         "v": "1.0.0",
         "type": "start_mission",
         "id": "1",
@@ -142,10 +143,11 @@ def test_credential_ref_authenticates_before_protocol_no_secret_on_surface() -> 
     assert is_refusal(assert_no_secret_on_wire_surface(envelope_with_secret))
 
     schema = load_schema("initialize")
-    examples = schema.get("examples", [])
-    assert isinstance(examples, list)
-    for example in examples:
-        assert isinstance(example, dict)
+    examples_obj = schema.get("examples", [])
+    assert isinstance(examples_obj, list)
+    for example_obj in cast(list[object], examples_obj):
+        assert isinstance(example_obj, dict)
+        example = cast(dict[str, object], example_obj)
         assert is_ok(assert_no_secret_on_wire_surface(example))
         assert "credential_ref" in example
         assert "secret" not in example
