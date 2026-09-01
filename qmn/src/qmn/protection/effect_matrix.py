@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Final, Literal
+from typing import Final, Literal, cast
 
 from qmf.core import Ok, Result, is_refusal
 from qmf.risk.control_action import SatisfactionPredicate, SubjectScope
@@ -228,7 +228,7 @@ def compile_ksa_effect_cell(
 def compile_effect_matrix(
     *,
     value_status: object,
-    cells: Sequence[Mapping[str, object]] | Iterable[Mapping[str, object]] | None = None,
+    cells: Sequence[object] | Iterable[object] | None = None,
 ) -> Result[CompiledEffectMatrix]:
     """Compile the matrix artifact from value-status plus optional cell maps.
 
@@ -249,7 +249,7 @@ def compile_effect_matrix(
                     "each matrix cell declaration is a mapping",
                     given=repr(item),
                 )
-            raw_cells.append(item)
+            raw_cells.append(cast("Mapping[str, object]", item))
 
     if status.value == VALUE_STATUS_BLANK:
         if raw_cells:

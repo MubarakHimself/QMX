@@ -349,10 +349,10 @@ def mint_escalation(
 
 
 def fold_ksa_level(
-    records: Sequence[KsaEscalationRecord] | Iterable[KsaEscalationRecord],
+    records: Sequence[object] | Iterable[object],
     *,
-    scope: KsaEnforcementScope,
-    epoch: LevelEpoch,
+    scope: object,
+    epoch: object,
 ) -> Result[KsaLevel]:
     """Monotone non-decreasing KSA fold within one level epoch at ``scope``.
 
