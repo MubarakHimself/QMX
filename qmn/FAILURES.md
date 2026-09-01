@@ -248,3 +248,25 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Product-user affordance:** The node refused to seal because a producer,
   labeler, or seat claimed light without proven four bounds. Leave it heavy
   (fan-out) or wait for the VPS baseline before claiming light.
+
+### FR-19: Seat callback containment breach / automatic quarantine
+
+- **Failure class:** policy rejection
+- **Detection:** a QL-7 seat callback breaches `registry:seat_callback_deadline`
+  (slice-driver `CancelToken` / `LimitProbe` elapsed),
+  `registry:seat_memory_ceiling` (`LimitProbe` memory bytes), or raises
+  (`qmn.seats.host.drive_governed_seat`; triggers `deadline-breach`,
+  `memory-ceiling-breach`, `callback-exception`).
+- **Auto-recovery / retry:** none — the seat quarantines automatically and
+  stays `quarantined` across restart, boot epoch, and config version; only
+  operator-signed `seat_reinstate` exits. A non-returning callback is the
+  door-layer slice-progress watch / supervised restart of last resort, not a
+  seat-state clear.
+- **Visible degraded state:** the seat emits no further intents; the command
+  stream does not fail and the node does not restart on a cooperative breach;
+  quarantine is a read-time fold over the seat-transition stream.
+- **Notification tier:** protection-escalation
+- **Product-user affordance:** The bot seat was quarantined after a deadline,
+  memory-ceiling, or callback-exception breach. Inspect the journaled
+  transition, then reinstate from the operator principal over the powers
+  channel; a restart will not re-arm the seat.

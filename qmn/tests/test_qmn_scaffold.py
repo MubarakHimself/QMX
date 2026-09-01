@@ -72,6 +72,7 @@ def test_declared_dependencies_include_qmf_venue_and_qmb() -> None:
     assert "qmf-risk" in deps
     assert "qmf-venue" in deps
     assert "qmb" in deps
+    assert "qml" in deps
     assert "prometheus-client==0.26.0" in deps
 
 

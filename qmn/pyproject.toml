@@ -6,12 +6,14 @@ requires-python = ">=3.14,<3.15"
 # SemVer is display-only provenance (DEC-0186) — composition_fp is identity.
 # Story 24.1 lands the venue boundary (qmf-core + sanctioned qmf-venue at
 # qmn.venue). Story 24.4 adds qmb so the live loop drives run_slice unforked.
+# Story 26.8 hosts QL-7 seats through the QML runtime protocol.
 dependencies = [
     "qmf-core",
     "qmf-registry",
     "qmf-risk",
     "qmf-venue",
     "qmb",
+    "qml",
     "prometheus-client==0.26.0",
 ]
 
@@ -29,3 +31,4 @@ qmf-registry = { workspace = true }
 qmf-risk = { workspace = true }
 qmf-venue = { workspace = true }
 qmb = { workspace = true }
+qml = { workspace = true }
