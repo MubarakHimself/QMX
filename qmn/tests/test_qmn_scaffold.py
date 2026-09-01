@@ -111,6 +111,10 @@ def test_feat_0031_structural_seed_packages_exist() -> None:
 
 def test_composition_config_doors_time_surfaces() -> None:
     assert host.COMPOSITION_ROOT_SURFACE == "qmn.host"
+    assert host.REGISTRY_MINT_SURFACE == "qmn.host"
+    assert host.DOOR_LOCAL_REGISTRY_CACHE is False
+    assert host.HAS_ALTERNATE_IDENTITY_FUNCTION is False
+    assert len(host.COMPOSE_RECORD_KINDS) == 7
     assert host.ceremony_steps() == ("preflight", "compose", "fingerprint", "seal")
     assert host.SealedComposition().sealed is True
     assert config.CONFIG_SURFACE == "qmn.config"
