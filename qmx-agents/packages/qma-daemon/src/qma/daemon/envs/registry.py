@@ -24,6 +24,7 @@ from qma.core.barriers.reachability import (
     validate_execution_environment_declaration,
     validate_worker_image,
 )
+from qma.core.ports.compute import ComputeRequirement, match_compute_requirement
 from qma.core.ports.execution import (
     ComputerUseProfile,
     ExecutionEnvironment,
@@ -92,6 +93,12 @@ def _coerce_declaration(
     mounts_raw = getattr(environment, "mounts", None)
     allowlist = getattr(environment, "environment_allowlist", None)
     capabilities = getattr(environment, "capabilities", None)
+    cpu = getattr(environment, "cpu", None)
+    memory = getattr(environment, "memory", None)
+    disk = getattr(environment, "disk", None)
+    gpu_count = getattr(environment, "gpu_count", None)
+    gpu_kind_raw = getattr(environment, "gpu_kind", None)
+    gpu_kind = str(gpu_kind_raw) if isinstance(gpu_kind_raw, str) else None
     lifecycle_raw = getattr(environment, "lifecycle", None)
     lifecycle: EnvironmentLifecycle | str | None
     if isinstance(lifecycle_raw, EnvironmentLifecycle) or lifecycle_raw is None:
@@ -123,6 +130,11 @@ def _coerce_declaration(
         carries_trading_credential=bool(getattr(environment, "carries_trading_credential", False)),
         running_node=bool(getattr(environment, "running_node", False)),
         max_in_flight=getattr(environment, "max_in_flight", None),
+        cpu=cpu,
+        memory=memory,
+        disk=disk,
+        gpu_count=gpu_count,
+        gpu_kind=gpu_kind,
     )
     if not isinstance(parsed, Ok):
         return parsed
@@ -306,6 +318,21 @@ class ExecutionEnvironmentRegistry:
 
     def kinds(self) -> frozenset[str]:
         return frozenset(self._by_kind)
+
+    def match_requirement(
+        self,
+        requirement: ComputeRequirement,
+    ) -> Result[ExecutionEnvironmentDeclaration]:
+        """Match a ComputeRequirement against the named kind only (FR-Q50).
+
+        Never substitutes another registered kind. Unbound kind and unmet
+        capabilities both return ``NoEnvironment`` naming the requested kind.
+        """
+        token = requirement.kind.value
+        stored = self._declarations.get(token)
+        if stored is None:
+            return NoEnvironment.of(kind=token, reason="kind_unbound")
+        return match_compute_requirement(requirement, stored)
 
     def max_in_flight_for(self, kind: ExecutionEnvironmentKind | str) -> Result[int]:
         """Declared ``registry:environment.max_in_flight`` for a bound kind."""

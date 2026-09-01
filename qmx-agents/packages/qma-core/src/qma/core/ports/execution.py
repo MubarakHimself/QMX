@@ -178,6 +178,14 @@ def resolve_max_in_flight(
     return Ok(value)
 
 
+def _parse_optional_count(value: object, field: str) -> int | None:
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        raise VocabularyError(f"{value!r} is not a positive count for {field} (CT-46; AD-17)")
+    return value
+
+
 def _parse_max_in_flight(value: object) -> int:
     if value is None:
         return ENVIRONMENT_MAX_IN_FLIGHT_DEFAULT
@@ -353,6 +361,11 @@ class ExecutionEnvironmentDeclaration:
     image_imports: tuple[str, ...] = ()
     profile: ComputerUseProfile | None = None
     max_in_flight: int = ENVIRONMENT_MAX_IN_FLIGHT_DEFAULT
+    cpu: int | None = None
+    memory: int | None = None
+    disk: int | None = None
+    gpu_count: int | None = None
+    gpu_kind: str | None = None
 
     @classmethod
     def isolated(
@@ -410,6 +423,11 @@ class ExecutionEnvironmentDeclaration:
         image_imports: Sequence[str] = (),
         profile: ComputerUseProfile | None = None,
         max_in_flight: object = None,
+        cpu: object = None,
+        memory: object = None,
+        disk: object = None,
+        gpu_count: object = None,
+        gpu_kind: str | None = None,
     ) -> ExecutionEnvironmentDeclaration:
         """Parse closed kind/network/lifecycle; invented values fail as ``VocabularyError``."""
         if isinstance(kind, ExecutionEnvironmentKind):
@@ -446,6 +464,11 @@ class ExecutionEnvironmentDeclaration:
             image_imports=_tuple_of_str(image_imports),
             profile=profile,
             max_in_flight=_parse_max_in_flight(max_in_flight),
+            cpu=_parse_optional_count(cpu, "cpu"),
+            memory=_parse_optional_count(memory, "memory"),
+            disk=_parse_optional_count(disk, "disk"),
+            gpu_count=_parse_optional_count(gpu_count, "gpu_count"),
+            gpu_kind=(gpu_kind.strip() or None) if isinstance(gpu_kind, str) else None,
         )
 
     def image_manifest(self) -> WorkerImageManifest:
@@ -500,4 +523,15 @@ class ExecutionEnvironmentDeclaration:
             "registry_key": ENVIRONMENT_MAX_IN_FLIGHT_KEY,
             "editability": max_in_flight_editability(self.kind).value,
             "pinned_single_slot": is_pinned_single_slot_kind(self.kind),
+        }
+
+    def resources(self) -> Mapping[str, object]:
+        """Optional resource ceilings the Compute Router matches (FR-Q50)."""
+        return {
+            "cpu": self.cpu,
+            "memory": self.memory,
+            "disk": self.disk,
+            "gpu_count": self.gpu_count,
+            "gpu_kind": self.gpu_kind,
+            "capabilities": self.capabilities,
         }

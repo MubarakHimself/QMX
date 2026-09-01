@@ -24,6 +24,7 @@ __all__ = [
     "HookControl",
     "HookResultDecision",
     "HookVerb",
+    "IsolationMode",
     "JobHandleState",
     "MemoryValidationState",
     "MessageKind",
@@ -332,6 +333,13 @@ class EnvironmentLifecycle(StrEnum):
 
     EPHEMERAL = "ephemeral"
     PERSISTENT = "persistent"
+
+
+class IsolationMode(StrEnum):
+    """ComputeRequirement isolation; default ``required`` (AD-17; DEC-0316)."""
+
+    REQUIRED = "required"
+    SHARED = "shared"
 
 
 class RefinementEditKind(StrEnum):

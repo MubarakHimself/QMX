@@ -1,10 +1,9 @@
-"""Compute Router slot governance (CT-46; AD-17; FR-Q49).
+"""Compute Router placement and slot governance (CT-46; AD-17; FR-Q49, FR-Q50).
 
-An ExecutionEnvironment instance grants at most one ``environment_lease`` per
-slot. Capacity is the record-homed ``registry:environment.max_in_flight``
-value on the declaration. Full occupancy queues; agents never choose a
-machine or vendor. ``unknown`` jobs keep their slot until an explicit
-recorded resolution.
+Agents declare a ``ComputeRequirement``. This router is the only placer: it
+matches capabilities against the named kind, then grants or queues an
+``environment_lease``. Agents never choose a machine or vendor. Unsatisfiable
+kind returns ``NoEnvironment``. Windows VPS desktop provision is GAP-0070.
 """
 
 from __future__ import annotations
@@ -13,6 +12,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from types import MappingProxyType
 
+from qma.core.barriers.reachability import GAP_0070_DESKTOP_EXCLUSION
+from qma.core.ports.compute import ComputeRequirement
 from qma.core.ports.execution import (
     ENVIRONMENT_MAX_IN_FLIGHT_DEFAULT,
     ENVIRONMENT_MAX_IN_FLIGHT_KEY,
@@ -73,6 +74,7 @@ class PlacementDecision:
     lease: EnvironmentLease | None = None
     queued: QueuedPlacement | None = None
     agent_choice_ignored: bool = False
+    requirement: ComputeRequirement | None = None
 
     @property
     def granted(self) -> bool:
@@ -98,6 +100,36 @@ class PlacementDecision:
         if self.queued is not None:
             payload["queued_placement"] = dict(self.queued.to_payload())
             payload["outcome"] = "queued"
+        if self.requirement is not None:
+            payload["compute_requirement"] = dict(self.requirement.to_payload())
+        return MappingProxyType(payload)
+
+    def to_agent_payload(self) -> Mapping[str, object]:
+        """Agent-visible placement: kind and lease slot, never host or vendor."""
+        payload: dict[str, object] = {
+            "kind": self.kind,
+            "granted": self.granted,
+            "queued": self.is_queued,
+            "occupied": self.occupied,
+            "max_in_flight": self.max_in_flight,
+            "agent_choice_ignored": self.agent_choice_ignored,
+        }
+        if self.lease is not None:
+            payload["environment_lease"] = {
+                "lease": "environment_lease",
+                "task_id": self.lease.task_id,
+                "kind": self.lease.kind,
+                "slot_id": self.lease.slot_id,
+            }
+        if self.queued is not None:
+            payload["queued_placement"] = {
+                "outcome": "queued",
+                "task_id": self.queued.task_id,
+                "kind": self.queued.kind,
+                "queue_position": self.queued.queue_position,
+            }
+        if self.requirement is not None:
+            payload["compute_requirement"] = dict(self.requirement.to_payload())
         return MappingProxyType(payload)
 
 
@@ -115,6 +147,7 @@ class ComputeRouter:
         self._slots: dict[str, dict[int, str]] = {}
         self._queue: dict[str, list[str]] = {}
         self._unknown: set[str] = set()
+        self._requirements: dict[str, ComputeRequirement] = {}
 
     @property
     def environments(self) -> ExecutionEnvironmentRegistry:
@@ -122,6 +155,9 @@ class ComputeRouter:
 
     def lease_for(self, task_id: str) -> EnvironmentLease | None:
         return self._leases.get(task_id)
+
+    def requirement_for(self, task_id: str) -> ComputeRequirement | None:
+        return self._requirements.get(task_id)
 
     def is_unknown(self, task_id: str) -> bool:
         return task_id in self._unknown
@@ -177,6 +213,7 @@ class ComputeRouter:
                     occupied=self.occupied_count(token),
                     lease=existing,
                     agent_choice_ignored=ignored,
+                    requirement=self._requirements.get(task_id),
                 )
             )
         if task_id in self._queue.get(token, ()):
@@ -201,7 +238,63 @@ class ComputeRouter:
                 occupied=self.occupied_count(token),
                 lease=lease,
                 agent_choice_ignored=ignored,
+                requirement=self._requirements.get(task_id),
             )
+        )
+
+    def place_requirement(
+        self,
+        *,
+        task_id: str,
+        requirement: ComputeRequirement,
+        agent_machine: str | None = None,
+        agent_vendor: str | None = None,
+        machine: str | None = None,
+        vendor: str | None = None,
+        host: str | None = None,
+    ) -> Result[PlacementDecision]:
+        """Capability-matched placement. Named kind is a hard constraint (FR-Q50)."""
+        ignored = any(
+            value not in (None, "")
+            for value in (agent_machine, agent_vendor, machine, vendor, host)
+        )
+        matched = self._environments.match_requirement(requirement)
+        if not is_ok(matched):
+            return matched
+        self._requirements[task_id] = requirement
+        placed = self.place_job(
+            task_id=task_id,
+            kind=requirement.kind,
+            agent_machine=agent_machine,
+            agent_vendor=agent_vendor,
+            machine=machine,
+            vendor=vendor,
+        )
+        if not is_ok(placed):
+            self._requirements.pop(task_id, None)
+            return placed
+        return Ok(
+            replace(
+                placed.value,
+                requirement=requirement,
+                agent_choice_ignored=placed.value.agent_choice_ignored or ignored,
+            )
+        )
+
+    def provision_windows_vps(
+        self,
+        host: str | None = None,
+    ) -> Result[ExecutionEnvironmentDeclaration]:
+        """GAP-0070: the planned Windows VPS is not provisioned in this story."""
+        return policy_rejection(
+            "desktop",
+            "Windows VPS desktop provision is Deferred GAP-0070; the Compute "
+            "Router does not provision or register that host (DEC-0324; FR-Q50)",
+            gap=GAP_0070_DESKTOP_EXCLUSION["gap"],
+            status=GAP_0070_DESKTOP_EXCLUSION["status"],
+            provisioned=GAP_0070_DESKTOP_EXCLUSION["provisioned"],
+            host=host,
+            kind=ExecutionEnvironmentKind.DESKTOP.value,
         )
 
     def hold_unknown(self, task_id: str) -> Result[EnvironmentLease]:
@@ -371,6 +464,7 @@ class ComputeRouter:
                 max_in_flight=capacity,
             ),
             agent_choice_ignored=ignored,
+            requirement=self._requirements.get(task_id),
         )
 
     def _first_free_slot(self, kind: str, capacity: int) -> int | None:
@@ -389,6 +483,7 @@ class ComputeRouter:
         self._remove_from_queue(task_id)
         lease = self._leases.pop(task_id, None)
         self._unknown.discard(task_id)
+        self._requirements.pop(task_id, None)
         if lease is None:
             return None
         slots = self._slots.get(lease.kind, {})
@@ -432,4 +527,5 @@ class ComputeRouter:
             max_in_flight=capacity.value,
             occupied=self.occupied_count(kind),
             lease=lease,
+            requirement=self._requirements.get(task_id),
         )

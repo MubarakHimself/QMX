@@ -32,7 +32,15 @@ from qma.core.ports.cardinality import (
     validate_contribution_point,
     validate_multi_contribution_key,
 )
-from qma.core.ports.compute import ComputeProvider
+from qma.core.ports.compute import (
+    COMPUTE_REQUIREMENT_FIELDS,
+    ComputeProvider,
+    ComputeRequirement,
+    GpuRequirement,
+    environment_isolation,
+    match_compute_requirement,
+    parse_compute_requirement,
+)
 from qma.core.ports.context import ContextCompiler
 from qma.core.ports.execution import (
     CONTROL_CHANNEL_ENV_NAMES,
@@ -120,6 +128,7 @@ __all__ = [
     "AGENT_PATH_ENFORCEMENT_EVENTS",
     "AUTH_MODE_NONE",
     "CAPABILITY_NARROWING_ORDER",
+    "COMPUTE_REQUIREMENT_FIELDS",
     "CONTEXT_COMPILER_SCOPE_KEY",
     "CONTROL_CHANNEL_ENV_NAMES",
     "DECLARATION_SURFACE_FIELDS",
@@ -141,6 +150,7 @@ __all__ = [
     "TOOL_KIND_DEFAULT_RUNG",
     "Cardinality",
     "ComputeProvider",
+    "ComputeRequirement",
     "ComputerUseProfile",
     "ContextCompiler",
     "DeploymentRecord",
@@ -148,6 +158,7 @@ __all__ = [
     "EnvironmentMount",
     "ExecutionEnvironment",
     "ExecutionEnvironmentDeclaration",
+    "GpuRequirement",
     "KnowledgeSource",
     "MemoryProvider",
     "ModelCapabilities",
@@ -179,14 +190,17 @@ __all__ = [
     "default_rung_for_kind",
     "deny_binds_under_mode",
     "eligible_pool",
+    "environment_isolation",
     "has_qma_wire_schema",
     "is_agent_path_enforcement_event",
     "is_control_channel_env_name",
     "is_local_proxy_deployment",
     "is_pinned_single_slot_kind",
+    "match_compute_requirement",
     "max_in_flight_editability",
     "narrow_permissions",
     "narrow_toolset_ids",
+    "parse_compute_requirement",
     "parse_environment_mount",
     "qualified_contribution_id",
     "require_singleton_scope_key",

@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 
 from qma.core.ontology import ActorId
+from qma.core.ports.compute import ComputeRequirement
 from qma.core.refusals import NoEnvironment
 from qma.core.vocabulary.enums import (
     TASK_MISSION_TERMINAL_STATES,
@@ -298,6 +299,7 @@ class TaskGraphDispatcher:
         mission_id: str,
         holder_agent_id: str,
         environment_kind: ExecutionEnvironmentKind | str | None = None,
+        requirement: ComputeRequirement | None = None,
     ) -> Result[DispatchDecision]:
         """Select the next ready Task, grant ``dispatch_lease``, evaluate env lease."""
         graph = self._store.for_mission(mission_id)
@@ -319,6 +321,7 @@ class TaskGraphDispatcher:
             task_id=task.id,
             holder_agent_id=holder_agent_id,
             environment_kind=environment_kind,
+            requirement=requirement,
         )
 
     def dispatch_task(
@@ -327,6 +330,7 @@ class TaskGraphDispatcher:
         task_id: str,
         holder_agent_id: str,
         environment_kind: ExecutionEnvironmentKind | str | None = None,
+        requirement: ComputeRequirement | None = None,
     ) -> Result[DispatchDecision]:
         located = self._store.find_task(task_id)
         if located is None:
@@ -345,8 +349,15 @@ class TaskGraphDispatcher:
                 "dispatch_lease requires a holder agent id",
             )
 
-        kind = environment_kind if environment_kind is not None else self._default_kind
-        env_result = self._router.place_job(task_id=task.id, kind=kind)
+        if requirement is not None:
+            env_result = self._router.place_requirement(
+                task_id=task.id,
+                requirement=requirement,
+            )
+            kind = requirement.kind
+        else:
+            kind = environment_kind if environment_kind is not None else self._default_kind
+            env_result = self._router.place_job(task_id=task.id, kind=kind)
         env_lease: EnvironmentLease | None = None
         env_refusal: NoEnvironment | None = None
         queued: QueuedPlacement | None = None

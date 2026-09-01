@@ -56,10 +56,26 @@ class NoEnvironment(QmaRefusal):
     RETRYABILITY: ClassVar[Retryability] = Retryability.AFTER_CONDITION
 
     @classmethod
-    def of(cls, *, kind: str) -> NoEnvironment:
+    def of(
+        cls,
+        *,
+        kind: str,
+        reason: str | None = None,
+        unmet: tuple[str, ...] | None = None,
+    ) -> NoEnvironment:
+        context: dict[str, object] = {"kind": kind}
+        if reason is not None:
+            context["reason"] = reason
+        if unmet is not None:
+            context["unmet"] = unmet
+        descriptor = (
+            "a registered ExecutionEnvironment satisfies the ComputeRequirement"
+            if reason == "unmet"
+            else "an ExecutionEnvironment providing the kind is registered"
+        )
         return cls.create(
-            context={"kind": kind},
-            after_condition_descriptor="an ExecutionEnvironment providing the kind is registered",
+            context=context,
+            after_condition_descriptor=descriptor,
         )
 
 

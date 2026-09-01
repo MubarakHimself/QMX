@@ -786,6 +786,11 @@ def parse_declaration(
     image_imports: Sequence[str] = (),
     profile: ComputerUseProfile | None = None,
     max_in_flight: object = None,
+    cpu: object = None,
+    memory: object = None,
+    disk: object = None,
+    gpu_count: object = None,
+    gpu_kind: str | None = None,
     stage: StageName = "registration",
 ) -> Result[ExecutionEnvironmentDeclaration]:
     """Parse then validate a declaration; invented closed values are refusals."""
@@ -829,6 +834,11 @@ def parse_declaration(
             image_imports=image_imports,
             profile=profile,
             max_in_flight=max_in_flight,
+            cpu=cpu,
+            memory=memory,
+            disk=disk,
+            gpu_count=gpu_count,
+            gpu_kind=gpu_kind,
         )
     except VocabularyError as exc:
         reason = _vocabulary_refusal_reason(exc)
