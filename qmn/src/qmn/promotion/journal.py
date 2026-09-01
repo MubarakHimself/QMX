@@ -413,7 +413,7 @@ def persist_promotion(
     if is_refusal(payload):
         return payload
     widened = set(payload.value) & _WIDENED_PROMOTION_KEYS
-    if widened or set(payload.value) != PROMOTION_PAYLOAD_KEYS:
+    if widened or frozenset(payload.value) != PROMOTION_PAYLOAD_KEYS:
         return policy(
             "payload",
             "the promotion event payload carries only the promotion-card fp1; "
@@ -458,7 +458,7 @@ def persist_activation(
     if is_refusal(fp):
         return fp
     payload = MappingProxyType({"transition_fp1": fp.value.value})
-    if set(payload) != ACTIVATION_PAYLOAD_KEYS:
+    if frozenset(payload) != ACTIVATION_PAYLOAD_KEYS:
         return policy(
             "payload",
             "the activation journal payload is only the CT-24 transition fp1",
@@ -566,25 +566,27 @@ def reconstruct_activation(
             "activation reconstruction reads the CT-13 journal mapping",
             given=repr(type(event).__name__),
         )
-    mapped = map_activation_ct13_event_type(event.get("event_type"))
+    row = cast("Mapping[str, object]", event)
+    mapped = map_activation_ct13_event_type(row.get("event_type"))
     if is_refusal(mapped):
         return mapped
-    payload = event.get("payload")
+    payload = row.get("payload")
     if not isinstance(payload, Mapping):
         return invalid(
             "payload",
             "the activation journal payload is the CT-24 transition pointer",
             given=repr(payload),
         )
-    if set(payload) != ACTIVATION_PAYLOAD_KEYS:
+    payload_map = cast("Mapping[str, object]", payload)
+    if frozenset(payload_map) != ACTIVATION_PAYLOAD_KEYS:
         return policy(
             "payload",
             "requested versus enforced state is reconstructed from the "
             "referenced CT-24 record, never by widening the journal payload",
-            payload_keys=sorted(str(key) for key in payload),
+            payload_keys=sorted(payload_map),
             allowed=sorted(ACTIVATION_PAYLOAD_KEYS),
         )
-    pointer = payload.get("transition_fp1")
+    pointer = payload_map.get("transition_fp1")
     token = clean_token(pointer)
     if token is None:
         return invalid(
@@ -598,7 +600,7 @@ def reconstruct_activation(
             "reconstruction looks up CT-24 records by fingerprint",
             given=repr(type(transitions).__name__),
         )
-    record = transitions.get(token)
+    record = cast("Mapping[str, object]", transitions).get(token)
     if not isinstance(record, ActivationBindingTransition):
         return invalid(
             "transition_fp1",

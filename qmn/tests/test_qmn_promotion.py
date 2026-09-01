@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import TypeVar
+from typing import TypeVar, cast
 
 from qmf.core import (
     CalendarIdentity,
@@ -575,7 +575,7 @@ class _FailingJournal:
 
 def _as_map(row: object) -> dict[str, object]:
     assert isinstance(row, Mapping)
-    return dict(row)
+    return dict(cast("Mapping[str, object]", row))
 
 
 def _request() -> object:
@@ -600,9 +600,10 @@ def test_accepted_promotion_journals_card_fp1_and_correlation_id_only() -> None:
     row = _as_map(journal.appended[0])
     assert row["event_type"] == PROMOTION_EVENT_TYPE == "promotion"
     assert row["correlation_id"] == "corr-promo-1"
-    payload = row["payload"]
-    assert isinstance(payload, dict)
-    assert set(payload) == PROMOTION_PAYLOAD_KEYS == {"promotion_card_fp1"}
+    raw_payload = row["payload"]
+    assert isinstance(raw_payload, dict)
+    payload = dict(cast("Mapping[str, object]", raw_payload))
+    assert set(payload) == set(PROMOTION_PAYLOAD_KEYS) == {"promotion_card_fp1"}
     assert payload["promotion_card_fp1"] == landing.card_fp1.value
     canonical = _ok(PromotionEvent.try_create(landing.card_fp1, correlation_id="corr-promo-1"))
     assert dict(payload) == canonical.journal_payload()
@@ -616,7 +617,7 @@ def test_accepted_promotion_journals_card_fp1_and_correlation_id_only() -> None:
 def test_promotion_payload_builder_stays_closed() -> None:
     landing = _ok(_promote())
     payload = dict(_ok(promotion_journal_payload(landing.card_fp1)))
-    assert set(payload) == PROMOTION_PAYLOAD_KEYS
+    assert set(payload) == set(PROMOTION_PAYLOAD_KEYS)
     persisted = _ok(
         persist_promotion(
             journal=_RecordingJournal(),
@@ -625,7 +626,7 @@ def test_promotion_payload_builder_stays_closed() -> None:
         )
     )
     assert persisted.event_type == PROMOTION_EVENT_TYPE
-    assert set(persisted.payload) == PROMOTION_PAYLOAD_KEYS
+    assert set(persisted.payload) == set(PROMOTION_PAYLOAD_KEYS)
     assert persisted.correlation_id == "corr-2"
 
 
@@ -648,7 +649,7 @@ def test_activation_requested_refused_successful_use_ct24_risk_transition() -> N
     assert requested.transition.enforced_state is GovernedSeatState.ADMITTED
     req_row = _as_map(journal.appended[-1])
     assert req_row["event_type"] == "risk transition"
-    assert set(req_row["payload"]) == ACTIVATION_PAYLOAD_KEYS == {"transition_fp1"}
+    assert set(_as_map(req_row["payload"])) == set(ACTIVATION_PAYLOAD_KEYS) == {"transition_fp1"}
 
     refused = _ok(
         commit_activation(
@@ -729,8 +730,9 @@ def test_requested_vs_enforced_reconstructed_from_ct24_not_payload() -> None:
         )
     )
     row = _as_map(journal.appended[0])
-    payload = row["payload"]
-    assert isinstance(payload, dict)
+    raw_payload = row["payload"]
+    assert isinstance(raw_payload, dict)
+    payload = dict(cast("Mapping[str, object]", raw_payload))
     assert set(payload) == {"transition_fp1"}
     assert "requested_state" not in payload
     assert "enforced_state" not in payload
