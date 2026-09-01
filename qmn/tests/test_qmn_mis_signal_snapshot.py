@@ -188,7 +188,9 @@ def test_book_door_and_ksa_consume_bots_refused() -> None:
     )
     assert is_refusal(bot)
     assert bot.category is RefusalCategory.POLICY_REJECTION
-    assert refuse_bot_consumer("bot").category is RefusalCategory.POLICY_REJECTION
+    refused_bot = refuse_bot_consumer("bot")
+    assert is_refusal(refused_bot)
+    assert refused_bot.category is RefusalCategory.POLICY_REJECTION
 
 
 def test_non_ok_sqs_is_hard_block_never_last_known_good() -> None:

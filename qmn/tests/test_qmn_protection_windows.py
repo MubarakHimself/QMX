@@ -21,6 +21,7 @@ from qmf.risk.control_window import (
     CurrencyExposureRecord,
     FeedQuadruple,
     ProposedWindowAct,
+    ResolvedInstrumentScope,
     WindowBounds,
     WindowKind,
     mint_control_window,
@@ -108,7 +109,7 @@ def _news_window(
     end: int = 2_000_000_000,
     revision: str = "r1",
     known_at: int = 900_000_000,
-    scope=None,
+    scope: ResolvedInstrumentScope | None = None,
     window_id: str = "win-nfp-1",
 ):
     return _ok(
@@ -200,7 +201,9 @@ def test_resolved_settings_refuse_invented_minutes() -> None:
         invented.context["reason"]
     ).lower()
 
-    assert refuse_invented_window_minutes(15).category is RefusalCategory.INVALID_INPUT
+    invented_minutes = refuse_invented_window_minutes(15)
+    assert is_refusal(invented_minutes)
+    assert invented_minutes.category is RefusalCategory.INVALID_INPUT
     settings = _settings()
     assert settings.news_calendar_max_staleness.value_ns > 0
     assert NEWS_CALENDAR_MAX_STALENESS_VARIABLE in settings.fp1_identity()
@@ -286,10 +289,9 @@ def test_dead_zones_pause_entries_only() -> None:
 
 
 def test_currency_never_parsed_from_symbol_missing_scope_fail_closed() -> None:
-    assert (
-        refuse_symbol_currency_parse_at_door("EURUSD").category
-        is RefusalCategory.POLICY_REJECTION
-    )
+    symbol_parse = refuse_symbol_currency_parse_at_door("EURUSD")
+    assert is_refusal(symbol_parse)
+    assert symbol_parse.category is RefusalCategory.POLICY_REJECTION
     eurusd = _instrument("EURUSD")
     xauusd = _instrument("XAUUSD")
     scope = _ok(
@@ -316,7 +318,9 @@ def test_currency_never_parsed_from_symbol_missing_scope_fail_closed() -> None:
 
 
 def test_stale_news_and_no_live_skip_fail_closed() -> None:
-    assert refuse_live_skip_at_door().category is RefusalCategory.POLICY_REJECTION
+    live_skip = refuse_live_skip_at_door()
+    assert is_refusal(live_skip)
+    assert live_skip.category is RefusalCategory.POLICY_REJECTION
     settings = _settings()
     stale = stale_news_calendar_blocks_entries(
         last_refresh_at=_instant(0),
