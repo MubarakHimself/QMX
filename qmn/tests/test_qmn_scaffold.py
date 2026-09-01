@@ -159,6 +159,8 @@ def test_deploy_ops_toolkit_boundary() -> None:
         assert (_DEPLOY / name).is_dir(), f"missing deploy seed dir: {name}"
     boundary = _load_deploy_boundary()
     assert boundary.OPS_TOOLKIT_SURFACE == "qmn.deploy"
+    assert boundary.toolkit_principal() == "ops"
+    assert boundary.OPS_PRINCIPAL_NAME == "ops"
     assert "node-install" in boundary.ALLOWED_NODE_RECIPES
     assert "node-config-validate" in boundary.ALLOWED_NODE_RECIPES
     for action in (

@@ -4,8 +4,8 @@ Recipe bodies under ``justfile-recipes/`` are DevOps only. They never import the
 composition root (``qmn.host``) or the in-process Python API door, and they
 never place, cancel, amend, flatten, promote, or activate. Forbidden powers
 also include settings, resurrect, attestation, and countersign — refused at
-the ops principal transport later; named here so the scaffold cannot grow a
-trading control by habit.
+the ops principal transport (Story 25.7 / QMX-F045). Recipes run only as the
+ops principal; trading authority is never acquired by calling the same endpoint.
 
 This module is intentionally outside ``src/qmn`` so deploy tooling stays a
 separate process surface from the composition root.
@@ -19,12 +19,21 @@ __all__ = [
     "ALLOWED_NODE_RECIPES",
     "FORBIDDEN_DEPLOY_IMPORTS",
     "FORBIDDEN_RECIPE_ACTIONS",
+    "OPS_PRINCIPAL_NAME",
     "OPS_TOOLKIT_SURFACE",
     "deploy_may_import",
     "recipe_action_allowed",
+    "toolkit_principal",
 ]
 
 OPS_TOOLKIT_SURFACE: Final[str] = "qmn.deploy"
+# Recipes act only as the ops principal on the powers channel (DEC-0202).
+OPS_PRINCIPAL_NAME: Final[str] = "ops"
+
+
+def toolkit_principal() -> str:
+    """The constrained principal every ``just node-…`` recipe runs as."""
+    return OPS_PRINCIPAL_NAME
 
 # Closed allow-list of just node-… recipe names (AR-79). Bodies land later.
 ALLOWED_NODE_RECIPES: Final[frozenset[str]] = frozenset(
