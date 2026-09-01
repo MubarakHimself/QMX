@@ -44,30 +44,40 @@ class StoreClass(StrEnum):
 
 
 EqualInstantDisposition = Literal["ascending_journal_seq"]
+KnowledgeTimeBound = Literal["as_of_recorded_at"]
 ORDERING_KEY_JOURNAL_SEQ: Final[str] = "journal_seq"
 EQUAL_INSTANT_ASCENDING_JOURNAL_SEQ: Final[EqualInstantDisposition] = "ascending_journal_seq"
+KNOWLEDGE_TIME_BOUND_AS_OF_RECORDED_AT: Final[KnowledgeTimeBound] = "as_of_recorded_at"
 
 
 @dataclass(frozen=True, slots=True)
 class FoldMetadata:
-    """Fold ordering metadata committed at declaration (FR-Q23 / FR-Q24).
+    """Full fold-contract metadata committed at declaration (FR-Q23–FR-Q25).
 
-    Story 42.3 extends this with the full fold contract (``as_of`` over
-    ``recorded_at``, source stream). Here the announcement ``journal_seq`` is the
-    sole total-order key and equal instants dispose by ascending ``journal_seq``.
+    Declares source stream, ``journal_seq`` ordering, ``as_of`` over
+    ``recorded_at`` as the knowledge-time bound, and ascending-``journal_seq``
+    equal-instant disposition. Filtered projections may omit ``source_stream``.
     """
 
     ordering_key: str = ORDERING_KEY_JOURNAL_SEQ
     equal_instant_disposition: EqualInstantDisposition = EQUAL_INSTANT_ASCENDING_JOURNAL_SEQ
+    knowledge_time_bound: KnowledgeTimeBound = KNOWLEDGE_TIME_BOUND_AS_OF_RECORDED_AT
+    source_stream: str | None = None
 
     def __post_init__(self) -> None:
         if self.ordering_key != ORDERING_KEY_JOURNAL_SEQ:
-            msg = "fold ordering_key must be journal_seq (FR-Q24; AD-6)"
+            msg = "fold ordering_key must be journal_seq (FR-Q24, FR-Q25; AD-6)"
             raise ValueError(msg)
         if self.equal_instant_disposition != EQUAL_INSTANT_ASCENDING_JOURNAL_SEQ:
             msg = (
                 "equal instants dispose by ascending journal_seq, never by timestamp "
-                "(FR-Q24; AD-6)"
+                "(FR-Q24, FR-Q25; AD-6)"
+            )
+            raise ValueError(msg)
+        if self.knowledge_time_bound != KNOWLEDGE_TIME_BOUND_AS_OF_RECORDED_AT:
+            msg = (
+                "fold knowledge-time bound must be as_of over recorded_at "
+                "(FR-Q25; AD-6)"
             )
             raise ValueError(msg)
 
@@ -150,11 +160,11 @@ ANNOUNCEMENT_EVENT_BY_STORE: Final[Mapping[str, str]] = MappingProxyType(
 
 _STORE_CLASS: Final[Mapping[str, StoreClass]] = MappingProxyType(
     {
-        **{name: StoreClass.JOURNAL_DERIVED_PROJECTION for name in CLOSED_PROJECTIONS},
-        **{
-            name: StoreClass.JOURNAL_DERIVED_PROJECTION for name in DEFINITION_STORE_MEMBERS
-        },
-        **{name: StoreClass.INDEPENDENT_STORE for name in CLOSED_INDEPENDENT_STORES},
+        **dict.fromkeys(CLOSED_PROJECTIONS, StoreClass.JOURNAL_DERIVED_PROJECTION),
+        **dict.fromkeys(
+            DEFINITION_STORE_MEMBERS, StoreClass.JOURNAL_DERIVED_PROJECTION
+        ),
+        **dict.fromkeys(CLOSED_INDEPENDENT_STORES, StoreClass.INDEPENDENT_STORE),
     }
 )
 
@@ -172,6 +182,35 @@ def is_announcement_required(store: str) -> bool:
 def announce_event_for_store(store: str) -> str | None:
     """Return the ``noun.verb`` announcement event for ``store``, or None if exempt."""
     return ANNOUNCEMENT_EVENT_BY_STORE.get(store)
+
+
+def _default_fold_metadata(name: str) -> FoldMetadata:
+    """Attach the v1 fold contract when ``name`` is a fold; else ordering defaults.
+
+    Filtered projections (per-scope streams, quarantine) are not folds and carry
+    no ``source_stream``. Independent stores are not folds either.
+    """
+    # Lazy import avoids a stores ↔ fold_contracts cycle at module load.
+    from qma.daemon.journal.fold_contracts import (  # noqa: PLC0415
+        FILTERED_PROJECTIONS_NOT_FOLDS,
+        fold_id_for_store,
+        v1_fold_contract,
+    )
+
+    if name in FILTERED_PROJECTIONS_NOT_FOLDS or name in CLOSED_INDEPENDENT_STORES:
+        return FoldMetadata()
+    fold_id = fold_id_for_store(name)
+    if fold_id is None:
+        return FoldMetadata()
+    contract = v1_fold_contract(fold_id)
+    if contract is None:
+        return FoldMetadata()
+    return FoldMetadata(
+        ordering_key=contract.ordering_key,
+        equal_instant_disposition=contract.equal_instant_disposition,
+        knowledge_time_bound=contract.knowledge_time_bound,
+        source_stream=contract.source_stream,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -228,7 +267,9 @@ class StoreRegistry:
         existing = self._declarations.get(name)
         if existing is not None:
             return Ok(existing)
-        meta = fold_metadata if fold_metadata is not None else FoldMetadata()
+        meta = (
+            fold_metadata if fold_metadata is not None else _default_fold_metadata(name)
+        )
         declaration = StoreDeclaration(
             name=name,
             store_class=_STORE_CLASS[name],

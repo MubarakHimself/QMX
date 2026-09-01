@@ -5,7 +5,8 @@ Failure-register entries for `qma-daemon`, per the workspace convention
 mode, written for someone who was not in the design room. Epic 42 opens this
 register: Story 42.1 delivers the sole-writer persistence substrate (FR-1,
 FR-2); Story 42.2 delivers the authoritative journal, closed store list, and
-announcement law (FR-3 through FR-5).
+announcement law (FR-3 through FR-5); Story 42.3 delivers durable-clock and
+fold-contract enforcement (FR-6 through FR-9).
 
 ### FR-1: A second daemon or writer is refused at the persistence boundary
 
@@ -76,3 +77,61 @@ announcement law (FR-3 through FR-5).
 - **Product-user affordance:** only ledger, artifact, staging, and admitted
   MemoryProvider appends are announced. Telemetry is exempt; other names are
   invalid announcement targets.
+
+### FR-6: Host-local time reads and worker-authored evidence timestamps are refused
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `refuse_host_local_time` / `refuse_worker_evidence_timestamp`
+  and `DaemonClock.stamp_durable` / `stamp_evidence_record` /
+  `AuthoritativeJournal.append_event` refuse any host-local time path and any
+  worker-supplied evidence timestamp; durable stamps come only from the injected
+  qmf-core clock (FR-Q25; AD-6).
+- **Auto-recovery / retry:** none — callers must obtain time through the daemon
+  clock facade.
+- **Visible degraded state:** no durable row is written with a worker or host
+  stamp; existing evidence is unchanged.
+- **Notification tier:** operator-visible (caller / worker wiring bug).
+- **Product-user affordance:** workers do not stamp evidence and components do
+  not read the host clock. The daemon records `occurred_at` and `recorded_at`.
+
+### FR-7: Wall-clock policies without a resolvable IANA zone are refused
+
+- **Failure class:** `invalid input` (CT-04).
+- **Detection:** `DaemonClock.wall_clock_policy` / `WallClockPolicy.resolve_zone`
+  require a non-empty IANA zone that resolves in the tz database at evaluation
+  time (FR-Q25; AD-6).
+- **Auto-recovery / retry:** none — correct the zone name on the policy.
+- **Visible degraded state:** the policy is not applied; no civil-time decision
+  is taken under an implied host zone.
+- **Notification tier:** operator-visible (misconfigured quiet hours / cron /
+  rollup / ledger date index).
+- **Product-user affordance:** every wall-clock policy must name its timezone
+  explicitly (for example `America/New_York`). Host local time is never implied.
+
+### FR-8: A fold outside the ratified v1 list is refused
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `FoldContractRegistry.register` /
+  `AuthoritativeJournal.register_fold` accept only the AD-6 v1 fold ids; filtered
+  projections (`per_scope_event_streams`, `ledger_quarantine_stream`) are not
+  folds and cannot register a contract (FR-Q25; AD-6).
+- **Auto-recovery / retry:** none — a new fold requires a spine amendment.
+- **Visible degraded state:** no fold contract is committed; existing registered
+  folds are unchanged.
+- **Notification tier:** operator-visible (configuration / plugin error).
+- **Product-user affordance:** only the ratified v1 folds may be exposed. Adding
+  a fold is an architecture change, not a runtime declaration.
+
+### FR-9: Announcement-bound evidence missing `journal_seq` is refused at stamp
+
+- **Failure class:** `invalid input` (CT-04).
+- **Detection:** `DaemonClock.stamp_evidence_record` with
+  `announcement_bound=True` requires a positive announcement `journal_seq`;
+  telemetry (`announcement_bound=False`) refuses an embedded `journal_seq`
+  (FR-Q25; AD-6, AD-23).
+- **Auto-recovery / retry:** none — allocate `journal_seq` via the authoritative
+  journal announcement path first, or stamp telemetry without it.
+- **Visible degraded state:** the evidence mapping is not stamped.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** announcement-bound evidence always carries its
+  journal sequence; telemetry carries times only.

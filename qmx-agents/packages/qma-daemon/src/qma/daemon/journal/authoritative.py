@@ -1,9 +1,10 @@
-"""Single append-only journal with global monotonic ``journal_seq`` (FR-Q23, FR-Q24).
+"""Single append-only journal with global monotonic ``journal_seq`` (FR-Q23–FR-Q25).
 
 Daemon-owned durable events write only here. ``journal_seq`` is the system's sole
 total-order key; per-scope streams are filtered projections whose ``seq`` is a
 derived index. Evidence-store appends emit announcement events carrying the
-record ``fp1`` (telemetry exempt).
+record ``fp1`` (telemetry exempt). Durable rows carry ``occurred_at`` /
+``recorded_at`` from the injected qmf-core clock (FR-Q25).
 """
 
 from __future__ import annotations
@@ -14,6 +15,12 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final, Literal
 
+from qma.daemon.journal.clock import (
+    DaemonClock,
+    DurableTimestamps,
+    refuse_worker_evidence_timestamp,
+)
+from qma.daemon.journal.fold_contracts import FoldContract, FoldContractRegistry
 from qma.daemon.journal.stores import (
     ANNOUNCEMENT_REQUIRED_STORES,
     TELEMETRY_STORE,
@@ -25,7 +32,9 @@ from qma.daemon.journal.stores import (
 from qma.daemon.persistence.substrate import PersistenceSubstrate
 from qma.wire.envelope import ScopeSegment, parse_scope_path
 from qmf.core import (
+    Clock,
     Fingerprint,
+    Instant,
     Ok,
     Result,
     World,
@@ -61,6 +70,8 @@ class JournalEventRecord:
     payload: Mapping[str, object]
     world: str
     fingerprint: str
+    occurred_at: int
+    recorded_at: int
 
     def to_row(self) -> dict[str, object]:
         """JSON-native row for the single append-only journal stream."""
@@ -69,6 +80,8 @@ class JournalEventRecord:
             "world": self.world,
             "event": self.event,
             "journal_seq": self.journal_seq,
+            "occurred_at": self.occurred_at,
+            "recorded_at": self.recorded_at,
             "scope_path": [segment.to_dict() for segment in self.scope_path],
             "payload": dict(self.payload),
             "fingerprint": self.fingerprint,
@@ -131,11 +144,15 @@ def _identity_content(
     scope_path: Sequence[ScopeSegment],
     payload: Mapping[str, object],
     world: str,
+    occurred_at: int,
+    recorded_at: int,
 ) -> dict[str, object]:
     return {
         "class": _EVENT_CLASS,
         "event": event,
         "journal_seq": journal_seq,
+        "occurred_at": occurred_at,
+        "recorded_at": recorded_at,
         "scope_path": [segment.to_dict() for segment in scope_path],
         "payload": dict(payload),
         "world": world,
@@ -143,11 +160,13 @@ def _identity_content(
 
 
 class AuthoritativeJournal:
-    """Sole durable append target for daemon-owned events (FR-Q23; AD-6).
+    """Sole durable append target for daemon-owned events (FR-Q23–FR-Q25; AD-6).
 
-    Allocates the global monotonic ``journal_seq``, writes one JSONL stream through
-    the persistence substrate's ``JournalStore``, derives per-scope projection
-    indices, validates the closed store list, and emits evidence announcements.
+    Allocates the global monotonic ``journal_seq``, stamps ``occurred_at`` /
+    ``recorded_at`` from the injected qmf-core clock, writes one JSONL stream
+    through the persistence substrate's ``JournalStore``, derives per-scope
+    projection indices, validates the closed store list and v1 fold contracts,
+    and emits evidence announcements.
     """
 
     def __init__(
@@ -156,29 +175,40 @@ class AuthoritativeJournal:
         journal_store: JournalStore,
         writer: WriterId,
         world: World,
+        clock: DaemonClock,
         stores: StoreRegistry | None = None,
+        folds: FoldContractRegistry | None = None,
         next_journal_seq: int = _FIRST_JOURNAL_SEQ,
         scope_seq_state: dict[tuple[tuple[str, str], ...], int] | None = None,
     ) -> None:
         self._journal = journal_store
         self._writer = writer
         self._world = world
+        self._clock = clock
         self._stores = stores if stores is not None else StoreRegistry()
+        self._folds = folds if folds is not None else FoldContractRegistry()
         self._next_seq = next_journal_seq
         self._scope_seq = scope_seq_state if scope_seq_state is not None else {}
         self._lock = threading.Lock()
         self._closed = False
 
     @classmethod
-    def bind(cls, substrate: PersistenceSubstrate) -> Result[AuthoritativeJournal]:
+    def bind(
+        cls,
+        substrate: PersistenceSubstrate,
+        *,
+        clock: Clock | DaemonClock,
+    ) -> Result[AuthoritativeJournal]:
         """Bind the authoritative journal to the sole-writer persistence substrate.
 
         Resumes ``journal_seq`` from the durable stream so restarts continue the
-        global monotonic total order.
+        global monotonic total order. ``clock`` is the injected qmf-core clock
+        (or a :class:`DaemonClock` wrapping one) — never host local time.
         """
         journal = substrate.journal
         writer = substrate.writer
         world = substrate.world_store.world
+        daemon_clock = clock if isinstance(clock, DaemonClock) else DaemonClock(clock)
         resume = cls._resume_state(journal, world=world)
         if is_refusal(resume):
             return resume
@@ -188,6 +218,7 @@ class AuthoritativeJournal:
                 journal_store=journal,
                 writer=writer,
                 world=world,
+                clock=daemon_clock,
                 next_journal_seq=next_seq,
                 scope_seq_state=scope_state,
             )
@@ -222,6 +253,16 @@ class AuthoritativeJournal:
         return self._stores
 
     @property
+    def folds(self) -> FoldContractRegistry:
+        """V1 fold-contract registry (FR-Q25)."""
+        return self._folds
+
+    @property
+    def clock(self) -> DaemonClock:
+        """Daemon clock facade over the injected qmf-core clock (FR-Q25)."""
+        return self._clock
+
+    @property
     def next_journal_seq(self) -> int:
         """The ``journal_seq`` the next append will allocate."""
         return self._next_seq
@@ -240,17 +281,54 @@ class AuthoritativeJournal:
         """Validate and commit a closed-list store/projection declaration."""
         return self._stores.declare(name, fold_metadata=fold_metadata)
 
+    def register_fold(self, fold_id: object) -> Result[FoldContract]:
+        """Register a ratified v1 fold contract; refuse undeclared folds."""
+        return self._folds.register(fold_id)
+
+    def stamp_durable(
+        self,
+        *,
+        occurred_at: Instant | int | None = None,
+        worker_authored_timestamp: object = None,
+    ) -> Result[DurableTimestamps]:
+        """Stamp ``occurred_at`` / ``recorded_at`` from the injected clock."""
+        return self._clock.stamp_durable(
+            occurred_at=occurred_at,
+            worker_authored_timestamp=worker_authored_timestamp,
+        )
+
+    def stamp_evidence_record(
+        self,
+        record: dict[str, object],
+        *,
+        occurred_at: Instant | int | None = None,
+        journal_seq: int | None = None,
+        announcement_bound: bool = True,
+        worker_authored_timestamp: object = None,
+    ) -> Result[dict[str, object]]:
+        """Stamp a durable evidence record; refuse worker-authored timestamps."""
+        return self._clock.stamp_evidence_record(
+            record,
+            occurred_at=occurred_at,
+            journal_seq=journal_seq,
+            announcement_bound=announcement_bound,
+            worker_authored_timestamp=worker_authored_timestamp,
+        )
+
     def append_event(
         self,
         event: object,
         *,
         scope_path: object = (),
         payload: Mapping[str, object] | None = None,
+        occurred_at: Instant | int | None = None,
+        worker_authored_timestamp: object = None,
     ) -> Result[JournalAppendReceipt]:
         """Append one daemon-owned event, allocating the next ``journal_seq``.
 
         Writes only to the single append-only journal. Per-scope ``seq`` is a
         derived projection index of the scope named last — never ``journal_seq``.
+        Stamps ``occurred_at`` / ``recorded_at`` from the injected clock.
         """
         if self._closed:
             return policy_rejection(
@@ -279,6 +357,13 @@ class AuthoritativeJournal:
                 given=repr(type(body).__name__),
             )
 
+        stamps = self._clock.stamp_durable(
+            occurred_at=occurred_at,
+            worker_authored_timestamp=worker_authored_timestamp,
+        )
+        if is_refusal(stamps):
+            return stamps
+
         with self._lock:
             journal_seq = self._next_seq
             key = _scope_key(segments)
@@ -289,6 +374,8 @@ class AuthoritativeJournal:
                 scope_path=segments,
                 payload=body,
                 world=self._world.value,
+                occurred_at=stamps.value.occurred_at,
+                recorded_at=stamps.value.recorded_at,
             )
             fp_result = fingerprint(identity)
             if is_refusal(fp_result):
@@ -300,6 +387,8 @@ class AuthoritativeJournal:
                 payload=_freeze_payload(body),
                 world=self._world.value,
                 fingerprint=fp_result.value.value,
+                occurred_at=stamps.value.occurred_at,
+                recorded_at=stamps.value.recorded_at,
             )
             # Store fingerprints the full row (including the embedded identity fp1);
             # do not present the identity-only fingerprint — it would mismatch.
@@ -327,13 +416,17 @@ class AuthoritativeJournal:
         *,
         scope_path: object = (),
         extra_payload: Mapping[str, object] | None = None,
+        worker_authored_timestamp: object = None,
     ) -> Result[AnnouncementOutcome]:
         """Emit a journal announcement for a declared evidence-store append (FR-Q24).
 
         Covers ledger, artifact, staging, and admitted MemoryProvider stores.
         The telemetry store is the one exemption — no journal announcement is
-        emitted and no ``journal_seq`` is allocated for that path.
+        emitted and no ``journal_seq`` is allocated for that path. Worker-authored
+        evidence timestamps are refused (FR-Q25).
         """
+        if worker_authored_timestamp is not None:
+            return refuse_worker_evidence_timestamp(attempted=worker_authored_timestamp)
         if not isinstance(store, str) or store.strip() == "":
             return invalid_input(
                 "store",

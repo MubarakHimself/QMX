@@ -50,3 +50,5 @@ def test_structural_modules_importable() -> None:
     assert qma.daemon.PersistenceSubstrate.__name__ == "PersistenceSubstrate"
     assert qma.daemon.AuthoritativeJournal.__name__ == "AuthoritativeJournal"
     assert qma.daemon.journal.AuthoritativeJournal is qma.daemon.AuthoritativeJournal
+    assert qma.daemon.DaemonClock.__name__ == "DaemonClock"
+    assert qma.daemon.FoldContractRegistry.__name__ == "FoldContractRegistry"

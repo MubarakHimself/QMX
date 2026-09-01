@@ -17,7 +17,21 @@ from qma.daemon.journal import (
     StoreClass,
     order_by_announcement_journal_seq,
 )
-from qmf.core import RefusalCategory, fingerprint, is_ok, is_refusal
+from qmf.core import (
+    DataDrivenClock,
+    Instant,
+    RefusalCategory,
+    fingerprint,
+    is_ok,
+    is_refusal,
+)
+
+
+def _test_clock(*, boot: str = "boot-1", n: int = 64) -> DataDrivenClock:
+    base = 1_700_000_000_000_000_000
+    walls = tuple(Instant(value_ns=base + i) for i in range(n))
+    monos = tuple(i * 1_000 for i in range(n))
+    return DataDrivenClock(boot_epoch_id=boot, wall_instants=walls, monotonic_ns=monos)
 
 
 def _open_journal(tmp_path: Path, *, boot: str = "boot-1") -> tuple[
@@ -28,7 +42,7 @@ def _open_journal(tmp_path: Path, *, boot: str = "boot-1") -> tuple[
     )
     assert is_ok(substrate_result), substrate_result
     substrate = substrate_result.value
-    journal_result = AuthoritativeJournal.bind(substrate)
+    journal_result = AuthoritativeJournal.bind(substrate, clock=_test_clock(boot=boot))
     assert is_ok(journal_result), journal_result
     return substrate, journal_result.value
 
@@ -100,6 +114,9 @@ def test_closed_store_list_accepts_only_declared_vocabulary(tmp_path: Path) -> N
             assert (
                 declared.value.fold_metadata.equal_instant_disposition
                 == "ascending_journal_seq"
+            )
+            assert (
+                declared.value.fold_metadata.knowledge_time_bound == "as_of_recorded_at"
             )
 
         refused = journal.declare_store("shadow_cache")
