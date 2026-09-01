@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import platform
 import sys
-import time
 from collections.abc import Sequence
 from typing import Final, cast
 
@@ -65,6 +64,7 @@ from qmn.bench.schema import (
 )
 from qmn.loop import CommandStreamLoop, RecordingAccumulator, clear_first_writer_registry
 from qmn.order import ConnectionCommandPacer
+from qmn.time import host_perf_counter_ns
 from qmn.venue import (
     Command,
     ConformanceCase,
@@ -313,14 +313,14 @@ def run_seat_mark(*, seat_count: object) -> Result[SeatMarkResult]:
 
     clear_first_writer_registry()
     rss_before = peak_rss_bytes()
-    started = time.perf_counter_ns()  # ambient-scan: allow - AR-22/TN-23 bench wall-clock
+    started = host_perf_counter_ns()
 
     walked = _walk_hot_path(seat_count=seat_count)
     if is_refusal(walked):
         return walked
     rungs, queue, slices_driven, kind = walked.value
 
-    ended = time.perf_counter_ns()  # ambient-scan: allow - AR-22/TN-23 bench wall-clock
+    ended = host_perf_counter_ns()
     wall_ns = ended - started
     rss_after = peak_rss_bytes()
     peak_rss = max(
@@ -458,7 +458,7 @@ def _walk_hot_path(
     seq = 0
 
     # --- tick_received -------------------------------------------------------
-    tick_start = time.perf_counter_ns()  # ambient-scan: allow - AR-22/TN-23 bench rung
+    tick_start = host_perf_counter_ns()
     for i in range(seat_count):
         pushed = accumulator.value.push(
             observation_id=f"tick-{seat_count}-{i}",
@@ -470,7 +470,7 @@ def _walk_hot_path(
         if is_refusal(pushed):
             overflow_events += 1
         seq = i
-    tick_ns = time.perf_counter_ns() - tick_start  # ambient-scan: allow - AR-22/TN-23 bench rung
+    tick_ns = host_perf_counter_ns() - tick_start
     rung_samples.append(
         RungSample(
             rung=HotPathRung.TICK_RECEIVED,
@@ -480,9 +480,9 @@ def _walk_hot_path(
     )
 
     # --- evidence_write (journaled intake already done; pull proves foldability)
-    ev_start = time.perf_counter_ns()  # ambient-scan: allow - AR-22/TN-23 bench rung
+    ev_start = host_perf_counter_ns()
     foldable = accumulator.value.pull_foldable()
-    ev_ns = time.perf_counter_ns() - ev_start  # ambient-scan: allow - AR-22/TN-23 bench rung
+    ev_ns = host_perf_counter_ns() - ev_start
     # Re-push a subset so later slices have work (pull drained the queue).
     for i, item in enumerate(foldable[: min(len(foldable), max(1, seat_count // 2))]):
         _ = accumulator.value.push(
@@ -506,7 +506,7 @@ def _walk_hot_path(
         HotPathRung.DECISION,
         HotPathRung.RISK_EVALUATION,
     ):
-        rung_start = time.perf_counter_ns()  # ambient-scan: allow - AR-22/TN-23 bench rung
+        rung_start = host_perf_counter_ns()
         iterations = max(1, min(seat_count, 8))
         for step in range(iterations):
             seq += 1
@@ -520,7 +520,7 @@ def _walk_hot_path(
             driven = loop.value.close_frontier()
             if is_ok(driven) and driven.value is not None:
                 slices_driven += 1
-        rung_end = time.perf_counter_ns()  # ambient-scan: allow - AR-22/TN-23 bench rung
+        rung_end = host_perf_counter_ns()
         rung_samples.append(
             RungSample(
                 rung=rung,
@@ -530,7 +530,7 @@ def _walk_hot_path(
         )
 
     # --- order_submitted via conformance double + pacer queue behaviour ------
-    order_start = time.perf_counter_ns()  # ambient-scan: allow - AR-22/TN-23 bench rung
+    order_start = host_perf_counter_ns()
     for i in range(max(1, min(seat_count, 16))):
         cmd = Command.place_order(venue.value, account.value, _SESSION, i + 1, params.value)
         if is_refusal(cmd):
@@ -567,7 +567,7 @@ def _walk_hot_path(
         submitted = double.value.submit(cmd.value)
         if is_refusal(submitted):
             continue
-    order_end = time.perf_counter_ns()  # ambient-scan: allow - AR-22/TN-23 bench rung
+    order_end = host_perf_counter_ns()
     rung_samples.append(
         RungSample(
             rung=HotPathRung.ORDER_SUBMITTED,

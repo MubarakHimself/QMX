@@ -19,9 +19,19 @@ from qmn.time._refuse import clean_token, invalid
 __all__ = [
     "VPS_CLOCK_SURFACE",
     "VpsClock",
+    "host_perf_counter_ns",
 ]
 
 VPS_CLOCK_SURFACE: Final[str] = "qmn.time"
+
+
+def host_perf_counter_ns() -> int:
+    """Composition-root elapsed-time reader for the TN-23 bench harness.
+
+    Wall-clock event stamps still go through :meth:`VpsClock.from_host_os`.
+    The harness measures host elapsed time only via this marked factory.
+    """
+    return time.perf_counter_ns()  # ambient-scan: allow - composition-root VPS clock
 
 
 class VpsClock:

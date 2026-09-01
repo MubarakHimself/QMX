@@ -28,7 +28,7 @@ from qmn.time.calendars import (
     refuse_bare_calendar_token,
     refuse_time_substitute,
 )
-from qmn.time.clock import VPS_CLOCK_SURFACE, VpsClock
+from qmn.time.clock import VPS_CLOCK_SURFACE, VpsClock, host_perf_counter_ns
 from qmn.time.discipline import (
     CLOCK_BAND_FAILURE_IDS,
     SILENT_DEGRADATION_ALARM_CLASS,
@@ -85,6 +85,7 @@ __all__ = [
     "clock_band_requires_stand_down",
     "evaluate_clock_band",
     "evaluate_sync_posture",
+    "host_perf_counter_ns",
     "measurements_named_apart",
     "named_time_rules",
     "record_unsynchronized_interval",
