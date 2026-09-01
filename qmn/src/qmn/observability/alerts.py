@@ -9,6 +9,7 @@ alerted. No daily liveness digest and no quiet hours (DEC-0261).
 
 from __future__ import annotations
 
+import os
 import re
 from collections.abc import Mapping, MutableSequence, Sequence
 from dataclasses import dataclass, field
@@ -241,9 +242,54 @@ class AlertPublisher:
         return Ok(payload)
 
 
+_MAX_FAILURES_BYTES: Final[int] = 1 << 20  # 1 MiB
+
+
 def default_failures_path() -> Path:
     """``qmn/FAILURES.md`` beside the distribution root (not under ``src/``)."""
     return Path(__file__).resolve().parents[3] / "FAILURES.md"
+
+
+def _failures_root() -> Path:
+    return Path(__file__).resolve().parents[3]
+
+
+def _read_failures_path(path: Path) -> Result[str]:
+    """Read FAILURES.md as a regular in-root non-symlink file under a size cap."""
+    root = _failures_root()
+    try:
+        resolved = Path(os.path.realpath(path))
+        root_real = Path(os.path.realpath(root))
+    except OSError as exc:
+        return invalid(
+            "failures_path",
+            f"cannot resolve FAILURES.md path: {exc}",
+        )
+    if path.is_symlink() or not resolved.is_relative_to(root_real):
+        return invalid(
+            "failures_path",
+            "refusing to follow a symlink or read FAILURES.md outside the qmn root",
+            path=str(path),
+        )
+    if not path.is_file():
+        return invalid(
+            "failures_path",
+            "FAILURES.md must be a regular in-root file",
+            path=str(path),
+        )
+    size = path.stat().st_size
+    if size > _MAX_FAILURES_BYTES:
+        return invalid(
+            "failures_path",
+            "refusing to read FAILURES.md above the size cap",
+            path=str(path),
+            size=size,
+            max_bytes=_MAX_FAILURES_BYTES,
+        )
+    try:
+        return Ok(path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        return invalid("failures_path", f"cannot read FAILURES.md: {exc}")
 
 
 def push_classes_for_tier(tier: object) -> frozenset[str]:
@@ -263,10 +309,10 @@ def push_classes_for_tier(tier: object) -> frozenset[str]:
 def parse_failures_register(source: str | Path) -> Result[tuple[FailureRegisterEntry, ...]]:
     """Parse FAILURES.md into typed register entries with all six NFR-11 fields."""
     if isinstance(source, Path):
-        try:
-            text = source.read_text(encoding="utf-8")
-        except OSError as exc:
-            return invalid("failures_path", f"cannot read FAILURES.md: {exc}")
+        loaded = _read_failures_path(source)
+        if is_refusal(loaded):
+            return loaded
+        text = loaded.value
     else:
         token = clean_token(source)
         if token is None:

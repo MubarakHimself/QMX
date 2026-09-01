@@ -6,6 +6,7 @@ import ast
 from pathlib import Path
 from typing import TypeVar
 
+import pytest
 from qmf.core.refusal import Result, is_ok, is_refusal
 from qmn.observability import (
     CAN_CALL_DOOR,
@@ -36,6 +37,14 @@ T = TypeVar("T")
 _QMN_ROOT = Path(__file__).resolve().parents[1]
 _OBS_SRC = _QMN_ROOT / "src" / "qmn" / "observability"
 _FAILURES = _QMN_ROOT / "FAILURES.md"
+
+
+def _try_symlink(link: Path, target: Path) -> None:
+    """Create a symlink or skip where the platform forbids it (Windows without privilege)."""
+    try:
+        link.symlink_to(target)
+    except (OSError, NotImplementedError):
+        pytest.skip("symlink creation is not permitted on this platform")
 
 
 def _ok(result: Result[T]) -> T:
@@ -75,6 +84,31 @@ def test_parse_failures_register_has_all_six_fields() -> None:
         assert entry.visible_degraded_state
         assert entry.notification_tier
         assert entry.product_user_affordance
+
+
+def test_parse_failures_register_refuses_symlink_and_oversize(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from qmn.observability import alerts as alerts_mod
+
+    root = tmp_path / "qmn-root"
+    root.mkdir()
+    monkeypatch.setattr(alerts_mod, "_failures_root", lambda: root)
+
+    outside = tmp_path / "outside.md"
+    outside.write_text("# FR-99 Outside\n", encoding="utf-8")
+    link = root / "FAILURES.md"
+    _try_symlink(link, outside)
+    refused = parse_failures_register(link)
+    assert is_refusal(refused)
+    assert "symlink" in str(refused.context["reason"])
+
+    monkeypatch.setattr(alerts_mod, "_MAX_FAILURES_BYTES", 8)
+    oversize = root / "FAILURES-big.md"
+    oversize.write_text("x" * 32, encoding="utf-8")
+    refused_size = parse_failures_register(oversize)
+    assert is_refusal(refused_size)
+    assert "size cap" in str(refused_size.context["reason"])
 
 
 def test_closed_push_classes_cover_three_accepted_classes() -> None:

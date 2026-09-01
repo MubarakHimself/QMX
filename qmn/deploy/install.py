@@ -66,6 +66,7 @@ _units = _load_sibling("qmn_deploy_units", _DEPLOY_ROOT / "systemd" / "units.py"
 _obs = _load_sibling(
     "qmn_deploy_obs_stack", _DEPLOY_ROOT / "observability" / "stack.py"
 )
+_safe_io = _load_sibling("qmn_deploy_safe_io", _DEPLOY_ROOT / "safe_io.py")
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,7 +119,8 @@ def load_render_values(path: Path | None) -> dict[str, object]:
     if path is None:
         # Evidence defaults recorded in the registry notes (not ratified constants).
         return {"drain_window": "30s", "watchdog_interval": "15s"}
-    data = json.loads(path.read_text(encoding="utf-8"))
+    text = _safe_io.read_text_contained(path, contain_within=path.parent)
+    data = json.loads(text)
     if not isinstance(data, dict):
         raise ValueError("render values must be a JSON object")
     return cast("dict[str, object]", data)
@@ -397,14 +399,19 @@ def build_install_plan(
 def write_plan(plan: InstallPlan, destination: Path) -> None:
     """Write the plan JSON and rendered units beside it."""
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(
+    _safe_io.write_text_exclusive_no_follow(
+        destination,
         json.dumps(plan.to_jsonable(), indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
+        contain_within=destination.parent,
     )
     units_dir = destination.parent / "rendered-units"
     units_dir.mkdir(parents=True, exist_ok=True)
     for name, text in plan.rendered_units.items():
-        (units_dir / name).write_text(text, encoding="utf-8")
+        _safe_io.write_text_exclusive_no_follow(
+            units_dir / name,
+            text,
+            contain_within=units_dir,
+        )
 
 
 def main(argv: Sequence[str] | None = None) -> int:

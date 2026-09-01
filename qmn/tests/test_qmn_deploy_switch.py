@@ -22,6 +22,7 @@ _QMN_ROOT = Path(__file__).resolve().parents[1]
 _DEPLOY = _QMN_ROOT / "deploy"
 _FIXTURES = _DEPLOY / "fixtures"
 _WORKSPACE = _QMN_ROOT.parent
+_MAX_FIXTURE_BYTES = 1 << 20  # 1 MiB
 
 
 def _load(name: str, path: Path) -> ModuleType:
@@ -31,6 +32,24 @@ def _load(name: str, path: Path) -> ModuleType:
     sys.modules[name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def _read_fixture_text(path: Path) -> str:
+    """Read a fixture as a regular in-root non-symlink file under a size cap."""
+    resolved = path.resolve()
+    assert not path.is_symlink(), resolved
+    assert resolved.is_file() and resolved.is_relative_to(_WORKSPACE), resolved
+    size = resolved.stat().st_size
+    assert size <= _MAX_FIXTURE_BYTES, resolved
+    return resolved.read_text(encoding="utf-8")
+
+
+def _try_symlink(link: Path, target: Path) -> None:
+    """Create a symlink or skip where the platform forbids it (Windows without privilege)."""
+    try:
+        link.symlink_to(target)
+    except (OSError, NotImplementedError):
+        pytest.skip("symlink creation is not permitted on this platform")
 
 
 @pytest.fixture(scope="module")
@@ -188,12 +207,12 @@ def test_upgrade_policy_never_auto_reboots_or_restarts_node(
     )
     assert findings == ()
 
-    fixture_apt = (
+    fixture_apt = _read_fixture_text(
         _FIXTURES / "upgrade-policy" / upgrade_mod.APT_UNATTENDED_FRAGMENT_NAME
-    ).read_text(encoding="utf-8")
-    fixture_nr = (
+    )
+    fixture_nr = _read_fixture_text(
         _FIXTURES / "upgrade-policy" / upgrade_mod.NEEDRESTART_FRAGMENT_NAME
-    ).read_text(encoding="utf-8")
+    )
     assert 'Automatic-Reboot "false"' in fixture_apt
     assert "qmn.service" in fixture_nr
 
@@ -311,3 +330,73 @@ def test_workflow_pins_ubuntu_24_04_never_latest() -> None:
     assert "ci_lane.py" in workflow
     assert "LoadCredentialEncrypted" in workflow or "scratch" in workflow.casefold()
     assert "node-rollback" in workflow or "rollback" in workflow
+
+
+def test_write_plan_refuses_symlink_destination(
+    switch_mod: ModuleType, tmp_path: Path
+) -> None:
+    plan = switch_mod.build_switch_plan(
+        commit="abc1234",
+        config_version="cfg-1",
+        mode="check",
+    )
+    outside = tmp_path / "outside.json"
+    outside.write_text("keep\n", encoding="utf-8")
+    link = tmp_path / "plan.json"
+    _try_symlink(link, outside)
+    with pytest.raises(OSError, match="symlink"):
+        switch_mod.write_plan(plan, link)
+    assert outside.read_text(encoding="utf-8") == "keep\n"
+
+
+def test_load_deployment_record_refuses_symlink_and_oversize(
+    switch_mod: ModuleType, tmp_path: Path
+) -> None:
+    deployments = tmp_path / "deployments"
+    deployments.mkdir()
+    outside = tmp_path / "secret.json"
+    outside.write_text('{"commit":"deadbeef","config_version":"x"}\n', encoding="utf-8")
+    link = deployments / "deadbeef.json"
+    _try_symlink(link, outside)
+    with pytest.raises(OSError, match="symlink"):
+        switch_mod.load_deployment_record(link)
+
+    big = deployments / "big.json"
+    big.write_text("x" * ((_MAX_FIXTURE_BYTES) + 1), encoding="utf-8")
+    with pytest.raises(OSError, match="size cap"):
+        switch_mod.load_deployment_record(big)
+
+
+def test_write_fragments_refuses_symlink(
+    upgrade_mod: ModuleType, tmp_path: Path
+) -> None:
+    dest = tmp_path / "upgrade-policy"
+    dest.mkdir()
+    outside = tmp_path / "outside.conf"
+    outside.write_text("keep\n", encoding="utf-8")
+    link = dest / upgrade_mod.APT_UNATTENDED_FRAGMENT_NAME
+    _try_symlink(link, outside)
+    with pytest.raises(OSError, match="symlink"):
+        upgrade_mod.write_fragments(dest)
+    assert outside.read_text(encoding="utf-8") == "keep\n"
+
+
+def test_apply_plan_refuses_symlinked_release_marker(
+    switch_mod: ModuleType, tmp_path: Path
+) -> None:
+    root = tmp_path / "opt-qmx"
+    plan = switch_mod.build_switch_plan(
+        commit="ccccccc3",
+        config_version="cfg-c",
+        mode="apply",
+        opt_qmx=root,
+    )
+    tree = switch_mod.tree_path(root, "ccccccc3")
+    tree.mkdir(parents=True)
+    outside = tmp_path / "outside-release"
+    outside.write_text("keep\n", encoding="utf-8")
+    marker = tree / ".qmx-release"
+    _try_symlink(marker, outside)
+    with pytest.raises(OSError, match="symlink"):
+        switch_mod.apply_plan_to_fixture(plan, root)
+    assert outside.read_text(encoding="utf-8") == "keep\n"

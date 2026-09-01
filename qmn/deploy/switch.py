@@ -74,6 +74,7 @@ def _load_sibling(module_name: str, path: Path) -> ModuleType:
 
 
 _boundary = _load_sibling("qmn_deploy_boundary", _DEPLOY_ROOT / "boundary.py")
+_safe_io = _load_sibling("qmn_deploy_safe_io", _DEPLOY_ROOT / "safe_io.py")
 
 
 @dataclass(frozen=True, slots=True)
@@ -179,7 +180,8 @@ def record_path(opt_qmx: Path, commit: str) -> Path:
 
 
 def load_deployment_record(path: Path) -> DeploymentRecord:
-    data = json.loads(path.read_text(encoding="utf-8"))
+    text = _safe_io.read_text_contained(path, contain_within=path.parent)
+    data = json.loads(text)
     if not isinstance(data, dict):
         raise ValueError("deployment record must be a JSON object")
     record = cast("dict[str, object]", data)
@@ -542,7 +544,8 @@ def apply_plan_to_fixture(plan: ReleasePlan, opt_qmx: Path) -> DeploymentRecord:
         new_tree = tree_path(opt_qmx, record.commit)
         new_tree.mkdir(parents=True, exist_ok=True)
         # Marker proving materialize + sync landed in the new tree only.
-        (new_tree / ".qmx-release").write_text(
+        _safe_io.write_text_exclusive_no_follow(
+            new_tree / ".qmx-release",
             json.dumps(
                 {
                     "commit": record.commit,
@@ -552,15 +555,16 @@ def apply_plan_to_fixture(plan: ReleasePlan, opt_qmx: Path) -> DeploymentRecord:
                 sort_keys=True,
             )
             + "\n",
-            encoding="utf-8",
+            contain_within=new_tree,
         )
         if not record.check_mode_ok:
             raise RuntimeError("check-mode boot must pass before symlink flip")
         _atomic_symlink_to(current_link(opt_qmx), new_tree)
         out = record_path(opt_qmx, record.commit)
-        out.write_text(
+        _safe_io.write_text_exclusive_no_follow(
+            out,
             json.dumps(record.to_jsonable(), indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
+            contain_within=deployments_dir(opt_qmx),
         )
         _prune_trees(opt_qmx, keep_commit=record.commit, depth=DEFAULT_PRUNE_DEPTH)
         return record
@@ -582,10 +586,11 @@ def apply_plan_to_fixture(plan: ReleasePlan, opt_qmx: Path) -> DeploymentRecord:
             recipe=ROLLBACK_RECIPE,
             check_mode_ok=True,
         )
-        out.write_text(
+        _safe_io.write_text_exclusive_no_follow(
+            out,
             json.dumps(rollback_record.to_jsonable(), indent=2, sort_keys=True)
             + "\n",
-            encoding="utf-8",
+            contain_within=deployments_dir(opt_qmx),
         )
         return rollback_record
 
@@ -621,9 +626,10 @@ def _prune_trees(opt_qmx: Path, *, keep_commit: str, depth: int) -> None:
 def write_plan(plan: ReleasePlan, destination: Path) -> None:
     """Write the plan JSON."""
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(
+    _safe_io.write_text_exclusive_no_follow(
+        destination,
         json.dumps(plan.to_jsonable(), indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
+        contain_within=destination.parent,
     )
 
 

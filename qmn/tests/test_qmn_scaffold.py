@@ -29,6 +29,7 @@ _SRC = _QMN_ROOT / "src" / "qmn"
 _VENUE = _SRC / "venue"
 _DEPLOY = _QMN_ROOT / "deploy"
 _WORKSPACE_ROOT = _QMN_ROOT.parent
+_MAX_SOURCE_BYTES = 1 << 20  # 1 MiB
 
 
 def _load_deploy_boundary():
@@ -216,7 +217,19 @@ def test_nothing_outside_qmn_imports_qmn() -> None:
 
 
 def _imported_modules(path: Path) -> set[str]:
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    """Every dotted module name imported by one source file (import + from-import).
+
+    The path is resolved and must be a regular file inside the workspace — never a
+    symlink, never resolving out of the workspace — and its size is capped before
+    the read, so a planted symlink or an oversized file can neither redirect nor
+    unbound it.
+    """
+    resolved = path.resolve()
+    assert not path.is_symlink(), resolved
+    assert resolved.is_file() and resolved.is_relative_to(_WORKSPACE_ROOT), resolved
+    size = resolved.stat().st_size
+    assert size <= _MAX_SOURCE_BYTES, resolved
+    tree = ast.parse(resolved.read_text(encoding="utf-8"), filename=str(resolved))
     names: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):

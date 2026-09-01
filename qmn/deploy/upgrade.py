@@ -10,9 +10,12 @@ DevOps surface only — never imports ``qmn.host`` / ``qmn.doors``.
 
 from __future__ import annotations
 
+import importlib.util
+import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from types import ModuleType
 from typing import Final
 
 __all__ = [
@@ -27,6 +30,21 @@ __all__ = [
     "inspect_upgrade_policy",
     "needrestart_fragment",
 ]
+
+_DEPLOY_ROOT: Final[Path] = Path(__file__).resolve().parent
+
+
+def _load_sibling(module_name: str, path: Path) -> ModuleType:
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"cannot load {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+_safe_io = _load_sibling("qmn_deploy_safe_io", _DEPLOY_ROOT / "safe_io.py")
 
 APT_UNATTENDED_FRAGMENT_NAME: Final[str] = "52qmx-no-auto-reboot"
 NEEDRESTART_FRAGMENT_NAME: Final[str] = "qmx-never-restart.conf"
@@ -160,9 +178,13 @@ def inspect_upgrade_policy(
 def write_fragments(destination: Path) -> None:
     """Write apt + needrestart fragments under a fixture/CI directory."""
     destination.mkdir(parents=True, exist_ok=True)
-    (destination / APT_UNATTENDED_FRAGMENT_NAME).write_text(
-        apt_unattended_fragment(), encoding="utf-8"
+    _safe_io.write_text_exclusive_no_follow(
+        destination / APT_UNATTENDED_FRAGMENT_NAME,
+        apt_unattended_fragment(),
+        contain_within=destination,
     )
-    (destination / NEEDRESTART_FRAGMENT_NAME).write_text(
-        needrestart_fragment(), encoding="utf-8"
+    _safe_io.write_text_exclusive_no_follow(
+        destination / NEEDRESTART_FRAGMENT_NAME,
+        needrestart_fragment(),
+        contain_within=destination,
     )

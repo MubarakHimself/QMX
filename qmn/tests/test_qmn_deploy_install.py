@@ -21,6 +21,7 @@ _DEPLOY = _QMN_ROOT / "deploy"
 _TEMPLATES = _DEPLOY / "systemd" / "templates"
 _FIXTURES = _DEPLOY / "fixtures"
 _WORKSPACE = _QMN_ROOT.parent
+_MAX_READ_BYTES = 1 << 20  # 1 MiB
 
 
 def _load(name: str, path: Path) -> ModuleType:
@@ -30,6 +31,14 @@ def _load(name: str, path: Path) -> ModuleType:
     sys.modules[name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def _try_symlink(link: Path, target: Path) -> None:
+    """Create a symlink or skip where the platform forbids it (Windows without privilege)."""
+    try:
+        link.symlink_to(target)
+    except (OSError, NotImplementedError):
+        pytest.skip("symlink creation is not permitted on this platform")
 
 
 @pytest.fixture(scope="module")
@@ -294,3 +303,40 @@ def test_root_justfile_imports_node_recipes() -> None:
     node_just = (_DEPLOY / "justfile-recipes" / "node.just").read_text(encoding="utf-8")
     assert "node-install" in node_just
     assert "trading" in node_just.lower() or "DevOps" in node_just
+
+
+def test_write_plan_refuses_symlink_destination(
+    install_mod: ModuleType, tmp_path: Path
+) -> None:
+    plan = install_mod.build_install_plan(
+        mode="check",
+        render_values={"drain_window": "30s", "watchdog_interval": "15s"},
+        deploy_root=_DEPLOY,
+    )
+    outside = tmp_path / "outside.json"
+    outside.write_text("keep\n", encoding="utf-8")
+    link = tmp_path / "plan.json"
+    _try_symlink(link, outside)
+    with pytest.raises(OSError, match="symlink"):
+        install_mod.write_plan(plan, link)
+    assert outside.read_text(encoding="utf-8") == "keep\n"
+
+
+def test_load_render_values_refuses_symlink_and_oversize(
+    install_mod: ModuleType, tmp_path: Path
+) -> None:
+    outside = tmp_path / "secret.json"
+    outside.write_text('{"drain_window":"1s","watchdog_interval":"1s"}\n', encoding="utf-8")
+    link = tmp_path / "values.json"
+    _try_symlink(link, outside)
+    with pytest.raises(OSError, match="symlink"):
+        install_mod.load_render_values(link)
+
+    big = tmp_path / "big.json"
+    big.write_text("x" * (_MAX_READ_BYTES + 1), encoding="utf-8")
+    with pytest.raises(OSError, match="size cap"):
+        install_mod.load_render_values(big)
+
+    ok = install_mod.load_render_values(_FIXTURES / "render-values.json")
+    assert ok["drain_window"]
+    assert ok["watchdog_interval"]
