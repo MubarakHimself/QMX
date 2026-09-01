@@ -311,7 +311,9 @@ def apply_kill_line_breach(
             "kill-line flatten mints kill_line_flat apart from protection_forced_flat",
             given=repr(reason_r.value),
         )
-    if not isinstance(live_target, ExecutionTarget) or not isinstance(paper_target, ExecutionTarget):
+    if not isinstance(live_target, ExecutionTarget) or not isinstance(
+        paper_target, ExecutionTarget
+    ):
         return invalid(
             "execution_target",
             "kill-line stand-down routes between typed live and paper ExecutionTargets",

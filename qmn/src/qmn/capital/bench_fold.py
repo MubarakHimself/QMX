@@ -205,7 +205,9 @@ def apply_bench_crossing(
             qualifying_loss_count=report.qualifying_loss_count,
             threshold=report.fold.threshold,
         )
-    if not isinstance(live_target, ExecutionTarget) or not isinstance(paper_target, ExecutionTarget):
+    if not isinstance(live_target, ExecutionTarget) or not isinstance(
+        paper_target, ExecutionTarget
+    ):
         return invalid(
             "execution_target",
             "bench routing reads typed live and paper ExecutionTargets",

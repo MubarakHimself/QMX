@@ -14,7 +14,7 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
-from qmf.core import ExactRational, Ok, Price, PriceDelta, Result, UnitKind, is_ok, is_refusal
+from qmf.core import ExactRational, Ok, Price, PriceDelta, Result, UnitKind, is_refusal
 from qmf.risk.exit_record import check_move_to_breakeven_ratchet
 
 from qmn.capital._refuse import invalid, policy, unsupported
@@ -304,7 +304,6 @@ def dispatch_originated_breakeven_ratchet(
     )
     if is_refusal(admitted):
         return admitted
-    assert is_ok(admitted)
     return admitted
 
 
