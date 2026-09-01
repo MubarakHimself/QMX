@@ -35,6 +35,7 @@ from qmn.order import (
     ConnectionCommandPacer,
     JournalSequenceCursor,
     OrderPath,
+    OrderPathSubmission,
     admission_class_for,
     compound_all_rejected_acceptance_blocked,
     require_venue_resident_protective_stop,
@@ -399,6 +400,7 @@ def test_order_path_happy_path_bind_before_handoff() -> None:
             handed_off_at=_instant(),
         )
     )
+    assert isinstance(submitted, OrderPathSubmission)
     assert submitted.protective_stop_form == "entry-relative"
     assert submitted.handoff.retry_prohibited is True
     assert submitted.handoff.submission_deadline.value_ns == _WALL_NS + 2_000_000_000
