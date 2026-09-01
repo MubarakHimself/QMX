@@ -36,8 +36,8 @@ __all__ = [
 class JobHandleEvidence:
     """Daemon-resolved JobHandle snapshot used as Task-state evidence (CT-46).
 
-    Full Compute Router placement lands in Epic 45; this record is the evidence
-    surface FR-Q28 binds to Task terminal outcomes.
+    Durable JobHandle operations live on ``JobHandleService`` (FR-Q51). This
+    record is the evidence surface the dispatcher applies to Task state.
     """
 
     job_id: str
@@ -109,8 +109,7 @@ def validate_never_dispatched_cancel(
     if was_dispatched:
         return policy_rejection(
             "task_state",
-            "dispatched Task cancel requires terminal JobHandle evidence "
-            "(FR-Q28; AD-12)",
+            "dispatched Task cancel requires terminal JobHandle evidence (FR-Q28; AD-12)",
             current_state=current_state.value,
             to_state=to_state.value,
         )

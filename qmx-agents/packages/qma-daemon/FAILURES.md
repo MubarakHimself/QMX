@@ -10,7 +10,9 @@ fold-contract enforcement (FR-6 through FR-9); Story 42.4 delivers store-class
 ownership and the governed variable registry (FR-10 through FR-13); Story 42.5
 delivers versioned-store migration, backup, and controlled restoration (FR-14
 through FR-17). Epic 43 Story 43.2 adds closed Task/Mission state with
-evidence-bound terminal outcomes (FR-18 through FR-21).
+evidence-bound terminal outcomes (FR-18 through FR-21). Epic 45 Story 45.4
+adds durable JobHandle operations and daemon-only Task mapping (FR-29
+through FR-31).
 
 ### FR-1: A second daemon or writer is refused at the persistence boundary
 
@@ -412,3 +414,52 @@ evidence-bound terminal outcomes (FR-18 through FR-21).
 - **Product-user affordance:** that environment would reach a venue, broker,
   exchange, trading node, or OpenRouter. QMA refuses it up front. The
   trading desk stays read-only.
+
+### FR-29: Timeout, lost supervisor, unreachable environment, or restart is `unknown`
+
+- **Failure class:** designed state, not a refusal (CT-46 / L35). Retry,
+  assumed outcome, and inferred failure of an `unknown` job are
+  `policy rejection` (CT-04).
+- **Detection:** `JobHandleService.mark_unknown` / `observe_lost_certainty`
+  / `JobHandle.reattach` after a lost supervisor, unreachable environment,
+  timeout, or daemon restart. `abort` refuses those triggers so they cannot
+  become `aborted` or `failed` (FR-Q51; DEC-0316).
+- **Auto-recovery / retry:** none — `retry`, `infer_failure`, and
+  `assume_outcome` are refused; the job holds its `environment_lease` until
+  an explicit recorded resolution.
+- **Visible degraded state:** JobHandle and Task are `unknown`; the slot
+  stays occupied; completion is blocked.
+- **Notification tier:** operator-visible (human-gate `unknown.resolve`).
+- **Product-user affordance:** the job's outcome is not known. Do not retry
+  or assume it failed. An operator records a resolution.
+
+### FR-30: `unknown` resolution requires an operator-principal recorded action
+
+- **Failure class:** `OperatorPrincipalRequired` / `policy rejection` (CT-04).
+- **Detection:** `JobHandleService.resolve_unknown` authorizes
+  `unknown.resolve` (AD-24). A `machine` principal is refused. `recorded=False`
+  is refused even for an operator (FR-Q51; DEC-0323).
+- **Auto-recovery / retry:** none — no headless, scripted, scheduled, or
+  agent path resolves `unknown`.
+- **Visible degraded state:** the JobHandle stays `unknown` and keeps its
+  slot; Task stays `unknown`.
+- **Notification tier:** operator-visible (human-gate refusal).
+- **Product-user affordance:** only an interactive operator can resolve an
+  unknown job, and the resolution must be recorded. A worker or scheduler
+  cannot.
+
+### FR-31: Known environment/supervisor non-completion is `aborted`, not `cancelled`
+
+- **Failure class:** designed state (CT-46). Illegal transitions after a
+  terminal JobHandle are `policy rejection`.
+- **Detection:** `JobHandleService.abort` records `oom_kill`,
+  `container_stop`, `image_failure`, or `mount_failure` as `aborted`. The
+  daemon maps `aborted` to Task `failed` with the reason on the Task Ledger
+  and never to `cancelled` (FR-Q51; DEC-0316).
+- **Auto-recovery / retry:** none — terminal JobHandle states are exactly
+  `done`, `failed`, `cancelled`, and `aborted`.
+- **Visible degraded state:** the Task is `failed` with the abort reason;
+  leases are released.
+- **Notification tier:** silent-log (caller receives the mapped Task state).
+- **Product-user affordance:** the environment or supervisor stopped the
+  job. That is not an explicit cancel. The abort reason is on the Task.

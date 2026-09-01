@@ -1,6 +1,6 @@
-"""ExecutionEnvironment registry, Compute Router, and lease evaluation.
+"""ExecutionEnvironment registry, Compute Router, and durable JobHandle.
 
-AD-14, AD-17; FR-Q27, FR-Q47, FR-Q48, FR-Q49, FR-Q50.
+AD-14, AD-17; FR-Q27, FR-Q47, FR-Q48, FR-Q49, FR-Q50, FR-Q51.
 """
 
 from __future__ import annotations
