@@ -38,6 +38,7 @@ QMA_DAEMON_ALLOWED_DEPS: Final[frozenset[str]] = frozenset(
         "qmf-registry",
         "qmf-data",
         "qmf-risk",
+        "tzdata",
     }
 )
 

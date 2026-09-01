@@ -65,6 +65,7 @@ def test_daemon_deps_limited_to_declared_parent_set() -> None:
                 "qmf-registry",
                 "qmf-data",
                 "qmf-risk",
+                "tzdata",
             }
         )
         == QMA_DAEMON_ALLOWED_DEPS
