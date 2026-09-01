@@ -41,11 +41,11 @@ def test_timeout_keys_are_registry_citations_only() -> None:
     assert HOOK_TIMEOUT_BEFORE_KEY == "registry:hook.timeout_before"
     assert HOOK_TIMEOUT_AFTER_KEY == "registry:hook.timeout_after"
     assert HOOK_TIMEOUT_CONTROL_KEY == "registry:hook.timeout_control"
-    assert HOOK_TIMEOUT_KEYS == {
+    assert {
         HOOK_TIMEOUT_BEFORE_KEY,
         HOOK_TIMEOUT_AFTER_KEY,
         HOOK_TIMEOUT_CONTROL_KEY,
-    }
+    } == HOOK_TIMEOUT_KEYS
     assert timeout_registry_key_for_event("before_tool") == HOOK_TIMEOUT_BEFORE_KEY
     assert timeout_registry_key_for_event("before_memory_write") == HOOK_TIMEOUT_BEFORE_KEY
     assert timeout_registry_key_for_event(BEFORE_LEDGER_APPEND_EVENT) == HOOK_TIMEOUT_BEFORE_KEY

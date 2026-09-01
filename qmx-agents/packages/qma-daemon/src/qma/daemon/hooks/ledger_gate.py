@@ -165,9 +165,7 @@ def is_exempt_ledger_author(entry: Mapping[str, object]) -> bool:
     if kind in DAEMON_AUTHORED_ENTRY_KINDS and _authored_by_is_daemon(authored_by):
         return True
     # Hook-returned ledger_entry: authored_by daemon plus returning hook registry id.
-    if kind == "ledger_entry" and _authored_by_is_daemon(authored_by):
-        return True
-    return False
+    return kind == "ledger_entry" and _authored_by_is_daemon(authored_by)
 
 
 def is_dispatch_lease_holder(
@@ -204,9 +202,7 @@ def is_well_formed_ledger_entry(entry: Mapping[str, object]) -> bool:
     # model_deployment_ref mandatory except daemon-authored exempt kinds.
     if kind in DAEMON_AUTHORED_ENTRY_KINDS and _authored_by_is_daemon(entry.get("authored_by")):
         return True
-    if "model_deployment_ref" not in entry or entry.get("model_deployment_ref") is None:
-        return False
-    return True
+    return "model_deployment_ref" in entry and entry.get("model_deployment_ref") is not None
 
 
 def annotate_ledger_entry(
