@@ -1,15 +1,40 @@
-"""Protection surface (TN-7/TN-8): scoped KSA fold and effect-matrix compile.
+"""Protection surface (TN-7/TN-8): scoped KSA fold, effect-matrix, ranked dispatcher.
 
 Story 26.1 lands the monotone KSA severity fold, operator-only ``resume``, and
 ``registry:ksa_effect_matrix`` cell compilation. Matrix **values** stay
 operator-owned (GAP-0050 / FTR-07) — blank or provisional cells block live and
-soak as declared. Story 26.2 fills the ranked control dispatcher.
+soak as declared. Story 26.2 fills the ranked control dispatcher: one
+evidence-first arbitration point per stream, BMS total unique AD-37 rank,
+collapse/compose without arrival order, dead-wire satisfaction predicates, and
+standing-intent persistence with reserved-extent / UNDELIVERABLE fallback.
 """
 
 from __future__ import annotations
 
 from typing import Final
 
+from qmn.protection.dispatch import (
+    DISPATCHER_SURFACE,
+    RANKED_CONTROL_KINDS,
+    UNDELIVERABLE_ALARM_CLASS,
+    CandidateOrigin,
+    DeadWireSatisfaction,
+    DispatchCandidate,
+    DispatchPlan,
+    IntentPersistDisposition,
+    PersistedProtectiveIntent,
+    ProtectionIntentExtent,
+    StreamProtectionDispatcher,
+    UndeliverableProtectiveIntent,
+    check_dead_wire_satisfaction,
+    command_outcome_never_satisfies,
+    dispatch_ranked_controls,
+    exclude_venue_resident_tier1,
+    persist_protective_intent,
+    redecide_protective_intent,
+    require_total_unique_rank_table,
+    stream_dispatcher_key,
+)
 from qmn.protection.effect_matrix import (
     EFFECT_MATRIX_BLANK_EFFECTS,
     KSA_EFFECT_KINDS,
@@ -56,6 +81,7 @@ from qmn.protection.ksa import (
 
 __all__ = [
     "AUTO_DEESCALATION_EVENTS",
+    "DISPATCHER_SURFACE",
     "EFFECT_MATRIX_BLANK_EFFECTS",
     "KSA_EFFECT_KINDS",
     "KSA_EFFECT_MATRIX_REGISTRY_KEY",
@@ -65,11 +91,18 @@ __all__ = [
     "OPERATOR_AUTHORITY",
     "PAPER_DISPOSITION_BY_TRIGGER",
     "PROTECTION_SURFACE",
+    "RANKED_CONTROL_KINDS",
+    "UNDELIVERABLE_ALARM_CLASS",
     "VALUE_STATUSES",
     "VALUE_STATUS_BLANK",
     "VALUE_STATUS_PROVISIONAL",
     "VALUE_STATUS_RATIFIED",
+    "CandidateOrigin",
     "CompiledEffectMatrix",
+    "DeadWireSatisfaction",
+    "DispatchCandidate",
+    "DispatchPlan",
+    "IntentPersistDisposition",
     "KsaEffectMatrixCell",
     "KsaEnforcementScope",
     "KsaEscalationRecord",
@@ -77,12 +110,20 @@ __all__ = [
     "KsaTriggerClass",
     "LevelEpoch",
     "PaperDisposition",
+    "PersistedProtectiveIntent",
+    "ProtectionIntentExtent",
     "ResumeRecord",
+    "StreamProtectionDispatcher",
+    "UndeliverableProtectiveIntent",
     "cell_blocks_role_live",
     "cell_blocks_soak",
+    "check_dead_wire_satisfaction",
+    "command_outcome_never_satisfies",
     "compile_effect_matrix",
     "compile_ksa_effect_cell",
+    "dispatch_ranked_controls",
     "effective_ksa_level",
+    "exclude_venue_resident_tier1",
     "fold_ksa_level",
     "ksa_levels",
     "ksa_trigger_classes",
@@ -92,9 +133,13 @@ __all__ = [
     "mint_escalation",
     "mint_level_epoch",
     "paper_disposition_for",
+    "persist_protective_intent",
+    "redecide_protective_intent",
+    "require_total_unique_rank_table",
     "resume",
     "scope_covers_stream",
     "stream_blocked_by_escalation",
+    "stream_dispatcher_key",
 ]
 
 PROTECTION_SURFACE: Final[str] = "qmn.protection"
