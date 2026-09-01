@@ -307,3 +307,46 @@ evidence-bound terminal outcomes (FR-18 through FR-21).
 - **Notification tier:** silent-log (caller receives the typed refusal).
 - **Product-user affordance:** that Task already finished. Start a new Task
   rather than rewriting the closed outcome.
+
+### FR-22: A tool matching the act-level money-path deny-list is refused at registration
+
+- **Failure class:** `ProhibitedMoneyPathTool` / `policy rejection` (CT-04).
+- **Detection:** `ToolRegistry.register_tool` evaluates the code-declared
+  act-level deny-list (families plus enumerated verbs) before `check_fn` for
+  every tool kind, including a tool tagged paper-only (FR-Q42; AD-16; SCN-0014).
+- **Auto-recovery / retry:** none — the deny-list is code, not a setting.
+  Role, Mission, hook, toolset, `tool_adapter`, and `check_fn` cannot lift it.
+- **Visible degraded state:** the tool is not stored; its schema never reaches
+  a model.
+- **Notification tier:** operator-visible (startup / registration refusal).
+- **Product-user affordance:** that tool would submit, amend, or otherwise
+  write the money path. QMA has no execution tool at any account role, paper
+  included. Remove the act; do not retry under a different permission.
+
+### FR-23: An MCP server advertising one money-path tool is refused whole
+
+- **Failure class:** `ProhibitedMoneyPathTool` / `policy rejection` (CT-04).
+- **Detection:** `ToolRegistry.register_adapter` / `register_mcp_server`
+  passes every advertised tool through the same deny-list; one match refuses
+  the adapter and binds none of its tools (FR-Q42; AD-16).
+- **Auto-recovery / retry:** none — fix the server's advertised set.
+- **Visible degraded state:** the MCP server is unbound; no partial catalog.
+- **Notification tier:** operator-visible (startup / adapter registration).
+- **Product-user affordance:** that MCP server advertised a prohibited
+  trading act. Unbind it entirely; a partial server is not installed.
+
+### FR-24: A money-path write through the parent-library surface is refused
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `ParentSurfaceGate.attempt_write` / `attempt_zone_transition`
+  refuse binding, Book, BMS, seat, control-action, exit, protection, priority,
+  and promotion records and every zone transition. The sole admitted write is
+  a content-addressed candidate in the existing `dev` zone (FR-Q42; AD-2).
+- **Auto-recovery / retry:** none — QMA mints no promotion command and no
+  money-path value. A human promotes outside QMA.
+- **Visible degraded state:** no money-path record is written; no zone
+  changes.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** QMA may only stage a content-addressed
+  candidate in the `dev` zone. Binding, sizing, protection, and promotion
+  stay with the trading node and a human.

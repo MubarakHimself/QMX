@@ -7,16 +7,22 @@ from pathlib import Path
 import pytest
 from qma.core.barriers import (
     CAPABILITY_LADDER,
+    MONEY_PATH_DENIAL_NOT_LIFTABLE_BY,
+    MONEY_PATH_DENIED_ACTS,
     MONEY_PATH_DENY_LIST,
     PERMITTED_PARENT_SURFACES,
     PROHIBITED_RECORD_FAMILIES,
     QMA_CORE_ALLOWED_DEPS,
     QMA_DAEMON_ALLOWED_DEPS,
+    QMA_MINTED_MONEY_PATH_VALUES,
+    QMA_MINTED_PROMOTION_COMMAND,
     QMA_WIRE_ALLOWED_DEPS,
+    SOLE_PERMITTED_PARENT_WRITE,
     CapabilityError,
     CapabilityRung,
     DependencyBoundaryError,
     MoneyPathAct,
+    MoneyPathDeniedAct,
     MoneyPathDenyError,
     ParentLibrary,
     ParentSurfaceError,
@@ -32,11 +38,16 @@ from qma.core.barriers import (
     capability_rung_rank,
     is_money_path_act_denied,
     is_parent_surface_permitted,
+    match_money_path_act,
     parse_capability_rung,
+    refuse_money_path_permission,
     refuse_money_path_registration,
+    refuse_parent_money_path_write,
     refuse_unlisted_parent_surface,
+    refuse_zone_transition_surface,
 )
 from qma.core.refusals import ProhibitedMoneyPathTool
+from qmf.core import is_refusal
 
 AGENTS_ROOT = Path(__file__).resolve().parents[3]
 CORE_PKG = AGENTS_ROOT / "packages" / "qma-core"
@@ -204,6 +215,96 @@ def test_money_path_deny_list_cannot_be_widened() -> None:
         assert_deny_list_not_widenable({"order", "invented_execution_act"})
     with pytest.raises(MoneyPathDenyError, match="cannot be widened"):
         assert_deny_list_not_widenable({"paper_only_order"})
+
+
+@pytest.mark.parametrize(
+    ("act", "matched"),
+    [
+        ("submit_order", "submit_order"),
+        ("amend_order", "amend_order"),
+        ("cancel_order", "cancel_order"),
+        ("replace_order", "replace_order"),
+        ("place_order", "submit_order"),
+        ("open_position", "open_position"),
+        ("close_position", "close_position"),
+        ("reduce_position", "reduce_position"),
+        ("hedge_position", "hedge_position"),
+        ("set_protection", "set_protection"),
+        ("amend_protection", "amend_protection"),
+        ("size", "size"),
+        ("resize", "resize"),
+        ("mint_sizing_decision", "mint_sizing_decision"),
+        ("create_binding", "create_binding"),
+        ("amend_binding", "amend_binding"),
+        ("activate_binding", "activate_binding"),
+        ("stand_down_binding", "stand_down_binding"),
+        ("delete_binding", "delete_binding"),
+        ("set_book_mode", "set_book_mode"),
+        ("set_seat_state", "set_seat_state"),
+        ("set_book_parameter", "set_book_parameter"),
+        ("set_bms_parameter", "set_bms_parameter"),
+        ("set_priority_rank", "set_priority_rank"),
+        ("set_capital_floor", "set_capital_floor"),
+        ("arm_kill_switch", "arm_kill_switch"),
+        ("disarm_kill_switch", "disarm_kill_switch"),
+        ("change_kill_switch", "change_kill_switch"),
+        ("change_control_action", "change_control_action"),
+        ("zone_transition", "zone_transition"),
+        ("paper_only_submit_order", "submit_order"),
+        ("paper_only_order", "order"),
+        ("submit an order", "submit_order"),
+    ],
+)
+def test_act_level_deny_list_matches_enumerated_verbs(act: str, matched: str) -> None:
+    assert is_money_path_act_denied(act)
+    assert match_money_path_act(act) == matched
+
+
+def test_act_level_deny_list_does_not_match_read_and_calculate() -> None:
+    for allowed in (
+        "read",
+        "read_positions",
+        "fetch_bars",
+        "risk_calculate",
+        "search",
+        "summarize",
+    ):
+        assert not is_money_path_act_denied(allowed)
+        assert match_money_path_act(allowed) is None
+
+
+def test_denied_act_vocabulary_is_code_declared() -> None:
+    assert frozenset(MoneyPathDeniedAct) == MONEY_PATH_DENIED_ACTS
+    assert QMA_MINTED_PROMOTION_COMMAND is None
+    assert QMA_MINTED_MONEY_PATH_VALUES == ()
+    assert "check_fn" in MONEY_PATH_DENIAL_NOT_LIFTABLE_BY
+    assert "role" in MONEY_PATH_DENIAL_NOT_LIFTABLE_BY
+    assert SOLE_PERMITTED_PARENT_WRITE == (
+        ParentLibrary.QMF_REGISTRY,
+        ParentSurfaceKind.DEV_ZONE_CANDIDATE_WRITE,
+    )
+
+
+def test_permission_cannot_lift_money_path_denial() -> None:
+    refusal = refuse_money_path_permission(
+        tool_id="trading:place_order",
+        act="submit_order",
+        plugin_id="trading-readonly",
+        via="role",
+    )
+    assert isinstance(refusal, ProhibitedMoneyPathTool)
+    assert refusal.context["matched_act"] == "submit_order"
+    assert refusal.context["via"] == "role"
+
+
+def test_parent_money_path_write_returns_typed_refusal() -> None:
+    for family in ProhibitedRecordFamily:
+        refusal = refuse_parent_money_path_write(family)
+        assert is_refusal(refusal)
+        assert refusal.context["family"] == family.value
+    zone = refuse_zone_transition_surface()
+    assert is_refusal(zone)
+    assert zone.context["field"] == "zone_transition"
 
 
 def test_dependency_boundary_rejects_extras() -> None:

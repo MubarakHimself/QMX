@@ -11,6 +11,10 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
+from qma.core.barriers.money_path import (
+    is_money_path_act_denied,
+    refuse_money_path_permission,
+)
 from qma.core.plugins.hooks import HookResult, HookSource, build_hook_result
 from qma.core.ports.permissions import (
     AGENT_PATH_ENFORCEMENT_EVENTS,
@@ -84,6 +88,22 @@ class PermissionPolicyEnforcer:
                 ),
                 given=event,
             )
+
+        if required_permission is not None and is_money_path_act_denied(required_permission):
+            return refuse_money_path_permission(
+                tool_id=f"permission:{required_permission}",
+                act=required_permission,
+                via="permission_policy",
+            )
+        if payload is not None:
+            payload_act = payload.get("act")
+            if isinstance(payload_act, str) and is_money_path_act_denied(payload_act):
+                tool_raw = payload.get("tool_id", "permission:act")
+                return refuse_money_path_permission(
+                    tool_id=str(tool_raw),
+                    act=payload_act,
+                    via="hook",
+                )
 
         resolved_mode = (
             self.mode

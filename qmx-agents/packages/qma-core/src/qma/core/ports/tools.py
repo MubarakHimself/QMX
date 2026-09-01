@@ -178,15 +178,13 @@ class ToolAdapterRecord:
 
     adapter_id: str
     advertised_tool_ids: tuple[str, ...] = ()
+    advertised_acts: tuple[str, ...] = ()
     plugin_id: str | None = None
     metadata: Mapping[str, object] = field(default_factory=dict[str, object])
 
     def __post_init__(self) -> None:
         if ":" not in self.adapter_id:
-            msg = (
-                "adapter_id must be fully-qualified <plugin_id>:<local_id> "
-                "(AD-16; FR-Q41)"
-            )
+            msg = "adapter_id must be fully-qualified <plugin_id>:<local_id> (AD-16; FR-Q41)"
             raise VocabularyError(msg)
         if self.plugin_id is None:
             object.__setattr__(self, "plugin_id", self.adapter_id.split(":", 1)[0])
@@ -195,6 +193,7 @@ class ToolAdapterRecord:
             "advertised_tool_ids",
             tuple(self.advertised_tool_ids),
         )
+        object.__setattr__(self, "advertised_acts", tuple(self.advertised_acts))
         object.__setattr__(self, "metadata", MappingProxyType(dict(self.metadata)))
         # Binding fields must never ride the contribution (AD-16).
         for forbidden in ("desk", "role", "desk_and_role", "binding"):
@@ -241,10 +240,7 @@ class ToolsetRecord:
 
     def __post_init__(self) -> None:
         if ":" not in self.toolset_id:
-            msg = (
-                "toolset_id must be fully-qualified <plugin_id>:<local_id> "
-                "(AD-16; FR-Q41)"
-            )
+            msg = "toolset_id must be fully-qualified <plugin_id>:<local_id> (AD-16; FR-Q41)"
             raise VocabularyError(msg)
         if not self.version.strip():
             msg = "toolset version must be a non-empty string (AD-16)"
@@ -252,8 +248,7 @@ class ToolsetRecord:
         for tool_id in self.tool_ids:
             if ":" not in tool_id:
                 msg = (
-                    f"toolset lists fully-qualified tool ids only; got {tool_id!r} "
-                    "(AD-16; FR-Q41)"
+                    f"toolset lists fully-qualified tool ids only; got {tool_id!r} (AD-16; FR-Q41)"
                 )
                 raise VocabularyError(msg)
         object.__setattr__(self, "tool_ids", tuple(dict.fromkeys(self.tool_ids)))

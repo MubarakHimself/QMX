@@ -1,18 +1,20 @@
-"""Unified Tool Registry (AD-16; FR-Q41; AR-Q18).
+"""Unified Tool Registry (AD-16; FR-Q41, FR-Q42; AR-Q18).
 
 Native, CLI, plugin, MCP-adapter, browser, computer-use and backtest tools
 enter one registry. Availability ``check_fn`` excludes an unrunnable tool
 before its schema reaches a model. MCP desk-and-role bindings are operator-only.
-Lowest capable capability-ladder rung wins. Trading desk stays read-only —
-money-path acts are refused at registration (AR-Q18); Story 44.5 owns the
-full deny-list expansion.
+Lowest capable capability-ladder rung wins. Trading desk stays read-and-calculate:
+the code-declared act-level money-path deny-list refuses matching tools at
+registration, before ``check_fn``, including paper-only tools. An MCP adapter
+that advertises one denied tool is refused whole. Role, Mission, hook, toolset,
+tool_adapter, and check_fn cannot lift the denial.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from types import MappingProxyType
-from typing import Any
+from typing import Any, cast
 
 from qma.core.barriers.capability import (
     CAPABILITY_LADDER,
@@ -20,8 +22,15 @@ from qma.core.barriers.capability import (
     parse_capability_rung,
 )
 from qma.core.barriers.money_path import (
+    QMA_MINTED_PROMOTION_COMMAND,
     is_money_path_act_denied,
+    match_money_path_act,
+    refuse_money_path_permission,
     refuse_money_path_registration,
+)
+from qma.core.barriers.parent_surfaces import (
+    ProhibitedMutation,
+    ProhibitedRecordFamily,
 )
 from qma.core.control.primitives import Skill
 from qma.core.ports.tools import (
@@ -41,10 +50,12 @@ from qma.core.ports.tools import (
     subagent_inherited_tool_ids,
     write_tool_adapter_binding,
 )
+from qma.core.refusals.variants import ProhibitedMoneyPathTool
 from qma.core.vocabulary.enums import ExecutionEnvironmentKind, PrincipalClass
 from qma.core.vocabulary.registry import VocabularyError
 from qma.daemon.envs.registry import ExecutionEnvironmentRegistry
-from qmf.core import Ok, Result
+from qma.daemon.tools.parent_writes import DEV_ZONE, DevZoneCandidate, ParentSurfaceGate
+from qmf.core import Ok, Result, is_ok
 from qmf.data.store.refusals import invalid_input
 
 __all__ = [
@@ -69,6 +80,44 @@ def _always_available() -> bool:
     return True
 
 
+def _declared_acts(record: ToolRecord) -> tuple[str, ...]:
+    """Acts the deny-list inspects: ``money_path_act`` plus declared ``acts``."""
+    acts: list[str] = []
+    if record.money_path_act is not None:
+        acts.append(record.money_path_act)
+    acts.extend(record.acts)
+    return tuple(acts)
+
+
+def _metadata_advertised_rows(
+    record: ToolAdapterRecord,
+) -> tuple[tuple[str, str], ...]:
+    """``(tool_id, act)`` pairs declared on adapter metadata / advertised_acts."""
+    rows: list[tuple[str, str]] = []
+    for act in record.advertised_acts:
+        rows.append((record.adapter_id, act))
+    raw = record.metadata.get("advertised_tools")
+    if not isinstance(raw, Sequence) or isinstance(raw, (str, bytes)):
+        return tuple(rows)
+    for item in cast(Sequence[object], raw):
+        if not isinstance(item, Mapping):
+            continue
+        mapping = cast(Mapping[str, object], item)
+        tool_raw = mapping.get("tool_id", mapping.get("id", record.adapter_id))
+        tool_id = str(tool_raw)
+        money = mapping.get("money_path_act")
+        if isinstance(money, str) and money:
+            rows.append((tool_id, money))
+        acts_raw = mapping.get("acts", ())
+        if isinstance(acts_raw, str):
+            rows.append((tool_id, acts_raw))
+            continue
+        if isinstance(acts_raw, Sequence) and not isinstance(acts_raw, (str, bytes)):
+            for act_item in cast(Sequence[object], acts_raw):
+                rows.append((tool_id, str(act_item)))
+    return tuple(rows)
+
+
 class ToolRegistry:
     """One governed Tool Registry for every tool kind (AD-16; FR-Q41)."""
 
@@ -85,6 +134,7 @@ class ToolRegistry:
         self._environments = (
             environments if environments is not None else ExecutionEnvironmentRegistry()
         )
+        self._parent_writes = ParentSurfaceGate()
 
     @property
     def environments(self) -> ExecutionEnvironmentRegistry:
@@ -120,6 +170,48 @@ class ToolRegistry:
 
         return check
 
+    def _money_path_refusal_for(self, record: ToolRecord) -> ProhibitedMoneyPathTool | None:
+        """Evaluate the deny-list before ``check_fn`` (FR-Q42; AD-16).
+
+        Paper-only tags and account-role prefixes cannot lift a match.
+        """
+        for act in _declared_acts(record):
+            if is_money_path_act_denied(act):
+                return refuse_money_path_registration(
+                    tool_id=record.tool_id,
+                    act=act,
+                    plugin_id=record.plugin_id,
+                )
+        return None
+
+    def _adapter_money_path_refusal(
+        self,
+        record: ToolAdapterRecord,
+        *,
+        extra_tools: Sequence[ToolRecord] = (),
+    ) -> ProhibitedMoneyPathTool | None:
+        """Refuse the whole MCP server when any advertised tool matches."""
+        extras = {tool.tool_id: tool for tool in extra_tools}
+        for tool_id, act in _metadata_advertised_rows(record):
+            if is_money_path_act_denied(act):
+                return refuse_money_path_registration(
+                    tool_id=tool_id,
+                    act=act,
+                    plugin_id=record.plugin_id,
+                )
+        for tool_id in record.advertised_tool_ids:
+            tool = extras.get(tool_id, self._tools.get(tool_id))
+            if tool is None:
+                continue
+            refused = self._money_path_refusal_for(tool)
+            if refused is not None:
+                return refused
+        for tool in extra_tools:
+            refused = self._money_path_refusal_for(tool)
+            if refused is not None:
+                return refused
+        return None
+
     def register_tool(
         self,
         record: ToolRecord,
@@ -139,22 +231,10 @@ class ToolRegistry:
                 given=record.tool_id,
             )
 
-        # AR-Q18 / money-path: refuse execution acts at registration (before check_fn).
-        if record.money_path_act is not None and is_money_path_act_denied(
-            record.money_path_act
-        ):
-            return refuse_money_path_registration(
-                tool_id=record.tool_id,
-                act=record.money_path_act,
-                plugin_id=record.plugin_id,
-            )
-        for act in record.acts:
-            if is_money_path_act_denied(act):
-                return refuse_money_path_registration(
-                    tool_id=record.tool_id,
-                    act=act,
-                    plugin_id=record.plugin_id,
-                )
+        # FR-Q42 / AD-16: act-level deny-list before check_fn, every kind, paper included.
+        denied = self._money_path_refusal_for(record)
+        if denied is not None:
+            return denied
 
         resolved_check = check_fn if check_fn is not None else record.check_fn
         if kind is ToolKind.COMPUTER_USE:
@@ -250,7 +330,10 @@ class ToolRegistry:
         return tuple(visible)
 
     def register_adapter(self, record: ToolAdapterRecord) -> Result[str]:
-        """Register an MCP/adapter contribution without desk-and-role binding."""
+        """Register an MCP/adapter contribution without desk-and-role binding.
+
+        One advertised money-path tool refuses the whole server (FR-Q42; AD-16).
+        """
         if record.adapter_id in self._adapters:
             return invalid_input(
                 "adapter_id",
@@ -267,8 +350,43 @@ class ToolRegistry:
                     ),
                     given=repr(record.metadata.get(forbidden)),
                 )
+        denied = self._adapter_money_path_refusal(record)
+        if denied is not None:
+            return denied
         self._adapters[record.adapter_id] = record
         return Ok(record.adapter_id)
+
+    def register_mcp_server(
+        self,
+        adapter: ToolAdapterRecord,
+        tools: Sequence[ToolRecord],
+        *,
+        check_fns: Mapping[str, AvailabilityCheck] | None = None,
+    ) -> Result[str]:
+        """Register an MCP server as one adapter plus its advertised tools.
+
+        Any matching advertised tool refuses the whole server — nothing binds.
+        """
+        denied = self._adapter_money_path_refusal(adapter, extra_tools=tools)
+        if denied is not None:
+            return denied
+        previous_tools = set(self._tools)
+        previous_adapters = set(self._adapters)
+        adapter_out = self.register_adapter(adapter)
+        if not is_ok(adapter_out):
+            return adapter_out
+        for tool in tools:
+            check = None if check_fns is None else check_fns.get(tool.tool_id)
+            registered = self.register_tool(tool, check_fn=check)
+            if not is_ok(registered):
+                for tool_id in tuple(self._tools):
+                    if tool_id not in previous_tools:
+                        del self._tools[tool_id]
+                for adapter_id in tuple(self._adapters):
+                    if adapter_id not in previous_adapters:
+                        del self._adapters[adapter_id]
+                return registered
+        return Ok(adapter.adapter_id)
 
     def write_adapter_binding(
         self,
@@ -379,6 +497,67 @@ class ToolRegistry:
 
         return Ok(effective)
 
+    def resolve_permission(
+        self,
+        act: str,
+        *,
+        tool_id: str = "registry:permission",
+        plugin_id: str | None = None,
+        via: str | None = None,
+        check_fn: AvailabilityCheck | None = None,
+    ) -> Result[bool]:
+        """Resolve availability/permission; a deny-list match cannot be lifted.
+
+        Role, Mission, hook, toolset, tool_adapter, and ``check_fn`` are ignored
+        when the act is denied — the refusal is raised here, never deferred to a
+        runtime hook (FR-Q42; AD-16).
+        """
+        if is_money_path_act_denied(act):
+            return refuse_money_path_permission(
+                tool_id=tool_id,
+                act=act,
+                plugin_id=plugin_id,
+                via=via,
+            )
+        if check_fn is not None:
+            return Ok(bool(check_fn()))
+        return Ok(True)
+
+    def attempt_money_path_write(
+        self,
+        family: ProhibitedRecordFamily | str,
+        mutation: ProhibitedMutation | str = ProhibitedMutation.WRITE,
+    ) -> Result[DevZoneCandidate]:
+        """Refuse a money-path write through the permitted dependency surface."""
+        return self._parent_writes.attempt_write(family=family, mutation=mutation)
+
+    def attempt_zone_transition(self) -> Result[DevZoneCandidate]:
+        """Refuse every zone-transition surface."""
+        return self._parent_writes.attempt_zone_transition()
+
+    def write_dev_zone_candidate(
+        self,
+        payload: Mapping[str, object],
+        *,
+        origin: str = "qma",
+        summary: str | None = None,
+        lineage_predecessor: str | None = None,
+        zone: str = DEV_ZONE,
+    ) -> Result[DevZoneCandidate]:
+        """Sole permitted write: a content-addressed candidate in the ``dev`` zone."""
+        return self._parent_writes.write_dev_zone_candidate(
+            payload,
+            origin=origin,
+            summary=summary,
+            lineage_predecessor=lineage_predecessor,
+            zone=zone,
+        )
+
+    @property
+    def minted_promotion_command(self) -> None:
+        """This registry mints no promotion command (FR-Q42)."""
+        return QMA_MINTED_PROMOTION_COMMAND
+
     def select_for_act(
         self,
         act: str,
@@ -386,6 +565,12 @@ class ToolRegistry:
         allowed_tool_ids: Sequence[str] | frozenset[str] | set[str] | None = None,
     ) -> Result[ToolRecord]:
         """Pick the lowest capable available tool that declares ``act``."""
+        if is_money_path_act_denied(act):
+            matched = match_money_path_act(act)
+            return refuse_money_path_registration(
+                tool_id="registry:select_for_act",
+                act=matched if matched is not None else act,
+            )
         allowed = None if allowed_tool_ids is None else frozenset(allowed_tool_ids)
         candidates: list[ToolRecord] = []
         for tool in self._tools.values():
@@ -416,5 +601,7 @@ class ToolRegistry:
                 "ladder": list(self.capability_ladder),
                 "gap_0070": dict(GAP_0070_DESKTOP_EXCLUSION),
                 "desktop_registered": self._desktop_registered(),
+                "minted_promotion_command": self.minted_promotion_command,
+                "permitted_parent_write": list(self._parent_writes.permitted_write),
             }
         )

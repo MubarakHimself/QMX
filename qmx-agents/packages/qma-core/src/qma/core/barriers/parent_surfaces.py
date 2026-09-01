@@ -9,10 +9,13 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Final
 
+from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
+
 __all__ = [
     "PARENT_SURFACE_LIBRARIES",
     "PERMITTED_PARENT_SURFACES",
     "PROHIBITED_RECORD_FAMILIES",
+    "SOLE_PERMITTED_PARENT_WRITE",
     "ParentLibrary",
     "ParentSurfaceError",
     "ParentSurfaceKind",
@@ -21,7 +24,9 @@ __all__ = [
     "assert_no_zone_transition",
     "assert_record_family_immutable",
     "is_parent_surface_permitted",
+    "refuse_parent_money_path_write",
     "refuse_unlisted_parent_surface",
+    "refuse_zone_transition_surface",
 ]
 
 
@@ -82,6 +87,12 @@ PERMITTED_PARENT_SURFACES: Final[frozenset[tuple[ParentLibrary, ParentSurfaceKin
 
 PROHIBITED_RECORD_FAMILIES: Final[frozenset[ProhibitedRecordFamily]] = frozenset(
     ProhibitedRecordFamily
+)
+
+# The one write AD-2 permits: a content-addressed candidate in the existing dev zone.
+SOLE_PERMITTED_PARENT_WRITE: Final[tuple[ParentLibrary, ParentSurfaceKind]] = (
+    ParentLibrary.QMF_REGISTRY,
+    ParentSurfaceKind.DEV_ZONE_CANDIDATE_WRITE,
 )
 
 
@@ -164,4 +175,65 @@ def assert_no_zone_transition() -> None:
     """Refuse every zone-transition surface call."""
     raise ParentSurfaceError(
         "QMA cannot call any zone-transition surface (FR-Q07; DEC-0301; DEC-0347)"
+    )
+
+
+def _policy_refusal(field: str, reason: str, **extra: object) -> TypedRefusal:
+    context: dict[str, object] = {"field": field, "reason": reason}
+    context.update(extra)
+    return TypedRefusal(
+        category=RefusalCategory.POLICY_REJECTION,
+        retryability=Retryability.NO,
+        context=context,
+    )
+
+
+def refuse_parent_money_path_write(
+    family: ProhibitedRecordFamily | str,
+    mutation: ProhibitedMutation | str = ProhibitedMutation.WRITE,
+) -> TypedRefusal:
+    """Return a typed refusal for any money-path record write (FR-Q42; AD-2).
+
+    Public QMA boundaries return this value; they never raise across the seam.
+    """
+    family_token = family.value if isinstance(family, ProhibitedRecordFamily) else str(family)
+    mutation_token = mutation.value if isinstance(mutation, ProhibitedMutation) else str(mutation)
+    try:
+        resolved_family = (
+            family if isinstance(family, ProhibitedRecordFamily) else ProhibitedRecordFamily(family)
+        )
+    except ValueError:
+        return _policy_refusal(
+            "record_family",
+            "QMA cannot write an unlisted money-path record family (FR-Q42; DEC-0347)",
+            family=family_token,
+            mutation=mutation_token,
+        )
+    try:
+        resolved_mutation = (
+            mutation if isinstance(mutation, ProhibitedMutation) else ProhibitedMutation(mutation)
+        )
+    except ValueError:
+        return _policy_refusal(
+            "mutation",
+            "QMA cannot apply an unlisted mutation to a money-path record (FR-Q42; DEC-0347)",
+            family=family_token,
+            mutation=mutation_token,
+        )
+    return _policy_refusal(
+        "record_family",
+        (
+            f"QMA cannot {resolved_mutation.value} {resolved_family.value!r} records "
+            "(FR-Q42; FR-Q07; DEC-0301; DEC-0347)"
+        ),
+        family=resolved_family.value,
+        mutation=resolved_mutation.value,
+    )
+
+
+def refuse_zone_transition_surface() -> TypedRefusal:
+    """Return a typed refusal for every zone-transition surface call (FR-Q42)."""
+    return _policy_refusal(
+        "zone_transition",
+        "QMA cannot call any zone-transition surface (FR-Q42; FR-Q07; DEC-0301; DEC-0347)",
     )
