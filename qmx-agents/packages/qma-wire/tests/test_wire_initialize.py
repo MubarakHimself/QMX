@@ -23,7 +23,7 @@ _TEST_CRED_REF = "cred://models/openai"
 
 def _authed_conn() -> WireConnection:
     conn = WireConnection()
-    authed = conn.authenticate(_TEST_CRED_REF)
+    authed = conn.authenticate(_TEST_CRED_REF, principal_class="operator")
     assert isinstance(authed, Ok)
     return conn
 

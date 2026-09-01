@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://qmx.local/qma-wire/schemas/command.v1.schema.json",
   "title": "QMA wire command family (CT-40)",
-  "description": "Command family payload. Mutates and acks immediately; effects settle asynchronously over JSON-RPC 2.0 WebSocket. Closed-and-addable under qma-wire.",
+  "description": "Command family payload. Mutates and acks immediately; effects settle asynchronously over JSON-RPC 2.0 WebSocket. Closed-and-addable under qma-wire. Every command carries the connection principal_class verbatim (AD-24; FR-Q20).",
   "type": "object",
   "additionalProperties": false,
   "required": ["family", "name"],
@@ -21,6 +21,11 @@
         "launch_task",
         "retry_task"
       ]
+    },
+    "principal_class": {
+      "type": "string",
+      "enum": ["operator", "machine"],
+      "description": "Connection principal class recorded verbatim on every command (DEC-0323)"
     },
     "args": { "type": "object" }
   }

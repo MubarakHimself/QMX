@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qmx.local/qma-wire/schemas/principal_record.v1.schema.json",
+  "title": "QMA principal-bearing journal and ledger contract shapes (CT-40; AD-24)",
+  "description": "Contract shapes for journal and ledger records that carry the authenticated connection's principal_class verbatim (FR-Q20; DEC-0323).",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record_kind", "event", "principal_class", "correlation_id", "payload"],
+      "properties": {
+        "record_kind": { "const": "journal" },
+        "event": { "type": "string", "minLength": 1 },
+        "principal_class": { "type": "string", "enum": ["operator", "machine"] },
+        "correlation_id": { "type": "string", "minLength": 1 },
+        "payload": { "type": "object" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record_kind", "kind", "principal_class", "correlation_id", "body"],
+      "properties": {
+        "record_kind": { "const": "ledger" },
+        "kind": { "type": "string", "minLength": 1 },
+        "principal_class": { "type": "string", "enum": ["operator", "machine"] },
+        "correlation_id": { "type": "string", "minLength": 1 },
+        "body": { "type": "object" }
+      }
+    }
+  ]
+}

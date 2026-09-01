@@ -116,19 +116,27 @@ def test_unauthenticated_bind_is_hard_startup_refusal() -> None:
 
 
 def test_credential_ref_authenticates_before_protocol_no_secret_on_surface() -> None:
-    session = authenticate_before_protocol("cred://models/openai")
+    session = authenticate_before_protocol(
+        "cred://models/openai",
+        principal_class="machine",
+    )
     assert isinstance(session, Ok)
     assert session.value.authenticated_before_protocol is True
     assert str(session.value.credential_ref) == "cred://models/openai"
+    assert session.value.principal_class.value == "machine"
 
     diagnostic = session.value.to_diagnostic()
     trace = session.value.to_trace()
     assert is_ok(assert_no_secret_on_wire_surface(diagnostic))
     assert is_ok(assert_no_secret_on_wire_surface(trace))
     assert "secret" not in diagnostic
+    assert diagnostic["principal_class"] == "machine"
     assert FORBIDDEN_SECRET_SURFACE_KEYS  # closed deny list is non-empty
 
-    secretish = authenticate_before_protocol("secret=literally-a-value")
+    secretish = authenticate_before_protocol(
+        "secret=literally-a-value",
+        principal_class="operator",
+    )
     assert is_refusal(secretish)
 
     envelope_with_secret: dict[str, object] = {
@@ -162,9 +170,11 @@ def test_wire_connection_requires_auth_before_initialize() -> None:
     assert is_refusal(refused)
     assert refused.context["field"] == "authentication"
 
-    authed = conn.authenticate("cred://models/openai")
+    authed = conn.authenticate("cred://models/openai", principal_class="operator")
     assert isinstance(authed, Ok)
     assert conn.credential_ref == "cred://models/openai"
+    assert conn.principal_class is not None
+    assert conn.principal_class.value == "operator"
     finished = conn.complete_initialize(params.value, assign_producer_id="p")
     assert is_ok(finished)
 

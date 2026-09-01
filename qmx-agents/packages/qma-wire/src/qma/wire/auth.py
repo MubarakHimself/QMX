@@ -3,6 +3,8 @@
 Every client authenticates with a Credential-Broker-resolved credential before
 protocol bytes. The wire carries only the credential reference — never a
 resolved secret value — in envelopes, schema examples, traces, or diagnostics.
+The authenticated connection also carries exactly one principal class,
+``operator`` or ``machine`` (FR-Q20; DEC-0323).
 """
 
 from __future__ import annotations
@@ -12,6 +14,8 @@ from dataclasses import dataclass
 from typing import Final, cast
 
 from qma.core.plugins.credential import CredentialRef, CredentialRefError, parse_credential_ref
+from qma.core.vocabulary import PrincipalClass
+from qma.wire.principals import parse_principal_class
 from qmf.core.refusal import (
     Ok,
     RefusalCategory,
@@ -66,36 +70,47 @@ def _invalid(field: str, reason: str, **extra: object) -> TypedRefusal:
 
 @dataclass(frozen=True, slots=True)
 class AuthenticatedWireSession:
-    """Connection authenticated before protocol bytes; carries only the ref."""
+    """Connection authenticated before protocol bytes; carries ref + principal."""
 
     credential_ref: CredentialRef
+    principal_class: PrincipalClass
     authenticated_before_protocol: bool = True
 
     def to_diagnostic(self) -> dict[str, object]:
-        """Diagnostic surface — reference only, never a resolved secret."""
+        """Diagnostic surface — reference and principal only, never a secret."""
         return {
             "credential_ref": str(self.credential_ref),
+            "principal_class": self.principal_class.value,
             "authenticated_before_protocol": self.authenticated_before_protocol,
         }
 
     def to_trace(self) -> dict[str, object]:
-        """Trace surface — reference only."""
+        """Trace surface — reference and principal only."""
         return self.to_diagnostic()
 
 
-def authenticate_before_protocol(credential_ref: object) -> Result[AuthenticatedWireSession]:
+def authenticate_before_protocol(
+    credential_ref: object,
+    *,
+    principal_class: object,
+) -> Result[AuthenticatedWireSession]:
     """Authenticate a client before any protocol bytes are accepted.
 
     ``credential_ref`` must be a broker-resolved *reference*. Inline secret
-    shapes are refused; the returned session exposes only the reference.
+    shapes are refused; the returned session exposes only the reference plus
+    exactly one principal class (``operator`` or ``machine``).
     """
     try:
         parsed = parse_credential_ref(credential_ref)
     except CredentialRefError as exc:
         return _invalid("credential_ref", str(exc), given=repr(credential_ref))
+    principal = parse_principal_class(principal_class)
+    if not isinstance(principal, Ok):
+        return principal
     return Ok(
         AuthenticatedWireSession(
             credential_ref=parsed,
+            principal_class=principal.value,
             authenticated_before_protocol=True,
         )
     )

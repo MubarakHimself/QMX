@@ -13,7 +13,13 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Final, cast
 
+from qma.core.vocabulary import PrincipalClass
 from qma.wire.auth import authenticate_before_protocol
+from qma.wire.principals import (
+    AuthorizedWireCommand,
+    authorize_wire_command,
+    refuse_principal_impersonation,
+)
 from qma.wire.vocabulary import MessageFamily, family_of, parse_wire_type
 from qmf.core.refusal import (
     Ok,
@@ -235,12 +241,14 @@ class WireConnection:
     """Per-connection handshake state. Family messages require completed initialize.
 
     Authentication by credential reference must complete before protocol bytes
-    (initialize and family messages). The connection stores only the reference.
+    (initialize and family messages). The connection stores the reference and
+    exactly one immutable principal class (``operator`` or ``machine``).
     """
 
     _initialized: bool = False
     _authenticated: bool = False
     _credential_ref: str | None = None
+    _principal_class: PrincipalClass | None = None
     _producer_id: str | None = None
     _protocol_version: str | None = None
     _capabilities: Mapping[str, object] = field(default_factory=_empty_caps)
@@ -258,6 +266,10 @@ class WireConnection:
         return self._credential_ref
 
     @property
+    def principal_class(self) -> PrincipalClass | None:
+        return self._principal_class
+
+    @property
     def producer_id(self) -> str | None:
         return self._producer_id
 
@@ -269,14 +281,56 @@ class WireConnection:
     def capabilities(self) -> Mapping[str, object]:
         return self._capabilities
 
-    def authenticate(self, credential_ref: object) -> Result[str]:
-        """Authenticate before protocol bytes; store only the credential reference."""
-        session = authenticate_before_protocol(credential_ref)
+    def authenticate(
+        self,
+        credential_ref: object,
+        *,
+        principal_class: object,
+    ) -> Result[str]:
+        """Authenticate before protocol bytes; bind credential ref and principal."""
+        if self._authenticated and self._principal_class is not None:
+            # Principal class is immutable for the life of the connection.
+            refused = refuse_principal_impersonation(self._principal_class, principal_class)
+            if not isinstance(refused, Ok):
+                return refused
+            if str(self._credential_ref) != str(credential_ref):
+                return _policy(
+                    "authentication",
+                    "credential_ref is immutable once the connection is authenticated",
+                )
+            return Ok(str(self._credential_ref))
+        session = authenticate_before_protocol(
+            credential_ref,
+            principal_class=principal_class,
+        )
         if not isinstance(session, Ok):
             return session
         self._authenticated = True
         self._credential_ref = str(session.value.credential_ref)
+        self._principal_class = session.value.principal_class
         return Ok(self._credential_ref)
+
+    def authorize_command(
+        self,
+        command: object,
+        *,
+        args: Mapping[str, object] | None = None,
+        trim_stream: object = None,
+        inside_retention_window: bool = False,
+    ) -> Result[AuthorizedWireCommand]:
+        """Authorize ``command`` under this connection's principal class."""
+        if not self._authenticated or self._principal_class is None:
+            return _policy(
+                "authentication",
+                "a Credential-Broker-resolved credential must authenticate before protocol bytes",
+            )
+        return authorize_wire_command(
+            command,
+            self._principal_class,
+            args=args,
+            trim_stream=trim_stream,
+            inside_retention_window=inside_retention_window,
+        )
 
     def begin_initialize(self, request: Mapping[str, object]) -> Result[JsonRpcRequest]:
         """Parse a JSON-RPC initialize request; refuse non-initialize methods pre-gate."""

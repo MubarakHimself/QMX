@@ -51,6 +51,7 @@ SCHEMA_FILES: Final[dict[str, str]] = {
     "event": "event.v1.schema.json",
     "initialize": "initialize.v1.schema.json",
     "host_request": "host_request.v1.schema.json",
+    "principal_record": "principal_record.v1.schema.json",
 }
 
 
@@ -130,6 +131,24 @@ def _check_type(instance: object, expected: str, path: str) -> None:
 
 
 def _validate(instance: object, schema: Mapping[str, object], path: str = "$") -> None:
+    # Draft 2020-12 oneOf — used by principal_record journal/ledger shapes.
+    one_of = schema.get("oneOf")
+    if isinstance(one_of, list) and one_of:
+        errors: list[str] = []
+        for option_obj in cast("list[object]", one_of):
+            option = _as_object_map(option_obj)
+            if option is None:
+                continue
+            try:
+                _validate(instance, option, path)
+                break
+            except SchemaValidationError as exc:
+                errors.append(str(exc))
+        else:
+            raise SchemaValidationError(
+                f"{path}: matched no oneOf branch ({'; '.join(errors)})"
+            )
+        return
     if "const" in schema and instance != schema["const"]:
         raise SchemaValidationError(f"{path}: expected const {schema['const']!r}")
     if "enum" in schema:
