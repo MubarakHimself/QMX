@@ -46,7 +46,7 @@ class EgressFrame:
     entered. Exiting clears the secret; the frame never serializes it.
     """
 
-    __slots__ = ("_credential_ref", "_closed", "_secret", "_entered")
+    __slots__ = ("_closed", "_credential_ref", "_entered", "_secret")
 
     def __init__(self, credential_ref: CredentialRef, secret: str) -> None:
         if not secret:
