@@ -17,7 +17,8 @@
         "inspect_ledger",
         "inspect_trace",
         "list_installed_plugins",
-        "get_provider_health"
+        "get_provider_health",
+        "list_mission_hooks"
       ]
     },
     "args": { "type": "object" }

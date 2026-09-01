@@ -1,7 +1,22 @@
-"""Closed-and-addable hook registry and HookResult (AD-10, AD-11; FR-Q30–FR-Q33)."""
+"""Closed-and-addable hook registry and HookResult (AD-10, AD-11; FR-Q30–FR-Q35)."""
 
 from __future__ import annotations
 
+from qma.daemon.hooks.agent_authored import (
+    AGENT_AUTHORED_ALLOWED_DECISIONS,
+    AGENT_AUTHORED_FORBIDDEN_RESULT_FIELDS,
+    AGENT_AUTHORED_WIRE_QUERY,
+    HOOK_DISPOSED_JOURNAL_EVENT,
+    HOOK_REGISTERED_JOURNAL_EVENT,
+    HOOK_REGISTRATIONS_FOLD,
+    AgentAuthoredHookRegistrar,
+    ApprovedHookTemplate,
+    MissionExitStack,
+    MissionHookRegistration,
+    assert_agent_authored_hook_result,
+    intersect_permissions_exact,
+    validate_agent_authored_template,
+)
 from qma.daemon.hooks.controls import (
     APPROVAL_REQUEST_JOURNAL_EVENT,
     ASK_ESCALATION_EXHAUSTED_REASON,
@@ -74,6 +89,9 @@ from qma.daemon.hooks.verifiers import (
 )
 
 __all__ = [
+    "AGENT_AUTHORED_ALLOWED_DECISIONS",
+    "AGENT_AUTHORED_FORBIDDEN_RESULT_FIELDS",
+    "AGENT_AUTHORED_WIRE_QUERY",
     "AGENT_REACHABLE_WRITE_VERBS",
     "APPROVAL_REQUEST_JOURNAL_EVENT",
     "ASK_ESCALATION_EXHAUSTED_REASON",
@@ -81,6 +99,9 @@ __all__ = [
     "BYPASS_WRITE_PATHS",
     "DAEMON_AUTHORED_ENTRY_KINDS",
     "DAEMON_OWNED_HOOK_VERBS",
+    "HOOK_DISPOSED_JOURNAL_EVENT",
+    "HOOK_REGISTERED_JOURNAL_EVENT",
+    "HOOK_REGISTRATIONS_FOLD",
     "HOOK_TIMEOUT_AFTER_KEY",
     "HOOK_TIMEOUT_BEFORE_KEY",
     "HOOK_TIMEOUT_CONTROL_KEY",
@@ -90,8 +111,10 @@ __all__ = [
     "ON_TIMEOUT_KEY",
     "PHASE_LESS_CONTROLS",
     "REQUIRED_VERIFIER_GATE_EVENTS",
+    "AgentAuthoredHookRegistrar",
     "ApprovalRequestRecord",
     "ApprovalTargetKind",
+    "ApprovedHookTemplate",
     "AskOutcome",
     "AskSuspension",
     "CompletionGateOutcome",
@@ -108,11 +131,14 @@ __all__ = [
     "LedgerAppendGateResult",
     "LedgerQuarantineRecord",
     "LedgerQuarantineStream",
+    "MissionExitStack",
+    "MissionHookRegistration",
     "OperatorApprovalQueueProjection",
     "PrimitiveInvocation",
     "ScopeSegmentView",
     "annotate_ledger_entry",
     "apply_worker_daemon_decision",
+    "assert_agent_authored_hook_result",
     "assert_matcher_within_source",
     "assert_no_bypass_write_path",
     "default_empty_hook_result",
@@ -120,6 +146,7 @@ __all__ = [
     "evaluate_required_verifier_gate",
     "event_names_for_verb",
     "event_within_source_bound",
+    "intersect_permissions_exact",
     "is_dispatch_lease_holder",
     "is_exempt_ledger_author",
     "is_required_verifier_gate",
@@ -132,4 +159,5 @@ __all__ = [
     "run_deterministic_verifier",
     "select_handlers_for_event",
     "timeout_registry_key_for_event",
+    "validate_agent_authored_template",
 ]

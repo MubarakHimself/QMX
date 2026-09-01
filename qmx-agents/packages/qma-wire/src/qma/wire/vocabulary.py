@@ -11,6 +11,7 @@ from enum import StrEnum
 from typing import Final
 
 __all__ = [
+    "ADDABLE_QUERY_COUNT",
     "SEED_COMMAND_COUNT",
     "SEED_EVENT_COUNT",
     "SEED_QUERY_COUNT",
@@ -35,6 +36,8 @@ SEED_COMMAND_COUNT: Final[int] = 9
 SEED_QUERY_COUNT: Final[int] = 7
 SEED_EVENT_COUNT: Final[int] = 10
 SEED_VOCABULARY_COUNT: Final[int] = SEED_COMMAND_COUNT + SEED_QUERY_COUNT + SEED_EVENT_COUNT
+# Closed-and-addable extensions beyond the packet seed (FR-Q35; AD-11).
+ADDABLE_QUERY_COUNT: Final[int] = 1
 
 
 class MessageFamily(StrEnum):
@@ -64,9 +67,11 @@ class WireCommand(StrEnum):
 
 
 class WireQuery(StrEnum):
-    """The seven seed queries (packet nouns; DEC-0304, DEC-0331).
+    """Closed-and-addable queries (packet seed plus AD-11 extension).
 
-    The packet seed ``get bot`` reads ``get_quant`` under the Bot-to-Quant rule.
+    The seven packet-seed queries (DEC-0304, DEC-0331) plus ``list_mission_hooks``
+    exposing Agent-authored Mission hook registrations (FR-Q35; AD-11). The
+    packet seed ``get bot`` reads ``get_quant`` under the Bot-to-Quant rule.
     """
 
     GET_QUANT = "get_quant"
@@ -76,6 +81,7 @@ class WireQuery(StrEnum):
     INSPECT_TRACE = "inspect_trace"
     LIST_INSTALLED_PLUGINS = "list_installed_plugins"
     GET_PROVIDER_HEALTH = "get_provider_health"
+    LIST_MISSION_HOOKS = "list_mission_hooks"
 
 
 class WireEvent(StrEnum):

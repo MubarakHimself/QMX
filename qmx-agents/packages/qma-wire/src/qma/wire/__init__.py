@@ -176,6 +176,7 @@ from qma.wire.schemas import (
     validate_wire_envelope_dict,
 )
 from qma.wire.vocabulary import (
+    ADDABLE_QUERY_COUNT,
     SEED_COMMAND_COUNT,
     SEED_EVENT_COUNT,
     SEED_QUERY_COUNT,
@@ -194,6 +195,7 @@ from qma.wire.vocabulary import (
 )
 
 __all__ = [
+    "ADDABLE_QUERY_COUNT",
     "ALTERNATE_RLM_TRANSPORTS",
     "ATTACH_METHOD",
     "COMPATIBILITY_AUTHORITY",

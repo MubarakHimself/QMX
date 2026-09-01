@@ -8,6 +8,7 @@ import pytest
 import qma.wire
 from qma.core.vocabulary import HOOK_EVENT_NAMES
 from qma.wire import (
+    ADDABLE_QUERY_COUNT,
     FAMILY_CONTRACTS,
     SEED_COMMAND_COUNT,
     SEED_EVENT_COUNT,
@@ -37,7 +38,9 @@ from qmf.core.refusal import is_ok, is_refusal
 def test_seed_vocabulary_counts_and_owner() -> None:
     assert WIRE_VOCABULARY_OWNER == "qma-wire"
     assert len(WIRE_COMMANDS) == SEED_COMMAND_COUNT == 9
-    assert len(WIRE_QUERIES) == SEED_QUERY_COUNT == 7
+    assert SEED_QUERY_COUNT == 7
+    assert ADDABLE_QUERY_COUNT == 1
+    assert len(WIRE_QUERIES) == SEED_QUERY_COUNT + ADDABLE_QUERY_COUNT == 8
     assert len(WIRE_EVENTS) == SEED_EVENT_COUNT == 10
     assert SEED_VOCABULARY_COUNT == 26
     assert {member.value for member in WireCommand} == WIRE_COMMANDS
@@ -59,6 +62,8 @@ def test_seed_members_match_ratified_packet() -> None:
     } == WIRE_COMMANDS
     assert "get_quant" in WIRE_QUERIES
     assert "get_bot" not in WIRE_QUERIES
+    assert "list_mission_hooks" in WIRE_QUERIES
+    assert WireQuery.LIST_MISSION_HOOKS.value == "list_mission_hooks"
     assert {
         "agent.started",
         "message.delta",
