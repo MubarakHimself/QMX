@@ -12,6 +12,7 @@ import qma.daemon.envs
 import qma.daemon.hooks
 import qma.daemon.journal
 import qma.daemon.ledgers
+import qma.daemon.persistence
 import qma.daemon.plugins
 import qma.daemon.proxy
 import qma.daemon.scheduler
@@ -28,6 +29,7 @@ def test_version_display_only() -> None:
 def test_structural_modules_importable() -> None:
     modules = (
         qma.daemon.journal,
+        qma.daemon.persistence,
         qma.daemon.taskgraph,
         qma.daemon.ledgers,
         qma.daemon.hooks,
@@ -45,3 +47,4 @@ def test_structural_modules_importable() -> None:
     from qma.daemon.plugins import DaemonPluginContext
 
     assert DaemonPluginContext.__name__ == "DaemonPluginContext"
+    assert qma.daemon.PersistenceSubstrate.__name__ == "PersistenceSubstrate"

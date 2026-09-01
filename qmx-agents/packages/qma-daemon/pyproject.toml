@@ -1,7 +1,7 @@
 [project]
 name = "qma-daemon"
 version = "0.1.0"
-description = "QMA sole runtime and sole writer. Scaffold starts no process and writes no durable state."
+description = "QMA sole runtime and sole writer of journal, SQLite, and artifact store via qmf-data sinks."
 requires-python = ">=3.14,<3.15"
 dependencies = [
     "qma-core",
