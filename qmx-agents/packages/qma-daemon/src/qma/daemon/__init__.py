@@ -12,6 +12,11 @@ SemVer is display-only provenance in lockstep with the QMF workspace (AR-Q11).
 
 from __future__ import annotations
 
+from qma.daemon.hooks import (
+    AGENT_REACHABLE_WRITE_VERBS,
+    BYPASS_WRITE_PATHS,
+    HookRegistry,
+)
 from qma.daemon.journal import (
     AuthoritativeJournal,
     DaemonClock,
@@ -36,6 +41,8 @@ from qma.daemon.taskgraph import (
 )
 
 __all__ = [
+    "AGENT_REACHABLE_WRITE_VERBS",
+    "BYPASS_WRITE_PATHS",
     "AuthoritativeJournal",
     "CompileRequest",
     "DaemonClock",
@@ -44,6 +51,7 @@ __all__ = [
     "FoldContractRegistry",
     "FoldMetadata",
     "GovernedVariableRegistry",
+    "HookRegistry",
     "MissionCompiler",
     "PersistenceStartupEvidence",
     "PersistenceSubstrate",
