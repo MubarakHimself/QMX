@@ -140,7 +140,10 @@ def test_all_variant_factories_carry_structured_context() -> None:
         SlugUnavailable.of(slug="trader", slug_kind="quant_slug"),
         CursorScopeMismatch.of(cursor_scope="desk/a", expected_scope="desk/b"),
         NoEligibleReviewer.of(model_class="REASONING_HIGH"),
-        NoEligibleDeployment.of(model_class="CODING_HIGH"),
+        NoEligibleDeployment.of(
+            model_class="CODING_HIGH",
+            unmet_constraint="min_context_tokens",
+        ),
         NonLoopbackProxy.of(address="10.0.0.1:8080"),
         UnauthenticatedProxy.of(deployment_id="proxy-1"),
         ProhibitedMoneyPathTool.of(tool_id="place_order"),

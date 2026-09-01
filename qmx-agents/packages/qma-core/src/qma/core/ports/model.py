@@ -1,26 +1,54 @@
-"""ModelDeployment port and ReviewPolicy catalog (CT-45; AD-1, AD-10, AD-15).
+"""ModelDeployment port, ModelClass routing shapes, and ReviewPolicy (CT-45).
 
-ReviewPolicy compares optional Deployment ``model_family`` values. The catalog
-is core-defined so the completion gate is contract-testable without a
-production model Deployment (FR-Q34).
+Definitions only: a ModelClassRequest never names a vendor or Deployment.
+Eligibility is two-stage (class pool, then needs + min_context_tokens).
+``model_family`` is optional, never defaulted or synthesized (FR-Q38/FR-Q39).
 """
 
 from __future__ import annotations
 
 from collections.abc import Sequence
-from dataclasses import dataclass
-from typing import Protocol, runtime_checkable
+from dataclasses import dataclass, field, replace
+from typing import Final, Literal, Protocol, runtime_checkable
 
-from qma.core.refusals.variants import NoEligibleReviewer
-from qma.core.vocabulary.enums import ModelClass
+from qma.core.refusals.variants import (
+    NoEligibleDeployment,
+    NoEligibleReviewer,
+    OperatorPrincipalRequired,
+)
+from qma.core.vocabulary.enums import ModelClass, PrincipalClass, RoutingPolicy
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
 from qmf.core import Ok, Result
+from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 
 __all__ = [
+    "MODEL_FAMILY_ASSIGN_COMMAND",
     "DeploymentRecord",
+    "ModelCapabilities",
+    "ModelClassRequest",
     "ModelDeployment",
+    "NeedsFlags",
     "ReviewPolicy",
+    "RoutingDecision",
+    "assign_model_family",
+    "capabilities_for",
+    "eligible_pool",
+    "resolve_model_request",
+    "select_from_eligible",
     "select_reviewer",
+    "unmet_constraint_for",
+]
+
+MODEL_FAMILY_ASSIGN_COMMAND: Final[str] = "model_family.assign"
+
+NeedName = Literal[
+    "tools",
+    "vision",
+    "reasoning_effort",
+    "parallel_tool_calls",
+    "min_context_tokens",
+    "class_pool",
+    "needs",
 ]
 
 
@@ -33,17 +61,65 @@ class ModelDeployment(Protocol):
 
 
 @dataclass(frozen=True, slots=True)
+class NeedsFlags:
+    """Stage-two eligibility flags beside ``min_context_tokens`` (CT-45; AD-15)."""
+
+    tools: bool = False
+    vision: bool = False
+    reasoning_effort: bool = False
+    parallel_tool_calls: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ModelClassRequest:
+    """Harness-selected ModelClass request — never a vendor or Deployment id."""
+
+    model_class: ModelClass
+    needs: NeedsFlags = field(default_factory=NeedsFlags)
+    min_context_tokens: int = 0
+
+    def __post_init__(self) -> None:
+        if self.min_context_tokens < 0:
+            msg = "min_context_tokens must be >= 0 (CT-45)"
+            raise VocabularyError(msg)
+
+
+@dataclass(frozen=True, slots=True)
+class ModelCapabilities:
+    """Capabilities returned to the Context Compiler for the selected Deployment."""
+
+    deployment_id: str
+    model_class: ModelClass
+    context_window: int
+    supports_tools: bool
+    supports_vision: bool
+    supports_reasoning_effort: bool
+    supports_parallel_tool_calls: bool
+    model_family: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class DeploymentRecord:
-    """Core-defined Deployment catalog row for ReviewPolicy (CT-45; AD-15).
+    """Core-defined Deployment catalog row (CT-45; AD-15).
 
     ``model_family`` is optional and never defaulted or synthesized. An
     unassigned family is routable but ineligible for every ReviewPolicy
-    comparison (DEC-0314, DEC-0309).
+    comparison (DEC-0314, DEC-0309). Registration leaves the field absent.
     """
 
     deployment_id: str
     model_class: ModelClass
     model_family: str | None = None
+    supports_tools: bool = False
+    supports_vision: bool = False
+    supports_reasoning_effort: bool = False
+    supports_parallel_tool_calls: bool = False
+    context_tokens: int = 0
+    weight: int = 1
+    quota_remaining: int = 0
+    fill_units: int = 0
+    fill_capacity: int = 1
+    credential_ref: str | None = None
 
     def __post_init__(self) -> None:
         if self.deployment_id.strip() == "":
@@ -55,6 +131,28 @@ class DeploymentRecord:
                 "omit the field for an unassigned family (CT-45; AD-15)"
             )
             raise VocabularyError(msg)
+        if self.context_tokens < 0:
+            msg = "context_tokens must be >= 0 (CT-45)"
+            raise VocabularyError(msg)
+        if self.weight < 1:
+            msg = "weight must be >= 1 (CT-45)"
+            raise VocabularyError(msg)
+        if self.fill_capacity < 1:
+            msg = "fill_capacity must be >= 1 (CT-45)"
+            raise VocabularyError(msg)
+        if self.fill_units < 0:
+            msg = "fill_units must be >= 0 (CT-45)"
+            raise VocabularyError(msg)
+
+
+@dataclass(frozen=True, slots=True)
+class RoutingDecision:
+    """Resolved ModelClass → Deployment step; Credential Broker is next (CT-45)."""
+
+    deployment: DeploymentRecord
+    capabilities: ModelCapabilities
+    routing_policy: RoutingPolicy
+    chain: tuple[str, ...] = ("ModelClass", "Deployment", "CredentialBroker")
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,6 +175,207 @@ class ReviewPolicy:
             catalog,
             model_class=self.model_class,
         )
+
+
+def capabilities_for(record: DeploymentRecord) -> ModelCapabilities:
+    """Project a Deployment record into Context-Compiler capabilities."""
+    return ModelCapabilities(
+        deployment_id=record.deployment_id,
+        model_class=record.model_class,
+        context_window=record.context_tokens,
+        supports_tools=record.supports_tools,
+        supports_vision=record.supports_vision,
+        supports_reasoning_effort=record.supports_reasoning_effort,
+        supports_parallel_tool_calls=record.supports_parallel_tool_calls,
+        model_family=record.model_family,
+    )
+
+
+def _class_pool(
+    catalog: Sequence[DeploymentRecord],
+    model_class: ModelClass,
+) -> tuple[DeploymentRecord, ...]:
+    return tuple(entry for entry in catalog if entry.model_class is model_class)
+
+
+def unmet_constraint_for(
+    request: ModelClassRequest,
+    catalog: Sequence[DeploymentRecord],
+) -> NeedName:
+    """Name the first unmet constraint for an empty eligible pool (CT-45)."""
+    class_pool = _class_pool(catalog, request.model_class)
+    if not class_pool:
+        return "class_pool"
+    needs = request.needs
+    if needs.tools and not any(entry.supports_tools for entry in class_pool):
+        return "tools"
+    if needs.vision and not any(entry.supports_vision for entry in class_pool):
+        return "vision"
+    if needs.reasoning_effort and not any(entry.supports_reasoning_effort for entry in class_pool):
+        return "reasoning_effort"
+    if needs.parallel_tool_calls and not any(
+        entry.supports_parallel_tool_calls for entry in class_pool
+    ):
+        return "parallel_tool_calls"
+    if request.min_context_tokens > 0 and not any(
+        entry.context_tokens >= request.min_context_tokens for entry in class_pool
+    ):
+        return "min_context_tokens"
+    # Combined filter empty while each flag alone has some match.
+    return "needs"
+
+
+def _passes_needs(entry: DeploymentRecord, needs: NeedsFlags) -> bool:
+    if needs.tools and not entry.supports_tools:
+        return False
+    if needs.vision and not entry.supports_vision:
+        return False
+    if needs.reasoning_effort and not entry.supports_reasoning_effort:
+        return False
+    return not (needs.parallel_tool_calls and not entry.supports_parallel_tool_calls)
+
+
+def eligible_pool(
+    request: ModelClassRequest,
+    catalog: Sequence[DeploymentRecord],
+) -> tuple[DeploymentRecord, ...]:
+    """Two-stage filter: class pool, then needs + min_context_tokens only."""
+    pool = _class_pool(catalog, request.model_class)
+    return tuple(
+        entry
+        for entry in pool
+        if _passes_needs(entry, request.needs)
+        and entry.context_tokens >= request.min_context_tokens
+    )
+
+
+def select_from_eligible(
+    pool: Sequence[DeploymentRecord],
+    policy: RoutingPolicy,
+    *,
+    round_robin_cursor: int = 0,
+) -> tuple[DeploymentRecord, int]:
+    """Load-balance within an already-eligible pool under a closed policy.
+
+    Returns ``(selected, next_round_robin_cursor)``. Cursor advances only for
+    ``weighted_round_robin``; other policies leave it unchanged.
+    """
+    if not pool:
+        msg = "select_from_eligible requires a non-empty eligible pool"
+        raise VocabularyError(msg)
+
+    if policy is RoutingPolicy.FAILOVER:
+        return pool[0], round_robin_cursor
+
+    if policy is RoutingPolicy.QUOTA_LOWEST:
+        _qi, selected = max(
+            enumerate(pool),
+            key=lambda pair: (pair[1].quota_remaining, -pair[0]),
+        )
+        return selected, round_robin_cursor
+
+    if policy is RoutingPolicy.FILL_FIRST:
+        unsaturated = [entry for entry in pool if entry.fill_units < entry.fill_capacity]
+        candidates: Sequence[DeploymentRecord] = unsaturated if unsaturated else pool
+        _fi, selected = max(
+            enumerate(candidates),
+            key=lambda pair: (pair[1].fill_units, -pair[0]),
+        )
+        return selected, round_robin_cursor
+
+    if policy is RoutingPolicy.WEIGHTED_ROUND_ROBIN:
+        expanded: list[DeploymentRecord] = []
+        for entry in pool:
+            expanded.extend([entry] * entry.weight)
+        index = round_robin_cursor % len(expanded)
+        return expanded[index], round_robin_cursor + 1
+
+    msg = f"unsupported routing policy: {policy!r}"
+    raise VocabularyError(msg)
+
+
+def resolve_model_request(
+    request: ModelClassRequest,
+    catalog: Sequence[DeploymentRecord],
+    *,
+    policy: RoutingPolicy | str = RoutingPolicy.FAILOVER,
+    round_robin_cursor: int = 0,
+) -> Result[RoutingDecision]:
+    """Resolve ModelClass → Deployment; never crosses a class boundary (FR-Q38)."""
+    resolved_policy = (
+        policy if isinstance(policy, RoutingPolicy) else parse_closed(RoutingPolicy, policy)
+    )
+    pool = eligible_pool(request, catalog)
+    if not pool:
+        return NoEligibleDeployment.of(
+            model_class=request.model_class.value,
+            unmet_constraint=unmet_constraint_for(request, catalog),
+        )
+    selected, _next_cursor = select_from_eligible(
+        pool,
+        resolved_policy,
+        round_robin_cursor=round_robin_cursor,
+    )
+    return Ok(
+        RoutingDecision(
+            deployment=selected,
+            capabilities=capabilities_for(selected),
+            routing_policy=resolved_policy,
+        )
+    )
+
+
+def assign_model_family(
+    record: DeploymentRecord,
+    family: str,
+    *,
+    principal: PrincipalClass | str,
+    allowed_families: Sequence[str],
+) -> Result[DeploymentRecord]:
+    """Operator-only ``model_family`` assignment governed by the registry enum.
+
+    Machine principals return ``OperatorPrincipalRequired``. Values outside
+    ``registry:deployment.model_family`` are refused as invalid input.
+    """
+    command = MODEL_FAMILY_ASSIGN_COMMAND
+    if isinstance(principal, PrincipalClass):
+        resolved_principal = principal
+    else:
+        try:
+            resolved_principal = PrincipalClass(principal)
+        except ValueError:
+            return OperatorPrincipalRequired.of(
+                command=command,
+                principal_class=str(principal),
+            )
+    if resolved_principal is not PrincipalClass.OPERATOR:
+        return OperatorPrincipalRequired.of(
+            command=command,
+            principal_class=resolved_principal.value,
+        )
+    if family.strip() == "":
+        return TypedRefusal(
+            category=RefusalCategory.INVALID_INPUT,
+            retryability=Retryability.NO,
+            context={
+                "field": "model_family",
+                "reason": "model_family must be a non-empty registry member when assigned",
+                "given": repr(family),
+            },
+        )
+    allowed = frozenset(allowed_families)
+    if family not in allowed:
+        return TypedRefusal(
+            category=RefusalCategory.INVALID_INPUT,
+            retryability=Retryability.NO,
+            context={
+                "field": "model_family",
+                "reason": "model_family must be a member of registry:deployment.model_family",
+                "given": family,
+                "allowed": sorted(allowed),
+            },
+        )
+    return Ok(replace(record, model_family=family))
 
 
 def select_reviewer(

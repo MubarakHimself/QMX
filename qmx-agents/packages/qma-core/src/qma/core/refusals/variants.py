@@ -104,8 +104,18 @@ class NoEligibleDeployment(QmaRefusal):
     CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.UNAVAILABLE_DEPENDENCY
 
     @classmethod
-    def of(cls, *, model_class: str) -> NoEligibleDeployment:
-        return cls.create(context={"model_class": model_class})
+    def of(
+        cls,
+        *,
+        model_class: str,
+        unmet_constraint: str,
+    ) -> NoEligibleDeployment:
+        return cls.create(
+            context={
+                "model_class": model_class,
+                "unmet_constraint": unmet_constraint,
+            }
+        )
 
 
 class NonLoopbackProxy(QmaRefusal):
