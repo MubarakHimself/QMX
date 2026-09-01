@@ -119,9 +119,12 @@ jobs:
           # the pytest pythonpath exposes are invisible to it. They are first-party and
           # deliberately never published, so we name them - which teaches the rule our
           # vocabulary and leaves it fully armed for everything else.
+          # */src covers top-level apps (qmb/, qml/, qmn/); */*/src covers
+          # packages/*/src and extensions/*/src. Deeper trees (e.g. qmx-agents)
+          # stay on the floor set below until their layout is stable.
           namespaces = {
               child.name
-              for src in root.glob("*/*/src")
+              for src in list(root.glob("*/src")) + list(root.glob("*/*/src"))
               for child in src.iterdir()
               if child.is_dir() and not child.name.startswith((".", "_"))
           }
@@ -132,7 +135,7 @@ jobs:
           }
           # A floor for namespaces that later epics introduce, so the first commit that
           # adds one cannot re-trip this before its src/ tree exists.
-          floor = {"qmf", "qmb", "qml"}
+          floor = {"qmf", "qmb", "qml", "qmn", "qma"}
           allow = sorted(namespaces | tool_modules | floor)
           print(f"first-party names: {allow}", file=sys.stderr)
           print("SKYLOS_PRIVATE_DEPS_ALLOW=" + ",".join(allow))
