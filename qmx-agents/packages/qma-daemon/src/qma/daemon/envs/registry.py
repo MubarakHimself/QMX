@@ -1,8 +1,10 @@
-"""ExecutionEnvironment provider registry (CT-46; AD-17; FR-Q27, FR-Q47).
+"""ExecutionEnvironment provider registry (CT-46; AD-17; FR-Q27, FR-Q47, FR-Q48).
 
-Registration and placement run the AD-28 reachability barrier. A missing
-network posture, a deny-listed host, a forbidden image, or a dirty
-computer-use profile is refused here — never as a runtime hook deny.
+Registration and placement run the AD-28 reachability barrier and the
+FR-Q48 declaration-surface checks. A missing network posture, a deny-listed
+host, a forbidden image, a dirty shared filesystem, a control-channel
+env-var allowlist, or a dirty computer-use profile is refused here — never
+as a runtime hook deny.
 """
 
 from __future__ import annotations
@@ -29,7 +31,7 @@ from qma.core.ports.execution import (
     WorkerImageManifest,
 )
 from qma.core.refusals import NoEnvironment, ProhibitedReachability
-from qma.core.vocabulary.enums import ExecutionEnvironmentKind
+from qma.core.vocabulary.enums import EnvironmentLifecycle, ExecutionEnvironmentKind
 from qmf.core import Ok, Result
 from qmf.data.store.refusals import invalid_input
 
@@ -86,6 +88,18 @@ def _coerce_declaration(
         hosts = tuple(str(item) for item in cast(tuple[object, ...], hosts_raw))
     else:
         hosts = None
+    mounts_raw = getattr(environment, "mounts", None)
+    allowlist = getattr(environment, "environment_allowlist", None)
+    capabilities = getattr(environment, "capabilities", None)
+    lifecycle_raw = getattr(environment, "lifecycle", None)
+    lifecycle: EnvironmentLifecycle | str | None
+    if isinstance(lifecycle_raw, EnvironmentLifecycle) or lifecycle_raw is None:
+        lifecycle = lifecycle_raw
+    else:
+        lifecycle = str(lifecycle_raw)
+    mounts: tuple[object, ...] | None = (
+        tuple(cast(tuple[object, ...], mounts_raw)) if isinstance(mounts_raw, tuple) else None
+    )
     parsed = parse_declaration(
         kind=kind,
         network=network,
@@ -93,6 +107,18 @@ def _coerce_declaration(
         provider_ref=str(getattr(environment, "provider_ref", None) or provider_id or ""),
         image=str(getattr(environment, "image", "") or ""),
         host=str(getattr(environment, "host", "") or ""),
+        lifecycle=lifecycle,
+        mounts=mounts,
+        environment_allowlist=(
+            tuple(str(item) for item in cast(tuple[object, ...], allowlist))
+            if isinstance(allowlist, tuple)
+            else None
+        ),
+        capabilities=(
+            tuple(str(item) for item in cast(tuple[object, ...], capabilities))
+            if isinstance(capabilities, tuple)
+            else None
+        ),
         carries_trading_credential=bool(getattr(environment, "carries_trading_credential", False)),
         running_node=bool(getattr(environment, "running_node", False)),
     )
@@ -169,6 +195,47 @@ class ExecutionEnvironmentRegistry:
         if stored.profile is not None:
             self._profiles[token] = stored.profile
         return Ok(token)
+
+    def register_declaration(
+        self,
+        declaration: ExecutionEnvironmentDeclaration,
+        *,
+        provider_id: str | None = None,
+    ) -> Result[str]:
+        """Register a complete CT-46 declaration; reachability runs first."""
+        return self.register(
+            declaration.kind,
+            declaration,
+            provider_id=provider_id or declaration.provider_ref or None,
+            declaration=declaration,
+        )
+
+    def select_ordinary_worker(self) -> Result[ExecutionEnvironmentDeclaration]:
+        """Docker-per-worker ephemeral is the ordinary worker environment."""
+        stored = self._declarations.get(ExecutionEnvironmentKind.DOCKER.value)
+        if stored is None:
+            return Ok(ExecutionEnvironmentDeclaration.ordinary_docker_worker())
+        if not stored.is_docker_per_worker():
+            return refuse_reachability(
+                surface="environment",
+                reason="ordinary_worker_not_ephemeral",
+                stage="registration",
+                kind=ExecutionEnvironmentKind.DOCKER.value,
+                matched=stored.lifecycle.value,
+            )
+        return Ok(stored)
+
+    def ensure_ordinary_worker(self) -> Result[ExecutionEnvironmentDeclaration]:
+        """Bind the ordinary docker-per-worker environment when docker is unbound."""
+        selected = self.select_ordinary_worker()
+        if not isinstance(selected, Ok):
+            return selected
+        if ExecutionEnvironmentKind.DOCKER.value not in self._by_kind:
+            bound = self.register_declaration(selected.value)
+            if not isinstance(bound, Ok):
+                return bound
+        stored = self._declarations[ExecutionEnvironmentKind.DOCKER.value]
+        return Ok(stored)
 
     def register_worker_image(
         self,
@@ -272,6 +339,10 @@ class ExecutionEnvironmentRegistry:
                 provider_ref=barrier.value.provider_ref,
                 image=barrier.value.image,
                 host=host,
+                lifecycle=barrier.value.lifecycle,
+                mounts=barrier.value.mounts,
+                environment_allowlist=barrier.value.environment_allowlist,
+                capabilities=barrier.value.capabilities,
                 carries_trading_credential=barrier.value.carries_trading_credential,
                 running_node=barrier.value.running_node,
                 image_packages=barrier.value.image_packages,
@@ -322,9 +393,17 @@ class ExecutionEnvironmentRegistry:
         return self.evaluate_environment_lease(task_id=task_id, kind=kind, host=host)
 
     def snapshot(self) -> Mapping[str, Any]:
+        ordinary = self._declarations.get(ExecutionEnvironmentKind.DOCKER.value)
         return MappingProxyType(
             {
                 "kinds": sorted(self._by_kind),
                 "empty": self.is_empty(),
+                "lifecycles": {
+                    kind: declaration.lifecycle.value
+                    for kind, declaration in self._declarations.items()
+                },
+                "ordinary_worker": (
+                    ordinary.is_docker_per_worker() if ordinary is not None else False
+                ),
             }
         )

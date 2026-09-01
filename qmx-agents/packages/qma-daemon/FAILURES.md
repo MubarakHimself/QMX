@@ -350,3 +350,65 @@ evidence-bound terminal outcomes (FR-18 through FR-21).
 - **Product-user affordance:** QMA may only stage a content-addressed
   candidate in the `dev` zone. Binding, sizing, protection, and promotion
   stay with the trading node and a human.
+
+### FR-25: An incomplete or invented ExecutionEnvironment declaration is refused at registration
+
+- **Failure class:** `ProhibitedReachability` / `policy rejection` (CT-04).
+- **Detection:** `ExecutionEnvironmentRegistry.register` / `register_declaration`
+  require the CT-46 surface (kind, provider ref, image, mounts, env-var
+  allowlist, capabilities, required `network`, lifecycle). Invented kind or
+  lifecycle values, a missing provider ref, and a container image without a
+  name are refused before the binding is stored (FR-Q48; AD-17).
+- **Auto-recovery / retry:** none — correct the declaration; the registry
+  stays empty for that kind.
+- **Visible degraded state:** the environment is unbound; placement of that
+  kind returns `NoEnvironment`.
+- **Notification tier:** operator-visible (declaration write / startup).
+- **Product-user affordance:** that environment record is not a closed
+  `ExecutionEnvironment`. Use one of the six kinds and `ephemeral` or
+  `persistent`; do not invent a lifetime or skip the required `network`.
+
+### FR-26: A shared dirty filesystem is refused at registration
+
+- **Failure class:** `ProhibitedReachability` / `policy rejection` (CT-04).
+- **Detection:** a mount that is both `shared` and writable (`rw`) is refused
+  by `validate_declaration_surface` during registration. Docker-per-worker
+  ephemeral is the ordinary worker and ships no shared writable mounts
+  (FR-Q48; AD-17).
+- **Auto-recovery / retry:** none — drop the shared writable mount or make
+  it read-only.
+- **Visible degraded state:** the environment is not bound; no worker
+  inherits leftover files from another worker.
+- **Notification tier:** operator-visible (declaration write).
+- **Product-user affordance:** workers do not share a dirty filesystem.
+  Ordinary Docker workers are one container per worker and ephemeral.
+
+### FR-27: An environment-variable allowlist used as a control channel is refused
+
+- **Failure class:** `ProhibitedReachability` / `policy rejection` (CT-04).
+- **Detection:** `environment_allowlist` must be declared env-var names.
+  Assignments (`NAME=value`) and control-channel names (`QMA_CONTROL_CHANNEL`
+  and kin) are refused at registration (FR-Q48; AD-17).
+- **Auto-recovery / retry:** none — list names only; the allowlist is not a
+  command path.
+- **Visible degraded state:** the environment is unbound.
+- **Notification tier:** operator-visible (declaration write).
+- **Product-user affordance:** the environment allowlist names which
+  variables a worker may see. It cannot carry commands, control sockets, or
+  values.
+
+### FR-28: Venue/broker/exchange/trading-node reachability is refused at registration, not by a hook
+
+- **Failure class:** `ProhibitedReachability` / `policy rejection` (CT-04).
+- **Detection:** `ExecutionEnvironmentRegistry.register` runs the AD-28
+  barrier before the binding is stored. A deny-listed host, OpenRouter
+  destination, forbidden image, or money-path capability is a registration
+  (or placement) refusal — never a runtime hook deny (FR-Q48; SCN-0014).
+- **Auto-recovery / retry:** none — Role, Mission, plugin, permission, and
+  hook cannot lift the host denial.
+- **Visible degraded state:** the environment never hosts work; no money-path
+  act is minted.
+- **Notification tier:** operator-visible (declaration write / placement).
+- **Product-user affordance:** that environment would reach a venue, broker,
+  exchange, trading node, or OpenRouter. QMA refuses it up front. The
+  trading desk stays read-only.

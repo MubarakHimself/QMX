@@ -9,6 +9,7 @@ from typing import Final
 from qma.core.vocabulary.enums import (
     AskOnTimeout,
     DeliveryState,
+    EnvironmentLifecycle,
     ExecutionEnvironmentKind,
     GovernedAct,
     GraphArtifactKind,
@@ -76,6 +77,7 @@ CLOSED_VOCABULARIES: Final[tuple[ClosedVocabulary, ...]] = (
     ClosedVocabulary("memory_validation_state", "AD-18", MemoryValidationState, "DEC-0317"),
     ClosedVocabulary("node_kind", "AD-13", NodeKind, "DEC-0312"),
     ClosedVocabulary("execution_environment_kind", "AD-17", ExecutionEnvironmentKind, "DEC-0316"),
+    ClosedVocabulary("environment_lifecycle", "AD-17", EnvironmentLifecycle, "DEC-0316"),
     ClosedVocabulary("network_policy", "AD-28", NetworkPolicy, "DEC-0327"),
     ClosedVocabulary("refinement_edit_kind", "AD-22", RefinementEditKind, "DEC-0321"),
     ClosedVocabulary("variable_scope", "AD-26", VariableScope, "DEC-0325"),

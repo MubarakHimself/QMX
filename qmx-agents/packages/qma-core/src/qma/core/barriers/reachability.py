@@ -16,13 +16,21 @@ from typing import Final, Literal, cast
 from urllib.parse import urlparse
 
 from qma.core.barriers.credential_allowlist import OUT_OF_SCOPE_CREDENTIAL_REF_PREFIXES
+from qma.core.barriers.money_path import match_money_path_act
 from qma.core.ports.execution import (
     ComputerUseProfile,
+    EnvironmentMount,
     ExecutionEnvironmentDeclaration,
     WorkerImageManifest,
+    is_control_channel_env_name,
+    parse_environment_mount,
 )
 from qma.core.refusals.variants import ProhibitedReachability
-from qma.core.vocabulary.enums import ExecutionEnvironmentKind, NetworkPolicy
+from qma.core.vocabulary.enums import (
+    EnvironmentLifecycle,
+    ExecutionEnvironmentKind,
+    NetworkPolicy,
+)
 from qma.core.vocabulary.registry import VocabularyError
 from qmf.core import Ok, Result
 
@@ -52,6 +60,7 @@ __all__ = [
     "refuse_reachability",
     "refuse_reachability_waiver",
     "validate_computer_use_profile",
+    "validate_declaration_surface",
     "validate_execution_environment_declaration",
     "validate_host_identity",
     "validate_network_posture",
@@ -78,6 +87,13 @@ HOST_IDENTITY_KINDS: Final[frozenset[ExecutionEnvironmentKind]] = frozenset(
     {
         ExecutionEnvironmentKind.REMOTE_HOST,
         ExecutionEnvironmentKind.DESKTOP,
+    }
+)
+
+_CONTAINER_KINDS: Final[frozenset[ExecutionEnvironmentKind]] = frozenset(
+    {
+        ExecutionEnvironmentKind.DOCKER,
+        ExecutionEnvironmentKind.REMOTE_CONTAINER,
     }
 )
 
@@ -676,7 +692,74 @@ def validate_execution_environment_declaration(
     )
     if not isinstance(profile, Ok):
         return profile
+    surface = validate_declaration_surface(declaration, stage=stage)
+    if not isinstance(surface, Ok):
+        return surface
     return Ok(declaration)
+
+
+def validate_declaration_surface(
+    declaration: ExecutionEnvironmentDeclaration,
+    *,
+    stage: StageName = "registration",
+) -> Result[ExecutionEnvironmentDeclaration]:
+    """Refuse an incomplete, dirty, or control-channel declaration (FR-Q48)."""
+    kind_token = declaration.kind.value
+    if not declaration.provider_ref.strip():
+        return refuse_reachability(
+            surface="environment",
+            reason="missing_provider_ref",
+            stage=stage,
+            kind=kind_token,
+        )
+    if declaration.kind in _CONTAINER_KINDS and not declaration.image.strip():
+        return refuse_reachability(
+            surface="environment",
+            reason="missing_image",
+            stage=stage,
+            kind=kind_token,
+        )
+    for mount in declaration.mounts:
+        if mount.is_shared_dirty():
+            return refuse_reachability(
+                surface="mounts",
+                reason="shared_dirty_filesystem",
+                stage=stage,
+                kind=kind_token,
+                host=mount.source,
+                matched=mount.target,
+            )
+    for name in declaration.environment_allowlist:
+        if is_control_channel_env_name(name):
+            return refuse_reachability(
+                surface="environment_allowlist",
+                reason="control_channel",
+                stage=stage,
+                kind=kind_token,
+                matched=name,
+            )
+    for capability in declaration.capabilities:
+        matched = match_money_path_act(capability)
+        if matched is not None:
+            return refuse_reachability(
+                surface="capabilities",
+                reason="money_path_capability",
+                stage=stage,
+                kind=kind_token,
+                matched=matched,
+            )
+    return Ok(declaration)
+
+
+def _vocabulary_refusal_reason(exc: VocabularyError) -> str:
+    message = str(exc).casefold()
+    if "lifecycle" in message:
+        return "invalid_lifecycle"
+    if "mount" in message:
+        return "invalid_mount"
+    if "environment-variable" in message:
+        return "invalid_env_var"
+    return "invalid_kind"
 
 
 def parse_declaration(
@@ -687,6 +770,10 @@ def parse_declaration(
     provider_ref: str = "",
     image: str = "",
     host: str = "",
+    lifecycle: EnvironmentLifecycle | str | None = None,
+    mounts: Sequence[object] | None = None,
+    environment_allowlist: Sequence[str] | None = None,
+    capabilities: Sequence[str] | None = None,
     carries_trading_credential: bool = False,
     running_node: bool = False,
     image_packages: Sequence[str] = (),
@@ -694,7 +781,7 @@ def parse_declaration(
     profile: ComputerUseProfile | None = None,
     stage: StageName = "registration",
 ) -> Result[ExecutionEnvironmentDeclaration]:
-    """Parse then validate a declaration; invented network values are refusals."""
+    """Parse then validate a declaration; invented closed values are refusals."""
     kind_token = kind.value if isinstance(kind, ExecutionEnvironmentKind) else str(kind)
     posture = validate_network_posture(
         network,
@@ -705,6 +792,18 @@ def parse_declaration(
     if not isinstance(posture, Ok):
         return posture
     policy, hosts = posture.value
+    parsed_mounts: tuple[EnvironmentMount, ...] | None = None
+    if mounts is not None:
+        try:
+            parsed_mounts = tuple(parse_environment_mount(item) for item in mounts)
+        except VocabularyError as exc:
+            return refuse_reachability(
+                surface="mounts",
+                reason="invalid_mount",
+                stage=stage,
+                kind=kind_token,
+                matched=str(exc),
+            )
     try:
         declaration = ExecutionEnvironmentDeclaration.try_parse(
             kind=kind,
@@ -713,18 +812,23 @@ def parse_declaration(
             provider_ref=provider_ref,
             image=image,
             host=host,
+            lifecycle=lifecycle,
+            mounts=parsed_mounts,
+            environment_allowlist=environment_allowlist,
+            capabilities=capabilities,
             carries_trading_credential=carries_trading_credential,
             running_node=running_node,
             image_packages=image_packages,
             image_imports=image_imports,
             profile=profile,
         )
-    except VocabularyError:
+    except VocabularyError as exc:
+        reason = _vocabulary_refusal_reason(exc)
         return refuse_reachability(
             surface="environment",
-            reason="invalid_kind",
+            reason=reason,
             stage=stage,
             kind=kind_token,
-            matched=repr(kind),
+            matched=str(exc),
         )
     return validate_execution_environment_declaration(declaration, stage=stage)

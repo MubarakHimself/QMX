@@ -24,6 +24,7 @@ from qma.core.plugins import (
 )
 from qma.core.ports import (
     PORT_CONTRACTS,
+    ExecutionEnvironmentDeclaration,
     require_singleton_scope_key,
     validate_contribution_point,
 )
@@ -87,9 +88,21 @@ def main() -> None:
         provider_ref="local",
     )
     assert is_ok(isolated)
+    ordinary = ExecutionEnvironmentDeclaration.ordinary_docker_worker()
+    assert ordinary.is_docker_per_worker()
     venue = validate_network_posture("allowlist", ("demo.ctraderapi.com",))
     assert is_refusal(venue)
     assert ProhibitedReachability.matches(venue)
+    dirty = parse_declaration(
+        kind="docker",
+        network="none",
+        reachable_hosts=(),
+        provider_ref="local-docker",
+        image="qma-worker:isolated",
+        mounts=({"source": "/shared", "target": "/work", "mode": "rw", "shared": True},),
+    )
+    assert is_refusal(dirty)
+    assert dirty.context["reason"] == "shared_dirty_filesystem"
 
     refused = NoMemoryProvider.of(desk="research")
     assert is_refusal(refused)

@@ -35,10 +35,15 @@ from qma.core.ports.cardinality import (
 from qma.core.ports.compute import ComputeProvider
 from qma.core.ports.context import ContextCompiler
 from qma.core.ports.execution import (
+    CONTROL_CHANNEL_ENV_NAMES,
+    DECLARATION_SURFACE_FIELDS,
     ComputerUseProfile,
+    EnvironmentMount,
     ExecutionEnvironment,
     ExecutionEnvironmentDeclaration,
     WorkerImageManifest,
+    is_control_channel_env_name,
+    parse_environment_mount,
 )
 from qma.core.ports.knowledge import KnowledgeSource
 from qma.core.ports.memory import MemoryProvider
@@ -110,6 +115,8 @@ __all__ = [
     "AUTH_MODE_NONE",
     "CAPABILITY_NARROWING_ORDER",
     "CONTEXT_COMPILER_SCOPE_KEY",
+    "CONTROL_CHANNEL_ENV_NAMES",
+    "DECLARATION_SURFACE_FIELDS",
     "LEAF_BLOCKED_TOOL_TAGS",
     "LOCAL_PROXY_ADAPTERS",
     "MODEL_FAMILY_ASSIGN_COMMAND",
@@ -129,6 +136,7 @@ __all__ = [
     "ContextCompiler",
     "DeploymentRecord",
     "EffectiveCapabilitySet",
+    "EnvironmentMount",
     "ExecutionEnvironment",
     "ExecutionEnvironmentDeclaration",
     "KnowledgeSource",
@@ -164,9 +172,11 @@ __all__ = [
     "eligible_pool",
     "has_qma_wire_schema",
     "is_agent_path_enforcement_event",
+    "is_control_channel_env_name",
     "is_local_proxy_deployment",
     "narrow_permissions",
     "narrow_toolset_ids",
+    "parse_environment_mount",
     "qualified_contribution_id",
     "require_singleton_scope_key",
     "resolve_enforcement_decision",

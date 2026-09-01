@@ -23,6 +23,7 @@ from qma.core.vocabulary import (
     TASK_MISSION_TERMINAL_STATES,
     AskOnTimeout,
     DeliveryState,
+    EnvironmentLifecycle,
     ExecutionEnvironmentKind,
     GovernedAct,
     GovernedActTarget,
@@ -79,6 +80,8 @@ def test_invented_values_rejected() -> None:
         parse_closed(ModelClass, "REASONING_LOW")
     with pytest.raises(VocabularyError):
         parse_closed(PrincipalClass, "admin")
+    with pytest.raises(VocabularyError):
+        parse_closed(EnvironmentLifecycle, "always_on")
     with pytest.raises(VocabularyError):
         parse_hook_event_name("before_invented")
 
@@ -287,6 +290,15 @@ def test_memory_graph_environment_refinement_scopes() -> None:
         NodeKind.LOOP,
     } == TASK_EMITTING_NODE_KINDS
     assert len(tuple(ExecutionEnvironmentKind)) == 6
+    assert {member.value for member in ExecutionEnvironmentKind} == {
+        "local",
+        "docker",
+        "remote_container",
+        "remote_host",
+        "browser",
+        "desktop",
+    }
+    assert {member.value for member in EnvironmentLifecycle} == {"ephemeral", "persistent"}
     assert {member.value for member in NetworkPolicy} == {"none", "allowlist"}
     assert len(tuple(RefinementEditKind)) == 9
     assert "variable" not in {member.value for member in RefinementEditKind}

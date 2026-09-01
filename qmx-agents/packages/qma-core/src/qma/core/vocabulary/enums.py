@@ -16,6 +16,7 @@ __all__ = [
     "TASK_MISSION_TERMINAL_STATES",
     "AskOnTimeout",
     "DeliveryState",
+    "EnvironmentLifecycle",
     "ExecutionEnvironmentKind",
     "GovernedAct",
     "GraphArtifactKind",
@@ -324,6 +325,13 @@ class NetworkPolicy(StrEnum):
 
     NONE = "none"
     ALLOWLIST = "allowlist"
+
+
+class EnvironmentLifecycle(StrEnum):
+    """ExecutionEnvironment lifetime; docker-per-worker defaults to ephemeral (AD-17)."""
+
+    EPHEMERAL = "ephemeral"
+    PERSISTENT = "persistent"
 
 
 class RefinementEditKind(StrEnum):
