@@ -7,7 +7,7 @@ import importlib.util
 import struct
 import sys
 from pathlib import Path
-from typing import TypeVar
+from typing import Iterable, TypeVar, cast
 
 from qmf.core.refusal import Result, is_ok, is_refusal
 from qmn.doors.http import powers as powers_mod
@@ -89,13 +89,13 @@ def test_transport_identity_and_closed_sets() -> None:
     assert identity["socket_owner"] == POWERS_SOCKET_OWNER == "qmx:qmxops"
     assert identity["socket_mode"] == POWERS_SOCKET_MODE == 0o660
     assert identity["service_account"] == SERVICE_ACCOUNT_NAME == "qmx"
-    assert set(identity["principal_set"]) == PRINCIPAL_SET == {
+    assert set(cast(Iterable[str], identity["principal_set"])) == PRINCIPAL_SET == {
         OPERATOR_PRINCIPAL,
         OPS_PRINCIPAL,
     }
     assert "agent" not in PRINCIPAL_SET
     assert identity["agent_never_a_principal"] is True
-    assert set(identity["ops_allowed_powers"]) == OPS_ALLOWED_POWERS
+    assert set(cast(Iterable[str], identity["ops_allowed_powers"])) == OPS_ALLOWED_POWERS
     assert {
         "notify_test",
         "restore_drill_run",
