@@ -340,3 +340,49 @@ def test_load_render_values_refuses_symlink_and_oversize(
     ok = install_mod.load_render_values(_FIXTURES / "render-values.json")
     assert ok["drain_window"]
     assert ok["watchdog_interval"]
+
+
+def test_safe_io_read_and_write_use_o_nofollow(tmp_path: Path) -> None:
+    safe_io = _load("qmn_deploy_safe_io_test", _DEPLOY / "safe_io.py")
+    source = (_DEPLOY / "safe_io.py").read_text(encoding="utf-8")
+    assert "O_NOFOLLOW" in source
+    assert "os.open" in source
+    assert "stat.S_ISREG" in source
+    assert "path.read_text" not in source
+    assert "path.stat()" not in source
+
+    target = tmp_path / "plan.json"
+    safe_io.write_text_exclusive_no_follow(
+        target, '{"ok":true}\n', contain_within=tmp_path
+    )
+    assert target.is_file() and not target.is_symlink()
+    assert (
+        safe_io.read_text_contained(target, contain_within=tmp_path) == '{"ok":true}\n'
+    )
+
+    safe_io.write_text_exclusive_no_follow(
+        target, '{"ok":false}\n', contain_within=tmp_path
+    )
+    assert (
+        safe_io.read_text_contained(target, contain_within=tmp_path) == '{"ok":false}\n'
+    )
+
+    big = tmp_path / "big.txt"
+    big.write_text("x" * (_MAX_READ_BYTES + 1), encoding="utf-8")
+    with pytest.raises(OSError, match="size cap"):
+        safe_io.read_text_contained(big, contain_within=tmp_path)
+
+
+def test_safe_io_refuses_symlink_leaf(tmp_path: Path) -> None:
+    safe_io = _load("qmn_deploy_safe_io_symlink_test", _DEPLOY / "safe_io.py")
+    outside = tmp_path / "outside.json"
+    outside.write_text("keep\n", encoding="utf-8")
+    link = tmp_path / "linked.json"
+    _try_symlink(link, outside)
+    with pytest.raises(OSError, match="symlink"):
+        safe_io.read_text_contained(link, contain_within=tmp_path)
+    with pytest.raises(OSError, match="symlink"):
+        safe_io.write_text_exclusive_no_follow(
+            link, "nope\n", contain_within=tmp_path
+        )
+    assert outside.read_text(encoding="utf-8") == "keep\n"

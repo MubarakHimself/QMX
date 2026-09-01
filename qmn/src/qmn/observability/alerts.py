@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import os
 import re
+import stat
 from collections.abc import Mapping, MutableSequence, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -255,7 +256,7 @@ def _failures_root() -> Path:
 
 
 def _read_failures_path(path: Path) -> Result[str]:
-    """Read FAILURES.md as a regular in-root non-symlink file under a size cap."""
+    """Read FAILURES.md via O_NOFOLLOW as a regular in-root file under a size cap."""
     root = _failures_root()
     try:
         resolved = Path(os.path.realpath(path))
@@ -271,25 +272,60 @@ def _read_failures_path(path: Path) -> Result[str]:
             "refusing to follow a symlink or read FAILURES.md outside the qmn root",
             path=str(path),
         )
-    if not path.is_file():
-        return invalid(
-            "failures_path",
-            "FAILURES.md must be a regular in-root file",
-            path=str(path),
-        )
-    size = path.stat().st_size
-    if size > _MAX_FAILURES_BYTES:
-        return invalid(
-            "failures_path",
-            "refusing to read FAILURES.md above the size cap",
-            path=str(path),
-            size=size,
-            max_bytes=_MAX_FAILURES_BYTES,
-        )
     try:
-        return Ok(path.read_text(encoding="utf-8"))
+        # getattr keeps the "O_NOFOLLOW" token on this open so SKY-D324/D325
+        # see the no-follow flag; Windows has no O_NOFOLLOW (value 0).
+        fd = os.open(  # skylos: ignore[SKY-D215] contained, no-follow read
+            path,
+            os.O_RDONLY
+            | getattr(os, "O_NOFOLLOW", 0)
+            | getattr(os, "O_BINARY", 0),
+        )
     except OSError as exc:
         return invalid("failures_path", f"cannot read FAILURES.md: {exc}")
+    try:
+        info = os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode):
+            return invalid(
+                "failures_path",
+                "FAILURES.md must be a regular in-root file",
+                path=str(path),
+            )
+        size = info.st_size
+        if size > _MAX_FAILURES_BYTES:
+            return invalid(
+                "failures_path",
+                "refusing to read FAILURES.md above the size cap",
+                path=str(path),
+                size=size,
+                max_bytes=_MAX_FAILURES_BYTES,
+            )
+        limit = (
+            _MAX_FAILURES_BYTES if size <= 0 else min(size, _MAX_FAILURES_BYTES)
+        )
+        buf = bytearray()
+        while len(buf) < limit:
+            chunk = os.read(fd, limit - len(buf))
+            if not chunk:
+                break
+            buf.extend(chunk)
+        if size <= 0 and len(buf) >= _MAX_FAILURES_BYTES:
+            extra = os.read(fd, 1)
+            if extra:
+                return invalid(
+                    "failures_path",
+                    "refusing to read FAILURES.md above the size cap",
+                    path=str(path),
+                    max_bytes=_MAX_FAILURES_BYTES,
+                )
+    except OSError as exc:
+        return invalid("failures_path", f"cannot read FAILURES.md: {exc}")
+    finally:
+        os.close(fd)
+    try:
+        return Ok(bytes(buf).decode("utf-8"))
+    except UnicodeDecodeError as exc:
+        return invalid("failures_path", f"FAILURES.md is not UTF-8 text: {exc}")
 
 
 def push_classes_for_tier(tier: object) -> frozenset[str]:

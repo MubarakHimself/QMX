@@ -111,6 +111,36 @@ def test_parse_failures_register_refuses_symlink_and_oversize(
     assert "size cap" in str(refused_size.context["reason"])
 
 
+def test_read_failures_path_uses_o_nofollow(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from qmn.observability import alerts as alerts_mod
+
+    root = tmp_path / "qmn-root"
+    root.mkdir()
+    monkeypatch.setattr(alerts_mod, "_failures_root", lambda: root)
+
+    regular = root / "FAILURES-ok.md"
+    regular.write_text("# FR-1 Ok\n", encoding="utf-8")
+    loaded = alerts_mod._read_failures_path(regular)
+    assert is_ok(loaded)
+    assert loaded.value.startswith("# FR-1 Ok")
+
+    monkeypatch.setattr(alerts_mod, "_MAX_FAILURES_BYTES", 8)
+    oversize = root / "FAILURES-big.md"
+    oversize.write_text("x" * 32, encoding="utf-8")
+    refused_size = alerts_mod._read_failures_path(oversize)
+    assert is_refusal(refused_size)
+    assert "size cap" in str(refused_size.context["reason"])
+
+    source = (_OBS_SRC / "alerts.py").read_text(encoding="utf-8")
+    assert "O_NOFOLLOW" in source
+    assert "os.open" in source
+    assert "stat.S_ISREG" in source
+    assert "path.read_text" not in source
+    assert "path.stat()" not in source
+
+
 def test_closed_push_classes_cover_three_accepted_classes() -> None:
     assert PUSH_ALERT_CLASSES == (
         "money-boundary",

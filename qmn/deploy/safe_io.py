@@ -1,15 +1,17 @@
 """Contained, no-follow file I/O for the deploy toolkit (SKY-D324 / SKY-D325).
 
-Writes refuse a leaf symlink, stay inside ``contain_within``, and create with
-``O_CREAT | O_EXCL | O_WRONLY`` plus ``O_NOFOLLOW`` where the platform offers
-it. An existing regular file at the destination is unlinked first so plan and
-record re-writes stay exclusive. Reads require a regular in-root non-symlink
-file under a 1 MiB size cap.
+Writes stay inside ``contain_within``, refuse a leaf symlink at the destination,
+and create via a sibling temp with ``O_CREAT | O_EXCL | O_WRONLY`` plus
+``O_NOFOLLOW`` where the platform offers it, then ``os.replace`` onto the
+destination so a crash cannot delete a previous plan between unlink and create.
+Reads open with ``O_RDONLY | O_NOFOLLOW``, require a regular in-root file under
+a 1 MiB size cap, and UTF-8 decode the bytes.
 """
 
 from __future__ import annotations
 
 import os
+import stat
 from pathlib import Path
 from typing import Final
 
@@ -35,7 +37,7 @@ def write_text_exclusive_no_follow(
     *,
     contain_within: Path,
 ) -> None:
-    """Create *path* exclusively and write UTF-8 *text*, never following a symlink."""
+    """Create *path* via a sibling temp and replace, never following a symlink."""
     data = text.encode("utf-8")
     try:
         resolved = Path(os.path.realpath(path))
@@ -50,17 +52,35 @@ def write_text_exclusive_no_follow(
             "refusing to follow a symlink or write outside the intended root "
             f"({path})"
         )
-    if path.exists():
-        if path.is_symlink() or not path.is_file():
+    if path.exists() and (path.is_symlink() or not path.is_file()):
+        raise OSError(
+            f"refusing to replace a non-regular in-root path ({path})"
+        )
+
+    tmp = path.parent / f".{path.name}.write-{os.getpid()}"
+    try:
+        tmp_resolved = Path(os.path.realpath(tmp))
+    except OSError as exc:
+        raise OSError(
+            f"could not resolve a contained filesystem path ({tmp}): "
+            f"{type(exc).__name__}"
+        ) from exc
+    if tmp.is_symlink() or not tmp_resolved.is_relative_to(root_real):
+        raise OSError(
+            "refusing to follow a symlink or write outside the intended root "
+            f"({tmp})"
+        )
+    if tmp.exists() or tmp.is_symlink():
+        if tmp.is_dir() and not tmp.is_symlink():
             raise OSError(
-                f"refusing to replace a non-regular in-root path ({path})"
+                f"refusing to replace a non-regular in-root path ({tmp})"
             )
-        path.unlink()
+        tmp.unlink()
     try:
         # getattr keeps the "O_NOFOLLOW" token on this open so SKY-D324 sees
         # the no-follow flag; Windows has no O_NOFOLLOW (value 0).
         fd = os.open(  # skylos: ignore[SKY-D215] contained, no-follow, exclusive create
-            path,
+            tmp,
             os.O_CREAT
             | os.O_EXCL
             | os.O_WRONLY
@@ -70,12 +90,23 @@ def write_text_exclusive_no_follow(
         )
     except OSError as exc:
         raise OSError(
-            f"exclusive no-follow create failed for {path} ({type(exc).__name__})"
+            f"exclusive no-follow create failed for {tmp} ({type(exc).__name__})"
         ) from exc
     try:
-        _write_all(fd, data)
-    finally:
-        os.close(fd)
+        try:
+            _write_all(fd, data)
+        finally:
+            os.close(fd)
+        if path.is_symlink():
+            raise OSError(
+                "refusing to follow a symlink or write outside the intended root "
+                f"({path})"
+            )
+        os.replace(tmp, path)
+    except OSError:
+        if tmp.exists() or tmp.is_symlink():
+            tmp.unlink(missing_ok=True)
+        raise
 
 
 def read_text_contained(
@@ -98,13 +129,47 @@ def read_text_contained(
             "refusing to follow a symlink or read outside the intended root "
             f"({path})"
         )
-    if not path.is_file():
-        raise OSError(
-            f"refusing to read a path that is not a regular in-root file ({path})"
+    try:
+        # getattr keeps the "O_NOFOLLOW" token on this open so SKY-D324/D325
+        # see the no-follow flag; Windows has no O_NOFOLLOW (value 0).
+        fd = os.open(  # skylos: ignore[SKY-D215] contained, no-follow read
+            path,
+            os.O_RDONLY
+            | getattr(os, "O_NOFOLLOW", 0)
+            | getattr(os, "O_BINARY", 0),
         )
-    size = path.stat().st_size
-    if size > max_bytes:
+    except OSError as exc:
         raise OSError(
-            f"refusing to read a file above the size cap ({path}: {size} > {max_bytes})"
-        )
-    return path.read_text(encoding="utf-8")
+            f"contained no-follow open failed for {path} ({type(exc).__name__})"
+        ) from exc
+    try:
+        info = os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode):
+            raise OSError(
+                f"refusing to read a path that is not a regular in-root file ({path})"
+            )
+        size = info.st_size
+        if size > max_bytes:
+            raise OSError(
+                f"refusing to read a file above the size cap ({path}: {size} > {max_bytes})"
+            )
+        # st_size 0 can be a real empty file or a special file; still cap the read.
+        limit = max_bytes if size <= 0 else min(size, max_bytes)
+        buf = bytearray()
+        while len(buf) < limit:
+            chunk = os.read(fd, limit - len(buf))
+            if not chunk:
+                break
+            buf.extend(chunk)
+        if size <= 0 and len(buf) >= max_bytes:
+            extra = os.read(fd, 1)
+            if extra:
+                raise OSError(
+                    f"refusing to read a file above the size cap ({path}: > {max_bytes})"
+                )
+    finally:
+        os.close(fd)
+    try:
+        return bytes(buf).decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise OSError(f"contained file is not UTF-8 text ({path})") from exc

@@ -400,3 +400,29 @@ def test_apply_plan_refuses_symlinked_release_marker(
     with pytest.raises(OSError, match="symlink"):
         switch_mod.apply_plan_to_fixture(plan, root)
     assert outside.read_text(encoding="utf-8") == "keep\n"
+
+
+def test_atomic_symlink_pointer_fallback_uses_exclusive_no_follow(
+    switch_mod: ModuleType,
+) -> None:
+    source = (_DEPLOY / "switch.py").read_text(encoding="utf-8")
+    assert "write_text_exclusive_no_follow" in source
+    assert "tmp.write_text" not in source
+    # Pointer-file fallback must stay contained under the link parent.
+    assert "contain_within=link.parent" in source
+
+
+def test_atomic_symlink_to_writes_pointer_when_symlink_unavailable(
+    switch_mod: ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    link = tmp_path / "current"
+    target = tmp_path / "trees" / "abc1234"
+    target.mkdir(parents=True)
+
+    def _refuse_symlink(self: Path, *args: object, **kwargs: object) -> None:
+        raise OSError("symlink unavailable")
+
+    monkeypatch.setattr(Path, "symlink_to", _refuse_symlink)
+    switch_mod._atomic_symlink_to(link, target)
+    assert link.is_file() and not link.is_symlink()
+    assert link.read_text(encoding="utf-8") == "abc1234\n"

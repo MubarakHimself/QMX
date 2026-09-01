@@ -519,7 +519,11 @@ def _atomic_symlink_to(link: Path, target: Path) -> None:
         if tmp.exists() or tmp.is_symlink():
             tmp.unlink(missing_ok=True)
         # Atomic pointer-file fallback for fixture hosts without symlink rights.
-        tmp.write_text(target.name.casefold() + "\n", encoding="utf-8")
+        _safe_io.write_text_exclusive_no_follow(
+            tmp,
+            target.name.casefold() + "\n",
+            contain_within=link.parent,
+        )
         os.replace(tmp, link)
 
 
