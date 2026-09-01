@@ -270,3 +270,77 @@ designed failure; every typed refusal the node can emit belongs here.
   memory-ceiling, or callback-exception breach. Inspect the journaled
   transition, then reinstate from the operator principal over the powers
   channel; a restart will not re-arm the seat.
+
+### FR-20: Promotion silent-battery refusal
+
+- **Failure class:** policy rejection
+- **Detection:** the operator `promotion_sign` click runs the silent
+  precondition battery against fresh state (`qmn.promotion.run_silent_battery`
+  / `promote_to_admitted`); any of the three admission layers, Book/BMS/bot/
+  config fingerprints, CT-18 capabilities, live-conditioned baselines,
+  un-discharged resign `admission_impact`, blanks, or non-ratified live-gating
+  value-status fails.
+- **Auto-recovery / retry:** none — the operator re-runs promotion after the
+  named check is repaired; displayed-eligible is never a trade grant.
+- **Visible degraded state:** promotion does not occur; no seat lands; no
+  intent, ledger, or exposure is opened. The operator sees a passed-or-refused
+  list in plain words with the refusing check named.
+- **Notification tier:** operator-visible (journaled powers refusal).
+- **Product-user affordance:** Promotion was refused. Read the named check
+  (admission layers, fingerprints, venue capabilities, live baselines,
+  admission impact, blanks, or value-status) and retry the promotion click
+  from the operator principal after it passes.
+
+### FR-21: Sandbox provenance at hub publish or promotion pull
+
+- **Failure class:** policy rejection
+- **Detection:** a hub fragment or as-of artifact carries `provenance =
+  sandbox` at `hub_publish` or at the node-initiated promotion pull
+  (`qmn.promotion.refuse_sandbox_provenance` / `pull_published_as_of`). An
+  as-of set containing one sandbox artifact refuses the whole pull.
+- **Auto-recovery / retry:** none — sandbox artifacts never enter the
+  published area or a live-zone landing. Publish only live-provenance
+  fragments and pull only the published area.
+- **Visible degraded state:** publish or pull refused; the seat does not
+  land ADMITTED; refusal journaled and alarmed.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** A sandbox-provenance artifact was refused at
+  publish or at the promotion pull. Remove it from the as-of set and retry
+  from the published area; factory-sandbox evidence cannot authorize live
+  money.
+
+### FR-22: Same-day activation trade path
+
+- **Failure class:** policy rejection
+- **Detection:** an activation click requests a manual override, warm-up,
+  ramp, or same-day trade, or a first intent is attempted before the next
+  boundary of the account-scoped day-boundary calendar
+  (`qmn.promotion.request_activation` /
+  `revalidate_before_first_intent`).
+- **Auto-recovery / retry:** none — there is no override. Wait for the next
+  account-scoped day-boundary, then revalidate before the first intent.
+- **Visible degraded state:** the activation record is accepted (when the
+  click itself is legal) but remains ineffective; the seat stays `admitted`
+  with no exposure; the first intent is refused.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** Activation does not trade until the next
+  account-scoped day-boundary. There is no same-day path, warm-up, or ramp.
+  Retry the first intent after that boundary, after revalidation passes.
+
+### FR-23: Intervening refusal after activation day-boundary
+
+- **Failure class:** policy rejection
+- **Detection:** at or after the activation day-boundary, fresh
+  config/capability/baseline/protection state fails
+  (`qmn.promotion.revalidate_before_first_intent` /
+  `admit_first_intent`).
+- **Auto-recovery / retry:** none automatic — the bot remains admitted but
+  inactive. Repair the refusing check and revalidate again; do not infer
+  exposure from the earlier activation click.
+- **Visible degraded state:** seat stays `admitted`; `may_mint_intent` is
+  false; no first intent is admitted.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** Activation reached the day-boundary but
+  fresh state no longer passes. The bot is still admitted and not trading.
+  Fix the named config, capability, baseline, or protection check, then
+  revalidate before the first intent.

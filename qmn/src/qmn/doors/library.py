@@ -28,6 +28,7 @@ from qmn.observability.health import (
     aggregate_health,
 )
 from qmn.observability.metrics import NodeMetricsRegistry, build_node_metrics
+from qmn.promotion.hub import refuse_sandbox_provenance
 
 _OPS_PRINCIPAL: Final[str] = "ops"
 
@@ -571,12 +572,9 @@ def _apply_power(
         if fragment is None:
             return invalid("fragment_fp1", "hub_publish names the fragment fp1 to publish")
         provenance = requested.get("provenance")
-        if provenance == "sandbox":
-            return policy(
-                "provenance",
-                "hub_publish refuses provenance = sandbox at publish",
-                provenance=provenance,
-            )
+        sandbox = refuse_sandbox_provenance(provenance, crossing="publish")
+        if is_refusal(sandbox):
+            return sandbox
         runtime.hub_published.append(fragment)
         return Ok(
             MappingProxyType(
