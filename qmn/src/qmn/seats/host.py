@@ -5,6 +5,9 @@ and injected read surfaces over the declared footprint only. The loop drives the
 callback per evaluation instant through ``mint_intents``. Clock, Book, venue, and
 signal-snapshot objects are never injected. Deadline and memory-ceiling values
 are caller-supplied registry resolutions — never invented (FTR-07; TN-19).
+
+Node seating of a proposed bot goes through ``propose_node_seat`` (Story 26.15);
+this module does not admit the ungoverned Python-bot tunnel.
 """
 
 from __future__ import annotations
