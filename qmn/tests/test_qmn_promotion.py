@@ -1,7 +1,8 @@
-"""Story 26.9 — promote separately, activate at the next day boundary."""
+"""Stories 26.9 and 26.10 — promote, activate next day, persist closed journals."""
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TypeVar
 
@@ -10,23 +11,41 @@ from qmf.core import (
     CivilDate,
     Fingerprint,
     Instant,
+    JournalSink,
+    Ok,
     RefusalCategory,
+    SinkAck,
+    SinkResult,
     TradingDate,
     WriterId,
     fingerprint,
+    unpersistable,
 )
 from qmf.core.refusal import Result, is_ok, is_refusal
-from qmf.registry.promotion import PromotionCard
+from qmf.registry.promotion import PromotionCard, PromotionEvent
 from qmn.config import compile_node_config
+from qmn.observability.logging import (
+    LOGS_ARE_NOT_JOURNALS,
+    LOGS_SATISFY_CT13_EVIDENCE,
+    log_record_is_journal_evidence,
+)
 from qmn.promotion import (
+    ACTIVATION_CT13_EVENT_TYPE,
+    ACTIVATION_PAYLOAD_KEYS,
+    ACTIVATION_TRIGGER,
     ADMISSION_IMPACT_NONE,
     ADMISSION_IMPACT_RESIGN,
+    CT13_SEVEN_EVENT_TYPES,
     DEMO_BASELINE_ENVIRONMENT,
     FORBIDDEN_ACTIVATION_OVERRIDES,
     LIVE_BASELINE_ENVIRONMENT,
+    LOG_LINE_SUBSTITUTES_FOR_JOURNAL,
+    PROMOTION_EVENT_TYPE,
+    PROMOTION_PAYLOAD_KEYS,
     PROMOTION_SURFACE,
     SAME_DAY_TRADE_PATH_EXISTS,
     SANDBOX_PROVENANCE,
+    ActivationPhase,
     AdmissionLayerFreshState,
     BatteryCheckId,
     ConfigGateFreshState,
@@ -39,10 +58,17 @@ from qmn.promotion import (
     ProtectionFreshState,
     PublishedHub,
     admit_first_intent,
+    assert_closed_ct13_event_type,
+    commit_activation,
+    commit_promotion,
     live_gating_from_config,
+    map_activation_ct13_event_type,
+    persist_promotion,
     promote_to_admitted,
+    promotion_journal_payload,
     publish_hub_fragment,
     pull_published_as_of,
+    reconstruct_activation,
     refuse_invented_ksa_or_latency,
     refuse_sandbox_provenance,
     request_activation,
@@ -527,3 +553,243 @@ def test_intervening_refusal_leaves_admitted_but_inactive() -> None:
     )
     assert blocked_protection.enforced_state is GovernedSeatState.ADMITTED
     assert blocked_protection.may_mint_intent is False
+
+
+# --- Story 26.10: closed journal paths --------------------------------------
+
+
+class _RecordingJournal:
+    def __init__(self) -> None:
+        self.appended: list[object] = []
+
+    def append(self, event: object, /) -> SinkResult:
+        self.appended.append(event)
+        return Ok(SinkAck())
+
+
+class _FailingJournal:
+    def append(self, event: object, /) -> SinkResult:
+        del event
+        return unpersistable("journal room unavailable")
+
+
+def _as_map(row: object) -> dict[str, object]:
+    assert isinstance(row, Mapping)
+    return dict(row)
+
+
+def _request() -> object:
+    landing = _ok(_promote())
+    return _ok(
+        request_activation(
+            principal=OPERATOR_PRINCIPAL,
+            landing=landing,
+            signed_at=_instant(_NS),
+            day_boundary=_day_boundary(),
+            operator_signature="sig-operator-activate",
+        )
+    )
+
+
+def test_accepted_promotion_journals_card_fp1_and_correlation_id_only() -> None:
+    landing = _ok(_promote())
+    journal = _RecordingJournal()
+    committed = _ok(commit_promotion(landing, journal=journal, correlation_id="corr-promo-1"))
+    assert committed is landing
+    assert len(journal.appended) == 1
+    row = _as_map(journal.appended[0])
+    assert row["event_type"] == PROMOTION_EVENT_TYPE == "promotion"
+    assert row["correlation_id"] == "corr-promo-1"
+    payload = row["payload"]
+    assert isinstance(payload, dict)
+    assert set(payload) == PROMOTION_PAYLOAD_KEYS == {"promotion_card_fp1"}
+    assert payload["promotion_card_fp1"] == landing.card_fp1.value
+    canonical = _ok(PromotionEvent.try_create(landing.card_fp1, correlation_id="corr-promo-1"))
+    assert dict(payload) == canonical.journal_payload()
+    assert "correlation_id" not in payload
+    for widened in ("operator", "artifact", "config", "binding", "binding_id", "seat_id"):
+        assert widened not in payload
+        assert widened not in row
+    assert isinstance(journal, JournalSink)
+
+
+def test_promotion_payload_builder_stays_closed() -> None:
+    landing = _ok(_promote())
+    payload = dict(_ok(promotion_journal_payload(landing.card_fp1)))
+    assert set(payload) == PROMOTION_PAYLOAD_KEYS
+    persisted = _ok(
+        persist_promotion(
+            journal=_RecordingJournal(),
+            card_fp1=landing.card_fp1,
+            correlation_id="corr-2",
+        )
+    )
+    assert persisted.event_type == PROMOTION_EVENT_TYPE
+    assert set(persisted.payload) == PROMOTION_PAYLOAD_KEYS
+    assert persisted.correlation_id == "corr-2"
+
+
+def test_activation_requested_refused_successful_use_ct24_risk_transition() -> None:
+    accepted = _request()
+    journal = _RecordingJournal()
+    requested = _ok(
+        commit_activation(
+            journal=journal,
+            phase=ActivationPhase.REQUESTED,
+            acceptance=accepted,
+            correlation_id="corr-act-req",
+        )
+    )
+    assert requested.applied is True
+    assert requested.event.event_type == ACTIVATION_CT13_EVENT_TYPE == "risk transition"
+    assert requested.event.event_type != PROMOTION_EVENT_TYPE
+    assert requested.transition.trigger_kind == ACTIVATION_TRIGGER
+    assert requested.transition.requested_state is GovernedSeatState.ACTIVE
+    assert requested.transition.enforced_state is GovernedSeatState.ADMITTED
+    req_row = _as_map(journal.appended[-1])
+    assert req_row["event_type"] == "risk transition"
+    assert set(req_row["payload"]) == ACTIVATION_PAYLOAD_KEYS == {"transition_fp1"}
+
+    refused = _ok(
+        commit_activation(
+            journal=journal,
+            phase=ActivationPhase.REFUSED,
+            acceptance=accepted,
+            refusing_check="the silent promotion battery refused",
+            correlation_id="corr-act-ref",
+        )
+    )
+    assert refused.applied is False
+    assert refused.event.event_type == "risk transition"
+    assert refused.transition.enforced_state is GovernedSeatState.ADMITTED
+    assert refused.transition.requested_state is GovernedSeatState.ACTIVE
+    assert refused.transition.operator_signature == "sig-operator-activate"
+
+    ready = _ok(
+        revalidate_before_first_intent(
+            acceptance=accepted,
+            now=_instant(_BOUNDARY_NS),
+            fresh=_fresh(),
+        )
+    )
+    successful = _ok(
+        commit_activation(
+            journal=journal,
+            phase=ActivationPhase.SUCCESSFUL,
+            readiness=ready,
+            correlation_id="corr-act-ok",
+        )
+    )
+    assert successful.applied is True
+    assert successful.event.event_type == "risk transition"
+    assert successful.transition.enforced_state is GovernedSeatState.ACTIVE
+    assert successful.transition.requested_state is GovernedSeatState.ACTIVE
+    assert all(_as_map(item)["event_type"] == "risk transition" for item in journal.appended)
+    assert len(journal.appended) == 3
+
+
+def test_activation_never_uses_promotion_or_an_eighth_type() -> None:
+    accepted = _request()
+    journal = _RecordingJournal()
+    as_promotion = _refusal(
+        commit_activation(
+            journal=journal,
+            phase=ActivationPhase.REQUESTED,
+            acceptance=accepted,
+            event_type=PROMOTION_EVENT_TYPE,
+            correlation_id="corr-wrong",
+        )
+    )
+    assert as_promotion.category is RefusalCategory.POLICY_REJECTION
+    assert as_promotion.context["field"] == "event_type"
+    assert as_promotion.context["mapped"] == ACTIVATION_CT13_EVENT_TYPE
+    assert journal.appended == []
+
+    eighth = _refusal(map_activation_ct13_event_type("activation"))
+    assert eighth.category is RefusalCategory.UNSUPPORTED_CAPABILITY
+    assert eighth.context["ftr"] == "FTR-01"
+    invented = _refusal(assert_closed_ct13_event_type("seat-transition"))
+    assert invented.context["ftr"] == "FTR-01"
+    assert "activation" not in CT13_SEVEN_EVENT_TYPES
+    assert "seat-transition" not in CT13_SEVEN_EVENT_TYPES
+    assert PROMOTION_EVENT_TYPE in CT13_SEVEN_EVENT_TYPES
+    assert ACTIVATION_CT13_EVENT_TYPE in CT13_SEVEN_EVENT_TYPES
+    assert _ok(map_activation_ct13_event_type()) == "risk transition"
+
+
+def test_requested_vs_enforced_reconstructed_from_ct24_not_payload() -> None:
+    accepted = _request()
+    journal = _RecordingJournal()
+    committed = _ok(
+        commit_activation(
+            journal=journal,
+            phase=ActivationPhase.REQUESTED,
+            acceptance=accepted,
+            correlation_id="corr-recon",
+        )
+    )
+    row = _as_map(journal.appended[0])
+    payload = row["payload"]
+    assert isinstance(payload, dict)
+    assert set(payload) == {"transition_fp1"}
+    assert "requested_state" not in payload
+    assert "enforced_state" not in payload
+    assert "operator_signature" not in payload
+    assert "principal" not in payload
+    fp = _ok(committed.transition.fingerprint())
+    rebuilt = _ok(reconstruct_activation(row, {fp.value: committed.transition}))
+    assert rebuilt.requested_state is GovernedSeatState.ACTIVE
+    assert rebuilt.enforced_state is GovernedSeatState.ADMITTED
+    assert rebuilt.principal == "sig-operator-activate"
+    assert rebuilt.phase is ActivationPhase.REQUESTED
+    assert rebuilt.transition_fp1 == fp
+
+
+def test_journal_sink_refusal_blocks_promotion_and_activation_state() -> None:
+    landing = _ok(_promote())
+    failing = _FailingJournal()
+    blocked_promo = _refusal(commit_promotion(landing, journal=failing, correlation_id="corr-fail"))
+    assert blocked_promo.category is RefusalCategory.STORAGE_FAILURE
+    assert isinstance(failing, JournalSink)
+
+    accepted = _request()
+    blocked_act = _refusal(
+        commit_activation(
+            journal=_FailingJournal(),
+            phase=ActivationPhase.REQUESTED,
+            acceptance=accepted,
+            correlation_id="corr-fail-act",
+        )
+    )
+    assert blocked_act.category is RefusalCategory.STORAGE_FAILURE
+    ready = _ok(
+        revalidate_before_first_intent(
+            acceptance=accepted,
+            now=_instant(_BOUNDARY_NS),
+            fresh=_fresh(),
+        )
+    )
+    blocked_success = _refusal(
+        commit_activation(
+            journal=_FailingJournal(),
+            phase=ActivationPhase.SUCCESSFUL,
+            readiness=ready,
+            correlation_id="corr-fail-ok",
+        )
+    )
+    assert blocked_success.category is RefusalCategory.STORAGE_FAILURE
+    not_a_sink = _refusal(persist_promotion(journal=object(), card_fp1=landing.card_fp1))
+    assert not_a_sink.category is RefusalCategory.INVALID_INPUT
+    assert not_a_sink.context["log_line_substitutes"] is False
+    assert not_a_sink.context["logs_are_not_journals"] is True
+
+
+def test_log_line_never_substitutes_for_missing_journal_record() -> None:
+    assert LOG_LINE_SUBSTITUTES_FOR_JOURNAL is False
+    assert LOGS_ARE_NOT_JOURNALS is True
+    assert LOGS_SATISFY_CT13_EVIDENCE is False
+    assert log_record_is_journal_evidence() is False
+    landing = _ok(_promote())
+    refused = _refusal(commit_promotion(landing, journal="a-log-line", correlation_id="c"))
+    assert refused.context["log_record_is_journal_evidence"] is False
+    assert refused.context["log_line_substitutes"] is False

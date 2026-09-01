@@ -1,9 +1,10 @@
-"""Promotion and next-day activation (TN-20; Story 26.9).
+"""Promotion and next-day activation (TN-20; Stories 26.9 and 26.10).
 
 Human-only promotion runs the silent battery and lands ADMITTED with no
 intent, ledger, or exposure. Activation is a separate act that becomes
 effective only at the next account-scoped day-boundary. Sandbox provenance
-is refused at hub publish and at the promotion pull.
+is refused at hub publish and at the promotion pull. Persistence uses the
+closed CT-13 ``promotion`` type and the CT-24 → ``risk transition`` mapping.
 """
 
 from __future__ import annotations
@@ -40,6 +41,29 @@ from qmn.promotion.hub import (
     pull_published_as_of,
     refuse_sandbox_provenance,
 )
+from qmn.promotion.journal import (
+    ACTIVATION_CT13_EVENT_TYPE,
+    ACTIVATION_PAYLOAD_KEYS,
+    ACTIVATION_TRIGGER,
+    CT13_SEVEN_EVENT_TYPES,
+    LOG_LINE_SUBSTITUTES_FOR_JOURNAL,
+    PROMOTION_EVENT_TYPE,
+    PROMOTION_PAYLOAD_KEYS,
+    ActivationBindingTransition,
+    ActivationJournalRow,
+    ActivationPhase,
+    ActivationReconstruction,
+    CommittedActivation,
+    PromotionJournalRow,
+    assert_closed_ct13_event_type,
+    commit_activation,
+    commit_promotion,
+    map_activation_ct13_event_type,
+    persist_activation,
+    persist_promotion,
+    promotion_journal_payload,
+    reconstruct_activation,
+)
 from qmn.promotion.lifecycle import (
     AGENT_SIGNER_PREFIXES,
     FORBIDDEN_ACTIVATION_OVERRIDES,
@@ -55,38 +79,59 @@ from qmn.promotion.lifecycle import (
 )
 
 __all__ = [
+    "ACTIVATION_CT13_EVENT_TYPE",
+    "ACTIVATION_PAYLOAD_KEYS",
+    "ACTIVATION_TRIGGER",
     "ADMISSION_IMPACTS",
     "ADMISSION_IMPACT_NONE",
     "ADMISSION_IMPACT_RELINT",
     "ADMISSION_IMPACT_RESIGN",
     "AGENT_SIGNER_PREFIXES",
+    "CT13_SEVEN_EVENT_TYPES",
     "DEMO_BASELINE_ENVIRONMENT",
     "FORBIDDEN_ACTIVATION_OVERRIDES",
     "HUB_CROSSINGS",
     "LIVE_BASELINE_ENVIRONMENT",
+    "LOG_LINE_SUBSTITUTES_FOR_JOURNAL",
+    "PROMOTION_EVENT_TYPE",
+    "PROMOTION_PAYLOAD_KEYS",
     "PROMOTION_SURFACE",
     "SAME_DAY_TRADE_PATH_EXISTS",
     "SANDBOX_PROVENANCE",
     "ActivationAcceptance",
+    "ActivationBindingTransition",
+    "ActivationJournalRow",
+    "ActivationPhase",
     "ActivationReadiness",
+    "ActivationReconstruction",
     "AdmissionLayerFreshState",
     "BatteryCheck",
     "BatteryCheckId",
+    "CommittedActivation",
     "ConfigGateFreshState",
     "Ct18CapabilityFreshState",
     "HubArtifact",
     "IdentityFingerprints",
     "LiveBaselineFreshState",
     "PromotionFreshState",
+    "PromotionJournalRow",
     "PromotionLanding",
     "ProtectionFreshState",
     "PublishedHub",
     "SilentBatteryReport",
     "admit_first_intent",
+    "assert_closed_ct13_event_type",
+    "commit_activation",
+    "commit_promotion",
     "live_gating_from_config",
+    "map_activation_ct13_event_type",
+    "persist_activation",
+    "persist_promotion",
     "promote_to_admitted",
+    "promotion_journal_payload",
     "publish_hub_fragment",
     "pull_published_as_of",
+    "reconstruct_activation",
     "refuse_invented_ksa_or_latency",
     "refuse_sandbox_provenance",
     "request_activation",
