@@ -28,6 +28,10 @@ from qmn.host.light_heavy import (
     resolve_composition_classes,
     workload_claim_identity_content,
 )
+from qmn.host.risk_population import (
+    RuntimeRiskGraph,
+    admit_runtime_risk_population,
+)
 
 __all__ = [
     "BOOT_BOUND_SURFACES",
@@ -641,6 +645,7 @@ def run_boot_ceremony(
     composition_inputs: object,
     writer_streams: object = (),
     workload_claims: object = (),
+    risk_population: object = None,
     preflight: object | None = None,
     boot_attempt_sink: object,
     door_binder: Callable[[], Result[BoundSupervisorDoors]] | None = None,
@@ -650,8 +655,9 @@ def run_boot_ceremony(
     """Run doors → boot-attempt → preflight → compose → fingerprint → seal.
 
     Compose evaluates light/heavy claims over assembled definitions before Seal
-    (Story 25.14 / AD-24). No operator CLI exists on this path (DEC-0211). Check
-    mode never opens a sequencer and never mutates runtime state.
+    (Story 25.14 / AD-24) and admits the assembled runtime risk graph together
+    (Story 26.11 / QMX-F067). No operator CLI exists on this path (DEC-0211).
+    Check mode never opens a sequencer and never mutates runtime state.
     """
     mode_name = clean_token(mode)
     if mode_name not in {"live", "check"}:
@@ -877,6 +883,34 @@ def run_boot_ceremony(
         composition_inputs, composition_classes.identity_content
     )
 
+    population = _admit_risk_population(risk_population)
+    if is_refusal(population):
+        failure_id = str(
+            population.context.get("failure_id", "compose.risk_population")
+        )
+        attempt = BootAttemptRecord(
+            boot_epoch_id=boot_token,
+            unit_role=role_token,
+            stage="compose",
+            writer=supervisor.value,
+            sequence=0,
+            reason=reason_token,
+            failure_id=failure_id,
+        )
+        sink.amend(attempt)
+        if boot_mode == "check":
+            return _check_mode_refusal(population)
+        return Ok(
+            _stand_down_outcome(
+                mode=boot_mode,
+                doors=doors.value,
+                boot_attempt=attempt,
+                stage="compose",
+                preflight_status=status_map,
+                failure_id=failure_id,
+            )
+        )
+
     attempt = BootAttemptRecord(
         boot_epoch_id=boot_token,
         unit_role=role_token,
@@ -978,6 +1012,7 @@ def run_check_mode(
     composition_inputs: object,
     writer_streams: object = (),
     workload_claims: object = (),
+    risk_population: object = None,
     preflight: object | None = None,
     boot_attempt_sink: object,
     door_binder: Callable[[], Result[BoundSupervisorDoors]] | None = None,
@@ -992,11 +1027,29 @@ def run_check_mode(
         composition_inputs=composition_inputs,
         writer_streams=writer_streams,
         workload_claims=workload_claims,
+        risk_population=risk_population,
         preflight=preflight,
         boot_attempt_sink=boot_attempt_sink,
         door_binder=door_binder,
         mutate_runtime_state=False,
     )
+
+
+def _admit_risk_population(risk_population: object) -> Result[None]:
+    """Evaluate the assembled risk graph at Compose; empty means no Books."""
+    if risk_population is None or risk_population == ():
+        return Ok(None)
+    if not isinstance(risk_population, RuntimeRiskGraph):
+        return invalid(
+            "risk_population",
+            "Compose Layer-1 admission reads a RuntimeRiskGraph",
+            given=type(risk_population).__name__,
+            failure_id="compose.risk_population",
+        )
+    admitted = admit_runtime_risk_population(risk_population)
+    if is_refusal(admitted):
+        return admitted
+    return Ok(None)
 
 
 def _classify_workload_claims(

@@ -344,3 +344,44 @@ designed failure; every typed refusal the node can emit belongs here.
   fresh state no longer passes. The bot is still admitted and not trading.
   Fix the named config, capability, baseline, or protection check, then
   revalidate before the first intent.
+
+### FR-24: Runtime risk population mismatch at Compose
+
+- **Failure class:** invalid input / unavailable dependency / policy rejection
+- **Detection:** Compose Layer-1 admission over the assembled risk graph
+  (`qmn.host.admit_runtime_risk_population`) finds a cardinality or
+  referential-integrity mismatch: total unique rank, declared scopes,
+  netting partitions, one-BMS-per-account/many-Books, one-Book-per-bot,
+  or one active paper target (`compose.risk_population.*`).
+- **Auto-recovery / retry:** none — repair the assembled roster/BMS/Book/
+  binding/seat/window/priority/capability records and reboot; the node
+  does not Seal an invalid population.
+- **Visible degraded state:** boot stands down alive at the compose stage;
+  sequencer stays closed; doors serve the refusal. A mismatch never
+  reaches Seal.
+- **Notification tier:** alarm / operator-visible (compose refusal).
+- **Product-user affordance:** The node refused to seal because the
+  assembled risk graph is internally inconsistent. Valid individual
+  records still fail together if cardinalities or references disagree.
+  Fix the named check (rank table, scopes, netting partition, BMS/Book/
+  bot cardinality, or paper target) and restart.
+
+### FR-25: Layer-2 shakedown on a live binding or incomplete machinery
+
+- **Failure class:** policy rejection
+- **Detection:** `qmn.host.run_demo_shakedown` is asked to run on
+  `role = live`, to treat shakedown evidence as performance proof, to
+  invent soak/KSA numbers, or to skip a required exercise (windows,
+  protection effects, paper ledger, kill line, reconciliation, SQS
+  baseline conditioning, callback containment, command-path dry run).
+- **Auto-recovery / retry:** none — shakedown runs only on a demo or
+  paper-validation binding without a live binding. Re-run after the
+  missing prerequisite or invented value is removed.
+- **Visible degraded state:** Layer-2 proof is not assembled; Layer-3
+  human signature cannot attest the page; promotion battery admission
+  layers remain unproven.
+- **Notification tier:** operator-visible (journaled admission refusal).
+- **Product-user affordance:** Technical shakedown proves the machinery
+  works and proves nothing about edge. It cannot run live, cannot mint
+  soak or KSA numbers, and its evidence is for your signature — not a
+  performance certificate.
