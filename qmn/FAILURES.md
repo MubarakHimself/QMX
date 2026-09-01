@@ -101,3 +101,68 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Notification tier:** operator-visible (powers refusal).
 - **Product-user affordance:** The UI or recipe used an outdated evidence
   snapshot. Refresh status/health from the evidence channel and retry.
+
+### FR-8: Chrony waitsync failed at preflight
+
+- **Failure class:** unavailable dependency
+- **Detection:** `chrony_waitsync` preflight check / `evaluate_sync_posture`
+  with `chrony_waitsync_passed=False` (`preflight.clock.chrony`).
+- **Auto-recovery / retry:** none while unsynchronized — wait for chrony sync;
+  check mode skips this gate.
+- **Visible degraded state:** node cannot trade; stand-down-alive after doors
+  bind; unsynchronized intervals recorded as explicit no-entry data-gaps.
+- **Notification tier:** silent-degradation (clock / sync).
+- **Product-user affordance:** The VPS clock is not synchronized. Fix chrony
+  sources, confirm `chronyc waitsync`, then resurrect after a clean preflight.
+
+### FR-9: Clock band warn
+
+- **Failure class:** policy rejection (per-cycle precondition)
+- **Detection:** machine-versus-truth abs offset ≥ `clock_drift_warn` and below
+  `clock_drift_no_new_entry` (`clock.band.warn`).
+- **Auto-recovery / retry:** clears automatically on a later cycle whose drift
+  returns below warn — never a standing CT-30 action.
+- **Visible degraded state:** evidence published; entries still allowed.
+- **Notification tier:** operator-visible (journaled band evidence).
+- **Product-user affordance:** Clock drift is elevated. Monitor chrony offset;
+  no trading block yet.
+
+### FR-10: Clock band no-new-entry
+
+- **Failure class:** policy rejection (per-cycle precondition)
+- **Detection:** machine-versus-truth abs offset ≥ `clock_drift_no_new_entry`
+  and below `clock_drift_halt` (`clock.band.no_new_entry`).
+- **Auto-recovery / retry:** clears on a later cycle below the band — entry-side
+  only (L39); exits and protection remain enactable.
+- **Visible degraded state:** `place_order` and risk-increasing amends refused
+  for the cycle; protection/exits preserved.
+- **Notification tier:** silent-degradation (does not switch off at go-live).
+- **Product-user affordance:** The node stopped accepting new entries because
+  clock drift crossed the no-new-entry band. Open positions stay protected;
+  restore chrony sync and wait for the next ok/warn cycle.
+
+### FR-11: Clock band halt
+
+- **Failure class:** policy rejection (lifecycle)
+- **Detection:** machine-versus-truth abs offset ≥ `clock_drift_halt`, or
+  unsynchronized posture (`clock.band.halt` / `clock.sync.unsynchronized`).
+- **Auto-recovery / retry:** none — only an operator `resurrect` leaves
+  stand-down-alive (`StandDownTrigger.CLOCK_HALT`).
+- **Visible degraded state:** stand-down-alive; entries refused; exits and
+  protection preserved; doors keep serving.
+- **Notification tier:** silent-degradation + stand-down alarm.
+- **Product-user affordance:** Clock discipline halted the node. Fix time sync,
+  then resurrect from the operator principal over the powers channel.
+
+### FR-12: Wall-versus-monotonic suspect window
+
+- **Failure class:** data quality / sync
+- **Detection:** `WallMonotonicDivergenceDetector` finds wall delta diverging
+  from monotonic elapsed beyond tolerance (`clock.divergence.suspect_window`).
+- **Auto-recovery / retry:** none while the window is open — a step is only
+  legal with the node stopped; the window is an explicit no-entry data-gap.
+- **Visible degraded state:** suspect window journaled; no-entry until cleared
+  by a stopped-node step and fresh sync.
+- **Notification tier:** silent-degradation.
+- **Product-user affordance:** The host clock stepped or paused. Stop the node
+  before any clock step, record the gap, resync, then restart.
