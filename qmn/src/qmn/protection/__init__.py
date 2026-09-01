@@ -1,4 +1,4 @@
-"""Protection surface (TN-7/TN-8): scoped KSA fold, effect-matrix, ranked dispatcher.
+"""Protection surface (TN-7/TN-8): KSA, effect-matrix, dispatcher, windows.
 
 Story 26.1 lands the monotone KSA severity fold, operator-only ``resume``, and
 ``registry:ksa_effect_matrix`` cell compilation. Matrix **values** stay
@@ -7,6 +7,8 @@ soak as declared. Story 26.2 fills the ranked control dispatcher: one
 evidence-first arbitration point per stream, BMS total unique AD-37 rank,
 collapse/compose without arrival order, dead-wire satisfaction predicates, and
 standing-intent persistence with reserved-extent / UNDELIVERABLE fallback.
+Story 26.3 enforces CT-31 news windows and both dead-zone kinds at the Book
+door (entries only, live and paper alike) and journals would-have-been vetoes.
 """
 
 from __future__ import annotations
@@ -78,9 +80,34 @@ from qmn.protection.ksa import (
     scope_covers_stream,
     stream_blocked_by_escalation,
 )
+from qmn.protection.windows import (
+    DEAD_ZONE_KINDS,
+    NEWS_CALENDAR_MAX_STALENESS_VARIABLE,
+    PROTECTION_WINDOW_VARIABLE_NAMES,
+    WINDOW_DOOR,
+    WINDOW_EFFECT,
+    BookDoorWindowGate,
+    DeadZoneKind,
+    NewsRevisionDisposition,
+    ResolvedWindowSettings,
+    WindowActDisposition,
+    allow_protective_act_under_windows,
+    apply_news_revision,
+    assert_calendars_distinct,
+    dead_zone_kinds,
+    enforce_entry_at_book_door,
+    journal_would_have_been,
+    refuse_invented_window_minutes,
+    refuse_live_skip_at_door,
+    refuse_symbol_currency_parse_at_door,
+    require_resolved_window_settings,
+    stale_news_calendar_blocks_entries,
+    windows_in_force,
+)
 
 __all__ = [
     "AUTO_DEESCALATION_EVENTS",
+    "DEAD_ZONE_KINDS",
     "DISPATCHER_SURFACE",
     "EFFECT_MATRIX_BLANK_EFFECTS",
     "KSA_EFFECT_KINDS",
@@ -88,18 +115,24 @@ __all__ = [
     "KSA_LEVELS",
     "KSA_TRIGGER_CLASSES",
     "LEVEL_RANK",
+    "NEWS_CALENDAR_MAX_STALENESS_VARIABLE",
     "OPERATOR_AUTHORITY",
     "PAPER_DISPOSITION_BY_TRIGGER",
     "PROTECTION_SURFACE",
+    "PROTECTION_WINDOW_VARIABLE_NAMES",
     "RANKED_CONTROL_KINDS",
     "UNDELIVERABLE_ALARM_CLASS",
     "VALUE_STATUSES",
     "VALUE_STATUS_BLANK",
     "VALUE_STATUS_PROVISIONAL",
     "VALUE_STATUS_RATIFIED",
+    "WINDOW_DOOR",
+    "WINDOW_EFFECT",
+    "BookDoorWindowGate",
     "CandidateOrigin",
     "CompiledEffectMatrix",
     "DeadWireSatisfaction",
+    "DeadZoneKind",
     "DispatchCandidate",
     "DispatchPlan",
     "IntentPersistDisposition",
@@ -109,22 +142,31 @@ __all__ = [
     "KsaLevel",
     "KsaTriggerClass",
     "LevelEpoch",
+    "NewsRevisionDisposition",
     "PaperDisposition",
     "PersistedProtectiveIntent",
     "ProtectionIntentExtent",
+    "ResolvedWindowSettings",
     "ResumeRecord",
     "StreamProtectionDispatcher",
     "UndeliverableProtectiveIntent",
+    "WindowActDisposition",
+    "allow_protective_act_under_windows",
+    "apply_news_revision",
+    "assert_calendars_distinct",
     "cell_blocks_role_live",
     "cell_blocks_soak",
     "check_dead_wire_satisfaction",
     "command_outcome_never_satisfies",
     "compile_effect_matrix",
     "compile_ksa_effect_cell",
+    "dead_zone_kinds",
     "dispatch_ranked_controls",
     "effective_ksa_level",
+    "enforce_entry_at_book_door",
     "exclude_venue_resident_tier1",
     "fold_ksa_level",
+    "journal_would_have_been",
     "ksa_levels",
     "ksa_trigger_classes",
     "matrix_blocks_role_live",
@@ -135,11 +177,17 @@ __all__ = [
     "paper_disposition_for",
     "persist_protective_intent",
     "redecide_protective_intent",
+    "refuse_invented_window_minutes",
+    "refuse_live_skip_at_door",
+    "refuse_symbol_currency_parse_at_door",
+    "require_resolved_window_settings",
     "require_total_unique_rank_table",
     "resume",
     "scope_covers_stream",
+    "stale_news_calendar_blocks_entries",
     "stream_blocked_by_escalation",
     "stream_dispatcher_key",
+    "windows_in_force",
 ]
 
 PROTECTION_SURFACE: Final[str] = "qmn.protection"
