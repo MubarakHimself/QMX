@@ -11,6 +11,7 @@ from typing import Final, Literal
 
 from qma.core.ontology.actor_id import ActorId
 from qma.core.ontology.desks import DeskSlug, OntologyError, RoleName
+from qma.core.vocabulary.enums import ExecutionModel, SessionAutonomy
 
 __all__ = [
     "PROFILE_FORBIDDEN_USES",
@@ -136,10 +137,16 @@ class Subagent:
 
 @dataclass(frozen=True, slots=True)
 class Session:
-    """Run container for Agents and Subagents — not an ontology-chain link."""
+    """Run container for Agents and Subagents — not an ontology-chain link.
+
+    Durable axes are execution-model and autonomy only (AD-14; DEC-0313).
+    Attachment is client state and is never a field on this record.
+    """
 
     id: str
     owner: ActorId
+    execution_model: ExecutionModel = ExecutionModel.DIALOGUE
+    autonomy: SessionAutonomy = SessionAutonomy.INTERACTIVE
 
 
 @dataclass(frozen=True, slots=True)

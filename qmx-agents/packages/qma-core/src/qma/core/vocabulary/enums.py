@@ -18,6 +18,7 @@ __all__ = [
     "DeliveryState",
     "EnvironmentLifecycle",
     "ExecutionEnvironmentKind",
+    "ExecutionModel",
     "GovernedAct",
     "GraphArtifactKind",
     "HandleKind",
@@ -34,6 +35,7 @@ __all__ = [
     "PrincipalClass",
     "RefinementEditKind",
     "RoutingPolicy",
+    "SessionAttachment",
     "SessionAutonomy",
     "TaskMissionState",
     "VariableEditability",
@@ -258,6 +260,29 @@ class PrincipalClass(StrEnum):
 
     OPERATOR = "operator"
     MACHINE = "machine"
+
+
+class ExecutionModel(StrEnum):
+    """Session execution-model axis (AD-14; DEC-0313).
+
+    Dialogue Runtime serves every desk. RLM Runtime v1 is Analysis-desk only.
+    There is no third execution model and no background-session type.
+    """
+
+    DIALOGUE = "dialogue"
+    RLM = "rlm"
+
+
+class SessionAttachment(StrEnum):
+    """Session attachment axis (AD-14; DEC-0313).
+
+    Client state only — never daemon state and never persisted. Closing a
+    client is therefore harmless; the durable Session record does not carry
+    this axis.
+    """
+
+    ATTACHED = "attached"
+    DETACHED = "detached"
 
 
 class SessionAutonomy(StrEnum):

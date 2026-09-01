@@ -1,6 +1,10 @@
-"""ExecutionEnvironment registry, Compute Router, and durable JobHandle.
+"""ExecutionEnvironment registry, Compute Router, JobHandle, and RLM runtime.
 
-AD-14, AD-17; FR-Q27, FR-Q47, FR-Q48, FR-Q49, FR-Q50, FR-Q51.
+AD-14, AD-17; FR-Q27, FR-Q47, FR-Q48, FR-Q49, FR-Q50, FR-Q51, FR-Q52.
+
+JobHandle, host_request, and Dialogue/RLM runtimes live in sibling modules
+(``jobs``, ``host_bridge``, ``runtime``) so this package init stays free of
+the dispatcher cycle.
 """
 
 from __future__ import annotations
