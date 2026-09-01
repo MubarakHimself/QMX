@@ -260,9 +260,7 @@ class OperatorApprovalQueueProjection:
     """Daemon-held operator approval queue — materializes on first operator ask."""
 
     materialized: bool = False
-    _entries: list[ApprovalRequestRecord] = field(
-        default_factory=list[ApprovalRequestRecord]
-    )
+    _entries: list[ApprovalRequestRecord] = field(default_factory=list[ApprovalRequestRecord])
 
     @property
     def entries(self) -> tuple[ApprovalRequestRecord, ...]:
@@ -308,9 +306,7 @@ class ControlOutcomeController:
     _operator_queue: OperatorApprovalQueueProjection = field(
         default_factory=OperatorApprovalQueueProjection
     )
-    _journal: list[ApprovalRequestRecord] = field(
-        default_factory=list[ApprovalRequestRecord]
-    )
+    _journal: list[ApprovalRequestRecord] = field(default_factory=list[ApprovalRequestRecord])
     _asks: dict[str, AskSuspension] = field(default_factory=dict[str, AskSuspension])
     _defers: dict[str, DeferParking] = field(default_factory=dict[str, DeferParking])
     _next_journal_seq: int = 1
@@ -640,4 +636,3 @@ class ControlOutcomeController:
         )
         self._journal.append(record)
         return record
-

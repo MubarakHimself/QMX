@@ -52,9 +52,7 @@ LEDGER_ENTRY_REQUIRED_FIELDS: Final[frozenset[str]] = frozenset(
 )
 
 # Closed daemon-authored kinds exempt from the lease-holder check (CT-51).
-DAEMON_AUTHORED_ENTRY_KINDS: Final[frozenset[str]] = frozenset(
-    {"reassigned", "unknown_tail"}
-)
+DAEMON_AUTHORED_ENTRY_KINDS: Final[frozenset[str]] = frozenset({"reassigned", "unknown_tail"})
 
 LedgerAppendDisposition = Literal["record", "quarantine"]
 
@@ -83,9 +81,7 @@ class LedgerQuarantineRecord:
 class LedgerQuarantineStream:
     """Durable companion of the ledger store — refuse writes land here (AD-8)."""
 
-    _records: list[LedgerQuarantineRecord] = field(
-        default_factory=list[LedgerQuarantineRecord]
-    )
+    _records: list[LedgerQuarantineRecord] = field(default_factory=list[LedgerQuarantineRecord])
 
     def write(
         self,
@@ -267,16 +263,8 @@ def evaluate_before_ledger_append(
     )
 
     if not well_formed or not lease_ok:
-        reason = (
-            "schema_invalid"
-            if not well_formed
-            else "outside_dispatch_lease"
-        )
-        denial_source = (
-            "schema"
-            if not well_formed
-            else "lease"
-        )
+        reason = "schema_invalid" if not well_formed else "outside_dispatch_lease"
+        denial_source = "schema" if not well_formed else "lease"
         # An explicit deny from a hook still quarantines rather than discarding.
         if attempted_result is not None and attempted_result.reason:
             reason = attempted_result.reason

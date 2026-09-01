@@ -17,12 +17,14 @@ from typing import Final, TypeVar, cast
 
 from qma.core.plugins.context import Disposer, HookHandler
 from qma.core.plugins.hooks import (
+    HookImplementationKind,
     HookPhase,
     HookResult,
     HookSource,
     assert_hook_result_phase_law,
     build_hook_event,
     build_hook_result,
+    parse_hook_implementation_kind,
 )
 from qma.core.vocabulary.enums import HookControl, HookResultDecision, HookVerb
 from qma.core.vocabulary.hooks import (
@@ -41,6 +43,14 @@ from qma.daemon.hooks.ledger_gate import (
     LedgerAppendGateResult,
     LedgerQuarantineStream,
     evaluate_before_ledger_append,
+)
+from qma.daemon.hooks.source_bounds import (
+    HookSourceBinding,
+    ScopeSegmentView,
+    assert_matcher_within_source,
+    matcher_matches,
+    parse_scope_segments,
+    select_handlers_for_event,
 )
 from qma.daemon.hooks.timeouts import (
     HookTimeoutResolution,
@@ -222,9 +232,24 @@ _V1_ENTRIES: Final[tuple[HookRegistryEntry, ...]] = _build_v1_entries()
 @dataclass(frozen=True, slots=True)
 class _HandlerRecord:
     source: HookSource
+    source_ref: str
     handler: HookHandler
     decisions: frozenset[HookResultDecision]
     fields: frozenset[str]
+    implementation: HookImplementationKind
+    matcher: str | None = None
+    allowed_scopes: tuple[tuple[ScopeSegmentView, ...], ...] = ()
+    # When True, registration omitted an explicit source_ref (legacy unit tests
+    # and unscoped plugin probes). Bound filtering is skipped for these records.
+    unbound: bool = False
+
+    def binding(self) -> HookSourceBinding:
+        return HookSourceBinding(
+            source=self.source,
+            source_ref=self.source_ref,
+            allowed_scopes=self.allowed_scopes,
+            matcher=self.matcher,
+        )
 
 
 @dataclass
@@ -242,12 +267,8 @@ class HookRegistry:
     )
     _entries: tuple[HookRegistryEntry, ...] = field(default=_V1_ENTRIES, init=False)
     _by_event: Mapping[str, HookRegistryEntry] = field(init=False)
-    _timeout_telemetry: HookTimeoutTelemetrySink = field(
-        default_factory=HookTimeoutTelemetrySink
-    )
-    _ledger_quarantine: LedgerQuarantineStream = field(
-        default_factory=LedgerQuarantineStream
-    )
+    _timeout_telemetry: HookTimeoutTelemetrySink = field(default_factory=HookTimeoutTelemetrySink)
+    _ledger_quarantine: LedgerQuarantineStream = field(default_factory=LedgerQuarantineStream)
 
     def __post_init__(self) -> None:
         by_event = {entry.event: entry for entry in self._entries}
@@ -398,10 +419,18 @@ class HookRegistry:
         handler: HookHandler,
         *,
         source: HookSource | str = HookSource.PLUGIN,
+        source_ref: str | None = None,
+        matcher: str | None = None,
+        implementation: HookImplementationKind | str = HookImplementationKind.CALLABLE,
+        allowed_scopes: Sequence[Sequence[Mapping[str, str] | ScopeSegmentView]] | None = None,
         decisions: Iterable[HookResultDecision | str] | None = None,
         fields: Iterable[str] | None = None,
     ) -> Result[Disposer]:
-        """Attach a handler; illegal decisions/fields are refused at registration."""
+        """Attach a handler; illegal decisions/fields/matchers refused at registration.
+
+        Source bound is applied before the matcher at dispatch. A matcher that
+        could resolve outside ``source_ref`` is refused here (FR-Q34).
+        """
         resolved = self.resolve_event(event)
         if not is_ok(resolved):
             return cast(Result[Disposer], resolved)
@@ -410,6 +439,43 @@ class HookRegistry:
             src = source if isinstance(source, HookSource) else parse_closed(HookSource, source)
         except VocabularyError as exc:
             return invalid_input("source", str(exc), given=repr(source))
+        try:
+            impl = parse_hook_implementation_kind(implementation)
+        except VocabularyError as exc:
+            return policy_rejection(
+                "implementation",
+                str(exc),
+                given=repr(implementation),
+            )
+        unbound = source_ref is None
+        ref = source_ref.strip() if isinstance(source_ref, str) else ""
+        if not unbound and ref == "":
+            return invalid_input(
+                "source_ref",
+                "source_ref must be a non-empty string when provided (FR-Q34)",
+                given=repr(source_ref),
+            )
+        if unbound:
+            ref = src.value
+        scopes: tuple[tuple[ScopeSegmentView, ...], ...] = ()
+        if allowed_scopes is not None:
+            parsed_scopes: list[tuple[ScopeSegmentView, ...]] = []
+            for raw_scope in allowed_scopes:
+                try:
+                    parsed_scopes.append(parse_scope_segments(raw_scope))
+                except VocabularyError as exc:
+                    return invalid_input("allowed_scopes", str(exc), given=repr(raw_scope))
+            scopes = tuple(parsed_scopes)
+        binding = HookSourceBinding(
+            source=src,
+            source_ref=ref,
+            allowed_scopes=scopes,
+            matcher=matcher,
+        )
+        matcher_ok = assert_matcher_within_source(binding, matcher)
+        if not is_ok(matcher_ok):
+            return cast(Result[Disposer], matcher_ok)
+        normalized_matcher = matcher_ok.value
         try:
             declared_decisions, declared_fields = validate_registration_phase_law(
                 name,
@@ -425,9 +491,14 @@ class HookRegistry:
         bucket = self._handlers.setdefault(name, [])
         record = _HandlerRecord(
             source=src,
+            source_ref=ref,
             handler=handler,
             decisions=declared_decisions,
             fields=declared_fields,
+            implementation=impl,
+            matcher=normalized_matcher,
+            allowed_scopes=scopes,
+            unbound=unbound,
         )
         bucket.append(record)
 
@@ -453,11 +524,18 @@ class HookRegistry:
         matcher: str | None = None,
         timed_out: bool = False,
         correlation_id: str | None = None,
+        scope_path: Sequence[Mapping[str, str] | ScopeSegmentView] | None = None,
+        role_id: str | None = None,
+        plugin_id: str | None = None,
+        match_value: str | None = None,
+        apply_source_bound: bool = True,
     ) -> Result[HookResult]:
         """Fire handlers for one registered event and resolve most-restrictive.
 
         When ``timed_out`` is true, the phase-specific fail rule resolves the
-        decision without running handlers (FR-Q32).
+        decision without running handlers (FR-Q32). Source bound is applied
+        before the matcher whenever ``apply_source_bound`` is true and the
+        handler carries an explicit ``source_ref`` (FR-Q34).
         """
         resolved = self.resolve_event(event)
         if not is_ok(resolved):
@@ -481,8 +559,50 @@ class HookRegistry:
         handlers = self._handlers.get(name, ())
         if not handlers:
             return Ok(default_empty_hook_result(name))
+        segments: tuple[ScopeSegmentView, ...] | None = None
+        if scope_path is not None:
+            try:
+                segments = parse_scope_segments(scope_path)
+            except VocabularyError as exc:
+                return invalid_input("scope_path", str(exc), given=repr(scope_path))
+        payload_map = dict(payload or {})
+        effective_role = role_id
+        if effective_role is None:
+            raw_role = payload_map.get("role_id")
+            if isinstance(raw_role, str):
+                effective_role = raw_role
+        effective_plugin = plugin_id
+        if effective_plugin is None:
+            raw_plugin = payload_map.get("plugin_id")
+            if isinstance(raw_plugin, str):
+                effective_plugin = raw_plugin
+        effective_match = match_value
+        if effective_match is None:
+            for key in ("tool_name", "match_value", "name"):
+                raw_match = payload_map.get(key)
+                if isinstance(raw_match, str):
+                    effective_match = raw_match
+                    break
+        if matcher is not None:
+            effective_match = matcher if effective_match is None else effective_match
+
+        def _eligible(record: _HandlerRecord) -> bool:
+            if not apply_source_bound or record.unbound:
+                return matcher_matches(record.matcher, effective_match)
+            selected = select_handlers_for_event(
+                (record,),
+                scope_path=segments,
+                role_id=effective_role,
+                plugin_id=effective_plugin,
+                match_value=effective_match,
+                get_binding=_HandlerRecord.binding,
+            )
+            return bool(selected)
+
         collected: list[HookResult] = []
         for record in handlers:
+            if not _eligible(record):
+                continue
             raw = record.handler(hook_event)
             try:
                 validated = assert_hook_result_phase_law(name, raw)
@@ -500,6 +620,8 @@ class HookRegistry:
                     given=validated.decision.value,
                 )
             collected.append(validated)
+        if not collected:
+            return Ok(default_empty_hook_result(name))
         return Ok(resolve_parallel_hook_results(collected))
 
     def resolve_timeout(

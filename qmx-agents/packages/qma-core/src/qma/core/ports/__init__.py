@@ -27,7 +27,12 @@ from qma.core.ports.context import ContextCompiler
 from qma.core.ports.execution import ExecutionEnvironment
 from qma.core.ports.knowledge import KnowledgeSource
 from qma.core.ports.memory import MemoryProvider
-from qma.core.ports.model import ModelDeployment
+from qma.core.ports.model import (
+    DeploymentRecord,
+    ModelDeployment,
+    ReviewPolicy,
+    select_reviewer,
+)
 from qma.core.ports.tools import ToolAdapter
 
 RUNTIME_PORT_TYPES: tuple[type, ...] = (
@@ -50,16 +55,19 @@ __all__ = [
     "Cardinality",
     "ComputeProvider",
     "ContextCompiler",
+    "DeploymentRecord",
     "ExecutionEnvironment",
     "KnowledgeSource",
     "MemoryProvider",
     "ModelDeployment",
     "PortContract",
     "PortError",
+    "ReviewPolicy",
     "ToolAdapter",
     "has_qma_wire_schema",
     "qualified_contribution_id",
     "require_singleton_scope_key",
+    "select_reviewer",
     "validate_contribution_point",
     "validate_multi_contribution_key",
 ]

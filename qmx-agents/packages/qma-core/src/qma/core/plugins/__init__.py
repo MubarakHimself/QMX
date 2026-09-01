@@ -21,13 +21,16 @@ from qma.core.plugins.credential import (
     parse_credential_ref,
 )
 from qma.core.plugins.hooks import (
+    FORBIDDEN_HOOK_IMPLEMENTATION_KINDS,
     HookEvent,
+    HookImplementationKind,
     HookPhase,
     HookResult,
     HookSource,
     assert_hook_result_phase_law,
     build_hook_event,
     build_hook_result,
+    parse_hook_implementation_kind,
 )
 from qma.core.plugins.manifest import (
     DESK_PREFIX_TOKENS,
@@ -46,6 +49,7 @@ from qma.core.vocabulary.handles import (
 
 __all__ = [
     "DESK_PREFIX_TOKENS",
+    "FORBIDDEN_HOOK_IMPLEMENTATION_KINDS",
     "MONEY_PATH_LIVE_WRITABLE_HANDLE_KINDS",
     "READ_ONLY_EVIDENCE_HANDLE_KINDS",
     "BoundaryError",
@@ -56,6 +60,7 @@ __all__ = [
     "HandleKind",
     "HookEvent",
     "HookHandler",
+    "HookImplementationKind",
     "HookPhase",
     "HookResult",
     "HookSource",
@@ -70,6 +75,7 @@ __all__ = [
     "build_hook_event",
     "build_hook_result",
     "parse_credential_ref",
+    "parse_hook_implementation_kind",
     "parse_plugin_manifest",
     "scan_daemon_imports",
     "scan_forbidden_runtime_calls",

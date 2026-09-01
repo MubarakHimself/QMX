@@ -87,9 +87,7 @@ class HookTimeoutTelemetry:
 class HookTimeoutTelemetrySink:
     """In-process telemetry sink for hook timeout records (AD-23 companion)."""
 
-    _records: list[HookTimeoutTelemetry] = field(
-        default_factory=list[HookTimeoutTelemetry]
-    )
+    _records: list[HookTimeoutTelemetry] = field(default_factory=list[HookTimeoutTelemetry])
 
     def emit(self, record: HookTimeoutTelemetry) -> HookTimeoutTelemetry:
         self._records.append(record)

@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, Final
 
 from qma.core.vocabulary.enums import HookResultDecision
 from qma.core.vocabulary.hooks import (
@@ -19,14 +19,31 @@ from qma.core.vocabulary.hooks import (
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
 
 __all__ = [
+    "FORBIDDEN_HOOK_IMPLEMENTATION_KINDS",
     "HookEvent",
+    "HookImplementationKind",
     "HookPhase",
     "HookResult",
     "HookSource",
     "assert_hook_result_phase_law",
     "build_hook_event",
     "build_hook_result",
+    "parse_hook_implementation_kind",
 ]
+
+
+# Prompt-type and agent-type handlers are refused — hooks are deterministic
+# Python callables or subprocesses only (FR-Q34; P-2; AD-10).
+FORBIDDEN_HOOK_IMPLEMENTATION_KINDS: Final[frozenset[str]] = frozenset(
+    {
+        "prompt",
+        "agent",
+        "prompt_type",
+        "agent_type",
+        "prompt-type",
+        "agent-type",
+    }
+)
 
 
 class HookPhase(StrEnum):
@@ -44,6 +61,45 @@ class HookSource(StrEnum):
     ROLE = "role"
     MISSION = "mission"
     PLUGIN = "plugin"
+
+
+class HookImplementationKind(StrEnum):
+    """Closed deterministic hook forms (FR-Q34; CT-41; AD-10).
+
+    Only ``callable`` and ``subprocess`` are legal. Prompt-type and agent-type
+    handlers are refused at registration.
+    """
+
+    CALLABLE = "callable"
+    SUBPROCESS = "subprocess"
+
+
+def parse_hook_implementation_kind(value: object) -> HookImplementationKind:
+    """Accept only callable or subprocess; refuse prompt/agent handlers."""
+    if isinstance(value, HookImplementationKind):
+        return value
+    if not isinstance(value, str):
+        raise VocabularyError(
+            f"{value!r} is not a HookImplementationKind; "
+            "hooks must be deterministic callable or subprocess (FR-Q34; AD-10)"
+        )
+    normalized = value.strip().lower().replace("-", "_")
+    if normalized in FORBIDDEN_HOOK_IMPLEMENTATION_KINDS or value.strip().lower() in (
+        "prompt-type",
+        "agent-type",
+    ):
+        raise VocabularyError(
+            f"hook implementation {value!r} is forbidden; no prompt-type or "
+            "agent-type handlers (FR-Q34; P-2; AD-10)"
+        )
+    try:
+        return parse_closed(HookImplementationKind, normalized)
+    except VocabularyError as exc:
+        raise VocabularyError(
+            f"{value!r} is not a deterministic hook form; legal kinds are "
+            f"{{{', '.join(sorted(k.value for k in HookImplementationKind))}}} "
+            "(FR-Q34; AD-10)"
+        ) from exc
 
 
 @dataclass(frozen=True, slots=True)

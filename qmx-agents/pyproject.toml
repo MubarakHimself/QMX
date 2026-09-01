@@ -81,6 +81,9 @@ extraPaths = [
     "packages/qma-wire/src",
     "packages/qma-daemon/src",
     "../packages/qmf-core/src",
+    "../packages/qmf-data/src",
+    "../packages/qmf-registry/src",
+    "../packages/qmf-risk/src",
 ]
 typeCheckingMode = "strict"
 pythonVersion = "3.14"
