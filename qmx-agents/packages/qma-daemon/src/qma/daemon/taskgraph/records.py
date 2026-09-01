@@ -189,6 +189,28 @@ class MissionRecord:
             raise ValueError(msg)
         return owner_quant.desk
 
+    def with_state(self, state: TaskMissionState) -> MissionRecord:
+        return MissionRecord(
+            id=self.id,
+            owner=self.owner,
+            goal=self.goal,
+            intent=self.intent,
+            scope=self.scope,
+            constraints=self.constraints,
+            evidence_requirements=self.evidence_requirements,
+            capabilities=self.capabilities,
+            success_criteria=self.success_criteria,
+            outputs=self.outputs,
+            verification=self.verification,
+            budget=dict(self.budget),
+            escalation=self.escalation,
+            termination_criteria=self.termination_criteria,
+            approval_route=self.approval_route,
+            state=state,
+            graph_template_ref=self.graph_template_ref,
+            task_graph_id=self.task_graph_id,
+        )
+
     def to_payload(self) -> Mapping[str, object]:
         return MappingProxyType(
             {

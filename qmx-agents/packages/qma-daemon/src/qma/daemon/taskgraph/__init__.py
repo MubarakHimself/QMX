@@ -1,4 +1,4 @@
-"""Mission Compiler, Task Graph state, and dispatcher (AD-12, AD-13; FR-Q27)."""
+"""Mission Compiler, Task Graph state, and dispatcher (AD-12, AD-13; FR-Q27, FR-Q28)."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from qma.daemon.taskgraph.dispatcher import (
     DispatchDecision,
     TaskGraphDispatcher,
     TaskGraphStore,
+    TaskTransitionResult,
     validate_proposed_transition,
 )
 from qma.daemon.taskgraph.records import (
@@ -28,6 +29,14 @@ from qma.daemon.taskgraph.records import (
     TaskRecord,
     derive_mission_desk,
 )
+from qma.daemon.taskgraph.state import (
+    JobHandleEvidence,
+    compute_mission_state,
+    task_state_from_job_handle,
+    validate_never_dispatched_cancel,
+    validate_terminal_evidence,
+    validate_unique_terminal,
+)
 
 __all__ = [
     "MISSION_DIRECTOR_ROLE",
@@ -38,6 +47,7 @@ __all__ = [
     "DispatchLease",
     "GraphTemplate",
     "GraphTemplateCatalog",
+    "JobHandleEvidence",
     "MissionCompiler",
     "MissionRecord",
     "ProposedTransition",
@@ -47,7 +57,13 @@ __all__ = [
     "TaskGraphStore",
     "TaskLedger",
     "TaskRecord",
+    "TaskTransitionResult",
+    "compute_mission_state",
     "derive_mission_desk",
+    "task_state_from_job_handle",
     "validate_approval_route",
+    "validate_never_dispatched_cancel",
     "validate_proposed_transition",
+    "validate_terminal_evidence",
+    "validate_unique_terminal",
 ]

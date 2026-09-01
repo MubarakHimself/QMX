@@ -2,11 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
+from types import MappingProxyType
 from typing import Final
 
 __all__ = [
+    "JOB_HANDLE_NONTERMINAL_STATES",
+    "JOB_HANDLE_TERMINAL_STATES",
+    "JOB_HANDLE_TO_TASK_STATE",
     "TASK_EMITTING_NODE_KINDS",
+    "TASK_MISSION_NONTERMINAL_STATES",
+    "TASK_MISSION_TERMINAL_STATES",
     "DeliveryState",
     "ExecutionEnvironmentKind",
     "GovernedAct",
@@ -27,6 +34,9 @@ __all__ = [
     "TaskMissionState",
     "VariableEditability",
     "VariableScope",
+    "is_job_handle_terminal",
+    "is_task_mission_terminal",
+    "map_job_handle_to_task_state",
 ]
 
 
@@ -128,6 +138,71 @@ class TaskMissionState(StrEnum):
     DONE = "done"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
+
+JOB_HANDLE_TERMINAL_STATES: Final[frozenset[JobHandleState]] = frozenset(
+    {
+        JobHandleState.DONE,
+        JobHandleState.FAILED,
+        JobHandleState.CANCELLED,
+        JobHandleState.ABORTED,
+    }
+)
+JOB_HANDLE_NONTERMINAL_STATES: Final[frozenset[JobHandleState]] = frozenset(
+    {
+        JobHandleState.QUEUED,
+        JobHandleState.RUNNING,
+        JobHandleState.UNKNOWN,
+    }
+)
+TASK_MISSION_TERMINAL_STATES: Final[frozenset[TaskMissionState]] = frozenset(
+    {
+        TaskMissionState.DONE,
+        TaskMissionState.FAILED,
+        TaskMissionState.CANCELLED,
+    }
+)
+TASK_MISSION_NONTERMINAL_STATES: Final[frozenset[TaskMissionState]] = frozenset(
+    {
+        TaskMissionState.PENDING,
+        TaskMissionState.READY,
+        TaskMissionState.RUNNING,
+        TaskMissionState.BLOCKED,
+        TaskMissionState.UNKNOWN,
+    }
+)
+
+# Fixed, total JobHandle → Task mapping applied by the daemon alone (DEC-0316).
+JOB_HANDLE_TO_TASK_STATE: Final[Mapping[JobHandleState, TaskMissionState]] = MappingProxyType(
+    {
+        JobHandleState.QUEUED: TaskMissionState.RUNNING,
+        JobHandleState.RUNNING: TaskMissionState.RUNNING,
+        JobHandleState.DONE: TaskMissionState.DONE,
+        JobHandleState.FAILED: TaskMissionState.FAILED,
+        JobHandleState.ABORTED: TaskMissionState.FAILED,
+        JobHandleState.CANCELLED: TaskMissionState.CANCELLED,
+        JobHandleState.UNKNOWN: TaskMissionState.UNKNOWN,
+    }
+)
+
+
+def is_job_handle_terminal(state: JobHandleState) -> bool:
+    """True when ``state`` is a JobHandle terminal outcome (DEC-0316)."""
+    return state in JOB_HANDLE_TERMINAL_STATES
+
+
+def is_task_mission_terminal(state: TaskMissionState) -> bool:
+    """True when ``state`` is a Task/Mission terminal outcome (DEC-0311)."""
+    return state in TASK_MISSION_TERMINAL_STATES
+
+
+def map_job_handle_to_task_state(state: JobHandleState) -> TaskMissionState:
+    """Map a JobHandle state onto the closed Task state vocabulary (DEC-0316).
+
+    ``aborted`` maps to Task ``failed`` (reason recorded by the daemon caller);
+    ``aborted`` never becomes Task ``cancelled``.
+    """
+    return JOB_HANDLE_TO_TASK_STATE[state]
 
 
 class MessageKind(StrEnum):

@@ -1,7 +1,8 @@
-"""Deterministic Task Graph scheduler and dispatcher (AD-12; FR-Q27).
+"""Deterministic Task Graph scheduler and dispatcher (AD-12; FR-Q27, FR-Q28).
 
 Decides where, when, who, and dependencies; grants ``dispatch_lease``; evaluates
 ``environment_lease`` through the core ExecutionEnvironment port registry.
+Applies closed Task/Mission state with JobHandle-evidenced terminal outcomes.
 Parallel workers synchronize through the Task Graph, never chat.
 """
 
@@ -13,14 +14,27 @@ from types import MappingProxyType
 
 from qma.core.ontology import ActorId
 from qma.core.refusals import NoEnvironment
-from qma.core.vocabulary.enums import ExecutionEnvironmentKind, TaskMissionState
+from qma.core.vocabulary.enums import (
+    TASK_MISSION_TERMINAL_STATES,
+    ExecutionEnvironmentKind,
+    JobHandleState,
+    TaskMissionState,
+    is_task_mission_terminal,
+)
 from qma.daemon.envs.registry import EnvironmentLease, ExecutionEnvironmentRegistry
 from qma.daemon.taskgraph.records import (
     MISSION_DIRECTOR_ROLE,
     DispatchLease,
+    MissionRecord,
     ProposedTransition,
     TaskGraph,
     TaskRecord,
+)
+from qma.daemon.taskgraph.state import (
+    JobHandleEvidence,
+    compute_mission_state,
+    validate_never_dispatched_cancel,
+    validate_terminal_evidence,
 )
 from qmf.core import Ok, Result, is_ok, is_refusal
 from qmf.data.store.refusals import invalid_input, policy_rejection
@@ -29,6 +43,7 @@ __all__ = [
     "DispatchDecision",
     "TaskGraphDispatcher",
     "TaskGraphStore",
+    "TaskTransitionResult",
     "validate_proposed_transition",
 ]
 
@@ -64,21 +79,61 @@ class DispatchDecision:
         return MappingProxyType(payload)
 
 
+@dataclass(frozen=True, slots=True)
+class TaskTransitionResult:
+    """Daemon-authored Task transition plus derived Mission state."""
+
+    task: TaskRecord
+    mission: MissionRecord | None
+    task_graph: TaskGraph
+    job_handle: JobHandleEvidence | None
+    dispatch_lease_retained: bool
+    environment_lease_retained: bool
+
+    def to_payload(self) -> Mapping[str, object]:
+        payload: dict[str, object] = {
+            "task": dict(self.task.to_payload()),
+            "task_graph_id": self.task_graph.id,
+            "dispatch_lease_retained": self.dispatch_lease_retained,
+            "environment_lease_retained": self.environment_lease_retained,
+        }
+        if self.mission is not None:
+            payload["mission"] = dict(self.mission.to_payload())
+        if self.job_handle is not None:
+            payload["job_handle"] = dict(self.job_handle.to_payload())
+        return MappingProxyType(payload)
+
+
 @dataclass
 class TaskGraphStore:
     """In-memory Task Graph projection keyed by mission / graph id (AD-12)."""
 
     _by_graph_id: dict[str, TaskGraph] = field(default_factory=dict[str, TaskGraph])
     _by_mission_id: dict[str, str] = field(default_factory=dict[str, str])
+    _missions: dict[str, MissionRecord] = field(default_factory=dict[str, MissionRecord])
     _dispatch_leases: dict[str, DispatchLease] = field(
         default_factory=dict[str, DispatchLease]
     )
+    _environment_leases: dict[str, EnvironmentLease] = field(
+        default_factory=dict[str, EnvironmentLease]
+    )
+    _job_handles: dict[str, JobHandleEvidence] = field(
+        default_factory=dict[str, JobHandleEvidence]
+    )
+    _dispatched: set[str] = field(default_factory=set[str])
 
     def materialize(self, graph: TaskGraph) -> TaskGraph:
         """Persist the compiled Task Graph projection for its Mission."""
         self._by_graph_id[graph.id] = graph
         self._by_mission_id[graph.mission_id] = graph.id
         return graph
+
+    def put_mission(self, mission: MissionRecord) -> MissionRecord:
+        self._missions[mission.id] = mission
+        return mission
+
+    def mission(self, mission_id: str) -> MissionRecord | None:
+        return self._missions.get(mission_id)
 
     def get(self, graph_id: str) -> TaskGraph | None:
         return self._by_graph_id.get(graph_id)
@@ -96,8 +151,28 @@ class TaskGraphStore:
     def lease_for(self, task_id: str) -> DispatchLease | None:
         return self._dispatch_leases.get(task_id)
 
+    def environment_lease_for(self, task_id: str) -> EnvironmentLease | None:
+        return self._environment_leases.get(task_id)
+
+    def job_handle_for(self, task_id: str) -> JobHandleEvidence | None:
+        return self._job_handles.get(task_id)
+
+    def was_dispatched(self, task_id: str) -> bool:
+        return task_id in self._dispatched
+
     def record_lease(self, lease: DispatchLease) -> None:
         self._dispatch_leases[lease.task_id] = lease
+        self._dispatched.add(lease.task_id)
+
+    def record_environment_lease(self, lease: EnvironmentLease) -> None:
+        self._environment_leases[lease.task_id] = lease
+
+    def record_job_handle(self, evidence: JobHandleEvidence) -> None:
+        self._job_handles[evidence.task_id] = evidence
+
+    def release_leases(self, task_id: str) -> None:
+        self._dispatch_leases.pop(task_id, None)
+        self._environment_leases.pop(task_id, None)
 
     def find_task(self, task_id: str) -> tuple[TaskGraph, TaskRecord] | None:
         for graph in self._by_graph_id.values():
@@ -114,9 +189,9 @@ def validate_proposed_transition(
 ) -> Result[ProposedTransition]:
     """Daemon-side gate: Mission Director / agents propose; daemon validates.
 
-    Terminal-outcome authorship remains refused here at the proposal layer for
-    Story 43.1; Story 43.2 binds JobHandle evidence. Non-terminal proposals that
-    match the current state are accepted for recording.
+    An LLM may propose non-terminal progress but can never author a terminal
+    outcome — terminal transitions require JobHandle evidence via the daemon's
+    evidence-bound path (FR-Q28; L35).
     """
     if proposal.from_state is not current_state:
         return policy_rejection(
@@ -125,16 +200,12 @@ def validate_proposed_transition(
             from_state=proposal.from_state.value,
             current_state=current_state.value,
         )
-    terminal = {
-        TaskMissionState.DONE,
-        TaskMissionState.FAILED,
-        TaskMissionState.CANCELLED,
-    }
-    if proposal.to_state in terminal:
+    if proposal.to_state in TASK_MISSION_TERMINAL_STATES:
         return policy_rejection(
             "proposed_transition",
             "an LLM or Mission Director may propose but never author a terminal "
-            "outcome; the daemon alone applies terminal transitions (FR-Q27; L35)",
+            "outcome; terminal transitions require JobHandle evidence applied by "
+            "the daemon (FR-Q28; L35)",
             to_state=proposal.to_state.value,
             proposed_by=proposal.proposed_by_agent_id,
         )
@@ -145,6 +216,14 @@ def validate_proposed_transition(
             "to_state",
             "Task/Mission state must be one of the eight closed values",
             given=repr(proposal.to_state),
+        )
+    if is_task_mission_terminal(current_state):
+        return policy_rejection(
+            "proposed_transition",
+            "each Task reaches at most one terminal state; no further transitions "
+            "are accepted after a terminal outcome (FR-Q28; AD-12)",
+            current_state=current_state.value,
+            to_state=proposal.to_state.value,
         )
     return Ok(proposal)
 
@@ -177,7 +256,14 @@ class TaskGraphDispatcher:
     def environments(self) -> ExecutionEnvironmentRegistry:
         return self._environments
 
-    def materialize(self, graph: TaskGraph) -> TaskGraph:
+    def materialize(
+        self,
+        graph: TaskGraph,
+        *,
+        mission: MissionRecord | None = None,
+    ) -> TaskGraph:
+        if mission is not None:
+            self._store.put_mission(mission)
         return self._store.materialize(graph)
 
     def dispatch_next(
@@ -258,10 +344,13 @@ class TaskGraphDispatcher:
             owner=task.owner,
         )
         self._store.record_lease(lease)
+        if env_lease is not None:
+            self._store.record_environment_lease(env_lease)
 
         running = task.with_state(TaskMissionState.RUNNING)
         updated_graph = graph.replace_task(running)
         self._store.put(updated_graph)
+        self._refresh_mission(task.mission_id, updated_graph)
 
         return Ok(
             DispatchDecision(
@@ -284,6 +373,13 @@ class TaskGraphDispatcher:
         if located is None:
             return invalid_input("task_id", "unknown Task id", given=task_id)
         _graph, task = located
+        if is_task_mission_terminal(task.state):
+            return policy_rejection(
+                "dispatcher",
+                "terminal Tasks cannot be reassigned (FR-Q28)",
+                task_id=task_id,
+                state=task.state.value,
+            )
         # Transcript independence: ledger travels with the Task record.
         if task.ledger is None:
             return invalid_input(
@@ -317,8 +413,207 @@ class TaskGraphDispatcher:
         if not is_ok(validated):
             return validated
         updated = task.with_state(proposal.to_state)
-        self._store.put(graph.replace_task(updated))
+        updated_graph = graph.replace_task(updated)
+        self._store.put(updated_graph)
+        self._refresh_mission(task.mission_id, updated_graph)
         return Ok(updated)
+
+    def cancel_never_dispatched(
+        self,
+        *,
+        task_id: str,
+    ) -> Result[TaskTransitionResult]:
+        """Daemon-written cancel for a Task that never received a JobHandle."""
+        located = self._store.find_task(task_id)
+        if located is None:
+            return invalid_input("task_id", "unknown Task id", given=task_id)
+        graph, task = located
+        if self._store.was_dispatched(task_id):
+            return policy_rejection(
+                "task_state",
+                "Task was dispatched; cancel requires terminal JobHandle evidence "
+                "(FR-Q28; AD-12)",
+                task_id=task_id,
+            )
+        if self._store.job_handle_for(task_id) is not None:
+            return policy_rejection(
+                "job_handle",
+                "never-dispatched cancel must not create or use a JobHandle",
+                task_id=task_id,
+            )
+        validated = validate_never_dispatched_cancel(
+            current_state=task.state,
+            to_state=TaskMissionState.CANCELLED,
+            was_dispatched=False,
+        )
+        if not is_ok(validated):
+            return validated
+        updated = task.with_state(TaskMissionState.CANCELLED)
+        updated_graph = graph.replace_task(updated)
+        self._store.put(updated_graph)
+        mission = self._refresh_mission(task.mission_id, updated_graph)
+        return Ok(
+            TaskTransitionResult(
+                task=updated,
+                mission=mission,
+                task_graph=updated_graph,
+                job_handle=None,
+                dispatch_lease_retained=False,
+                environment_lease_retained=False,
+            )
+        )
+
+    def apply_job_handle_evidence(
+        self,
+        evidence: JobHandleEvidence,
+        *,
+        proposed_to_state: TaskMissionState | None = None,
+    ) -> Result[TaskTransitionResult]:
+        """Apply JobHandle evidence to Task state; daemon alone authors outcomes.
+
+        ``unknown`` retains both leases and blocks completion until
+        :meth:`resolve_unknown_job_handle`. Terminal evidence releases leases.
+        """
+        located = self._store.find_task(evidence.task_id)
+        if located is None:
+            return invalid_input("task_id", "unknown Task id", given=evidence.task_id)
+        graph, task = located
+        validated = validate_terminal_evidence(
+            current_state=task.state,
+            evidence=evidence,
+            was_dispatched=self._store.was_dispatched(evidence.task_id),
+            proposed_to_state=proposed_to_state,
+        )
+        if not is_ok(validated):
+            return validated
+
+        new_state = validated.value
+        self._store.record_job_handle(evidence)
+        updated = task.with_state(new_state)
+        # Record abort reason on the Task Ledger when aborted → failed.
+        if (
+            evidence.state is JobHandleState.ABORTED
+            and evidence.abort_reason
+            and updated.ledger is not None
+        ):
+            updated = TaskRecord(
+                id=updated.id,
+                mission_id=updated.mission_id,
+                owner=updated.owner,
+                intent=updated.intent,
+                inputs=dict(updated.inputs),
+                refs=updated.refs,
+                acceptance_criteria=updated.acceptance_criteria,
+                state=updated.state,
+                node_id=updated.node_id,
+                node_kind=updated.node_kind,
+                agent_role=updated.agent_role,
+                worker_template_ref=updated.worker_template_ref,
+                iteration=updated.iteration,
+                retry_index=updated.retry_index,
+                attempt_of=updated.attempt_of,
+                ledger=updated.ledger.append(
+                    {
+                        "kind": "job_aborted",
+                        "abort_reason": evidence.abort_reason,
+                        "job_id": evidence.job_id,
+                    }
+                ),
+            )
+
+        retain = evidence.state is JobHandleState.UNKNOWN
+        if retain:
+            # unknown holds both leases until explicit recorded resolution.
+            if self._store.lease_for(task.id) is None:
+                return policy_rejection(
+                    "dispatch_lease",
+                    "JobHandle unknown requires an existing dispatch_lease to retain "
+                    "(FR-Q28; AD-12)",
+                    task_id=task.id,
+                )
+            dispatch_retained = True
+            env_retained = self._store.environment_lease_for(task.id) is not None
+        elif is_task_mission_terminal(new_state):
+            self._store.release_leases(task.id)
+            dispatch_retained = False
+            env_retained = False
+        else:
+            dispatch_retained = self._store.lease_for(task.id) is not None
+            env_retained = self._store.environment_lease_for(task.id) is not None
+
+        updated_graph = graph.replace_task(updated)
+        self._store.put(updated_graph)
+        mission = self._refresh_mission(task.mission_id, updated_graph)
+        return Ok(
+            TaskTransitionResult(
+                task=updated,
+                mission=mission,
+                task_graph=updated_graph,
+                job_handle=evidence,
+                dispatch_lease_retained=dispatch_retained,
+                environment_lease_retained=env_retained,
+            )
+        )
+
+    def resolve_unknown_job_handle(
+        self,
+        evidence: JobHandleEvidence,
+    ) -> Result[TaskTransitionResult]:
+        """Explicit recorded resolution of an ``unknown`` JobHandle (FR-Q28).
+
+        Accepts only terminal JobHandle evidence; releases both retained leases.
+        """
+        located = self._store.find_task(evidence.task_id)
+        if located is None:
+            return invalid_input("task_id", "unknown Task id", given=evidence.task_id)
+        _graph, task = located
+        if task.state is not TaskMissionState.UNKNOWN:
+            return policy_rejection(
+                "task_state",
+                "resolve_unknown_job_handle requires Task state unknown",
+                task_id=task.id,
+                state=task.state.value,
+            )
+        current = self._store.job_handle_for(task.id)
+        if current is None or current.state is not JobHandleState.UNKNOWN:
+            return policy_rejection(
+                "job_handle",
+                "resolve_unknown_job_handle requires recorded JobHandle unknown",
+                task_id=task.id,
+            )
+        if not evidence.is_terminal:
+            return policy_rejection(
+                "job_handle",
+                "explicit resolution of unknown requires terminal JobHandle evidence",
+                job_state=evidence.state.value,
+            )
+        # Temporarily treat as non-terminal current for unique-terminal check:
+        # unknown is non-terminal, so validate_terminal_evidence is correct.
+        return self.apply_job_handle_evidence(evidence)
+
+    def mission_state_for(self, mission_id: str) -> Result[TaskMissionState]:
+        """Compute Mission state from its Tasks (never from a JobHandle)."""
+        graph = self._store.for_mission(mission_id)
+        if graph is None:
+            return invalid_input(
+                "mission_id",
+                "no Task Graph projection materialized for mission",
+                given=mission_id,
+            )
+        return Ok(compute_mission_state(tuple(t.state for t in graph.tasks)))
+
+    def _refresh_mission(
+        self,
+        mission_id: str,
+        graph: TaskGraph,
+    ) -> MissionRecord | None:
+        mission = self._store.mission(mission_id)
+        derived = compute_mission_state(tuple(t.state for t in graph.tasks))
+        if mission is None:
+            return None
+        updated = mission.with_state(derived)
+        self._store.put_mission(updated)
+        return updated
 
     @staticmethod
     def mission_director_agent_id(owner: ActorId, mission_id: str) -> str:

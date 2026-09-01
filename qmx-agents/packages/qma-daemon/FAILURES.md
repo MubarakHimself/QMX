@@ -9,7 +9,8 @@ announcement law (FR-3 through FR-5); Story 42.3 delivers durable-clock and
 fold-contract enforcement (FR-6 through FR-9); Story 42.4 delivers store-class
 ownership and the governed variable registry (FR-10 through FR-13); Story 42.5
 delivers versioned-store migration, backup, and controlled restoration (FR-14
-through FR-17).
+through FR-17). Epic 43 Story 43.2 adds closed Task/Mission state with
+evidence-bound terminal outcomes (FR-18 through FR-21).
 
 ### FR-1: A second daemon or writer is refused at the persistence boundary
 
@@ -248,3 +249,61 @@ through FR-17).
 - **Notification tier:** operator-visible (unauthorized restore attempt).
 - **Product-user affordance:** only an operator restores the live store, and
   the act is journaled. Background automation cannot do it.
+
+### FR-18: LLM/Mission Director terminal proposal without JobHandle evidence is refused
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `validate_proposed_transition` / `apply_proposed_transition`
+  refuse any proposed `done`/`failed`/`cancelled` transition; terminal
+  authorship is only via `apply_job_handle_evidence` with a terminal
+  `JobHandleEvidence` (FR-Q28; AD-12; L35; FM-20).
+- **Auto-recovery / retry:** none — supply daemon JobHandle evidence, never an
+  LLM-authored terminal.
+- **Visible degraded state:** Task remains non-terminal; Mission state is
+  recomputed from Tasks and stays non-terminal.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** agents can propose progress but cannot close a
+  Task. Completion waits on JobHandle evidence the daemon alone applies.
+
+### FR-19: Dispatched Task terminal transition without terminal JobHandle is refused
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `cancel_never_dispatched` refuses when the Task was
+  dispatched; `apply_job_handle_evidence` requires dispatched status and
+  accepts terminal outcomes only from terminal JobHandle states (FR-Q28).
+- **Auto-recovery / retry:** none — wait for or record terminal JobHandle
+  evidence (or resolve `unknown` explicitly).
+- **Visible degraded state:** Task stays `running`/`blocked`/`unknown`; leases
+  retained when handle is `unknown`.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** a started Task closes only when its job
+  evidences a terminal outcome. Cancel-without-handle is only for work that
+  never started.
+
+### FR-20: JobHandle `unknown` blocks completion and holds both leases
+
+- **Failure class:** designed degraded state (not a refusal on entry).
+- **Detection:** `apply_job_handle_evidence` for `JobHandleState.UNKNOWN` maps
+  the Task to `unknown`, retains `dispatch_lease` and `environment_lease`, and
+  refuses further terminal outcomes until `resolve_unknown_job_handle` records
+  terminal evidence (FR-Q28; AD-12; FM-6).
+- **Auto-recovery / retry:** none — no component invents a terminal outcome;
+  only an explicit recorded resolution clears the block.
+- **Visible degraded state:** Task `unknown`; Mission containing it is
+  `unknown` (never `failed`); both leases held; completion blocked.
+- **Notification tier:** operator-visible (unresolved job / FM-6).
+- **Product-user affordance:** the job outcome is not known. Do not treat it as
+  failed; resolve the handle explicitly when evidence arrives.
+
+### FR-21: Second terminal transition on the same Task is refused
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `validate_unique_terminal` refuses any further terminal (or
+  post-terminal) transition once a Task is `done`/`failed`/`cancelled`
+  (FR-Q28; AD-12).
+- **Auto-recovery / retry:** none — a Task has exactly one terminal state.
+- **Visible degraded state:** Task remains at its first terminal state;
+  Mission aggregation unchanged by the refused attempt.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** that Task already finished. Start a new Task
+  rather than rewriting the closed outcome.

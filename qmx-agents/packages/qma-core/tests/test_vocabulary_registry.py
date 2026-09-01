@@ -13,9 +13,14 @@ from qma.core.vocabulary import (
     HOOK_VERBS,
     HOST_REQUEST_OWNING_AD,
     HOST_REQUEST_VOCABULARY_OWNER,
+    JOB_HANDLE_NONTERMINAL_STATES,
+    JOB_HANDLE_TERMINAL_STATES,
+    JOB_HANDLE_TO_TASK_STATE,
     MONEY_PATH_LIVE_WRITABLE_HANDLE_KINDS,
     READ_ONLY_EVIDENCE_HANDLE_KINDS,
     TASK_EMITTING_NODE_KINDS,
+    TASK_MISSION_NONTERMINAL_STATES,
+    TASK_MISSION_TERMINAL_STATES,
     DeliveryState,
     ExecutionEnvironmentKind,
     GovernedAct,
@@ -40,6 +45,9 @@ from qma.core.vocabulary import (
     assert_handle_kind_not_money_path,
     assert_no_principal_conversion,
     hook_result_rank,
+    is_job_handle_terminal,
+    is_task_mission_terminal,
+    map_job_handle_to_task_state,
     may_convert_principal,
     most_restrictive_hook_result,
     parse_closed,
@@ -162,6 +170,62 @@ def test_handle_and_work_states() -> None:
         "failed",
         "cancelled",
     }
+    assert frozenset(
+        {
+            JobHandleState.DONE,
+            JobHandleState.FAILED,
+            JobHandleState.CANCELLED,
+            JobHandleState.ABORTED,
+        }
+    ) == JOB_HANDLE_TERMINAL_STATES
+    assert frozenset(
+        {
+            JobHandleState.QUEUED,
+            JobHandleState.RUNNING,
+            JobHandleState.UNKNOWN,
+        }
+    ) == JOB_HANDLE_NONTERMINAL_STATES
+    assert frozenset(
+        {
+            TaskMissionState.DONE,
+            TaskMissionState.FAILED,
+            TaskMissionState.CANCELLED,
+        }
+    ) == TASK_MISSION_TERMINAL_STATES
+    assert frozenset(
+        {
+            TaskMissionState.PENDING,
+            TaskMissionState.READY,
+            TaskMissionState.RUNNING,
+            TaskMissionState.BLOCKED,
+            TaskMissionState.UNKNOWN,
+        }
+    ) == TASK_MISSION_NONTERMINAL_STATES
+    assert JOB_HANDLE_TERMINAL_STATES.isdisjoint(JOB_HANDLE_NONTERMINAL_STATES)
+    assert TASK_MISSION_TERMINAL_STATES.isdisjoint(TASK_MISSION_NONTERMINAL_STATES)
+    assert frozenset(JobHandleState) == (
+        JOB_HANDLE_TERMINAL_STATES | JOB_HANDLE_NONTERMINAL_STATES
+    )
+    assert frozenset(TaskMissionState) == (
+        TASK_MISSION_TERMINAL_STATES | TASK_MISSION_NONTERMINAL_STATES
+    )
+    assert map_job_handle_to_task_state(JobHandleState.QUEUED) is TaskMissionState.RUNNING
+    assert map_job_handle_to_task_state(JobHandleState.RUNNING) is TaskMissionState.RUNNING
+    assert map_job_handle_to_task_state(JobHandleState.DONE) is TaskMissionState.DONE
+    assert map_job_handle_to_task_state(JobHandleState.FAILED) is TaskMissionState.FAILED
+    assert map_job_handle_to_task_state(JobHandleState.ABORTED) is TaskMissionState.FAILED
+    assert map_job_handle_to_task_state(JobHandleState.CANCELLED) is TaskMissionState.CANCELLED
+    assert map_job_handle_to_task_state(JobHandleState.UNKNOWN) is TaskMissionState.UNKNOWN
+    assert len(JOB_HANDLE_TO_TASK_STATE) == len(JobHandleState)
+    for job_state in JobHandleState:
+        mapped = map_job_handle_to_task_state(job_state)
+        assert is_job_handle_terminal(job_state) is (job_state in JOB_HANDLE_TERMINAL_STATES)
+        assert is_task_mission_terminal(mapped) is (
+            mapped in TASK_MISSION_TERMINAL_STATES
+        )
+        # aborted never becomes cancelled (DEC-0316).
+        if job_state is JobHandleState.ABORTED:
+            assert mapped is not TaskMissionState.CANCELLED
 
 
 def test_message_model_routing_principal() -> None:
