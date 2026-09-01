@@ -1,0 +1,16 @@
+# qmn-news-calendar.timer — cadence from registry:news_calendar_refresh_cadence
+# (rendered evidence default: every 2 h). OnCalendar is a bootstrap schedule;
+# the recorder also respects the free-feed download budget at config compile.
+
+[Unit]
+Description=QMX news-calendar refresh timer
+Documentation=file:///opt/qmx/current/docs/components/calendar-feed.md
+
+[Timer]
+OnCalendar=*-*-* 00/2:05:00
+Persistent=true
+Unit=qmn-news-calendar.service
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,32 @@
+# qmn-restore-sample.service — nightly sample restore drill (DEC-0198 / DEC-0252).
+# Shares the backup run's payload key. Integrity check only; never mutates the
+# only live copy.
+
+[Unit]
+Description=QMX nightly sample restore drill (qmn)
+Documentation=file:///opt/qmx/current/docs/lenses/ops/runbook.md
+After=qmn-backup.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=qmx
+Group=qmx
+WorkingDirectory=/opt/qmx/current
+ExecStart=/opt/qmx/current/.venv/bin/python -m qmn.data.restore_sample
+Nice=10
+
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true
+ReadWritePaths=/var/lib/qmx
+LogsDirectory=qmn
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+LoadCredentialEncrypted=backup-payload-key
+LoadCredentialEncrypted=object-storage
+
+Environment=TZ=UTC
+Environment=QMX_ROOT=/opt/qmx/current
+Environment=QMX_STATE=/var/lib/qmx

@@ -17,6 +17,10 @@ set windows-shell := ["cmd.exe", "/c"]
 config := env_var_or_default("SSSF_CONFIG", "adws/adw_sssf_config/sssf.config.yaml")
 db     := "adws/adw_data/sssf.db"
 
+# QMN operations toolkit (DevOps only; never a trading control). COMP-QMN /
+# TN-16 / AR-79 / DEC-0202. Closed allow-list lives in qmn/deploy/boundary.py.
+import "./qmn/deploy/justfile-recipes/node.just"
+
 # list every recipe
 default:
     @just --list

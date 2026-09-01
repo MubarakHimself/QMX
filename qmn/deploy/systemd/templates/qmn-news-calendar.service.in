@@ -1,0 +1,30 @@
+# qmn-news-calendar.service — news-calendar recorder oneshot (TN-13 / DEC-0198).
+# Paired with qmn-news-calendar.timer. Forex Factory free weekly file is the
+# sole V1 source (DEC-0214). No venue credentials on this unit.
+
+[Unit]
+Description=QMX news-calendar recorder (qmn)
+Documentation=file:///opt/qmx/current/docs/components/calendar-feed.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=qmx
+Group=qmx
+WorkingDirectory=/opt/qmx/current
+ExecStart=/opt/qmx/current/.venv/bin/python -m qmn.data.news_calendar_recorder
+Nice=10
+
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true
+ReadWritePaths=/var/lib/qmx
+LogsDirectory=qmn
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+# No LoadCredentialEncrypted: free feed needs no secret material.
+Environment=TZ=UTC
+Environment=QMX_ROOT=/opt/qmx/current
+Environment=QMX_STATE=/var/lib/qmx

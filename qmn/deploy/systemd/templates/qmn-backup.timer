@@ -1,0 +1,14 @@
+# qmn-backup.timer — nightly backup push by the VPS (DEC-0198).
+
+[Unit]
+Description=QMX nightly backup timer
+Documentation=file:///opt/qmx/current/docs/lenses/ops/runbook.md
+
+[Timer]
+OnCalendar=*-*-* 02:15:00
+Persistent=true
+Unit=qmn-backup.service
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

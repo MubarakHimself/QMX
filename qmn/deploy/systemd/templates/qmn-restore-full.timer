@@ -1,0 +1,14 @@
+# qmn-restore-full.timer — monthly full restore into scratch (DEC-0252).
+
+[Unit]
+Description=QMX monthly full restore timer
+Documentation=file:///opt/qmx/current/docs/lenses/ops/runbook.md
+
+[Timer]
+OnCalendar=*-*-01 03:30:00
+Persistent=true
+Unit=qmn-restore-full.service
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

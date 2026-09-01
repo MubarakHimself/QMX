@@ -1,0 +1,7 @@
+{
+  "drain_window": "30s",
+  "watchdog_interval": "15s",
+  "node_crash_loop_max_boots": 3,
+  "node_crash_loop_window": "60s",
+  "notes": "Evidence defaults for check-mode unit rendering only; not ratified constants (L38 / DEC-0256)."
+}

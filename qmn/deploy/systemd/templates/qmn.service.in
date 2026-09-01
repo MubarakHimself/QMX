@@ -1,0 +1,61 @@
+# qmn.service — long-lived trading-node process (TN-16 / DEC-0201).
+# TimeoutStopSec and WatchdogSec are RENDERED by node-install from the
+# resolved config artifact (registry:drain_window / registry:watchdog_interval).
+# Never hand-author those two keys.
+
+[Unit]
+Description=QMX trading node (qmn)
+Documentation=file:///opt/qmx/current/docs/lenses/ops/runbook.md
+After=network-online.target chrony.service
+Wants=network-online.target chrony.service
+# Observability is zero-authority and optional; the node must not wait on it.
+# (DEC-0200 / DEC-0212)
+
+[Service]
+Type=notify
+User=qmx
+Group=qmx
+# Fixed account — DynamicUser is forbidden (DEC-0227).
+WorkingDirectory=/opt/qmx/current
+ExecStart=/opt/qmx/current/.venv/bin/python -m qmn.host.supervise
+Restart=on-failure
+RestartSec=5s
+RestartForceExitStatus=75
+SuccessExitStatus=75
+# StartLimitBurst > crash-loop K; StartLimitIntervalSec >= T (evidence K=3, T=60s).
+StartLimitBurst=4
+StartLimitIntervalSec=60
+TimeoutStopSec=@DRAIN_WINDOW_SEC@
+WatchdogSec=@WATCHDOG_INTERVAL_SEC@
+NotifyAccess=main
+
+# Hardening (DEC-0201 / DEC-0227 / NFR-14)
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true
+ReadWritePaths=/var/lib/qmx
+RuntimeDirectory=qmn
+RuntimeDirectoryMode=0750
+LogsDirectory=qmn
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+# Powers socket at /run/qmn/powers.sock owned qmx:qmxops mode 0660 (DEC-0202).
+UMask=0007
+
+# Credentials: host-key sealed via systemd-creds encrypt --with-key=host
+# (never --with-key=auto). Each unit receives ONLY its own material (DEC-0197).
+LoadCredentialEncrypted=kek
+LoadCredentialEncrypted=venue-client-id
+LoadCredentialEncrypted=venue-client-secret
+LoadCredentialEncrypted=venue-access-token
+LoadCredentialEncrypted=venue-refresh-token
+LoadCredentialEncrypted=venue-ctid-accounts
+LoadCredentialEncrypted=notification-token
+
+Environment=TZ=UTC
+Environment=QMX_ROOT=/opt/qmx/current
+Environment=QMX_STATE=/var/lib/qmx
+Environment=QMN_POWERS_SOCKET=/run/qmn/powers.sock
+
+[Install]
+WantedBy=multi-user.target

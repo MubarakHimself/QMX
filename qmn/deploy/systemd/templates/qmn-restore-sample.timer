@@ -1,0 +1,14 @@
+# qmn-restore-sample.timer — nightly, right after backup (DEC-0252).
+
+[Unit]
+Description=QMX nightly sample restore timer
+Documentation=file:///opt/qmx/current/docs/lenses/ops/runbook.md
+
+[Timer]
+OnCalendar=*-*-* 02:45:00
+Persistent=true
+Unit=qmn-restore-sample.service
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

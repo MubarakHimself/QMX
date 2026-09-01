@@ -1,0 +1,39 @@
+# qmx-observability.service — separate zero-authority stack (TN-15 / DEC-0200).
+# NOT a node unit (AR-78). Distinct non-qmx account, own storage, own
+# credentials. Containers permitted here only (DEC-0212). Story 25.17 fills
+# the compose file under qmn/deploy/observability/.
+
+[Unit]
+Description=QMX zero-authority observability stack
+Documentation=file:///opt/qmx/current/qmn/deploy/observability/README.txt
+After=network-online.target docker.service
+Wants=network-online.target
+# Node must run and pass with this unit absent (DEC-0212).
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+User=qmxobs
+Group=qmxobs
+WorkingDirectory=/var/lib/qmx-observability
+ExecStart=/usr/bin/docker compose -f /opt/qmx/current/qmn/deploy/observability/compose.yml up -d
+ExecStop=/usr/bin/docker compose -f /opt/qmx/current/qmn/deploy/observability/compose.yml down
+Restart=on-failure
+RestartSec=15s
+
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true
+ReadWritePaths=/var/lib/qmx-observability
+# Loopback-only listeners; no public inbound authority path (NFR-14 / FR-067).
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+# Declared fourth secret holder — holds NOTHING the node holds (DEC-0227).
+LoadCredentialEncrypted=grafana-admin
+LoadCredentialEncrypted=log-shipper-token
+
+Environment=TZ=UTC
+
+[Install]
+WantedBy=multi-user.target
