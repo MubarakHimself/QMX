@@ -24,6 +24,8 @@ from qmn.config.compiler import (
     compile_layers,
     compile_node_config,
     is_secret_ref_key,
+    refuse_unknown_compile_layer,
+    validate_registry_row_schema,
 )
 from qmn.config.countersign import countersign_value_status
 from qmn.config.gating import (
@@ -75,5 +77,7 @@ __all__ = [
     "is_secret_ref_key",
     "live_role_blocked_by",
     "provisional_live_gates_like_blank",
+    "refuse_unknown_compile_layer",
     "rows_by_name",
+    "validate_registry_row_schema",
 ]

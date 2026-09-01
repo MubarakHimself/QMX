@@ -85,6 +85,7 @@ from qmf.core import (
 __all__ = [
     "ASYNC_CONFORMANCE_EXEMPTION",
     "CTRADER_OPEN_API_PORT",
+    "SEQUENCE_CURSOR_RECORD_CLASS",
     "AccountBinding",
     "BlockCause",
     "CommandPipeStatus",
@@ -104,6 +105,10 @@ ASYNC_CONFORMANCE_EXEMPTION: Final[str] = "qmf.venue.connection"
 
 # cTrader Open API TLS port — demo and live share the port, not the host (DEC-0196).
 CTRADER_OPEN_API_PORT: Final[int] = 5035
+
+# Durable per-writer sequence cursor persisted through the observation sink.
+# Resets only on a new boot epoch; never on reconnect (CT-19; QMX-F064).
+SEQUENCE_CURSOR_RECORD_CLASS: Final[str] = "writer-sequence-cursor"
 
 # Length-prefixed ProtoMessage framing: 4-byte big-endian length + payload.
 _FRAME_HEADER: Final[str] = ">I"
@@ -610,14 +615,95 @@ class ConnectionManager:
 
         Stamps the venue ``WriterId`` and the strictly-increasing per-writer sequence onto
         a caller-supplied :class:`~qmf.core.Instant` (read through the injected clock at the
-        composition root, never an ambient clock here). Ordering carries no causal meaning
-        (CT-02; DEC-0106).
+        composition root, never an ambient clock here). The advanced cursor is persisted
+        through the observation sink before the key is handed out — durable within the boot
+        epoch, reset only by constructing a manager on a new boot epoch (CT-19; QMX-F064).
+        Ordering carries no causal meaning (CT-02; DEC-0106).
         """
         if not isinstance(instant, Instant):
             return _invalid(
                 "instant", "an ordering key is stamped on an Instant", given=repr(instant)
             )
+        # Persist the post-mint cursor first so a sink failure never advances memory
+        # without a durable mark (CT-19; QMX-F064).
+        pending_next = self._sequencer.next_sequence + 1
+        persisted = self._persist_sequence_cursor(next_sequence=pending_next)
+        if is_refusal(persisted):
+            return persisted
         return Ok(self._sequencer.mint(instant))
+
+    def _persist_sequence_cursor(
+        self, *, next_sequence: int | None = None
+    ) -> Result[Mapping[str, object]]:
+        """Write the durable sequence cursor through the observation sink."""
+        cursor = (
+            self._sequencer.next_sequence if next_sequence is None else next_sequence
+        )
+        record: dict[str, object] = {
+            "class": SEQUENCE_CURSOR_RECORD_CLASS,
+            "writer_stream": self._writer_id.stream,
+            "boot_epoch_id": self._writer_id.boot_epoch_id,
+            "next_sequence": cursor,
+        }
+        written = self._observation_sink.emit(record)
+        if is_refusal(written) or is_unpersistable(written):
+            return TypedRefusal(
+                category=RefusalCategory.STORAGE_FAILURE,
+                retryability=Retryability.AFTER_CONDITION,
+                context={
+                    "field": "sequence_cursor",
+                    "reason": "the per-writer sequence cursor must persist through the "
+                    "observation sink before the key is released",
+                    "boot_epoch_id": self._writer_id.boot_epoch_id,
+                    "next_sequence": self._sequencer.next_sequence,
+                },
+                after_condition_descriptor="observation sink recovers",
+            )
+        return Ok(record)
+
+    def recover_sequence_cursor(self, prior_next_sequence: object) -> Result[int]:
+        """Recover a durable cursor for this boot epoch before minting resumes.
+
+        Reconnect and mid-boot recovery advance from the persisted cursor — they never
+        reset the count. A new boot epoch constructs a fresh manager (sequence starts at
+        zero) instead of calling this with a foreign epoch's cursor (CT-19; QMX-F064).
+        """
+        if (
+            not isinstance(prior_next_sequence, int)
+            or isinstance(prior_next_sequence, bool)
+            or prior_next_sequence < 0
+        ):
+            return _invalid(
+                "prior_next_sequence",
+                "the durable sequence cursor is a non-negative int recovered from the "
+                "observation sink",
+                given=repr(prior_next_sequence),
+            )
+        current = self._sequencer.next_sequence
+        if prior_next_sequence < current:
+            return _invalid(
+                "prior_next_sequence",
+                "recovering a cursor behind the live sequencer would rewind the "
+                "per-writer sequence; refuse rather than reset",
+                prior=prior_next_sequence,
+                current=current,
+            )
+        # Rebuild the sequencer at the recovered high-water; same writer, same boot.
+        self._sequencer = WriterSequencer(self._writer_id, start=prior_next_sequence)
+        return Ok(self._sequencer.next_sequence)
+
+    def note_reconnect(self) -> Result[int]:
+        """Record a reconnect: the per-writer sequence continues, never resets.
+
+        Session recovery never resubmits a command and never restarts the gapless
+        sequence for this boot epoch (CT-19; AR-46; QMX-F064).
+        """
+        return Ok(self._sequencer.next_sequence)
+
+    @property
+    def next_sequence(self) -> int:
+        """The sequence value the next :meth:`next_command_key` will mint."""
+        return self._sequencer.next_sequence
 
     # -- secret lifecycle ----------------------------------------------------
 

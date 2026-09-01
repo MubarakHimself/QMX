@@ -201,6 +201,7 @@ from qmf.venue.commands import (
 from qmf.venue.connection import (
     ASYNC_CONFORMANCE_EXEMPTION,
     CTRADER_OPEN_API_PORT,
+    SEQUENCE_CURSOR_RECORD_CLASS,
     AccountBinding,
     BlockCause,
     CommandPipeStatus,
@@ -308,6 +309,7 @@ __all__ = [
     "ACCESS_TOKEN_LIFETIME_CLASS",
     "ASYNC_CONFORMANCE_EXEMPTION",
     "CTRADER_OPEN_API_PORT",
+    "SEQUENCE_CURSOR_RECORD_CLASS",
     "FIRST_CONNECTION_CHECKS",
     "FOUR_OUTCOME_LAW",
     "HEARTBEAT_BOUND_SECONDS",

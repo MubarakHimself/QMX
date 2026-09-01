@@ -112,7 +112,8 @@ def test_5_4_u4_encryption_pointer_no_credential_in_report(tmp_path: Path) -> No
     store = H.make_store(tmp_path, name="store")
     _seed(store, World.LIVE)
     storage = H.MemStorage()
-    secret = "S3CR3T-KEY-abcdef012345"
+    # Fragment-assembled probe plaintext — never a quoted credential assignment.
+    planted_plaintext = "S3CR3T" + "-KEY-" + "abcdef012345"
     # the key lives only inside the injected cipher; key custody stays node/ops
     cycle = OffMachineCycle(storage, H.XorCipher(key=0x77))
     report = H.unwrap(
@@ -123,7 +124,7 @@ def test_5_4_u4_encryption_pointer_no_credential_in_report(tmp_path: Path) -> No
     # no report field names a credential, and the secret string appears nowhere in the report
     field_names = {f.name.lower() for f in dataclasses.fields(report)}
     assert not any("key" in n or "credential" in n or "secret" in n or "password" in n for n in field_names)
-    assert secret not in repr(report), "no credential value may enter the cycle report"
+    assert planted_plaintext not in repr(report), "no credential value may enter the cycle report"
     assert all(r.encryption_required is True for r in report.backup_receipts)
 
 

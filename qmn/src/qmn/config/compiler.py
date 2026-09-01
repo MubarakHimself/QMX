@@ -51,6 +51,8 @@ __all__ = [
     "compile_node_config",
     "is_secret_ref_key",
     "layers_identity",
+    "refuse_unknown_compile_layer",
+    "validate_registry_row_schema",
 ]
 
 COMPILE_LAYERS: Final[tuple[str, ...]] = (
@@ -117,6 +119,89 @@ def layers_identity() -> dict[str, object]:
         "has_invocation_override_layer": HAS_INVOCATION_OVERRIDE_LAYER,
         "layer_precedence": COMPILE_LAYERS,
     }
+
+
+def refuse_unknown_compile_layer(name: object) -> Result[str]:
+    """Refuse any layer name outside the fixed four-layer precedence (FR-071)."""
+    token = clean_token(name)
+    if token is None:
+        return invalid("layer", "a compile layer is a non-blank token", given=repr(name))
+    if token not in COMPILE_LAYERS:
+        return invalid(
+            "layer",
+            "unknown compile layer; only roster → bms → book → node_defaults are admitted "
+            "and no invocation layer exists",
+            given=token,
+            allowed=list(COMPILE_LAYERS),
+        )
+    if token in {"invocation", "runtime", "cli", "flags"}:
+        return invalid(
+            "layer",
+            "invocation/runtime override layers are refused (DEC-0203)",
+            given=token,
+        )
+    return Ok(token)
+
+
+def validate_registry_row_schema(row: object) -> Result[RegistryRowSchema]:
+    """Refuse a catalog row missing unit/owner/status-bearing schema fields (FR-071)."""
+    if not isinstance(row, Mapping):
+        return invalid(
+            "registry_row",
+            "a registry schema row is a mapping",
+            given=type(row).__name__,
+        )
+    body = cast("Mapping[str, object]", row)
+    name = clean_token(body.get("name"))
+    if name is None:
+        return invalid("name", "registry row name is a non-blank token")
+    owner = clean_token(body.get("owner_scope"))
+    if owner is None:
+        return invalid(
+            name,
+            "registry-schema gate refuses a row missing owner_scope",
+        )
+    if "units" not in body:
+        return invalid(
+            name,
+            "registry-schema gate refuses a row missing unit_kind/units",
+        )
+    if body.get("configurable") is not True:
+        return invalid(
+            name,
+            "value_status_required rows are configurable; hard-coded node values are refused",
+        )
+    blank_effect = body.get("blank_effect")
+    if not isinstance(blank_effect, (tuple, list)):
+        return invalid(
+            name,
+            "registry-schema gate refuses a row missing blank_effect status tags",
+        )
+    component = clean_token(body.get("component"))
+    if component is None:
+        return invalid(name, "registry row component is a non-blank token")
+    type_token = clean_token(body.get("type"))
+    if type_token is None:
+        return invalid(name, "registry row type is a non-blank token")
+    units_raw = body.get("units")
+    units: str | None
+    if units_raw is None:
+        units = None
+    else:
+        units = clean_token(units_raw)
+        if units is None:
+            return invalid(name, "units is None or a non-blank token")
+    effects = cast("Sequence[object]", blank_effect)
+    schema: RegistryRowSchema = {
+        "name": name,
+        "component": component,
+        "owner_scope": owner,
+        "units": units,
+        "type": type_token,
+        "blank_effect": tuple(str(item) for item in effects),
+        "configurable": True,
+    }
+    return Ok(schema)
 
 
 def is_secret_ref_key(name: str) -> bool:

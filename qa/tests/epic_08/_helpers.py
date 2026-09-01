@@ -310,6 +310,7 @@ def build_declaration(
     adapter_version: str = "1.0.0",
     injective_total: bool = False,
     command_scopes: list[str] | None = None,
+    order_parameter_subset: object | None = None,
 ) -> CapabilityDeclaration:
     measured_set = DEFAULT_MEASURED if measured is None else measured
     fields: list[CapabilityField] = []
@@ -322,6 +323,11 @@ def build_declaration(
                 value = {"injective_total": injective_total}
             if name is CapabilityFieldName.COMMAND_SCOPES and command_scopes is not None:
                 value = command_scopes
+            if (
+                name is CapabilityFieldName.ORDER_PARAMETER_SUBSET
+                and order_parameter_subset is not None
+            ):
+                value = order_parameter_subset
             fields.append(ok(CapabilityField.static(name, value)))
     decl = CapabilityDeclaration.try_create(
         adapter_version,

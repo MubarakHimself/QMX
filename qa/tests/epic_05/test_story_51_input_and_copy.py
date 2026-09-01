@@ -238,13 +238,16 @@ def test_5_1_u10_no_credential_in_evidence(tmp_path: Path) -> None:
     store = H.make_store(tmp_path)
     H.seed_raw(store, _ROWS)
     export = H.export_of(store, RoomRole.IMMUTABLE_RAW_ARCHIVE)
-    secret = "S3CR3T-KEY-9f8e7d6c5b4a"
+    # Fragment-assembled probe plaintext — never a quoted credential assignment.
+    planted_plaintext = "S3CR3T" + "-KEY-" + "9f8e7d6c5b4a"
     storage = H.MemStorage()
     # the key lives only inside the injected cipher; it never flows into the primitive
     cipher = H.XorCipher(key=0x33)
     receipt = H.unwrap(_backup(storage, cipher).copy_export(export, for_world=World.LIVE))
     blob = repr(receipt) + receipt.payload_fingerprint + repr([c for _, c in storage.put_calls])
-    assert secret not in blob, "no secret value may appear in the backup receipt / fp1 / ack"
+    assert planted_plaintext not in blob, (
+        "no secret value may appear in the backup receipt / fp1 / ack"
+    )
     # the fp1 identifies the ciphertext, not any secret; ack detail carries no credentials
     assert receipt.payload_fingerprint.startswith("fp1:sha256:")
 

@@ -224,15 +224,43 @@ def test_iter_scanned_files_prunes_skip_dirs_and_fixtures(tmp_path: Path) -> Non
     planted = f'key = "{_shape("AWS_ACCESS_KEY_ID")}"\n'
     (tmp_path / "tools").mkdir()
     (tmp_path / "tools" / "real.py").write_text("x = 1\n", encoding="utf-8")
-    # A fixtures corpus with a planted secret must be pruned (not descended into).
+    # Only this scanner's planted corpus under tools/tests/fixtures is path-skipped.
     fixtures = tmp_path / "tools" / "tests" / "fixtures"
     fixtures.mkdir(parents=True)
     (fixtures / "planted.py").write_text(planted, encoding="utf-8")
+    # Project fixtures / unit files / rendered config stay in scope (QMX-F064).
+    project_fixtures = tmp_path / "qmn" / "deploy" / "fixtures"
+    project_fixtures.mkdir(parents=True)
+    (project_fixtures / "render-values.json").write_text("{}\n", encoding="utf-8")
+    unit_dir = tmp_path / "qmn" / "tests"
+    unit_dir.mkdir(parents=True)
+    (unit_dir / "test_unit.py").write_text("x = 1\n", encoding="utf-8")
     # A virtualenv is machine noise, pruned too.
     (tmp_path / ".venv").mkdir()
     (tmp_path / ".venv" / "leak.py").write_text(planted, encoding="utf-8")
     found = {p.name for p in scanner.iter_scanned_files(tmp_path)}
-    assert found == {"real.py"}
+    assert found == {"real.py", "render-values.json", "test_unit.py"}
+
+
+def test_covered_surfaces_include_qmx_f064_roster() -> None:
+    assert {
+        "source",
+        "fixtures",
+        "unit_files",
+        "rendered_config",
+        "logs",
+        "refusal_snapshots",
+    } == scanner.COVERED_SURFACES
+
+
+def test_iter_scanned_files_covers_logs_and_refusal_snapshots(tmp_path: Path) -> None:
+    (tmp_path / "logs").mkdir()
+    (tmp_path / "logs" / "node.log").write_text("boot ok\n", encoding="utf-8")
+    snap = tmp_path / "refusal_snapshots"
+    snap.mkdir()
+    (snap / "denied.json").write_text('{"category":"policy"}\n', encoding="utf-8")
+    found = {p.name for p in scanner.iter_scanned_files(tmp_path)}
+    assert found == {"node.log", "denied.json"}
 
 
 def test_non_text_suffixes_are_skipped(tmp_path: Path) -> None:

@@ -15,7 +15,7 @@ from collections.abc import Mapping, MutableSequence, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Final, Literal, Protocol
+from typing import Final, Literal, Protocol, cast
 
 from qmf.core.refusal import Ok, Result, is_refusal
 
@@ -332,7 +332,11 @@ class CrashLoopFold:
     """Counts unrequested exiting boots within ``(K, T)`` (DEC-0189 / DEC-0226).
 
     Requested-restart stamps never advance the fold. Detected preflight refusals
-    that stay alive (no exit) also never advance it.
+    that stay alive (no exit) also never advance it. Counters are durable: a
+    process restart reloads stamps via :meth:`load` and never clears the fold by
+    itself. Only an operator ``resurrect`` (or an explicit :meth:`reset_for_operator_cycle`)
+    resets the fold so an unrequested crash cannot masquerade as a clean operator
+    cycle (TN-4; QMX-F064 / Story 25.13).
     """
 
     max_boots: int
@@ -340,6 +344,39 @@ class CrashLoopFold:
     _stamps: MutableSequence[BootAttemptStamp] = field(
         default_factory=list[BootAttemptStamp]
     )
+
+    @classmethod
+    def load(
+        cls,
+        *,
+        max_boots: object,
+        window_ns: object,
+        stamps: object,
+    ) -> Result[CrashLoopFold]:
+        """Rebuild the fold from durable boot-attempt stamps (process-restart safe)."""
+        k = _positive_int("node_crash_loop_max_boots", max_boots)
+        if is_refusal(k):
+            return k
+        t = _positive_int("node_crash_loop_window", window_ns)
+        if is_refusal(t):
+            return t
+        if not isinstance(stamps, Sequence) or isinstance(stamps, (str, bytes)):
+            return invalid(
+                "stamps",
+                "crash-loop fold loads a sequence of BootAttemptStamp projections",
+                given=type(stamps).__name__,
+            )
+        loaded: list[BootAttemptStamp] = []
+        for index, raw in enumerate(cast("Sequence[object]", stamps)):
+            if not isinstance(raw, BootAttemptStamp):
+                return invalid(
+                    "stamps",
+                    "each durable stamp is a BootAttemptStamp",
+                    index=index,
+                    given=type(raw).__name__,
+                )
+            loaded.append(raw)
+        return Ok(cls(max_boots=k.value, window_ns=t.value, _stamps=loaded))
 
     def record(self, stamp: object) -> Result[CrashLoopVerdict]:
         if not isinstance(stamp, BootAttemptStamp):
@@ -350,6 +387,18 @@ class CrashLoopFold:
             )
         self._stamps.append(stamp)
         return Ok(self.evaluate(now_ns=stamp.at_ns))
+
+    def reset_for_operator_cycle(self) -> None:
+        """Clear counted stamps after an operator resurrect / new clean boot epoch.
+
+        A mere process restart must call :meth:`load` instead — it never resets.
+        """
+        self._stamps.clear()
+
+    @property
+    def stamps(self) -> tuple[BootAttemptStamp, ...]:
+        """Durable stamp projection — process restart reloads these, never drops them."""
+        return tuple(self._stamps)
 
     def evaluate(self, *, now_ns: object) -> CrashLoopVerdict:
         if not isinstance(now_ns, int) or isinstance(now_ns, bool):
@@ -744,6 +793,11 @@ class LifecycleSupervisor:
         self.state = LifecycleState.RUNNING
         self.stand_down_trigger = None
         self.doors_serving = True
+        # Operator resurrect is a clean cycle — reset the crash-loop fold so a
+        # prior unrequested crash cannot masquerade as the new operator epoch.
+        fold = self.crash_loop
+        if fold is not None:
+            fold.reset_for_operator_cycle()
         return Ok(receipt)
 
     def set_command_fate(self, command_id: object, fate: object) -> Result[None]:

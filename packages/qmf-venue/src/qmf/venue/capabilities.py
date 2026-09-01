@@ -20,8 +20,8 @@ venue-observation profile must exist before the first command and before any
 evidence-bearing decode. A ``measured-at-connection`` capability consumed before its
 profile exists is an ``unavailable dependency`` refusal; a measured-but-unverified
 capability consumed in evidence-bearing work is a ``policy rejection`` refusal; invoking
-an undeclared capability or an unsupported close scope is an ``unsupported capability``
-refusal, never emulated at a wider scope.
+an undeclared capability, an undeclared order parameter, or an unsupported close scope is
+an ``unsupported capability`` refusal, never emulated at a wider scope.
 
 The declaration carries the pinned **error map** (:class:`ErrorMap`): a versioned table
 of ``(venue code, context) -> (refusal category, retryability, after-condition,
@@ -740,6 +740,64 @@ class CapabilityDeclaration:
             )
         return Ok(requested)
 
+    def order_parameter(
+        self,
+        *,
+        order_type: object = None,
+        time_in_force: object = None,
+    ) -> Result[Mapping[str, str]]:
+        """Admit an order-type / time-in-force pair against ``order_parameter_subset``.
+
+        Each adapter declares its supported subset in CT-18. Invoking an undeclared
+        order type or time-in-force is an ``unsupported capability`` refusal — never
+        emulated (CT-18/CT-19; QMX-F064). At least one of ``order_type`` or
+        ``time_in_force`` must be supplied.
+        """
+        if order_type is None and time_in_force is None:
+            return _invalid(
+                "order_parameter",
+                "order_parameter checks require order_type and/or time_in_force",
+            )
+        declared = _declared_order_parameters(
+            self.fields[CapabilityFieldName.ORDER_PARAMETER_SUBSET]
+        )
+        admitted: dict[str, str] = {}
+        if order_type is not None:
+            token = _order_parameter_token(order_type)
+            if token is None:
+                return _unsupported(
+                    "order_type",
+                    "an order type is a non-empty token declared by the adapter subset",
+                    given=repr(order_type),
+                )
+            if token not in declared["order_types"]:
+                return _unsupported(
+                    "order_type",
+                    "the venue does not declare this order type; invoking an undeclared "
+                    "order parameter is refused, never emulated",
+                    requested=token,
+                    declared=sorted(declared["order_types"]),
+                )
+            admitted["order_type"] = token
+        if time_in_force is not None:
+            token = _order_parameter_token(time_in_force)
+            if token is None:
+                return _unsupported(
+                    "time_in_force",
+                    "a time-in-force is a non-empty token declared by the adapter subset",
+                    given=repr(time_in_force),
+                )
+            if token not in declared["time_in_force"]:
+                return _unsupported(
+                    "time_in_force",
+                    "the venue does not declare this time-in-force; invoking an undeclared "
+                    "order parameter is refused, never emulated",
+                    requested=token,
+                    declared=sorted(declared["time_in_force"]),
+                )
+            admitted["time_in_force"] = token
+        return Ok(MappingProxyType(admitted))
+
     def resolve_error(self, venue_code: object, context: object) -> Result[ErrorMapResolution]:
         """Resolve a venue error code through the pinned error map (see ErrorMap.resolve)."""
         return self.error_map.resolve(venue_code, context)
@@ -925,6 +983,17 @@ class CapabilityDiscovery:
         """Resolve a requested close scope (see :meth:`CapabilityDeclaration.close_scope`)."""
         return self.declaration.close_scope(scope)
 
+    def order_parameter(
+        self,
+        *,
+        order_type: object = None,
+        time_in_force: object = None,
+    ) -> Result[Mapping[str, str]]:
+        """Admit order parameters (see :meth:`CapabilityDeclaration.order_parameter`)."""
+        return self.declaration.order_parameter(
+            order_type=order_type, time_in_force=time_in_force
+        )
+
     def resolve_error(self, venue_code: object, context: object) -> Result[ErrorMapResolution]:
         """Resolve a venue error code through the pinned error map (see ErrorMap.resolve)."""
         return self.declaration.resolve_error(venue_code, context)
@@ -950,6 +1019,52 @@ def _declared_close_scopes(scopes_field: CapabilityField) -> frozenset[CloseScop
         if scope is not None:  # pragma: no branch
             resolved.add(scope)
     return frozenset(resolved)
+
+
+def _order_parameter_token(raw: object) -> str | None:
+    """Normalize an order-type or time-in-force token from an enum or string."""
+    if isinstance(raw, StrEnum):
+        token = raw.value
+    elif isinstance(raw, str):
+        token = raw
+    else:
+        token = getattr(raw, "value", None)
+        if not isinstance(token, str):
+            return None
+    cleaned = token.strip()
+    return cleaned if cleaned else None
+
+
+def _declared_order_parameters(
+    subset_field: CapabilityField,
+) -> dict[str, frozenset[str]]:
+    """Extract declared ``order_types`` / ``time_in_force`` tokens from the subset field."""
+    empty: dict[str, frozenset[str]] = {
+        "order_types": frozenset(),
+        "time_in_force": frozenset(),
+    }
+    if not subset_field.is_static or subset_field.value is None:
+        return empty
+    raw = subset_field.value
+    if not isinstance(raw, Mapping):
+        return empty
+    body = cast("Mapping[str, object]", raw)
+
+    def _tokens(key: str) -> frozenset[str]:
+        value = body.get(key)
+        if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
+            return frozenset()
+        out: set[str] = set()
+        for item in cast("Sequence[object]", value):
+            token = _order_parameter_token(item)
+            if token is not None:
+                out.add(token)
+        return frozenset(out)
+
+    return {
+        "order_types": _tokens("order_types"),
+        "time_in_force": _tokens("time_in_force"),
+    }
 
 
 def _validate_command_scopes(scopes_field: CapabilityField) -> TypedRefusal | None:

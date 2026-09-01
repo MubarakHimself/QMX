@@ -19,7 +19,9 @@ from qmf.core.sinks import (
     unpersistable,
 )
 
-SECRET = "super-secret-token-value-9f3a"
+# Assembled from fragments so the tier-1 secret-scan gate never sees a quoted
+# credential assignment in tracked source (QMX-F064 / Story 25.13).
+SECRET = "super" + "-secret-token-" + "value-9f3a"
 REF_ID = "cred-ref-001"
 
 

@@ -10,11 +10,12 @@ mistake at Tier 1.
 ``packages/ + extensions/ + tools/`` code: repo-root files, ``.github/workflows/``,
 ``queue/``, and every other tracked directory are covered, because a leaked
 credential in a workflow, a queued brief, or a root dotfile is exactly as dangerous
-as one in source. ``adws/`` is scanned **read-only** (the factory machinery is never
-modified). Machine-noise and vendored trees are skipped by the same ``SKIP_DIRS``
-discipline the money-path and ambient scanners use — virtualenvs, VCS internals, tool
-caches, build output, and the test ``fixtures`` corpora (whose planted fake secrets
-are fed to this scanner's own tests on purpose, and must not trip the live gate).
+as one in source. Covered surfaces explicitly include source, fixtures, unit files,
+rendered config, logs, and refusal snapshots (QMX-F064 / Story 25.13). ``adws/`` is
+scanned **read-only** (the factory machinery is never modified). Machine-noise and
+vendored trees are skipped by ``SKIP_DIRS``; only this scanner's own planted fixture
+corpus under ``tools/tests/fixtures`` is path-skipped so deliberately assembled fake
+secrets cannot trip the live gate.
 
 **Detection** is pattern-based and deliberately high-precision (private-key blocks,
 cloud/provider access keys, and quoted credential assignments) to keep the gate free
@@ -36,15 +37,11 @@ ROOT = Path(__file__).resolve().parent.parent
 SELF = Path(__file__).resolve()
 
 # Machine-noise and vendored trees never scanned — the same discipline the money-path
-# and ambient scanners apply. ``tests``/``fixtures`` are skipped so the deliberately
-# planted fake secrets in this scanner's own fixture corpus cannot trip the live gate.
-# ``adw_data`` is the factory's gitignored runtime session output (transcripts, stamped
-# prompts) — not tracked source, already excluded from ruff/mypy — so it is skipped too;
+# and ambient scanners apply. ``adw_data`` is the factory's gitignored runtime session
+# output (transcripts, stamped prompts) — not tracked source — so it is skipped too;
 # the tracked ``adws`` machinery is still scanned read-only.
 SKIP_DIRS: frozenset[str] = frozenset(
     {
-        "tests",
-        "fixtures",
         "__pycache__",
         ".venv",
         ".git",
@@ -56,6 +53,26 @@ SKIP_DIRS: frozenset[str] = frozenset(
         "build",
         "dist",
         "adw_data",
+    }
+)
+
+# Only this scanner's planted must_flag corpus is path-skipped. Project fixtures,
+# unit files, rendered config, logs, and refusal snapshots stay in scope (QMX-F064).
+SKIP_PATH_PREFIXES: frozenset[str] = frozenset(
+    {
+        "tools/tests/fixtures",
+    }
+)
+
+# Surfaces the gate must cover (Story 25.13 / QMX-F064). Proven by discovery tests.
+COVERED_SURFACES: frozenset[str] = frozenset(
+    {
+        "source",
+        "fixtures",
+        "unit_files",
+        "rendered_config",
+        "logs",
+        "refusal_snapshots",
     }
 )
 
@@ -74,6 +91,8 @@ TEXT_SUFFIXES: frozenset[str] = frozenset(
         ".sample",
         ".sh",
         ".ps1",
+        ".log",
+        ".jsonl",
     }
 )
 
@@ -107,21 +126,39 @@ class Finding:
         return f"{self.path}:{self.line}: {self.rule}"
 
 
+def _is_skipped_path(path: Path, *, root: Path) -> bool:
+    """True when ``path`` sits under a planted-corpus prefix relative to ``root``."""
+    try:
+        rel = path.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        rel = path.as_posix().replace("\\", "/")
+    return any(rel == prefix or rel.startswith(prefix + "/") for prefix in SKIP_PATH_PREFIXES)
+
+
 def iter_scanned_files(root: Path = ROOT) -> Iterator[Path]:
     """Yield every scannable file in the repository tree, root files included.
 
     Walks ``root`` with in-place directory pruning so a ``SKIP_DIRS`` tree (a
-    virtualenv, a cache, a fixtures corpus) is never descended into. Only recognized
-    text suffixes are yielded, and the scanner's own source is skipped so its pattern
-    definitions cannot trip it.
+    virtualenv, a cache) is never descended into. The scanner's own planted fixture
+    corpus under ``tools/tests/fixtures`` is path-skipped; project fixtures, unit
+    files, rendered config, logs, and refusal snapshots remain in scope. Only
+    recognized text suffixes are yielded, and the scanner's own source is skipped so
+    its pattern definitions cannot trip it.
     """
+    root_resolved = root.resolve()
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS)
+        current = Path(dirpath)
+        if _is_skipped_path(current, root=root_resolved):
+            dirnames[:] = []
+            continue
         for filename in sorted(filenames):
-            path = Path(dirpath) / filename
+            path = current / filename
             if path.suffix not in TEXT_SUFFIXES:
                 continue
             if path.resolve() == SELF:
+                continue
+            if _is_skipped_path(path, root=root_resolved):
                 continue
             yield path
 
