@@ -14,10 +14,21 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Final, cast
 
-from qmf.core import Fingerprint, Instant, Money, Ok, Result, TypedRefusal, fingerprint, is_refusal
+from qmf.core import (
+    Fingerprint,
+    Instant,
+    Money,
+    Ok,
+    Result,
+    SinkAck,
+    TypedRefusal,
+    fingerprint,
+    is_refusal,
+)
 from qmf.risk.paper import reject_paper_pnl_to_treasury
 from qmf.risk.r_faces import RFaces
 
+from qmn.journal_dispatch import CallableDispatcher, WriteBoundary, journal_before_effect
 from qmn.ledger._refuse import clean_token, invalid, policy
 from qmn.ledger.binding_ledger import BindingVirtualLedger
 
@@ -279,22 +290,41 @@ def apply_treasury_boundary(
         )
 
     positions_before = dict(ledger.position_snapshots())
-    appended = journal.append(act)
-    if is_refusal(appended):
-        return appended
-    row = ledger.append_boundary(
-        cash_delta=act.cash_delta,
-        recorded_at=act.dated_at,
-        note=act.kind.value,
-    )
-    if is_refusal(row):
-        return row
-    positions_after = dict(ledger.position_snapshots())
-    if positions_before != positions_after:
-        return policy(
-            "positions",
-            "a treasury boundary act never touches positions and never re-bases a frozen R",
+
+    class _TreasuryJournalSink:
+        def append(self, event: object, /) -> Result[SinkAck]:
+            del event
+            written = journal.append(act)
+            if is_refusal(written):
+                return written
+            return Ok(SinkAck(detail={"complete": True, "partial": False}))
+
+    def _apply_cash(_payload: object) -> Result[TreasuryBoundaryAct]:
+        del _payload
+        row = ledger.append_boundary(
+            cash_delta=act.cash_delta,
+            recorded_at=act.dated_at,
+            note=act.kind.value,
         )
+        if is_refusal(row):
+            return row
+        positions_after = dict(ledger.position_snapshots())
+        if positions_before != positions_after:
+            return policy(
+                "positions",
+                "a treasury boundary act never touches positions and never re-bases a frozen R",
+            )
+        return Ok(act)
+
+    receipt = journal_before_effect(
+        kind="treasury",
+        payload=act.as_mapping(),
+        journal=_TreasuryJournalSink(),
+        dispatcher=CallableDispatcher(_apply_cash),
+        boundary=WriteBoundary.ATOMIC,
+    )
+    if is_refusal(receipt):
+        return receipt
     return Ok(act)
 
 

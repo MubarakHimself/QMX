@@ -39,6 +39,11 @@ from qmf.core import (
     is_refusal,
 )
 
+from qmn.journal_dispatch import (
+    CallableDispatcher,
+    WriteBoundary,
+    journal_before_effect,
+)
 from qmn.order.amend import (
     AmendAtomicity,
     BookDynamicProtectionPolicy,
@@ -152,6 +157,7 @@ class OrderPath:
         BookDynamicProtectionPolicy.SINGLE_SIDED_BREAKEVEN_RATCHET
     )
     amend_journal: JournalSink[object] | None = None
+    command_journal: JournalSink[object] | None = None
     _sequencer_open: bool = False
 
     @classmethod
@@ -170,6 +176,7 @@ class OrderPath:
             BookDynamicProtectionPolicy.SINGLE_SIDED_BREAKEVEN_RATCHET
         ),
         amend_journal: object = None,
+        command_journal: object = None,
     ) -> Result[OrderPath]:
         if not isinstance(ordinal_store, CommandOrdinalStore):
             return TypedRefusal(
@@ -298,6 +305,21 @@ class OrderPath:
                     "given": type(amend_journal).__name__,
                 },
             )
+        command_sink: JournalSink[object] | None
+        if command_journal is None:
+            command_sink = None
+        elif isinstance(command_journal, JournalSink):
+            command_sink = cast("JournalSink[object]", command_journal)
+        else:
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "command_journal",
+                    "reason": "commands journal through a JournalSink before dispatch",
+                    "given": type(command_journal).__name__,
+                },
+            )
         return Ok(
             cls(
                 ordinal_store=ordinal_store,
@@ -312,6 +334,7 @@ class OrderPath:
                 amend_atomicity=resolved_atomicity,
                 book_dynamic_protection_policy=policy,
                 amend_journal=journal,
+                command_journal=command_sink,
             )
         )
 
@@ -592,6 +615,47 @@ class OrderPath:
             return handoff
 
         # Past handoff: never retry — a failed submit is terminal for this mint.
+        if self.command_journal is not None:
+            def _submit(_payload: Mapping[str, object]) -> Result[object]:
+                del _payload
+                return self.client.submit(command)
+
+            receipt = journal_before_effect(
+                kind="command",
+                payload={
+                    "kind": "command",
+                    "command_kind": command.kind.value,
+                    "command_fp1": fp.value.value,
+                    "phase": "before-dispatch",
+                },
+                journal=self.command_journal,
+                dispatcher=CallableDispatcher(_submit),
+                boundary=WriteBoundary.ORDERED_WITH_RECOVERY,
+            )
+            _ = self.pacer.release(admission.value.admission_class)
+            if is_refusal(receipt):
+                return receipt
+            submitted_value = receipt.value.dispatcher_result
+            if not isinstance(submitted_value, SubmissionResult):
+                return TypedRefusal(
+                    category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+                    retryability=Retryability.NO,
+                    context={
+                        "field": "command",
+                        "reason": "journal-before-dispatch did not yield a SubmissionResult",
+                    },
+                )
+            return Ok(
+                OrderPathSubmission(
+                    command=command,
+                    venue_client_id=client_id.value,
+                    admission=admission.value,
+                    handoff=handoff.value,
+                    result=submitted_value,
+                    protective_stop_form=stop_form.value,
+                )
+            )
+
         submitted = self.client.submit(command)
         _ = self.pacer.release(admission.value.admission_class)
         if is_refusal(submitted):

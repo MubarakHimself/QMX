@@ -29,7 +29,7 @@ from qmn.config.compiler import (
     refuse_unknown_compile_layer,
     validate_registry_row_schema,
 )
-from qmn.config.countersign import countersign_value_status
+from qmn.config.countersign import apply_settings_edit, countersign_value_status
 from qmn.config.gating import (
     blank_effect_coverage,
     live_role_blocked_by,
@@ -107,6 +107,7 @@ __all__ = [
     "SensingOnlyPlan",
     "StateCarryChoice",
     "ThrottleScope",
+    "apply_settings_edit",
     "blank_effect_coverage",
     "compile_layers",
     "compile_node_config",

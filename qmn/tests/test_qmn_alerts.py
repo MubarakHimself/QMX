@@ -30,6 +30,7 @@ from qmn.observability import (
     parse_failures_register,
     push_classes_for_tier,
 )
+from qmn.observability.failures_gate import validate_failures_completeness
 from qmn.time import CLOCK_BAND_FAILURE_IDS
 
 T = TypeVar("T")
@@ -235,7 +236,8 @@ def test_allow_listed_failure_publishes_through_channel() -> None:
 
 def test_typed_failure_ids_have_register_entries() -> None:
     """CI gate: every known typed failure id resolves in FAILURES.md (TN-23)."""
-    allow_list = _ok(load_alert_allow_list())
+    report = _ok(validate_failures_completeness())
+    allow_list = report.allow_list
     registered = allow_list.registered_ids()
     missing = [
         failure_id
@@ -243,9 +245,12 @@ def test_typed_failure_ids_have_register_entries() -> None:
         if failure_id not in registered
     ]
     assert missing == [], f"typed failure ids missing from FAILURES.md: {missing}"
-    # Every FR-* entry is registered.
     for entry in allow_list.entries:
         assert entry.fr_id in registered
+    for failure_id in report.emitted_ids:
+        assert failure_id in report.registered_ids or any(
+            failure_id.startswith(f"{parent}.") for parent in report.registered_ids
+        )
 
 
 def test_generate_allow_list_rejects_empty() -> None:

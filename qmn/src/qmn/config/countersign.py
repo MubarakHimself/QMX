@@ -8,11 +8,12 @@ version branched from the prior artifact.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from types import MappingProxyType
 
 from qmf.core.fingerprint import Fingerprint
 from qmf.core.refusal import Ok, Result, is_refusal
 
-from qmn.config._refuse import invalid, policy
+from qmn.config._refuse import clean_token, invalid, policy
 from qmn.config.compiler import (
     VALUE_STATUS_PROVISIONAL,
     VALUE_STATUS_RATIFIED,
@@ -20,8 +21,55 @@ from qmn.config.compiler import (
     ResolvedValueRow,
     compile_node_config,
 )
+from qmn.journal_dispatch import (
+    CallableDispatcher,
+    WriteBoundary,
+    enact_settings,
+    passthrough_dispatch,
+)
 
-__all__ = ["countersign_value_status"]
+__all__ = ["apply_settings_edit", "countersign_value_status"]
+
+
+def apply_settings_edit(
+    *,
+    journal: object,
+    dispatcher: object,
+    variable: object,
+    operator_signature: object,
+    config_version: object = None,
+    boundary: object = WriteBoundary.ATOMIC,
+) -> Result[object]:
+    """Journal a settings edit before the resolved config is applied."""
+    name = clean_token(variable)
+    if name is None:
+        return invalid(
+            "variable",
+            "settings_edit names exactly one variable",
+            given=repr(variable),
+        )
+    signature = clean_token(operator_signature)
+    if signature is None:
+        return invalid(
+            "operator_signature",
+            "a settings edit requires an operator signature",
+            given=repr(operator_signature),
+        )
+    payload = MappingProxyType(
+        {
+            "kind": "settings",
+            "variable": name,
+            "operator_signature": signature,
+            "config_version": config_version,
+        }
+    )
+    apply = dispatcher if dispatcher is not None else CallableDispatcher(passthrough_dispatch)
+    return enact_settings(
+        payload,
+        journal=journal,
+        dispatcher=apply,
+        boundary=boundary,
+    )
 
 
 def countersign_value_status(

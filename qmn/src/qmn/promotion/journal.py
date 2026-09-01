@@ -35,6 +35,11 @@ from qmf.core import (
     is_refusal,
 )
 
+from qmn.journal_dispatch import (
+    CallableDispatcher,
+    WriteBoundary,
+    journal_before_effect,
+)
 from qmn.observability.logging import (
     LOGS_ARE_NOT_JOURNALS,
     LOGS_SATISFY_CT13_EVIDENCE,
@@ -485,6 +490,7 @@ def commit_promotion(
     *,
     journal: object,
     correlation_id: object = None,
+    dispatcher: object = None,
 ) -> Result[PromotionLanding]:
     """Persist the promotion event; sink refusal blocks the landing."""
     if not isinstance(landing, PromotionLanding):
@@ -493,14 +499,47 @@ def commit_promotion(
             "promotion persist commits a PromotionLanding",
             given=repr(type(landing).__name__),
         )
-    persisted = persist_promotion(
-        journal=journal,
-        card_fp1=landing.card_fp1,
-        correlation_id=correlation_id,
+    mapped = assert_closed_ct13_event_type(PROMOTION_EVENT_TYPE)
+    if is_refusal(mapped):
+        return mapped
+    payload = promotion_journal_payload(landing.card_fp1)
+    if is_refusal(payload):
+        return payload
+    widened = set(payload.value) & _WIDENED_PROMOTION_KEYS
+    if widened or frozenset(payload.value) != PROMOTION_PAYLOAD_KEYS:
+        return policy(
+            "payload",
+            "the promotion event payload carries only the promotion-card fp1; "
+            "operator, artifact, config, and binding detail stay on the card",
+            payload_keys=sorted(payload.value),
+            allowed=sorted(PROMOTION_PAYLOAD_KEYS),
+        )
+    correlation = _optional_correlation(correlation_id)
+    if is_refusal(correlation):
+        return correlation
+    sink = _require_journal_sink(journal)
+    if is_refusal(sink):
+        return sink
+    row = PromotionJournalRow(
+        event_type=mapped.value,
+        promotion_card_fp1=landing.card_fp1,
+        correlation_id=correlation.value,
+        payload=payload.value,
     )
-    if is_refusal(persisted):
-        return persisted
-    del persisted
+    apply = (
+        dispatcher
+        if dispatcher is not None
+        else CallableDispatcher(lambda _payload: Ok(MappingProxyType({"applied": True})))
+    )
+    receipt = journal_before_effect(
+        kind="promotion",
+        payload=row.as_mapping(),
+        journal=sink.value,
+        dispatcher=apply,
+        boundary=WriteBoundary.ATOMIC,
+    )
+    if is_refusal(receipt):
+        return receipt
     return Ok(landing)
 
 
@@ -516,6 +555,7 @@ def commit_activation(
     transition_instant: object = None,
     refusing_check: object = None,
     event_type: object = ACTIVATION_CT13_EVENT_TYPE,
+    dispatcher: object = None,
 ) -> Result[CommittedActivation]:
     """Persist the CT-24 activation transition before any state takes effect."""
     resolved_phase = _coerce_phase(phase)
@@ -532,22 +572,56 @@ def commit_activation(
     )
     if is_refusal(built):
         return built
-    persisted = persist_activation(
-        journal=journal,
-        transition=built.value,
-        correlation_id=correlation_id,
-        event_type=event_type,
+    mapped = map_activation_ct13_event_type(event_type)
+    if is_refusal(mapped):
+        return mapped
+    fp = built.value.fingerprint()
+    if is_refusal(fp):
+        return fp
+    payload = MappingProxyType({"transition_fp1": fp.value.value})
+    if frozenset(payload) != ACTIVATION_PAYLOAD_KEYS:
+        return policy(
+            "payload",
+            "the activation journal payload is only the CT-24 transition fp1",
+            payload_keys=sorted(payload),
+            allowed=sorted(ACTIVATION_PAYLOAD_KEYS),
+        )
+    correlation = _optional_correlation(correlation_id)
+    if is_refusal(correlation):
+        return correlation
+    sink = _require_journal_sink(journal)
+    if is_refusal(sink):
+        return sink
+    applied = resolved_phase.value is not ActivationPhase.REFUSED
+    row = ActivationJournalRow(
+        event_type=mapped.value,
+        transition_fp1=fp.value,
+        correlation_id=correlation.value,
+        payload=payload,
     )
-    if is_refusal(persisted):
-        return persisted
+    apply = (
+        dispatcher
+        if dispatcher is not None
+        else CallableDispatcher(
+            lambda _payload: Ok(MappingProxyType({"applied": applied}))
+        )
+    )
+    receipt = journal_before_effect(
+        kind="activation",
+        payload=row.as_mapping(),
+        journal=sink.value,
+        dispatcher=apply,
+        boundary=WriteBoundary.ATOMIC,
+    )
+    if is_refusal(receipt):
+        return receipt
     accepted = acceptance if isinstance(acceptance, ActivationAcceptance) else None
     ready = readiness if isinstance(readiness, ActivationReadiness) else None
-    applied = resolved_phase.value is not ActivationPhase.REFUSED
     return Ok(
         CommittedActivation(
             phase=resolved_phase.value,
             transition=built.value,
-            event=persisted.value,
+            event=row,
             acceptance=accepted,
             readiness=ready,
             applied=applied,

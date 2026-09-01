@@ -58,7 +58,8 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Visible degraded state:** n/a — admit records both peer and claim.
 - **Notification tier:** silent-log (journaled admit carries both fields).
 - **Product-user affordance:** Who you are on the socket is who the node trusts;
-  typing a different name in the request does not change the principal.
+  typing a different name in the request does not change the principal. Inspect
+  `read_failure_detail` on the evidence channel for the recorded peer and claim.
 
 ### FR-5: Unit under operator UID at preflight
 
@@ -72,7 +73,8 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Notification tier:** alarm / operator-visible (preflight refusal).
 - **Product-user affordance:** The node refused to boot because a systemd unit
   would run as your operator account. Move that unit off the operator UID and
-  restart; automation must never share the operator principal.
+  restart via the operations toolkit; automation must never share the operator
+  principal.
 
 ### FR-6: Evidence channel budget exhausted
 
@@ -86,8 +88,8 @@ designed failure; every typed refusal the node can emit belongs here.
   unaffected; node keeps serving.
 - **Notification tier:** operator-visible (evidence refusal on the wire).
 - **Product-user affordance:** The evidence channel hit its per-boot request
-  budget. Reduce scrape rate or raise `evidence_channel_budget`, then restart
-  at a safe point if a higher budget is required.
+  budget. Reduce scrape rate or raise `evidence_channel_budget`, inspect
+  `read_status`, then restart at a safe point if a higher budget is required.
 
 ### FR-7: Stale evidence cited for a powers call
 
@@ -124,8 +126,8 @@ designed failure; every typed refusal the node can emit belongs here.
   returns below warn — never a standing CT-30 action.
 - **Visible degraded state:** evidence published; entries still allowed.
 - **Notification tier:** operator-visible (journaled band evidence).
-- **Product-user affordance:** Clock drift is elevated. Monitor chrony offset;
-  no trading block yet.
+- **Product-user affordance:** Clock drift is elevated. Monitor chrony offset
+  via the evidence channel (`read_status`); no trading block yet.
 
 ### FR-10: Clock band no-new-entry
 
@@ -139,7 +141,8 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Notification tier:** silent-degradation
 - **Product-user affordance:** The node stopped accepting new entries because
   clock drift crossed the no-new-entry band. Open positions stay protected;
-  restore chrony sync and wait for the next ok/warn cycle.
+  restore chrony sync, watch `read_status` on the evidence channel, and wait
+  for the next ok/warn cycle.
 
 ### FR-11: Clock band halt
 
@@ -165,7 +168,8 @@ designed failure; every typed refusal the node can emit belongs here.
   by a stopped-node step and fresh sync.
 - **Notification tier:** silent-degradation
 - **Product-user affordance:** The host clock stepped or paused. Stop the node
-  before any clock step, record the gap, resync, then restart.
+  before any clock step, record the gap, resync, then restart via the
+  operations toolkit.
 
 ### FR-13: Money-boundary sweep
 
@@ -178,7 +182,8 @@ designed failure; every typed refusal the node can emit belongs here.
   is unchanged by the notification.
 - **Notification tier:** money-boundary
 - **Product-user affordance:** A capital sweep completed. Confirm the journaled
-  amount against the destination account; no trading control is implied.
+  amount against the destination account via `read_status` on the evidence
+  channel; no trading control is implied.
 
 ### FR-14: Money-boundary re-seed
 
@@ -190,7 +195,8 @@ designed failure; every typed refusal the node can emit belongs here.
   the re-seed.
 - **Notification tier:** money-boundary
 - **Product-user affordance:** A capital re-seed completed. Confirm the
-  journaled amount; the notification authorizes nothing further.
+  journaled amount via `read_status` on the evidence channel; the notification
+  authorizes nothing further.
 
 ### FR-15: Money-boundary refund (dormant V1)
 
@@ -200,8 +206,9 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Auto-recovery / retry:** n/a — dormant; no automatic path exists.
 - **Visible degraded state:** n/a — dormant.
 - **Notification tier:** money-boundary
-- **Product-user affordance:** Refund is reserved and dormant in V1. No refund
-  alert can fire until a later story activates the act.
+- **Product-user affordance:** Refund is reserved and dormant in V1. Inspect
+  `read_failure_detail` on the evidence channel; no refund alert can fire until
+  a later story activates the act.
 
 ### FR-16: Kill-switch / KSA escalation
 
@@ -237,8 +244,9 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Detection:** Compose evaluates a workload's four-bound light claim without
   a recorded live-path baseline, with unmet declared bounds, without harness
   proof, with a child-supplied self-approved class, or with a heavy dependency
-  on the synchronous path (`qmn.host.light_heavy` /
-  `compose.light_heavy.*`).
+  on the synchronous path (`compose.light_heavy` /
+  `compose.light_heavy.no_baseline` / `compose.light_heavy.unmet_bounds` /
+  `compose.light_heavy.missing_dependency` / `compose.light_heavy.heavy_dependency`).
 - **Auto-recovery / retry:** none within the boot epoch — record the live-path
   baseline on this deployment tuple, drop the light claim (heavy by default),
   or remove the heavy dependency; then restart at a safe point.
@@ -247,7 +255,9 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Notification tier:** alarm / operator-visible (compose refusal).
 - **Product-user affordance:** The node refused to seal because a producer,
   labeler, or seat claimed light without proven four bounds. Leave it heavy
-  (fan-out) or wait for the VPS baseline before claiming light.
+  (fan-out) or wait for the VPS baseline before claiming light. Inspect
+  `read_failure_detail`; restart via the operations toolkit after the claim is
+  dropped.
 
 ### FR-19: Seat callback containment breach / automatic quarantine
 
@@ -349,10 +359,17 @@ designed failure; every typed refusal the node can emit belongs here.
 
 - **Failure class:** invalid input / unavailable dependency / policy rejection
 - **Detection:** Compose Layer-1 admission over the assembled risk graph
-  (`qmn.host.admit_runtime_risk_population`) finds a cardinality or
-  referential-integrity mismatch: total unique rank, declared scopes,
-  netting partitions, one-BMS-per-account/many-Books, one-Book-per-bot,
-  or one active paper target (`compose.risk_population.*`).
+  finds a cardinality or referential-integrity mismatch: total unique rank,
+  declared scopes, netting partitions, one-BMS-per-account/many-Books,
+  one-Book-per-bot, or one active paper target
+  (`compose.risk_population` / `compose.risk_population.referential_integrity` /
+  `compose.risk_population.total_unique_rank` /
+  `compose.risk_population.declared_scopes` /
+  `compose.risk_population.netting_partitions` /
+  `compose.risk_population.one_bms_per_account` /
+  `compose.risk_population.one_book_per_bot` /
+  `compose.risk_population.one_active_paper_target` /
+  `compose.risk_population.cardinalities`).
 - **Auto-recovery / retry:** none — repair the assembled roster/BMS/Book/
   binding/seat/window/priority/capability records and reboot; the node
   does not Seal an invalid population.
@@ -364,7 +381,7 @@ designed failure; every typed refusal the node can emit belongs here.
   assembled risk graph is internally inconsistent. Valid individual
   records still fail together if cardinalities or references disagree.
   Fix the named check (rank table, scopes, netting partition, BMS/Book/
-  bot cardinality, or paper target) and restart.
+  bot cardinality, or paper target) and restart via the operations toolkit.
 
 ### FR-25: Layer-2 shakedown on a live binding or incomplete machinery
 
@@ -384,7 +401,7 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Product-user affordance:** Technical shakedown proves the machinery
   works and proves nothing about edge. It cannot run live, cannot mint
   soak or KSA numbers, and its evidence is for your signature — not a
-  performance certificate.
+  performance certificate. Inspect `read_status` on the evidence channel.
 
 ### FR-26: Bot-supplied final size at the Book door
 
@@ -400,7 +417,8 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Notification tier:** operator-visible (journaled).
 - **Product-user affordance:** The bot proposed a size. QMX refuses that: the
   Book sizes every entry. Remove quantity/`requested_r` from the bot intent
-  and let the Book door freeze R.
+  and let the Book door freeze R. Inspect `read_failure_detail` on the
+  evidence channel.
 
 ### FR-27: Command mint without frozen R faces
 
@@ -415,7 +433,8 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Notification tier:** operator-visible (journaled door refusal).
 - **Product-user affordance:** An order cannot be minted until the Book has
   frozen original risk. The entry must pass the Book door (full-loss price,
-  Book-resolved `requested_r`, dimensional checks) first.
+  Book-resolved `requested_r`, dimensional checks) first. Inspect
+  `read_failure_detail` on the evidence channel.
 
 ### FR-28: Frozen R mutated except the journaled partial-entry rebase
 
@@ -433,3 +452,88 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Product-user affordance:** Frozen R does not move with stops, rollover,
   settings, or treasury. Only a short ENTRY fill at first terminal state
   re-bases `original_risk_amount`, once, and that rebase is journaled.
+  Inspect `read_failure_detail` on the evidence channel.
+
+### FR-29: Boot-blocking config at preflight
+
+- **Failure class:** policy rejection
+- **Detection:** preflight finds a blank or non-ratified row whose blank
+  effect is `blocks-boot` (`preflight.config.boot_blocking`).
+- **Auto-recovery / retry:** none within the boot epoch — fill or countersign
+  the named row, then restart at a safe point.
+- **Visible degraded state:** boot does not Seal; stand-down-alive after
+  doors bind; sequencer stays closed.
+- **Notification tier:** alarm / operator-visible (preflight refusal).
+- **Product-user affordance:** A boot-blocking config row is blank or not
+  ratified. Fill it or countersign from the operator principal over the
+  powers channel, then restart via the operations toolkit.
+
+### FR-30: Boot-attempt journal write or amend failed
+
+- **Failure class:** storage failure
+- **Detection:** the supervisor WriterId cannot persist or amend the
+  boot-attempt record (`boot.attempt.write` / `boot.attempt.amend`).
+- **Auto-recovery / retry:** none while the journal room is unpersistable —
+  restore capacity, then restart.
+- **Visible degraded state:** check mode exits; live boot stands down alive
+  if doors already bound; sequencer stays closed.
+- **Notification tier:** silent-degradation
+- **Product-user affordance:** The node could not journal the boot-attempt
+  record. Free disk / restore the journal room, then restart via the
+  operations toolkit. Entries stay blocked while storage is down.
+
+### FR-31: Writer-id allocation refused at Compose
+
+- **Failure class:** invalid input / policy rejection
+- **Detection:** Compose cannot allocate reserved supervisor and stream
+  WriterIds (`compose.writer_ids`).
+- **Auto-recovery / retry:** none — repair the writer roster and reboot.
+- **Visible degraded state:** boot stands down at compose; sequencer closed.
+- **Notification tier:** alarm / operator-visible (compose refusal).
+- **Product-user affordance:** Writer-id allocation failed at Compose.
+  Inspect `read_failure_detail`, fix the roster, then restart via the
+  operations toolkit.
+
+### FR-32: composition_fp fingerprint refused
+
+- **Failure class:** invalid input
+- **Detection:** Compose cannot fingerprint the sealed node-config
+  (`fingerprint.composition_fp`).
+- **Auto-recovery / retry:** none — the cite set must be fingerprintable.
+- **Visible degraded state:** boot does not Seal; stand-down-alive.
+- **Notification tier:** alarm / operator-visible (compose refusal).
+- **Product-user affordance:** The composition fingerprint could not be
+  minted. Inspect `read_failure_detail` and the cite set, then restart via
+  the operations toolkit.
+
+### FR-33: Journal-before-dispatch storage failure
+
+- **Failure class:** storage failure
+- **Detection:** a command, control, protection, promotion, activation,
+  treasury, or settings effect cannot persist its journal first
+  (`storage.journal_before_dispatch` / `storage.partial_write` /
+  `storage.log_only_path` / `storage.best_effort_path`). A partial write is
+  a storage failure. A log line or best-effort write is refused.
+- **Auto-recovery / retry:** none while unpersistable — restore the journal
+  room; the act is re-decided, never blindly retried.
+- **Visible degraded state:** the effect does not dispatch; entries are
+  blocked; exits and standing protection remain enactable (L39).
+- **Notification tier:** silent-degradation
+- **Product-user affordance:** The node refused to apply an effect because
+  the journal write did not land. Restore journal capacity via the
+  operations toolkit, then retry the act from the operator principal over
+  the powers channel. A log line is not evidence.
+
+### FR-34: Preflight detected a refusal without a more specific id
+
+- **Failure class:** policy rejection / unavailable dependency
+- **Detection:** preflight returns a typed refusal whose context does not
+  name a more specific id (`preflight.detected`).
+- **Auto-recovery / retry:** none — inspect the preflight status, repair
+  the named check, then resurrect or restart.
+- **Visible degraded state:** stand-down-alive after doors bind; sequencer
+  closed.
+- **Notification tier:** alarm / operator-visible (preflight refusal).
+- **Product-user affordance:** Preflight refused boot. Read `read_failure_detail`
+  and the preflight-status view on the evidence channel, repair the cause,
+  then resurrect from the operator principal over the powers channel.

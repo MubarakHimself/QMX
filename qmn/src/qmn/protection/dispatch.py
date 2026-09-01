@@ -25,6 +25,7 @@ from typing import Final, cast
 
 from qmf.core import (
     Fingerprint,
+    JournalSink,
     Ok,
     Result,
     SinkAck,
@@ -57,6 +58,12 @@ from qmf.risk.control_rank import (
     check_control_rank_uniqueness,
 )
 
+from qmn.journal_dispatch import (
+    CallableDispatcher,
+    WriteBoundary,
+    journal_before_effect,
+    passthrough_dispatch,
+)
 from qmn.protection._refuse import invalid, policy
 
 __all__ = [
@@ -480,7 +487,8 @@ def check_dead_wire_satisfaction(
 def persist_protective_intent(
     record: object,
     *,
-    journal_result: object,
+    journal_result: object = None,
+    journal: object = None,
     extent: object,
     alarms: MutableSequence[Mapping[str, object]] | None = None,
 ) -> Result[PersistedProtectiveIntent]:
@@ -506,7 +514,33 @@ def persist_protective_intent(
     if is_refusal(fp):
         return fp
 
-    journaled = journal_before_dispatch(record, journal_result=journal_result)
+    resolved_journal_result = journal_result
+    if journal is not None:
+        if not isinstance(journal, JournalSink):
+            return invalid(
+                "journal",
+                "protective intents persist through a JournalSink before dispatch",
+                given=type(journal).__name__,
+            )
+        sink = cast("JournalSink[Mapping[str, object]]", journal)
+        appended = sink.append(
+            {
+                "kind": "protection",
+                "phase": "before-dispatch",
+                "control_action_fp1": fp.value.value,
+                "action_kind": record.action_kind.value,
+                "stream": record.stream.fp1_identity(),
+            }
+        )
+        resolved_journal_result = True if is_ok(appended) else appended
+
+    if resolved_journal_result is None:
+        return invalid(
+            "journal_result",
+            "persist_protective_intent requires a journal result or a JournalSink",
+        )
+
+    journaled = journal_before_dispatch(record, journal_result=resolved_journal_result)
     if is_ok(journaled):
         return Ok(
             PersistedProtectiveIntent(
@@ -801,6 +835,62 @@ class StreamProtectionDispatcher:
             return Ok(result)
         self._standing.append(record)
         return Ok(result)
+
+    def enact(
+        self,
+        record: object,
+        *,
+        journal: object,
+        dispatcher: object,
+    ) -> Result[object]:
+        """Journal a protective act, then dispatch. Storage failure never dispatches."""
+        if not isinstance(record, ControlActionRecord):
+            return invalid(
+                "record",
+                "enact journals a ControlActionRecord before dispatch",
+                given=repr(record),
+            )
+        if record.stream != self.stream:
+            return invalid(
+                "record",
+                "protective act runs on a different (VenueId, account) stream",
+                dispatcher_stream=self.stream.fp1_identity(),
+                record_stream=record.stream.fp1_identity(),
+            )
+        fp = record.fingerprint()
+        if is_refusal(fp):
+            return fp
+        payload = {
+            "kind": "protection",
+            "control_action_fp1": fp.value.value,
+            "action_kind": record.action_kind.value,
+            "stream": record.stream.fp1_identity(),
+        }
+        apply = dispatcher if dispatcher is not None else CallableDispatcher(passthrough_dispatch)
+        receipt = journal_before_effect(
+            kind="protection",
+            payload=payload,
+            journal=journal,
+            dispatcher=apply,
+            boundary=WriteBoundary.ORDERED_WITH_RECOVERY,
+        )
+        if is_refusal(receipt):
+            persisted = persist_protective_intent(
+                record,
+                journal_result=receipt,
+                extent=self.extent,
+                alarms=self._alarms,
+            )
+            if is_refusal(persisted):
+                return persisted
+            if persisted.value.disposition is IntentPersistDisposition.UNDELIVERABLE:
+                if persisted.value.undeliverable is not None:
+                    self._undeliverable.append(persisted.value.undeliverable)
+                return persisted
+            self._standing.append(record)
+            return persisted
+        self._standing.append(record)
+        return receipt
 
     def check_satisfaction(
         self,
