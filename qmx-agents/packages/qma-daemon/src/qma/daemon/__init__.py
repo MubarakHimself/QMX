@@ -29,22 +29,30 @@ from qma.daemon.persistence import (
 )
 from qma.daemon.persistence.lifecycle import DaemonStoreLifecycle
 from qma.daemon.staging import ProposalGate
+from qma.daemon.taskgraph import (
+    CompileRequest,
+    MissionCompiler,
+    TaskGraphDispatcher,
+)
 
 __all__ = [
     "AuthoritativeJournal",
+    "CompileRequest",
     "DaemonClock",
     "DaemonStoreLifecycle",
     "FoldContract",
     "FoldContractRegistry",
     "FoldMetadata",
     "GovernedVariableRegistry",
+    "MissionCompiler",
     "PersistenceStartupEvidence",
     "PersistenceSubstrate",
     "ProposalGate",
     "StoreOwnershipRegistry",
     "StoreRegistry",
-    "order_by_announcement_journal_seq",
+    "TaskGraphDispatcher",
     "__version__",
+    "order_by_announcement_journal_seq",
 ]
 
 # Display-only provenance — never identity content (AR-Q11; DEC-0335).

@@ -52,3 +52,6 @@ def test_structural_modules_importable() -> None:
     assert qma.daemon.journal.AuthoritativeJournal is qma.daemon.AuthoritativeJournal
     assert qma.daemon.DaemonClock.__name__ == "DaemonClock"
     assert qma.daemon.FoldContractRegistry.__name__ == "FoldContractRegistry"
+    assert qma.daemon.MissionCompiler.__name__ == "MissionCompiler"
+    assert qma.daemon.TaskGraphDispatcher.__name__ == "TaskGraphDispatcher"
+    assert qma.daemon.taskgraph.MissionCompiler is qma.daemon.MissionCompiler
