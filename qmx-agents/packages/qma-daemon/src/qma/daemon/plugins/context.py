@@ -12,6 +12,7 @@ from typing import Any
 from qma.core.plugins.context import Disposer, HookHandler
 from qma.core.plugins.credential import CredentialRef, parse_credential_ref
 from qma.core.ports.cardinality import (
+    HANDLE_KIND_CONTRIBUTION_POINTS,
     qualified_contribution_id,
     require_singleton_scope_key,
     validate_contribution_point,
@@ -23,6 +24,7 @@ from qma.core.ports.knowledge import KnowledgeSource
 from qma.core.ports.memory import MemoryProvider
 from qma.core.ports.model import ModelDeployment
 from qma.core.ports.tools import ToolAdapter
+from qma.core.vocabulary.handles import is_handle_kind_contribution_point
 
 __all__ = ["DaemonPluginContext", "PluginContextError"]
 
@@ -95,7 +97,19 @@ class DaemonPluginContext:
         self._singletons[key] = value
         return self._dispose_singleton(port, scope_value)
 
+    def register_handle_kind(self, kind: str) -> Disposer:
+        """Trap: plugins never extend the closed handle-kind vocabulary."""
+        raise PluginContextError(
+            "handle kinds are a closed qma-core vocabulary; plugins may not "
+            f"extend them with {kind!r} (AD-14; DEC-0313; FR-Q53)"
+        )
+
     def _bind_multi(self, point: str, local_id: str, value: object) -> Disposer:
+        if point in HANDLE_KIND_CONTRIBUTION_POINTS or is_handle_kind_contribution_point(point):
+            raise PluginContextError(
+                "handle kinds are a closed qma-core vocabulary; plugins may not "
+                f"extend them with {point!r} (AD-14; DEC-0313; FR-Q53)"
+            )
         validate_contribution_point(point)
         qualified = qualified_contribution_id(self._plugin_id, local_id)
         key = (point, qualified)

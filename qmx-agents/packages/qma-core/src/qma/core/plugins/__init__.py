@@ -48,18 +48,32 @@ from qma.core.plugins.secret_schema import (
 )
 from qma.core.vocabulary.enums import HandleKind
 from qma.core.vocabulary.handles import (
+    CLOSED_HANDLE_KINDS,
+    FORBIDDEN_LIVE_MONEY_PATH_HANDLE_TARGETS,
+    HANDLE_KIND_CONTRIBUTION_POINTS,
     MONEY_PATH_LIVE_WRITABLE_HANDLE_KINDS,
+    MONEY_PATH_RELEVANT_FIELDS,
+    QMA_OWNED_CANDIDATE_ORIGIN,
     READ_ONLY_EVIDENCE_HANDLE_KINDS,
+    STRATEGY_CANDIDATE_ZONE,
     assert_handle_kind_not_money_path,
+    is_handle_kind_contribution_point,
+    refuse_plugin_handle_kind_extension,
 )
 
 __all__ = [
+    "CLOSED_HANDLE_KINDS",
     "DESK_PREFIX_TOKENS",
     "FORBIDDEN_HOOK_IMPLEMENTATION_KINDS",
+    "FORBIDDEN_LIVE_MONEY_PATH_HANDLE_TARGETS",
     "FORBIDDEN_SECRET_PAYLOAD_KEYS",
+    "HANDLE_KIND_CONTRIBUTION_POINTS",
     "HOOK_SECRET_EXCLUDED_FIELDS",
     "MONEY_PATH_LIVE_WRITABLE_HANDLE_KINDS",
+    "MONEY_PATH_RELEVANT_FIELDS",
+    "QMA_OWNED_CANDIDATE_ORIGIN",
     "READ_ONLY_EVIDENCE_HANDLE_KINDS",
+    "STRATEGY_CANDIDATE_ZONE",
     "BoundaryError",
     "ContributionDecl",
     "CredentialRef",
@@ -84,9 +98,11 @@ __all__ = [
     "assert_no_secret_in_mapping",
     "build_hook_event",
     "build_hook_result",
+    "is_handle_kind_contribution_point",
     "parse_credential_ref",
     "parse_hook_implementation_kind",
     "parse_plugin_manifest",
+    "refuse_plugin_handle_kind_extension",
     "scan_daemon_imports",
     "scan_forbidden_runtime_calls",
 ]

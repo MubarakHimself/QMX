@@ -9,6 +9,7 @@ from typing import Final
 
 __all__ = [
     "CONTEXT_COMPILER_SCOPE_KEY",
+    "HANDLE_KIND_CONTRIBUTION_POINTS",
     "MULTI_CONTRIBUTION_POINTS",
     "PORT_CONTRACTS",
     "PORT_CONTRACT_BY_NAME",
@@ -95,6 +96,11 @@ RETIRED_CONTRIBUTION_POINTS: Final[frozenset[str]] = frozenset(
     {"ui_view", "command", "mission_template"}
 )
 
+# Handle kinds are qma-core-owned; a plugin may never contribute one (AD-14).
+HANDLE_KIND_CONTRIBUTION_POINTS: Final[frozenset[str]] = frozenset(
+    {"handle_kind", "handle", "HandleKind"}
+)
+
 # The eight multi points are the closed set with a qma-wire schema obligation.
 # A point outside this set has no schema and may not be registered.
 _WIRE_SCHEMA_BACKED: Final[frozenset[str]] = MULTI_CONTRIBUTION_POINTS
@@ -152,6 +158,11 @@ def validate_contribution_point(contribution_point: object) -> str:
     """
     if not isinstance(contribution_point, str) or not contribution_point:
         raise PortError(f"invalid contribution point {contribution_point!r}")
+    if contribution_point in HANDLE_KIND_CONTRIBUTION_POINTS:
+        raise PortError(
+            f"contribution point {contribution_point!r} cannot extend the closed "
+            "handle-kind vocabulary owned by qma-core (AD-14; DEC-0313; FR-Q53)"
+        )
     if contribution_point in RETIRED_CONTRIBUTION_POINTS:
         raise PortError(
             f"contribution point {contribution_point!r} is undeclared or retired "

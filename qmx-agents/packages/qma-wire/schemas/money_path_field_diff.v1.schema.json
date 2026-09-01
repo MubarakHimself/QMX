@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qmx.local/qma-wire/schemas/money_path_field_diff.v1.schema.json",
+  "title": "QMA money-path-relevant candidate field-level diff (AD-14 / CT-47)",
+  "description": "Named qma-wire schema for a StrategyHandle candidate flagged money_path_relevant. The approval_request payload must carry a field-level diff of exactly the touched risk, sizing, exit, protection, binding, or priority fields against the ancestor. QMA never mints a value where the ancestor carries none (DEC-0313; FR-Q53).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "candidate_ref", "predecessor_ref", "fields"],
+  "properties": {
+    "schema": { "const": "qma.wire.money_path_field_diff.v1" },
+    "candidate_ref": { "type": "string", "minLength": 1 },
+    "predecessor_ref": { "type": "string", "minLength": 1 },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "ancestor", "proposed"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "enum": ["risk", "sizing", "exit", "protection", "binding", "priority"]
+          },
+          "ancestor": {},
+          "proposed": {}
+        }
+      }
+    }
+  }
+}

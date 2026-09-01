@@ -130,6 +130,12 @@ from qma.wire.listener import (
     is_loopback_host,
     validate_listener_startup,
 )
+from qma.wire.money_path_diff import (
+    MONEY_PATH_FIELD_DIFF_SCHEMA,
+    MONEY_PATH_FIELD_DIFF_SCHEMA_FILE,
+    MONEY_PATH_FIELD_DIFF_SCHEMA_NAME,
+    validate_money_path_field_diff,
+)
 from qma.wire.outbox import (
     REMOTE_OUTBOX_DEPTH_REGISTRY_KEY,
     REMOTE_SPOOL_BYTES_REGISTRY_KEY,
@@ -222,6 +228,9 @@ __all__ = [
     "JOB_HANDLE_TERMINAL_STATES",
     "JOURNAL_SEQ_FIELD",
     "JSONRPC_VERSION",
+    "MONEY_PATH_FIELD_DIFF_SCHEMA",
+    "MONEY_PATH_FIELD_DIFF_SCHEMA_FILE",
+    "MONEY_PATH_FIELD_DIFF_SCHEMA_NAME",
     "REMOTE_DIAL_DIRECTION",
     "REMOTE_OUTBOX_DEPTH_REGISTRY_KEY",
     "REMOTE_SPOOL_BYTES_REGISTRY_KEY",
@@ -343,6 +352,7 @@ __all__ = [
     "validate_family_payload",
     "validate_instance",
     "validate_listener_startup",
+    "validate_money_path_field_diff",
     "validate_remote_dial_out",
     "validate_wire_envelope_dict",
 ]

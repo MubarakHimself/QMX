@@ -12,7 +12,8 @@ delivers versioned-store migration, backup, and controlled restoration (FR-14
 through FR-17). Epic 43 Story 43.2 adds closed Task/Mission state with
 evidence-bound terminal outcomes (FR-18 through FR-21). Epic 45 Story 45.4
 adds durable JobHandle operations and daemon-only Task mapping (FR-29
-through FR-31).
+through FR-31). Epic 45 Story 45.6 adds daemon-resolved evidence handles
+and StrategyHandle candidate artifacts (FR-32 through FR-35).
 
 ### FR-1: A second daemon or writer is refused at the persistence boundary
 
@@ -463,3 +464,61 @@ through FR-31).
 - **Notification tier:** silent-log (caller receives the mapped Task state).
 - **Product-user affordance:** the environment or supervisor stopped the
   job. That is not an explicit cancel. The abort reason is on the Task.
+
+### FR-32: A plugin or invented handle kind is refused
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `EvidenceHandleService.mint` / `register_plugin_handle_kind`
+  accept only the six closed `qma-core` kinds. `DaemonPluginContext.register_handle_kind`
+  and a plugin contribution point `handle_kind` are refused (FR-Q53; AD-14).
+- **Auto-recovery / retry:** none — extending handle kinds is a spine
+  amendment, never a plugin contribution.
+- **Visible degraded state:** no handle is minted; no plugin binding is
+  stored.
+- **Notification tier:** operator-visible (plugin load / mint refusal).
+- **Product-user affordance:** that handle kind is not in the closed set.
+  Plugins cannot add one.
+
+### FR-33: A live or writable money-path handle is not minted
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** mint refuses an open order, open position, binding, Book,
+  seat, BMS record, control action, kill switch, or venue session target,
+  and refuses `live` or `writable` flags. `TradeLogHandle` and
+  `MarketDataHandle` additionally require recorded, closed, read-only
+  evidence (FR-Q53; CT-47; SCN-0014).
+- **Auto-recovery / retry:** none — those records are not handleable.
+- **Visible degraded state:** no handle exists; agents cannot address the
+  live money-path record.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** QMA handles recorded evidence only. Open
+  orders, positions, Books, and venue sessions have no handle.
+
+### FR-34: A money_path_relevant approval lacks the named field-level diff
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `emit_approval_request` refuses a `money_path_relevant`
+  candidate whose payload is missing, unnamed, or not exactly the touched
+  risk/sizing/exit/protection/binding/priority fields under
+  `qma.wire.money_path_field_diff.v1`. Creating a candidate that would fill
+  an unset money-path field is refused at write (FR-Q53; DEC-0313).
+- **Auto-recovery / retry:** none — supply the exact named diff, or leave
+  unset money-path fields unset for a human.
+- **Visible degraded state:** the candidate stays in the `dev` zone; no
+  `approval_request` is emitted.
+- **Notification tier:** operator-visible (approval-channel refusal).
+- **Product-user affordance:** a candidate that touches money-path fields
+  cannot go to approval without an exact field-level diff. QMA will not
+  invent a missing sizing, exit, or binding value.
+
+### FR-35: Promotion and zone transition are uncallable
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `EvidenceHandleService.promote` and `transition_zone`
+  return the zone-transition refusal. StrategyHandle writes only the
+  existing `dev` zone and mints no promotion command (FR-Q53; L17).
+- **Auto-recovery / retry:** none — a human promotes outside QMA.
+- **Visible degraded state:** the candidate remains a `dev`-zone artifact.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** QMA cannot promote or change zones. A human
+  promotes the candidate outside this system.

@@ -24,6 +24,7 @@ from qma.core.plugins import (
 )
 from qma.core.ports import (
     PORT_CONTRACTS,
+    EvidenceHandle,
     ExecutionEnvironmentDeclaration,
     require_singleton_scope_key,
     validate_contribution_point,
@@ -57,6 +58,13 @@ def main() -> None:
     assert require_singleton_scope_key("MemoryProvider", "desk") == "desk"
     assert validate_contribution_point("tool") == "tool"
     assert HandleKind.STRATEGY_HANDLE.value == "StrategyHandle"
+    handle = EvidenceHandle.try_create(
+        kind=HandleKind.STRATEGY_HANDLE,
+        handle_id="h:strategy:demo",
+        evidence_ref="fp1:sha256:demo",
+    )
+    assert is_ok(handle)
+    assert handle.value.contents is None
     parse_credential_ref("cred://models/openai")
     build_hook_event("before_tool", source=HookSource.PLUGIN)
     build_hook_result(HookResultDecision.DENY, reason="blocked")

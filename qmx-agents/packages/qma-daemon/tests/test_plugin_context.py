@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from qma.core.plugins import PluginContext, build_hook_event, build_hook_result
 from qma.core.plugins.hooks import HookSource
+from qma.core.ports.handles import EvidenceHandle
 from qma.core.vocabulary.enums import HookResultDecision
 from qma.daemon.plugins import DaemonPluginContext
 
@@ -16,6 +18,10 @@ class _MemoryStub:
 
 class _CompilerStub:
     """Structural ContextCompiler stand-in."""
+
+    def compile_context(self, handles: Sequence[EvidenceHandle]) -> Mapping[str, object]:
+        _ = handles
+        return {"handles": [], "contents_in_context": False}
 
 
 def test_daemon_context_conforms_to_plugin_context_protocol() -> None:

@@ -8,6 +8,7 @@ from typing import Literal, cast
 
 from qma.core.ontology.desks import DESK_PREFIX_TOKENS
 from qma.core.ports.cardinality import (
+    HANDLE_KIND_CONTRIBUTION_POINTS,
     PORT_CONTRACT_BY_NAME,
     Cardinality,
     PortError,
@@ -70,6 +71,11 @@ def _parse_contribution(raw: Mapping[str, object], *, plugin_id: str) -> Contrib
     point = raw.get("point")
     if not isinstance(point, str):
         raise ManifestError(f"contribution point must be a string; got {point!r}")
+    if point in HANDLE_KIND_CONTRIBUTION_POINTS:
+        raise ManifestError(
+            "handle kinds are a closed qma-core vocabulary; plugins may not "
+            "extend them (AD-14; DEC-0313; FR-Q53)"
+        )
 
     # Singleton port bindings use the port type name; multi points use the eight names.
     if point in PORT_CONTRACT_BY_NAME:

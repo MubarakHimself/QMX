@@ -10,6 +10,7 @@ import qma.daemon.bus
 import qma.daemon.capabilities
 import qma.daemon.context
 import qma.daemon.envs
+import qma.daemon.handles
 import qma.daemon.hooks
 import qma.daemon.journal
 import qma.daemon.ledgers
@@ -41,6 +42,7 @@ def test_structural_modules_importable() -> None:
         qma.daemon.proxy,
         qma.daemon.tools,
         qma.daemon.envs,
+        qma.daemon.handles,
         qma.daemon.context,
         qma.daemon.plugins,
         qma.daemon.telemetry,

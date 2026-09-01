@@ -52,6 +52,7 @@ SCHEMA_FILES: Final[dict[str, str]] = {
     "initialize": "initialize.v1.schema.json",
     "host_request": "host_request.v1.schema.json",
     "principal_record": "principal_record.v1.schema.json",
+    "money_path_field_diff": "money_path_field_diff.v1.schema.json",
 }
 
 
@@ -145,9 +146,7 @@ def _validate(instance: object, schema: Mapping[str, object], path: str = "$") -
             except SchemaValidationError as exc:
                 errors.append(str(exc))
         else:
-            raise SchemaValidationError(
-                f"{path}: matched no oneOf branch ({'; '.join(errors)})"
-            )
+            raise SchemaValidationError(f"{path}: matched no oneOf branch ({'; '.join(errors)})")
         return
     if "const" in schema and instance != schema["const"]:
         raise SchemaValidationError(f"{path}: expected const {schema['const']!r}")
