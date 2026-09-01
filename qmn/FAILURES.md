@@ -385,3 +385,51 @@ designed failure; every typed refusal the node can emit belongs here.
   works and proves nothing about edge. It cannot run live, cannot mint
   soak or KSA numbers, and its evidence is for your signature — not a
   performance certificate.
+
+### FR-26: Bot-supplied final size at the Book door
+
+- **Failure class:** invalid input
+- **Detection:** an inbound CT-23 mapping carries `requested_r`, `quantity`,
+  `volume`, `size`, `lots`, or `original_risk_amount`
+  (`qmn.order.reject_bot_supplied_final_size` /
+  `admit_entry_at_book_door` / `mint_place_order_from_authorized`).
+- **Auto-recovery / retry:** none — the bot may not size. The Book resolves
+  `requested_r` and derives quantity from frozen original risk.
+- **Visible degraded state:** the intent is refused before command mint; no
+  venue command is constructed; the decision is journaled as refused-by-door.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The bot proposed a size. QMX refuses that: the
+  Book sizes every entry. Remove quantity/`requested_r` from the bot intent
+  and let the Book door freeze R.
+
+### FR-27: Command mint without frozen R faces
+
+- **Failure class:** invalid input
+- **Detection:** `mint_place_order_from_authorized` or
+  `mint_virtual_from_authorized` is called without an `AuthorizedIntent`
+  whose three R faces were frozen at the Book door
+  (`qmn.order.refuse_command_mint_without_frozen_r`).
+- **Auto-recovery / retry:** none — admit the entry at the Book door first.
+- **Visible degraded state:** no `place_order` is minted; the order path
+  never sees an unauthorized command.
+- **Notification tier:** operator-visible (journaled door refusal).
+- **Product-user affordance:** An order cannot be minted until the Book has
+  frozen original risk. The entry must pass the Book door (full-loss price,
+  Book-resolved `requested_r`, dimensional checks) first.
+
+### FR-28: Frozen R mutated except the journaled partial-entry rebase
+
+- **Failure class:** policy rejection
+- **Detection:** a protection amendment, rollover, configuration change, or
+  treasury act would change frozen R faces, or a second distinct
+  terminal-partial-entry rebase is requested
+  (`qmn.order.preserve_frozen_r` /
+  `journal_terminal_partial_entry_rebase`).
+- **Auto-recovery / retry:** none for a distinct second rebase. A repeat of
+  the same journaled rebase is idempotent and does not append again.
+- **Visible degraded state:** the act is refused; virtual-position faces and
+  CT-29 original risk stay as admitted (or as the one journaled rebase).
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** Frozen R does not move with stops, rollover,
+  settings, or treasury. Only a short ENTRY fill at first terminal state
+  re-bases `original_risk_amount`, once, and that rebase is journaled.

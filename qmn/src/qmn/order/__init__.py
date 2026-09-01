@@ -26,6 +26,11 @@ Story 24.9: duplicate fills dedup by venue-native deal/execution identity
 ``rejected-by-venue (superseded-by-terminal-subject)`` with CT-29 venue
 authority, never UNKNOWN; absent/terminal subjects resolve without submission
 (TN-24j).
+
+Story 26.12: the CT-23 Book door freezes the three R faces into an authorized
+intent before command mint; the bot never supplies final size; only the
+journaled terminal-partial-entry rebase may change original_risk_amount
+(QMX-F068; TN-24/25).
 """
 
 from __future__ import annotations
@@ -49,6 +54,25 @@ from qmn.order.amend import (
     refuse_close_then_replace,
     refuse_invented_amend_sequence,
     resolve_amend_atomicity,
+)
+from qmn.order.door import (
+    BOT_SIZE_FIELDS,
+    PARTIAL_ENTRY_REBASE_JOURNAL_KIND,
+    POSITION_RISK_AMOUNT_FORMULA_ID,
+    AuthorizedIntent,
+    FrozenRPreservation,
+    PartialEntryRebaseJournal,
+    PartialEntryRebaseJournalRecord,
+    PostAdmissionKind,
+    admit_entry_at_book_door,
+    check_door_dimensional_units,
+    journal_terminal_partial_entry_rebase,
+    mint_ct29_from_frozen_r,
+    mint_place_order_from_authorized,
+    mint_virtual_from_authorized,
+    preserve_frozen_r,
+    refuse_command_mint_without_frozen_r,
+    reject_bot_supplied_final_size,
 )
 from qmn.order.fills import (
     DATA_QUALITY_EVENT_TYPE,
@@ -118,6 +142,7 @@ from qmn.order.unknown import (
 
 __all__ = [
     "AMEND_JOURNAL_KIND",
+    "BOT_SIZE_FIELDS",
     "CLOSING_AUTHORITY_VENUE",
     "COMMAND_ORDINAL_RECORD_CLASS",
     "CT19_CLOSED_KINDS",
@@ -130,6 +155,8 @@ __all__ = [
     "JOURNAL_SEQUENCE_RECORD_CLASS",
     "OPERATOR_PRINCIPAL",
     "PACER_DOOR",
+    "PARTIAL_ENTRY_REBASE_JOURNAL_KIND",
+    "POSITION_RISK_AMOUNT_FORMULA_ID",
     "SUPERSEDED_BY_TERMINAL_SUBJECT",
     "UNDELIVERABLE_ALARM_CLASS",
     "VENUE_CLIENT_ID_PREFIX",
@@ -138,6 +165,7 @@ __all__ = [
     "AmendAtomicity",
     "AmendJournalRecord",
     "AmendSequencePlan",
+    "AuthorizedIntent",
     "BookDynamicProtectionPolicy",
     "CommandIdentityBinder",
     "CommandOrdinalHighWater",
@@ -149,6 +177,7 @@ __all__ = [
     "DynamicProtectionOrigin",
     "FillIngestDisposition",
     "FillIngestResult",
+    "FrozenRPreservation",
     "HeldProtectionAct",
     "HoldDisposition",
     "JournalSequenceCursor",
@@ -156,6 +185,9 @@ __all__ = [
     "OrderPathSubmission",
     "OrderPathTerminalResolution",
     "PacerAdmission",
+    "PartialEntryRebaseJournal",
+    "PartialEntryRebaseJournalRecord",
+    "PostAdmissionKind",
     "ProtectionIntentExtent",
     "ReadbackClarity",
     "ResolveDecision",
@@ -165,7 +197,9 @@ __all__ = [
     "UnknownStreamRegistry",
     "WireHandoff",
     "admission_class_for",
+    "admit_entry_at_book_door",
     "admit_risk_non_increasing_amend_protection",
+    "check_door_dimensional_units",
     "compound_all_rejected_acceptance_blocked",
     "ct19_kinds_are_closed",
     "decide_resolve_path",
@@ -174,11 +208,18 @@ __all__ = [
     "is_breakeven_ratchet_amendment",
     "is_single_sided_amendment",
     "journal_amend_before_dispatch",
+    "journal_terminal_partial_entry_rebase",
     "local_queue_bound_refusal",
+    "mint_ct29_from_frozen_r",
+    "mint_place_order_from_authorized",
     "mint_venue_client_id",
+    "mint_virtual_from_authorized",
+    "preserve_frozen_r",
     "refuse_close_partial",
     "refuse_close_then_replace",
+    "refuse_command_mint_without_frozen_r",
     "refuse_invented_amend_sequence",
+    "reject_bot_supplied_final_size",
     "require_venue_resident_protective_stop",
     "resolve_amend_atomicity",
     "resolve_node_close_against_subject",
