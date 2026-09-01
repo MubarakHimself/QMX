@@ -117,8 +117,8 @@ qml = { workspace = true }
 qmb = { workspace = true }
 # The qmn application-layer member, referenced by qmn-lib below so `import qmn`
 # resolves in the gate environment (Story 24.1; DEC-0186). qmn declares qmf-core,
-# qmf-venue (sanctioned at qmn.venue only), and qmb (Story 24.4 unforked loop);
-# protobuf stays in qmf-venue.
+# qmf-risk (CT-30 KSA effects; Story 26.1), qmf-venue (sanctioned at qmn.venue
+# only), and qmb (Story 24.4 unforked loop); protobuf stays in qmf-venue.
 qmn = { workspace = true }
 
 [dependency-groups]
@@ -198,9 +198,9 @@ qmb-lib = ["qmb"]
 
 # The qmn trading node, provisioned by default. Installs the qmn workspace member
 # so `import qmn` resolves under `poe test` / `poe types`. qmn declares qmf-core,
-# qmf-venue (DEC-0186, DEC-0241), and qmb (Story 24.4); protobuf stays declared
-# only in qmf-venue. Kept out of `dev` so the SSSF factory-gate contract stays
-# byte-stable.
+# qmf-risk (Story 26.1), qmf-venue (DEC-0186, DEC-0241), and qmb (Story 24.4);
+# protobuf stays declared only in qmf-venue. Kept out of `dev` so the SSSF
+# factory-gate contract stays byte-stable.
 qmn-lib = ["qmn"]
 
 # skylos is SEPARATE from `dev`, and not because it is optional - because it

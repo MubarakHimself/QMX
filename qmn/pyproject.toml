@@ -9,6 +9,7 @@ requires-python = ">=3.14,<3.15"
 dependencies = [
     "qmf-core",
     "qmf-registry",
+    "qmf-risk",
     "qmf-venue",
     "qmb",
     "prometheus-client==0.26.0",
@@ -25,5 +26,6 @@ module-name = "qmn"
 [tool.uv.sources]
 qmf-core = { workspace = true }
 qmf-registry = { workspace = true }
+qmf-risk = { workspace = true }
 qmf-venue = { workspace = true }
 qmb = { workspace = true }

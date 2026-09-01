@@ -1470,6 +1470,7 @@ dependencies = [
     { name = "qmb" },
     { name = "qmf-core" },
     { name = "qmf-registry" },
+    { name = "qmf-risk" },
     { name = "qmf-venue" },
 ]
 
@@ -1479,6 +1480,7 @@ requires-dist = [
     { name = "qmb", editable = "qmb" },
     { name = "qmf-core", editable = "packages/qmf-core" },
     { name = "qmf-registry", editable = "packages/qmf-registry" },
+    { name = "qmf-risk", editable = "packages/qmf-risk" },
     { name = "qmf-venue", editable = "packages/qmf-venue" },
 ]
 

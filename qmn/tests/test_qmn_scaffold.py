@@ -69,6 +69,7 @@ def test_declared_dependencies_include_qmf_venue_and_qmb() -> None:
     data = tomllib.loads((_QMN_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     deps = set(data["project"]["dependencies"])
     assert "qmf-core" in deps
+    assert "qmf-risk" in deps
     assert "qmf-venue" in deps
     assert "qmb" in deps
     assert "prometheus-client==0.26.0" in deps
