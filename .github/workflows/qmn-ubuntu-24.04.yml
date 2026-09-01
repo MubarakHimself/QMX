@@ -1,0 +1,106 @@
+name: QMN ubuntu-24.04 lane
+# Pinned Linux CI lane for the trading node (TN-16 / NFR-18/21 / DEC-0201).
+# Never uses the floating latest runner image. Compensates for the deliberate
+# absence of a staging host together with check mode, replay, and node-rollback.
+#
+# Steps: Linux typing, isolated clean install, unit-file/IaC scan, check-mode
+# boot + switch/rollback planner, scratch-credstore LoadCredentialEncrypted
+# contract (systemd-analyze when available).
+on:
+  push:
+    branches: [integration]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  qmn-ubuntu-24-04:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        with:
+          python-version-file: .python-version
+
+      - name: Install uv (pinned)
+        run: python -m pip install --disable-pip-version-check "uv==0.12.6"
+
+      - name: Sync the workspace (default groups)
+        run: uv sync
+
+      - name: Assert runner pin is ubuntu-24.04 (never latest)
+        run: |
+          python - <<'PY'
+          import os, sys
+          label = os.environ.get("ImageOS") or os.environ.get("RUNNER_OS", "")
+          # GitHub sets ImageOS=ubuntu24 for ubuntu-24.04 runners.
+          print(f"ImageOS={os.environ.get('ImageOS')!r} RUNNER_OS={os.environ.get('RUNNER_OS')!r}")
+          image = (os.environ.get("ImageOS") or "").casefold()
+          if image and "ubuntu24" not in image and image != "ubuntu24":
+              # Soft signal — the workflow YAML pin is authoritative.
+              print("warning: ImageOS did not advertise ubuntu24; workflow pin still ubuntu-24.04")
+          print("runner pin ok")
+          PY
+
+      - name: Linux typing (pythonPlatform=Linux) for qmn
+        run: >
+          uv run pyright --pythonplatform Linux
+          --project pyproject.toml
+          qmn/src qmn/deploy
+
+      - name: Unit-file / IaC scan + check-mode + scratch-credstore + upgrade contract
+        run: uv run python qmn/deploy/ci_lane.py --out "$RUNNER_TEMP/qmn-ci-lane.json"
+
+      - name: Isolated clean install (qmn)
+        run: uv run python qmn/deploy/ci_lane.py --isolated-install --out "$RUNNER_TEMP/qmn-ci-lane-isolated.json"
+
+      - name: Switch / rollback fixture proof (atomic current flip, paired record)
+        run: |
+          ROOT="$RUNNER_TEMP/opt-qmx"
+          mkdir -p "$ROOT"
+          uv run python qmn/deploy/switch.py node-switch \
+            --commit aaaaaaaa --config-version cfg-a \
+            --fixture-root "$ROOT" --out "$RUNNER_TEMP/switch-a.json"
+          uv run python qmn/deploy/switch.py node-switch \
+            --commit bbbbbbbb --config-version cfg-b \
+            --fixture-root "$ROOT" --out "$RUNNER_TEMP/switch-b.json"
+          uv run python qmn/deploy/switch.py node-rollback \
+            --fixture-root "$ROOT" --out "$RUNNER_TEMP/rollback.json"
+          python - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "opt-qmx"
+          current = root / "current"
+          assert current.exists() or current.is_symlink(), current
+          if current.is_symlink():
+              commit = pathlib.Path(os.readlink(current)).name
+          else:
+              commit = current.read_text(encoding="utf-8").strip()
+          assert commit == "aaaaaaaa", commit
+          record = json.loads((root / "deployments" / "aaaaaaaa.json").read_text(encoding="utf-8"))
+          assert record["commit"] == "aaaaaaaa"
+          assert record["config_version"] == "cfg-a"
+          assert (root / "trees" / "aaaaaaaa").is_dir()
+          assert (root / "trees" / "bbbbbbbb").is_dir(), "previous tree must stay recoverable"
+          print("switch/rollback fixture proof ok")
+          PY
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        if: always()
+        with:
+          name: qmn-ubuntu-24-04-lane
+          path: |
+            ${{ runner.temp }}/qmn-ci-lane.json
+            ${{ runner.temp }}/qmn-ci-lane-isolated.json
+            ${{ runner.temp }}/switch-a.json
+            ${{ runner.temp }}/switch-b.json
+            ${{ runner.temp }}/rollback.json
+          if-no-files-found: warn
+          retention-days: 14

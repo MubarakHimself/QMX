@@ -15,15 +15,17 @@ qmn_values := qmn_deploy / "fixtures" / "render-values.json"
 node-install *ARGS:
     uv run python "{{qmn_deploy}}/install.py" --check-mode --values "{{qmn_values}}" {{ARGS}}
 
-# Placeholder surfaces for later stories (25.18 switch/rollback, secrets, …).
-# Bodies stay check-mode / no-op until those stories land; names are reserved
-# on the allow-list in qmn/deploy/boundary.py.
-
+# Release switch / rollback (Story 25.18). Check mode by default; live --apply
+# is refused off-VPS. Fixture-root apply is for CI/tests only.
 node-switch *ARGS:
-    @echo "node-switch: reserved (Story 25.18); refusing host mutation from this worktree"
+    uv run python "{{qmn_deploy}}/switch.py" node-switch --check-mode {{ARGS}}
 
 node-rollback *ARGS:
-    @echo "node-rollback: reserved (Story 25.18); refusing host mutation from this worktree"
+    uv run python "{{qmn_deploy}}/switch.py" node-rollback --check-mode {{ARGS}}
+
+# Pinned ubuntu-24.04 lane contract suite (NFR-18/21 compensators).
+node-ci-lane *ARGS:
+    uv run python "{{qmn_deploy}}/ci_lane.py" {{ARGS}}
 
 node-secrets-provision *ARGS:
     @echo "node-secrets-provision: reserved; seal with systemd-creds encrypt --with-key=host"

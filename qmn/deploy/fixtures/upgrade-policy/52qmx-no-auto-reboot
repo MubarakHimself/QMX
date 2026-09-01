@@ -1,0 +1,6 @@
+// QMX Trading VPS — unattended upgrades stage/verify only (NFR-18).
+// Never reboot; never restart qmn.service. Release changes require
+// an explicit ops-principal `just node-switch` at a safe point.
+Unattended-Upgrade::Automatic-Reboot "false";
+Unattended-Upgrade::Automatic-Reboot-WithUsers "false";
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
