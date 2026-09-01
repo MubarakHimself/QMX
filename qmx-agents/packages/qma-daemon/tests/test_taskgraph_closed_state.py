@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from qma.core.ontology import ActorId, DeskSlug, Goal, Quant, RoleName
+from qma.core.ports.execution import ExecutionEnvironmentDeclaration
 from qma.core.vocabulary.enums import (
     TASK_MISSION_TERMINAL_STATES,
     ExecutionEnvironmentKind,
@@ -62,6 +63,10 @@ def _compile_and_dispatch(
                 ExecutionEnvironmentKind.DOCKER,
                 _EnvStub(),
                 provider_id="local-docker",
+                declaration=ExecutionEnvironmentDeclaration.isolated(
+                    ExecutionEnvironmentKind.DOCKER,
+                    provider_ref="local-docker",
+                ),
             )
         )
     dispatcher = TaskGraphDispatcher(environments=envs)
@@ -86,13 +91,16 @@ def test_closed_vocabulary_exactly_eight_states_three_terminal() -> None:
         "failed",
         "cancelled",
     }
-    assert frozenset(
-        {
-            TaskMissionState.DONE,
-            TaskMissionState.FAILED,
-            TaskMissionState.CANCELLED,
-        }
-    ) == TASK_MISSION_TERMINAL_STATES
+    assert (
+        frozenset(
+            {
+                TaskMissionState.DONE,
+                TaskMissionState.FAILED,
+                TaskMissionState.CANCELLED,
+            }
+        )
+        == TASK_MISSION_TERMINAL_STATES
+    )
     for state in TaskMissionState:
         assert is_task_mission_terminal(state) is (state in TASK_MISSION_TERMINAL_STATES)
 
@@ -169,9 +177,7 @@ def test_aborted_job_maps_to_failed_with_reason_never_cancelled() -> None:
 def test_never_dispatched_task_cancels_without_job_handle() -> None:
     owner = _quant(slug="beta")
     compiler = MissionCompiler(known_quant_actor_ids={owner.actor_id.value})
-    compiled = compiler.compile(
-        CompileRequest(goal=Goal(text="cancel before start"), owner=owner)
-    )
+    compiled = compiler.compile(CompileRequest(goal=Goal(text="cancel before start"), owner=owner))
     assert is_ok(compiled)
     dispatcher = TaskGraphDispatcher()
     dispatcher.materialize(compiled.value.task_graph, mission=compiled.value.mission)

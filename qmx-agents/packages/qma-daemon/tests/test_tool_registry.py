@@ -6,6 +6,7 @@ import pytest
 from qma.core.barriers.capability import CAPABILITY_LADDER, CapabilityRung
 from qma.core.control.primitives import Skill
 from qma.core.plugins.manifest import ManifestError, parse_plugin_manifest
+from qma.core.ports.execution import ExecutionEnvironmentDeclaration
 from qma.core.ports.tools import (
     TOOL_KINDS,
     ToolAdapterRecord,
@@ -282,7 +283,16 @@ def test_computer_use_fails_check_fn_without_desktop_gap_0070_excluded() -> None
     assert registry.snapshot()["desktop_registered"] is False
 
     # Registering desktop makes the same tool available (still no VPS provisioned here).
-    assert is_ok(envs.register(ExecutionEnvironmentKind.DESKTOP, _EnvStub()))
+    assert is_ok(
+        envs.register(
+            ExecutionEnvironmentKind.DESKTOP,
+            _EnvStub(),
+            declaration=ExecutionEnvironmentDeclaration.isolated(
+                ExecutionEnvironmentKind.DESKTOP,
+                provider_ref="local-desktop",
+            ),
+        )
+    )
     assert tool.is_available() is True
     visible = registry.model_visible_schemas()
     assert len(visible) == 1

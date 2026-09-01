@@ -30,6 +30,7 @@ from qma.core.refusals import (
     NonLoopbackProxy,
     OperatorPrincipalRequired,
     ProhibitedMoneyPathTool,
+    ProhibitedReachability,
     ProvenanceShapeMismatch,
     QmaRefusal,
     SlugUnavailable,
@@ -57,6 +58,7 @@ EXPECTED_VARIANTS = (
     "NonLoopbackProxy",
     "UnauthenticatedProxy",
     "ProhibitedMoneyPathTool",
+    "ProhibitedReachability",
     "UnknownHostRequest",
     "ProvenanceShapeMismatch",
     "StaleSnapshot",
@@ -147,6 +149,11 @@ def test_all_variant_factories_carry_structured_context() -> None:
         NonLoopbackProxy.of(address="10.0.0.1:8080"),
         UnauthenticatedProxy.of(deployment_id="proxy-1"),
         ProhibitedMoneyPathTool.of(tool_id="place_order"),
+        ProhibitedReachability.of(
+            surface="environment",
+            reason="denied_host",
+            host="demo.ctraderapi.com",
+        ),
         UnknownHostRequest.of(verb="invented.verb"),
         ProvenanceShapeMismatch.of(
             source_id="strats",

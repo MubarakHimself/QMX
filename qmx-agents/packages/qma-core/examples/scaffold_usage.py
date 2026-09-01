@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import qma.core
 from qma.core import content_address, tree_digest
+from qma.core.barriers import parse_declaration, validate_network_posture
 from qma.core.foundation import Money, fingerprint, is_ok, is_refusal
 from qma.core.ontology import (
     ONTOLOGY_CHAIN,
@@ -26,7 +27,7 @@ from qma.core.ports import (
     require_singleton_scope_key,
     validate_contribution_point,
 )
-from qma.core.refusals import NoMemoryProvider, StoreVersionMismatch
+from qma.core.refusals import NoMemoryProvider, ProhibitedReachability, StoreVersionMismatch
 from qma.core.vocabulary import (
     HOOK_VERBS,
     HookResultDecision,
@@ -78,6 +79,17 @@ def main() -> None:
     assert is_ok(file_fp)
     digest = tree_digest({"readme.md": file_fp.value})
     assert is_ok(digest)
+
+    isolated = parse_declaration(
+        kind="docker",
+        network="none",
+        reachable_hosts=(),
+        provider_ref="local",
+    )
+    assert is_ok(isolated)
+    venue = validate_network_posture("allowlist", ("demo.ctraderapi.com",))
+    assert is_refusal(venue)
+    assert ProhibitedReachability.matches(venue)
 
     refused = NoMemoryProvider.of(desk="research")
     assert is_refusal(refused)

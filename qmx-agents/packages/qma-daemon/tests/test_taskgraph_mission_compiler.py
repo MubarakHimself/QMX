@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from typing import cast
 
 from qma.core.ontology import ActorId, DeskSlug, Goal, Quant, RoleName
+from qma.core.ports.execution import ExecutionEnvironmentDeclaration
 from qma.core.refusals import NoEnvironment
 from qma.core.vocabulary.enums import (
     ExecutionEnvironmentKind,
@@ -318,7 +319,15 @@ def test_dispatcher_grants_dispatch_lease_and_evaluates_environment() -> None:
     # Registered provider may issue the environment_lease.
     populated = ExecutionEnvironmentRegistry()
     assert is_ok(
-        populated.register(ExecutionEnvironmentKind.DOCKER, _EnvStub(), provider_id="local-docker")
+        populated.register(
+            ExecutionEnvironmentKind.DOCKER,
+            _EnvStub(),
+            provider_id="local-docker",
+            declaration=ExecutionEnvironmentDeclaration.isolated(
+                ExecutionEnvironmentKind.DOCKER,
+                provider_ref="local-docker",
+            ),
+        )
     )
     lease = populated.evaluate_environment_lease(
         task_id="task:probe",

@@ -34,7 +34,12 @@ from qma.core.ports.cardinality import (
 )
 from qma.core.ports.compute import ComputeProvider
 from qma.core.ports.context import ContextCompiler
-from qma.core.ports.execution import ExecutionEnvironment
+from qma.core.ports.execution import (
+    ComputerUseProfile,
+    ExecutionEnvironment,
+    ExecutionEnvironmentDeclaration,
+    WorkerImageManifest,
+)
 from qma.core.ports.knowledge import KnowledgeSource
 from qma.core.ports.memory import MemoryProvider
 from qma.core.ports.model import (
@@ -120,10 +125,12 @@ __all__ = [
     "TOOL_KIND_DEFAULT_RUNG",
     "Cardinality",
     "ComputeProvider",
+    "ComputerUseProfile",
     "ContextCompiler",
     "DeploymentRecord",
     "EffectiveCapabilitySet",
     "ExecutionEnvironment",
+    "ExecutionEnvironmentDeclaration",
     "KnowledgeSource",
     "MemoryProvider",
     "ModelCapabilities",
@@ -144,6 +151,7 @@ __all__ = [
     "ToolKind",
     "ToolRecord",
     "ToolsetRecord",
+    "WorkerImageManifest",
     "assert_agent_path_enforcement_event",
     "assert_skill_is_not_capability_grant",
     "assign_model_family",

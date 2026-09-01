@@ -23,6 +23,7 @@ __all__ = [
     "NonLoopbackProxy",
     "OperatorPrincipalRequired",
     "ProhibitedMoneyPathTool",
+    "ProhibitedReachability",
     "ProvenanceShapeMismatch",
     "SlugUnavailable",
     "StaleSnapshot",
@@ -162,6 +163,43 @@ class ProhibitedMoneyPathTool(QmaRefusal):
         return cls.create(context=context)
 
 
+class ProhibitedReachability(QmaRefusal):
+    """Environment, image, host, or profile hits the AD-28 barrier (FR-Q47).
+
+    Raised at registration or placement, never as a runtime hook deny.
+    """
+
+    VARIANT: ClassVar[str] = "ProhibitedReachability"
+    CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.POLICY_REJECTION
+
+    @classmethod
+    def of(
+        cls,
+        *,
+        surface: str,
+        reason: str,
+        stage: str = "registration",
+        host: str | None = None,
+        kind: str | None = None,
+        via: str | None = None,
+        matched: str | None = None,
+    ) -> ProhibitedReachability:
+        context: dict[str, object] = {
+            "surface": surface,
+            "reason": reason,
+            "stage": stage,
+        }
+        if host is not None:
+            context["host"] = host
+        if kind is not None:
+            context["kind"] = kind
+        if via is not None:
+            context["via"] = via
+        if matched is not None:
+            context["matched"] = matched
+        return cls.create(context=context)
+
+
 class UnknownHostRequest(QmaRefusal):
     """host_request verb maps to no daemon-owned primitive (AD-14)."""
 
@@ -268,6 +306,7 @@ NAMED_REFUSAL_VARIANTS: Final[tuple[type[QmaRefusal], ...]] = (
     NonLoopbackProxy,
     UnauthenticatedProxy,
     ProhibitedMoneyPathTool,
+    ProhibitedReachability,
     UnknownHostRequest,
     ProvenanceShapeMismatch,
     StaleSnapshot,

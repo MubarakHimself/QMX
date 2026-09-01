@@ -12,6 +12,7 @@ from dataclasses import replace
 from types import MappingProxyType
 from typing import Any
 
+from qma.core.barriers.reachability import refuse_forbidden_model_adapter
 from qma.core.ports.model import (
     MODEL_FAMILY_ASSIGN_COMMAND,
     PROXY_ALLOW_UNAUTHENTICATED_LOOPBACK_KEY,
@@ -94,6 +95,9 @@ class DeploymentRegistry:
         """Register a Deployment with ``model_family`` absent (plugin path)."""
         if record.model_family is not None:
             return _invalid_family_on_register(record.deployment_id)
+        openrouter = refuse_forbidden_model_adapter(record.adapter)
+        if openrouter is not None:
+            return openrouter
         if record.deployment_id in self._by_id:
             return invalid_input(
                 "deployment_id",
@@ -153,9 +157,7 @@ class DeploymentRegistry:
         return outcome
 
     def local_proxy_catalog(self) -> tuple[DeploymentRecord, ...]:
-        return tuple(
-            entry for entry in self._by_id.values() if is_local_proxy_deployment(entry)
-        )
+        return tuple(entry for entry in self._by_id.values() if is_local_proxy_deployment(entry))
 
     def startup_evidence(self) -> LocalProxyStartupEvidence:
         """Evidence entry naming each proxy Deployment and the loopback setting."""

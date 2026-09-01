@@ -32,6 +32,7 @@ from qma.core.barriers.parent_surfaces import (
     ProhibitedMutation,
     ProhibitedRecordFamily,
 )
+from qma.core.barriers.reachability import GAP_0070_DESKTOP_EXCLUSION
 from qma.core.control.primitives import Skill
 from qma.core.ports.tools import (
     TOOL_ADAPTER_WRITE_COMMAND,
@@ -62,18 +63,6 @@ __all__ = [
     "GAP_0070_DESKTOP_EXCLUSION",
     "ToolRegistry",
 ]
-
-# Deferred GAP-0070: no Windows VPS / desktop environment is provisioned here.
-GAP_0070_DESKTOP_EXCLUSION: Mapping[str, str] = MappingProxyType(
-    {
-        "gap": "GAP-0070",
-        "status": "deferred",
-        "effect": (
-            "computer-use tools fail check_fn until a desktop ExecutionEnvironment "
-            "is registered; this story does not provision one"
-        ),
-    }
-)
 
 
 def _always_available() -> bool:
