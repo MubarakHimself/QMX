@@ -6,8 +6,9 @@ import ast
 import importlib.util
 import struct
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, TypeVar, cast
+from typing import TypeVar, cast
 
 from qmf.core.refusal import Result, is_ok, is_refusal
 from qmn.doors.http import powers as powers_mod
