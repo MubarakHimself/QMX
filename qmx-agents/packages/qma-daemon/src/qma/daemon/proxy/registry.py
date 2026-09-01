@@ -2,6 +2,7 @@
 
 Plugin contributions register with ``model_family`` absent. Operator assignment
 is a separate human-gate command; the registry never synthesizes a family.
+Local-proxy Deployments are validated for loopback bind and ``auth_mode: none``.
 """
 
 from __future__ import annotations
@@ -13,10 +14,18 @@ from typing import Any
 
 from qma.core.ports.model import (
     MODEL_FAMILY_ASSIGN_COMMAND,
+    PROXY_ALLOW_UNAUTHENTICATED_LOOPBACK_KEY,
     DeploymentRecord,
     assign_model_family,
+    is_local_proxy_deployment,
 )
 from qma.core.vocabulary.enums import ModelClass, PrincipalClass
+from qma.daemon.proxy.local_proxy import (
+    ALLOW_UNAUTHENTICATED_LOOPBACK_DEFAULT,
+    LocalProxyStartupEvidence,
+    record_local_proxy_startup_evidence,
+    validate_local_proxy_registration,
+)
 from qmf.core import Ok, Result
 from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 from qmf.data.store.refusals import invalid_input
@@ -45,21 +54,41 @@ class DeploymentRegistry:
     """In-memory multi Deployment catalog keyed by ``deployment_id``.
 
     Stage-one routing reads only records whose ``model_class`` matches the
-    request. Registration refuses any non-``None`` ``model_family``.
+    request. Registration refuses any non-``None`` ``model_family``. Local-proxy
+    rows are validated against loopback bind and ``auth_mode: none`` (FR-Q40).
     """
 
-    def __init__(self, *, allowed_families: Sequence[str] | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        allowed_families: Sequence[str] | None = None,
+        allow_unauthenticated_loopback: bool = ALLOW_UNAUTHENTICATED_LOOPBACK_DEFAULT,
+    ) -> None:
         self._by_id: dict[str, DeploymentRecord] = {}
         self._allowed_families: frozenset[str] = frozenset(allowed_families or ())
         self._wrr_cursors: dict[str, int] = {}
+        self._allow_unauthenticated_loopback = bool(allow_unauthenticated_loopback)
 
     @property
     def allowed_families(self) -> frozenset[str]:
         return self._allowed_families
 
+    @property
+    def allow_unauthenticated_loopback(self) -> bool:
+        """Current ``registry:proxy.allow_unauthenticated_loopback`` value."""
+        return self._allow_unauthenticated_loopback
+
+    @property
+    def allow_unauthenticated_loopback_key(self) -> str:
+        return PROXY_ALLOW_UNAUTHENTICATED_LOOPBACK_KEY
+
     def set_allowed_families(self, families: Sequence[str]) -> None:
         """Replace the closed ``registry:deployment.model_family`` vocabulary."""
         self._allowed_families = frozenset(families)
+
+    def set_allow_unauthenticated_loopback(self, allowed: bool) -> None:
+        """Update the cited ``registry:proxy.allow_unauthenticated_loopback`` value."""
+        self._allow_unauthenticated_loopback = bool(allowed)
 
     def register(self, record: DeploymentRecord) -> Result[str]:
         """Register a Deployment with ``model_family`` absent (plugin path)."""
@@ -71,8 +100,14 @@ class DeploymentRegistry:
                 "Deployment id already registered (CT-45; AD-15)",
                 given=record.deployment_id,
             )
+        custody = validate_local_proxy_registration(
+            record,
+            allow_unauthenticated_loopback=self._allow_unauthenticated_loopback,
+        )
+        if not isinstance(custody, Ok):
+            return custody
         # Force absence even if a caller passed an explicit None via replace.
-        stored = replace(record, model_family=None)
+        stored = replace(custody.value, model_family=None)
         self._by_id[stored.deployment_id] = stored
         return Ok(stored.deployment_id)
 
@@ -117,6 +152,18 @@ class DeploymentRegistry:
             self._by_id[deployment_id] = outcome.value
         return outcome
 
+    def local_proxy_catalog(self) -> tuple[DeploymentRecord, ...]:
+        return tuple(
+            entry for entry in self._by_id.values() if is_local_proxy_deployment(entry)
+        )
+
+    def startup_evidence(self) -> LocalProxyStartupEvidence:
+        """Evidence entry naming each proxy Deployment and the loopback setting."""
+        return record_local_proxy_startup_evidence(
+            self.catalog(),
+            allow_unauthenticated_loopback=self._allow_unauthenticated_loopback,
+        )
+
     def snapshot(self) -> Mapping[str, Any]:
         return MappingProxyType(
             {
@@ -132,9 +179,16 @@ class DeploymentRegistry:
                         "weight": record.weight,
                         "quota_remaining": record.quota_remaining,
                         "credential_ref": record.credential_ref,
+                        "adapter": record.adapter,
+                        "auth_mode": record.auth_mode,
+                        "bind_host": record.bind_host,
+                        "bind_port": record.bind_port,
+                        "accepts_unauthenticated": record.accepts_unauthenticated,
                     }
                     for deployment_id, record in self._by_id.items()
                 },
                 "allowed_families": sorted(self._allowed_families),
+                "allow_unauthenticated_loopback": self._allow_unauthenticated_loopback,
+                "allow_unauthenticated_loopback_key": PROXY_ALLOW_UNAUTHENTICATED_LOOPBACK_KEY,
             }
         )

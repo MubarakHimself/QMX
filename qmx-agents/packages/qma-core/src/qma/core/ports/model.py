@@ -22,7 +22,11 @@ from qmf.core import Ok, Result
 from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 
 __all__ = [
+    "AUTH_MODE_NONE",
+    "LOCAL_PROXY_ADAPTERS",
     "MODEL_FAMILY_ASSIGN_COMMAND",
+    "OPENCODEX_ADAPTER",
+    "PROXY_ALLOW_UNAUTHENTICATED_LOOPBACK_KEY",
     "DeploymentRecord",
     "ModelCapabilities",
     "ModelClassRequest",
@@ -33,6 +37,7 @@ __all__ = [
     "assign_model_family",
     "capabilities_for",
     "eligible_pool",
+    "is_local_proxy_deployment",
     "resolve_model_request",
     "select_from_eligible",
     "select_reviewer",
@@ -40,6 +45,14 @@ __all__ = [
 ]
 
 MODEL_FAMILY_ASSIGN_COMMAND: Final[str] = "model_family.assign"
+
+# Local-proxy custody (CT-45; AD-15; FR-Q40). Spine mints only auth_mode: none.
+AUTH_MODE_NONE: Final[str] = "none"
+OPENCODEX_ADAPTER: Final[str] = "opencodex"
+LOCAL_PROXY_ADAPTERS: Final[frozenset[str]] = frozenset({OPENCODEX_ADAPTER})
+PROXY_ALLOW_UNAUTHENTICATED_LOOPBACK_KEY: Final[str] = (
+    "registry:proxy.allow_unauthenticated_loopback"
+)
 
 NeedName = Literal[
     "tools",
@@ -105,6 +118,9 @@ class DeploymentRecord:
     ``model_family`` is optional and never defaulted or synthesized. An
     unassigned family is routable but ineligible for every ReviewPolicy
     comparison (DEC-0314, DEC-0309). Registration leaves the field absent.
+
+    A local-proxy Deployment (OpenCodex first) carries ``auth_mode: none``, a
+    verified loopback bind, and never a QMA ``credential_ref`` (FR-Q40).
     """
 
     deployment_id: str
@@ -120,6 +136,11 @@ class DeploymentRecord:
     fill_units: int = 0
     fill_capacity: int = 1
     credential_ref: str | None = None
+    adapter: str | None = None
+    auth_mode: str | None = None
+    bind_host: str | None = None
+    bind_port: int | None = None
+    accepts_unauthenticated: bool = False
 
     def __post_init__(self) -> None:
         if self.deployment_id.strip() == "":
@@ -143,6 +164,24 @@ class DeploymentRecord:
         if self.fill_units < 0:
             msg = "fill_units must be >= 0 (CT-45)"
             raise VocabularyError(msg)
+        if self.auth_mode is not None and self.auth_mode != AUTH_MODE_NONE:
+            msg = (
+                "auth_mode mints only 'none' for local-proxy Deployments; "
+                "QMA-owned credentials use credential_ref (CT-45; AD-15)"
+            )
+            raise VocabularyError(msg)
+        if self.bind_port is not None and not (1 <= self.bind_port <= 65535):
+            msg = "bind_port must be in 1..65535 when set (CT-45)"
+            raise VocabularyError(msg)
+
+
+def is_local_proxy_deployment(record: DeploymentRecord) -> bool:
+    """True when the Deployment is a local-proxy implementation (FR-Q40)."""
+    if record.adapter is not None and record.adapter in LOCAL_PROXY_ADAPTERS:
+        return True
+    if record.auth_mode == AUTH_MODE_NONE:
+        return True
+    return record.bind_host is not None
 
 
 @dataclass(frozen=True, slots=True)

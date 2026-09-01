@@ -28,7 +28,11 @@ from qma.core.ports.execution import ExecutionEnvironment
 from qma.core.ports.knowledge import KnowledgeSource
 from qma.core.ports.memory import MemoryProvider
 from qma.core.ports.model import (
+    AUTH_MODE_NONE,
+    LOCAL_PROXY_ADAPTERS,
     MODEL_FAMILY_ASSIGN_COMMAND,
+    OPENCODEX_ADAPTER,
+    PROXY_ALLOW_UNAUTHENTICATED_LOOPBACK_KEY,
     DeploymentRecord,
     ModelCapabilities,
     ModelClassRequest,
@@ -39,6 +43,7 @@ from qma.core.ports.model import (
     assign_model_family,
     capabilities_for,
     eligible_pool,
+    is_local_proxy_deployment,
     resolve_model_request,
     select_from_eligible,
     select_reviewer,
@@ -57,11 +62,15 @@ RUNTIME_PORT_TYPES: tuple[type, ...] = (
 )
 
 __all__ = [
+    "AUTH_MODE_NONE",
     "CONTEXT_COMPILER_SCOPE_KEY",
+    "LOCAL_PROXY_ADAPTERS",
     "MODEL_FAMILY_ASSIGN_COMMAND",
     "MULTI_CONTRIBUTION_POINTS",
+    "OPENCODEX_ADAPTER",
     "PORT_CONTRACTS",
     "PORT_CONTRACT_BY_NAME",
+    "PROXY_ALLOW_UNAUTHENTICATED_LOOPBACK_KEY",
     "RETIRED_CONTRIBUTION_POINTS",
     "RUNTIME_PORT_TYPES",
     "Cardinality",
@@ -84,6 +93,7 @@ __all__ = [
     "capabilities_for",
     "eligible_pool",
     "has_qma_wire_schema",
+    "is_local_proxy_deployment",
     "qualified_contribution_id",
     "require_singleton_scope_key",
     "resolve_model_request",

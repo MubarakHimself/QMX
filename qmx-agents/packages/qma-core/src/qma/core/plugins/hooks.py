@@ -171,11 +171,24 @@ def build_hook_result(
     verifier_ref: str | None = None,
 ) -> HookResult:
     """Construct a HookResult after validating the closed decision vocabulary."""
+    from qma.core.plugins.secret_schema import assert_no_secret_in_hook_payloads
+    from qmf.core import is_refusal
+
     resolved = parse_closed(HookResultDecision, decision)
     if resolved is HookResultDecision.OBSERVE and (
         updated_input is not None or updated_output is not None
     ):
         raise VocabularyError("observe may not carry updated_input or updated_output (AD-10)")
+    secret_check = assert_no_secret_in_hook_payloads(
+        updated_input=updated_input,
+        updated_output=updated_output,
+        injected_context=injected_context,
+    )
+    if is_refusal(secret_check):
+        raise VocabularyError(
+            "resolved secrets are excluded from updated_input, updated_output, "
+            "and injected_context (AD-24; FR-Q46)"
+        )
     return HookResult(
         decision=resolved,
         reason=reason,
