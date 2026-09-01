@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from qma.core.plugins.hooks import (
     HookEvent,
     HookImplementationKind,
@@ -197,7 +199,7 @@ def test_required_verifier_gate_runs_deterministic_callable() -> None:
     assert is_required_verifier_gate("review_required")
     assert not is_required_verifier_gate("before_tool")
 
-    def verifier(_payload: dict[str, object]) -> dict[str, object]:
+    def verifier(_payload: Mapping[str, object]) -> Mapping[str, object]:
         return {"passed": True, "checks": ["schema"]}
 
     catalog = (
@@ -236,7 +238,7 @@ def test_required_verifier_gate_runs_deterministic_callable() -> None:
 
 
 def test_review_required_gate_and_phase_law_fields() -> None:
-    def verifier(_payload: dict[str, object]) -> dict[str, object]:
+    def verifier(_payload: Mapping[str, object]) -> Mapping[str, object]:
         return {"passed": True}
 
     catalog = (
@@ -265,7 +267,7 @@ def test_review_required_gate_and_phase_law_fields() -> None:
 
 
 def test_verifier_failure_denies_without_llm() -> None:
-    def verifier(_payload: dict[str, object]) -> dict[str, object]:
+    def verifier(_payload: Mapping[str, object]) -> Mapping[str, object]:
         return {"passed": False, "reason": "tests_failed"}
 
     catalog = (
@@ -327,7 +329,7 @@ def test_unassigned_family_ineligible_and_empty_catalog_no_eligible_reviewer() -
 
 
 def test_completion_gate_returns_no_eligible_reviewer() -> None:
-    def verifier(_payload: dict[str, object]) -> dict[str, object]:
+    def verifier(_payload: Mapping[str, object]) -> Mapping[str, object]:
         return {"passed": True}
 
     outcome = evaluate_required_verifier_gate(
