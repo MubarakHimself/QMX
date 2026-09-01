@@ -62,7 +62,8 @@ APPLICATION_ROOTS: tuple[str, ...] = ("qml", "qmb", "qmn")
 # qmf-registry, and qmf-risk only (Story 11.1; DEC-0171). qmb consumes the six
 # backend qmf packages and never qmf-venue (Story 13.1; DEC-0169). qmn is the
 # one sanctioned qmf-venue importer at its qmn.venue boundary (Story 24.1;
-# DEC-0241); Story 24.1 declares qmf-core + qmf-venue only.
+# DEC-0241); roster deps stay qmf-core + qmf-venue while qmb is an application
+# peer (Story 24.4 unforked run_slice; Story 25.1).
 EXPECTED_APPLICATION_DEPS: dict[str, frozenset[str]] = {
     "qml": frozenset({"qmf-core", "qmf-registry", "qmf-risk"}),
     "qmb": frozenset(
@@ -79,11 +80,12 @@ EXPECTED_APPLICATION_DEPS: dict[str, frozenset[str]] = {
 }
 
 # Application-layer workspace peers (not roster, not third-party). qmb hosts
-# CT-33 bots through the QL-7 adapter and may import qml (Story 14.8).
+# CT-33 bots through the QL-7 adapter and may import qml (Story 14.8). qmn
+# drives QMB run_slice unforked and may depend on qmb as a peer (Story 25.1).
 EXPECTED_APPLICATION_PEERS: dict[str, frozenset[str]] = {
     "qml": frozenset(),
     "qmb": frozenset({"qml"}),
-    "qmn": frozenset(),
+    "qmn": frozenset({"qmb"}),
 }
 
 # Third-party runtime deps for application members (workspace qmf-* dropped).

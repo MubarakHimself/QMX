@@ -191,7 +191,10 @@ def test_qmn_is_application_layer_not_roster() -> None:
     assert member.module_name == "qmn"
     assert member.roster_dependencies == EXPECTED_APPLICATION_DEPS["qmn"]
     assert VENUE_EDGE in member.roster_dependencies
-    assert set(member.dependencies) == member.roster_dependencies
+    assert (
+        set(member.dependencies) - member.roster_dependencies
+        == EXPECTED_APPLICATION_THIRD_PARTY["qmn"] | EXPECTED_APPLICATION_PEERS["qmn"]
+    )
 
 
 def test_qmn_venue_imports_qmf_venue_and_nothing_else_does() -> None:

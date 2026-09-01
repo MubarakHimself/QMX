@@ -10,6 +10,8 @@ CT-19/CT-20 shapes re-exported there. ``qmn.loop`` drives QMB ``run_slice``
 unforked behind the recording accumulator (DEC-0190). ``qmn.order`` wires
 command identity, protection priority, submission timing, and the exact
 ``(VenueId, account)`` UNKNOWN stream boundary (DEC-0224, QMX-F062).
+Story 25.1 seeds ``host`` (composition), ``config``, ``doors``, ``time``, and
+the ``deploy/`` operations toolkit (no console-script; recipes never trade).
 Nothing imports ``qmn``.
 
 ``__version__`` is display-only SemVer provenance and never enters ``fp1``
