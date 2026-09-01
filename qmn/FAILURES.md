@@ -230,3 +230,21 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Product-user affordance:** The node stood down fail-closed. Inspect the
   stand-down trigger, fix the cause, then resurrect from the operator
   principal.
+
+### FR-18: Light claim refused at composition root
+
+- **Failure class:** policy rejection
+- **Detection:** Compose evaluates a workload's four-bound light claim without
+  a recorded live-path baseline, with unmet declared bounds, without harness
+  proof, with a child-supplied self-approved class, or with a heavy dependency
+  on the synchronous path (`qmn.host.light_heavy` /
+  `compose.light_heavy.*`).
+- **Auto-recovery / retry:** none within the boot epoch — record the live-path
+  baseline on this deployment tuple, drop the light claim (heavy by default),
+  or remove the heavy dependency; then restart at a safe point.
+- **Visible degraded state:** boot does not Seal; stand-down-alive after doors
+  bind; heavy configs stay off the trading path.
+- **Notification tier:** alarm / operator-visible (compose refusal).
+- **Product-user affordance:** The node refused to seal because a producer,
+  labeler, or seat claimed light without proven four bounds. Leave it heavy
+  (fan-out) or wait for the VPS baseline before claiming light.

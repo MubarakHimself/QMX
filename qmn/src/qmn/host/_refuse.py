@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 
-__all__ = ["clean_token", "invalid", "policy"]
+__all__ = ["clean_token", "invalid", "policy", "unsupported"]
 
 
 def clean_token(value: object) -> str | None:
@@ -31,3 +31,8 @@ def invalid(field: str, reason: str, **extra: object) -> TypedRefusal:
 def policy(field: str, reason: str, **extra: object) -> TypedRefusal:
     """A ``policy rejection`` refusal."""
     return _build(RefusalCategory.POLICY_REJECTION, field, reason, **extra)
+
+
+def unsupported(field: str, reason: str, **extra: object) -> TypedRefusal:
+    """An ``unsupported capability`` refusal."""
+    return _build(RefusalCategory.UNSUPPORTED_CAPABILITY, field, reason, **extra)

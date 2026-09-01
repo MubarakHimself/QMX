@@ -10,8 +10,11 @@ writes the boot-attempt record under the reserved supervisor WriterId, then
 runs the ordered ceremony — only a door-bind failure exits nonzero; later
 detected refusals enter stand-down-alive. Story 25.6 owns safe points,
 stand-down-alive, watchdog/slice-progress, requested-restart exit 75, and the
-SIGTERM/UNKNOWN shutdown contract. Child modules and doors never restamp,
-never hold a registry cache, and never persist lineage.
+SIGTERM/UNKNOWN shutdown contract. Story 25.14 evaluates light/heavy four-bound
+claims over assembled definitions at Compose and refuses contradictions before
+Seal — child modules never self-approve the effective composition class.
+Child modules and doors never restamp, never hold a registry cache, and never
+persist lineage.
 """
 
 from __future__ import annotations
@@ -47,6 +50,21 @@ from qmn.host.boot_ceremony import (
     run_boot_ceremony,
     run_check_mode,
     supervisor_writer_is_reserved,
+)
+from qmn.host.light_heavy import (
+    CHILD_MODULES_MAY_SELF_APPROVE,
+    LIGHT_HEAVY_SURFACE,
+    WORKLOAD_KINDS,
+    CompositionClass,
+    CompositionClassAssignment,
+    FourBoundDeclaration,
+    ResolvedCompositionClasses,
+    WorkloadClaim,
+    WorkloadKind,
+    evaluate_workload_claim,
+    guard_synchronous_placement,
+    resolve_composition_classes,
+    workload_claim_identity_content,
 )
 from qmn.host.lineage_persist import (
     COMPOSITION_LINEAGE_STREAM,
@@ -121,6 +139,7 @@ __all__ = [
     "CHECK_MODE_EXIT_ON_REFUSAL",
     "CHECK_MODE_OPENS_SEQUENCER",
     "CHECK_MODE_PREFLIGHT_CHECKS",
+    "CHILD_MODULES_MAY_SELF_APPROVE",
     "CLEAN_STOP_EXIT_CODE",
     "COMPOSE_KIND_FORMAT_VERSION",
     "COMPOSE_RECORD_KINDS",
@@ -137,6 +156,7 @@ __all__ = [
     "HAS_ALTERNATE_IDENTITY_FUNCTION",
     "HAS_OPERATOR_CLI",
     "IDENTITY_FORBIDDEN_OCCURRENCE_KEYS",
+    "LIGHT_HEAVY_SURFACE",
     "LINEAGE_PERSIST_SURFACE",
     "NODE_RESURRECT_SUBTYPE",
     "OCCURRENCE_LINEAGE_EDGE_TYPE",
@@ -147,6 +167,7 @@ __all__ = [
     "SUPERVISION_SURFACE",
     "SUPERVISOR_ROLE",
     "SUPERVISOR_STREAM",
+    "WORKLOAD_KINDS",
     "BootAttemptRecord",
     "BootCeremonyOutcome",
     "BoundSupervisorDoors",
@@ -154,18 +175,22 @@ __all__ = [
     "CommandFate",
     "ComposeOccurrenceEvidence",
     "CompositionCiteSet",
+    "CompositionClass",
+    "CompositionClassAssignment",
     "CompositionFingerprintInputs",
     "CompositionLineageReceipt",
     "CompositionRootRegistry",
     "CrashLoopFold",
     "CrashLoopVerdict",
     "DrainOutcome",
+    "FourBoundDeclaration",
     "InMemoryBootAttemptSink",
     "LifecycleState",
     "LifecycleSupervisor",
     "NotifyTransport",
     "PreflightFacts",
     "RecordingNotifyTransport",
+    "ResolvedCompositionClasses",
     "ResurrectReceipt",
     "SafePointSnapshot",
     "SealedBootEpoch",
@@ -175,6 +200,8 @@ __all__ = [
     "StandDownTrigger",
     "StdlibSdNotifyTransport",
     "SupervisionConfig",
+    "WorkloadClaim",
+    "WorkloadKind",
     "WriterAllocation",
     "admit_under_lifecycle",
     "allocate_writer_ids",
@@ -186,6 +213,8 @@ __all__ = [
     "compute_composition_fp",
     "continues_performance_edge",
     "evaluate_safe_point",
+    "evaluate_workload_claim",
+    "guard_synchronous_placement",
     "install_compose_kinds",
     "install_composition_occurrence_kind",
     "mint_compose_record",
@@ -196,11 +225,13 @@ __all__ = [
     "persist_explicit_lineage_edge",
     "preflight_checks_for_mode",
     "reserved_supervisor_writer",
+    "resolve_composition_classes",
     "run_boot_ceremony",
     "run_check_mode",
     "sd_notify",
     "supervision_process_model",
     "supervisor_writer_is_reserved",
+    "workload_claim_identity_content",
 ]
 
 COMPOSITION_ROOT_SURFACE: Final[str] = "qmn.host"

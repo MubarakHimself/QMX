@@ -22,6 +22,12 @@ from qmf.core.refusal import Ok, Result, TypedRefusal, is_refusal
 from qmn.config.compiler import ResolvedNodeConfig
 from qmn.doors import EVIDENCE_DOOR, POWERS_DOOR
 from qmn.host._refuse import clean_token, invalid, policy
+from qmn.host.light_heavy import (
+    ResolvedCompositionClasses,
+    WorkloadClaim,
+    resolve_composition_classes,
+    workload_claim_identity_content,
+)
 
 __all__ = [
     "BOOT_BOUND_SURFACES",
@@ -240,6 +246,8 @@ class CompositionFingerprintInputs:
 
     Calendar DATA snapshots and the post-seal venue-observation profile are
     deliberately excluded. Candidate labelers belong on ``shadow_composition_fp``.
+    Class-affecting workload declarations (declared four-bound budgets) ride into
+    identity as contract surface; the light/heavy *verdict* never does (AD-24).
     """
 
     config_fp: Fingerprint
@@ -252,6 +260,9 @@ class CompositionFingerprintInputs:
     calendar_code_identities: Mapping[str, str] = field(default_factory=dict[str, str])
     os_cpu_class: str = "unset"
     shadow_candidate_identities: Mapping[str, str] = field(default_factory=dict[str, str])
+    workload_claim_identities: Mapping[str, object] = field(
+        default_factory=dict[str, object]
+    )
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -273,6 +284,11 @@ class CompositionFingerprintInputs:
             self,
             "shadow_candidate_identities",
             MappingProxyType(dict(self.shadow_candidate_identities)),
+        )
+        object.__setattr__(
+            self,
+            "workload_claim_identities",
+            MappingProxyType(dict(self.workload_claim_identities)),
         )
 
     def governed_identity(self) -> dict[str, object]:
@@ -296,6 +312,7 @@ class CompositionFingerprintInputs:
                 sorted(self.calendar_code_identities.items())
             ),
             "os_cpu_class": self.os_cpu_class,
+            "workload_claim_identities": dict(self.workload_claim_identities),
         }
 
     def shadow_identity(self) -> dict[str, object]:
@@ -333,6 +350,7 @@ class SealedBootEpoch:
     sealed: bool = True
     ready: bool = True
     opens_sequencer: bool = True
+    composition_classes: ResolvedCompositionClasses | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -353,6 +371,7 @@ class BootCeremonyOutcome:
     opens_sequencer: bool
     exit_code: int | None
     failure_id: str | None = None
+    composition_classes: ResolvedCompositionClasses | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -621,6 +640,7 @@ def run_boot_ceremony(
     config: object | None = None,
     composition_inputs: object,
     writer_streams: object = (),
+    workload_claims: object = (),
     preflight: object | None = None,
     boot_attempt_sink: object,
     door_binder: Callable[[], Result[BoundSupervisorDoors]] | None = None,
@@ -629,8 +649,9 @@ def run_boot_ceremony(
 ) -> Result[BootCeremonyOutcome]:
     """Run doors → boot-attempt → preflight → compose → fingerprint → seal.
 
-    No operator CLI exists on this path (DEC-0211). Check mode never opens a
-    sequencer and never mutates runtime state.
+    Compose evaluates light/heavy claims over assembled definitions before Seal
+    (Story 25.14 / AD-24). No operator CLI exists on this path (DEC-0211). Check
+    mode never opens a sequencer and never mutates runtime state.
     """
     mode_name = clean_token(mode)
     if mode_name not in {"live", "check"}:
@@ -794,7 +815,7 @@ def run_boot_ceremony(
     )
     sink.amend(attempt)
 
-    # --- Act 2: compose (WriterId allocation) ---
+    # --- Act 2: compose (WriterIds + light/heavy gate) ---
     allocation = allocate_writer_ids(
         machine=machine_token,
         boot_epoch_id=boot_token,
@@ -823,6 +844,39 @@ def run_boot_ceremony(
                 failure_id="compose.writer_ids",
             )
         )
+
+    classified = _classify_workload_claims(workload_claims)
+    if is_refusal(classified):
+        failure_id = str(
+            classified.context.get("failure_id", "compose.light_heavy")
+        )
+        attempt = BootAttemptRecord(
+            boot_epoch_id=boot_token,
+            unit_role=role_token,
+            stage="compose",
+            writer=supervisor.value,
+            sequence=0,
+            reason=reason_token,
+            failure_id=failure_id,
+        )
+        sink.amend(attempt)
+        if boot_mode == "check":
+            return _check_mode_refusal(classified)
+        return Ok(
+            _stand_down_outcome(
+                mode=boot_mode,
+                doors=doors.value,
+                boot_attempt=attempt,
+                stage="compose",
+                preflight_status=status_map,
+                failure_id=failure_id,
+            )
+        )
+    composition_classes = classified.value
+    fingerprinted_inputs = _with_workload_claim_identities(
+        composition_inputs, composition_classes.identity_content
+    )
+
     attempt = BootAttemptRecord(
         boot_epoch_id=boot_token,
         unit_role=role_token,
@@ -834,7 +888,7 @@ def run_boot_ceremony(
     sink.amend(attempt)
 
     # --- Act 3: fingerprint ---
-    fps = compute_composition_fp(composition_inputs)
+    fps = compute_composition_fp(fingerprinted_inputs)
     if is_refusal(fps):
         attempt = BootAttemptRecord(
             boot_epoch_id=boot_token,
@@ -880,6 +934,7 @@ def run_boot_ceremony(
         sealed=True,
         ready=True,
         opens_sequencer=opens_sequencer,
+        composition_classes=composition_classes,
     )
     attempt = BootAttemptRecord(
         boot_epoch_id=boot_token,
@@ -909,6 +964,7 @@ def run_boot_ceremony(
             opens_sequencer=opens_sequencer,
             exit_code=None,
             failure_id=None,
+            composition_classes=composition_classes,
         )
     )
 
@@ -921,6 +977,7 @@ def run_check_mode(
     config: object | None = None,
     composition_inputs: object,
     writer_streams: object = (),
+    workload_claims: object = (),
     preflight: object | None = None,
     boot_attempt_sink: object,
     door_binder: Callable[[], Result[BoundSupervisorDoors]] | None = None,
@@ -934,10 +991,80 @@ def run_check_mode(
         config=config,
         composition_inputs=composition_inputs,
         writer_streams=writer_streams,
+        workload_claims=workload_claims,
         preflight=preflight,
         boot_attempt_sink=boot_attempt_sink,
         door_binder=door_binder,
         mutate_runtime_state=False,
+    )
+
+
+def _classify_workload_claims(
+    workload_claims: object,
+) -> Result[ResolvedCompositionClasses]:
+    """Evaluate assembled claims at Compose; empty means no light claims."""
+    if workload_claims is None:
+        claims: tuple[WorkloadClaim, ...] = ()
+    elif isinstance(workload_claims, Sequence) and not isinstance(
+        workload_claims, (str, bytes)
+    ):
+        typed: list[WorkloadClaim] = []
+        for item in cast("Sequence[object]", workload_claims):
+            if not isinstance(item, WorkloadClaim):
+                return invalid(
+                    "workload_claims",
+                    "Compose resolves a sequence of WorkloadClaim values",
+                    given=type(item).__name__,
+                )
+            typed.append(item)
+        claims = tuple(typed)
+    else:
+        return invalid(
+            "workload_claims",
+            "Compose resolves a sequence of WorkloadClaim values",
+            given=type(workload_claims).__name__,
+        )
+    if not claims:
+        return Ok(
+            ResolvedCompositionClasses(
+                assignments=(),
+                identity_content=workload_claim_identity_content(()),
+            )
+        )
+    return resolve_composition_classes(claims)
+
+
+def _with_workload_claim_identities(
+    inputs: CompositionFingerprintInputs,
+    claim_identity: Mapping[str, object],
+) -> CompositionFingerprintInputs:
+    """Stamp class-affecting declarations into composition_fp inputs.
+
+    An empty claim set leaves a blank ``workload_claim_identities`` map so
+    compositions without registered producers keep their prior fingerprint
+    body (omit-empty, never null).
+    """
+    claims = claim_identity.get("claims", ())
+    if not claims:
+        if not inputs.workload_claim_identities:
+            return inputs
+        stamped: Mapping[str, object] = {}
+    else:
+        stamped = dict(claim_identity)
+    if dict(inputs.workload_claim_identities) == dict(stamped):
+        return inputs
+    return CompositionFingerprintInputs(
+        config_fp=inputs.config_fp,
+        distribution_identities=dict(inputs.distribution_identities),
+        extension_identities=dict(inputs.extension_identities),
+        proto_release_tag=inputs.proto_release_tag,
+        tzdata_version=inputs.tzdata_version,
+        adapter_capability_fps=inputs.adapter_capability_fps,
+        registry_as_of_fp=inputs.registry_as_of_fp,
+        calendar_code_identities=dict(inputs.calendar_code_identities),
+        os_cpu_class=inputs.os_cpu_class,
+        shadow_candidate_identities=dict(inputs.shadow_candidate_identities),
+        workload_claim_identities=dict(stamped),
     )
 
 
