@@ -490,7 +490,8 @@ fmt-check = "ruff format --check packages extensions qml qmb qmn tools"
 lint = "ruff check packages extensions qml qmb qmn tools"
 # python -m: direct `pyright` console script can be blocked by host App Control.
 types = "python -m pyright"
-test = "pytest packages extensions qml qmb qmn --cov=qmf --cov=qml --cov=qmb --cov=qmn --cov-branch --cov-report=term-missing --cov-report=json:coverage.json --cov-fail-under=80"
+# python -m: direct `pytest` console script can be blocked by host App Control.
+test = "python -m pytest packages extensions qml qmb qmn --cov=qmf --cov=qml --cov=qmb --cov=qmn --cov-branch --cov-report=term-missing --cov-report=json:coverage.json --cov-fail-under=80"
 qa-verify = "python qa/run_qa_verify.py"
 # Mechanical per-package + contract-module enforcement on top of the aggregate floor
 # above: reads the coverage.json `test` writes and fails the gate if any package drops
@@ -499,7 +500,8 @@ cov-report = "python tools/coverage_report.py"
 # The workspace tools (tier-1 static scanners + gate helpers) carry their own suite and
 # their own 80% package coverage floor, scoped to the tool modules (Story 1.7, 1.8;
 # M1/M7/M9; AR-20).
-test-tools = "pytest tools/tests --cov=money_path_scan --cov=ambient_scan --cov=secret_scan --cov=mock_data_scan --cov=coverage_report --cov=workspace_meta --cov-branch --cov-report=term-missing --cov-fail-under=80"
+# python -m: direct `pytest` console script can be blocked by host App Control.
+test-tools = "python -m pytest tools/tests --cov=money_path_scan --cov=ambient_scan --cov=secret_scan --cov=mock_data_scan --cov=coverage_report --cov=workspace_meta --cov-branch --cov-report=term-missing --cov-fail-under=80"
 secret-scan = "python tools/secret_scan.py"
 # Tier-1 static scanner: fails closed on any binary float on the money path
 # (NFR-02 enforcing FR-001; CT-01, DEC-0105).
