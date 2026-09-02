@@ -194,42 +194,52 @@ def test_handle_and_work_states() -> None:
         "failed",
         "cancelled",
     }
-    assert frozenset(
-        {
-            JobHandleState.DONE,
-            JobHandleState.FAILED,
-            JobHandleState.CANCELLED,
-            JobHandleState.ABORTED,
-        }
-    ) == JOB_HANDLE_TERMINAL_STATES
-    assert frozenset(
-        {
-            JobHandleState.QUEUED,
-            JobHandleState.RUNNING,
-            JobHandleState.UNKNOWN,
-        }
-    ) == JOB_HANDLE_NONTERMINAL_STATES
-    assert frozenset(
-        {
-            TaskMissionState.DONE,
-            TaskMissionState.FAILED,
-            TaskMissionState.CANCELLED,
-        }
-    ) == TASK_MISSION_TERMINAL_STATES
-    assert frozenset(
-        {
-            TaskMissionState.PENDING,
-            TaskMissionState.READY,
-            TaskMissionState.RUNNING,
-            TaskMissionState.BLOCKED,
-            TaskMissionState.UNKNOWN,
-        }
-    ) == TASK_MISSION_NONTERMINAL_STATES
+    assert (
+        frozenset(
+            {
+                JobHandleState.DONE,
+                JobHandleState.FAILED,
+                JobHandleState.CANCELLED,
+                JobHandleState.ABORTED,
+            }
+        )
+        == JOB_HANDLE_TERMINAL_STATES
+    )
+    assert (
+        frozenset(
+            {
+                JobHandleState.QUEUED,
+                JobHandleState.RUNNING,
+                JobHandleState.UNKNOWN,
+            }
+        )
+        == JOB_HANDLE_NONTERMINAL_STATES
+    )
+    assert (
+        frozenset(
+            {
+                TaskMissionState.DONE,
+                TaskMissionState.FAILED,
+                TaskMissionState.CANCELLED,
+            }
+        )
+        == TASK_MISSION_TERMINAL_STATES
+    )
+    assert (
+        frozenset(
+            {
+                TaskMissionState.PENDING,
+                TaskMissionState.READY,
+                TaskMissionState.RUNNING,
+                TaskMissionState.BLOCKED,
+                TaskMissionState.UNKNOWN,
+            }
+        )
+        == TASK_MISSION_NONTERMINAL_STATES
+    )
     assert JOB_HANDLE_TERMINAL_STATES.isdisjoint(JOB_HANDLE_NONTERMINAL_STATES)
     assert TASK_MISSION_TERMINAL_STATES.isdisjoint(TASK_MISSION_NONTERMINAL_STATES)
-    assert frozenset(JobHandleState) == (
-        JOB_HANDLE_TERMINAL_STATES | JOB_HANDLE_NONTERMINAL_STATES
-    )
+    assert frozenset(JobHandleState) == (JOB_HANDLE_TERMINAL_STATES | JOB_HANDLE_NONTERMINAL_STATES)
     assert frozenset(TaskMissionState) == (
         TASK_MISSION_TERMINAL_STATES | TASK_MISSION_NONTERMINAL_STATES
     )
@@ -244,9 +254,7 @@ def test_handle_and_work_states() -> None:
     for job_state in JobHandleState:
         mapped = map_job_handle_to_task_state(job_state)
         assert is_job_handle_terminal(job_state) is (job_state in JOB_HANDLE_TERMINAL_STATES)
-        assert is_task_mission_terminal(mapped) is (
-            mapped in TASK_MISSION_TERMINAL_STATES
-        )
+        assert is_task_mission_terminal(mapped) is (mapped in TASK_MISSION_TERMINAL_STATES)
         # aborted never becomes cancelled (DEC-0316).
         if job_state is JobHandleState.ABORTED:
             assert mapped is not TaskMissionState.CANCELLED
@@ -302,6 +310,7 @@ def test_memory_graph_environment_refinement_scopes() -> None:
     assert {member.value for member in NetworkPolicy} == {"none", "allowlist"}
     assert len(tuple(RefinementEditKind)) == 9
     assert "variable" not in {member.value for member in RefinementEditKind}
+    assert "routine" not in {member.value for member in RefinementEditKind}
     assert len(tuple(VariableScope)) == 8
 
     assert GraphArtifactKind.GRAPH_TEMPLATE.value == "graph_template"
