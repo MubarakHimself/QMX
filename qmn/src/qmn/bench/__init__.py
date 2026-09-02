@@ -1,14 +1,46 @@
-"""Hot-path benchmark harness (TN-23 / Story 25.15).
+"""Hot-path benchmark harness (TN-23 / Story 25.15 / Story 28.7).
 
 Test-status portable harness measuring wall-clock and peak RSS across the
 four-point seat sweep. Unmeasured limits are unset evidence — never invented
-numeric latency gates (FTR-07). Story 28.7 owns first-hours VPS baselines.
+numeric latency gates (FTR-07). Story 28.7 records first-hours VPS and
+storage baselines: variance-derived regression thresholds, the watched
+~50 ms figure (never a gate), and storage against ``vps_disk_budget``.
 """
 
 from __future__ import annotations
 
 from typing import Final
 
+from qmn.bench.baselines import (
+    CI_ENFORCES_LATENCY_GATE,
+    E9_F04_CLOSED,
+    FIRST_HOURS_CLASS,
+    FIRST_HOURS_FORMAT_VERSION,
+    FIRST_HOURS_SURFACE,
+    PROCURES_VPS,
+    REQUIRES_REAL_VPS,
+    SOAK_LOCAL_PROCUREMENT_SKIPPED,
+    STORAGE_LINE_ITEMS,
+    CapacityBand,
+    CapacityDecision,
+    FirstHoursInputs,
+    FirstHoursReport,
+    RungBaseline,
+    SeatBaseline,
+    StorageBaseline,
+    StorageLineItem,
+    derive_regression_thresholds,
+    evaluate_storage_capacity,
+    materialize_representative_day,
+    measure_storage_trees,
+    record_first_hours_baselines,
+    refuse_ci_latency_gate,
+    refuse_drop_observability,
+    refuse_invented_latency_budget,
+    refuse_procure_vps,
+    refuse_watched_target_as_gate,
+    refuse_weaken_thresholds,
+)
 from qmn.bench.harness import (
     MODULE,
     collect_provenance,
@@ -23,6 +55,7 @@ from qmn.bench.schema import (
     SEAT_LADDER,
     VARIANCE_METHOD,
     VARIANCE_METHOD_DESCRIPTION,
+    WATCHED_LATENCY_TARGET,
     WATCHED_LATENCY_TARGET_IS_GATE,
     BaselineEligibility,
     BenchLifecycle,
@@ -43,29 +76,58 @@ from qmn.bench.schema import (
 __all__ = [
     "BENCH_SURFACE",
     "BUDGET_SLOT_NAMES",
+    "CI_ENFORCES_LATENCY_GATE",
     "DESIGN_BOT_CONCURRENCY_REFERENCE",
+    "E9_F04_CLOSED",
+    "FIRST_HOURS_CLASS",
+    "FIRST_HOURS_FORMAT_VERSION",
+    "FIRST_HOURS_SURFACE",
     "HOT_PATH_RUNGS",
     "MODULE",
+    "PROCURES_VPS",
+    "REQUIRES_REAL_VPS",
     "SEAT_LADDER",
+    "SOAK_LOCAL_PROCUREMENT_SKIPPED",
+    "STORAGE_LINE_ITEMS",
     "VARIANCE_METHOD",
     "VARIANCE_METHOD_DESCRIPTION",
+    "WATCHED_LATENCY_TARGET",
     "WATCHED_LATENCY_TARGET_IS_GATE",
     "BaselineEligibility",
     "BenchLifecycle",
     "BudgetSlot",
     "BudgetStatus",
+    "CapacityBand",
+    "CapacityDecision",
     "DeploymentProvenance",
+    "FirstHoursInputs",
+    "FirstHoursReport",
     "HarnessReport",
     "HotPathRung",
     "QueueBehaviorSample",
+    "RungBaseline",
     "RungSample",
+    "SeatBaseline",
     "SeatMarkResult",
+    "StorageBaseline",
+    "StorageLineItem",
     "VarianceMethod",
     "baseline_eligible",
     "budget_slots_unset",
     "collect_provenance",
+    "derive_regression_thresholds",
+    "evaluate_storage_capacity",
     "gate_may_enforce",
+    "materialize_representative_day",
+    "measure_storage_trees",
     "peak_rss_bytes",
+    "record_first_hours_baselines",
+    "refuse_ci_latency_gate",
+    "refuse_drop_observability",
+    "refuse_invented_latency_budget",
+    "refuse_procure_vps",
+    "refuse_watched_target_as_gate",
+    "refuse_weaken_thresholds",
     "run",
     "run_seat_mark",
 ]

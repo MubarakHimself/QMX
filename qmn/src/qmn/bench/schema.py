@@ -1,10 +1,10 @@
 """Hot-path benchmark output schema — measure-then-budget, no invented gates.
 
-Story 25.15 / TN-23 / DEC-0208 / FTR-07 / E9-F04. The schema records wall time,
-peak RSS, queue behaviour, the six named AD-13 live-path rungs, and deployment
-provenance. Every unmeasured limit is an explicit ``unset`` budget slot —
-never a silently enforced numeric constant. Story 28.7 owns first-hours VPS
-baselines and ``[E9-F04]`` closure.
+Story 25.15 / 28.7 / TN-23 / DEC-0208 / FTR-07 / E9-F04. The schema records
+wall time, peak RSS, queue behaviour, the six named AD-13 live-path rungs,
+and deployment provenance. Story 28.7 records first-hours baselines and
+states regression thresholds as a declared multiple of measured run-to-run
+variance. The watched ~50 ms figure is recorded and is never a gate.
 """
 
 from __future__ import annotations
@@ -26,6 +26,7 @@ __all__ = [
     "SEAT_LADDER",
     "VARIANCE_METHOD",
     "VARIANCE_METHOD_DESCRIPTION",
+    "WATCHED_LATENCY_TARGET",
     "WATCHED_LATENCY_TARGET_IS_GATE",
     "BaselineEligibility",
     "BenchLifecycle",
@@ -54,14 +55,25 @@ HOT_PATH_RUNGS: Final[tuple[str, ...]] = LATENCY_RUNGS
 
 # Operator ~50 ms figure is a watched target, never a budget or gate (DEC-0208).
 WATCHED_LATENCY_TARGET_IS_GATE: Final[bool] = False
+WATCHED_LATENCY_TARGET: Final[Mapping[str, object]] = MappingProxyType(
+    {
+        "approx_ms": 50,
+        "is_gate": False,
+        "role": "watched-target",
+        "source": "DEC-0208",
+        "used_as_regression_threshold": False,
+    }
+)
 
 VARIANCE_METHOD: Final[str] = "multiple-of-measured-run-to-run-variance"
 VARIANCE_METHOD_DESCRIPTION: Final[str] = (
     "When a baseline is recorded, each benchmark's regression threshold is "
     "stated as a declared multiple of measured run-to-run variance on the same "
     "(OS, CPU-class) deployment tuple. A baseline without a stated threshold "
-    "is not a gate (DEC-0208, DEC-0111). The multiple and the threshold stay "
-    "unset until Story 28.7 records the first-hours VPS baseline."
+    "is not a gate (DEC-0208, DEC-0111). Story 28.7 records the first-hours "
+    "baseline; CI runs the harness for correctness only and never enforces "
+    "the derived threshold as a merge gate. The watched ~50 ms figure is "
+    "recorded and is never that threshold."
 )
 
 BUDGET_SLOT_NAMES: Final[tuple[str, ...]] = (
@@ -124,12 +136,18 @@ class BaselineEligibility(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class VarianceMethod:
-    """How a future regression threshold will be derived — no number here."""
+    """How a regression threshold is derived from measured run-to-run variance.
+
+    ``variance_multiple`` is the declared multiplier, never a latency budget.
+    Per-seat / per-rung nanosecond ceilings live on the first-hours baseline
+    rows. A method-level ``regression_threshold`` stays unset so a single
+    invented latency number cannot masquerade as the gate (FTR-07).
+    """
 
     method_id: str = VARIANCE_METHOD
     description: str = VARIANCE_METHOD_DESCRIPTION
-    variance_multiple: None = None
-    regression_threshold: None = None
+    variance_multiple: int | float | None = None
+    regression_threshold: int | float | None = None
     status: BudgetStatus = BudgetStatus.UNSET
 
 
@@ -308,6 +326,16 @@ def gate_may_enforce(report: HarnessReport) -> Result[Literal[False]]:
                 "lifecycle": report.provenance.lifecycle.value,
             },
         )
+    if report.watched_latency_target_is_gate:
+        return TypedRefusal(
+            category=RefusalCategory.POLICY_REJECTION,
+            retryability=Retryability.NO,
+            context={
+                "field": "watched_latency_target_is_gate",
+                "reason": "the watched ~50 ms figure is recorded and is never "
+                "a gate (FTR-07 / DEC-0208)",
+            },
+        )
     enforced = [slot.name for slot in report.budgets if slot.gate_enforced]
     if enforced:
         return TypedRefusal(
@@ -315,8 +343,8 @@ def gate_may_enforce(report: HarnessReport) -> Result[Literal[False]]:
             retryability=Retryability.NO,
             context={
                 "field": "budgets",
-                "reason": "placeholder budgets must not be silently enforced; "
-                "Story 28.7 records measured baselines before any gate",
+                "reason": "placeholder or measured budgets must not be silently "
+                "enforced; CI runs the harness for correctness only (DEC-0208)",
                 "enforced": enforced,
             },
         )

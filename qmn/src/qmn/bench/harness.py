@@ -1,4 +1,4 @@
-"""Portable hot-path benchmark harness (Story 25.15 / TN-23 / AR-84).
+"""Portable hot-path benchmark harness (Story 25.15 / 28.7 / TN-23 / AR-84).
 
 Measures wall-clock **and** peak RSS across the four-point seat sweep
 (10 / 40 / 100 / 200) against ``registry:design_bot_concurrency``, walking each
@@ -6,10 +6,12 @@ named AD-13 live-path rung and recording queue behaviour through the pacer and
 recording accumulator. The FEAT-0023 conformance double supplies the venue
 edge — no network, no credentials.
 
-Numeric latency / RSS budgets stay unset evidence (FTR-07). CI runs this for
-correctness only; Story 28.7 records first-hours VPS baselines and closes
-``[E9-F04]``. The harness must not run while a slice-driving node process is
-active (DEC-0208).
+``run`` is the CI correctness pass: numeric latency / RSS budgets stay unset
+evidence (FTR-07). ``record_first_hours_baselines`` (Story 28.7) repeats the
+seat sweep, states variance-derived regression thresholds, records the
+watched ~50 ms figure without using it as a gate, and measures storage
+against ``vps_disk_budget``. Neither path requires a real VPS. The harness
+must not run while a slice-driving node process is active (DEC-0208).
 """
 
 from __future__ import annotations
@@ -279,7 +281,7 @@ def run(
     if not baseline_eligible(lifecycle):
         eligibility = BaselineEligibility.CONTAMINATED_SLICE_DRIVING
     else:
-        # Pre-soak: eligible lifecycle, but budgets remain unset until Story 28.7.
+        # A single CI correctness pass does not state a regression threshold.
         eligibility = BaselineEligibility.BUDGETS_UNSET
 
     return Ok(

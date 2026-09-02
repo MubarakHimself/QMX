@@ -38,6 +38,10 @@ Story 28.6 publishes a machine-readable closure matrix for every named node
 QA-debt ID plus the permanent battery; a missing story/evidence link fails
 rather than inheriting, foundation debt stays foundation, and mutmut is not
 a factory gate (zero classified mutants fail closed).
+Story 28.7 records first-hours VPS and storage baselines through the
+test-status harness (variance-derived thresholds, watched ~50 ms never a
+gate, storage against vps_disk_budget); it does not require a real VPS and
+skips soak-local procurement (FTR-07 / E9-F04).
 Child modules and doors never restamp, never hold a registry cache, and never
 persist lineage.
 """

@@ -92,12 +92,11 @@ def test_production_matrix_links_every_named_id() -> None:
             path = workspace_root().joinpath(*relative.split("/"))
             assert path.exists(), relative
     e9 = by_id["E9-F04"]
-    assert e9.status == "linked"
+    assert e9.status == "closed"
     assert e9.closure_owner == "28.7"
-    assert e9.story == "25.15"
+    assert e9.story == "28.7"
     for debt_id, row in by_id.items():
-        if debt_id != "E9-F04":
-            assert row.status == "closed", debt_id
+        assert row.status == "closed", debt_id
 
 
 def test_matrix_is_machine_readable_json() -> None:

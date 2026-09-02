@@ -1155,3 +1155,28 @@ designed failure; every typed refusal the node can emit belongs here.
   every named ID. Inspect `read_status` on the evidence channel and run
   `just node-config-validate`. Supply a distinct story and evidence path for
   each node QA-debt ID; keep ruff, pyright, and pytest as the factory gate.
+
+### FR-71: First-hours VPS and storage baselines refused
+
+- **Failure class:** policy rejection / invalid input
+- **Detection:** the Story 28.7 test-status harness refused a real-VPS
+  procurement act (`first_hours.procure_vps`), treating the watched ~50 ms
+  figure as a gate (`first_hours.watched_target_as_gate`), inventing a
+  latency budget (`first_hours.invented_latency_budget`), enforcing a CI
+  latency merge gate (`first_hours.ci_latency_gate`), weakening measured
+  thresholds (`first_hours.weaken_thresholds`), dropping the observability
+  line item (`first_hours.drop_observability`), a slice-driving lifecycle
+  (`first_hours.contaminated_lifecycle`), or invalid inputs
+  (`first_hours.inputs`).
+- **Auto-recovery / retry:** none — re-run the harness before the doors open
+  or from stand-down-alive; state regression thresholds as a declared
+  multiple of measured run-to-run variance; never use ~50 ms as a gate;
+  never procure a VPS from this story.
+- **Visible degraded state:** first-hours baselines do not seal; `[E9-F04]`
+  stays unclosed; soak-local VPS procurement remains skipped.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The first-hours baseline harness could not
+  record capacity and latency evidence. Inspect `read_status` on the
+  evidence channel and run `just node-config-validate`. Supply a declared
+  variance multiple and `vps_disk_budget` line items as fixtures; do not
+  invent a latency budget and do not wait for a real VPS.

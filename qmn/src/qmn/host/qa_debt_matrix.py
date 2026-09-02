@@ -524,16 +524,15 @@ NODE_QA_DEBT_ROWS: Final[tuple[QaDebtRow, ...]] = (
     ),
     _row(
         "E9-F04",
-        "25.15",
-        "Build the hot-path benchmark harness without invented budgets",
+        "28.7",
+        "Establish first-hours VPS and storage baselines",
         (
+            "qmn/src/qmn/bench/baselines.py",
             "qmn/src/qmn/bench/schema.py",
             "qmn/src/qmn/bench/harness.py",
             "qmn/tests/test_qmn_bench.py",
-            "_bmad-output/planning-artifacts/epics.md",
+            "qmn/tests/test_qmn_first_hours.py",
         ),
-        status=_STATUS_LINKED,
-        closure_owner="28.7",
     ),
     _row(
         "E12-F01",

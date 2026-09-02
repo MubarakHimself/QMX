@@ -16,6 +16,7 @@ from qmn.bench import (
     MODULE,
     SEAT_LADDER,
     VARIANCE_METHOD,
+    WATCHED_LATENCY_TARGET,
     WATCHED_LATENCY_TARGET_IS_GATE,
     BaselineEligibility,
     BenchLifecycle,
@@ -54,6 +55,8 @@ def test_surface_and_ladder_match_tn23() -> None:
     assert HOT_PATH_RUNGS == LATENCY_RUNGS
     assert tuple(member.value for member in HotPathRung) == HOT_PATH_RUNGS
     assert WATCHED_LATENCY_TARGET_IS_GATE is False
+    assert WATCHED_LATENCY_TARGET["approx_ms"] == 50
+    assert WATCHED_LATENCY_TARGET["is_gate"] is False
     assert VARIANCE_METHOD == "multiple-of-measured-run-to-run-variance"
 
 
