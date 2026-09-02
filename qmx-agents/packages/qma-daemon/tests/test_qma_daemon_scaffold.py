@@ -10,6 +10,7 @@ import qma.daemon.bus
 import qma.daemon.capabilities
 import qma.daemon.context
 import qma.daemon.envs
+import qma.daemon.experiments
 import qma.daemon.handles
 import qma.daemon.hooks
 import qma.daemon.journal
@@ -42,6 +43,7 @@ def test_structural_modules_importable() -> None:
         qma.daemon.proxy,
         qma.daemon.tools,
         qma.daemon.envs,
+        qma.daemon.experiments,
         qma.daemon.handles,
         qma.daemon.context,
         qma.daemon.plugins,
@@ -59,3 +61,8 @@ def test_structural_modules_importable() -> None:
     assert qma.daemon.MissionCompiler.__name__ == "MissionCompiler"
     assert qma.daemon.TaskGraphDispatcher.__name__ == "TaskGraphDispatcher"
     assert qma.daemon.taskgraph.MissionCompiler is qma.daemon.MissionCompiler
+    from qma.daemon.experiments import ExperimentSpecService
+    from qma.daemon.ledgers import ExperimentLedger
+
+    assert ExperimentSpecService.__name__ == "ExperimentSpecService"
+    assert ExperimentLedger.__name__ == "ExperimentLedger"

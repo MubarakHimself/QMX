@@ -13,7 +13,9 @@ through FR-17). Epic 43 Story 43.2 adds closed Task/Mission state with
 evidence-bound terminal outcomes (FR-18 through FR-21). Epic 45 Story 45.4
 adds durable JobHandle operations and daemon-only Task mapping (FR-29
 through FR-31). Epic 45 Story 45.6 adds daemon-resolved evidence handles
-and StrategyHandle candidate artifacts (FR-32 through FR-35).
+and StrategyHandle candidate artifacts (FR-32 through FR-35). Epic 45
+Story 45.7 adds content-addressed ExperimentSpec identity, append-only
+CT-07 lineage, and Experiment Ledger authorship (FR-36 through FR-39).
 
 ### FR-1: A second daemon or writer is refused at the persistence boundary
 
@@ -522,3 +524,56 @@ and StrategyHandle candidate artifacts (FR-32 through FR-35).
 - **Notification tier:** silent-log (caller receives the typed refusal).
 - **Product-user affordance:** QMA cannot promote or change zones. A human
   promotes the candidate outside this system.
+
+### FR-36: A parameter change carries a git branch or code ref
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `ExperimentSpec.with_change(change="resolved_config")` refuses
+  a `code_ref` and any git branch or commit used as `resolved_config_ref`.
+  `code_ref` is admitted only as `git:commit:<40-hex>` on a code change
+  (FR-Q54; CT-47; DEC-0376).
+- **Auto-recovery / retry:** none — identify the change with a resolved-config
+  `fp1`, or mint a code-change spec with a git commit object id.
+- **Visible degraded state:** no successor spec is stored; the predecessor is
+  unchanged.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** parameter sweeps are not git branches. Change
+  the resolved config, or commit code and cite that commit.
+
+### FR-37: An ExperimentSpec is mutated in place
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `ExperimentSpecService.mutate_in_place` always refuses.
+  Successors are new `fp1` records; CT-07 `branches-from` edges append to the
+  lineage stream and never rewrite either spec (FR-Q54; CT-07).
+- **Auto-recovery / retry:** none — construct a successor spec.
+- **Visible degraded state:** stored specs and edges are unchanged.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** experiments are immutable snapshots. Record a
+  new spec and a lineage edge instead of editing the old one.
+
+### FR-38: A second Task authors the Experiment Ledger
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `append_evidence` requires the `dispatch_lease` of the Task
+  that registered the Experiment. A different Task, or a different Agent than
+  that lease holder, is refused. Duplicate `fp1` registration keeps the first
+  author (FR-Q54; DEC-0308).
+- **Auto-recovery / retry:** none — append as the registering Task's lease
+  holder.
+- **Visible degraded state:** the ledger is unchanged; no second author exists.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** one Experiment has one notebook author: the
+  Agent holding the registering Task. Another Task cannot co-author it.
+
+### FR-39: Typed strategy-mechanism fields on ExperimentSpec
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** construction and successor minting refuse `EntryMechanism`,
+  `ExitMechanism`, `Filter`, `SessionRule`, `PositionRule`, and
+  `InvalidationRule` (GAP-0085; FR-Q54).
+- **Auto-recovery / retry:** none — those nouns stay with QML / qmf-registry.
+- **Visible degraded state:** no spec is minted; GAP-0085 remains deferred.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** QMA records experiment identity and lineage.
+  It does not decompose strategy mechanisms.
