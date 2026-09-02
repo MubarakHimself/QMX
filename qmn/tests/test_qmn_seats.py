@@ -212,6 +212,7 @@ def test_seats_surface_and_registry_keys() -> None:
                 QuarantineTrigger.DEADLINE_BREACH.value,
                 QuarantineTrigger.MEMORY_CEILING_BREACH.value,
                 QuarantineTrigger.CALLBACK_EXCEPTION.value,
+                QuarantineTrigger.NON_RETURNING_CALLBACK.value,
             }
         )
         == QUARANTINE_TRIGGERS

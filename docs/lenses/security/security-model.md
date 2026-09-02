@@ -4,7 +4,7 @@ title: QMF V1 Security Model
 type: lens
 status: ratified
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP, COMP-QMN, COMP-CTRADER, COMP-DUKASCOPY, COMP-CALENDAR-FEED, COMP-OBJECT-STORAGE, COMP-QMA-CORE, COMP-QMA-WIRE, COMP-QMA-DAEMON]
-decisions: [DEC-0001, DEC-0009, DEC-0029, DEC-0030, DEC-0035, DEC-0038, DEC-0041, DEC-0042, DEC-0045, DEC-0048, DEC-0059, DEC-0065, DEC-0100, DEC-0104, DEC-0108, DEC-0109, DEC-0110, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0142, DEC-0143, DEC-0146, DEC-0148, DEC-0150, DEC-0151, DEC-0158, DEC-0188, DEC-0197, DEC-0201, DEC-0202, DEC-0205, DEC-0211, DEC-0217, DEC-0227, DEC-0234, DEC-0236, DEC-0314, DEC-0315, DEC-0323, DEC-0324, DEC-0327, DEC-0341, DEC-0344, DEC-0345, DEC-0347, DEC-0261]
+decisions: [DEC-0001, DEC-0009, DEC-0029, DEC-0030, DEC-0035, DEC-0038, DEC-0041, DEC-0042, DEC-0045, DEC-0048, DEC-0059, DEC-0065, DEC-0100, DEC-0104, DEC-0108, DEC-0109, DEC-0110, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0142, DEC-0143, DEC-0146, DEC-0148, DEC-0150, DEC-0151, DEC-0158, DEC-0188, DEC-0197, DEC-0201, DEC-0202, DEC-0204, DEC-0205, DEC-0211, DEC-0217, DEC-0227, DEC-0234, DEC-0236, DEC-0260, DEC-0314, DEC-0315, DEC-0323, DEC-0324, DEC-0327, DEC-0341, DEC-0344, DEC-0345, DEC-0347, DEC-0261]
 sources: [DEC-0001, DEC-0009, DEC-0029, DEC-0030, DEC-0035, DEC-0038, DEC-0041, DEC-0042, DEC-0045, DEC-0048, DEC-0059, DEC-0065, DEC-0104, DEC-0109, DEC-0110, DEC-0119, DEC-0188, DEC-0197, DEC-0201, DEC-0202, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, _docwork/gaps.yaml, docs/architecture/dependencies.yaml, docs/decisions/ADR-0019-trading-node.md, docs/components/trading-node.md, docs/contracts/ct-04-typed-refusal.yaml, docs/contracts/ct-05-version-fingerprint.yaml, docs/contracts/ct-06-registration.yaml, docs/contracts/ct-08-gate-evidence.yaml, docs/contracts/ct-10-source-observation.yaml, docs/contracts/ct-13-journal.yaml, docs/contracts/ct-14-backup-restore.yaml, docs/contracts/ct-15-external-source-adapter.yaml, docs/contracts/ct-19-venue-command.yaml, docs/contracts/ct-20-venue-event.yaml, docs/contracts/ct-21-venue-secret-session.yaml, docs/contracts/ct-22-book-charter.yaml, docs/contracts/ct-23-risk-evaluation.yaml, docs/contracts/ct-24-book-mode.yaml, docs/contracts/ct-25-risk-journal.yaml]
 generated: 2026-08-18
 verified: '2026-08-30'
@@ -156,6 +156,22 @@ The provisioning wizard is carved out as a **transient workstation-only holder**
 **VPS hardening is default-deny in both directions** (DEC-0201): SSH is key-only with no password, alongside the separate restricted provisioning identity and the separate confined inbox-write identity; `ufw` is default-deny inbound except SSH; and outbound is a **default-deny egress allow-list** — the cTrader venue hosts, the notification and liveness-heartbeat (formerly dead-man's-switch, notification only and zero authority) endpoints (DEC-0261), the object-storage bucket, the history and news-calendar providers (Forex Factory's free weekly file is the sole V1 news-calendar source, with no paid fallback slot anywhere), the distribution index, the observability stack's container image registry (or a vendored image source — the only place containers are permitted), and NTP. **No public port ever**: the doors are localhost- and socket-bound and the desktop UI reaches them over an SSH tunnel. Unattended security upgrades run with no automatic reboot and are configured never to restart `qmn.service`, so any restart of the node is routed through the drain path (DEC-0201).
 
 **Sandbox-provenance refusal is enforced at both inbound crossings** (DEC-0188, DEC-0205): the operator `hub_publish` power refuses any fragment carrying `provenance = sandbox` at publish, and the click-gated promotion pull refuses any artifact carrying `provenance = sandbox`, and any as-of set containing one, at pull — verifying each artifact's `fp1` against the promotion card before the seat lands. A refusal is journaled and alarmed, never skipped. This is the node's only inbound path to live authority, and no factory-sandbox artifact can traverse it.
+
+## Trading-node V1 seat-containment limit (TN-19, GAP-0054)
+
+V1 has **no hardened OS-level memory or security confinement** for bot seats: no restricted tokens or Job Objects on Windows, no seccomp-class filter and no `rlimit` hard cap on Linux. That confinement is **GAP-0054, deferred**. Stating the V1 limit does not close the gap (DEC-0204, DEC-0236, DEC-0260).
+
+Admitted bot code runs in-process on the loop's only domain thread. Compensating controls, named once and still falsifiable, are:
+
+- QL-8 static AST/import scan (`ql-8-static-scan`)
+- capability starvation (hosts inject read surfaces only)
+- host process isolation (stdlib process spawn of the Layer-2 runner)
+- per-callback deadline (`registry:seat_callback_deadline`, cooperative `CancelToken` / `LimitProbe` at slice boundaries)
+- per-seat memory ceiling (`registry:seat_memory_ceiling`, cooperative `LimitProbe`; not an OS hard cap)
+- automatic quarantine whose only exit is operator-signed `seat_reinstate`
+- the door-layer slice-progress watch plus supervised restart of last resort for a non-returning callback
+
+A dynamically-evasive malicious bot is out of V1's threat model (bots are operator- or operator's-agent-authored). Do not invent a higher cap in code or prose.
 
 ## QMA — Credential Broker, principal classes, money-path barrier
 

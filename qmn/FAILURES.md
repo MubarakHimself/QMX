@@ -271,7 +271,8 @@ designed failure; every typed refusal the node can emit belongs here.
   stays `quarantined` across restart, boot epoch, and config version; only
   operator-signed `seat_reinstate` exits. A non-returning callback is the
   door-layer slice-progress watch / supervised restart of last resort, not a
-  seat-state clear.
+  seat-state clear. V1 has no hardened OS-level memory or security
+  confinement (GAP-0054 stays deferred; this entry does not close it).
 - **Visible degraded state:** the seat emits no further intents; the command
   stream does not fail and the node does not restart on a cooperative breach;
   quarantine is a read-time fold over the seat-transition stream.

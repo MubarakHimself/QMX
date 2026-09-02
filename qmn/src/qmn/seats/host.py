@@ -596,6 +596,12 @@ def _quarantine(
         principal=OPERATOR_PRINCIPAL,
         stream_failure=False,
         node_restart=False,
+        alarm_class="protection-escalation",
+        failure_id="FR-19",
+        enforcement="cooperative-enforced",
+        os_level_confinement=False,
+        gap_0054="deferred",
+        gap_0054_closed=False,
     )
 
 

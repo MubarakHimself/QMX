@@ -57,6 +57,7 @@ class QuarantineTrigger(StrEnum):
     DEADLINE_BREACH = "deadline-breach"
     MEMORY_CEILING_BREACH = "memory-ceiling-breach"
     CALLBACK_EXCEPTION = "callback-exception"
+    NON_RETURNING_CALLBACK = "non-returning-callback"
 
 
 QUARANTINE_TRIGGERS: Final[frozenset[str]] = frozenset(t.value for t in QuarantineTrigger)
@@ -171,7 +172,8 @@ class SeatTransitionRecord:
                 return invalid(
                     "trigger",
                     "quarantine is entered only by deadline-breach, "
-                    "memory-ceiling-breach, or callback-exception",
+                    "memory-ceiling-breach, callback-exception, or "
+                    "non-returning-callback",
                     given=trig,
                     allowed=sorted(QUARANTINE_TRIGGERS),
                 )
