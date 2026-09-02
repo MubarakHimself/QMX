@@ -274,7 +274,7 @@ def test_runtime_duplicate_multi_names_conflicting_ids_and_keeps_leases() -> Non
         )
     )
     # Force a multi collision by claiming the same qualified id from another plugin.
-    multi_owners: dict[tuple[str, str], str] = loader._multi_owners
+    multi_owners: dict[tuple[str, str], str] = getattr(loader, "_multi_owners")
     multi_owners[("tool", "research-alt:search")] = "research-corpus"
 
     def collide(ctx: PluginContext) -> None:
