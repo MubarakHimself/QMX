@@ -32,12 +32,7 @@ LOADER_SRC = (
     Path(__file__).resolve().parents[1] / "src" / "qma" / "daemon" / "plugins" / "loader.py"
 )
 REFUSAL_SRC = (
-    Path(__file__).resolve().parents[1]
-    / "src"
-    / "qma"
-    / "daemon"
-    / "plugins"
-    / "load_refusal.py"
+    Path(__file__).resolve().parents[1] / "src" / "qma" / "daemon" / "plugins" / "load_refusal.py"
 )
 
 
@@ -199,6 +194,7 @@ def test_startup_abort_forward_only_without_confirmation(tmp_path: Path) -> None
         migration_source_root=source,
         migration_destination_root=dest,
     )
+
     def activate_search(ctx: PluginContext) -> None:
         assert isinstance(ctx, DaemonPluginContext)
         ctx.register_tool("search", {"name": "search"})
@@ -274,7 +270,7 @@ def test_runtime_duplicate_multi_names_conflicting_ids_and_keeps_leases() -> Non
         )
     )
     # Force a multi collision by claiming the same qualified id from another plugin.
-    multi_owners: dict[tuple[str, str], str] = getattr(loader, "_multi_owners")
+    multi_owners = loader.debug_multi_owners_for_tests()
     multi_owners[("tool", "research-alt:search")] = "research-corpus"
 
     def collide(ctx: PluginContext) -> None:
@@ -297,6 +293,40 @@ def test_runtime_duplicate_multi_names_conflicting_ids_and_keeps_leases() -> Non
     assert refused.context["dispatch_leases"] == continuity.dispatch_leases
     assert loader.get("research-corpus") is not None
     assert loader.get("research-alt") is None
+
+
+def test_failed_reload_keeps_live_scope_and_continuity() -> None:
+    continuity = _continuity()
+    loader = PluginLoader(continuity=continuity)
+
+    def activate_search(ctx: PluginContext) -> None:
+        assert isinstance(ctx, DaemonPluginContext)
+        ctx.register_tool("search", {"name": "search"})
+
+    assert is_ok(
+        loader.install(
+            _manifest(contributions=[{"point": "tool", "local_id": "search"}]),
+            activator=activate_search,
+        )
+    )
+    live = loader.get("research-corpus")
+    assert live is not None
+
+    def boom(_ctx: PluginContext) -> None:
+        raise RuntimeError("reload boom")
+
+    refused = loader.reload(
+        _manifest(contributions=[{"point": "tool", "local_id": "search"}]),
+        activator=boom,
+    )
+    assert is_refusal(refused)
+    assert refused.context["continuity_intact"] is True
+    assert refused.context["dispatch_leases"] == continuity.dispatch_leases
+    kept = loader.get("research-corpus")
+    assert kept is live
+    assert any(
+        row.qualified_id == "research-corpus:search" for row in loader.published_contributions()
+    )
 
 
 def test_first_party_only_refuses_cut_surfaces() -> None:
@@ -374,8 +404,6 @@ def test_missing_dependency_is_load_failure_not_pending() -> None:
 def test_reference_usage_example_runs() -> None:
     import runpy
 
-    path = (
-        Path(__file__).resolve().parents[1] / "examples" / "plugin_load_refusal_usage.py"
-    )
+    path = Path(__file__).resolve().parents[1] / "examples" / "plugin_load_refusal_usage.py"
     namespace = runpy.run_path(str(path))
     namespace["main"]()

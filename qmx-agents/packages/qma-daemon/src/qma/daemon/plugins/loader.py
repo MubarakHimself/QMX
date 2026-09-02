@@ -5,7 +5,8 @@ manifest validation → qma_api compatibility → permissions → dependencies �
 migrations → topological activation → publication over the wire surface.
 
 Reload is an explicit operator command. There is no file watcher and no
-reactive remount. Contribution types are imported from ``qma-core``; this
+reactive remount. A failed reload keeps the live scope until the replacement
+load succeeds (FR-Q70). Contribution types are imported from ``qma-core``; this
 module implements the daemon-owned loader only. Migrations (FR-Q69) run the
 five-step path with an ``fp1`` journal checkpoint; forward-only upgrades take
 a recorded ``operator`` confirmation. Load refusal (FR-Q70) aborts startup
@@ -300,6 +301,10 @@ class PluginLoader:
         """Return the continuity markers the loader must leave untouched."""
         return self.continuity
 
+    def debug_multi_owners_for_tests(self) -> dict[tuple[str, str], str]:
+        """Return the live multi-owner map so tests can seed a duplicate-id collision."""
+        return self._multi_owners
+
     def _refuse(
         self,
         field_name: str,
@@ -356,9 +361,7 @@ class PluginLoader:
         raw: Mapping[str, object],
     ) -> Result[str]:
         trust = assess_plugin_trust(
-            declared_surfaces={
-                name: raw[name] for name in CUT_PLUGIN_SURFACES if name in raw
-            }
+            declared_surfaces={name: raw[name] for name in CUT_PLUGIN_SURFACES if name in raw}
         )
         if not is_ok(trust):
             return trust
@@ -503,7 +506,11 @@ class PluginLoader:
             def drop_singleton(
                 owned: tuple[str, str] = key,
                 owner: str = context.plugin_id,
+                stack: PluginExitStack = context.exit_stack,
             ) -> None:
+                current = self._loaded.get(owner)
+                if current is not None and current.exit_stack is not stack:
+                    return
                 if self._singleton_owners.get(owned) == owner:
                     self._singleton_owners.pop(owned, None)
 
@@ -527,7 +534,11 @@ class PluginLoader:
             def drop_multi(
                 owned: tuple[str, str] = key,
                 owner: str = context.plugin_id,
+                stack: PluginExitStack = context.exit_stack,
             ) -> None:
+                current = self._loaded.get(owner)
+                if current is not None and current.exit_stack is not stack:
+                    return
                 if self._multi_owners.get(owned) == owner:
                     self._multi_owners.pop(owned, None)
 
@@ -724,9 +735,7 @@ class PluginLoader:
         gated = self._require_operator("plugin.install", principal)
         if not is_ok(gated):
             return gated
-        return self._load_with_migrations(
-            raw, activator=activator, correlation_id=correlation_id
-        )
+        return self._load_with_migrations(raw, activator=activator, correlation_id=correlation_id)
 
     def enable(
         self,
@@ -740,9 +749,7 @@ class PluginLoader:
         gated = self._require_operator("plugin.enable", principal)
         if not is_ok(gated):
             return gated
-        return self._load_with_migrations(
-            raw, activator=activator, correlation_id=correlation_id
-        )
+        return self._load_with_migrations(raw, activator=activator, correlation_id=correlation_id)
 
     def reload(
         self,
@@ -752,7 +759,11 @@ class PluginLoader:
         principal: object = PrincipalClass.OPERATOR,
         correlation_id: object = "plugin-reload",
     ) -> Result[LoadedPlugin]:
-        """Explicit reload — no file watcher, no reactive remount (AD-21)."""
+        """Explicit reload — no file watcher, no reactive remount (AD-21).
+
+        The live scope stays mounted until the replacement load succeeds
+        (FR-Q70). A refused reload restores the parked incumbent.
+        """
         if self.file_watcher_enabled:
             return TypedRefusal(
                 category=RefusalCategory.POLICY_REJECTION,
@@ -766,11 +777,48 @@ class PluginLoader:
         if not is_ok(gated):
             return gated
         plugin_id = raw.get("id")
+        parked: LoadedPlugin | None = None
+        parked_published: tuple[PublishedContribution, ...] = ()
         if isinstance(plugin_id, str) and plugin_id in self._loaded:
-            self.unload(plugin_id)
-        return self._load_with_migrations(
-            raw, activator=activator, correlation_id=correlation_id
-        )
+            parked, parked_published = self._park_loaded(plugin_id)
+        loaded = self._load_with_migrations(raw, activator=activator, correlation_id=correlation_id)
+        if not is_ok(loaded):
+            if parked is not None:
+                self._restore_parked_scope(parked, parked_published)
+            return loaded
+        if parked is not None:
+            parked.exit_stack.close()
+        return loaded
+
+    def _park_loaded(
+        self, plugin_id: str
+    ) -> tuple[LoadedPlugin, tuple[PublishedContribution, ...]]:
+        """Detach a live scope without disposing it, for swap-on-success reload."""
+        parked = self._loaded.pop(plugin_id)
+        published = tuple(row for row in self._published if row.plugin_id == plugin_id)
+        self._drop_published(plugin_id)
+        for key, owner in list(self._singleton_owners.items()):
+            if owner == plugin_id:
+                self._singleton_owners.pop(key, None)
+        for key, owner in list(self._multi_owners.items()):
+            if owner == plugin_id:
+                self._multi_owners.pop(key, None)
+        return parked, published
+
+    def _restore_parked_scope(
+        self,
+        parked: LoadedPlugin,
+        published: tuple[PublishedContribution, ...],
+    ) -> None:
+        """Remount a parked incumbent after a refused reload."""
+        plugin_id = parked.manifest.id
+        self._loaded[plugin_id] = parked
+        self._published.extend(published)
+        snap = parked.context.snapshot()
+        for key in cast_mapping(snap["singletons"]):
+            self._singleton_owners[key] = plugin_id
+        for key in cast_mapping(snap["multis"]):
+            self._multi_owners[key] = plugin_id
 
     def unload(self, plugin_id: str) -> int:
         """Close the plugin scope LIFO and remove every published contribution."""
@@ -927,9 +975,7 @@ class PluginLoader:
         conflicting_raw = ctx.get("conflicting_plugin_ids", ())
         conflicting_ids: tuple[str, ...] = ()
         if isinstance(conflicting_raw, tuple):
-            conflicting_ids = tuple(
-                str(item) for item in cast(tuple[object, ...], conflicting_raw)
-            )
+            conflicting_ids = tuple(str(item) for item in cast(tuple[object, ...], conflicting_raw))
         raise PluginStartupAbort(
             str(ctx.get("reason", result)),
             plugin_id=str(plugin_id) if isinstance(plugin_id, str) else None,

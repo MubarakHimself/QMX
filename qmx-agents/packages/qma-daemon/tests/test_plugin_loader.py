@@ -198,10 +198,15 @@ def test_machine_principal_refused_and_operator_reload_explicit() -> None:
     assert is_refusal(machine)
     assert machine.context.get("command") == "plugin.install"
 
-    assert is_ok(loader.install(_manifest(), activator=_activate_research))
+    installed = loader.install(_manifest(), activator=_activate_research)
+    assert is_ok(installed)
+    incumbent = installed.value
     reloaded = loader.reload(_manifest(), activator=_activate_research)
     assert is_ok(reloaded)
     assert reloaded.value.manifest.id == "research-corpus"
+    assert reloaded.value is not incumbent
+    assert incumbent.exit_stack.closed is True
+    assert loader.get("research-corpus") is reloaded.value
 
 
 def test_qma_api_incompatible_and_permissions_refused() -> None:
