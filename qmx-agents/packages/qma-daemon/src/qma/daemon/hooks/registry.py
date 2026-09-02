@@ -650,8 +650,10 @@ class HookRegistry:
         timed_out: bool = False,
         source: HookSource | str = HookSource.MISSION,
         correlation_id: str | None = None,
+        hook_registry_id: str | None = None,
+        ct51_schema: bool = False,
     ) -> Result[LedgerAppendGateResult]:
-        """Run ``before_ledger_append`` as a validating gate (FR-Q32; L39).
+        """Run ``before_ledger_append`` as a validating gate (FR-Q32; FR-Q58; L39).
 
         Well-formed evidence from the lease holder cannot be denied. Schema-
         invalid or outside-lease denies quarantine the entry and never discard.
@@ -676,7 +678,33 @@ class HookRegistry:
                 quarantine=self._ledger_quarantine,
                 telemetry=self._timeout_telemetry,
                 correlation_id=correlation_id,
+                hook_registry_id=hook_registry_id,
+                ct51_schema=ct51_schema,
             )
+        )
+
+    def record_hook_ledger_entry(
+        self,
+        entry: Mapping[str, object],
+        *,
+        hook_registry_id: str,
+        timed_out: bool = False,
+        correlation_id: str | None = None,
+        source: HookSource | str = HookSource.MISSION,
+    ) -> Result[LedgerAppendGateResult]:
+        """Record a ``ledger_entry`` returned by ``before_task_complete`` / ``review_required``.
+
+        Authored by the daemon plus the returning hook's registry id, exempt from
+        the ``dispatch_lease`` holder check, still schema-validated (FR-Q58).
+        """
+        return self.evaluate_ledger_append(
+            entry,
+            dispatch_lease_holder=None,
+            timed_out=timed_out,
+            source=source,
+            correlation_id=correlation_id,
+            hook_registry_id=hook_registry_id,
+            ct51_schema=True,
         )
 
     def evaluate_primitive(

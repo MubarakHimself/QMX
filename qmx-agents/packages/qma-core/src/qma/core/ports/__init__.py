@@ -102,6 +102,7 @@ from qma.core.ports.jobs import (
 from qma.core.ports.knowledge import KnowledgeSource
 from qma.core.ports.ledgers import (
     DAEMON_AUTHORED_ENTRY_KINDS,
+    HOOK_RETURNED_LEDGER_KIND,
     LEDGER_ENTRY_OPTIONAL_REFS,
     LEDGER_ENTRY_REQUIRED_FIELDS,
     SHARED_SEMANTIC_KEYS,
@@ -110,10 +111,12 @@ from qma.core.ports.ledgers import (
     QuantLedgerLease,
     TaskCompleted,
     TaskLedgerEntry,
+    missing_task_completed_fields,
     named_lease_kind,
     parse_ledger_author,
     parse_task_completed,
     parse_task_ledger_entry,
+    stamp_hook_returned_ledger_entry,
 )
 from qma.core.ports.memory import MemoryProvider
 from qma.core.ports.model import (
@@ -229,6 +232,7 @@ __all__ = [
     "GAP_0085_STRATEGY_MECHANISMS",
     "GIT_COMMIT_REF_PREFIX",
     "HANDLE_KIND_CONTRIBUTION_POINTS",
+    "HOOK_RETURNED_LEDGER_KIND",
     "JOB_HANDLE_ABORT_TRIGGERS",
     "JOB_HANDLE_OPERATIONS",
     "JOB_HANDLE_UNKNOWN_RESOLVE_COMMAND",
@@ -335,6 +339,7 @@ __all__ = [
     "is_unknown_trigger",
     "match_compute_requirement",
     "max_in_flight_editability",
+    "missing_task_completed_fields",
     "money_path_field_is_set",
     "named_lease_kind",
     "narrow_permissions",
@@ -368,6 +373,7 @@ __all__ = [
     "select_lowest_capable",
     "select_reviewer",
     "skill_grants_tool_or_capability",
+    "stamp_hook_returned_ledger_entry",
     "subagent_inherited_tool_ids",
     "touched_money_path_fields",
     "unmet_constraint_for",

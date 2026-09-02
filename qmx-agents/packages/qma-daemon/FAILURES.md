@@ -23,7 +23,8 @@ Story 45.9 adds the deployment envelope: workstation Docker workers, remote
 dial-out only, trading-node host-identity refusal, computer-use exclusion,
 and read-only dev/paper except the dev-zone candidate (FR-44 through FR-47).
 Epic 46 Story 46.1 adds the Task-owned Task Ledger under ``dispatch_lease``
-(FR-48 through FR-50).
+(FR-48 through FR-50). Epic 46 Story 46.2 adds ``before_ledger_append`` as a
+validating gate that never discards evidence (FR-51 through FR-53).
 
 ### FR-1: A second daemon or writer is refused at the persistence boundary
 
@@ -746,3 +747,58 @@ Epic 46 Story 46.1 adds the Task-owned Task Ledger under ``dispatch_lease``
 - **Notification tier:** silent-log (caller receives the typed refusal).
 - **Product-user affordance:** workers send the work; the daemon writes the
   clock. Do not timestamp your own ledger evidence.
+
+### FR-51: A schema-invalid or non-holder Task Ledger append is quarantined
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `before_ledger_append` (`evaluate_before_ledger_append` /
+  `TaskLedgerStore.append`) refuses only a schema-invalid entry or one not
+  authored by the holder of the named append right. The refused mapping is
+  written verbatim to `ledger_quarantine_stream`. The first explicit denial
+  materializes that projection (CT-51; FR-Q58; L39).
+- **Auto-recovery / retry:** none — correct the schema or append as the
+  holder of `dispatch_lease`. Daemon `reassigned` / `unknown_tail` and a
+  hook-returned `ledger_entry` (`authored_by: daemon` plus the hook registry
+  id) are the only lease-check exemptions and remain schema-validated.
+- **Visible degraded state:** the Task Ledger is unchanged; the attempted
+  entry remains inspectable on the quarantine stream; `discarded` is always
+  false.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** that append was not a valid Task Ledger line.
+  The attempt is kept in quarantine so nothing is lost. Fix the entry or
+  wait until you hold the Task's `dispatch_lease`.
+
+### FR-52: An incomplete TaskCompleted append refuses completion only
+
+- **Failure class:** `policy rejection` (CT-04) of the completion transition.
+- **Detection:** `TaskLedgerStore.propose_completion` writes the
+  TaskCompleted append even when any of the five fields (what was done, what
+  changed, evidence and artifact refs, unresolved issues, next
+  recommendation) is omitted, then refuses the completion transition
+  (CT-51; FR-Q58).
+- **Auto-recovery / retry:** none for the transition — supply the five-field
+  structured append and propose completion again. The incomplete entry stays
+  on the Task Ledger.
+- **Visible degraded state:** Task remains non-terminal; the incomplete
+  append is on the ledger and is never discarded.
+- **Notification tier:** silent-log (caller receives `completion_admitted=False`
+  plus the typed refusal).
+- **Product-user affordance:** the Task is not done until the five-field
+  account is complete. The partial write is kept so the work is not lost.
+
+### FR-53: A `before_ledger_append` timeout never discards the entry
+
+- **Failure class:** designed evidence-preserving timeout (not a refusal of
+  well-formed evidence).
+- **Detection:** a `before_ledger_append` timeout resolves to `allow` with
+  the entry recorded and annotated `hook_timeout`. Schema-invalid or
+  non-holder denials still quarantine rather than drop the mapping
+  (CT-51; FR-Q58; DEC-0309).
+- **Auto-recovery / retry:** none — the annotated or quarantined record is
+  the evidence.
+- **Visible degraded state:** well-formed evidence is on the Task Ledger
+  with `hook_timeout`; invalid attempts sit on the quarantine stream.
+- **Notification tier:** silent-log.
+- **Product-user affordance:** a slow validation hook cannot erase what the
+  Agent tried to record. Look for the `hook_timeout` annotation or the
+  quarantine stream.

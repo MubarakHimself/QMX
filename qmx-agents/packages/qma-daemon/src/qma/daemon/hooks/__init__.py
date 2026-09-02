@@ -36,6 +36,7 @@ from qma.daemon.hooks.controls import (
 from qma.daemon.hooks.ledger_gate import (
     DAEMON_AUTHORED_ENTRY_KINDS,
     LEDGER_ENTRY_REQUIRED_FIELDS,
+    LEDGER_QUARANTINE_STREAM,
     LedgerAppendGateResult,
     LedgerQuarantineRecord,
     LedgerQuarantineStream,
@@ -107,6 +108,7 @@ __all__ = [
     "HOOK_TIMEOUT_CONTROL_KEY",
     "HOOK_TIMEOUT_KEYS",
     "LEDGER_ENTRY_REQUIRED_FIELDS",
+    "LEDGER_QUARANTINE_STREAM",
     "NO_INTERACTIVE_AUTHORITY_REASON",
     "ON_TIMEOUT_KEY",
     "PHASE_LESS_CONTROLS",
