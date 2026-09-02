@@ -15,7 +15,7 @@ import hashlib
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Final, cast
+from typing import Final
 
 from qmf.core import (
     Duration,
@@ -534,7 +534,7 @@ class NewsCalendarRecorder:
                     fail_closed=True,
                 )
             )
-        receipt = cast("CalendarImportReceipt", outcome_value)
+        receipt = outcome_value
         produced = 0
         idempotent = 0
         for item in receipt.intake_receipts:
