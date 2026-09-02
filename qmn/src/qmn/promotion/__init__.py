@@ -2,9 +2,10 @@
 
 Human-only promotion runs the silent battery and lands ADMITTED with no
 intent, ledger, or exposure. Activation is a separate act that becomes
-effective only at the next account-scoped day-boundary. Sandbox provenance
-is refused at hub publish and at the promotion pull. Persistence uses the
-closed CT-13 ``promotion`` type and the CT-24 → ``risk transition`` mapping.
+effective only at the next account-scoped day-boundary. The passive hub
+inbox is write-only and WriterId-scoped; sandbox provenance is refused at
+hub publish and at the promotion pull. Persistence uses the closed CT-13
+``promotion`` type and the CT-24 → ``risk transition`` mapping.
 """
 
 from __future__ import annotations
@@ -77,6 +78,22 @@ from qmn.promotion.lifecycle import (
     request_activation,
     revalidate_before_first_intent,
 )
+from qmn.promotion.passive_hub import (
+    HUB_INBOX_NAME,
+    HUB_PUBLISHED_NAME,
+    INBOUND_CROSSINGS,
+    HubFragment,
+    InboxReceipt,
+    PassiveHubTree,
+    PublishReceipt,
+    accept_inbox_fragment,
+    publish_inbox_fragment,
+    pull_from_published,
+    refuse_evidence_sync_into_inbox,
+    refuse_inbound_crossing,
+    refuse_inbox_promotion_read,
+    refuse_published_direct_write,
+)
 
 __all__ = [
     "ACTIVATION_CT13_EVENT_TYPE",
@@ -91,6 +108,9 @@ __all__ = [
     "DEMO_BASELINE_ENVIRONMENT",
     "FORBIDDEN_ACTIVATION_OVERRIDES",
     "HUB_CROSSINGS",
+    "HUB_INBOX_NAME",
+    "HUB_PUBLISHED_NAME",
+    "INBOUND_CROSSINGS",
     "LIVE_BASELINE_ENVIRONMENT",
     "LOG_LINE_SUBSTITUTES_FOR_JOURNAL",
     "PROMOTION_EVENT_TYPE",
@@ -111,14 +131,19 @@ __all__ = [
     "ConfigGateFreshState",
     "Ct18CapabilityFreshState",
     "HubArtifact",
+    "HubFragment",
     "IdentityFingerprints",
+    "InboxReceipt",
     "LiveBaselineFreshState",
+    "PassiveHubTree",
     "PromotionFreshState",
     "PromotionJournalRow",
     "PromotionLanding",
     "ProtectionFreshState",
+    "PublishReceipt",
     "PublishedHub",
     "SilentBatteryReport",
+    "accept_inbox_fragment",
     "admit_first_intent",
     "assert_closed_ct13_event_type",
     "commit_activation",
@@ -130,9 +155,15 @@ __all__ = [
     "promote_to_admitted",
     "promotion_journal_payload",
     "publish_hub_fragment",
+    "publish_inbox_fragment",
+    "pull_from_published",
     "pull_published_as_of",
     "reconstruct_activation",
+    "refuse_evidence_sync_into_inbox",
+    "refuse_inbound_crossing",
+    "refuse_inbox_promotion_read",
     "refuse_invented_ksa_or_latency",
+    "refuse_published_direct_write",
     "refuse_sandbox_provenance",
     "request_activation",
     "revalidate_before_first_intent",

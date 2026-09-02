@@ -715,3 +715,77 @@ designed failure; every typed refusal the node can emit belongs here.
   Inspect `read_failure_detail` on the evidence channel. Keep
   `news_calendar_provider_primary` at the free weekly file and a cadence
   inside the provider budget; restore via the operations toolkit.
+
+### FR-50: Sealed-archive copy failed content verification
+
+- **Failure class:** storage failure / policy rejection
+- **Detection:** the one-way evidence sync wrote a prefix whose reread fp1
+  does not match, or a true collision landed under the same prefix id
+  (`data.sealed.verify_mismatch`). The watermark does not advance.
+- **Auto-recovery / retry:** resume from the last verified watermark; do not
+  purge. Re-run the detached sync duty after the hot prefix is re-sealed.
+- **Visible degraded state:** sealed-archive lags the hot rooms; hot-room
+  purge stays refused; the trading loop is not blocked.
+- **Notification tier:** silent-degradation
+- **Product-user affordance:** Evidence copy into sealed-archive failed
+  verification. Inspect `read_failure_detail` on the evidence channel. The
+  node loop keeps running; restore via the operations toolkit. Do not purge
+  hot rooms until a verified sealed copy exists.
+
+### FR-51: Evidence sync refused as a second writer or loop attachment
+
+- **Failure class:** policy rejection
+- **Detection:** sync was asked to copy an uncommitted prefix
+  (`data.sealed.uncommitted`), to emit as a second writer
+  (`data.sealed.second_writer`), to attach to the command-stream loop
+  (`data.sealed.loop_blocking`), to instantiate `world = simulated`
+  (`data.sealed.world`), or to stand up off-host backup infrastructure
+  (`data.sealed.off_host_infra`).
+- **Auto-recovery / retry:** none — copy only committed prefixes from a
+  detached duty; off-host backup is Story 27.6.
+- **Visible degraded state:** no sealed-archive write; no second observation
+  writer; the slice loop is unchanged.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The node refused to copy uncommitted evidence,
+  to write observations twice, or to block the loop on sync. Inspect
+  `read_failure_detail` on the evidence channel. Resume the detached copy
+  via the operations toolkit after the prefix is committed.
+
+### FR-52: Hot-room purge missing dual verified copies
+
+- **Failure class:** policy rejection
+- **Detection:** purge eligibility ran without a verified sealed-archive copy
+  (`data.purge.missing_sealed`), without a verified off-host copy
+  (`data.purge.missing_off_host`), before `hot_room_retention_window`
+  (`data.purge.retention_window`), or against keep-forever evidence
+  (`data.purge.retained_forever`).
+- **Auto-recovery / retry:** none — wait for both verified copies past the
+  window. Raw evidence, journals, registry, cited research, and lineage stay
+  under their retention law.
+- **Visible degraded state:** the hot prefix is retained; sealed-archive and
+  off-host proofs are unchanged.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** Hot-room purge was refused because a verified
+  sealed-archive copy or a verified off-host copy is missing, or the
+  retention window has not elapsed. Inspect `read_failure_detail` on the
+  evidence channel. Do not delete keep-forever evidence.
+
+### FR-53: Passive hub illegal crossing or area misuse
+
+- **Failure class:** policy rejection
+- **Detection:** an inbound path other than confined sandbox push or
+  click-gated promotion pull (`hub.inbound_crossing`), a promotion read of
+  the write-only inbox (`hub.inbox.read`), a direct write to the read-only
+  published area (`hub.published.write`), evidence sync into the inbox
+  (`hub.sync_into_inbox`), or a fragment without WriterId scope
+  (`hub.writer_scope`). Sandbox provenance at publish or pull remains FR-21.
+- **Auto-recovery / retry:** none — push WriterId-scoped fragments into
+  `hub-inbox`, then `hub_publish`; pull only from `hub-published`.
+- **Visible degraded state:** the fragment does not publish or land; the
+  inbox stays write-only; published stays read-only.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The passive hub refused an illegal inbound
+  crossing or a read of the write-only inbox. Inspect `read_failure_detail`
+  on the evidence channel. Sandbox fragments stay in the inbox until an
+  operator `hub_publish` over the powers channel; promotion pull reads only
+  the published area.

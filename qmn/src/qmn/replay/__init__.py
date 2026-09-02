@@ -1,4 +1,4 @@
-"""Replay import surface stub (TN-21). Epic 27 fills the sealed-archive port."""
+"""Replay import surface stub (TN-21). Story 27.4 owns the sealed-archive write."""
 
 from __future__ import annotations
 
