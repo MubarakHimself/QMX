@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TypeVar
+from typing import TypeVar, cast
 
 from qmf.core import (
     Duration,
@@ -205,7 +205,8 @@ def test_v1_inventory_is_six_rule_based_plus_fitted_liquidity() -> None:
     assert inventory["governed_v1"] == list(V1_GOVERNED_PRODUCER_IDS)
     assert inventory["regime_classifier_bound"] is False
     assert inventory["trained_model_selected"] is False
-    assert set(inventory["unauthoritative_candidates"]) == UNAUTHORITATIVE_CANDIDATES
+    candidates = cast("list[str]", inventory["unauthoritative_candidates"])
+    assert set(candidates) == UNAUTHORITATIVE_CANDIDATES
     formulas = v1_formula_catalog()
     assert [row.producer_id for row in formulas] == list(V1_GOVERNED_PRODUCER_IDS)
     assert all(row.nature is FormulaNature.RULE_BASED for row in formulas[:6])
@@ -254,7 +255,7 @@ def test_each_producer_has_versioned_identity_inputs_and_fp1() -> None:
 
 
 def _params_for(producer_id: str) -> dict[str, object]:
-    mapping = {
+    mapping: dict[str, dict[str, object]] = {
         IDENTITY_PRODUCER_ID: {},
         SPREAD_STATE_PRODUCER_ID: {"normal_max": _count(12), "elevated_max": _count(25)},
         GAP_EVENT_PRODUCER_ID: {
