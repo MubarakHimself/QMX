@@ -570,3 +570,19 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Product-user affordance:** Paper profit and eyeballing the books cannot
   prove the runtime risk gate. Run the executable composition-root path.
   Inspect `read_failure_detail` on the evidence channel.
+
+### FR-37: Shadow output wired into a governed consumer at Compose
+
+- **Failure class:** policy rejection
+- **Detection:** Compose finds a candidate/shadow snapshot wired into the Book
+  door, KSA, a bot, venue, or any command/control fold
+  (`compose.shadow_isolation`).
+- **Auto-recovery / retry:** none — remove the wiring so the shadow lane stays
+  publish-only, then reboot.
+- **Visible degraded state:** boot stands down at compose; sequencer closed;
+  governed `composition_fp` is unchanged by the candidate set.
+- **Notification tier:** alarm / operator-visible (compose refusal).
+- **Product-user affordance:** A candidate labeler was pointed at a live
+  consumer. Inspect `read_failure_detail` on the evidence channel, drop the
+  shadow-to-governed wiring, then restart via the operations toolkit. Shadow
+  comparison stays diagnostic and never gates trading.

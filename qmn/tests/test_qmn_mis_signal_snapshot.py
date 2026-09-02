@@ -26,6 +26,7 @@ from qmn.mis import (
     GovernedConsumer,
     ProducerReadiness,
     ProducerSlot,
+    SnapshotLane,
     check_snapshot_freshness,
     consume_signal_snapshot,
     mint_signal_snapshot,
@@ -226,6 +227,30 @@ def test_snapshot_is_immutable_and_fingerprinted() -> None:
     except TypeError:
         raised = True
     assert raised
+
+
+def test_shadow_lane_snapshot_is_not_consumed_by_book_door_or_ksa() -> None:
+    snap = _ok(
+        mint_signal_snapshot(
+            frontier_instant=_instant(1_000_000_000),
+            environment="live",
+            feed_state=CanonicalFeedState.LIVE,
+            producers=(_sqs_slot(),),
+            decision_freshness_bound=_duration(5_000_000_000),
+            lane=SnapshotLane.SHADOW,
+        )
+    )
+    assert snap.lane is SnapshotLane.SHADOW
+    assert snap.fp1_identity()["lane"] == SnapshotLane.SHADOW.value
+    governed = _snapshot()
+    assert governed.lane is SnapshotLane.GOVERNED
+    assert _ok(governed.fingerprint()) != _ok(snap.fingerprint())
+    for consumer in (GovernedConsumer.BOOK_DOOR, GovernedConsumer.KSA):
+        refused = consume_signal_snapshot(
+            snap, consumer=consumer, decision_at=_instant(1_000_000_000)
+        )
+        assert is_refusal(refused)
+        assert refused.category is RefusalCategory.POLICY_REJECTION
 
 
 def test_missing_freshness_bound_refuses_mint() -> None:

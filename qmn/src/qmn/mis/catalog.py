@@ -305,7 +305,7 @@ class ConfiguredMisProducer:
 
 @dataclass(frozen=True, slots=True)
 class MisProducerCatalog:
-    """Immutable governed-role catalog. Candidate wiring is Story 26.18."""
+    """Immutable governed-role catalog. Candidates register on the shadow seam."""
 
     producers: Mapping[str, ConfiguredMisProducer]
 
@@ -520,7 +520,8 @@ def register_mis_producer(
     """Register a configured producer into the governed catalog.
 
     Trained ``regime_classifier_v1`` and unauthoritative recovered names refuse.
-    Duplicate producer ids refuse. Candidate-role registration is not this story.
+    Duplicate producer ids refuse. Candidate-role registration belongs on the
+    shadow seam (``register_shadow_candidate``), never this catalog.
     """
     if not isinstance(catalog, MisProducerCatalog):
         return invalid(
@@ -540,8 +541,8 @@ def register_mis_producer(
     if resolved_role is not MisProducerRole.GOVERNED:
         return policy(
             "role",
-            "Story 26.17 registers governed V1 producers only; candidate "
-            "shadow-lane registration is Story 26.18",
+            "governed registration takes role=governed; candidate labelers "
+            "register through register_shadow_candidate on the shadow seam",
             role=resolved_role.value,
         )
     trained = refuse_trained_regime_classifier(producer.producer_id)

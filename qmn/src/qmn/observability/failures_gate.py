@@ -78,6 +78,7 @@ DESIGNED_TYPED_FAILURE_IDS: Final[frozenset[str]] = frozenset(
         "compose.risk_population.referential_integrity",
         "compose.risk_population.total_unique_rank",
         "compose.writer_ids",
+        "compose.shadow_isolation",
         "fingerprint.composition_fp",
         "lifecycle.stand_down",
         "money.boundary.re_seed",

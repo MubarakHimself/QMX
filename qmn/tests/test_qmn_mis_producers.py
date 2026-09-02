@@ -764,7 +764,12 @@ def test_ad24_heavy_by_default_light_claim_refused_without_baseline() -> None:
 
 def test_liquidity_and_labeler_modules_stay_cpu_stdlib() -> None:
     banned = ("numpy", "torch", "sklearn", "tensorflow", "jax")
-    for path in (_MIS_SRC / "liquidity.py", _MIS_SRC / "labelers.py", _MIS_SRC / "catalog.py"):
+    for path in (
+        _MIS_SRC / "liquidity.py",
+        _MIS_SRC / "labelers.py",
+        _MIS_SRC / "catalog.py",
+        _MIS_SRC / "shadow.py",
+    ):
         text = path.read_text(encoding="utf-8")
         for name in banned:
             assert f"import {name}" not in text

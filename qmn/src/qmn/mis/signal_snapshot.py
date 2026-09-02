@@ -43,6 +43,7 @@ __all__ = [
     "ProducerReadiness",
     "ProducerSlot",
     "SignalSnapshot",
+    "SnapshotLane",
     "SqsBaselineKey",
     "SqsReading",
     "check_snapshot_freshness",
@@ -66,6 +67,13 @@ class GovernedConsumer(StrEnum):
 
 
 GOVERNED_CONSUMERS: Final[frozenset[GovernedConsumer]] = frozenset(GovernedConsumer)
+
+
+class SnapshotLane(StrEnum):
+    """Governed money-path lane versus zero-authority shadow publish (DEC-0204)."""
+
+    GOVERNED = "governed"
+    SHADOW = "shadow"
 
 
 class ProducerReadiness(StrEnum):
@@ -354,6 +362,7 @@ class SignalSnapshot:
     producers: Mapping[str, ProducerSlot]
     degraded_sensors: tuple[str, ...]
     decision_freshness_bound: Duration
+    lane: SnapshotLane = SnapshotLane.GOVERNED
 
     def fingerprint(self) -> Result[Fingerprint]:
         return fingerprint(self.fp1_identity())
@@ -361,6 +370,7 @@ class SignalSnapshot:
     def fp1_identity(self) -> dict[str, object]:
         return {
             "class": "signal-snapshot",
+            "lane": self.lane.value,
             "frontier_instant": self.frontier_instant.fp1_identity(),
             "environment": self.environment,
             "feed_state": self.feed_state.value,
@@ -391,6 +401,7 @@ def mint_signal_snapshot(
     producers: object,
     decision_freshness_bound: object,
     degraded_sensors: object = (),
+    lane: object = SnapshotLane.GOVERNED,
 ) -> Result[SignalSnapshot]:
     """Mint one immutable snapshot with exactly one slot per producer id."""
     if not isinstance(frontier_instant, Instant):
@@ -422,7 +433,11 @@ def mint_signal_snapshot(
             "decision_freshness_bound is a non-negative Duration",
             given=decision_freshness_bound.value_ns,
         )
-    slots = _coerce_producer_slots(producers)
+    resolved_lane = _coerce_lane(lane)
+    if isinstance(resolved_lane, TypedRefusal):
+        return resolved_lane
+    require_sqs = resolved_lane is SnapshotLane.GOVERNED
+    slots = _coerce_producer_slots(producers, require_sqs=require_sqs)
     if isinstance(slots, TypedRefusal):
         return slots
     sensors = _coerce_sensor_list(degraded_sensors)
@@ -436,6 +451,7 @@ def mint_signal_snapshot(
             producers=MappingProxyType(slots),
             degraded_sensors=sensors,
             decision_freshness_bound=decision_freshness_bound,
+            lane=resolved_lane,
         )
     )
 
@@ -496,6 +512,14 @@ def consume_signal_snapshot(
             "snapshot",
             "Book door / KSA consume a SignalSnapshot",
             given=repr(snapshot),
+        )
+    if snapshot.lane is SnapshotLane.SHADOW:
+        return policy(
+            "lane",
+            "a shadow-lane snapshot is publish-only; the Book door, KSA, bots, "
+            "venue, and command/control folds never consume candidate output",
+            lane=snapshot.lane.value,
+            consumer=resolved.value,
         )
     fresh = check_snapshot_freshness(snapshot, decision_at=decision_at)
     if is_refusal(fresh):
@@ -568,8 +592,27 @@ def _coerce_consumer(value: object) -> GovernedConsumer | TypedRefusal:
     )
 
 
+def _coerce_lane(value: object) -> SnapshotLane | TypedRefusal:
+    if isinstance(value, SnapshotLane):
+        return value
+    token = clean_token(value)
+    if token is not None:
+        try:
+            return SnapshotLane(token)
+        except ValueError:
+            pass
+    return invalid(
+        "lane",
+        "snapshot lane is governed|shadow",
+        given=repr(value),
+        allowed=[member.value for member in SnapshotLane],
+    )
+
+
 def _coerce_producer_slots(
     value: object,
+    *,
+    require_sqs: bool = True,
 ) -> dict[str, ProducerSlot] | TypedRefusal:
     if isinstance(value, (str, bytes)) or not isinstance(value, Iterable):
         return invalid(
@@ -597,7 +640,7 @@ def _coerce_producer_slots(
                 producer_id=item.producer_id,
             )
         slots[item.producer_id] = item
-    if SQS_PRODUCER_ID not in slots:
+    if require_sqs and SQS_PRODUCER_ID not in slots:
         return invalid(
             "producers",
             "the signal snapshot carries the SQS producer slot (one value per instant)",

@@ -646,6 +646,7 @@ def run_boot_ceremony(
     writer_streams: object = (),
     workload_claims: object = (),
     risk_population: object = None,
+    shadow_consumer_wiring: object = (),
     preflight: object | None = None,
     boot_attempt_sink: object,
     door_binder: Callable[[], Result[BoundSupervisorDoors]] | None = None,
@@ -883,6 +884,38 @@ def run_boot_ceremony(
         composition_inputs, composition_classes.identity_content
     )
 
+    from qmn.mis.shadow import (  # noqa: PLC0415 — leaf isolation check at Compose
+        refuse_shadow_governed_wiring,
+    )
+
+    isolation = refuse_shadow_governed_wiring(shadow_consumer_wiring)
+    if is_refusal(isolation):
+        failure_id = str(
+            isolation.context.get("failure_id", "compose.shadow_isolation")
+        )
+        attempt = BootAttemptRecord(
+            boot_epoch_id=boot_token,
+            unit_role=role_token,
+            stage="compose",
+            writer=supervisor.value,
+            sequence=0,
+            reason=reason_token,
+            failure_id=failure_id,
+        )
+        sink.amend(attempt)
+        if boot_mode == "check":
+            return _check_mode_refusal(isolation)
+        return Ok(
+            _stand_down_outcome(
+                mode=boot_mode,
+                doors=doors.value,
+                boot_attempt=attempt,
+                stage="compose",
+                preflight_status=status_map,
+                failure_id=failure_id,
+            )
+        )
+
     population = _admit_risk_population(risk_population)
     if is_refusal(population):
         failure_id = str(
@@ -1013,6 +1046,7 @@ def run_check_mode(
     writer_streams: object = (),
     workload_claims: object = (),
     risk_population: object = None,
+    shadow_consumer_wiring: object = (),
     preflight: object | None = None,
     boot_attempt_sink: object,
     door_binder: Callable[[], Result[BoundSupervisorDoors]] | None = None,
@@ -1028,6 +1062,7 @@ def run_check_mode(
         writer_streams=writer_streams,
         workload_claims=workload_claims,
         risk_population=risk_population,
+        shadow_consumer_wiring=shadow_consumer_wiring,
         preflight=preflight,
         boot_attempt_sink=boot_attempt_sink,
         door_binder=door_binder,
