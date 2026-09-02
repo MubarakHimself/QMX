@@ -13,7 +13,7 @@ from types import MappingProxyType
 from typing import Final, cast
 
 from qma.core.ontology import ActorId
-from qma.core.vocabulary.enums import LeaseKind, TaskLedgerEntryKind
+from qma.core.vocabulary.enums import LeaseKind, QuantLedgerEntryKind, TaskLedgerEntryKind
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
 from qmf.core import Ok, Result
 from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
@@ -23,15 +23,19 @@ __all__ = [
     "HOOK_RETURNED_LEDGER_KIND",
     "LEDGER_ENTRY_OPTIONAL_REFS",
     "LEDGER_ENTRY_REQUIRED_FIELDS",
+    "QUANT_LEDGER_ENTRY_REQUIRED_FIELDS",
+    "QUANT_LEDGER_FORBIDDEN_TASK_KEYS",
     "SHARED_SEMANTIC_KEYS",
     "TASK_COMPLETED_FIELDS",
     "LedgerAuthor",
+    "QuantLedgerEntry",
     "QuantLedgerLease",
     "TaskCompleted",
     "TaskLedgerEntry",
     "missing_task_completed_fields",
     "named_lease_kind",
     "parse_ledger_author",
+    "parse_quant_ledger_entry",
     "parse_task_completed",
     "parse_task_ledger_entry",
     "stamp_hook_returned_ledger_entry",
@@ -45,6 +49,25 @@ LEDGER_ENTRY_REQUIRED_FIELDS: Final[frozenset[str]] = frozenset(
         "attempt_no",
         "authored_by",
         "recorded_at",
+    }
+)
+
+QUANT_LEDGER_ENTRY_REQUIRED_FIELDS: Final[frozenset[str]] = frozenset(
+    {
+        "id",
+        "kind",
+        "authored_by",
+        "recorded_at",
+    }
+)
+
+# Quant Ledger never restates or synthesizes another Task's ledger (DEC-0338).
+QUANT_LEDGER_FORBIDDEN_TASK_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "task_ledger",
+        "task_entries",
+        "task_completed",
+        "attempt_no",
     }
 )
 
@@ -148,6 +171,38 @@ class QuantLedgerLease:
                 "holder_agent_id": self.holder_agent_id,
             }
         )
+
+
+@dataclass(frozen=True, slots=True)
+class QuantLedgerEntry:
+    """One append-only Quant Ledger row (AD-9; FR-Q59)."""
+
+    id: str
+    kind: QuantLedgerEntryKind
+    authored_by: LedgerAuthor
+    recorded_at: int
+    model_deployment_ref: str
+    mission_ref: str | None = None
+    body: Mapping[str, object] | None = None
+
+    def __post_init__(self) -> None:
+        if self.body is not None:
+            object.__setattr__(self, "body", MappingProxyType(dict(self.body)))
+
+    def to_payload(self) -> Mapping[str, object]:
+        authored = self.authored_by.to_payload()
+        payload: dict[str, object] = {
+            "id": self.id,
+            "kind": self.kind.value,
+            "authored_by": authored if isinstance(authored, str) else dict(authored),
+            "recorded_at": self.recorded_at,
+            "model_deployment_ref": self.model_deployment_ref,
+        }
+        if self.mission_ref is not None:
+            payload["mission_ref"] = self.mission_ref
+        if self.body is not None:
+            payload["body"] = dict(self.body)
+        return MappingProxyType(payload)
 
 
 @dataclass(frozen=True, slots=True)
@@ -598,5 +653,87 @@ def parse_task_ledger_entry(value: object) -> Result[TaskLedgerEntry]:
             holder_agent_id=current_holder,
             hook_registry_id=hook_registry_id,
             last_acked_id=last_acked_id,
+        )
+    )
+
+
+def parse_quant_ledger_entry(value: object) -> Result[QuantLedgerEntry]:
+    """Validate a Quant Ledger entry against the declared desk-level schema."""
+    if not isinstance(value, Mapping):
+        return _invalid("entry", "a Quant Ledger entry is an object")
+    entry = cast("Mapping[str, object]", value)
+    overlap = QUANT_LEDGER_FORBIDDEN_TASK_KEYS.intersection(entry.keys())
+    if overlap:
+        return _policy(
+            "entry",
+            "the Quant Ledger never restates or synthesizes another Task's ledger "
+            "(CT-51; DEC-0338; FR-Q59)",
+            given=sorted(overlap),
+        )
+    missing = [field for field in sorted(QUANT_LEDGER_ENTRY_REQUIRED_FIELDS) if field not in entry]
+    if missing:
+        return _invalid(
+            "entry",
+            "every Quant Ledger entry carries id, kind, authored_by, and recorded_at "
+            "(AD-9; FR-Q59)",
+            missing=missing,
+        )
+    entry_id = entry.get("id")
+    if not isinstance(entry_id, str) or entry_id.strip() == "":
+        return _invalid("id", "id is the entry's own stable identity, never a _ref")
+    try:
+        kind = parse_closed(QuantLedgerEntryKind, entry.get("kind"))
+    except VocabularyError:
+        return _invalid(
+            "kind",
+            "kind is a declared Quant Ledger entry: mission_opened, mission_closed, "
+            "delegation, escalation, or standing_decision (AD-9; FR-Q59)",
+            given=repr(entry.get("kind")),
+        )
+    recorded_at = entry.get("recorded_at")
+    if not isinstance(recorded_at, int) or isinstance(recorded_at, bool) or recorded_at < 0:
+        return _invalid(
+            "recorded_at",
+            "recorded_at is the daemon-stamped UTC instant as int64 nanoseconds (AD-6)",
+        )
+    author = parse_ledger_author(entry.get("authored_by"), kind=TaskLedgerEntryKind.PROGRESS)
+    if not isinstance(author, Ok):
+        return author
+    if author.value.daemon:
+        return _invalid(
+            "authored_by",
+            "Quant Ledger entries are authored by an Agent of the owning Quant (AD-9; FR-Q59)",
+        )
+    model_ref = entry.get("model_deployment_ref")
+    if not isinstance(model_ref, str) or model_ref.strip() == "":
+        return _invalid(
+            "model_deployment_ref",
+            "Quant Ledger entries carry the model deployment used (AD-9; FR-Q59)",
+        )
+    mission_raw = entry.get("mission_ref")
+    mission_ref: str | None
+    if mission_raw is None:
+        mission_ref = None
+    elif isinstance(mission_raw, str) and mission_raw.strip():
+        mission_ref = mission_raw.strip()
+    else:
+        return _invalid("mission_ref", "mission_ref is a non-empty reference string")
+    body_raw = entry.get("body")
+    body: Mapping[str, object] | None
+    if body_raw is None:
+        body = None
+    elif isinstance(body_raw, Mapping):
+        body = MappingProxyType(dict(cast("Mapping[str, object]", body_raw)))
+    else:
+        return _invalid("body", "body is an object when present")
+    return Ok(
+        QuantLedgerEntry(
+            id=entry_id.strip(),
+            kind=kind,
+            authored_by=author.value,
+            recorded_at=recorded_at,
+            model_deployment_ref=model_ref.strip(),
+            mission_ref=mission_ref,
+            body=body,
         )
     )

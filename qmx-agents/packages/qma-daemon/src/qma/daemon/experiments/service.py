@@ -16,7 +16,10 @@ from qma.core.ports.experiments import (
     EXPERIMENT_LINEAGE_EDGE_TYPE,
     ExperimentSpec,
 )
-from qma.daemon.ledgers.experiment import ExperimentLedger, ExperimentLedgerEntry
+from qma.daemon.ledgers.experiment import (
+    ExperimentLedger,
+    ExperimentLedgerStore,
+)
 from qma.daemon.taskgraph.records import DispatchLease
 from qmf.core import Ok, Result, WriterId, is_refusal
 from qmf.data.store.refusals import invalid_input, policy_rejection
@@ -57,7 +60,12 @@ class RegisteredExperiment:
 class ExperimentSpecService:
     """Daemon registration, ledger append, and CT-07 lineage for ExperimentSpec."""
 
-    def __init__(self, *, writer: WriterId | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        writer: WriterId | None = None,
+        ledgers: ExperimentLedgerStore | None = None,
+    ) -> None:
         if writer is None:
             minted = WriterId.try_create("qma-daemon", "authoring", "experiment-lineage", "boot-1")
             if is_refusal(minted):
@@ -67,13 +75,17 @@ class ExperimentSpecService:
         self._writer = writer
         self._edges = EdgeLog(writer)
         self._specs: dict[str, ExperimentSpec] = {}
-        self._ledgers: dict[str, ExperimentLedger] = {}
+        self._ledger_store = ledgers if ledgers is not None else ExperimentLedgerStore()
         self._leases: dict[str, DispatchLease] = {}
         self._lineage: dict[str, LineageEdge] = {}
 
     @property
     def edge_log(self) -> EdgeLog:
         return self._edges
+
+    @property
+    def ledgers(self) -> ExperimentLedgerStore:
+        return self._ledger_store
 
     def register(
         self,
@@ -95,10 +107,18 @@ class ExperimentSpecService:
             )
         existing = self._specs.get(spec.spec_fp1)
         if existing is not None:
+            existing_ledger = self._ledger_store.get(spec.spec_fp1)
+            if existing_ledger is None:
+                return invalid_input(
+                    "experiment_ledger_ref",
+                    "an ExperimentSpec with no resolvable Experiment Ledger is a "
+                    "registration defect (CT-47; DEC-0308; FR-Q54)",
+                    spec_fp1=spec.spec_fp1,
+                )
             return Ok(
                 RegisteredExperiment(
                     spec=existing,
-                    ledger=self._ledgers[spec.spec_fp1],
+                    ledger=existing_ledger,
                     dispatch_lease=self._leases[spec.spec_fp1],
                     lineage_edge=self._lineage.get(spec.spec_fp1),
                 )
@@ -110,15 +130,13 @@ class ExperimentSpecService:
                 "spec_fp1",
                 "Experiment Ledger attachment must not change spec identity",
             )
-        ledger = ExperimentLedger(
+        ledger = self._ledger_store.open_for_experiment(
             experiment_id=stored.spec_fp1,
             owner=dispatch_lease.owner,
-            registering_task_id=dispatch_lease.task_id,
-            author_agent_id=dispatch_lease.holder_agent_id,
+            registering_lease=dispatch_lease,
             ledger_ref=ledger_ref,
         )
         self._specs[stored.spec_fp1] = stored
-        self._ledgers[stored.spec_fp1] = ledger
         self._leases[stored.spec_fp1] = dispatch_lease
         return Ok(
             RegisteredExperiment(
@@ -211,49 +229,12 @@ class ExperimentSpecService:
         body: Mapping[str, object],
     ) -> Result[ExperimentLedger]:
         """Append evidence. Author is the registering Task's dispatch_lease holder."""
-        if not isinstance(spec_fp1, str) or spec_fp1.strip() == "":
-            return invalid_input("spec_fp1", "ledger append requires an ExperimentSpec fp1")
-        if not isinstance(model_deployment_ref, str) or model_deployment_ref.strip() == "":
-            return invalid_input(
-                "model_deployment_ref",
-                "Experiment Ledger entries carry the model deployment used",
-            )
-        key = spec_fp1.strip()
-        ledger = self._ledgers.get(key)
-        if ledger is None:
-            return invalid_input(
-                "experiment_ledger_ref",
-                "an ExperimentSpec with no resolvable Experiment Ledger is a "
-                "registration defect (CT-47; DEC-0308; FR-Q54)",
-                spec_fp1=key,
-            )
-        if dispatch_lease.task_id != ledger.registering_task_id:
-            return policy_rejection(
-                "dispatch_lease",
-                "two Tasks registering against one Experiment never produce two "
-                "simultaneous authors; only the registering Task's dispatch_lease "
-                "holder may append (CT-47; DEC-0308; FR-Q54)",
-                registering_task_id=ledger.registering_task_id,
-                given_task_id=dispatch_lease.task_id,
-            )
-        if dispatch_lease.holder_agent_id != ledger.author_agent_id:
-            return policy_rejection(
-                "authored_by",
-                "the Agent holding the registering Task's dispatch_lease is the "
-                "Experiment Ledger author (CT-47; DEC-0308; FR-Q54)",
-                author_agent_id=ledger.author_agent_id,
-                given_agent_id=dispatch_lease.holder_agent_id,
-            )
-        entry = ExperimentLedgerEntry(
-            authored_by=dispatch_lease.holder_agent_id,
-            owner=ledger.owner.value,
-            model_deployment_ref=model_deployment_ref.strip(),
-            spec_fp1=key,
+        return self._ledger_store.append_evidence(
+            spec_fp1=spec_fp1,
+            dispatch_lease=dispatch_lease,
+            model_deployment_ref=model_deployment_ref,
             body=body,
         )
-        updated = ledger.append(entry)
-        self._ledgers[key] = updated
-        return Ok(updated)
 
     def resolve(self, spec_fp1: object) -> Result[RegisteredExperiment]:
         """Resolve a registered spec. Identity content is never rewritten."""
@@ -261,7 +242,7 @@ class ExperimentSpecService:
             return invalid_input("spec_fp1", "resolve requires an ExperimentSpec fp1")
         key = spec_fp1.strip()
         spec = self._specs.get(key)
-        ledger = self._ledgers.get(key)
+        ledger = self._ledger_store.get(key)
         lease = self._leases.get(key)
         if spec is None or ledger is None or lease is None:
             return invalid_input("spec_fp1", "unknown ExperimentSpec", spec_fp1=key)

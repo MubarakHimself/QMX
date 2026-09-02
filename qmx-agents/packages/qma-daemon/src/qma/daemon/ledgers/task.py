@@ -29,6 +29,10 @@ from qma.daemon.hooks.ledger_gate import (
 )
 from qma.daemon.journal.authoritative import AnnouncementOutcome, AuthoritativeJournal
 from qma.daemon.journal.clock import refuse_worker_evidence_timestamp
+from qma.daemon.ledgers.announcements import (
+    LedgerAppendAnnouncement,
+    agent_ref_from_authored_by,
+)
 from qma.daemon.taskgraph.records import DispatchLease, TaskLedger, TaskRecord
 from qma.wire.envelope import WireEnvelope
 from qma.wire.vocabulary import WireEvent, WireQuery
@@ -130,6 +134,10 @@ class TaskLedgerStore:
     _journal: AuthoritativeJournal | None = None
     _entry_seq: dict[str, int] = field(default_factory=dict[str, int])
     _quarantine: LedgerQuarantineStream = field(default_factory=LedgerQuarantineStream)
+    _announcements: list[LedgerAppendAnnouncement] = field(
+        default_factory=list[LedgerAppendAnnouncement]
+    )
+    _announce_seq: int = 0
 
     def __post_init__(self) -> None:
         if self._journal is not None:
@@ -165,6 +173,9 @@ class TaskLedgerStore:
 
     def lease_for(self, task_id: str) -> DispatchLease | None:
         return self._leases.get(task_id)
+
+    def announcements(self) -> tuple[LedgerAppendAnnouncement, ...]:
+        return tuple(self._announcements)
 
     def grant(self, lease: DispatchLease) -> Result[DispatchLease]:
         """Record ``dispatch_lease`` without writing a ``reassigned`` entry."""
@@ -670,6 +681,30 @@ class TaskLedgerStore:
             return wall
         return Ok(wall.value.value_ns)
 
+    def _record_announcement(
+        self,
+        entry: Mapping[str, object],
+        *,
+        task_id: str,
+        journal_seq: int,
+    ) -> None:
+        recorded_raw = entry.get("recorded_at")
+        recorded_at = recorded_raw if isinstance(recorded_raw, int) else 0
+        lease = self._leases.get(task_id)
+        owner = self._owners.get(task_id)
+        self._announcements.append(
+            LedgerAppendAnnouncement(
+                journal_seq=journal_seq,
+                store=TASK_LEDGER_STORE_NAME,
+                recorded_at=recorded_at,
+                entry=entry,
+                quant=owner.value if owner is not None else None,
+                agent=agent_ref_from_authored_by(entry.get("authored_by")),
+                mission=lease.mission_id if lease is not None else None,
+                task=task_id,
+            )
+        )
+
     def _announce(
         self,
         ledger: TaskLedger,
@@ -679,6 +714,8 @@ class TaskLedgerStore:
     ) -> Result[AnnouncementOutcome | None]:
         _ = ledger
         if self._journal is None:
+            self._announce_seq += 1
+            self._record_announcement(entry, task_id=task_id, journal_seq=self._announce_seq)
             return Ok(None)
         addressed = content_address(dict(entry))
         if is_refusal(addressed):
@@ -686,13 +723,24 @@ class TaskLedgerStore:
         declared = self._journal.declare_store(TASK_LEDGER_STORE_NAME)
         if is_refusal(declared):
             return declared
+        owner = self._owners.get(task_id)
+        extra: dict[str, object] = {"task_id": task_id}
+        if owner is not None:
+            extra["quant"] = owner.value
         announced = self._journal.announce_evidence_append(
             TASK_LEDGER_STORE_NAME,
             addressed.value,
-            extra_payload={"task_id": task_id},
+            extra_payload=extra,
         )
         if is_refusal(announced):
             return announced
+        seq = announced.value.journal_seq
+        if seq is None:
+            self._announce_seq += 1
+            seq = self._announce_seq
+        else:
+            self._announce_seq = max(self._announce_seq, seq)
+        self._record_announcement(entry, task_id=task_id, journal_seq=seq)
         return Ok(announced.value)
 
     def _ledger_updated_event(

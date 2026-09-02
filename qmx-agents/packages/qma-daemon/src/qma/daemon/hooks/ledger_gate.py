@@ -292,7 +292,7 @@ def _force_allow_well_formed(
 def evaluate_before_ledger_append(
     entry: Mapping[str, object],
     *,
-    dispatch_lease_holder: str | None,
+    dispatch_lease_holder: str | None = None,
     timed_out: bool = False,
     attempted_result: HookResult | None = None,
     quarantine: LedgerQuarantineStream | None = None,
@@ -300,6 +300,9 @@ def evaluate_before_ledger_append(
     correlation_id: str | None = None,
     hook_registry_id: str | None = None,
     ct51_schema: bool = False,
+    lease_holder: str | None = None,
+    schema_valid: bool | None = None,
+    outside_lease_reason: str = "outside_dispatch_lease",
 ) -> LedgerAppendGateResult:
     """Validate and resolve ``before_ledger_append`` under L39 evidence law.
 
@@ -307,6 +310,8 @@ def evaluate_before_ledger_append(
     - Well-formed + lease holder + deny/policy → allow (cannot deny).
     - Schema-invalid or outside-lease → quarantine stream, never discard.
     - First explicit denial materializes the ledger quarantine projection.
+    ``lease_holder`` is the holder of the relevant named lease (Task
+    ``dispatch_lease`` or Quant ``quant_ledger_lease``).
     """
     working: Mapping[str, object]
     if hook_registry_id is not None:
@@ -315,16 +320,19 @@ def evaluate_before_ledger_append(
         working = MappingProxyType(dict(entry))
 
     stream = quarantine if quarantine is not None else LedgerQuarantineStream()
-    if ct51_schema:
+    if schema_valid is not None:
+        well_formed = schema_valid
+    elif ct51_schema:
         well_formed = is_ok(parse_task_ledger_entry(working))
     else:
         well_formed = is_well_formed_ledger_entry(working)
+    holder = lease_holder if lease_holder is not None else dispatch_lease_holder
     lease_ok = is_exempt_ledger_author(working) or is_dispatch_lease_holder(
-        working, dispatch_lease_holder=dispatch_lease_holder
+        working, dispatch_lease_holder=holder
     )
 
     if not well_formed or not lease_ok:
-        reason = "schema_invalid" if not well_formed else "outside_dispatch_lease"
+        reason = "schema_invalid" if not well_formed else outside_lease_reason
         denial_source = "schema" if not well_formed else "lease"
         # An explicit deny from a hook still quarantines rather than discarding.
         if attempted_result is not None and attempted_result.reason:

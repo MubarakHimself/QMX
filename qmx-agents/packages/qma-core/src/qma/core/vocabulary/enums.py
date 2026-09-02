@@ -34,6 +34,7 @@ __all__ = [
     "NetworkPolicy",
     "NodeKind",
     "PrincipalClass",
+    "QuantLedgerEntryKind",
     "RefinementEditKind",
     "RoutingPolicy",
     "SessionAttachment",
@@ -137,6 +138,19 @@ class TaskLedgerEntryKind(StrEnum):
     REASSIGNED = "reassigned"
     UNKNOWN_TAIL = "unknown_tail"
     LEDGER_ENTRY = "ledger_entry"
+
+
+class QuantLedgerEntryKind(StrEnum):
+    """Declared Quant Ledger entry schema (AD-9; DEC-0308; FR-Q59).
+
+    Desk-level work only — never a restatement of a Task Ledger.
+    """
+
+    MISSION_OPENED = "mission_opened"
+    MISSION_CLOSED = "mission_closed"
+    DELEGATION = "delegation"
+    ESCALATION = "escalation"
+    STANDING_DECISION = "standing_decision"
 
 
 class JobHandleState(StrEnum):
