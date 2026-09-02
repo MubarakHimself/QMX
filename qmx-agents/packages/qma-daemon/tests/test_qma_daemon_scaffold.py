@@ -54,9 +54,10 @@ def test_structural_modules_importable() -> None:
         qma.daemon.telemetry,
     )
     assert all(m.__doc__ for m in modules)
-    from qma.daemon.plugins import DaemonPluginContext
+    from qma.daemon.plugins import DaemonPluginContext, PluginLoader
 
     assert DaemonPluginContext.__name__ == "DaemonPluginContext"
+    assert PluginLoader.__name__ == "PluginLoader"
     assert qma.daemon.PersistenceSubstrate.__name__ == "PersistenceSubstrate"
     assert qma.daemon.AuthoritativeJournal.__name__ == "AuthoritativeJournal"
     assert qma.daemon.journal.AuthoritativeJournal is qma.daemon.AuthoritativeJournal

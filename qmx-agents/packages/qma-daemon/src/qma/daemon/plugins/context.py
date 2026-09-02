@@ -2,13 +2,22 @@
 
 In-memory registration only for this story — no durable write and no process
 start. Plugins import the protocol from ``qma-core``; this module implements it.
+Each registration returns a disposer pushed onto the per-plugin exit stack.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from collections.abc import Mapping, Sequence
+from typing import Any, cast
 
+from qma.core.barriers.money_path import (
+    is_money_path_act_denied,
+    match_money_path_act,
+)
+from qma.core.barriers.reachability import (
+    is_forbidden_model_adapter,
+    refuse_forbidden_model_adapter,
+)
 from qma.core.plugins.context import Disposer, HookHandler
 from qma.core.plugins.credential import CredentialRef, parse_credential_ref
 from qma.core.ports.cardinality import (
@@ -22,9 +31,10 @@ from qma.core.ports.context import ContextCompiler
 from qma.core.ports.execution import ExecutionEnvironment
 from qma.core.ports.knowledge import KnowledgeSource
 from qma.core.ports.memory import MemoryProvider
-from qma.core.ports.model import ModelDeployment
+from qma.core.ports.model import DeploymentRecord, ModelDeployment
 from qma.core.ports.tools import ToolAdapter
 from qma.core.vocabulary.handles import is_handle_kind_contribution_point
+from qma.daemon.plugins.exit_stack import PluginExitStack
 
 __all__ = ["DaemonPluginContext", "PluginContextError"]
 
@@ -33,22 +43,49 @@ class PluginContextError(ValueError):
     """Raised when a daemon-side registration violates cardinality law."""
 
 
+def _tool_act_tokens(tool: Mapping[str, object]) -> tuple[str, ...]:
+    tokens: list[str] = []
+    money = tool.get("money_path_act")
+    if isinstance(money, str) and money:
+        tokens.append(money)
+    acts_raw = tool.get("acts", ())
+    if isinstance(acts_raw, str) and acts_raw:
+        tokens.append(acts_raw)
+    elif isinstance(acts_raw, Sequence) and not isinstance(acts_raw, (str, bytes)):
+        for item in cast(Sequence[object], acts_raw):
+            if isinstance(item, str) and item:
+                tokens.append(item)
+    name = tool.get("name")
+    if isinstance(name, str) and name:
+        tokens.append(name)
+    return tuple(tokens)
+
+
 class DaemonPluginContext:
     """Concrete ``PluginContext`` held by the daemon loader for one plugin scope."""
 
-    def __init__(self, plugin_id: str) -> None:
+    def __init__(
+        self,
+        plugin_id: str,
+        *,
+        exit_stack: PluginExitStack | None = None,
+    ) -> None:
         if not plugin_id or ":" in plugin_id:
             raise PluginContextError(f"invalid plugin_id {plugin_id!r}")
         self._plugin_id = plugin_id
+        self._exit_stack = exit_stack if exit_stack is not None else PluginExitStack(plugin_id)
         self._singletons: dict[tuple[str, str], object] = {}
         self._multis: dict[tuple[str, str], object] = {}
         self._credential_refs: dict[str, CredentialRef] = {}
-        self._disposers: list[Disposer] = []
         self._context_compiler: ContextCompiler | None = None
 
     @property
     def plugin_id(self) -> str:
         return self._plugin_id
+
+    @property
+    def exit_stack(self) -> PluginExitStack:
+        return self._exit_stack
 
     def declare_credential_ref(self, name: str, ref: str) -> CredentialRef:
         """Record a credential reference string available to this plugin scope."""
@@ -64,14 +101,16 @@ class DaemonPluginContext:
                 f"no credential_ref named {name!r} in plugin {self._plugin_id!r}"
             ) from exc
 
+    def _push(self, disposer: Disposer) -> Disposer:
+        return self._exit_stack.push(disposer)
+
     def _dispose_singleton(self, port: str, scope_value: str) -> Disposer:
         key = (port, scope_value)
 
         def dispose() -> None:
             self._singletons.pop(key, None)
 
-        self._disposers.append(dispose)
-        return dispose
+        return self._push(dispose)
 
     def _dispose_multi(self, point: str, qualified: str) -> Disposer:
         key = (point, qualified)
@@ -79,8 +118,7 @@ class DaemonPluginContext:
         def dispose() -> None:
             self._multis.pop(key, None)
 
-        self._disposers.append(dispose)
-        return dispose
+        return self._push(dispose)
 
     def _bind_singleton(
         self, port: str, scope_key: str | None, scope_value: str, value: object
@@ -145,13 +183,30 @@ class DaemonPluginContext:
             self._context_compiler = None
             self._singletons.pop(("ContextCompiler", "daemon"), None)
 
-        self._disposers.append(dispose)
-        return dispose
+        return self._push(dispose)
 
     def register_tool(self, local_id: str, tool: Mapping[str, object]) -> Disposer:
+        for act in _tool_act_tokens(tool):
+            if is_money_path_act_denied(act):
+                matched = match_money_path_act(act) or act
+                raise PluginContextError(
+                    "money-path act refused at plugin tool registration "
+                    f"(plugin_id={self._plugin_id!r}, local_id={local_id!r}, "
+                    f"matched_act={matched!r})"
+                )
         return self._bind_multi("tool", local_id, dict(tool))
 
     def register_tool_adapter(self, local_id: str, adapter: ToolAdapter) -> Disposer:
+        metadata: Mapping[str, object] = {}
+        raw_meta = getattr(adapter, "metadata", None)
+        if isinstance(raw_meta, Mapping):
+            metadata = cast(Mapping[str, object], raw_meta)
+        for forbidden in ("desk", "role", "desk_and_role", "binding"):
+            if forbidden in metadata:
+                raise PluginContextError(
+                    f"manifest for {self._plugin_id!r} declares operator-assigned field "
+                    f"'tool_adapter_binding' ({forbidden})"
+                )
         return self._bind_multi("tool_adapter", local_id, adapter)
 
     def register_hook(self, local_id: str, handler: HookHandler) -> Disposer:
@@ -164,6 +219,27 @@ class DaemonPluginContext:
         return self._bind_multi("graph_template", local_id, dict(template))
 
     def register_model_deployment(self, local_id: str, deployment: ModelDeployment) -> Disposer:
+        family = getattr(deployment, "model_family", None)
+        if family is not None:
+            raise PluginContextError(
+                f"manifest for {self._plugin_id!r} declares operator-assigned field 'model_family'"
+            )
+        adapter = getattr(deployment, "adapter", None)
+        if isinstance(adapter, str) and is_forbidden_model_adapter(adapter):
+            refused = refuse_forbidden_model_adapter(adapter)
+            detail = (
+                refused.context.get("reason", "openrouter_forbidden")
+                if refused
+                else ("openrouter_forbidden")
+            )
+            raise PluginContextError(
+                f"OpenRouter is not a QMA path; refused model_deployment "
+                f"{self._plugin_id!r}:{local_id} ({detail})"
+            )
+        if isinstance(deployment, DeploymentRecord) and deployment.model_family is not None:
+            raise PluginContextError(
+                f"manifest for {self._plugin_id!r} declares operator-assigned field 'model_family'"
+            )
         return self._bind_multi("model_deployment", local_id, deployment)
 
     def register_toolset(self, local_id: str, toolset: Mapping[str, object]) -> Disposer:
@@ -174,9 +250,7 @@ class DaemonPluginContext:
 
     def dispose_all(self) -> None:
         """LIFO dispose every registration in this plugin scope."""
-        while self._disposers:
-            disposer = self._disposers.pop()
-            disposer()
+        self._exit_stack.close()
 
     def snapshot(self) -> dict[str, Any]:
         """Test/inspection helper — no durable write."""
@@ -186,4 +260,6 @@ class DaemonPluginContext:
             "multis": dict(self._multis),
             "credential_refs": dict(self._credential_refs),
             "context_compiler_bound": self._context_compiler is not None,
+            "exit_stack_depth": self._exit_stack.depth,
+            "exit_stack_closed": self._exit_stack.closed,
         }

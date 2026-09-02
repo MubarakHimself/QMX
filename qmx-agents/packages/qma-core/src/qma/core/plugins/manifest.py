@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, cast
+from typing import Final, Literal, cast
 
 from qma.core.ontology.desks import DESK_PREFIX_TOKENS
 from qma.core.ports.cardinality import (
@@ -18,14 +18,33 @@ from qma.core.ports.cardinality import (
 
 __all__ = [
     "DESK_PREFIX_TOKENS",
+    "EMPTY_COLLECTION_KEYS",
+    "OPERATOR_ASSIGNED_MANIFEST_FIELDS",
     "ContributionDecl",
     "ManifestError",
     "PluginManifest",
     "PluginRosterEntry",
     "parse_plugin_manifest",
+    "require_desk_prefix_plugin_id",
 ]
 
 RollbackMode = Literal["forward_only"]
+
+# Declared collections are empty tuples when unused — never null (CT-42; FR-Q68).
+EMPTY_COLLECTION_KEYS: Final[tuple[str, ...]] = (
+    "dependencies",
+    "contributions",
+    "permissions",
+    "migrations",
+)
+
+# Operator-assigned at a human-gate command — refused on the load-time manifest.
+OPERATOR_ASSIGNED_MANIFEST_FIELDS: Final[frozenset[str]] = frozenset(
+    {
+        "model_family",
+        "tool_adapter_binding",
+    }
+)
 
 
 class ManifestError(ValueError):
@@ -67,6 +86,37 @@ class PluginRosterEntry:
     enabled: bool
 
 
+def require_desk_prefix_plugin_id(plugin_id: str, desk: str) -> str:
+    """Require ``plugin_id`` to use the desk prefix token (``{desk}-*``)."""
+    if desk not in DESK_PREFIX_TOKENS:
+        raise ManifestError(f"desk must be one of {sorted(DESK_PREFIX_TOKENS)}; got {desk!r}")
+    expected = f"{desk}-"
+    if not plugin_id.startswith(expected) or plugin_id == expected:
+        raise ManifestError(
+            f"plugin id {plugin_id!r} must use desk prefix token {desk!r} "
+            f"(expected id starting with {expected!r})"
+        )
+    if ":" in plugin_id:
+        raise ManifestError(f"plugin id must not contain ':'; got {plugin_id!r}")
+    return plugin_id
+
+
+def _refuse_null_collections(raw: Mapping[str, object]) -> None:
+    for key in EMPTY_COLLECTION_KEYS:
+        if key in raw and raw[key] is None:
+            raise ManifestError(
+                f"{key} must be an empty collection when undeclared, never null (CT-42; FR-Q68)"
+            )
+
+
+def _refuse_operator_assigned_fields(raw: Mapping[str, object], *, plugin_id: str) -> None:
+    for forbidden in OPERATOR_ASSIGNED_MANIFEST_FIELDS:
+        if forbidden in raw:
+            raise ManifestError(
+                f"manifest for {plugin_id!r} declares operator-assigned field {forbidden!r}"
+            )
+
+
 def _parse_contribution(raw: Mapping[str, object], *, plugin_id: str) -> ContributionDecl:
     point = raw.get("point")
     if not isinstance(point, str):
@@ -76,6 +126,18 @@ def _parse_contribution(raw: Mapping[str, object], *, plugin_id: str) -> Contrib
             "handle kinds are a closed qma-core vocabulary; plugins may not "
             "extend them (AD-14; DEC-0313; FR-Q53)"
         )
+
+    # Operator-assigned fields never ride a contribution declaration at load.
+    if "model_family" in raw:
+        raise ManifestError(
+            f"manifest for {plugin_id!r} declares operator-assigned field 'model_family'"
+        )
+    for binding_key in ("desk", "role", "desk_and_role", "binding", "tool_adapter_binding"):
+        if binding_key in raw and point in {"tool_adapter", "ToolAdapter"}:
+            raise ManifestError(
+                f"manifest for {plugin_id!r} declares operator-assigned field "
+                f"'tool_adapter_binding' ({binding_key})"
+            )
 
     # Singleton port bindings use the port type name; multi points use the eight names.
     if point in PORT_CONTRACT_BY_NAME:
@@ -120,6 +182,8 @@ def _parse_contribution(raw: Mapping[str, object], *, plugin_id: str) -> Contrib
 
 def parse_plugin_manifest(raw: Mapping[str, object]) -> PluginManifest:
     """Validate and materialize a PluginManifest mapping."""
+    _refuse_null_collections(raw)
+
     plugin_id = raw.get("id")
     version = raw.get("version")
     qma_api = raw.get("qma_api")
@@ -135,17 +199,13 @@ def parse_plugin_manifest(raw: Mapping[str, object]) -> PluginManifest:
         raise ManifestError("desk is required as a non-empty string")
     if desk not in DESK_PREFIX_TOKENS:
         raise ManifestError(f"desk must be one of {sorted(DESK_PREFIX_TOKENS)}; got {desk!r}")
+    require_desk_prefix_plugin_id(plugin_id, desk)
     if entrypoint is None:
         raise ManifestError("entrypoint is required")
     if not isinstance(entrypoint, str) or not entrypoint:
         raise ManifestError(f"entrypoint must be a non-empty string; got {entrypoint!r}")
 
-    # Operator-assigned fields may not appear on the load-time manifest (AD-15/16).
-    for forbidden in ("model_family", "tool_adapter_binding"):
-        if forbidden in raw:
-            raise ManifestError(
-                f"manifest for {plugin_id!r} declares operator-assigned field {forbidden!r}"
-            )
+    _refuse_operator_assigned_fields(raw, plugin_id=plugin_id)
 
     deps_raw = raw.get("dependencies", ())
     contribs_raw = raw.get("contributions", ())
@@ -168,12 +228,21 @@ def parse_plugin_manifest(raw: Mapping[str, object]) -> PluginManifest:
     dependencies = tuple(str(item) for item in deps_items)
     permissions = tuple(str(item) for item in perms_items)
     contributions: list[ContributionDecl] = []
+    seen_multi: set[str] = set()
     for item in contrib_items:
         if not isinstance(item, Mapping):
             raise ManifestError("each contribution must be a mapping")
         raw_map = cast(Mapping[object, object], item)
         contrib_map: dict[str, object] = {str(k): v for k, v in raw_map.items()}
-        contributions.append(_parse_contribution(contrib_map, plugin_id=plugin_id))
+        decl = _parse_contribution(contrib_map, plugin_id=plugin_id)
+        if decl.cardinality is Cardinality.MULTI and decl.local_id is not None:
+            qualified = f"{plugin_id}:{decl.local_id}"
+            if qualified in seen_multi:
+                raise ManifestError(
+                    f"duplicate multi contribution {qualified!r} for point {decl.point!r}"
+                )
+            seen_multi.add(qualified)
+        contributions.append(decl)
 
     migrations: list[Mapping[str, object]] = []
     for item in migration_items:

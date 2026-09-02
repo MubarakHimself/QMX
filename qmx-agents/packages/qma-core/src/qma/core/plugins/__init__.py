@@ -34,11 +34,14 @@ from qma.core.plugins.hooks import (
 )
 from qma.core.plugins.manifest import (
     DESK_PREFIX_TOKENS,
+    EMPTY_COLLECTION_KEYS,
+    OPERATOR_ASSIGNED_MANIFEST_FIELDS,
     ContributionDecl,
     ManifestError,
     PluginManifest,
     PluginRosterEntry,
     parse_plugin_manifest,
+    require_desk_prefix_plugin_id,
 )
 from qma.core.plugins.secret_schema import (
     FORBIDDEN_SECRET_PAYLOAD_KEYS,
@@ -64,6 +67,7 @@ from qma.core.vocabulary.handles import (
 __all__ = [
     "CLOSED_HANDLE_KINDS",
     "DESK_PREFIX_TOKENS",
+    "EMPTY_COLLECTION_KEYS",
     "FORBIDDEN_HOOK_IMPLEMENTATION_KINDS",
     "FORBIDDEN_LIVE_MONEY_PATH_HANDLE_TARGETS",
     "FORBIDDEN_SECRET_PAYLOAD_KEYS",
@@ -71,6 +75,7 @@ __all__ = [
     "HOOK_SECRET_EXCLUDED_FIELDS",
     "MONEY_PATH_LIVE_WRITABLE_HANDLE_KINDS",
     "MONEY_PATH_RELEVANT_FIELDS",
+    "OPERATOR_ASSIGNED_MANIFEST_FIELDS",
     "QMA_OWNED_CANDIDATE_ORIGIN",
     "READ_ONLY_EVIDENCE_HANDLE_KINDS",
     "STRATEGY_CANDIDATE_ZONE",
@@ -103,6 +108,7 @@ __all__ = [
     "parse_hook_implementation_kind",
     "parse_plugin_manifest",
     "refuse_plugin_handle_kind_extension",
+    "require_desk_prefix_plugin_id",
     "scan_daemon_imports",
     "scan_forbidden_runtime_calls",
 ]

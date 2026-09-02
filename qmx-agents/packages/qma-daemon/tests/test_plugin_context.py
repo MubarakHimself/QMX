@@ -85,6 +85,7 @@ def test_singleton_and_multi_registration_with_disposers() -> None:
     snap = ctx.snapshot()
     assert ("MemoryProvider", "research") in snap["singletons"]
     assert ("tool", "research-corpus:search") in snap["multis"]
+    assert snap["exit_stack_depth"] == 2
 
     dispose_tool()
     snap = ctx.snapshot()
@@ -92,6 +93,8 @@ def test_singleton_and_multi_registration_with_disposers() -> None:
     dispose_mem()
     snap = ctx.snapshot()
     assert ("MemoryProvider", "research") not in snap["singletons"]
+    ctx.dispose_all()
+    assert ctx.snapshot()["exit_stack_closed"] is True
 
 
 def test_context_compiler_replaceable_default_binding() -> None:

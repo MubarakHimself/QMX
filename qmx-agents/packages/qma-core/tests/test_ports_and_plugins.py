@@ -196,6 +196,29 @@ def test_parse_plugin_manifest_valid_and_invalid() -> None:
                 "contributions": [{"point": "ui_view", "local_id": "panel"}],
             }
         )
+    with pytest.raises(ManifestError, match="never null"):
+        parse_plugin_manifest(
+            {
+                "id": "research-corpus",
+                "version": "0.1.0",
+                "qma_api": ">=0.1.0,<1.0.0",
+                "desk": "research",
+                "entrypoint": "research_corpus.activate",
+                "dependencies": None,
+                "contributions": [],
+            }
+        )
+    with pytest.raises(ManifestError, match="desk prefix token"):
+        parse_plugin_manifest(
+            {
+                "id": "corpus-research",
+                "version": "0.1.0",
+                "qma_api": ">=0.1.0,<1.0.0",
+                "desk": "research",
+                "entrypoint": "research_corpus.activate",
+                "contributions": [],
+            }
+        )
 
 
 def test_core_definitions_only_and_desk_packages_ban_daemon() -> None:
