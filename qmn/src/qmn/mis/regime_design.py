@@ -840,7 +840,7 @@ def refuse_design_authority_claim(design: object) -> Result[None]:
         return policy(
             "authority",
             "regime_classifier_v1 design grants no governed or money-path authority; "
-            "Stories 30.4–30.8 own training, registration, shadow, and re-certification",
+            "Stories 30.4-30.8 own training, registration, shadow, and re-certification",
             producer_id=design.producer_id,
         )
     return Ok(None)
