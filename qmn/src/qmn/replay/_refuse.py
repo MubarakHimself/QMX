@@ -6,7 +6,7 @@ from collections.abc import Mapping
 
 from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 
-__all__ = ["clean_token", "invalid", "policy", "unavailable"]
+__all__ = ["clean_token", "invalid", "policy", "storage", "unavailable"]
 
 
 def clean_token(value: object) -> str | None:
@@ -43,6 +43,25 @@ def invalid(field: str, reason: str, **extra: object) -> TypedRefusal:
 def policy(field: str, reason: str, **extra: object) -> TypedRefusal:
     """A ``policy rejection`` refusal."""
     return _build(RefusalCategory.POLICY_REJECTION, field, reason, extra)
+
+
+def storage(
+    field: str,
+    reason: str,
+    *,
+    retryability: Retryability = Retryability.YES,
+    after_condition_descriptor: str | None = None,
+    **extra: object,
+) -> TypedRefusal:
+    """A ``storage failure`` refusal — unpersistable terminal ledger append."""
+    return _build(
+        RefusalCategory.STORAGE_FAILURE,
+        field,
+        reason,
+        extra,
+        retryability=retryability,
+        after_condition_descriptor=after_condition_descriptor,
+    )
 
 
 def unavailable(

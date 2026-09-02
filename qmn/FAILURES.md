@@ -940,3 +940,23 @@ designed failure; every typed refusal the node can emit belongs here.
   decision diff only. Inspect `read_failure_detail` on the evidence
   channel. A clean diff is required by later order-path changes and soak
   acceptance; it never gates live money.
+
+### FR-62: Replay job terminal ledger missing, duplicated, or unpersistable
+
+- **Failure class:** storage failure / policy rejection
+- **Detection:** a second differing terminal line for the same replay job
+  (`replay.ledger.collision` / `replay.ledger.rewrite`), or append-with-fsync
+  of the WriterId-scoped fragment fails (`replay.ledger.storage`). Zero or
+  two terminal lines fail the acceptance test (E15-F01).
+- **Auto-recovery / retry:** crash recovery scans the run directory and the
+  writer stream and appends the missing terminal record idempotently; a
+  storage failure is explicit and requires review. An existing terminal line
+  is never rewritten.
+- **Visible degraded state:** the diagnostic diff may already be on disk;
+  the job is not complete as evidence until exactly one terminal line is
+  committed. A collision leaves the original line unchanged.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** Inspect `read_failure_detail` on the evidence
+  channel. Re-run `just node-replay` after reviewing the storage failure;
+  recovery appends the missing terminal line without rewriting a committed
+  one.

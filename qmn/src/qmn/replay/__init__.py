@@ -1,16 +1,36 @@
-"""Replay import surface (TN-21 / Story 27.7).
+"""Replay import surface (TN-21 / Stories 27.7–27.8).
 
 A recorded day is replayed as a credential-free decision diff: a process
 outside the node, ``world = replay``, disjoint WriterIds, the replay
 VenueClientPort, and the named one-way sealed-archive import port. Signal
 snapshots are reused, not recomputed. GAP-0056 stays deferred — no fill
 simulation and no command submit. The diff is diagnostic evidence only.
+Every admitted job appends exactly one terminal ledger line (E15-F01).
 """
 
 from __future__ import annotations
 
 from typing import Final
 
+from qmn.replay.ledger import (
+    FRAGMENT_FILENAME,
+    NEVER_REWRITE,
+    ONE_TERMINAL_PER_JOB,
+    REPLAY_LEDGER_ROLE,
+    REPLAY_TERMINAL_CLASS,
+    TERMINAL_ABORT,
+    TERMINAL_BOUND,
+    TERMINAL_CANCEL,
+    TERMINAL_COMPLETE,
+    TERMINAL_REFUSE,
+    TERMINAL_STATUSES,
+    TERMINAL_TEARDOWN,
+    TRANSACTION_BOUNDARY,
+    ReplayLedgerSink,
+    ReplayTerminalRecord,
+    mint_data_fingerprint,
+    mint_run_fingerprint,
+)
 from qmn.replay.port import (
     FILL_SIMULATION_IN_REPLAY,
     GAP_0056_DEFERRED,
@@ -53,31 +73,53 @@ from qmn.replay.session import (
 )
 from qmn.replay.spawn import (
     REPLAY_MODULE,
+    ReplayLiveJob,
     ReplaySpawnReceipt,
+    finish_replay_job,
+    recover_replay_terminal,
+    run_replay_job,
     spawn_replay_job,
     spec_from_jsonable,
     spec_to_jsonable,
+    start_replay_job,
+    teardown_replay_job,
 )
 
 __all__ = [
     "FILL_SIMULATION_IN_REPLAY",
+    "FRAGMENT_FILENAME",
     "GAP_0056_DEFERRED",
+    "NEVER_REWRITE",
     "NODE_PROCESS_ENV",
+    "ONE_TERMINAL_PER_JOB",
     "RECORDED_DAY_KIND",
     "REPLAY_IMPORT_PORT",
     "REPLAY_IMPORT_SURFACE",
+    "REPLAY_LEDGER_ROLE",
     "REPLAY_MODULE",
     "REPLAY_PROCESS_ENV",
     "REPLAY_SURFACE",
+    "REPLAY_TERMINAL_CLASS",
     "REPLAY_WRITER_ROLE_PREFIX",
+    "TERMINAL_ABORT",
+    "TERMINAL_BOUND",
+    "TERMINAL_CANCEL",
+    "TERMINAL_COMPLETE",
+    "TERMINAL_REFUSE",
+    "TERMINAL_STATUSES",
+    "TERMINAL_TEARDOWN",
+    "TRANSACTION_BOUNDARY",
     "RecordedDay",
     "RecordedSignalSnapshot",
     "ReplayComposition",
     "ReplayDiffReport",
     "ReplayImportPort",
     "ReplayJobSpec",
+    "ReplayLedgerSink",
+    "ReplayLiveJob",
     "ReplaySliceHandler",
     "ReplaySpawnReceipt",
+    "ReplayTerminalRecord",
     "ReplayWorldSink",
     "allocate_replay_writer",
     "assert_outside_node_process",
@@ -85,6 +127,10 @@ __all__ = [
     "decode_recorded_day",
     "diff_recorded_day",
     "encode_recorded_day",
+    "finish_replay_job",
+    "mint_data_fingerprint",
+    "mint_run_fingerprint",
+    "recover_replay_terminal",
     "refuse_admission_gate",
     "refuse_command_submit",
     "refuse_credential_bind",
@@ -98,9 +144,12 @@ __all__ = [
     "refuse_secret_resolution",
     "refuse_sqs_recompute",
     "run_recorded_day",
+    "run_replay_job",
     "spawn_replay_job",
     "spec_from_jsonable",
     "spec_to_jsonable",
+    "start_replay_job",
+    "teardown_replay_job",
     "writers_are_disjoint",
 ]
 
