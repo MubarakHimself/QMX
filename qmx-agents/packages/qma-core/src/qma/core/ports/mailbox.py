@@ -1,8 +1,9 @@
-"""Mailbox Envelope, MessageKind, and DeliveryState (CT-48; AD-20; DEC-0319).
+"""Mailbox Envelope, MessageKind, DeliveryState, and WakePolicy (CT-48; AD-20).
 
 Definitions only. The daemon owns each Quant's durable Mailbox as a projection
-over journal ``message.*`` events. A message may request work but can never be
-the work — a handoff becomes real only when it writes a Task.
+over journal ``message.*`` events and evaluates the Quant ``WakePolicy`` at
+delivery time. A message may request work but can never be the work — a
+handoff becomes real only when it writes a Task.
 """
 
 from __future__ import annotations
@@ -13,6 +14,24 @@ from types import MappingProxyType
 from typing import Final, cast
 
 from qma.core.ontology import ActorId
+from qma.core.ontology.wake_policy import (
+    MAX_WAKES_PER_WINDOW_REGISTRY_KEY,
+    QUANT_WRITE_COMMAND,
+    QUIET_HOURS_REGISTRY_KEY,
+    WAKE_CONDITION_ANY,
+    WAKE_POLICY_EDITABILITY,
+    WAKE_POLICY_HOME,
+    WAKE_POLICY_SCOPE,
+    QuietHours,
+    WakePolicy,
+    authorize_quant_write,
+    is_wake_condition,
+    parse_quiet_hours,
+    parse_wake_policy,
+    refuse_model_wake_policy_write,
+    source_may_write_wake_policy,
+    wake_conditions_match,
+)
 from qma.core.vocabulary.enums import DeliveryState, MessageKind
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
 from qmf.core import Ok, Result
@@ -26,15 +45,31 @@ __all__ = [
     "GAP_0071_LEAD_MAILBOX_CATCH_ALL",
     "GAP_0079_EXTERNAL_TRANSPORT",
     "HUMAN_APPROVAL_CHANNEL",
+    "MAX_WAKES_PER_WINDOW_REGISTRY_KEY",
     "MESSAGE_KIND_VALUES",
+    "QUANT_WRITE_COMMAND",
+    "QUIET_HOURS_REGISTRY_KEY",
+    "WAKE_CONDITION_ANY",
+    "WAKE_POLICY_EDITABILITY",
+    "WAKE_POLICY_HOME",
+    "WAKE_POLICY_SCOPE",
     "Envelope",
+    "QuietHours",
+    "WakePolicy",
+    "authorize_quant_write",
     "envelope_identity_content",
     "is_human_approval_channel",
+    "is_wake_condition",
     "parse_delivery_state",
     "parse_envelope",
     "parse_message_kind",
+    "parse_quiet_hours",
+    "parse_wake_policy",
     "refuse_external_agent_transport",
     "refuse_lead_mailbox_catch_all",
+    "refuse_model_wake_policy_write",
+    "source_may_write_wake_policy",
+    "wake_conditions_match",
 ]
 
 

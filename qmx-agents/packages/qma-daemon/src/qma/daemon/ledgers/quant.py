@@ -63,15 +63,7 @@ def _default_clock() -> DataDrivenClock:
 
 
 def _quant_with_lead(quant: Quant, *, lead: bool) -> Quant:
-    return Quant(
-        actor_id=quant.actor_id,
-        desk=quant.desk,
-        quant_slug=quant.quant_slug,
-        role=quant.role,
-        name=quant.name,
-        lead=lead,
-        retired=quant.retired,
-    )
+    return quant.with_lead(lead)
 
 
 def _ledger_ref_for(quant: Quant) -> str:

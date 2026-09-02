@@ -14,6 +14,13 @@ from types import MappingProxyType
 from typing import Final
 
 from qma.core.ontology import ActorId, Agent, Quant, Task
+from qma.core.ontology.wake_policy import (
+    QUANT_WRITE_COMMAND,
+    WakePolicy,
+    parse_wake_policy,
+    refuse_model_wake_policy_write,
+    source_may_write_wake_policy,
+)
 from qma.core.plugins.hooks import HookResult
 from qma.core.ports.mailbox import (
     GAP_0071_LEAD_MAILBOX_CATCH_ALL,
@@ -29,6 +36,16 @@ from qma.daemon.journal.authoritative import AuthoritativeJournal
 from qma.daemon.journal.fold_contracts import v1_fold_contract
 from qma.daemon.journal.variables import registry_key
 from qma.daemon.ledgers.task import TaskLedgerStore
+from qma.daemon.scheduler.wake import (
+    WakeDecision,
+    WakeExemption,
+    civil_window_id,
+    evaluate_delivery_wake,
+    resolve_iana_zone,
+    routine_fire_suppressed_by_quiet_hours,
+    running_agent_paused_by_quiet_hours,
+)
+from qma.wire.principals import authorize_wire_command
 from qmf.core import Clock, DataDrivenClock, Instant, Ok, Result, is_refusal
 from qmf.data.store.refusals import invalid_input, policy_rejection
 
@@ -40,6 +57,7 @@ __all__ = [
     "MAILBOX_SOURCE_STREAM",
     "MAILBOX_STORE_NAME",
     "NO_EXTERNAL_RELAY",
+    "QUANT_WRITE_COMMAND",
     "DeliveryRecord",
     "Mailbox",
     "MailboxStore",
@@ -85,6 +103,16 @@ _DEFAULT_CLOCK_BASE_NS: Final[int] = 1_700_000_000_000_000_000
 _MESSAGE_SENT_EVENT: Final[str] = "message.sent"
 _MESSAGE_DELIVERED_EVENT: Final[str] = "message.delivered"
 _MESSAGE_ACKED_EVENT: Final[str] = "message.acked"
+_MESSAGE_WOKE_EVENT: Final[str] = "message.woke"
+_KEEP: Final[object] = object()
+_TERMINAL_DELIVERY: Final[frozenset[DeliveryState]] = frozenset(
+    {
+        DeliveryState.DELIVERED,
+        DeliveryState.WOKE,
+        DeliveryState.DEFERRED,
+        DeliveryState.DEAD_LETTER,
+    }
+)
 
 
 def _default_clock() -> DataDrivenClock:
@@ -110,6 +138,7 @@ class DeliveryRecord:
     journal_seq: int | None = None
     acked: bool = False
     answered: bool = False
+    wake_at: int | None = None
 
     def with_state(
         self,
@@ -119,13 +148,18 @@ class DeliveryRecord:
         acked: bool | None = None,
         answered: bool | None = None,
         envelope: Envelope | None = None,
+        wake_at: object = _KEEP,
     ) -> DeliveryRecord:
+        resolved_wake = self.wake_at if wake_at is _KEEP else wake_at
         return DeliveryRecord(
             envelope=self.envelope if envelope is None else envelope,
             state=state,
             journal_seq=self.journal_seq if journal_seq is None else journal_seq,
             acked=self.acked if acked is None else acked,
             answered=self.answered if answered is None else answered,
+            wake_at=(
+                resolved_wake if isinstance(resolved_wake, int) or resolved_wake is None else None
+            ),
         )
 
     @property
@@ -141,6 +175,7 @@ class DeliveryRecord:
                 "journal_seq": self.journal_seq,
                 "acked": self.acked,
                 "answered": self.answered,
+                "wake_at": self.wake_at,
                 "is_work": False,
                 "external_relay": False,
             }
@@ -209,6 +244,8 @@ class MailboxStore:
     _hooks: HookRegistry = field(default_factory=HookRegistry)
     _task_ledgers: TaskLedgerStore | None = None
     _journal_rows: int = 0
+    _wake_counts: dict[str, dict[str, int]] = field(default_factory=dict[str, dict[str, int]])
+    _running_agents: dict[str, set[str]] = field(default_factory=dict[str, set[str]])
 
     @property
     def store_name(self) -> str:
@@ -225,6 +262,9 @@ class MailboxStore:
     def mailbox_for(self, owner: Quant | ActorId | str) -> Mailbox | None:
         return self._mailboxes.get(self._owner_key(owner))
 
+    def quant_for(self, owner: Quant | ActorId | str) -> Quant | None:
+        return self._quants.get(self._owner_key(owner))
+
     def record_for(self, msg_id: str) -> DeliveryRecord | None:
         return self._by_msg_id.get(msg_id)
 
@@ -240,8 +280,19 @@ class MailboxStore:
     def open_for_quant(self, quant: Quant) -> Result[Mailbox]:
         """Create the one durable Mailbox for this Quant — no external relay."""
         key = quant.actor_id.value
-        existing = self._mailboxes.get(key)
+        stored = self._quants.get(key)
+        if stored is not None:
+            if (
+                quant.wake_policy is not None
+                and stored.wake_policy is not None
+                and quant.wake_policy != stored.wake_policy
+            ):
+                return refuse_model_wake_policy_write(source="mailbox.open_for_quant")
+            if quant.wake_policy is not None and stored.wake_policy is None:
+                return refuse_model_wake_policy_write(source="mailbox.open_for_quant")
+            quant = quant.with_wake_policy(stored.wake_policy)
         self._quants[key] = quant
+        existing = self._mailboxes.get(key)
         if existing is not None:
             return Ok(existing)
         mailbox = Mailbox(owner=quant.actor_id)
@@ -307,25 +358,155 @@ class MailboxStore:
         self._after_message_send(envelope_record, record)
         return Ok(record)
 
+    def write_wake_policy(
+        self,
+        owner: Quant | ActorId | str,
+        policy: Mapping[str, object] | WakePolicy,
+        *,
+        principal_class: object,
+        source: object = "operator",
+    ) -> Result[Quant]:
+        """Persist an operator-authored WakePolicy on the Quant record.
+
+        Record-homed: never a ``variable.set``. No model authors, alters, or
+        overrides the policy; a wake cap is not a write of the policy.
+        """
+        if not source_may_write_wake_policy(source):
+            return refuse_model_wake_policy_write(source=source)
+        authorized = authorize_wire_command(QUANT_WRITE_COMMAND, principal_class)
+        if is_refusal(authorized):
+            return authorized
+        parsed = parse_wake_policy(policy)
+        if is_refusal(parsed):
+            return parsed
+        authored = parsed.value
+        if authored.quiet_hours is not None:
+            zone = resolve_iana_zone(authored.quiet_hours.iana_zone)
+            if is_refusal(zone):
+                return zone
+        key = self._owner_key(owner)
+        quant = self._quants.get(key)
+        if quant is None:
+            return invalid_input("mailbox", "Quant has no Mailbox", given=key)
+        updated = quant.with_wake_policy(authored)
+        self._quants[key] = updated
+        return Ok(updated)
+
     def deliver(self, msg_id: str) -> Result[DeliveryRecord]:
-        """At-least-once delivery: idempotent on msg-id, never silent-drop."""
+        """At-least-once delivery: idempotent on msg-id, never silent-drop.
+
+        Evaluates the Quant ``WakePolicy`` at delivery time. Quiet hours
+        suppress wakes only: the Envelope is still delivered and may be acked.
+        """
         current = self._by_msg_id.get(msg_id)
         if current is None:
             return invalid_input("msg_id", "unknown mailbox Envelope", given=msg_id)
-        if current.state is DeliveryState.DEAD_LETTER:
+        if current.state in _TERMINAL_DELIVERY:
             return Ok(current)
-        if current.state is DeliveryState.DELIVERED:
-            return Ok(current)
+        decision = self._evaluate_record(current)
+        if is_refusal(decision):
+            return decision
+        verdict = decision.value
         journaled = self._journal_event(
             _MESSAGE_DELIVERED_EVENT,
             current.envelope,
-            state=DeliveryState.DELIVERED,
+            state=verdict.state,
         )
         if is_refusal(journaled):
             return journaled
-        updated = current.with_state(DeliveryState.DELIVERED, journal_seq=journaled.value)
+        updated = current.with_state(
+            verdict.state,
+            journal_seq=journaled.value,
+            wake_at=verdict.wake_at,
+        )
         self._replace(updated)
+        if verdict.wake:
+            counted = self._count_wake(current.envelope.to_actor)
+            if is_refusal(counted):
+                return counted
         return Ok(updated)
+
+    def fire_due_wakes(self, *, at: Instant | None = None) -> Result[tuple[DeliveryRecord, ...]]:
+        """Fire deferred wakes whose ``wake_at`` has been reached."""
+        when = self._evaluation_instant(at)
+        if is_refusal(when):
+            return when
+        now = when.value
+        fired: list[DeliveryRecord] = []
+        for record in tuple(self._by_msg_id.values()):
+            if record.state is not DeliveryState.DEFERRED:
+                continue
+            if record.wake_at is None or record.wake_at > now.value_ns:
+                continue
+            decision = self._evaluate_record(record, at=now)
+            if is_refusal(decision):
+                return decision
+            verdict = decision.value
+            event = _MESSAGE_WOKE_EVENT if verdict.wake else _MESSAGE_DELIVERED_EVENT
+            journaled = self._journal_event(event, record.envelope, state=verdict.state)
+            if is_refusal(journaled):
+                return journaled
+            updated = record.with_state(
+                verdict.state,
+                journal_seq=journaled.value,
+                wake_at=verdict.wake_at,
+            )
+            self._replace(updated)
+            if verdict.wake:
+                counted = self._count_wake(record.envelope.to_actor, at=now)
+                if is_refusal(counted):
+                    return counted
+            fired.append(updated)
+        return Ok(tuple(fired))
+
+    def mark_agent_running(self, owner: Quant | ActorId | str, agent_id: str) -> None:
+        """Record that an Agent of this Quant is already running."""
+        key = self._owner_key(owner)
+        running = self._running_agents.setdefault(key, set())
+        running.add(agent_id)
+
+    def mark_agent_stopped(self, owner: Quant | ActorId | str, agent_id: str) -> None:
+        """Clear a previously running Agent of this Quant."""
+        key = self._owner_key(owner)
+        running = self._running_agents.get(key)
+        if running is not None:
+            running.discard(agent_id)
+
+    def pause_running_agent(
+        self,
+        owner: Quant | ActorId | str,
+        *,
+        at: Instant | None = None,
+    ) -> Result[bool]:
+        """Quiet hours never pause a run already under way (CT-48; FR-Q61)."""
+        key = self._owner_key(owner)
+        quant = self._quants.get(key)
+        policy = None if quant is None else quant.wake_policy
+        when = self._evaluation_instant(at)
+        if is_refusal(when):
+            return when
+        paused = running_agent_paused_by_quiet_hours(policy, at=when.value)
+        if is_refusal(paused):
+            return paused
+        return Ok(False)
+
+    def evaluate_routine_fire(
+        self,
+        owner: Quant | ActorId | str,
+        *,
+        at: Instant | None = None,
+    ) -> Result[bool]:
+        """True when the Routine may fire. Quiet hours never suppress it."""
+        key = self._owner_key(owner)
+        quant = self._quants.get(key)
+        policy = None if quant is None else quant.wake_policy
+        when = self._evaluation_instant(at)
+        if is_refusal(when):
+            return when
+        suppressed = routine_fire_suppressed_by_quiet_hours(policy, at=when.value)
+        if is_refusal(suppressed):
+            return suppressed
+        return Ok(not suppressed.value)
 
     def ack(self, owner: Quant | ActorId | str, msg_id: str) -> Result[Mailbox]:
         """Advance the per-actor ack cursor. Idempotent on the same msg-id."""
@@ -423,6 +604,8 @@ class MailboxStore:
             if record.state is DeliveryState.DEAD_LETTER:
                 drop.add(msg_id)
                 continue
+            if record.state is DeliveryState.DEFERRED:
+                continue
             if not record.acked:
                 continue
             if record.envelope.kind is MessageKind.APPROVAL_REQUEST and not record.answered:
@@ -442,6 +625,67 @@ class MailboxStore:
                 "gap_0089": "deferred",
             }
         )
+
+    def _evaluation_instant(self, at: Instant | None = None) -> Result[Instant]:
+        if at is not None:
+            return Ok(at)
+        return self._clock.wall_now()
+
+    def _is_approval_request_reply(self, envelope: Envelope) -> bool:
+        if envelope.kind is not MessageKind.REPLY or envelope.reply_to_ref is None:
+            return False
+        parent = self._by_msg_id.get(envelope.reply_to_ref)
+        if parent is None:
+            return False
+        return parent.envelope.kind is MessageKind.APPROVAL_REQUEST
+
+    def _evaluate_record(
+        self,
+        record: DeliveryRecord,
+        *,
+        at: Instant | None = None,
+    ) -> Result[WakeDecision]:
+        quant = self._quants.get(record.envelope.to_actor.value)
+        policy = None if quant is None else quant.wake_policy
+        exemption: WakeExemption | None = None
+        if self._is_approval_request_reply(record.envelope):
+            exemption = "approval_request_reply"
+        if policy is None:
+            dummy = Instant(value_ns=0) if at is None else at
+            return evaluate_delivery_wake(
+                None,
+                kind=record.envelope.kind,
+                at=dummy,
+                wakes_in_window=0,
+                exemption=exemption,
+            )
+        when = self._evaluation_instant(at)
+        if is_refusal(when):
+            return when
+        window = civil_window_id(policy, when.value)
+        if is_refusal(window):
+            return window
+        wakes = self._wake_counts.get(record.envelope.to_actor.value, {}).get(window.value, 0)
+        return evaluate_delivery_wake(
+            policy,
+            kind=record.envelope.kind,
+            at=when.value,
+            wakes_in_window=wakes,
+            exemption=exemption,
+        )
+
+    def _count_wake(self, owner: ActorId, *, at: Instant | None = None) -> Result[None]:
+        quant = self._quants.get(owner.value)
+        policy = None if quant is None else quant.wake_policy
+        when = self._evaluation_instant(at)
+        if is_refusal(when):
+            return when
+        window = civil_window_id(policy, when.value)
+        if is_refusal(window):
+            return window
+        per_owner = self._wake_counts.setdefault(owner.value, {})
+        per_owner[window.value] = per_owner.get(window.value, 0) + 1
+        return Ok(None)
 
     def _owner_key(self, owner: Quant | ActorId | str) -> str:
         if isinstance(owner, Quant):

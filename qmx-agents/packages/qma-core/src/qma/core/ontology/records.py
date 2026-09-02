@@ -11,6 +11,7 @@ from typing import Final, Literal
 
 from qma.core.ontology.actor_id import ActorId
 from qma.core.ontology.desks import DeskSlug, OntologyError, RoleName
+from qma.core.ontology.wake_policy import WakePolicy
 from qma.core.vocabulary.enums import ExecutionModel, SessionAutonomy
 
 __all__ = [
@@ -76,6 +77,8 @@ class Quant:
     ``desk`` is the sole source of desk membership for consumers (FR-Q06).
     ``quant_slug`` is the store-side mint token used for collision / tombstone
     checks — never obtained by parsing ``actor_id``.
+    ``wake_policy`` is operator-authored and absent until a ``quant.write``;
+    the spine mints no default (CT-48; DEC-0319, DEC-0325; FR-Q61).
     """
 
     actor_id: ActorId
@@ -85,6 +88,33 @@ class Quant:
     name: str
     lead: bool = False
     retired: bool = False
+    wake_policy: WakePolicy | None = None
+
+    def with_lead(self, lead: bool) -> Quant:
+        """Return a copy with the desk lead flag updated."""
+        return Quant(
+            actor_id=self.actor_id,
+            desk=self.desk,
+            quant_slug=self.quant_slug,
+            role=self.role,
+            name=self.name,
+            lead=lead,
+            retired=self.retired,
+            wake_policy=self.wake_policy,
+        )
+
+    def with_wake_policy(self, wake_policy: WakePolicy | None) -> Quant:
+        """Return a copy carrying an operator-authored ``WakePolicy``."""
+        return Quant(
+            actor_id=self.actor_id,
+            desk=self.desk,
+            quant_slug=self.quant_slug,
+            role=self.role,
+            name=self.name,
+            lead=self.lead,
+            retired=self.retired,
+            wake_policy=wake_policy,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -236,6 +266,7 @@ def retire_quant(quant: Quant) -> tuple[Quant, SlugTombstone]:
         name=quant.name,
         lead=quant.lead,
         retired=True,
+        wake_policy=quant.wake_policy,
     )
     tombstone = SlugTombstone(
         slug=quant.quant_slug,

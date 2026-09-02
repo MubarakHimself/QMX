@@ -1,12 +1,15 @@
-"""L27 reference usage: durable Quant Mailbox Envelope records."""
+"""L27 reference usage: durable Quant Mailbox Envelope records and WakePolicy."""
 
 from __future__ import annotations
+
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from qma.core.ontology import ActorId, DeskSlug, Quant, RoleName
 from qma.core.vocabulary.enums import DeliveryState, MessageKind
 from qma.daemon.bus import MailboxStore
 from qma.daemon.ledgers import TaskLedgerStore
-from qmf.core import is_ok, is_refusal
+from qmf.core import DataDrivenClock, Instant, is_ok, is_refusal
 
 
 def main() -> None:
@@ -87,6 +90,64 @@ def main() -> None:
     assert is_ok(dead)
     assert dead.value.state is DeliveryState.DEAD_LETTER
     assert is_refusal(store.send({"msg_id": "x"}, external_relay=True))
+
+    zone = "America/New_York"
+    night = datetime(2024, 1, 15, 3, 0, tzinfo=ZoneInfo(zone))
+    morning = datetime(2024, 1, 15, 6, 0, tzinfo=ZoneInfo(zone))
+    night_ns = int(night.timestamp()) * 1_000_000_000
+    morning_ns = int(morning.timestamp()) * 1_000_000_000
+    clock = DataDrivenClock(
+        boot_epoch_id="wake-example",
+        wall_instants=(
+            Instant(value_ns=night_ns),
+            Instant(value_ns=morning_ns),
+            *(Instant(value_ns=morning_ns) for _ in range(8)),
+        ),
+        monotonic_ns=tuple(i * 1_000 for i in range(10)),
+    )
+    waking = MailboxStore(_clock=clock)
+    assert is_ok(waking.open_for_quant(sender))
+    assert is_ok(waking.open_for_quant(recipient))
+    authored = waking.write_wake_policy(
+        recipient,
+        {
+            "wake_conditions": ["any"],
+            "quiet_hours": {"start": "22:00", "end": "06:00", "iana_zone": zone},
+            "max_wakes_per_window": 4,
+        },
+        principal_class="operator",
+    )
+    assert is_ok(authored)
+    assert authored.value.wake_policy is not None
+    assert is_refusal(
+        waking.write_wake_policy(
+            recipient,
+            {"wake_conditions": ["notify"]},
+            principal_class="operator",
+            source="model",
+        )
+    )
+    ping = waking.send(
+        {
+            "msg_id": "msg-night",
+            "from": sender.actor_id.value,
+            "to": recipient.actor_id.value,
+            "kind": "notify",
+            "correlation_id": "corr-night",
+            "body": "overnight ping",
+            "priority": 0,
+            "created_at": night_ns,
+        }
+    )
+    assert is_ok(ping)
+    deferred = waking.deliver("msg-night")
+    assert is_ok(deferred)
+    assert deferred.value.state is DeliveryState.DEFERRED
+    assert is_ok(waking.ack(recipient, "msg-night"))
+    assert is_ok(waking.evaluate_routine_fire(recipient, at=Instant(value_ns=night_ns)))
+    fired = waking.fire_due_wakes(at=Instant(value_ns=morning_ns))
+    assert is_ok(fired)
+    assert fired.value[0].state is DeliveryState.WOKE
 
 
 if __name__ == "__main__":
