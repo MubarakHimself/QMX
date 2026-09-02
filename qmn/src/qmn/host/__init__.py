@@ -31,6 +31,9 @@ Story 28.4 proves lifecycle, security, recovery, and no-authority operations
 as injected campaigns and DevOps recipes — crash/preflight/quarantine/clock/
 disk/shutdown plus powers/secret probes — and skips a real VPS firewall
 campaign and a real bucket restore (AR-87).
+Story 28.5 wires SCN-0006/0008/0010/0011 through the sealed composition with
+TN-23 fixture metadata; synthetic data proves infrastructure/failure only and
+FTR-07 invents no KSA numbers.
 Child modules and doors never restamp, never hold a registry cache, and never
 persist lineage.
 """
@@ -91,6 +94,21 @@ from qmn.host.failure_campaign import (
     FailureCampaignReport,
     refuse_live_demo_account_required,
     run_paper_milestone_failure_campaign,
+)
+from qmn.host.golden_scenarios import (
+    GOLDEN_PROOF_KEYS,
+    GOLDEN_SCENARIO_CLASS,
+    GOLDEN_SCENARIO_FORMAT_VERSION,
+    GOLDEN_SCENARIO_IDS,
+    GOLDEN_SCENARIO_SURFACE,
+    SOURCE_CLASS_SYNTHETIC,
+    TRADING_EDGE_IS_PROOF,
+    GoldenFixtureProof,
+    GoldenScenarioInputs,
+    GoldenScenarioReport,
+    refuse_golden_invented_ksa_or_latency,
+    refuse_golden_trading_edge_claim,
+    run_paper_milestone_golden_scenarios,
 )
 from qmn.host.lifecycle_campaign import (
     LIFECYCLE_CAMPAIGN_CLASS,
@@ -313,6 +331,11 @@ __all__ = [
     "FAILURE_CAMPAIGN_SURFACE",
     "FTR07_UNSETTABLE_NAMES",
     "FULL_PREFLIGHT_CHECKS",
+    "GOLDEN_PROOF_KEYS",
+    "GOLDEN_SCENARIO_CLASS",
+    "GOLDEN_SCENARIO_FORMAT_VERSION",
+    "GOLDEN_SCENARIO_IDS",
+    "GOLDEN_SCENARIO_SURFACE",
     "GO_LIVE_ONLY_HUMAN_INPUTS",
     "HAS_ALTERNATE_IDENTITY_FUNCTION",
     "HAS_OPERATOR_CLI",
@@ -361,9 +384,11 @@ __all__ = [
     "SHAKEDOWN_IS_PERFORMANCE_PROOF",
     "SHAKEDOWN_SURFACE",
     "SOAK_LOCAL_HUMAN_INPUTS",
+    "SOURCE_CLASS_SYNTHETIC",
     "SUPERVISION_SURFACE",
     "SUPERVISOR_ROLE",
     "SUPERVISOR_STREAM",
+    "TRADING_EDGE_IS_PROOF",
     "VPS_PROCUREMENT_STARTING_POINT",
     "WORKLOAD_KINDS",
     "ArtifactCitation",
@@ -394,6 +419,9 @@ __all__ = [
     "FailureCampaignReport",
     "FourBoundDeclaration",
     "GateResult",
+    "GoldenFixtureProof",
+    "GoldenScenarioInputs",
+    "GoldenScenarioReport",
     "HumanInputRecord",
     "HumanInputScope",
     "InMemoryBootAttemptSink",
@@ -476,6 +504,8 @@ __all__ = [
     "prove_host_concurrency",
     "prove_seat_concurrency",
     "qmn_production_src_root",
+    "refuse_golden_invented_ksa_or_latency",
+    "refuse_golden_trading_edge_claim",
     "refuse_invented_ksa_or_latency_number",
     "refuse_invented_soak_or_ksa_number",
     "refuse_live_bucket_restore",
@@ -494,6 +524,7 @@ __all__ = [
     "run_check_mode",
     "run_demo_shakedown",
     "run_paper_milestone_failure_campaign",
+    "run_paper_milestone_golden_scenarios",
     "run_paper_milestone_lifecycle_campaign",
     "run_paper_milestone_security_probes",
     "run_runtime_risk_gate",
