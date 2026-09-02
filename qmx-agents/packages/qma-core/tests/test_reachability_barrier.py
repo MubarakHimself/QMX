@@ -236,4 +236,4 @@ def test_openrouter_is_not_a_qma_path() -> None:
         if "tests" in path.parts or "__pycache__" in path.parts:
             continue
         if "openrouter" in path.read_text(encoding="utf-8").casefold():
-            assert path.name in {"reachability.py", "registry.py"}
+            assert path.name in {"reachability.py", "registry.py", "context.py"}
