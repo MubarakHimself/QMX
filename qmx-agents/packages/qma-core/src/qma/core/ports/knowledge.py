@@ -231,13 +231,13 @@ def validate_evidence_confidence_shape(
             given_keys=(),
         )
     body = cast("Mapping[str, object]", value)
-    given = tuple(sorted(str(key) for key in body.keys()))
+    given = tuple(sorted(str(key) for key in body))
     expected_sorted = tuple(sorted(expected))
     if given != expected_sorted or len(body) != EVIDENCE_CONFIDENCE_DIMENSION_COUNT:
         return ProvenanceShapeMismatch.of(
             source_id=source_id,
             expected_keys=expected,
-            given_keys=tuple(str(key) for key in body.keys()),
+            given_keys=tuple(str(key) for key in body),
         )
     return Ok(None)
 

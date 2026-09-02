@@ -31,16 +31,16 @@ _DIMS = (
 
 
 def _confidence(**overrides: object) -> dict[str, object]:
-    body: dict[str, object] = {key: 0.5 for key in _DIMS}
+    body: dict[str, object] = dict.fromkeys(_DIMS, 0.5)
     body.update(overrides)
     return body
 
 
 def test_operation_surface_is_literal_query_only() -> None:
-    assert KNOWLEDGE_SOURCE_OPERATIONS == frozenset(
+    assert frozenset(
         {"snapshot", "search", "retrieve", "cite"}
-    )
-    assert KNOWLEDGE_QUERY_SURFACE == frozenset({"search", "retrieve", "cite"})
+    ) == KNOWLEDGE_SOURCE_OPERATIONS
+    assert frozenset({"search", "retrieve", "cite"}) == KNOWLEDGE_QUERY_SURFACE
     assert EVIDENCE_CONFIDENCE_DIMENSION_COUNT == 6
 
 

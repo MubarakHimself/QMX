@@ -26,7 +26,7 @@ _DIMS = (
 
 
 def _confidence(**overrides: object) -> dict[str, object]:
-    body: dict[str, object] = {key: 0.7 for key in _DIMS}
+    body: dict[str, object] = dict.fromkeys(_DIMS, 0.7)
     body.update(overrides)
     return body
 
