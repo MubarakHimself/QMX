@@ -32,6 +32,7 @@ from qmn.host.risk_population import (
     RuntimeRiskGraph,
     admit_runtime_risk_population,
 )
+from qmn.secrets.holders import extra_holders
 
 __all__ = [
     "BOOT_BOUND_SURFACES",
@@ -235,6 +236,7 @@ class PreflightFacts:
     dependency_pins_ok: bool = True
     unit_principals_ok: bool = True
     writer_id_namespace_ok: bool = True
+    secret_holders: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -612,6 +614,13 @@ def _evaluate_check(
     if name == "chrony_waitsync":
         return facts.chrony_synced, "preflight.clock.chrony", {}
     if name == "credential_is_set":
+        extra = extra_holders(facts.secret_holders)
+        if extra:
+            return (
+                False,
+                "secrets.holder.fifth",
+                {"extra_holders": list(extra)},
+            )
         missing = [
             ref
             for ref in facts.required_credential_refs

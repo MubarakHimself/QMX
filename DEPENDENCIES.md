@@ -56,6 +56,7 @@ means adding its row here first.
 | click | `==8.4.2` | BSD-3-Clause | `qmb` (off-roster app) | The `qmb` CLI door. Declared only in `qmb/pyproject.toml`; a major bump is a contract-versioning event (`registry:qmb_cli_pin`). (Story 13.1; DEC-0168) |
 | optuna | `==4.9.0` | MIT | `qmb` (off-roster app) | The default TPE-class sampler adapter. Declared only in `qmb/pyproject.toml`; adapters run `n_jobs=1` (fan-out is the orchestrator's); a major bump is a contract-versioning event (`registry:qmb_sampler_pin`). (Story 13.1; DEC-0168, DEC-0161) |
 | prometheus-client | `==0.26.0` | Apache-2.0 | `qmn` (off-roster app) | Metric registry and Prometheus exposition format for the node's `qmn_` signal families. Declared only in `qmn/pyproject.toml`; used as registry + text exposition only — the evidence door serves `/metrics` and no library-spawned server thread exists. (Story 25.10; TN-15 / DEC-0200) |
+| cryptography | `==50.0.1` | Apache-2.0 OR BSD-3-Clause | `qmn` (off-roster app) | AEAD (`ChaCha20Poly1305`) for the node's two-layer VPS secret store: KEK-wrapped rotated material under `/var/lib/qmx/state`. Declared only in `qmn/pyproject.toml`. Workstation `keyring` is not a VPS dependency and is not declared here. (Story 27.1; TN-12 / DEC-0197) |
 
 `qmf-data` is the first roster package to declare runtime outside-dependencies —
 `pyarrow` and `duckdb`, the CT-11/CT-09 store engines (Parquet + DuckDB; SQLite and

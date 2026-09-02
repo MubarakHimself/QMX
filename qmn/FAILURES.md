@@ -586,3 +586,48 @@ designed failure; every typed refusal the node can emit belongs here.
   consumer. Inspect `read_failure_detail` on the evidence channel, drop the
   shadow-to-governed wiring, then restart via the operations toolkit. Shadow
   comparison stays diagnostic and never gates trading.
+
+### FR-38: Fifth or unscoped secret holder
+
+- **Failure class:** policy rejection
+- **Detection:** a declared holder is outside `{connection_manager, backup_unit, notification_path, observability_stack}`, or a named holder resolves a slot outside its closed catalog (`secrets.holder.unknown` / `secrets.holder.fifth` / `secrets.holder.scope`).
+- **Auto-recovery / retry:** none — drop the extra holder or unscoped resolution; the closed four-holder set is not extensible in V1.
+- **Visible degraded state:** preflight or the secret scanner refuses; venue-session construction does not proceed; no fifth holder receives `LoadCredentialEncrypted` material.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** Only the four named VPS secret holders may resolve credentials. Inspect `read_failure_detail` on the evidence channel, then re-run `just node-secrets-provision` after the catalog matches the unit files.
+
+### FR-39: Secret value escaped onto a public surface
+
+- **Failure class:** policy rejection
+- **Detection:** a secret value or forbidden key appears in config, evidence, logs, health, metrics, or refusal context (`secrets.surface.value_leak`).
+- **Auto-recovery / retry:** none — rotate the credential via the restricted wizard using demo credentials in tests; never log the value.
+- **Visible degraded state:** the scanner refuses; `is_set` metadata remains the only public presence signal.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** Secret values must not appear above the designated holder. Inspect `read_failure_detail` on the evidence channel. Re-provision through `just node-secrets-provision` if a leak is suspected; the compromise drill uses demo credentials only.
+
+### FR-40: Rotation store-before-discard failed or a second refresher raced
+
+- **Failure class:** unavailable dependency
+- **Detection:** `atomic_replace` could not durably store the new secret (`secrets.rotation.store_failed`) or a second refresh was already in flight for the same opaque reference (`secrets.rotation.in_flight`).
+- **Auto-recovery / retry:** after-condition = successful store or operator re-provision through `just node-secrets-provision`. The old material is kept undiscarded; the command pipe blocks; sensing is unaffected.
+- **Visible degraded state:** one refresher per credential reference; readers keep the last stored value; alarm until store succeeds.
+- **Notification tier:** alarm / operator-visible (journaled).
+- **Product-user affordance:** Rotation is store-before-discard and keyed by credential reference. Inspect `read_failure_detail` on the evidence channel, restore store capacity, then retry or re-run `just node-secrets-provision`.
+
+### FR-41: SecretStore constructed off the VPS or credential missing
+
+- **Failure class:** policy rejection / unavailable dependency
+- **Detection:** composition attempted a secret holder off the roster VPS machine tuple (`secrets.store.off_host`) or a required reference is unset (`secrets.store.missing`).
+- **Auto-recovery / retry:** none for off-host construction — the workstation wizard is the only laptop holder and it never refreshes. Missing credentials: re-provision, then resurrect.
+- **Visible degraded state:** venue-session holder is not constructed off-VPS; preflight `is_set` is false for the missing reference; sequencer stays closed.
+- **Notification tier:** alarm / operator-visible (preflight refusal).
+- **Product-user affordance:** Provision through `just node-secrets-provision` on the dedicated SSH identity. Inspect `read_failure_detail` on the evidence channel. The VPS never mints the backup payload key.
+
+### FR-42: Compromise drill offered live credentials
+
+- **Failure class:** policy rejection
+- **Detection:** `run_compromise_drill` was handed a credential class other than demo (`secrets.drill.not_demo`).
+- **Auto-recovery / retry:** none — factory sandboxes never hold live secrets; repeat the drill with demo credentials.
+- **Visible degraded state:** the drill does not replace the store or restart a session.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The compromise drill uses demo credentials only. Inspect `read_failure_detail` on the evidence channel. Live cut-over is a later soak-local act, not this recipe.

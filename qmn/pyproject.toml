@@ -7,6 +7,7 @@ requires-python = ">=3.14,<3.15"
 # Story 24.1 lands the venue boundary (qmf-core + sanctioned qmf-venue at
 # qmn.venue). Story 24.4 adds qmb so the live loop drives run_slice unforked.
 # Story 26.8 hosts QL-7 seats through the QML runtime protocol.
+# Story 27.1 adds cryptography for the two-layer VPS secret store AEAD.
 dependencies = [
     "qmf-core",
     "qmf-registry",
@@ -15,6 +16,7 @@ dependencies = [
     "qmb",
     "qml",
     "prometheus-client==0.26.0",
+    "cryptography==50.0.1",
 ]
 
 [build-system]

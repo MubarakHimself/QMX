@@ -27,8 +27,11 @@ node-rollback *ARGS:
 node-ci-lane *ARGS:
     uv run python "{{qmn_deploy}}/ci_lane.py" {{ARGS}}
 
+# Restricted secrets wizard (Story 27.1 / TN-12). Check-mode by default.
+# Never SSHes to a live VPS; --apply without --fixture-root is refused.
+# Streams stdin into systemd-creds encrypt --with-key=host; never argv/file/echo.
 node-secrets-provision *ARGS:
-    @echo "node-secrets-provision: reserved; seal with systemd-creds encrypt --with-key=host"
+    uv run python "{{qmn_deploy}}/secrets_provision.py" --check-mode {{ARGS}}
 
 node-data-bootstrap *ARGS:
     @echo "node-data-bootstrap: reserved (history bootstrap)"

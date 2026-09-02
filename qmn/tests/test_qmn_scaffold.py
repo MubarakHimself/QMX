@@ -74,6 +74,7 @@ def test_declared_dependencies_include_qmf_venue_and_qmb() -> None:
     assert "qmb" in deps
     assert "qml" in deps
     assert "prometheus-client==0.26.0" in deps
+    assert "cryptography==50.0.1" in deps
 
 
 def test_only_venue_subpackage_imports_qmf_venue() -> None:
