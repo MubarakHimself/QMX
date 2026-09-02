@@ -228,9 +228,10 @@ def apply_plan_to_fixture(
     for path_ref, payload in (hours or {}).items():
         dest = raw / path_ref.replace("/", "_")
         dest.parent.mkdir(parents=True, exist_ok=True)
-        dest.write_bytes(payload)
+        _safe_io.write_bytes_exclusive_no_follow(dest, payload, contain_within=fixture_root)
         sidecar = dest.with_suffix(dest.suffix + ".provenance.json")
-        sidecar.write_text(
+        _safe_io.write_text_exclusive_no_follow(
+            sidecar,
             json.dumps(
                 {
                     "source": SOURCE_IDENTITY,
@@ -243,7 +244,7 @@ def apply_plan_to_fixture(
                 sort_keys=True,
             )
             + "\n",
-            encoding="utf-8",
+            contain_within=fixture_root,
         )
         written.append(path_ref)
     checkpoint = {
@@ -258,9 +259,10 @@ def apply_plan_to_fixture(
         "resumable": True,
         "idempotent": True,
     }
-    (archive / CHECKPOINT_NAME).write_text(
+    _safe_io.write_text_exclusive_no_follow(
+        archive / CHECKPOINT_NAME,
         json.dumps(checkpoint, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
+        contain_within=fixture_root,
     )
     return {
         "ok": plan.ok,

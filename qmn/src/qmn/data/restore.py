@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import sys
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -860,9 +859,15 @@ def _refuse_if_leaked(body: Mapping[str, object]) -> Result[None]:
 
 
 def _copy_file(src: Path, dest: Path) -> Result[None]:
+    """Contained ciphertext copy: O_NOFOLLOW read, exclusive no-follow write."""
+    if src.is_symlink() or dest.is_symlink():
+        return policy("path", "refusing to follow a symlink in restore scratch")
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_BINARY", 0)
     try:
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src, dest)
+        src_fd = os.open(  # skylos: ignore[SKY-D215] contained, no-follow restore copy
+            src,
+            flags,
+        )
     except OSError:
         return storage(
             "pull",
@@ -870,7 +875,23 @@ def _copy_file(src: Path, dest: Path) -> Result[None]:
             failure_id=_PULL_ID,
             retryability=Retryability.NO,
         )
-    return Ok(None)
+    try:
+        payload = bytearray()
+        while True:
+            chunk = os.read(src_fd, 64 * 1024)
+            if not chunk:
+                break
+            payload.extend(chunk)
+    except OSError:
+        return storage(
+            "pull",
+            "local-backend restore pull could not copy the ciphertext object",
+            failure_id=_PULL_ID,
+            retryability=Retryability.NO,
+        )
+    finally:
+        os.close(src_fd)
+    return _atomic_write(dest, bytes(payload))
 
 
 def _read_capped(path: Path) -> Result[bytes]:

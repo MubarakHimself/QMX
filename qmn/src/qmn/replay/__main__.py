@@ -12,7 +12,7 @@ from qmf.core import TypedRefusal, is_ok, is_refusal
 
 from qmn.replay.ledger import TERMINAL_REFUSE
 from qmn.replay.session import run_recorded_day
-from qmn.replay.spawn import spec_from_jsonable
+from qmn.replay.spawn import spec_from_jsonable, write_text_exclusive_no_follow
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -50,11 +50,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         _write_envelope(args.output, _refusal_envelope(report))
         print(str(report.context.get("reason", report)), file=sys.stderr)
         return 1
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(
-        json.dumps(dict(report.value.as_mapping()), indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    _write_envelope(args.output, dict(report.value.as_mapping()))
     return 0 if is_ok(report) else 1
 
 
@@ -73,8 +69,10 @@ def _refusal_envelope(refusal: TypedRefusal) -> dict[str, object]:
 def _write_envelope(path: Path, payload: Mapping[str, object]) -> None:
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(
-            json.dumps(dict(payload), indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        write_text_exclusive_no_follow(
+            path,
+            json.dumps(dict(payload), indent=2, sort_keys=True) + "\n",
+            contain_within=path.parent,
         )
     except OSError:
         return

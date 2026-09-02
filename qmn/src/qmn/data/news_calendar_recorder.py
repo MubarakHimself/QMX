@@ -60,11 +60,17 @@ def urllib_open_weekly_file(url: str) -> Result[bytes]:
     pinned = require_weekly_file_url(url)
     if is_refusal(pinned):
         return pinned
+    # Taint boundary: require_weekly_file_url admits only this constant; the
+    # opener never forwards the parameter (or Result.value) to the socket.
+    weekly_file = FOREX_FACTORY_WEEKLY_JSON
+    if pinned.value != weekly_file:
+        return fetch_unavailable_refusal(retryable=False)
     request = urllib.request.Request(  # noqa: S310
-        pinned.value, headers={"User-Agent": NEWS_CALENDAR_USER_AGENT}
+        weekly_file, headers={"User-Agent": NEWS_CALENDAR_USER_AGENT}
     )
     try:
-        # S310: URL is the pinned Forex Factory weekly file, checked above.
+        # S310 / SKY-D216: URL is the pinned Forex Factory weekly-file constant.
+        # skylos: ignore[SKY-D216] pinned weekly-file constant
         with urllib.request.urlopen(  # noqa: S310
             request, timeout=_TIMEOUT_SECONDS
         ) as response:

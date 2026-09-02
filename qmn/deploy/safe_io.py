@@ -18,6 +18,7 @@ from typing import Final
 __all__ = [
     "MAX_READ_BYTES",
     "read_text_contained",
+    "write_bytes_exclusive_no_follow",
     "write_text_exclusive_no_follow",
 ]
 
@@ -31,50 +32,37 @@ def _write_all(fd: int, data: bytes) -> None:
         offset += os.write(fd, view[offset:])
 
 
-def write_text_exclusive_no_follow(
+def write_bytes_exclusive_no_follow(
     path: Path,
-    text: str,
+    data: bytes,
     *,
     contain_within: Path,
 ) -> None:
     """Create *path* via a sibling temp and replace, never following a symlink."""
-    data = text.encode("utf-8")
     try:
         resolved = Path(os.path.realpath(path))
         root_real = Path(os.path.realpath(contain_within))
     except OSError as exc:
         raise OSError(
-            f"could not resolve a contained filesystem path ({path}): "
-            f"{type(exc).__name__}"
+            f"could not resolve a contained filesystem path ({path}): {type(exc).__name__}"
         ) from exc
     if path.is_symlink() or not resolved.is_relative_to(root_real):
-        raise OSError(
-            "refusing to follow a symlink or write outside the intended root "
-            f"({path})"
-        )
+        raise OSError(f"refusing to follow a symlink or write outside the intended root ({path})")
     if path.exists() and (path.is_symlink() or not path.is_file()):
-        raise OSError(
-            f"refusing to replace a non-regular in-root path ({path})"
-        )
+        raise OSError(f"refusing to replace a non-regular in-root path ({path})")
 
     tmp = path.parent / f".{path.name}.write-{os.getpid()}"
     try:
         tmp_resolved = Path(os.path.realpath(tmp))
     except OSError as exc:
         raise OSError(
-            f"could not resolve a contained filesystem path ({tmp}): "
-            f"{type(exc).__name__}"
+            f"could not resolve a contained filesystem path ({tmp}): {type(exc).__name__}"
         ) from exc
     if tmp.is_symlink() or not tmp_resolved.is_relative_to(root_real):
-        raise OSError(
-            "refusing to follow a symlink or write outside the intended root "
-            f"({tmp})"
-        )
+        raise OSError(f"refusing to follow a symlink or write outside the intended root ({tmp})")
     if tmp.exists() or tmp.is_symlink():
         if tmp.is_dir() and not tmp.is_symlink():
-            raise OSError(
-                f"refusing to replace a non-regular in-root path ({tmp})"
-            )
+            raise OSError(f"refusing to replace a non-regular in-root path ({tmp})")
         tmp.unlink()
     try:
         # getattr keeps the "O_NOFOLLOW" token on this open so SKY-D324 sees
@@ -99,14 +87,23 @@ def write_text_exclusive_no_follow(
             os.close(fd)
         if path.is_symlink():
             raise OSError(
-                "refusing to follow a symlink or write outside the intended root "
-                f"({path})"
+                f"refusing to follow a symlink or write outside the intended root ({path})"
             )
         os.replace(tmp, path)
     except OSError:
         if tmp.exists() or tmp.is_symlink():
             tmp.unlink(missing_ok=True)
         raise
+
+
+def write_text_exclusive_no_follow(
+    path: Path,
+    text: str,
+    *,
+    contain_within: Path,
+) -> None:
+    """UTF-8 wrapper around :func:`write_bytes_exclusive_no_follow`."""
+    write_bytes_exclusive_no_follow(path, text.encode("utf-8"), contain_within=contain_within)
 
 
 def read_text_contained(
@@ -121,33 +118,23 @@ def read_text_contained(
         root_real = Path(os.path.realpath(contain_within))
     except OSError as exc:
         raise OSError(
-            f"could not resolve a contained filesystem path ({path}): "
-            f"{type(exc).__name__}"
+            f"could not resolve a contained filesystem path ({path}): {type(exc).__name__}"
         ) from exc
     if path.is_symlink() or not resolved.is_relative_to(root_real):
-        raise OSError(
-            "refusing to follow a symlink or read outside the intended root "
-            f"({path})"
-        )
+        raise OSError(f"refusing to follow a symlink or read outside the intended root ({path})")
     try:
         # getattr keeps the "O_NOFOLLOW" token on this open so SKY-D324/D325
         # see the no-follow flag; Windows has no O_NOFOLLOW (value 0).
         fd = os.open(  # skylos: ignore[SKY-D215] contained, no-follow read
             path,
-            os.O_RDONLY
-            | getattr(os, "O_NOFOLLOW", 0)
-            | getattr(os, "O_BINARY", 0),
+            os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_BINARY", 0),
         )
     except OSError as exc:
-        raise OSError(
-            f"contained no-follow open failed for {path} ({type(exc).__name__})"
-        ) from exc
+        raise OSError(f"contained no-follow open failed for {path} ({type(exc).__name__})") from exc
     try:
         info = os.fstat(fd)
         if not stat.S_ISREG(info.st_mode):
-            raise OSError(
-                f"refusing to read a path that is not a regular in-root file ({path})"
-            )
+            raise OSError(f"refusing to read a path that is not a regular in-root file ({path})")
         size = info.st_size
         if size > max_bytes:
             raise OSError(
@@ -164,9 +151,7 @@ def read_text_contained(
         if size <= 0 and len(buf) >= max_bytes:
             extra = os.read(fd, 1)
             if extra:
-                raise OSError(
-                    f"refusing to read a file above the size cap ({path}: > {max_bytes})"
-                )
+                raise OSError(f"refusing to read a file above the size cap ({path}: > {max_bytes})")
     finally:
         os.close(fd)
     try:

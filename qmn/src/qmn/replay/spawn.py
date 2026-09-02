@@ -98,6 +98,81 @@ _SPAWN_TIMEOUT_S: Final[int] = 60
 _STORAGE_ID: Final[str] = "replay.ledger.storage"
 
 
+def _write_all(fd: int, data: bytes) -> None:
+    view = memoryview(data)
+    offset = 0
+    while offset < len(view):
+        offset += os.write(fd, view[offset:])
+
+
+def write_text_exclusive_no_follow(
+    path: Path,
+    text: str,
+    *,
+    contain_within: Path,
+) -> None:
+    """Contained exclusive write; the O_NOFOLLOW token stays on this open (SKY-D324).
+
+    Same contract as ``qmn.deploy.safe_io.write_text_exclusive_no_follow`` so
+    replay stays inside the installed ``qmn`` package.
+    """
+    data = text.encode("utf-8")
+    try:
+        resolved = Path(os.path.realpath(path))
+        root_real = Path(os.path.realpath(contain_within))
+    except OSError as exc:
+        raise OSError(
+            f"could not resolve a contained filesystem path ({path}): {type(exc).__name__}"
+        ) from exc
+    if path.is_symlink() or not resolved.is_relative_to(root_real):
+        raise OSError(f"refusing to follow a symlink or write outside the intended root ({path})")
+    if path.exists() and (path.is_symlink() or not path.is_file()):
+        raise OSError(f"refusing to replace a non-regular in-root path ({path})")
+    tmp = path.parent / f".{path.name}.write-{os.getpid()}"
+    try:
+        tmp_resolved = Path(os.path.realpath(tmp))
+    except OSError as exc:
+        raise OSError(
+            f"could not resolve a contained filesystem path ({tmp}): {type(exc).__name__}"
+        ) from exc
+    if tmp.is_symlink() or not tmp_resolved.is_relative_to(root_real):
+        raise OSError(f"refusing to follow a symlink or write outside the intended root ({tmp})")
+    if tmp.exists() or tmp.is_symlink():
+        if tmp.is_dir() and not tmp.is_symlink():
+            raise OSError(f"refusing to replace a non-regular in-root path ({tmp})")
+        tmp.unlink()
+    try:
+        # getattr keeps the "O_NOFOLLOW" token on this open so SKY-D324 sees
+        # the no-follow flag; Windows has no O_NOFOLLOW (value 0).
+        fd = os.open(  # skylos: ignore[SKY-D215] contained, no-follow, exclusive create
+            tmp,
+            os.O_CREAT
+            | os.O_EXCL
+            | os.O_WRONLY
+            | getattr(os, "O_NOFOLLOW", 0)
+            | getattr(os, "O_BINARY", 0),
+            0o600,
+        )
+    except OSError as exc:
+        raise OSError(
+            f"exclusive no-follow create failed for {tmp} ({type(exc).__name__})"
+        ) from exc
+    try:
+        try:
+            _write_all(fd, data)
+        finally:
+            os.close(fd)
+        if path.is_symlink():
+            raise OSError(
+                f"refusing to follow a symlink or write outside the intended root ({path})"
+            )
+        os.replace(tmp, path)
+    except OSError:
+        if tmp.exists() or tmp.is_symlink():
+            tmp.unlink(missing_ok=True)
+        raise
+
+
 @dataclass(frozen=True, slots=True)
 class ReplaySpawnReceipt:
     """Evidence that the replay job ran in a distinct process."""
@@ -229,7 +304,11 @@ def start_replay_job(
     start_ns = start.value
     spec_body = spec_to_jsonable(spec, evidence_root=evidence_root)
     try:
-        spec_path.write_text(json.dumps(spec_body, sort_keys=True) + "\n", encoding="utf-8")
+        write_text_exclusive_no_follow(
+            spec_path,
+            json.dumps(spec_body, sort_keys=True) + "\n",
+            contain_within=run_dir,
+        )
     except OSError as exc:
         return storage(
             "spec",
@@ -282,7 +361,11 @@ def start_replay_job(
         )
     manifest["pid"] = proc.pid
     try:
-        writer_path.write_text(json.dumps(manifest, sort_keys=True) + "\n", encoding="utf-8")
+        write_text_exclusive_no_follow(
+            writer_path,
+            json.dumps(manifest, sort_keys=True) + "\n",
+            contain_within=run_dir,
+        )
     except OSError as exc:
         kill_owned_process(proc)
         return storage(

@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import subprocess
 import sys
 from pathlib import Path
+from types import ModuleType
 from typing import TypeVar
 
 import pytest
@@ -64,6 +66,20 @@ _END = _START + 60_000_000_000
 _STREAM = "eurusd"
 _BOOT = "replay-boot-27-8"
 _MACHINE = "replay-host"
+_DEPLOY = Path(__file__).resolve().parents[1] / "deploy"
+
+
+def _load_safe_io() -> ModuleType:
+    path = _DEPLOY / "safe_io.py"
+    spec = importlib.util.spec_from_file_location("qmn_deploy_safe_io_replay_ledger", path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+_SAFE_IO = _load_safe_io()
 
 
 def _ok(result: Result[T]) -> T:
@@ -339,7 +355,8 @@ def _hanging_job(
     bound = limits if limits is not None else RunLimits()
     probe = ProcessLimitProbe(process.pid, 0)
     data_fp = _ok(mint_data_fingerprint(spec))
-    (run_dir / "writer.json").write_text(
+    _SAFE_IO.write_text_exclusive_no_follow(
+        run_dir / "writer.json",
         json.dumps(
             {
                 "run_fp": run_fp.value,
@@ -354,7 +371,7 @@ def _hanging_job(
             sort_keys=True,
         )
         + "\n",
-        encoding="utf-8",
+        contain_within=run_dir,
     )
     return ReplayLiveJob(
         spec=spec,

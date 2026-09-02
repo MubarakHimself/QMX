@@ -12,7 +12,8 @@ x-pinned-images:
   prometheus: &img_prometheus prom/prometheus:v3.5.5
   grafana: &img_grafana grafana/grafana:13.1.4
   loki: &img_loki grafana/loki:3.7.7
-  promtail: &img_promtail grafana/promtail:3.6.11
+  # Pinned image tag (DEPENDENCIES.md / stack.py), not a credential.
+  promtail: &img_promtail grafana/promtail:3.6.11  # skylos: ignore[SKY-S101]
 
 services:
   prometheus:
