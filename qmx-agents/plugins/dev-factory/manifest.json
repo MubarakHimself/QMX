@@ -3,11 +3,17 @@
   "version": "0.1.0",
   "qma_api": ">=0.1.0,<1.0.0",
   "desk": "dev",
+  "entrypoint": "daemon.plugin:activate",
   "dependencies": [],
-  "contributions": [],
+  "contributions": [
+    {"point": "tool", "local_id": "plan"},
+    {"point": "hook", "local_id": "lint"},
+    {"point": "skill", "local_id": "factory"},
+    {"point": "worker_template", "local_id": "factory-worker"},
+    {"point": "toolset", "local_id": "factory-tools"}
+  ],
   "permissions": [],
-  "entrypoint": null,
   "migrations": [],
-  "enabled": false,
-  "note": "Development desk factory plugin (topology only). No contribution activated; halves meet only at qma-wire."
+  "peer_integration": "qma_wire_only",
+  "daemon_renders": false
 }

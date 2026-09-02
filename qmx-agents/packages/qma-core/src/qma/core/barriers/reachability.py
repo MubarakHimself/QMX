@@ -50,6 +50,7 @@ __all__ = [
     "ReachabilityBarrierError",
     "assert_deny_list_not_waivable",
     "classify_denied_host",
+    "forbidden_reach_token_in_contribution",
     "is_denied_host",
     "is_forbidden_image_token",
     "is_forbidden_model_adapter",
@@ -850,3 +851,70 @@ def parse_declaration(
             matched=str(exc),
         )
     return validate_execution_environment_declaration(declaration, stage=stage)
+
+
+# Contribution fields that may name a host, image, import, or package (FR-Q71).
+CONTRIBUTION_REACH_FIELD_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "host",
+        "hosts",
+        "reachable_hosts",
+        "image",
+        "imports",
+        "packages",
+        "image_imports",
+        "image_packages",
+        "import",
+    }
+)
+
+_BANNED_SURFACE_TOKENS: Final[tuple[str, ...]] = (
+    "qmf.venue",
+    "qmf-venue",
+    "qmf_venue",
+    "platform-registry",
+    "platform_registry",
+)
+
+
+def forbidden_reach_token_in_contribution(payload: object) -> str | None:
+    """Return a matched venue/broker/node/qmf-venue token on a contribution.
+
+    Only host/image/import/package fields are inspected so free-text summaries
+    cannot trip the barrier. Plugins, workers, and environments must not reach
+    ``qmf-venue``, a venue, broker, exchange, trading node, or platform-registry
+    control surface (FR-Q71; SCN-0014).
+    """
+    return _scan_reach_payload(payload, parent_key=None)
+
+
+def _scan_reach_payload(payload: object, *, parent_key: str | None) -> str | None:
+    if isinstance(payload, Mapping):
+        mapping = cast(Mapping[object, object], payload)
+        for key, value in mapping.items():
+            key_s = key.casefold() if isinstance(key, str) else str(key).casefold()
+            hit = _scan_reach_payload(value, parent_key=key_s)
+            if hit is not None:
+                return hit
+        return None
+    if isinstance(payload, Sequence) and not isinstance(payload, (str, bytes)):
+        for item in cast(Sequence[object], payload):
+            hit = _scan_reach_payload(item, parent_key=parent_key)
+            if hit is not None:
+                return hit
+        return None
+    if not isinstance(payload, str) or parent_key not in CONTRIBUTION_REACH_FIELD_KEYS:
+        return None
+    if parent_key in {"host", "hosts", "reachable_hosts"}:
+        classified = classify_denied_host(payload)
+        if classified is not None:
+            return classified.value
+    token = is_forbidden_image_token(payload)
+    if token is not None:
+        return token
+    lowered = payload.strip().casefold().replace("_", "-")
+    for banned in _BANNED_SURFACE_TOKENS:
+        needle = banned.replace("_", "-")
+        if needle == lowered or lowered.startswith(needle + ".") or needle in lowered:
+            return banned
+    return None

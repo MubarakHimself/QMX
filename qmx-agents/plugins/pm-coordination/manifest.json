@@ -3,11 +3,17 @@
   "version": "0.1.0",
   "qma_api": ">=0.1.0,<1.0.0",
   "desk": "pm",
+  "entrypoint": "daemon.plugin:activate",
   "dependencies": [],
-  "contributions": [],
+  "contributions": [
+    {"point": "tool", "local_id": "status"},
+    {"point": "hook", "local_id": "review"},
+    {"point": "skill", "local_id": "coordinate"},
+    {"point": "graph_template", "local_id": "standup"},
+    {"point": "worker_template", "local_id": "coordinator"}
+  ],
   "permissions": [],
-  "entrypoint": null,
   "migrations": [],
-  "enabled": false,
-  "note": "PM desk coordination plugin (topology only). No contribution activated; halves meet only at qma-wire."
+  "peer_integration": "qma_wire_only",
+  "daemon_renders": false
 }

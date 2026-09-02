@@ -869,3 +869,60 @@ continuity across leases, Tasks, and pending evidence (FR-54 through FR-57).
 - **Notification tier:** operator-visible (load refusal).
 - **Product-user affordance:** that contribution point is out of v1 scope.
   Do not declare it on a PluginManifest until the deferred gap is ruled.
+
+### FR-58: A desk-pack money-path tool is refused before registration completes
+
+- **Failure class:** `ProhibitedMoneyPathTool` / `policy rejection` (CT-04; FR-Q71).
+- **Detection:** `DaemonPluginContext.register_tool` evaluates the act-level
+  deny-list (order, position, protection, sizing, binding, mode, control,
+  zone-transition, promotion) before the contribution is stored. The five
+  desk packs register only through `PluginManifest` / `PluginContext`.
+- **Auto-recovery / retry:** none — remove the act; paper does not make it safe.
+- **Visible degraded state:** the pack load is refused; no partial contribution
+  remains on the plugin scope.
+- **Notification tier:** operator-visible (install / enable / reload / roster).
+- **Product-user affordance:** QMA has no execution tool at any account role.
+
+### FR-59: A desk pack that would reach `qmf-venue` or a venue host is refused
+
+- **Failure class:** `ProhibitedReachability` / `policy rejection` (CT-04; FR-Q71).
+- **Detection:** worker-template, tool, and ExecutionEnvironment registration
+  scan host/image/import/package fields for `qmf-venue`, venue, broker,
+  exchange, trading-node, and platform-registry tokens. Plugin source trees
+  are import-scanned for `qmf.venue` / `qmb`.
+- **Auto-recovery / retry:** none — Role, Mission, plugin, and hook cannot lift
+  the host denial.
+- **Visible degraded state:** the contribution is not stored; the pack load
+  fails locally.
+- **Notification tier:** operator-visible (registration refusal).
+- **Product-user affordance:** desk packs cannot reach a venue, broker,
+  exchange, trading node, or platform-registry control surface.
+
+### FR-60: Promote from a desk pack is refused; memory is admitted and refinements applied
+
+- **Failure class:** `policy rejection` (CT-04; DEC-0345; FR-Q71).
+- **Detection:** `MemoryAdmissionGate.promote_refused` and
+  `ProposalGate.promote_refused` refuse `promote`. Memory candidates go
+  through `admit`. RefinementProposals go through `apply`. Only a human
+  outside QMA promotes a registered artifact.
+- **Auto-recovery / retry:** none — promote is not a QMA command.
+- **Visible degraded state:** the candidate stays admitted or the proposal
+  stays applied in QMA; live-zone membership is unchanged.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** QMA admits memory and applies refinements. A
+  human promotes outside this system.
+
+### FR-61: analysis-backtest will not schedule, parallelise, or own a second `qmb` job
+
+- **Failure class:** `policy rejection` (CT-04; CT-47; FR-Q71).
+- **Detection:** after pack activation the Backtesting Service remains the
+  analysis-backtest daemon half. A second in-flight `qmb` job per environment
+  is refused; `set_parallelism`, `append_run_ledger`, and `store_artifact`
+  always refuse.
+- **Auto-recovery / retry:** none while the occupying job is queued, running,
+  or unknown.
+- **Visible degraded state:** the first job remains occupying; QMB keeps its
+  run ledger and artifact contract.
+- **Notification tier:** silent-log.
+- **Product-user affordance:** one backtest at a time per environment through
+  the existing QMB door.

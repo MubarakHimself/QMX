@@ -59,12 +59,22 @@ from qma.daemon.plugins.migrations import (
     PluginMigrationRunner,
     rollback_mode_for_manifest,
 )
+from qma.daemon.plugins.packs import (
+    DESK_PLUGIN_PACK_DESKS,
+    DESK_PLUGIN_PACK_IDS,
+    DeskPluginRoster,
+    default_plugins_root,
+    load_pack_activator,
+    load_pack_manifest_raw,
+)
 
 __all__ = [
     "CHECKPOINT_IS_RECOVERY_COPY",
     "CUT_PLUGIN_SURFACES",
     "DAEMON_CORE_MIGRATION_TARGETS",
     "DAEMON_PLUGIN_RENDERS",
+    "DESK_PLUGIN_PACK_DESKS",
+    "DESK_PLUGIN_PACK_IDS",
     "EXCLUDED_CONTRIBUTION_POINTS",
     "FILE_WATCHER_ENABLED",
     "FIRST_PARTY_TRUST_MODE",
@@ -83,6 +93,7 @@ __all__ = [
     "DaemonContinuitySnapshot",
     "DaemonCoreMigrationDeclaration",
     "DaemonPluginContext",
+    "DeskPluginRoster",
     "DisableReceipt",
     "ForwardOnlyConfirmation",
     "InstallPreflightResult",
@@ -103,7 +114,10 @@ __all__ = [
     "assert_peer_integration_boundary",
     "assess_plugin_trust",
     "check_qma_api_compatible",
+    "default_plugins_root",
     "excluded_contribution_refusal",
+    "load_pack_activator",
+    "load_pack_manifest_raw",
     "refuse_cut_plugin_surface",
     "require_singleton_bindings_met",
     "rollback_mode_for_manifest",

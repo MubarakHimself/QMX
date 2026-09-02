@@ -15,8 +15,10 @@ from qma.core.barriers.money_path import (
     match_money_path_act,
 )
 from qma.core.barriers.reachability import (
+    forbidden_reach_token_in_contribution,
     is_forbidden_model_adapter,
     refuse_forbidden_model_adapter,
+    validate_execution_environment_declaration,
 )
 from qma.core.plugins.context import Disposer, HookHandler
 from qma.core.plugins.credential import CredentialRef, parse_credential_ref
@@ -28,13 +30,14 @@ from qma.core.ports.cardinality import (
 )
 from qma.core.ports.compute import ComputeProvider
 from qma.core.ports.context import ContextCompiler
-from qma.core.ports.execution import ExecutionEnvironment
+from qma.core.ports.execution import ExecutionEnvironment, ExecutionEnvironmentDeclaration
 from qma.core.ports.knowledge import KnowledgeSource
 from qma.core.ports.memory import MemoryProvider
 from qma.core.ports.model import DeploymentRecord, ModelDeployment
 from qma.core.ports.tools import ToolAdapter
 from qma.core.vocabulary.handles import is_handle_kind_contribution_point
 from qma.daemon.plugins.exit_stack import PluginExitStack
+from qmf.core import is_ok
 
 __all__ = ["DaemonPluginContext", "PluginContextError"]
 
@@ -167,6 +170,13 @@ class DaemonPluginContext:
     def register_execution_environment(
         self, kind: str, environment: ExecutionEnvironment
     ) -> Disposer:
+        if isinstance(environment, ExecutionEnvironmentDeclaration):
+            checked = validate_execution_environment_declaration(environment)
+            if not is_ok(checked):
+                raise PluginContextError(
+                    "reachability barrier refused ExecutionEnvironment "
+                    f"{kind!r} for plugin {self._plugin_id!r}: {checked}"
+                )
         return self._bind_singleton("ExecutionEnvironment", "kind", kind, environment)
 
     def register_compute_provider(self, kind: str, provider: ComputeProvider) -> Disposer:
@@ -194,6 +204,13 @@ class DaemonPluginContext:
                     f"(plugin_id={self._plugin_id!r}, local_id={local_id!r}, "
                     f"matched_act={matched!r})"
                 )
+        reach = forbidden_reach_token_in_contribution(tool)
+        if reach is not None:
+            raise PluginContextError(
+                "reachability barrier refused plugin tool registration "
+                f"(plugin_id={self._plugin_id!r}, local_id={local_id!r}, "
+                f"matched={reach!r})"
+            )
         return self._bind_multi("tool", local_id, dict(tool))
 
     def register_tool_adapter(self, local_id: str, adapter: ToolAdapter) -> Disposer:
@@ -246,6 +263,12 @@ class DaemonPluginContext:
         return self._bind_multi("toolset", local_id, dict(toolset))
 
     def register_worker_template(self, local_id: str, template: Mapping[str, object]) -> Disposer:
+        reach = forbidden_reach_token_in_contribution(template)
+        if reach is not None:
+            raise PluginContextError(
+                "reachability barrier refused worker_template "
+                f"{self._plugin_id!r}:{local_id} (matched={reach!r})"
+            )
         return self._bind_multi("worker_template", local_id, dict(template))
 
     def dispose_all(self) -> None:

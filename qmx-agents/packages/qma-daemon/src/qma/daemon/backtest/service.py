@@ -227,10 +227,20 @@ class BacktestingService:
         if is_refusal(registered):
             return registered
         if context is not None:
-            try:
-                context.register_tool(QMB_BACKTEST_TOOL_LOCAL_ID, dict(record.schema))
-            except PluginContextError as exc:
-                return invalid_input("tool", str(exc), plugin_id=ANALYSIS_BACKTEST_PLUGIN_ID)
+            snap = context.snapshot()
+            already = ("tool", QMB_BACKTEST_TOOL_ID) in snap["multis"]
+            if not already:
+                try:
+                    context.register_tool(
+                        QMB_BACKTEST_TOOL_LOCAL_ID,
+                        {
+                            **dict(record.schema),
+                            "name": QMB_BACKTEST_TOOL_LOCAL_ID,
+                            "acts": tuple(sorted(record.acts)),
+                        },
+                    )
+                except PluginContextError as exc:
+                    return invalid_input("tool", str(exc), plugin_id=ANALYSIS_BACKTEST_PLUGIN_ID)
         return Ok(record)
 
     def invoke(

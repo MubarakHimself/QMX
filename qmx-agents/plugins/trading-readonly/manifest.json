@@ -3,11 +3,17 @@
   "version": "0.1.0",
   "qma_api": ">=0.1.0,<1.0.0",
   "desk": "trading",
+  "entrypoint": "daemon.plugin:activate",
   "dependencies": [],
-  "contributions": [],
+  "contributions": [
+    {"point": "tool", "local_id": "positions"},
+    {"point": "tool", "local_id": "market-data"},
+    {"point": "tool_adapter", "local_id": "readonly-mcp"},
+    {"point": "skill", "local_id": "tape-read"},
+    {"point": "toolset", "local_id": "readonly-tools"}
+  ],
   "permissions": [],
-  "entrypoint": null,
   "migrations": [],
-  "enabled": false,
-  "note": "Trading desk read-only plugin (topology only). No contribution activated; halves meet only at qma-wire."
+  "peer_integration": "qma_wire_only",
+  "daemon_renders": false
 }

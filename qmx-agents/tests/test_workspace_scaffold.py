@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
+
+from qma.core.plugins import DESK_PLUGIN_PACK_DESKS, DESK_PLUGIN_PACK_IDS, parse_plugin_manifest
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGINS = ROOT / "plugins"
-PACKS = (
-    "research-corpus",
-    "analysis-backtest",
-    "dev-factory",
-    "trading-readonly",
-    "pm-coordination",
-)
+PACKS = DESK_PLUGIN_PACK_IDS
 HALF_DIRS = ("daemon", "worker", "ui", "skills", "graphs", "migrations")
 
 
@@ -23,6 +20,13 @@ def test_desk_plugin_topology() -> None:
         assert (root / "manifest.json").is_file()
         for half in HALF_DIRS:
             assert (root / half).is_dir()
+        assert (root / "daemon" / "plugin.py").is_file()
+        raw = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+        manifest = parse_plugin_manifest(raw)
+        assert manifest.id == pack
+        assert manifest.desk == DESK_PLUGIN_PACK_DESKS[pack]
+        assert manifest.entrypoint == "daemon.plugin:activate"
+        assert manifest.contributions
 
 
 def test_qma_ui_contract_is_deferred_stub_only() -> None:

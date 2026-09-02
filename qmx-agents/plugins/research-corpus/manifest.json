@@ -3,11 +3,18 @@
   "version": "0.1.0",
   "qma_api": ">=0.1.0,<1.0.0",
   "desk": "research",
+  "entrypoint": "daemon.plugin:activate",
   "dependencies": [],
-  "contributions": [],
+  "contributions": [
+    {"point": "MemoryProvider", "scope_key": "desk"},
+    {"point": "KnowledgeSource", "scope_key": "source_id"},
+    {"point": "tool", "local_id": "search"},
+    {"point": "skill", "local_id": "survey-skill"},
+    {"point": "graph_template", "local_id": "survey"},
+    {"point": "model_deployment", "local_id": "corpus-reader"}
+  ],
   "permissions": [],
-  "entrypoint": null,
   "migrations": [],
-  "enabled": false,
-  "note": "Research desk corpus plugin (topology only). No contribution activated; halves meet only at qma-wire."
+  "peer_integration": "qma_wire_only",
+  "daemon_renders": false
 }

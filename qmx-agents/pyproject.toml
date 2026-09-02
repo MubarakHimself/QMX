@@ -4,7 +4,7 @@
 # QMF, package version display-only provenance (AR-Q01, AR-Q11; DEC-0335).
 # Members are the three QMA packages only; qma-ui-contract is a deferred stub
 # outside the member set (GAP-0081; AR-Q08). Desk plugins live under plugins/
-# as topology only.
+# and register through the qma-core PluginManifest / PluginContext surface.
 
 [project]
 name = "qmx-agents"
@@ -72,9 +72,10 @@ ignore = [
 "tests/*" = ["S101", "S105", "S106", "S107", "PLC0415"]
 "packages/*/examples/*" = ["S101"]
 "examples/*" = ["S101"]
+"plugins/**" = ["S101"]
 
 [tool.pyright]
-include = ["packages", "tests", "examples"]
+include = ["packages", "tests", "examples", "plugins"]
 exclude = ["**/node_modules", "**/__pycache__", "**/.*", "packages/qma-ui-contract"]
 extraPaths = [
     "packages/qma-core/src",
@@ -90,9 +91,9 @@ pythonVersion = "3.14"
 pythonPlatform = "Windows"
 
 [tool.poe.tasks]
-fmt = "ruff format packages tests examples"
-fmt-check = "ruff format --check packages tests examples"
-lint = "ruff check packages tests examples"
+fmt = "ruff format packages tests examples plugins"
+fmt-check = "ruff format --check packages tests examples plugins"
+lint = "ruff check packages tests examples plugins"
 # python -m: direct `pyright` console script can be blocked by host App Control.
 # `poe.exe` itself is also blocked under this nested .venv (os error 4551); after
 # `uv sync` run `python scripts/ensure_poe_shim.py` so `uv run poe` uses poe.cmd.
