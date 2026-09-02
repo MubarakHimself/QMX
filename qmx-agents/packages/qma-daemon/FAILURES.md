@@ -16,6 +16,9 @@ through FR-31). Epic 45 Story 45.6 adds daemon-resolved evidence handles
 and StrategyHandle candidate artifacts (FR-32 through FR-35). Epic 45
 Story 45.7 adds content-addressed ExperimentSpec identity, append-only
 CT-07 lineage, and Experiment Ledger authorship (FR-36 through FR-39).
+Epic 45 Story 45.8 adds the single QMB backtesting door: one analysis-backtest
+Tool Registry entry, one ``qmb`` job per environment, recorded-evidence
+replay only, and no package-import edge (FR-40 through FR-43).
 
 ### FR-1: A second daemon or writer is refused at the persistence boundary
 
@@ -577,3 +580,57 @@ CT-07 lineage, and Experiment Ledger authorship (FR-36 through FR-39).
 - **Notification tier:** silent-log (caller receives the typed refusal).
 - **Product-user affordance:** QMA records experiment identity and lineage.
   It does not decompose strategy mechanisms.
+
+### FR-40: A second `qmb` job in one environment is refused
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `BacktestingService.submit` admits occupancy with
+  `admit_qmb_job`. ExecutionEnvironment is singleton per kind, so a second
+  in-flight `qmb` job for that kind is refused. CT-47 mints no new named
+  variant (FR-Q55; DEC-0316).
+- **Auto-recovery / retry:** none while the occupying job is queued, running,
+  or unknown. After a terminal outcome the slot is free.
+- **Visible degraded state:** the first job remains occupying; no second door
+  invocation is issued.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** one backtest at a time per environment. Wait
+  for the current `qmb` job to finish, or use a different environment.
+
+### FR-41: A backtest that names a venue account or a non-replay world is refused
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `QmbBacktestRequest.try_create` requires `world=replay`, a
+  recorded evidence reference, and no venue/account/paper/live fields
+  (CT-47; SCN-0014; FR-Q55).
+- **Auto-recovery / retry:** none — resubmit against recorded evidence and
+  QMB replay.
+- **Visible degraded state:** no `qmb` job is placed; the door is not invoked.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** QMA backtests recorded evidence in replay.
+  Paper and live are venue account roles, not a sandbox for this door.
+
+### FR-42: The Backtesting Service will not schedule, parallelise, or store QMB state
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `set_parallelism`, `append_run_ledger`, and `store_artifact`
+  always refuse. QMB keeps intra-node parallelism, its run ledger, and its
+  artifact contract; this service holds none of those (CT-47; FR-Q55).
+- **Auto-recovery / retry:** none — those concerns stay on QMB.
+- **Visible degraded state:** QMA occupancy and JobHandle records are
+  unchanged; no QMB ledger line or artifact is minted here.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** QMA places one job. QMB runs the backtest.
+
+### FR-43: A package-import edge to QMB is refused
+
+- **Failure class:** `policy rejection` (CT-04) at the door; build-time
+  `DependencyBoundaryError` on source scan.
+- **Detection:** `import_qmb_package` always refuses. `assert_no_qmb_import`
+  scans QMA packages, workers, and plugins for `import qmb`. Daemon
+  `pyproject.toml` must not declare `qmb` (CT-47; DEC-0347; FR-Q55).
+- **Auto-recovery / retry:** none — talk to QMB through the CLI or MCP door.
+- **Visible degraded state:** no import is bound; the runtime door is the
+  only path.
+- **Notification tier:** silent-log (caller / CI).
+- **Product-user affordance:** QMA does not import QMB. It invokes `qmb`
+  as a program.

@@ -31,6 +31,7 @@ from qma.core.barriers import (
     ProhibitedRecordFamily,
     assert_deny_list_not_widenable,
     assert_ladder_is_code_declared,
+    assert_no_qmb_import,
     assert_no_qmf_venue_import,
     assert_no_zone_transition,
     assert_package_deps_within,
@@ -45,6 +46,7 @@ from qma.core.barriers import (
     refuse_parent_money_path_write,
     refuse_unlisted_parent_surface,
     refuse_zone_transition_surface,
+    scan_qmb_imports,
 )
 from qma.core.refusals import ProhibitedMoneyPathTool
 from qmf.core import is_refusal
@@ -85,6 +87,7 @@ def test_daemon_deps_limited_to_declared_parent_set() -> None:
     # Venue must never appear in the daemon allowlist or pyproject.
     text = (DAEMON_PKG / "pyproject.toml").read_text(encoding="utf-8")
     assert "qmf-venue" not in text
+    assert "qmb" not in text
 
 
 def test_no_qma_tree_imports_qmf_venue() -> None:
@@ -95,6 +98,27 @@ def test_no_qma_tree_imports_qmf_venue() -> None:
     for pack in PLUGINS_ROOT.iterdir():
         if pack.is_dir():
             assert_no_qmf_venue_import(pack)
+
+
+def test_no_qma_tree_imports_qmb() -> None:
+    assert_no_qmb_import(CORE_PKG / "src")
+    assert_no_qmb_import(WIRE_PKG / "src")
+    assert_no_qmb_import(DAEMON_PKG / "src")
+    assert_no_qmb_import(PLUGINS_ROOT)
+    for pack in PLUGINS_ROOT.iterdir():
+        if pack.is_dir():
+            assert_no_qmb_import(pack)
+    assert scan_qmb_imports(CORE_PKG / "src") == ()
+    assert scan_qmb_imports(DAEMON_PKG / "src") == ()
+
+
+def test_qmb_import_scanner_catches_package_edge(tmp_path: Path) -> None:
+    sneaky = tmp_path / "sneak.py"
+    sneaky.write_text("import qmb\nfrom qmb.doors import cli\n", encoding="utf-8")
+    hits = scan_qmb_imports(tmp_path)
+    assert any("import qmb" in hit for hit in hits)
+    with pytest.raises(DependencyBoundaryError, match="import qmb"):
+        assert_no_qmb_import(tmp_path)
 
 
 def test_permitted_parent_surfaces_default_deny() -> None:

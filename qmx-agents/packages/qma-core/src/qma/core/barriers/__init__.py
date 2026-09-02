@@ -29,14 +29,18 @@ from qma.core.barriers.credential_allowlist import (
 )
 from qma.core.barriers.dependencies import (
     FORBIDDEN_QMA_IMPORT_ROOTS,
+    FORBIDDEN_QMB_IMPORT_ROOTS,
     QMA_CORE_ALLOWED_DEPS,
     QMA_DAEMON_ALLOWED_DEPS,
     QMA_PACKAGE_ALLOWED_DEPS,
     QMA_WIRE_ALLOWED_DEPS,
     DependencyBoundaryError,
+    assert_no_qmb_import,
     assert_no_qmf_venue_import,
     assert_package_deps_within,
     declared_project_dependencies,
+    scan_forbidden_qma_imports,
+    scan_qmb_imports,
     scan_qmf_venue_imports,
 )
 from qma.core.barriers.money_path import (
@@ -113,6 +117,7 @@ __all__ = [
     "FORBIDDEN_IMAGE_TOKENS",
     "FORBIDDEN_MODEL_ADAPTERS",
     "FORBIDDEN_QMA_IMPORT_ROOTS",
+    "FORBIDDEN_QMB_IMPORT_ROOTS",
     "GAP_0070_DESKTOP_EXCLUSION",
     "HANDED_VIA_SURFACES",
     "HOST_IDENTITY_KINDS",
@@ -154,6 +159,7 @@ __all__ = [
     "assert_deny_list_not_waivable",
     "assert_deny_list_not_widenable",
     "assert_ladder_is_code_declared",
+    "assert_no_qmb_import",
     "assert_no_qmf_venue_import",
     "assert_no_zone_transition",
     "assert_package_deps_within",
@@ -182,6 +188,8 @@ __all__ = [
     "refuse_reachability_waiver",
     "refuse_unlisted_parent_surface",
     "refuse_zone_transition_surface",
+    "scan_forbidden_qma_imports",
+    "scan_qmb_imports",
     "scan_qmf_venue_imports",
     "validate_computer_use_profile",
     "validate_declaration_surface",
