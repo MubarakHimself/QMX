@@ -15,6 +15,7 @@ import qma.daemon.handles
 import qma.daemon.hooks
 import qma.daemon.journal
 import qma.daemon.ledgers
+import qma.daemon.memory
 import qma.daemon.persistence
 import qma.daemon.plugins
 import qma.daemon.proxy
@@ -40,6 +41,7 @@ def test_structural_modules_importable() -> None:
         qma.daemon.bus,
         qma.daemon.scheduler,
         qma.daemon.staging,
+        qma.daemon.memory,
         qma.daemon.proxy,
         qma.daemon.tools,
         qma.daemon.envs,
@@ -58,6 +60,8 @@ def test_structural_modules_importable() -> None:
     assert qma.daemon.journal.AuthoritativeJournal is qma.daemon.AuthoritativeJournal
     assert qma.daemon.DaemonClock.__name__ == "DaemonClock"
     assert qma.daemon.FoldContractRegistry.__name__ == "FoldContractRegistry"
+    assert qma.daemon.MemoryAdmissionGate.__name__ == "MemoryAdmissionGate"
+    assert qma.daemon.MemoryProviderRegistry.__name__ == "MemoryProviderRegistry"
     assert qma.daemon.MissionCompiler.__name__ == "MissionCompiler"
     assert qma.daemon.TaskGraphDispatcher.__name__ == "TaskGraphDispatcher"
     assert qma.daemon.taskgraph.MissionCompiler is qma.daemon.MissionCompiler

@@ -34,6 +34,7 @@ from qma.daemon.journal import (
     StoreRegistry,
     order_by_announcement_journal_seq,
 )
+from qma.daemon.memory import MemoryAdmissionGate, MemoryProviderRegistry
 from qma.daemon.persistence import (
     PersistenceStartupEvidence,
     PersistenceSubstrate,
@@ -60,6 +61,8 @@ __all__ = [
     "FoldMetadata",
     "GovernedVariableRegistry",
     "HookRegistry",
+    "MemoryAdmissionGate",
+    "MemoryProviderRegistry",
     "MissionCompiler",
     "PermissionPolicyEnforcer",
     "PersistenceStartupEvidence",
