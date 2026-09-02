@@ -9,6 +9,7 @@ requires-python = ">=3.14,<3.15"
 # Story 26.8 hosts QL-7 seats through the QML runtime protocol.
 # Story 27.1 adds cryptography for the two-layer VPS secret store AEAD.
 # Story 27.2 adds qmf-data for CT-10/15 governed intake and Dukascopy bootstrap.
+# Story 27.5 reuses cryptography==50.0.1 ChaCha20Poly1305 as the CT-14 PayloadCipher.
 dependencies = [
     "qmf-core",
     "qmf-data",

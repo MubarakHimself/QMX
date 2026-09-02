@@ -789,3 +789,73 @@ designed failure; every typed refusal the node can emit belongs here.
   on the evidence channel. Sandbox fragments stay in the inbox until an
   operator `hub_publish` over the powers channel; promotion pull reads only
   the published area.
+
+### FR-54: Backup configuration contract (RPO/RTO/custody)
+
+- **Failure class:** policy rejection
+- **Detection:** RPO is not derived from the nightly schedule
+  (`data.backup.rpo_not_derived`), an RTO is declared without its drill
+  (`data.backup.rto_not_from_drill`), the two RTOs are conflated
+  (`data.backup.rto_conflated`), custody is not workstation-escrowed
+  (`data.backup.custody`), or a non-blank backup row lacks an evidence
+  citation (`data.backup.blank_row`).
+- **Auto-recovery / retry:** none — fill the governed rows from the actual
+  schedule and the matching restore drills, with evidence citations.
+- **Visible degraded state:** backup configuration does not compile; soak
+  remains blocked while any of the seven rows is blank.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** Inspect `read_failure_detail` on the evidence
+  channel. Set RPO from the nightly schedule, record the integrity RTO from
+  the monthly full restore and the full-DR RTO from `restore_drill_run`, and
+  keep `backup_payload_key_custody` as the workstation-escrowed rule.
+
+### FR-55: Payload-key crypto and custody
+
+- **Failure class:** policy rejection
+- **Detection:** VPS-minted payload key (`data.backup.vps_minted_key`),
+  venue-shared custody (`data.backup.venue_shared_custody`), missing key
+  (`data.backup.missing_key`), wrong key (`data.backup.wrong_key`),
+  destructive restore fallback (`data.backup.destructive_fallback`), or a
+  real escrow ceremony tonight (`data.backup.ceremony_tonight`).
+- **Auto-recovery / retry:** none — restore refuses and the source copy is
+  not rewritten.
+- **Visible degraded state:** encrypt/decrypt/restore does not proceed; the
+  source evidence tree is unchanged.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** Provision the workstation-escrowed payload
+  key through `just node-secrets-provision`. Inspect `read_failure_detail`
+  on the evidence channel. The VPS never mints the backup payload key and
+  never shares it with venue-secret custody.
+
+### FR-56: Backup-set retention or purge unmet
+
+- **Failure class:** policy rejection
+- **Detection:** retention inferred from a provider default
+  (`data.backup.provider_default_retention`), declared retention not elapsed
+  (`data.backup.retention_window`), verification missing
+  (`data.backup.unverified_purge`), two-copy rule unmet
+  (`data.backup.two_copy`), or the purge journal rejected the verdict
+  (`data.backup.journal`).
+- **Auto-recovery / retry:** none — wait for declared retention, verified
+  sealed-archive plus another verified off-host copy, and a durable journal
+  append.
+- **Visible degraded state:** the backup copy is retained; no provider
+  lifecycle deletes it.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** Inspect `read_failure_detail` on the evidence
+  channel. Purge only after the declared retention law, successful
+  verification, and the two-copy rule; never infer retention from Backblaze
+  or any other provider default.
+
+### FR-57: Live Backblaze or rclone bucket tonight
+
+- **Failure class:** policy rejection
+- **Detection:** a live object-storage client or bucket is opened
+  (`data.backup.backblaze_tonight`).
+- **Auto-recovery / retry:** none — Story 27.6 owns the B2/rclone push.
+- **Visible degraded state:** the provider row may be declared; no network
+  backup client starts.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** Inspect `read_failure_detail` on the evidence
+  channel. Declare the provider as configuration only; the real bucket push
+  waits for Story 27.6.
