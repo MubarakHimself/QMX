@@ -1229,3 +1229,25 @@ designed failure; every typed refusal the node can emit belongs here.
   training claim. Inspect `read_failure_detail` on the evidence channel.
   Re-run offline acquisition and cleaning with declared sources only;
   do not train from this story.
+
+### FR-74: MIS regime label generation refusal
+
+- **Failure class:** policy rejection
+- **Detection:** Story 30.3 label generation or audit is asked to train a
+  model (`mis.regime_labels.no_training`), apply an ad-hoc label tweak for
+  unsupported classes (`mis.regime_labels.ad_hoc_tweak`), or inspect sealed
+  holdout evaluation outcomes beyond the declared process
+  (`mis.regime_labels.sealed_holdout_peek`).
+- **Auto-recovery / retry:** none — generate deterministic as-of labels
+  from the Story 30.1 contract; map ambiguous rows to
+  `insufficient_evidence`; return materially unsupported classes to the
+  governed design-change process; leave training to Story 30.4.
+- **Visible degraded state:** no model weights are minted from Story 30.3;
+  no ad-hoc class remap mutates the vocabulary; sealed holdout outcomes
+  stay uninspected during label audit.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The MIS regime label path refused early
+  training, an ad-hoc label tweak, or a sealed-holdout outcome peek.
+  Inspect `read_failure_detail` on the evidence channel. Re-run label
+  generation under the accepted design; change the design through Story
+  30.1 when a class is unsupported; do not train from this story.

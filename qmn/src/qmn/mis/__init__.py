@@ -4,12 +4,14 @@ Story 26.3 lands the compute-once environment-keyed signal snapshot dispatched
 to the Book door and the KSA only. Story 26.17 ships the six rule-based
 labelers plus fitted ``liquidity_stress_v1``. ``regime_classifier_v1`` stays
 unbound. Story 26.18 publishes candidates through the zero-authority shadow
-seam — distinct WriterId/manifest prefix and ``shadow_composition_fp``,
+seam - distinct WriterId/manifest prefix and ``shadow_composition_fp``,
 comparison publish-only, no money-path authority. Story 30.1 mints the
 fingerprinted ``regime_classifier_v1`` design artifact and executable contract
 without selecting trained weights or granting governed authority. Story 30.2
 fetches and cleans the governed all-session training corpus offline and mints
 fingerprinted train/validation/holdout manifests without training a model.
+Story 30.3 generates and audits deterministic classifier labels under the
+Story 30.1 label contract without training a model.
 """
 
 from __future__ import annotations
@@ -120,6 +122,25 @@ from qmn.mis.regime_design import (
     refuse_design_authority_claim,
     validate_regime_design_leakage,
 )
+from qmn.mis.regime_labels import (
+    EXCLUSION_CLASS,
+    LABEL_GENERATOR_ID,
+    LABELS_FORMAT_VERSION,
+    REGIME_LABELS_ARTIFACT_ID,
+    REGIME_LABELS_SURFACE,
+    ExclusionReason,
+    LabelAuditReport,
+    LabeledCorpus,
+    LabelEdgeFit,
+    LabeledRow,
+    audit_regime_labels,
+    fit_label_quantile_edges,
+    generate_regime_labels,
+    materialize_labeled_corpus,
+    refuse_ad_hoc_label_tweak,
+    refuse_label_training,
+    refuse_sealed_holdout_outcome_peek,
+)
 from qmn.mis.shadow import (
     MONEY_PATH_CONSUMERS,
     SHADOW_COMPARISON_PROJECTION_KEY,
@@ -180,11 +201,14 @@ __all__ = [
     "DECISION_FRESHNESS_BOUND_VARIABLE",
     "DECLARED_TRADING_SESSIONS",
     "DEGRADED_SENSORS_PRODUCER_ID",
+    "EXCLUSION_CLASS",
     "FEED_STATE_PRODUCER_ID",
     "FITTED_PRODUCER_IDS",
     "GAP_EVENT_PRODUCER_ID",
     "GOVERNED_CONSUMERS",
     "IDENTITY_PRODUCER_ID",
+    "LABELS_FORMAT_VERSION",
+    "LABEL_GENERATOR_ID",
     "LIQUIDITY_STRESS_PRODUCER_ID",
     "MIS_PRODUCER_SURFACE",
     "MIS_SURFACE",
@@ -196,6 +220,8 @@ __all__ = [
     "REGIME_DESIGN_ARTIFACT_ID",
     "REGIME_DESIGN_FORMAT_VERSION",
     "REGIME_DESIGN_SURFACE",
+    "REGIME_LABELS_ARTIFACT_ID",
+    "REGIME_LABELS_SURFACE",
     "RULE_BASED_PRODUCER_IDS",
     "SHADOW_COMPARISON_PROJECTION_KEY",
     "SHADOW_COUNTED_TOWARD_MAX_SLICE_LATENCY",
@@ -224,6 +250,7 @@ __all__ = [
     "CorpusSplitBundle",
     "DataWindowContract",
     "EvaluationContract",
+    "ExclusionReason",
     "ExecutableRegimeContract",
     "FeatureContract",
     "FormulaNature",
@@ -232,7 +259,11 @@ __all__ = [
     "GovernedSourceDeclaration",
     "HyperparameterBounds",
     "ImbalanceTreatment",
+    "LabelAuditReport",
     "LabelContract",
+    "LabelEdgeFit",
+    "LabeledCorpus",
+    "LabeledRow",
     "LeakageControls",
     "LiquidityFitArtifact",
     "MisFormula",
@@ -268,6 +299,7 @@ __all__ = [
     "assemble_governed_snapshot",
     "assemble_shadow_snapshot",
     "assert_design_unchanged",
+    "audit_regime_labels",
     "build_acquisition_plan",
     "check_snapshot_freshness",
     "clean_corpus",
@@ -289,17 +321,23 @@ __all__ = [
     "evaluate_sqs",
     "exact_nearest_rank_quantile",
     "executable_regime_contract",
+    "fit_label_quantile_edges",
     "fit_liquidity_quantiles",
+    "generate_regime_labels",
     "materialize_corpus_splits",
+    "materialize_labeled_corpus",
     "materialize_training_corpus",
     "mint_signal_snapshot",
     "mis_formula",
     "publish_shadow_snapshot",
+    "refuse_ad_hoc_label_tweak",
     "refuse_bot_consumer",
     "refuse_corpus_training",
     "refuse_design_authority_claim",
+    "refuse_label_training",
     "refuse_live_network_corpus",
     "refuse_provider_fetch_in_training",
+    "refuse_sealed_holdout_outcome_peek",
     "refuse_shadow_governed_wiring",
     "refuse_shadow_light_claim",
     "refuse_shadow_money_path",
