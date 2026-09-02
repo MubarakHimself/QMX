@@ -1112,3 +1112,46 @@ designed failure; every typed refusal the node can emit belongs here.
   boundary. Inspect `read_failure_detail` on the evidence channel and run
   `just node-security-probes`. Retry from the operator principal; ops-toolkit
   recipes cannot promote, activate, flatten, resurrect, or countersign.
+
+### FR-69: Paper-milestone golden-scenario proofs refused
+
+- **Failure class:** policy rejection / invalid input
+- **Detection:** the Story 28.5 golden-scenario runner refused invented
+  KSA/latency numbers (`golden_scenarios.invented_ksa_or_latency`), a trading
+  edge claim (`golden_scenarios.trading_edge`), a non-conformance venue
+  (`golden_scenarios.venue`), invalid inputs (`golden_scenarios.inputs`), or
+  incomplete fixture metadata (`golden_scenarios.fixture_metadata`).
+- **Auto-recovery / retry:** none — re-run SCN-0006/0008/0010/0011 through the
+  sealed composition on the conformance double; never invent KSA numbers or
+  treat synthetic fixtures as trading-edge proof.
+- **Visible degraded state:** golden-scenario proofs do not seal; the paper
+  milestone cannot claim SCN-0006/0008/0010/0011.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The golden-scenario proofs could not run.
+  Inspect `read_status` on the evidence channel and run
+  `just node-config-validate`. Drive the four scenarios through the
+  conformance double with TN-23 fixture metadata; do not fill KSA numbers.
+
+### FR-70: QA-debt closure matrix refused
+
+- **Failure class:** policy rejection / invalid input
+- **Detection:** the Story 28.6 paper-milestone gate refused a missing
+  story/evidence link (`qa_debt.missing_link`), inherited or implicit coverage
+  (`qa_debt.inherited_or_implicit`), foundation debt reclassified as node debt
+  (`qa_debt.foundation_reclassified`), a closed-roster violation
+  (`qa_debt.roster`), missing permanent-battery evidence (`qa_debt.battery`),
+  an incomplete money-path mutmut roster (`qa_debt.mutation_roster`), a
+  zero-classified-mutant run (`qa_debt.mutation_zero`), untriaged classified
+  survivors (`qa_debt.mutation_untriaged`), or invalid inputs
+  (`qa_debt.inputs`).
+- **Auto-recovery / retry:** none — restore the named story and on-disk
+  evidence for every node QA-debt ID; do not mark a missing link inherited or
+  implicit; do not reclassify foundation debt; do not treat mutmut as a
+  factory gate.
+- **Visible degraded state:** the QA-debt closure matrix does not seal; the
+  paper milestone cannot claim named-debt discharge or the permanent battery.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The QA-debt closure matrix could not prove
+  every named ID. Inspect `read_status` on the evidence channel and run
+  `just node-config-validate`. Supply a distinct story and evidence path for
+  each node QA-debt ID; keep ruff, pyright, and pytest as the factory gate.

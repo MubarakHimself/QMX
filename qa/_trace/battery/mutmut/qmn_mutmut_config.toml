@@ -1,0 +1,21 @@
+# Nightly mutmut roster for node money-path modules (Story 28.6 / AR-86 / DEC-0208).
+#
+# The factory does not run mutmut. CI stages this file onto qmn/pyproject.toml
+# in a disposable checkout, then runs mutmut from qmn/ so it reads [tool.mutmut].
+# A zero-classified-mutant execution fails closed. Classified survivors are
+# triaged with evidence; this config invents no kill-rate number (FTR-07).
+
+[tool.mutmut]
+source_paths = ["src"]
+only_mutate = [
+    "src/qmn/order/door.py",
+    "src/qmn/order/path.py",
+    "src/qmn/ledger/binding_ledger.py",
+    "src/qmn/reconcile/residuals.py",
+    "src/qmn/capital/kill_line.py",
+    "src/qmn/ledger/virtual.py",
+]
+pytest_add_cli_args_test_selection = ["tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
