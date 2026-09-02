@@ -251,6 +251,14 @@ DESIGNED_TYPED_FAILURE_IDS: Final[frozenset[str]] = frozenset(
         "storage.log_only_path",
         "storage.partial_write",
         "supervision.fail_closed",
+        "verdict.incomplete_checklist",
+        "verdict.inputs",
+        "verdict.invented_ksa_or_latency",
+        "verdict.live_binding",
+        "verdict.procure_vps",
+        "verdict.profit",
+        "verdict.promotion_activation",
+        "verdict.unattended_week",
     }
 )
 

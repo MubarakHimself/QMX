@@ -1180,3 +1180,30 @@ designed failure; every typed refusal the node can emit belongs here.
   evidence channel and run `just node-config-validate`. Supply a declared
   variance multiple and `vps_disk_budget` line items as fixtures; do not
   invent a latency budget and do not wait for a real VPS.
+
+### FR-72: TN-23 live-readiness verdict refused
+
+- **Failure class:** policy rejection / invalid input
+- **Detection:** the Story 28.8 TN-23 checklist fold refused profit, loss,
+  win rate, or paper performance in the verdict (`verdict.profit`), an
+  attempt to run or claim the unattended paper week
+  (`verdict.unattended_week`), opening a live binding
+  (`verdict.live_binding`), procuring a VPS (`verdict.procure_vps`),
+  invented KSA/latency/soak-duration numbers
+  (`verdict.invented_ksa_or_latency`), a missing non-blocked checklist
+  item (`verdict.incomplete_checklist`), merged promotion/activation or
+  same-day activation (`verdict.promotion_activation`), or invalid
+  inputs (`verdict.inputs`).
+- **Auto-recovery / retry:** none — fold journaled machinery items with
+  evidence fingerprints; skip VPS, KSA, and paper-week acceptance as
+  blocked infra; never treat P&L as proof; never open a live binding
+  from this epic.
+- **Visible degraded state:** the live-readiness verdict does not seal;
+  the paper-milestone artifact is not published; live binding stays
+  closed.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The TN-23 live-readiness verdict could not
+  fold. Inspect `read_status` on the evidence channel and run
+  `just node-config-validate`. Supply journaled pass/refuse evidence for
+  every non-blocked checklist item; do not run the unattended week from
+  the factory lane and do not treat paper performance as readiness.
