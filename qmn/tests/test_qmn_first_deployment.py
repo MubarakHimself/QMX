@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TypeVar
 
 from qmf.core import AccountRole, Fingerprint, VenueId, World, fingerprint
@@ -33,11 +34,15 @@ from qmn.paper import (
     OPENS_LIVE_CREDENTIALS,
     PRE_UNATTENDED_PROOFS,
     PROCURES_VPS,
+    PreUnattendedProof,
     admit_live_sensing,
     begin_unattended_interval,
     build_paired_demo_target,
     compose_first_deployment_window,
     record_pre_unattended_proofs,
+    refuse_continuous_supervision,
+    refuse_first_deployment_live_authority,
+    refuse_late_approval_blocks_demo,
     refuse_open_live_credentials,
     refuse_procure_vps,
     require_first_deployment_book_routing,
@@ -411,3 +416,143 @@ def test_identical_inputs_fingerprint_identically() -> None:
     first = _ok(_compose())
     second = _ok(_compose())
     assert first.fingerprint == second.fingerprint
+
+
+def test_window_as_mapping_and_existing_vps_clears_blocked_infra() -> None:
+    window = _ok(_compose(vps_procured=True))
+    assert window.blocked_infra == ()
+    mapped = window.as_mapping()
+    assert mapped["fingerprint"] == window.fingerprint.value
+    assert mapped["book_routing"] == BookMode.PAPER.value
+    assert mapped["machinery"] == list(DEMO_SHAPE_MACHINERY)
+    assert mapped["units"] == list(DEMO_SHAPE_UNITS)
+    assert mapped["paper_virtual_ledger"] is True
+
+
+def test_book_routing_accepts_paper_token_and_refuses_invalid() -> None:
+    assert _ok(require_first_deployment_book_routing("PAPER")) is BookMode.PAPER
+    blank = _refusal(require_first_deployment_book_routing(None))
+    assert blank.category is RefusalCategory.INVALID_INPUT
+    assert blank.context["failure_id"] == "first_deployment.book_routing"
+    lower = _refusal(require_first_deployment_book_routing("paper"))
+    assert lower.context["failure_id"] == "first_deployment.book_routing"
+
+
+def test_live_sensing_invalid_inputs_and_mapping_decl() -> None:
+    not_bool = _refusal(admit_live_sensing(credentials_present="yes"))
+    assert not_bool.category is RefusalCategory.INVALID_INPUT
+    assert not_bool.context["failure_id"] == "first_deployment.open_live_credentials"
+
+    mapping = _ok(
+        admit_live_sensing(
+            credentials_present=True,
+            live_sensing={
+                "venue_id": "ic-markets",
+                "environment": "live",
+                "account_id": "acct-live-sense",
+                "credential_reference": "qmx/venue-live",
+                "opaque_metric_id": "m-sense",
+            },
+        )
+    )
+    assert mapping.sensing_open is True
+    assert mapping.sensing is not None
+    assert mapping.sensing.account_id == "acct-live-sense"
+
+    incomplete = _refusal(
+        admit_live_sensing(credentials_present=True, live_sensing={"venue_id": "ic-markets"})
+    )
+    assert incomplete.context["failure_id"] == "first_deployment.open_live_credentials"
+    wrong_type = _refusal(admit_live_sensing(credentials_present=True, live_sensing=["live"]))
+    assert wrong_type.context["failure_id"] == "first_deployment.open_live_credentials"
+    demo_env = _refusal(
+        admit_live_sensing(
+            credentials_present=True,
+            live_sensing=replace(_sensing(), environment="demo"),
+        )
+    )
+    assert demo_env.context["failure_id"] == "first_deployment.open_live_credentials"
+
+
+def test_pre_unattended_invalid_inputs_and_constructed_proof() -> None:
+    bad_mode = _refusal(
+        record_pre_unattended_proofs(
+            synthetic_alert_delivered=True,
+            missing_heartbeat_delivered=True,
+            fault_injection_mode="always-on",
+        )
+    )
+    assert bad_mode.context["failure_id"] == "first_deployment.continuous_supervision"
+    bad_alert = _refusal(
+        record_pre_unattended_proofs(
+            synthetic_alert_delivered="yes",
+            missing_heartbeat_delivered=True,
+        )
+    )
+    assert bad_alert.context["failure_id"] == "first_deployment.pre_unattended"
+    bad_heartbeat = _refusal(
+        record_pre_unattended_proofs(
+            synthetic_alert_delivered=True,
+            missing_heartbeat_delivered="yes",
+        )
+    )
+    assert bad_heartbeat.context["failure_id"] == "first_deployment.pre_unattended"
+
+    wrong_type = _refusal(begin_unattended_interval("ready"))
+    assert wrong_type.context["failure_id"] == "first_deployment.pre_unattended"
+    supervised = _refusal(
+        begin_unattended_interval(
+            PreUnattendedProof(
+                synthetic_alert_delivered=True,
+                missing_heartbeat_delivered=True,
+                fault_injection_mode=FAULT_INJECTION_MODE,
+                continuous_human_supervision=True,
+                unattended_interval_may_begin=True,
+            )
+        )
+    )
+    assert supervised.context["failure_id"] == "first_deployment.continuous_supervision"
+    assert refuse_continuous_supervision().context["failure_id"] == (
+        "first_deployment.continuous_supervision"
+    )
+    assert refuse_late_approval_blocks_demo().context["failure_id"] == (
+        "first_deployment.late_approval_blocks_demo"
+    )
+    assert refuse_first_deployment_live_authority("unknown-kind").context["failure_id"] == (
+        "first_deployment.live_binding"
+    )
+
+
+def test_compose_refuses_invalid_demo_binding_and_paired_target() -> None:
+    not_binding = _refusal(_compose(demo_binding="acct-demo-1"))
+    assert not_binding.context["failure_id"] == "first_deployment.demo_roster"
+
+    replay = replace(_demo_binding(), world=World.REPLAY)
+    replayed = _refusal(_compose(demo_binding=replay, paired=_paired()))
+    assert replayed.context["failure_id"] == "first_deployment.demo_roster"
+
+    not_paired = _refusal(_compose(paired="paper-target"))
+    assert not_paired.context["failure_id"] == "first_deployment.demo_roster"
+
+    live_target = _ok(ExecutionTarget.try_create(AccountRole.LIVE, _VENUE, "acct-demo-1"))
+    live_paper = _refusal(_compose(paired=replace(_paired(), paper_target=live_target)))
+    assert live_paper.context["failure_id"] == "first_deployment.demo_roster"
+
+    replay_paper = _refusal(_compose(paired=replace(_paired(), world=World.REPLAY)))
+    assert replay_paper.context["failure_id"] == "first_deployment.demo_roster"
+
+    twin = _refusal(_compose(paired=replace(_paired(), bot_twin_minted=True)))
+    assert twin.context["failure_id"] == "first_deployment.demo_roster"
+    book_twin = _refusal(_compose(paired=replace(_paired(), book_twin_minted=True)))
+    assert book_twin.context["failure_id"] == "first_deployment.demo_roster"
+
+    other_account = _ok(ExecutionTarget.try_create(AccountRole.DEMO, _VENUE, "acct-other"))
+    mismatched = _refusal(_compose(paired=replace(_paired(), paper_target=other_account)))
+    assert mismatched.context["failure_id"] == "first_deployment.demo_roster"
+
+
+def test_compose_wraps_roster_refusal_and_continuous_supervision() -> None:
+    reserve = _refusal(_compose(protective_reserve_capacity=-1))
+    assert reserve.context["failure_id"] == "first_deployment.demo_roster"
+    supervised = _refusal(_compose(continuous_human_supervision=True))
+    assert supervised.context["failure_id"] == "first_deployment.continuous_supervision"

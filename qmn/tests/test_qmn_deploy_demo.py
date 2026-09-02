@@ -199,6 +199,45 @@ def test_recipe_is_on_the_allow_list_and_justfile(
     assert "node-demo-deploy" in docs
 
 
+def test_non_paper_fixture_and_failed_apply_are_refused(
+    demo_mod: ModuleType, tmp_path: Path
+) -> None:
+    live_fixture = tmp_path / "live.json"
+    live_fixture.write_text('{"book_routing": "LIVE"}\n', encoding="utf-8")
+    live_plan = demo_mod.build_demo_shape_plan(
+        mode="check",
+        fixture=demo_mod.load_demo_shape_fixture(live_fixture),
+    )
+    assert live_plan.ok is False
+    assert any("PAPER" in finding for finding in live_plan.findings)
+
+    array_fixture = tmp_path / "array.json"
+    array_fixture.write_text("[]\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="JSON object"):
+        demo_mod.load_demo_shape_fixture(array_fixture)
+
+    procured = demo_mod.build_demo_shape_plan(mode="check", vps_procured=True)
+    assert procured.ok is True
+    assert procured.blocked_infra == ()
+
+    failed = demo_mod.build_demo_shape_plan(mode="check", procure_vps=True)
+    with pytest.raises(RuntimeError, match="failed plan"):
+        demo_mod.apply_plan_to_fixture(failed, tmp_path / "scratch")
+
+
+def test_main_writes_plan_and_refuses_forbidden_flags(demo_mod: ModuleType, tmp_path: Path) -> None:
+    out = tmp_path / "plan.json"
+    written = demo_mod.main(["--out", str(out), "--vps-procured"])
+    assert written == 0
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["book_routing"] == "PAPER"
+    assert payload["ok"] is True
+    assert payload["blocked_infra"] == []
+
+    refused = demo_mod.main(["--procure-vps"])
+    assert refused == 1
+
+
 def test_demo_planner_never_imports_qmn(demo_mod: ModuleType) -> None:
     path = _DEPLOY / "demo.py"
     resolved = path.resolve()
