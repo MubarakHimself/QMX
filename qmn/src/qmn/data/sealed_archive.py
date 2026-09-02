@@ -16,7 +16,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
-from typing import Final, cast
+from typing import Final, Protocol, cast
 
 from qmf.core import (
     Fingerprint,
@@ -112,6 +112,22 @@ _MISSING_SEALED_ID: Final[str] = "data.purge.missing_sealed"
 _MISSING_OFF_HOST_ID: Final[str] = "data.purge.missing_off_host"
 _WINDOW_ID: Final[str] = "data.purge.retention_window"
 _RETAINED_ID: Final[str] = "data.purge.retained_forever"
+_MONITORING_ID: Final[str] = "data.purge.monitoring_is_not_restore"
+_JOURNAL_ID: Final[str] = "data.purge.journal"
+_RESTORE_PROOF_KINDS: Final[frozenset[str]] = frozenset(
+    {
+        "restore-verification",
+        "nightly-sample-restore",
+        "monthly-full-restore",
+        "host-loss-rehearsal",
+    }
+)
+
+
+class PurgeJournalSink(Protocol):
+    """Append-only journal for hot-room purge verdicts (Story 27.9)."""
+
+    def append(self, record: Mapping[str, object], /) -> Result[None]: ...
 
 
 def refuse_uncommitted_prefix(*, prefix_id: object) -> TypedRefusal:
@@ -319,6 +335,7 @@ class OffHostCopyProof:
     prefix_id: str
     verified: bool
     copy_version: str
+    verification_kind: str = "restore-verification"
 
     def as_mapping(self) -> Mapping[str, object]:
         return MappingProxyType(
@@ -326,6 +343,7 @@ class OffHostCopyProof:
                 "prefix_id": self.prefix_id,
                 "verified": self.verified,
                 "copy_version": self.copy_version,
+                "verification_kind": self.verification_kind,
             }
         )
 
@@ -336,6 +354,7 @@ class OffHostCopyProof:
         prefix_id: object,
         verified: object,
         copy_version: object,
+        verification_kind: object = "restore-verification",
     ) -> Result[OffHostCopyProof]:
         ident = _segment(prefix_id, field="prefix_id")
         if is_refusal(ident):
@@ -353,7 +372,21 @@ class OffHostCopyProof:
                 "an off-host proof is a boolean verified claim",
                 given=repr(verified),
             )
-        return Ok(cls(prefix_id=ident.value, verified=verified, copy_version=version))
+        kind = clean_token(verification_kind)
+        if kind is None:
+            return invalid(
+                "verification_kind",
+                "an off-host proof names the verification kind that produced it",
+                given=repr(verification_kind),
+            )
+        return Ok(
+            cls(
+                prefix_id=ident.value,
+                verified=verified,
+                copy_version=version,
+                verification_kind=kind,
+            )
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -461,6 +494,7 @@ class PurgeDecision:
     allowed: bool
     prefix_id: str
     reason: str
+    journaled: bool = False
 
     def as_mapping(self) -> Mapping[str, object]:
         return MappingProxyType(
@@ -468,6 +502,7 @@ class PurgeDecision:
                 "allowed": self.allowed,
                 "prefix_id": self.prefix_id,
                 "reason": self.reason,
+                "journaled": self.journaled,
             }
         )
 
@@ -735,6 +770,7 @@ def evaluate_hot_room_purge(
     candidate: object,
     *,
     archive: object | None = None,
+    journal: object | None = None,
 ) -> Result[PurgeDecision]:
     """Hot-room purge requires a verified sealed copy AND a verified off-host copy."""
     if not isinstance(candidate, HotRoomPurgeCandidate):
@@ -752,7 +788,7 @@ def evaluate_hot_room_purge(
             prefix_end=candidate.prefix_end,
         )
     if candidate.now_ns - candidate.sealed_at_ns < candidate.retention_window_ns:
-        return policy(
+        refused = policy(
             "retention_window",
             "a hot room may be purged only after hot_room_retention_window elapses "
             "(DEC-0198, DEC-0253)",
@@ -761,33 +797,108 @@ def evaluate_hot_room_purge(
             elapsed_ns=candidate.now_ns - candidate.sealed_at_ns,
             window_ns=candidate.retention_window_ns,
         )
+        journaled = _journal_purge(journal, candidate, allowed=False, reason=_WINDOW_ID)
+        if is_refusal(journaled):
+            return journaled
+        return refused
     if not sealed_ok:
-        return policy(
+        refused = policy(
             "sealed-archive",
             "hot-room purge requires a verified copy in the sealed-archive room role "
             "(DEC-0188, DEC-0253)",
             failure_id=_MISSING_SEALED_ID,
             prefix_id=candidate.prefix_id,
         )
+        journaled = _journal_purge(journal, candidate, allowed=False, reason=_MISSING_SEALED_ID)
+        if is_refusal(journaled):
+            return journaled
+        return refused
     off_host = candidate.off_host
     if off_host is None or not off_host.verified or off_host.prefix_id != candidate.prefix_id:
-        return policy(
+        refused = policy(
             "off-host",
             "hot-room purge requires a verified off-host copy; a same-disk sealed "
             "copy frees nothing by itself (DEC-0188, DEC-0198)",
             failure_id=_MISSING_OFF_HOST_ID,
             prefix_id=candidate.prefix_id,
         )
+        journaled = _journal_purge(journal, candidate, allowed=False, reason=_MISSING_OFF_HOST_ID)
+        if is_refusal(journaled):
+            return journaled
+        return refused
+    if off_host.verification_kind not in _RESTORE_PROOF_KINDS:
+        refused = policy(
+            "off-host",
+            "hot-room purge requires restore verification; a monitoring result "
+            "or provider default is not a restore proof (FR-065, CT-14)",
+            failure_id=_MONITORING_ID,
+            prefix_id=candidate.prefix_id,
+            verification_kind=off_host.verification_kind,
+        )
+        journaled = _journal_purge(journal, candidate, allowed=False, reason=_MONITORING_ID)
+        if is_refusal(journaled):
+            return journaled
+        return refused
+    journaled = _journal_purge(
+        journal,
+        candidate,
+        allowed=True,
+        reason="verified-sealed-and-restore-verified-off-host",
+    )
+    if is_refusal(journaled):
+        return journaled
     return Ok(
         PurgeDecision(
             allowed=True,
             prefix_id=candidate.prefix_id,
             reason=(
-                "verified sealed-archive and verified off-host copies both exist "
-                "past hot_room_retention_window"
+                "verified sealed-archive and restore-verified off-host copies both "
+                "exist past hot_room_retention_window"
             ),
+            journaled=journal is not None,
         )
     )
+
+
+def _journal_purge(
+    journal: object | None,
+    candidate: HotRoomPurgeCandidate,
+    *,
+    allowed: bool,
+    reason: str,
+) -> Result[None]:
+    if journal is None:
+        return Ok(None)
+    if not hasattr(journal, "append"):
+        return invalid(
+            "journal",
+            "hot-room purge journals the unmet proof; a journal sink is required",
+            given=repr(type(journal).__name__),
+        )
+    off_host = None if candidate.off_host is None else dict(candidate.off_host.as_mapping())
+    record = MappingProxyType(
+        {
+            "event_type": "data quality",
+            "allowed": allowed,
+            "reason": reason,
+            "prefix_id": candidate.prefix_id,
+            "world": candidate.world.value,
+            "room_role": candidate.room_role,
+            "sealed_verified": candidate.sealed_verified,
+            "off_host": off_host,
+        }
+    )
+    sink = cast("PurgeJournalSink", journal)
+    written = sink.append(record)
+    if is_refusal(written):
+        return unavailable(
+            "journal",
+            "hot-room purge journals the unmet proof; the journal rejected the verdict (FR-065)",
+            failure_id=_JOURNAL_ID,
+            prefix_id=candidate.prefix_id,
+            unmet_reason=reason,
+        )
+    return Ok(None)
 
 
 def evaluate_sealed_deletion(candidate: object) -> Result[PurgeDecision]:

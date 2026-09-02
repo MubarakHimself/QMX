@@ -757,16 +757,19 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Detection:** purge eligibility ran without a verified sealed-archive copy
   (`data.purge.missing_sealed`), without a verified off-host copy
   (`data.purge.missing_off_host`), before `hot_room_retention_window`
-  (`data.purge.retention_window`), or against keep-forever evidence
-  (`data.purge.retained_forever`).
-- **Auto-recovery / retry:** none — wait for both verified copies past the
-  window. Raw evidence, journals, registry, cited research, and lineage stay
-  under their retention law.
+  (`data.purge.retention_window`), against keep-forever evidence
+  (`data.purge.retained_forever`), with a monitoring or provider-default
+  result offered as restore proof (`data.purge.monitoring_is_not_restore`),
+  or the purge journal rejected the unmet-proof record (`data.purge.journal`).
+- **Auto-recovery / retry:** none — wait for both restore-verified copies
+  past the window. Raw evidence, journals, registry, cited research, and
+  lineage stay under their retention law. A monitoring heartbeat is not a
+  restore proof.
 - **Visible degraded state:** the hot prefix is retained; sealed-archive and
   off-host proofs are unchanged.
 - **Notification tier:** operator-visible (journaled).
 - **Product-user affordance:** Hot-room purge was refused because a verified
-  sealed-archive copy or a verified off-host copy is missing, or the
+  sealed-archive copy or a restore-verified off-host copy is missing, or the
   retention window has not elapsed. Inspect `read_failure_detail` on the
   evidence channel. Do not delete keep-forever evidence.
 
@@ -960,3 +963,29 @@ designed failure; every typed refusal the node can emit belongs here.
   channel. Re-run `just node-replay` after reviewing the storage failure;
   recovery appends the missing terminal line without rewriting a committed
   one.
+
+### FR-63: Restore drill failed or refused silent retry
+
+- **Failure class:** policy rejection / storage failure / unavailable
+  dependency
+- **Detection:** sample, full, or host-loss restore failed content/identity
+  verification (`data.restore.verify_mismatch`), found no encrypted copy
+  (`data.restore.missing_copy`), could not pull the local-backend fixture
+  (`data.restore.pull`), used the wrong WriterId (`data.restore.wrong_writer`),
+  retried inside the same firing (`data.restore.silent_retry`), attempted
+  automatic cutover (`data.restore.cutover`), requested the real bucket/key
+  clean-host rehearsal tonight (`data.restore.clean_host_tonight`), asked the
+  sample restore to fill an RTO (`data.restore.sample_rto`), named an unknown
+  drill kind (`data.restore.kind`), or the data-quality journal rejected the
+  record (`data.restore.journal`).
+- **Auto-recovery / retry:** none inside the same firing — failure is
+  journaled as `data quality` and alarmed on silent-degradation; the next
+  timer or `restore_drill_run` is a new firing, never a silent retry.
+- **Visible degraded state:** scratch restore does not complete; the original
+  node remains authoritative; no purge claim is minted; no automatic cutover.
+- **Notification tier:** silent-degradation
+- **Product-user affordance:** A restore drill failed verification or was
+  refused. Inspect `read_failure_detail` on the evidence channel. Re-trigger
+  `restore_drill_run` or wait for the next `qmn-restore-sample` /
+  `qmn-restore-full` timer; run `just node-host-loss-restore` only as the
+  ops principal. Never cut over automatically.

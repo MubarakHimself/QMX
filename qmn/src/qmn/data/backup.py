@@ -97,9 +97,7 @@ LIVE_BUCKET_TONIGHT: Final[bool] = False
 INTEGRITY_DRILL_NAMES: Final[frozenset[str]] = frozenset(
     {"qmn-restore-full.timer", "monthly-full-restore"}
 )
-FULL_DR_DRILL_NAMES: Final[frozenset[str]] = frozenset(
-    {"restore_drill_run", "host-loss-rehearsal"}
-)
+FULL_DR_DRILL_NAMES: Final[frozenset[str]] = frozenset({"restore_drill_run", "host-loss-rehearsal"})
 SAMPLE_DRILL_NAMES: Final[frozenset[str]] = frozenset(
     {"qmn-restore-sample.timer", "nightly-sample-restore"}
 )
@@ -129,6 +127,14 @@ _PROVIDER_DEFAULT_ID: Final[str] = "data.backup.provider_default_retention"
 _UNVERIFIED_ID: Final[str] = "data.backup.unverified_purge"
 _TWO_COPY_ID: Final[str] = "data.backup.two_copy"
 _RETENTION_ID: Final[str] = "data.backup.retention_window"
+_RESTORE_PROOF_KINDS: Final[frozenset[str]] = frozenset(
+    {
+        "restore-verification",
+        "nightly-sample-restore",
+        "monthly-full-restore",
+        "host-loss-rehearsal",
+    }
+)
 _CEREMONY_ID: Final[str] = "data.backup.ceremony_tonight"
 _BUCKET_ID: Final[str] = "data.backup.backblaze_tonight"
 _JOURNAL_ID: Final[str] = "data.backup.journal"
@@ -192,8 +198,7 @@ class DrillMeasurement:
         if drill_name in SAMPLE_DRILL_NAMES:
             return policy(
                 "drill",
-                "the nightly sample restore does not measure either RTO "
-                "(DEC-0198, DEC-0252)",
+                "the nightly sample restore does not measure either RTO (DEC-0198, DEC-0252)",
                 failure_id=_RTO_ID,
                 drill=drill_name,
             )
@@ -313,6 +318,7 @@ class BackupCopyPurgeCandidate:
     verified: bool
     sealed_verified_remaining: bool
     other_off_host_verified_remaining: bool
+    verification_kind: str = "restore-verification"
 
     def as_mapping(self) -> Mapping[str, object]:
         return MappingProxyType(
@@ -324,6 +330,7 @@ class BackupCopyPurgeCandidate:
                 "retention_period_ns": self.retention_period_ns,
                 "retention_source": self.retention_source,
                 "verified": self.verified,
+                "verification_kind": self.verification_kind,
                 "sealed_verified_remaining": self.sealed_verified_remaining,
                 "other_off_host_verified_remaining": self.other_off_host_verified_remaining,
             }
@@ -342,6 +349,7 @@ class BackupCopyPurgeCandidate:
         verified: object,
         sealed_verified_remaining: object,
         other_off_host_verified_remaining: object,
+        verification_kind: object = "restore-verification",
     ) -> Result[BackupCopyPurgeCandidate]:
         ident = clean_token(copy_id)
         if ident is None:
@@ -385,6 +393,13 @@ class BackupCopyPurgeCandidate:
                 "other_off_host_verified_remaining is a boolean",
                 given=repr(other_off_host_verified_remaining),
             )
+        proof_kind = clean_token(verification_kind)
+        if proof_kind is None:
+            return invalid(
+                "verification_kind",
+                "backup-set purge names the verification kind that produced the proof",
+                given=repr(verification_kind),
+            )
         return Ok(
             cls(
                 copy_id=ident,
@@ -396,6 +411,7 @@ class BackupCopyPurgeCandidate:
                 verified=verified,
                 sealed_verified_remaining=sealed_verified_remaining,
                 other_off_host_verified_remaining=other_off_host_verified_remaining,
+                verification_kind=proof_kind,
             )
         )
 
@@ -819,29 +835,26 @@ def evaluate_backup_copy_purge(
             return written
         return policy(
             "retention",
-            "a backup copy ages out only after the declared retention period "
-            "(TN-13)",
+            "a backup copy ages out only after the declared retention period (TN-13)",
             failure_id=_RETENTION_ID,
             copy_id=candidate.copy_id,
             elapsed_ns=candidate.now_ns - candidate.created_at_ns,
             window_ns=candidate.retention_period_ns,
         )
-    if not candidate.verified:
+    if not candidate.verified or candidate.verification_kind not in _RESTORE_PROOF_KINDS:
         record = _purge_record(candidate, allowed=False, reason=_UNVERIFIED_ID)
         written = sink.append(record)
         if is_refusal(written):
             return written
         return policy(
             "verification",
-            "backup-set purge requires successful verification; a monitoring "
-            "result or provider default is not a restore proof (FR-065)",
+            "backup-set purge requires successful restore verification; a "
+            "monitoring result or provider default is not a restore proof (FR-065)",
             failure_id=_UNVERIFIED_ID,
             copy_id=candidate.copy_id,
+            verification_kind=candidate.verification_kind,
         )
-    if (
-        not candidate.sealed_verified_remaining
-        or not candidate.other_off_host_verified_remaining
-    ):
+    if not candidate.sealed_verified_remaining or not candidate.other_off_host_verified_remaining:
         record = _purge_record(candidate, allowed=False, reason=_TWO_COPY_ID)
         written = sink.append(record)
         if is_refusal(written):

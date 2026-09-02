@@ -593,6 +593,9 @@ def _apply_power(
                     "power": power,
                     "status": "drill-started",
                     "restore_drills": runtime.restore_drills,
+                    "cutover": False,
+                    "original_authoritative": True,
+                    "clean_host_rehearsal_tonight": False,
                 }
             )
         )

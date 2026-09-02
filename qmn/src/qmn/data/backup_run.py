@@ -127,6 +127,7 @@ _MANIFEST_KEYS: Final[frozenset[str]] = frozenset(
         "last_committed_sequence",
         "open_segment_boundary",
         "payload_fingerprint",
+        "content_fp1",
         "encryption_required",
         "encryption_algorithm",
         "committed",
@@ -247,6 +248,7 @@ class BackupManifest:
     last_committed_sequence: int
     open_segment_boundary: int
     payload_fingerprint: str
+    content_fp1: str
     committed: bool
     cited: bool
     contract_format_version: int = 1
@@ -265,6 +267,7 @@ class BackupManifest:
                 "last_committed_sequence": self.last_committed_sequence,
                 "open_segment_boundary": self.open_segment_boundary,
                 "payload_fingerprint": self.payload_fingerprint,
+                "content_fp1": self.content_fp1,
                 "encryption_required": self.encryption_required,
                 "encryption_algorithm": self.encryption_algorithm,
                 "committed": self.committed,
@@ -456,8 +459,7 @@ class LocalFilesystemRcloneRunner:
                     if target.read_bytes() != src_file.read_bytes():
                         return policy(
                             "object",
-                            "rclone must never mutate an existing versioned copy "
-                            "(DEC-0118)",
+                            "rclone must never mutate an existing versioned copy (DEC-0118)",
                             failure_id=_MUTATE_ID,
                             object_key=relative.as_posix(),
                         )
@@ -515,9 +517,7 @@ class SubprocessRcloneRunner:
             return refuse_rclone_transfer(returncode=1, argv=argv_t)
         if proc.returncode != 0:
             return refuse_rclone_transfer(returncode=proc.returncode, argv=argv_t)
-        return Ok(
-            RcloneExecution(argv=argv_t, returncode=0, copied=True, resumed=False)
-        )
+        return Ok(RcloneExecution(argv=argv_t, returncode=0, copied=True, resumed=False))
 
 
 def refuse_uncommitted_backup_prefix(*, prefix_id: object) -> TypedRefusal:
@@ -547,8 +547,7 @@ def refuse_secret_in_evidence(*, field: object = "manifest") -> TypedRefusal:
     """Credentials and plaintext never enter backup metadata or logs."""
     return policy(
         "evidence",
-        "credentials and plaintext never enter backup metadata or logs "
-        "(CT-14, DEC-0045)",
+        "credentials and plaintext never enter backup metadata or logs (CT-14, DEC-0045)",
         failure_id=_LEAK_ID,
         evidence_field=repr(field),
     )
@@ -583,8 +582,7 @@ def refuse_rclone_transfer(*, returncode: object, argv: Sequence[str]) -> TypedR
     """Unreachable or rejected rclone copy is a storage failure, never completion."""
     return storage(
         "rclone",
-        "rclone did not accept the ciphertext copy; completion is not claimed "
-        "(DEC-0109, DEC-0118)",
+        "rclone did not accept the ciphertext copy; completion is not claimed (DEC-0109, DEC-0118)",
         failure_id=_RCLONE_ID,
         returncode=repr(returncode),
         argv=_public_argv(argv),
@@ -800,9 +798,7 @@ def main(argv: list[str] | None = None) -> int:
             backend = args[idx + 1]
     soak = "--soak-local" in args
     if backend in LIVE_BUCKET_TOKENS:
-        refused = refuse_live_b2_without_soak(
-            backend=backend, soak_local=soak, has_account=False
-        )
+        refused = refuse_live_b2_without_soak(backend=backend, soak_local=soak, has_account=False)
         if is_refusal(refused):
             return 1
     # Unbound oneshot refuses rather than inventing a live bucket.
@@ -864,6 +860,7 @@ def _manifest_for(
         last_committed_sequence=prefix.end,
         open_segment_boundary=prefix.end,
         payload_fingerprint=digest,
+        content_fp1=prefix.content_fp1.value,
         committed=True,
         cited=prefix.cited,
     )
