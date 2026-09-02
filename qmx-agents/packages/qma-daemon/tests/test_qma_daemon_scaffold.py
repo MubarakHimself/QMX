@@ -70,6 +70,8 @@ def test_structural_modules_importable() -> None:
     assert qma.daemon.ProposalGate.__name__ == "ProposalGate"
     assert qma.daemon.MissionCompiler.__name__ == "MissionCompiler"
     assert qma.daemon.TaskGraphDispatcher.__name__ == "TaskGraphDispatcher"
+    assert qma.daemon.TelemetryStore.__name__ == "TelemetryStore"
+    assert qma.daemon.RetentionJob.__name__ == "RetentionJob"
     assert qma.daemon.taskgraph.MissionCompiler is qma.daemon.MissionCompiler
     from qma.daemon.experiments import ExperimentSpecService
     from qma.daemon.ledgers import ExperimentLedger, TaskLedgerStore

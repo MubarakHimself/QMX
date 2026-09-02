@@ -593,11 +593,17 @@ class MailboxStore:
             self._task_ledgers.open_for_task(task.id, owner=task.owner)
         return Ok(task)
 
-    def trim_delivery_projection(self) -> Mapping[str, object]:
+    def trim_delivery_projection(
+        self,
+        *,
+        correlation_id: str | None = None,
+        reason: str = "daemon_job_retention",
+    ) -> Mapping[str, object]:
         """Trim acked / dead_letter projection rows. Never deletes a journal record.
 
         Unacked Envelopes and unanswered ``approval_request`` rows stay. The trim
         window value is Deferred GAP-0089; this path cites the registry keys only.
+        Each trim records its window, reason and ``correlation_id`` (FR-Q67).
         """
         drop: set[str] = set()
         for msg_id, record in self._by_msg_id.items():
@@ -616,15 +622,20 @@ class MailboxStore:
             self._mailboxes[key] = mailbox.without_records(frozen)
         for msg_id in frozen:
             self._by_msg_id.pop(msg_id, None)
-        return MappingProxyType(
-            {
-                "trimmed_projection_entries": len(frozen),
-                "journal_records_deleted": False,
-                "journal_event_count": self._journal_rows,
-                "retention": list(DELIVERY_RETENTION_KEYS),
-                "gap_0089": "deferred",
-            }
-        )
+        payload: dict[str, object] = {
+            "stream": "mailbox.delivery",
+            "trimmed_projection_entries": len(frozen),
+            "journal_records_deleted": False,
+            "journal_event_count": self._journal_rows,
+            "window": registry_key("mailbox.delivery_retention_window"),
+            "reason": reason,
+            "retention": list(DELIVERY_RETENTION_KEYS),
+            "gap_0089": "deferred",
+            "gap_0090": "deferred",
+        }
+        if correlation_id is not None:
+            payload["correlation_id"] = correlation_id
+        return MappingProxyType(payload)
 
     def _evaluation_instant(self, at: Instant | None = None) -> Result[Instant]:
         if at is not None:

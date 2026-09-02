@@ -47,6 +47,7 @@ from qma.daemon.taskgraph import (
     MissionCompiler,
     TaskGraphDispatcher,
 )
+from qma.daemon.telemetry import RetentionJob, TelemetryStore
 
 __all__ = [
     "AGENT_PATH_ENFORCEMENT_EVENTS",
@@ -72,9 +73,11 @@ __all__ = [
     "PersistenceStartupEvidence",
     "PersistenceSubstrate",
     "ProposalGate",
+    "RetentionJob",
     "StoreOwnershipRegistry",
     "StoreRegistry",
     "TaskGraphDispatcher",
+    "TelemetryStore",
     "__version__",
     "order_by_announcement_journal_seq",
     "spawn_agent",
