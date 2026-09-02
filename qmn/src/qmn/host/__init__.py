@@ -14,7 +14,8 @@ SIGTERM/UNKNOWN shutdown contract. Story 25.14 evaluates light/heavy four-bound
 claims over assembled definitions at Compose and refuses contradictions before
 Seal — child modules never self-approve the effective composition class.
 Story 25.16 proves host concurrency and backpressure under deterministic load
-without inventing capacity numbers; seat concurrency is Story 26.19.
+without inventing capacity numbers. Story 26.19 proves seat-callback
+concurrency and end-to-end backpressure on the same seams (E15-F02).
 Story 26.11 admits the assembled runtime risk graph at Compose (cardinalities
 and referential integrity together) and runs the technical demo shakedown
 without a live binding — evidence for the human signature, never performance
@@ -146,6 +147,14 @@ from qmn.host.runtime_risk_gate import (
     refuse_paper_profit_as_proof,
     run_runtime_risk_gate,
 )
+from qmn.host.seat_concurrency import (
+    SEAT_CONCURRENCY_SURFACE,
+    SeatConcurrencyLoad,
+    SeatConcurrencyProofReport,
+    SeatInjectedBounds,
+    SeatIsolationRecord,
+    prove_seat_concurrency,
+)
 from qmn.host.shakedown import (
     SHAKEDOWN_EXERCISES,
     SHAKEDOWN_FOR_HUMAN_SIGNATURE,
@@ -238,6 +247,7 @@ __all__ = [
     "RUNTIME_RISK_GATE_SURFACE",
     "RUNTIME_RISK_SCENARIOS",
     "SEAT_CONCURRENCY_OWNED_BY",
+    "SEAT_CONCURRENCY_SURFACE",
     "SHAKEDOWN_EXERCISES",
     "SHAKEDOWN_FOR_HUMAN_SIGNATURE",
     "SHAKEDOWN_IS_PERFORMANCE_PROOF",
@@ -291,6 +301,10 @@ __all__ = [
     "ScopeRecord",
     "SealedBootEpoch",
     "SealedComposition",
+    "SeatConcurrencyLoad",
+    "SeatConcurrencyProofReport",
+    "SeatInjectedBounds",
+    "SeatIsolationRecord",
     "SeatRecord",
     "ShakedownEvidence",
     "ShakedownPlan",
@@ -329,6 +343,7 @@ __all__ = [
     "persist_explicit_lineage_edge",
     "preflight_checks_for_mode",
     "prove_host_concurrency",
+    "prove_seat_concurrency",
     "qmn_production_src_root",
     "refuse_invented_soak_or_ksa_number",
     "refuse_manual_observation_as_proof",

@@ -1,4 +1,4 @@
-"""QL-7 seat-hosting surface (TN-19; Stories 26.8, 26.15, and 26.16).
+"""QL-7 seat-hosting surface (TN-19; Stories 26.8, 26.15, 26.16, and 26.19).
 
 Hosts governed bots behind the runtime protocol: declared as-of evidence only,
 canonical assignment, callback deadline and memory ceiling. A containment
@@ -11,6 +11,10 @@ protection / order and cannot construct CT-19.
 Story 26.16: V1 containment is stated honestly — cooperative deadline,
 LimitProbe memory, exception quarantine, and slice-progress last-resort.
 There is no hardened OS-level confinement; GAP-0054 stays deferred.
+
+Story 26.19: concurrent seat callbacks are proved with host streams, doors,
+and timers under injected bounds; isolation and backpressure are measured
+without inventing latency budgets or claiming OS confinement.
 """
 
 from __future__ import annotations

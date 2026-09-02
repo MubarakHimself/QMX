@@ -4,7 +4,8 @@ Deterministic load drives concurrent streams, door reads, and timer ticks
 against **injected** configured bounds. Measurements prove one event loop,
 bounded in-flight work, explicit enqueue/backpressure, responsive
 evidence/powers doors, and no silent observation loss — without asserting
-invented capacity numbers (FTR-07). Seat callbacks belong to Story 26.19.
+invented capacity numbers (FTR-07). Seat callbacks and isolation are
+``qmn.host.seat_concurrency`` (Story 26.19).
 """
 
 from __future__ import annotations
@@ -67,7 +68,7 @@ __all__ = [
 ]
 
 CONCURRENCY_SURFACE: Final[str] = "qmn.host.concurrency"
-# Seat callbacks / end-to-end seat isolation are Story 26.19 — not this surface.
+# Seat callbacks / end-to-end seat isolation: qmn.host.seat_concurrency.
 SEAT_CONCURRENCY_OWNED_BY: Final[str] = "26.19"
 
 _BOOT: Final[str] = "boot-epoch-concurrency-25-16"
@@ -268,6 +269,8 @@ class BoundCrossingKind:
     LOCAL_QUEUE_BOUND = "local-queue-bound"
     EVIDENCE_BUDGET = "evidence-channel-budget"
     ENTRY_SIDE_DEGRADATION = "entry-side-no-new-entry"
+    SEAT_DEADLINE_QUARANTINE = "seat-deadline-quarantine"
+    SEAT_MEMORY_QUARANTINE = "seat-memory-quarantine"
 
 
 @dataclass(frozen=True, slots=True)
