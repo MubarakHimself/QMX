@@ -15,7 +15,6 @@ import json
 import os
 import shutil
 import sys
-import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -444,6 +443,12 @@ def run_restore_drill(
         return invalid("source_root", "restore names the original evidence root")
     if src == scratch_token:
         return refuse_destructive_restore_fallback(source_root=src)
+    if not callable(clock_ns):
+        return invalid(
+            "clock_ns",
+            "a restore drill records duration from an injected clock, never the host clock",
+            given=repr(type(clock_ns).__name__),
+        )
 
     started = _now_ns(clock_ns)
     pulled = _pull_objects(
@@ -571,15 +576,12 @@ def _writer_map(writer: WriterId) -> Mapping[str, object]:
     )
 
 
-def _now_ns(clock_ns: Callable[[], int] | None) -> int:
-    if clock_ns is not None:
-        return clock_ns()
-    return time.monotonic_ns()  # ambient-scan: allow — restore-drill duration (TN-13)
+def _now_ns(clock_ns: Callable[[], int]) -> int:
+    return clock_ns()
 
 
-def _elapsed_ns(started: int, clock_ns: Callable[[], int] | None) -> int:
-    ended = _now_ns(clock_ns)
-    return ended - started
+def _elapsed_ns(started: int, clock_ns: Callable[[], int]) -> int:
+    return clock_ns() - started
 
 
 def _pull_objects(
