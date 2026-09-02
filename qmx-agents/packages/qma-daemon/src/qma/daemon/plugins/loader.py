@@ -1,4 +1,4 @@
-"""Plugin loader — validate manifests and activate scoped contributions (FR-Q68; CT-42).
+"""Plugin loader — validate manifests and activate scoped contributions (FR-Q68–Q70; CT-42).
 
 Load order for explicit install / enable / reload:
 manifest validation → qma_api compatibility → permissions → dependencies →
@@ -8,7 +8,9 @@ Reload is an explicit operator command. There is no file watcher and no
 reactive remount. Contribution types are imported from ``qma-core``; this
 module implements the daemon-owned loader only. Migrations (FR-Q69) run the
 five-step path with an ``fp1`` journal checkpoint; forward-only upgrades take
-a recorded ``operator`` confirmation.
+a recorded ``operator`` confirmation. Load refusal (FR-Q70) aborts startup
+naming the unit, or returns a typed refusal on runtime commands while leaving
+daemon continuity intact.
 """
 
 from __future__ import annotations
@@ -32,6 +34,18 @@ from qma.core.ports.permissions import check_plugin_permissions_at_load
 from qma.core.vocabulary.enums import PrincipalClass
 from qma.daemon.plugins.context import DaemonPluginContext, PluginContextError
 from qma.daemon.plugins.exit_stack import PluginExitStack
+from qma.daemon.plugins.load_refusal import (
+    CUT_PLUGIN_SURFACES,
+    DaemonContinuitySnapshot,
+    PluginStartupAbort,
+    RequiredSingletonBinding,
+    assert_peer_integration_boundary,
+    assess_plugin_trust,
+    excluded_contribution_refusal,
+    require_singleton_bindings_met,
+    runtime_load_refusal,
+    startup_abort_from_load_error,
+)
 from qma.daemon.plugins.migrations import (
     DisableReceipt,
     ForwardOnlyConfirmation,
@@ -55,6 +69,7 @@ __all__ = [
     "PluginActivator",
     "PluginLoadError",
     "PluginLoader",
+    "PluginStartupAbort",
     "PublishedContribution",
     "check_qma_api_compatible",
     "topological_plugin_order",
@@ -87,14 +102,24 @@ _RANGE_CLAUSE: Final[re.Pattern[str]] = re.compile(
 
 
 class PluginLoadError(ValueError):
-    """Hard load refusal naming the offending plugin and field."""
+    """Hard load refusal naming the offending plugin, field, port, and key."""
 
     def __init__(
-        self, message: str, *, plugin_id: str | None = None, field: str | None = None
+        self,
+        message: str,
+        *,
+        plugin_id: str | None = None,
+        field: str | None = None,
+        port: str | None = None,
+        key: str | None = None,
+        conflicting_plugin_ids: tuple[str, ...] = (),
     ) -> None:
         super().__init__(message)
         self.plugin_id = plugin_id
         self.field = field
+        self.port = port
+        self.key = key
+        self.conflicting_plugin_ids = conflicting_plugin_ids
 
 
 def _version_tuple(value: str) -> tuple[int, int, int]:
@@ -232,7 +257,7 @@ class LoadedPlugin:
 
 @dataclass
 class PluginLoader:
-    """Daemon-owned loader for first-party desk plugins (AD-21; FR-Q68/FR-Q69)."""
+    """Daemon-owned loader for first-party desk plugins (AD-21; FR-Q68–Q70)."""
 
     daemon_qma_api: str = "0.1.0"
     permission_allowlist: frozenset[str] = frozenset()
@@ -240,6 +265,7 @@ class PluginLoader:
     journal: AuthoritativeJournal | None = None
     migration_source_root: Path | None = None
     migration_destination_root: Path | None = None
+    continuity: DaemonContinuitySnapshot = field(default_factory=DaemonContinuitySnapshot)
     _loaded: dict[str, LoadedPlugin] = field(default_factory=dict[str, LoadedPlugin], init=False)
     _singleton_owners: dict[tuple[str, str], str] = field(
         default_factory=dict[tuple[str, str], str], init=False
@@ -270,8 +296,90 @@ class PluginLoader:
     def published_contributions(self) -> tuple[PublishedContribution, ...]:
         return tuple(self._published)
 
-    def _refuse(self, field_name: str, reason: str, **extra: object) -> TypedRefusal:
-        return policy_rejection(field_name, reason, **extra)
+    def continuity_snapshot(self) -> DaemonContinuitySnapshot:
+        """Return the continuity markers the loader must leave untouched."""
+        return self.continuity
+
+    def _refuse(
+        self,
+        field_name: str,
+        reason: str,
+        *,
+        plugin_id: str | None = None,
+        port: str | None = None,
+        key: str | None = None,
+        conflicting_plugin_ids: tuple[str, ...] = (),
+        **extra: object,
+    ) -> TypedRefusal:
+        refused = runtime_load_refusal(
+            field_name=field_name,
+            reason=reason,
+            plugin_id=plugin_id,
+            port=port,
+            key=key,
+            conflicting_plugin_ids=conflicting_plugin_ids,
+            continuity=self.continuity,
+        )
+        if not extra:
+            return refused
+        # Merge caller extras without dropping continuity markers.
+        ctx = dict(refused.context)
+        ctx.update(extra)
+        return TypedRefusal(
+            category=refused.category,
+            retryability=refused.retryability,
+            context=MappingProxyType(ctx),
+        )
+
+    def _refuse_load_error(self, exc: PluginLoadError) -> TypedRefusal:
+        return self._refuse(
+            exc.field or "activation",
+            str(exc),
+            plugin_id=exc.plugin_id,
+            port=exc.port,
+            key=exc.key,
+            conflicting_plugin_ids=exc.conflicting_plugin_ids,
+        )
+
+    def _startup_abort_load_error(self, exc: PluginLoadError) -> PluginStartupAbort:
+        return startup_abort_from_load_error(
+            str(exc),
+            plugin_id=exc.plugin_id,
+            field=exc.field,
+            port=exc.port,
+            key=exc.key,
+            conflicting_plugin_ids=exc.conflicting_plugin_ids,
+        )
+
+    def _check_trust_and_peer_boundary(
+        self,
+        raw: Mapping[str, object],
+    ) -> Result[str]:
+        trust = assess_plugin_trust(
+            declared_surfaces={
+                name: raw[name] for name in CUT_PLUGIN_SURFACES if name in raw
+            }
+        )
+        if not is_ok(trust):
+            return trust
+        peer = assert_peer_integration_boundary(
+            peer_channel=raw.get("peer_integration", "qma_wire_only"),
+            daemon_renders=raw.get("daemon_renders", False),
+            shared_process_memory=raw.get("shared_process_memory", False),
+        )
+        if not is_ok(peer):
+            return peer
+        contribs = raw.get("contributions", ())
+        if isinstance(contribs, Sequence) and not isinstance(contribs, (str, bytes)):
+            for item in cast(Sequence[object], contribs):
+                if not isinstance(item, Mapping):
+                    continue
+                point = cast(Mapping[object, object], item).get("point")
+                if isinstance(point, str):
+                    excluded = excluded_contribution_refusal(point)
+                    if not is_ok(excluded):
+                        return excluded
+        return trust
 
     def _require_operator(self, command: LoadCommand, principal: object) -> Result[PrincipalClass]:
         parsed = parse_principal_class(principal)
@@ -386,6 +494,9 @@ class PluginLoader:
                     f"owned by {existing!r} and {context.plugin_id!r}",
                     plugin_id=context.plugin_id,
                     field=port,
+                    port=port,
+                    key=scope_value,
+                    conflicting_plugin_ids=(existing, context.plugin_id),
                 )
             self._singleton_owners[key] = context.plugin_id
 
@@ -407,6 +518,9 @@ class PluginLoader:
                     f"owned by {existing!r} and {context.plugin_id!r}",
                     plugin_id=context.plugin_id,
                     field=point,
+                    port=point,
+                    key=qualified,
+                    conflicting_plugin_ids=(existing, context.plugin_id),
                 )
             self._multi_owners[key] = context.plugin_id
 
@@ -536,11 +650,7 @@ class PluginLoader:
                 migration_report=migrated.value,
             )
         except PluginLoadError as exc:
-            return self._refuse(
-                exc.field or "activation",
-                str(exc),
-                plugin_id=exc.plugin_id,
-            )
+            return self._refuse_load_error(exc)
         return Ok(loaded)
 
     def _validate_manifest_phases(
@@ -550,6 +660,18 @@ class PluginLoader:
         check_dependencies: bool = True,
         available_dependencies: frozenset[str] | None = None,
     ) -> Result[PluginManifest]:
+        boundary = self._check_trust_and_peer_boundary(raw)
+        if not is_ok(boundary):
+            plugin_raw = raw.get("id")
+            return self._refuse(
+                str(boundary.context.get("field", "trust")),
+                str(boundary.context.get("reason", boundary)),
+                plugin_id=str(plugin_raw) if isinstance(plugin_raw, str) else None,
+                gap=boundary.context.get("gap"),
+                gap_status=boundary.context.get("gap_status"),
+                contribution_point=boundary.context.get("contribution_point"),
+                cut_surfaces=boundary.context.get("cut_surfaces"),
+            )
         try:
             manifest = parse_plugin_manifest(raw)
         except ManifestError as exc:
@@ -557,6 +679,14 @@ class PluginLoader:
                 "manifest",
                 str(exc),
                 plugin_id=raw.get("id"),
+                startup=False,
+                load_surface="runtime_command",
+                continuity_intact=True,
+                daemon_running=self.continuity.daemon_running,
+                dispatch_leases=self.continuity.dispatch_leases,
+                environment_leases=self.continuity.environment_leases,
+                running_tasks=self.continuity.running_tasks,
+                pending_evidence_appends=self.continuity.pending_evidence_appends,
             )
         try:
             check_qma_api_compatible(manifest.qma_api, self.daemon_qma_api)
@@ -569,17 +699,17 @@ class PluginLoader:
             )
         perms = self._check_permissions(manifest)
         if not is_ok(perms):
-            return perms
+            return self._refuse(
+                str(perms.context.get("field", "plugin.permissions")),
+                str(perms.context.get("reason", perms)),
+                plugin_id=manifest.id,
+            )
         try:
             if check_dependencies:
                 self._check_dependencies(manifest, available=available_dependencies)
             self._migrations_phase(manifest)
         except PluginLoadError as exc:
-            return self._refuse(
-                exc.field or "dependencies",
-                str(exc),
-                plugin_id=exc.plugin_id or manifest.id,
-            )
+            return self._refuse_load_error(exc)
         return Ok(manifest)
 
     def install(
@@ -691,8 +821,9 @@ class PluginLoader:
         activators: Mapping[str, PluginActivator],
         principal: object = PrincipalClass.OPERATOR,
         correlation_id: object = "plugin-roster",
+        required_singletons: Sequence[RequiredSingletonBinding] = (),
     ) -> Result[tuple[LoadedPlugin, ...]]:
-        """Validate and topologically activate a set of manifests."""
+        """Validate and topologically activate a set of manifests (runtime surface)."""
         gated = self._require_operator("plugin.install", principal)
         if not is_ok(gated):
             return gated
@@ -713,11 +844,7 @@ class PluginLoader:
         try:
             order = topological_plugin_order(parsed)
         except PluginLoadError as exc:
-            return self._refuse(
-                exc.field or "dependencies",
-                str(exc),
-                plugin_id=exc.plugin_id,
-            )
+            return self._refuse_load_error(exc)
         by_id = {manifest.id: manifest for manifest in parsed}
         loaded_rows: list[LoadedPlugin] = []
         for plugin_id in order:
@@ -748,12 +875,69 @@ class PluginLoader:
             except PluginLoadError as exc:
                 for row in reversed(loaded_rows):
                     self.unload(row.manifest.id)
+                return self._refuse_load_error(exc)
+        if required_singletons:
+            try:
+                require_singleton_bindings_met(
+                    required=required_singletons,
+                    bound=dict(self._singleton_owners),
+                )
+            except PluginStartupAbort as exc:
+                for row in reversed(loaded_rows):
+                    self.unload(row.manifest.id)
                 return self._refuse(
-                    exc.field or "activation",
+                    exc.field or "required_singleton",
                     str(exc),
                     plugin_id=exc.plugin_id,
+                    port=exc.port,
+                    key=exc.key,
+                    conflicting_plugin_ids=exc.conflicting_plugin_ids,
                 )
         return Ok(tuple(loaded_rows))
+
+    def startup_activate_roster(
+        self,
+        manifests: Sequence[Mapping[str, object]],
+        *,
+        activators: Mapping[str, PluginActivator],
+        principal: object = PrincipalClass.OPERATOR,
+        correlation_id: object = "plugin-startup-roster",
+        required_singletons: Sequence[RequiredSingletonBinding] = (),
+    ) -> tuple[LoadedPlugin, ...]:
+        """Daemon-startup roster load — aborts naming the offending unit (FR-Q70).
+
+        Never returns a silent pending state. Missing dependencies, duplicate
+        singleton/multi bindings, unbound required singleton keys, and
+        unconfirmed forward-only upgrades raise ``PluginStartupAbort``.
+        """
+        result = self.activate_roster(
+            manifests,
+            activators=activators,
+            principal=principal,
+            correlation_id=correlation_id,
+            required_singletons=required_singletons,
+        )
+        if is_ok(result):
+            return result.value
+        ctx = result.context
+        plugin_id = ctx.get("plugin_id")
+        field_name = ctx.get("field")
+        port = ctx.get("port")
+        key = ctx.get("key")
+        conflicting_raw = ctx.get("conflicting_plugin_ids", ())
+        conflicting_ids: tuple[str, ...] = ()
+        if isinstance(conflicting_raw, tuple):
+            conflicting_ids = tuple(
+                str(item) for item in cast(tuple[object, ...], conflicting_raw)
+            )
+        raise PluginStartupAbort(
+            str(ctx.get("reason", result)),
+            plugin_id=str(plugin_id) if isinstance(plugin_id, str) else None,
+            field=str(field_name) if isinstance(field_name, str) else None,
+            port=str(port) if isinstance(port, str) else None,
+            key=str(key) if isinstance(key, str) else None,
+            conflicting_plugin_ids=conflicting_ids,
+        )
 
 
 def cast_mapping(value: object) -> dict[tuple[str, str], object]:

@@ -1,4 +1,4 @@
-"""Plugin loader, reversible scopes, migrations, roster (AD-21).
+"""Plugin loader, reversible scopes, migrations, roster, load refusal (AD-21).
 
 ``DaemonPluginContext`` implements the ``qma-core`` ``PluginContext`` protocol.
 Plugin authors import contribution types from ``qma-core``, never from here.
@@ -8,6 +8,27 @@ from __future__ import annotations
 
 from qma.daemon.plugins.context import DaemonPluginContext, PluginContextError
 from qma.daemon.plugins.exit_stack import PluginExitStack
+from qma.daemon.plugins.load_refusal import (
+    CUT_PLUGIN_SURFACES,
+    DAEMON_PLUGIN_RENDERS,
+    EXCLUDED_CONTRIBUTION_POINTS,
+    FIRST_PARTY_TRUST_MODE,
+    GAP_0077_STATUS,
+    GAP_0081_STATUS,
+    PEER_INTEGRATION_BOUNDARY,
+    SHARED_PROCESS_MEMORY_AS_INTEGRATION,
+    ContinuityLedger,
+    DaemonContinuitySnapshot,
+    LoadSurface,
+    PluginStartupAbort,
+    RequiredSingletonBinding,
+    assert_peer_integration_boundary,
+    assess_plugin_trust,
+    excluded_contribution_refusal,
+    refuse_cut_plugin_surface,
+    require_singleton_bindings_met,
+    runtime_load_refusal,
+)
 from qma.daemon.plugins.loader import (
     FILE_WATCHER_ENABLED,
     LOAD_PHASES,
@@ -41,21 +62,32 @@ from qma.daemon.plugins.migrations import (
 
 __all__ = [
     "CHECKPOINT_IS_RECOVERY_COPY",
+    "CUT_PLUGIN_SURFACES",
     "DAEMON_CORE_MIGRATION_TARGETS",
+    "DAEMON_PLUGIN_RENDERS",
+    "EXCLUDED_CONTRIBUTION_POINTS",
     "FILE_WATCHER_ENABLED",
+    "FIRST_PARTY_TRUST_MODE",
     "FORWARD_ONLY_CONFIRM_COMMAND",
+    "GAP_0077_STATUS",
+    "GAP_0081_STATUS",
     "JOURNAL_CHECKPOINT_EVENT",
     "LOAD_PHASES",
     "MIGRATION_OWNER_DAEMON_CORE",
     "MIGRATION_OWNER_PLUGIN",
+    "PEER_INTEGRATION_BOUNDARY",
     "PLUGIN_INSTALL_PREFLIGHT_QUERY",
     "REVERSIBLE_BY_DOWN",
+    "SHARED_PROCESS_MEMORY_AS_INTEGRATION",
+    "ContinuityLedger",
+    "DaemonContinuitySnapshot",
     "DaemonCoreMigrationDeclaration",
     "DaemonPluginContext",
     "DisableReceipt",
     "ForwardOnlyConfirmation",
     "InstallPreflightResult",
     "JournalCheckpointEvidence",
+    "LoadSurface",
     "LoadedPlugin",
     "PluginActivator",
     "PluginContextError",
@@ -65,8 +97,16 @@ __all__ = [
     "PluginLoader",
     "PluginMigrationReport",
     "PluginMigrationRunner",
+    "PluginStartupAbort",
     "PublishedContribution",
+    "RequiredSingletonBinding",
+    "assert_peer_integration_boundary",
+    "assess_plugin_trust",
     "check_qma_api_compatible",
+    "excluded_contribution_refusal",
+    "refuse_cut_plugin_surface",
+    "require_singleton_bindings_met",
     "rollback_mode_for_manifest",
+    "runtime_load_refusal",
     "topological_plugin_order",
 ]

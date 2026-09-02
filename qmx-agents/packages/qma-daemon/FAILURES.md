@@ -24,7 +24,10 @@ dial-out only, trading-node host-identity refusal, computer-use exclusion,
 and read-only dev/paper except the dev-zone candidate (FR-44 through FR-47).
 Epic 46 Story 46.1 adds the Task-owned Task Ledger under ``dispatch_lease``
 (FR-48 through FR-50). Epic 46 Story 46.2 adds ``before_ledger_append`` as a
-validating gate that never discards evidence (FR-51 through FR-53).
+validating gate that never discards evidence (FR-51 through FR-53). Epic 48
+Story 48.3 adds the plugin load-refusal law: hard startup abort naming the
+offending unit, runtime typed refusal with LIFO dispose, and daemon
+continuity across leases, Tasks, and pending evidence (FR-54 through FR-57).
 
 ### FR-1: A second daemon or writer is refused at the persistence boundary
 
@@ -802,3 +805,67 @@ validating gate that never discards evidence (FR-51 through FR-53).
 - **Product-user affordance:** a slow validation hook cannot erase what the
   Agent tried to record. Look for the `hook_timeout` annotation or the
   quarantine stream.
+
+### FR-54: A hard startup plugin load error aborts naming the offending unit
+
+- **Failure class:** `policy rejection` / hard startup abort (CT-42; FR-Q70).
+- **Detection:** `PluginLoader.startup_activate_roster` raises
+  `PluginStartupAbort` for missing dependencies, duplicate singleton or multi
+  bindings (naming both plugin ids, the port, and the key), unbound required
+  singleton keys (naming the port, key, and requiring unit), and unconfirmed
+  forward-only upgrades. These are load failures, never silent pending state.
+- **Auto-recovery / retry:** none — fix the roster, confirm the upgrade, or
+  remove the conflicting plugin, then restart.
+- **Visible degraded state:** daemon startup does not complete; no partial
+  roster is left active from the failed activation set.
+- **Notification tier:** operator-visible (startup abort).
+- **Product-user affordance:** that plugin unit cannot load. The abort names
+  the plugin, field, port, key, and any conflicting plugin ids so the roster
+  can be corrected before another start.
+
+### FR-55: A runtime plugin load refusal preserves daemon continuity
+
+- **Failure class:** `policy rejection` (CT-04; CT-42; FR-Q70; L39).
+- **Detection:** explicit `plugin.install` / `plugin.enable` / `plugin.reload`
+  failures return a typed refusal naming the same offending fields, dispose
+  that plugin's scoped registrations LIFO, and stamp continuity markers
+  (`daemon_running`, `dispatch_lease`, `environment_lease`, running Tasks,
+  pending evidence appends) as intact. The loader never terminates the
+  process or discards a pending evidence append.
+- **Auto-recovery / retry:** none for the refused plugin; the running daemon
+  continues. Retry the command after fixing the manifest or confirmation.
+- **Visible degraded state:** the refused plugin is not loaded; every other
+  loaded plugin, lease, Task, and pending evidence append remains.
+- **Notification tier:** operator-visible (command refusal).
+- **Product-user affordance:** that install/enable/reload failed locally. The
+  daemon kept working; fix the named field and retry the command.
+
+### FR-56: Non-first-party trust and Cut plugin surfaces are refused
+
+- **Failure class:** `policy rejection` (CT-04; DEC-0361, DEC-0362; FR-Q70).
+- **Detection:** `assess_plugin_trust` and the loader accept only
+  `first_party_only`. Manifests declaring `trust_tier`, `marketplace`,
+  `plugin_store`, `install_count`, or `capability_solver` are refused. Peer
+  halves must integrate over `qma_wire_only`; a daemon plugin that renders or
+  uses shared process memory as an integration boundary is refused.
+- **Auto-recovery / retry:** none — those surfaces are Cut in v1.
+- **Visible degraded state:** the plugin is not loaded; no marketplace or
+  trust-tier machinery is introduced.
+- **Notification tier:** operator-visible (load refusal).
+- **Product-user affordance:** v1 ships first-party desk plugins only. There
+  is no plugin store, trust tier, or capability solver to configure.
+
+### FR-57: GAP-0077 and GAP-0081 contribution points stay excluded
+
+- **Failure class:** `policy rejection` (CT-42; FR-Q70).
+- **Detection:** `excluded_contribution_refusal` refuses `threading_node` /
+  `threading` (GAP-0077) and `ui_view` / `ui_package` / `ui_extension`
+  (GAP-0081). Both gaps remain `deferred` — this story does not mint or close
+  them.
+- **Auto-recovery / retry:** none — wait for the operator-supplied threading
+  node spec (GAP-0077) or a later UI extension sitting (GAP-0081).
+- **Visible degraded state:** no threading-node or UI contribution point is
+  registered; `qma-ui-contract` stays the existing stub.
+- **Notification tier:** operator-visible (load refusal).
+- **Product-user affordance:** that contribution point is out of v1 scope.
+  Do not declare it on a PluginManifest until the deferred gap is ruled.
