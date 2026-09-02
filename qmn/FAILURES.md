@@ -676,3 +676,42 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Visible degraded state:** venue paging is not issued; Dukascopy archive identity stays separate; no silent merge.
 - **Notification tier:** operator-visible (journaled).
 - **Product-user affordance:** The venue may only page the recent gap. Inspect `read_failure_detail` on the evidence channel, then re-run `just node-data-bootstrap` after the archive covers the rest.
+
+### FR-48: Failed or stale news-calendar refresh
+
+- **Failure class:** policy rejection (per-decision-cycle precondition)
+- **Detection:** the newest ingested news-calendar snapshot is older than
+  `news_calendar_max_staleness`, the timer has never ingested, or a refresh
+  failed including a provider rate-limit or block
+  (`data.news_calendar.stale` / `data.news_calendar.failed_refresh` /
+  `data.news_calendar.live_skip`).
+- **Auto-recovery / retry:** none for rate-limit or block inside the same
+  firing; other transport failures retry at most `news_recorder_max_attempts`
+  with `news_recorder_backoff` inside the 2-downloads-per-5-minutes budget.
+  A silently dead timer needs no signal — staleness fails entries closed by
+  itself. There is no live skip.
+- **Visible degraded state:** entries fail closed on every binding holding
+  news-exposed instruments; exits, protection, and recording continue.
+- **Notification tier:** silent-degradation
+- **Product-user affordance:** The node stopped accepting new entries because
+  the news calendar is stale or the free Forex Factory weekly file failed to
+  refresh. There is no live skip and no paid fallback. Inspect `read_status`
+  on the evidence channel, restore the feed via the operations toolkit, and
+  wait for a successful `qmn-news-calendar.timer` firing.
+
+### FR-49: Paid or second news-calendar source
+
+- **Failure class:** policy rejection
+- **Detection:** recorder settings name a paid provider, a second free source,
+  a non-weekly URL, or a cadence/attempts pair that would breach the free
+  feed budget (`data.news_calendar.paid_provider` /
+  `data.news_calendar.second_source` / `data.news_calendar.budget_breach`).
+- **Auto-recovery / retry:** none — V1 admits only Forex Factory's free weekly
+  JSON file; a later second free source is a future adapter and config row.
+- **Visible degraded state:** the timer does not fetch; no second intake path
+  is constructed; entries fail closed on the existing staleness precondition.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The node refused a paid or second news source.
+  Inspect `read_failure_detail` on the evidence channel. Keep
+  `news_calendar_provider_primary` at the free weekly file and a cadence
+  inside the provider budget; restore via the operations toolkit.

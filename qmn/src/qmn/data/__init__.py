@@ -1,8 +1,9 @@
-"""Live observation intake and history bootstrap (TN-13 / Story 27.2).
+"""Live observation intake, history bootstrap, and news-calendar ingest.
 
 The recording accumulator is the single first writer. CT-10 identity persists
 through governed intake; position/balance CT-20 mapping stays FTR-01-blocked.
 History bootstrap is the operations-toolkit recipe, never an ad-hoc fetch.
+Story 27.3 ingests Forex Factory's free weekly news-calendar file only.
 """
 
 from __future__ import annotations
@@ -44,6 +45,31 @@ from qmn.data.mapping import (
     refuse_ftr01_mapping,
     refuse_observation_journal_type,
 )
+from qmn.data.news_calendar import (
+    FOREX_FACTORY_WEEKLY_JSON,
+    FREE_FEED_BUDGET_DOWNLOADS,
+    FREE_FEED_BUDGET_WINDOW_NS,
+    NEWS_CALENDAR_ALARM_CLASS,
+    NEWS_CALENDAR_WRITER_ROLE,
+    NEWS_CALENDAR_WRITER_STREAM,
+    PAID_PROVIDER_TOKENS,
+    SOLE_V1_PROVIDER,
+    BytesSnapshotTransport,
+    NewsCalendarFiringReceipt,
+    NewsCalendarFrontier,
+    NewsCalendarRecorder,
+    NewsCalendarSettings,
+    allow_exit_under_stale_news_calendar,
+    evaluate_news_calendar_precondition,
+    gate_entry_under_news_calendar,
+    refuse_feed_budget_breach,
+    refuse_news_calendar_live_skip,
+    refuse_paid_news_provider,
+    refuse_second_news_source,
+    require_sole_free_provider,
+    require_weekly_file_url,
+    validate_news_calendar_settings,
+)
 
 __all__ = [
     "BOOTSTRAP_CONTEXT",
@@ -53,29 +79,52 @@ __all__ = [
     "DATA_SURFACE",
     "DUKASCOPY_SOURCE",
     "FORBIDDEN_FAILOVER_SOURCES",
+    "FOREX_FACTORY_WEEKLY_JSON",
+    "FREE_FEED_BUDGET_DOWNLOADS",
+    "FREE_FEED_BUDGET_WINDOW_NS",
     "FTR01_BLOCKED_KINDS",
+    "NEWS_CALENDAR_ALARM_CLASS",
+    "NEWS_CALENDAR_WRITER_ROLE",
+    "NEWS_CALENDAR_WRITER_STREAM",
     "OBSERVATION_JOURNAL_TYPE",
+    "PAID_PROVIDER_TOKENS",
     "PERSONAL_USE_LICENSE",
+    "SOLE_V1_PROVIDER",
     "VENUE_HISTORICAL_RATE_PER_S",
     "VENUE_SPAN_CAP_NS",
     "BootstrapCheckpoint",
     "BootstrapReceipt",
+    "BytesSnapshotTransport",
     "GovernedLiveIntake",
     "HistoryBootstrap",
     "IntakeIdentity",
     "LiveIntakeOutcome",
     "LiveIntakeReceipt",
+    "NewsCalendarFiringReceipt",
+    "NewsCalendarFrontier",
+    "NewsCalendarRecorder",
+    "NewsCalendarSettings",
     "RefusingLiveTransport",
     "VenueContinuityBridge",
     "VenueHistoryPage",
+    "allow_exit_under_stale_news_calendar",
     "assert_no_eighth_journal_type",
+    "evaluate_news_calendar_precondition",
+    "gate_entry_under_news_calendar",
     "journal_event_for_kind",
     "refuse_ad_hoc_fetch",
+    "refuse_feed_budget_breach",
     "refuse_ftr01_mapping",
     "refuse_live_network",
+    "refuse_news_calendar_live_skip",
     "refuse_observation_journal_type",
+    "refuse_paid_news_provider",
+    "refuse_second_news_source",
     "refuse_sibling_failover",
     "refuse_venue_span_cap",
+    "require_sole_free_provider",
+    "require_weekly_file_url",
+    "validate_news_calendar_settings",
 ]
 
 DATA_SURFACE: Final[str] = "qmn.data"

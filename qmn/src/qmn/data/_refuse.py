@@ -6,7 +6,7 @@ from collections.abc import Mapping
 
 from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 
-__all__ = ["clean_token", "invalid", "policy", "unavailable", "unsupported"]
+__all__ = ["clean_token", "invalid", "policy", "transient", "unavailable", "unsupported"]
 
 
 def clean_token(value: object) -> str | None:
@@ -66,4 +66,21 @@ def unavailable(
         extra,
         retryability=retryability,
         after_condition_descriptor=after_condition_descriptor,
+    )
+
+
+def transient(
+    field: str,
+    reason: str,
+    *,
+    retryability: Retryability = Retryability.NO,
+    **extra: object,
+) -> TypedRefusal:
+    """A ``transient venue failure`` (rate-limit / block). Default: do not retry."""
+    return _build(
+        RefusalCategory.TRANSIENT_VENUE_FAILURE,
+        field,
+        reason,
+        extra,
+        retryability=retryability,
     )
