@@ -199,6 +199,10 @@ def test_startup_abort_forward_only_without_confirmation(tmp_path: Path) -> None
         migration_source_root=source,
         migration_destination_root=dest,
     )
+    def activate_search(ctx: PluginContext) -> None:
+        assert isinstance(ctx, DaemonPluginContext)
+        ctx.register_tool("search", {"name": "search"})
+
     with pytest.raises(PluginStartupAbort) as raised:
         loader.startup_activate_roster(
             [
@@ -208,9 +212,7 @@ def test_startup_abort_forward_only_without_confirmation(tmp_path: Path) -> None
                     rollback="forward_only",
                 )
             ],
-            activators={
-                "research-corpus": lambda ctx: ctx.register_tool("search", {"name": "search"})
-            },
+            activators={"research-corpus": activate_search},
         )
     assert raised.value.field == "forward_only_confirmation"
 
@@ -260,14 +262,20 @@ def test_runtime_load_refusal_preserves_daemon_continuity() -> None:
 def test_runtime_duplicate_multi_names_conflicting_ids_and_keeps_leases() -> None:
     continuity = _continuity()
     loader = PluginLoader(continuity=continuity)
+
+    def activate_search(ctx: PluginContext) -> None:
+        assert isinstance(ctx, DaemonPluginContext)
+        ctx.register_tool("search", {"name": "search"})
+
     assert is_ok(
         loader.install(
             _manifest(contributions=[{"point": "tool", "local_id": "search"}]),
-            activator=lambda ctx: ctx.register_tool("search", {"name": "search"}),
+            activator=activate_search,
         )
     )
     # Force a multi collision by claiming the same qualified id from another plugin.
-    loader._multi_owners[("tool", "research-alt:search")] = "research-corpus"
+    multi_owners: dict[tuple[str, str], str] = getattr(loader, "_multi_owners")
+    multi_owners[("tool", "research-alt:search")] = "research-corpus"
 
     def collide(ctx: PluginContext) -> None:
         assert isinstance(ctx, DaemonPluginContext)
