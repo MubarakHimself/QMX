@@ -27,6 +27,7 @@ __all__ = [
     "HookVerb",
     "IsolationMode",
     "JobHandleState",
+    "LeaseKind",
     "MemoryValidationState",
     "MessageKind",
     "ModelClass",
@@ -37,6 +38,7 @@ __all__ = [
     "RoutingPolicy",
     "SessionAttachment",
     "SessionAutonomy",
+    "TaskLedgerEntryKind",
     "TaskMissionState",
     "VariableEditability",
     "VariableScope",
@@ -113,6 +115,28 @@ class HandleKind(StrEnum):
     STRATEGY_HANDLE = "StrategyHandle"
     KNOWLEDGE_HANDLE = "KnowledgeHandle"
     MARKET_DATA_HANDLE = "MarketDataHandle"
+
+
+class LeaseKind(StrEnum):
+    """The three named leases — never bare (AD-9, AD-17; DEC-0308, DEC-0316)."""
+
+    DISPATCH_LEASE = "dispatch_lease"
+    ENVIRONMENT_LEASE = "environment_lease"
+    QUANT_LEDGER_LEASE = "quant_ledger_lease"
+
+
+class TaskLedgerEntryKind(StrEnum):
+    """Task Ledger entry kinds (CT-51; AD-9; DEC-0308).
+
+    Daemon-authored kinds are exactly ``reassigned`` and ``unknown_tail``.
+    """
+
+    PROGRESS = "progress"
+    MESSAGE = "message"
+    TASK_COMPLETED = "task_completed"
+    REASSIGNED = "reassigned"
+    UNKNOWN_TAIL = "unknown_tail"
+    LEDGER_ENTRY = "ledger_entry"
 
 
 class JobHandleState(StrEnum):

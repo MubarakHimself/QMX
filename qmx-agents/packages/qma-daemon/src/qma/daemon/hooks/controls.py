@@ -31,9 +31,10 @@ from qma.core.vocabulary.enums import (
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
 from qma.daemon.hooks.registry import HookRegistry
 from qma.daemon.journal.variables import registry_key
+from qma.daemon.ledgers.task import TaskLedgerStore
 from qma.daemon.taskgraph.dispatcher import TaskGraphStore
 from qma.daemon.taskgraph.records import RESERVED_APPROVAL_ROUTE_OPERATOR
-from qmf.core import Ok, Result
+from qmf.core import Ok, Result, is_refusal
 from qmf.data.store.refusals import invalid_input, policy_rejection
 
 __all__ = [
@@ -303,6 +304,7 @@ class ControlOutcomeController:
     """Daemon control surface for durable ask/defer outcomes (FR-Q33)."""
 
     task_store: TaskGraphStore | None = None
+    ledgers: TaskLedgerStore | None = None
     _operator_queue: OperatorApprovalQueueProjection = field(
         default_factory=OperatorApprovalQueueProjection
     )
@@ -594,6 +596,13 @@ class ControlOutcomeController:
                     "deferred work must not hold environment_lease at resume (FR-Q33)",
                     task_id=parking.task_id,
                 )
+            if self.ledgers is not None:
+                resumed_ledger = self.ledgers.resume_from_defer(
+                    task_id=parking.task_id,
+                    dispatch_lease=lease,
+                )
+                if is_refusal(resumed_ledger):
+                    return resumed_ledger
 
         # Full hook chain — fresh dispatch, never the parked defer decision.
         return registry.dispatch(

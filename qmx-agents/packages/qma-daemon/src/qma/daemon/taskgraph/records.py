@@ -85,15 +85,24 @@ class TaskLedger:
 
     task_id: str
     entries: tuple[Mapping[str, object], ...] = ()
+    attempt_no: int = 0
 
     def append(self, entry: Mapping[str, object]) -> TaskLedger:
-        return TaskLedger(task_id=self.task_id, entries=(*self.entries, dict(entry)))
+        return TaskLedger(
+            task_id=self.task_id,
+            entries=(*self.entries, dict(entry)),
+            attempt_no=self.attempt_no,
+        )
+
+    def with_attempt_no(self, attempt_no: int) -> TaskLedger:
+        return TaskLedger(task_id=self.task_id, entries=self.entries, attempt_no=attempt_no)
 
     def to_payload(self) -> Mapping[str, object]:
         return MappingProxyType(
             {
                 "task_id": self.task_id,
                 "entries": [dict(e) for e in self.entries],
+                "attempt_no": self.attempt_no,
             }
         )
 
@@ -135,6 +144,20 @@ class TaskRecord:
         return self.is_decomposition
 
     def with_state(self, state: TaskMissionState) -> TaskRecord:
+        return self._copy(state=state)
+
+    def with_ledger(self, ledger: TaskLedger) -> TaskRecord:
+        if ledger.task_id != self.id:
+            msg = "TaskLedger.task_id must equal TaskRecord.id"
+            raise ValueError(msg)
+        return self._copy(ledger=ledger)
+
+    def _copy(
+        self,
+        *,
+        state: TaskMissionState | None = None,
+        ledger: TaskLedger | None = None,
+    ) -> TaskRecord:
         return TaskRecord(
             id=self.id,
             mission_id=self.mission_id,
@@ -143,7 +166,7 @@ class TaskRecord:
             inputs=dict(self.inputs),
             refs=self.refs,
             acceptance_criteria=self.acceptance_criteria,
-            state=state,
+            state=self.state if state is None else state,
             node_id=self.node_id,
             node_kind=self.node_kind,
             agent_role=self.agent_role,
@@ -151,7 +174,7 @@ class TaskRecord:
             iteration=self.iteration,
             retry_index=self.retry_index,
             attempt_of=self.attempt_of,
-            ledger=self.ledger,
+            ledger=self.ledger if ledger is None else ledger,
         )
 
     def to_payload(self) -> Mapping[str, object]:

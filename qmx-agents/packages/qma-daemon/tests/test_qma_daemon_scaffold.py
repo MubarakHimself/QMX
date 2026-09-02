@@ -62,7 +62,8 @@ def test_structural_modules_importable() -> None:
     assert qma.daemon.TaskGraphDispatcher.__name__ == "TaskGraphDispatcher"
     assert qma.daemon.taskgraph.MissionCompiler is qma.daemon.MissionCompiler
     from qma.daemon.experiments import ExperimentSpecService
-    from qma.daemon.ledgers import ExperimentLedger
+    from qma.daemon.ledgers import ExperimentLedger, TaskLedgerStore
 
     assert ExperimentSpecService.__name__ == "ExperimentSpecService"
     assert ExperimentLedger.__name__ == "ExperimentLedger"
+    assert TaskLedgerStore.__name__ == "TaskLedgerStore"

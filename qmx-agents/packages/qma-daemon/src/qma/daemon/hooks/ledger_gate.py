@@ -14,6 +14,8 @@ from types import MappingProxyType
 from typing import Final, Literal, cast
 
 from qma.core.plugins.hooks import HookResult, build_hook_result
+from qma.core.ports.ledgers import DAEMON_AUTHORED_ENTRY_KINDS as CORE_DAEMON_AUTHORED_KINDS
+from qma.core.ports.ledgers import LEDGER_ENTRY_REQUIRED_FIELDS
 from qma.core.vocabulary.enums import HookResultDecision
 from qma.core.vocabulary.hooks import (
     BEFORE_LEDGER_APPEND_EVENT,
@@ -41,18 +43,10 @@ __all__ = [
 ]
 
 
-LEDGER_ENTRY_REQUIRED_FIELDS: Final[frozenset[str]] = frozenset(
-    {
-        "id",
-        "kind",
-        "attempt_no",
-        "authored_by",
-        "recorded_at",
-    }
-)
-
 # Closed daemon-authored kinds exempt from the lease-holder check (CT-51).
-DAEMON_AUTHORED_ENTRY_KINDS: Final[frozenset[str]] = frozenset({"reassigned", "unknown_tail"})
+DAEMON_AUTHORED_ENTRY_KINDS: Final[frozenset[str]] = frozenset(
+    member.value for member in CORE_DAEMON_AUTHORED_KINDS
+)
 
 LedgerAppendDisposition = Literal["record", "quarantine"]
 

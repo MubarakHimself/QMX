@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
+from typing import TYPE_CHECKING
 
 from qma.core.ontology import ActorId
 from qma.core.ports.compute import ComputeRequirement
@@ -41,6 +42,9 @@ from qma.daemon.taskgraph.state import (
 )
 from qmf.core import Ok, Result, is_ok, is_refusal
 from qmf.data.store.refusals import invalid_input, policy_rejection
+
+if TYPE_CHECKING:
+    from qma.daemon.ledgers.task import TaskLedgerStore
 
 __all__ = [
     "DispatchDecision",
@@ -254,6 +258,7 @@ class TaskGraphDispatcher:
         store: TaskGraphStore | None = None,
         environments: ExecutionEnvironmentRegistry | None = None,
         router: ComputeRouter | None = None,
+        ledgers: TaskLedgerStore | None = None,
         default_environment_kind: ExecutionEnvironmentKind | str = ExecutionEnvironmentKind.DOCKER,
     ) -> None:
         self._store = store if store is not None else TaskGraphStore()
@@ -265,6 +270,14 @@ class TaskGraphDispatcher:
         )
         if self._store.slot_router is None:
             self._store.slot_router = self._router
+        if ledgers is None:
+            from qma.daemon.ledgers.task import (  # noqa: PLC0415
+                TaskLedgerStore as _TaskLedgerStore,
+            )
+
+            self._ledgers = _TaskLedgerStore()
+        else:
+            self._ledgers = ledgers
         self._default_kind = (
             default_environment_kind.value
             if isinstance(default_environment_kind, ExecutionEnvironmentKind)
@@ -282,6 +295,10 @@ class TaskGraphDispatcher:
     @property
     def router(self) -> ComputeRouter:
         return self._router
+
+    @property
+    def ledgers(self) -> TaskLedgerStore:
+        return self._ledgers
 
     def materialize(
         self,
@@ -380,10 +397,17 @@ class TaskGraphDispatcher:
             owner=task.owner,
         )
         self._store.record_lease(lease)
+        self._ledgers.open_for_task(task)
+        granted = self._ledgers.grant(lease)
+        if is_refusal(granted):
+            return granted
         if env_lease is not None:
             self._store.record_environment_lease(env_lease)
 
+        seeded = self._ledgers.get(task.id)
         running = task.with_state(TaskMissionState.RUNNING)
+        if seeded is not None:
+            running = running.with_ledger(seeded)
         updated_graph = graph.replace_task(running)
         self._store.put(updated_graph)
         self._refresh_mission(task.mission_id, updated_graph)
@@ -409,7 +433,7 @@ class TaskGraphDispatcher:
         located = self._store.find_task(task_id)
         if located is None:
             return invalid_input("task_id", "unknown Task id", given=task_id)
-        _graph, task = located
+        graph, task = located
         if is_task_mission_terminal(task.state):
             return policy_rejection(
                 "dispatcher",
@@ -424,13 +448,24 @@ class TaskGraphDispatcher:
                 "Task Ledger must exist for reassignment (transcript-independent)",
                 task_id=task_id,
             )
+        previous = self._store.lease_for(task_id)
         lease = DispatchLease(
             task_id=task.id,
             holder_agent_id=new_holder_agent_id,
             mission_id=task.mission_id,
             owner=task.owner,
         )
+        self._ledgers.open_for_task(task)
+        recorded = self._ledgers.record_reassignment(
+            task_id=task.id,
+            new_lease=lease,
+            previous_holder_agent_id=(previous.holder_agent_id if previous is not None else None),
+        )
+        if is_refusal(recorded):
+            return recorded
         self._store.record_lease(lease)
+        updated = task.with_ledger(recorded.value)
+        self._store.put(graph.replace_task(updated))
         return Ok(lease)
 
     def apply_proposed_transition(

@@ -22,6 +22,8 @@ replay only, and no package-import edge (FR-40 through FR-43). Epic 45
 Story 45.9 adds the deployment envelope: workstation Docker workers, remote
 dial-out only, trading-node host-identity refusal, computer-use exclusion,
 and read-only dev/paper except the dev-zone candidate (FR-44 through FR-47).
+Epic 46 Story 46.1 adds the Task-owned Task Ledger under ``dispatch_lease``
+(FR-48 through FR-50).
 
 ### FR-1: A second daemon or writer is refused at the persistence boundary
 
@@ -698,3 +700,49 @@ and read-only dev/paper except the dev-zone candidate (FR-44 through FR-47).
 - **Notification tier:** silent-log (caller receives the typed refusal).
 - **Product-user affordance:** QMA can write a research candidate in
   `dev`. It cannot promote, change zones, or treat paper as a sandbox.
+
+### FR-48: A Task Ledger append without that Task's `dispatch_lease` is refused
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `TaskLedgerStore.append` requires a named `dispatch_lease` for
+  the same Task whose holder matches `authored_by`. An `environment_lease` or
+  `quant_ledger_lease`, a different Task's lease, or a non-holder Agent is
+  refused (CT-51; FR-Q57).
+- **Auto-recovery / retry:** none — append as the Agent holding that Task's
+  `dispatch_lease`.
+- **Visible degraded state:** the Task Ledger is unchanged; no entry is
+  written.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** Task Ledger append rights follow
+  `dispatch_lease` only. Holding an environment slot or the Quant Ledger
+  does not author the Task's account.
+
+### FR-49: A non-daemon Task Ledger entry missing required authorship is refused
+
+- **Failure class:** `invalid input` (CT-04).
+- **Detection:** `parse_task_ledger_entry` requires `attempt_no`, `authored_by`
+  with an Agent ref plus the owning Quant `ActorId`, and
+  `model_deployment_ref`. Optional `trace_ref`, `artifact_ref`,
+  `experiment_ref`, and `knowledge_ref` must be reference strings — embedded
+  trace/artifact/experiment/knowledge objects are refused as shared
+  semantics (CT-51; FR-Q57).
+- **Auto-recovery / retry:** none — correct the entry and append again.
+- **Visible degraded state:** the Task Ledger is unchanged.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** every Agent-authored line names who wrote it,
+  which Quant owns the work, which model was used, and cites evidence by
+  reference.
+
+### FR-50: A worker-stamped Task Ledger `recorded_at` is refused
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `TaskLedgerStore.persist_via_wire` refuses an inbound
+  `recorded_at`. The daemon stamps UTC nanoseconds from the injected
+  qmf-core clock so the ledger survives the worker (FR-Q25; FR-Q57).
+- **Auto-recovery / retry:** none — omit `recorded_at`; the daemon records
+  it.
+- **Visible degraded state:** the entry is not persisted; the worker cannot
+  back-date evidence.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** workers send the work; the daemon writes the
+  clock. Do not timestamp your own ledger evidence.
