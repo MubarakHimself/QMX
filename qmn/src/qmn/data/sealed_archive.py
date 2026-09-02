@@ -623,6 +623,34 @@ class SealedArchive:
             return False
         return mark.value.verified and mark.value.prefix_end >= end.value
 
+    def read_prefix(
+        self,
+        *,
+        world: object,
+        room_role: object,
+        prefix_id: object,
+    ) -> Result[bytes]:
+        """Read-only payload fetch. Never writes (TN-21 replay import)."""
+        resolved = _as_world(world)
+        if is_refusal(resolved):
+            return resolved
+        role = _as_hot_role(room_role)
+        if is_refusal(role):
+            return role
+        ident = _segment(prefix_id, field="prefix_id")
+        if is_refusal(ident):
+            return ident
+        dest = self._prefix_path(resolved.value, role.value, ident.value)
+        if is_refusal(dest):
+            return dest
+        if dest.value.is_symlink() or not dest.value.is_file():
+            return unavailable(
+                "prefix",
+                "sealed-archive does not hold this prefix",
+                prefix_id=ident.value,
+            )
+        return _read_capped(dest.value)
+
     def _role_dir(self, world: World, room_role: str) -> Result[Path]:
         dirname = _ROLE_DIRS[room_role]
         world_seg = _segment(world.value, field="world")

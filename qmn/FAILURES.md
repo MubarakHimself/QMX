@@ -883,3 +883,60 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Product-user affordance:** Inspect `read_failure_detail` on the evidence
   channel. The nightly backup copies only committed prefixes of immutable
   raw archive, journals, registry, sealed-archive, and the research door.
+
+### FR-59: Replay started inside the node or with live wiring
+
+- **Failure class:** policy rejection
+- **Detection:** replay is attached to the node loop or the process is marked
+  as the trading node (`replay.in_node_process`), `world` is not replay
+  (`replay.wrong_world`), a venue-connecting client is selected
+  (`replay.live_venue_client`), a secret is resolved
+  (`replay.secret_resolved` / `replay.credential_bind`), a live sink is
+  constructed (`replay.live_sink`), a socket or network path is opened
+  (`replay.network`), or WriterIds leave the disjoint replay namespace
+  (`replay.disjoint_writer`).
+- **Auto-recovery / retry:** none — spawn `just node-replay` as a process
+  outside the node with `world = replay`.
+- **Visible degraded state:** the replay job does not drive `run_slice`; the
+  node loop is untouched.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** Run `just node-replay` from the operations
+  toolkit. Inspect `read_failure_detail` on the evidence channel. Replay
+  never shares the node process, never resolves a credential, and never
+  opens a live sink.
+
+### FR-60: Replay import crossing refused
+
+- **Failure class:** policy rejection / unavailable dependency
+- **Detection:** a write through the replay-import port
+  (`replay.cross_world_write`), live evidence read without the named port
+  (`replay.import_port_required`), or a missing sealed-archive interval
+  (`replay.missing_sealed_interval`).
+- **Auto-recovery / retry:** none until a verified sealed-archive copy of
+  the selected interval exists.
+- **Visible degraded state:** no cross-world write occurs; replay does not
+  start without the import port.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** Copy the day into sealed-archive, then rerun
+  `just node-replay`. Inspect `read_failure_detail` on the evidence channel.
+  Replay reads live evidence only through the one-way import port.
+
+### FR-61: Replay fill, submit, restore, or gate attempt
+
+- **Failure class:** policy rejection / unavailable dependency
+- **Detection:** fill simulation (`replay.fill_simulation`), command
+  submit/resend (`replay.command_submit`), SQS recompute
+  (`replay.sqs_recompute`), restoring replay state into a live or paper
+  seat (`replay.restore_into_live`), treating the diff as an admission or
+  live gate (`replay.admission_gate`), or replay-clock exhaustion
+  (`replay.clock_exhaustion`).
+- **Auto-recovery / retry:** none — GAP-0056 stays deferred; provision the
+  recorded interval and data-driven clock script.
+- **Visible degraded state:** no order is sent, no fill is simulated, and
+  the diagnostic report cannot restore into live/paper seats or gate
+  admission.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** Use `just node-replay` as a diagnostic
+  decision diff only. Inspect `read_failure_detail` on the evidence
+  channel. A clean diff is required by later order-path changes and soak
+  acceptance; it never gates live money.

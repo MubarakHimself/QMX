@@ -39,8 +39,11 @@ node-secrets-provision *ARGS:
 node-data-bootstrap *ARGS:
     uv run python "{{qmn_deploy}}/data_bootstrap.py" --check-mode {{ARGS}}
 
+# Credential-free recorded-day decision diff (Story 27.7 / TN-21).
+# Check-mode by default. Spawns python -m qmn.replay outside the node.
+# Never resolves a secret, never opens a live sink, never trades.
 node-replay *ARGS:
-    @echo "node-replay: reserved"
+    uv run python "{{qmn_deploy}}/replay.py" --check-mode {{ARGS}}
 
 node-config-init *ARGS:
     @echo "node-config-init: reserved"

@@ -9,6 +9,8 @@ Story 27.5 codes the backup numerics, payload-key custody, and copy-retention
 contract — no real key ceremony or live bucket tonight.
 Story 27.6 pushes encrypted committed prefixes through rclone against an
 isolated local-test backend; live B2 is soak-local.
+Story 27.7 reads sealed-archive through the named one-way replay import port
+in ``qmn.replay`` — this package stays the copy target, never a second writer.
 """
 
 from __future__ import annotations
