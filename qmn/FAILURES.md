@@ -631,3 +631,48 @@ designed failure; every typed refusal the node can emit belongs here.
 - **Visible degraded state:** the drill does not replace the store or restart a session.
 - **Notification tier:** operator-visible (journaled).
 - **Product-user affordance:** The compromise drill uses demo credentials only. Inspect `read_failure_detail` on the evidence channel. Live cut-over is a later soak-local act, not this recipe.
+
+### FR-43: Live intake asked to mint an observation journal type
+
+- **Failure class:** unsupported capability
+- **Detection:** governed live intake or the recording accumulator is asked to journal `observation` or any eighth type outside CT-13's closed seven (`data.intake.observation_journal_type`).
+- **Auto-recovery / retry:** none — FTR-01 blocks the mapping; do not invent a private event stream.
+- **Visible degraded state:** the observation is not foldable; interpretation does not run; no eighth journal type is persisted.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** Position and balance read-backs stay unmapped until the CT-20 annotation names a closed-seven row. Inspect `read_failure_detail` on the evidence channel. History bootstrap remains `just node-data-bootstrap`.
+
+### FR-44: Position/balance CT-20 mapping accepted before FTR-01
+
+- **Failure class:** unsupported capability
+- **Detection:** live intake would accept a position/balance read-back mapping onto CT-13 (`data.intake.ftr01_mapping`).
+- **Auto-recovery / retry:** none — this story refuses that mapping until the annotation lands.
+- **Visible degraded state:** ticks, bars, depth, fills, and lifecycle keep recording; the blocked kinds never mint an `observation` type.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The node refused a blocked CT-20 mapping. Inspect `read_failure_detail` on the evidence channel. Do not treat a read-back as a new journal type.
+
+### FR-45: Silent sibling-feed failover
+
+- **Failure class:** policy rejection
+- **Detection:** live intake is asked to write inbound observations from a sibling feed (`truefx` / `histdata` / `dukascopy-live-sibling`) instead of the pinned canonical sensing feed (`data.intake.sibling_failover`).
+- **Auto-recovery / retry:** none — a sensing outage fails closed until the same feed gap-replays.
+- **Visible degraded state:** no sibling write; the accumulator remains the single first writer; command-stream entries block only if the canonical feed is out.
+- **Notification tier:** alarm / operator-visible (journaled).
+- **Product-user affordance:** The node does not fail over to a companion tick source. Inspect `read_failure_detail` on the evidence channel. Reconnect the canonical venue feed; Dukascopy history is bootstrap-only via `just node-data-bootstrap`.
+
+### FR-46: Ad-hoc or live Dukascopy fetch
+
+- **Failure class:** policy rejection
+- **Detection:** a run-loop or factory path tries to fetch history outside `just node-data-bootstrap` (`data.bootstrap.ad_hoc`) or opens the live Dukascopy datafeed (`data.bootstrap.live_network`).
+- **Auto-recovery / retry:** none — inject a fixture transport; resume from the archive checkpoint.
+- **Visible degraded state:** no bytes leave the host toward the provider; the checkpoint is unchanged.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** History is acquired only through `just node-data-bootstrap` in check-mode or fixture apply. Inspect `read_failure_detail` on the evidence channel. Do not download from Dukascopy during a factory pass.
+
+### FR-47: Venue continuity gap exceeds the one-week span cap
+
+- **Failure class:** policy rejection
+- **Detection:** venue paging for the recent continuity gap is larger than the documented one-week tick-history span cap (`data.bootstrap.span_cap`).
+- **Auto-recovery / retry:** none — shorten the bridge to the archive's last window through go-live, inside the cap and 5 req/s historical rate.
+- **Visible degraded state:** venue paging is not issued; Dukascopy archive identity stays separate; no silent merge.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The venue may only page the recent gap. Inspect `read_failure_detail` on the evidence channel, then re-run `just node-data-bootstrap` after the archive covers the rest.

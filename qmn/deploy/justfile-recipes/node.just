@@ -33,8 +33,11 @@ node-ci-lane *ARGS:
 node-secrets-provision *ARGS:
     uv run python "{{qmn_deploy}}/secrets_provision.py" --check-mode {{ARGS}}
 
+# History bootstrap (Story 27.2 / TN-13). Check-mode by default.
+# Never downloads from the live Dukascopy datafeed; --apply without
+# --fixture-root is refused. Fixture apply writes injected hour payloads.
 node-data-bootstrap *ARGS:
-    @echo "node-data-bootstrap: reserved (history bootstrap)"
+    uv run python "{{qmn_deploy}}/data_bootstrap.py" --check-mode {{ARGS}}
 
 node-replay *ARGS:
     @echo "node-replay: reserved"

@@ -21,7 +21,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Final, cast
+from typing import Final, Protocol, cast
 
 from qmf.core import (
     Account,
@@ -73,6 +73,14 @@ __all__ = [
     "decode_volume",
     "ftr01_position_balance_blocked",
 ]
+
+
+class _LiveIntake(Protocol):
+    """Duck-typed governed intake: persist then fold (Story 27.2)."""
+
+    def record(self, **kwargs: object) -> Result[object]:
+        """Record one inbound observation through the accumulator."""
+        ...
 
 
 # Volumes are cents everywhere on the wire (including lotSize; depth size ÷100)
@@ -246,6 +254,7 @@ class LiveCTraderClient:
     _session_epoch: str
     _connection_manager: ConnectionManager | None = None
     _recorder: EventRecorder | None = None
+    _intake: _LiveIntake | None = None
     _account: Account | None = None
     _session_open: bool = False
     _capabilities_verified: bool = False
@@ -264,6 +273,7 @@ class LiveCTraderClient:
         session_epoch: object = "session-epoch-1",
         connection_manager: object = None,
         recorder: object = None,
+        intake: object = None,
     ) -> Result[LiveCTraderClient]:
         """Build a live client for ``(world, VenueId)`` with injected Clock/ErrorMap."""
         if not isinstance(world, World):
@@ -337,6 +347,17 @@ class LiveCTraderClient:
                 "when supplied, recorder must be an EventRecorder",
                 given=repr(recorder),
             )
+        bound_intake: _LiveIntake | None
+        if intake is None:
+            bound_intake = None
+        elif callable(getattr(intake, "record", None)):
+            bound_intake = cast("_LiveIntake", intake)
+        else:
+            return _invalid(
+                "intake",
+                "when supplied, intake is a GovernedLiveIntake (record method)",
+                given=repr(type(intake).__name__),
+            )
         return Ok(
             cls(
                 _world=world,
@@ -346,6 +367,7 @@ class LiveCTraderClient:
                 _session_epoch=session_epoch.strip(),
                 _connection_manager=cm,
                 _recorder=rec,
+                _intake=bound_intake,
             )
         )
 
@@ -666,8 +688,17 @@ class LiveCTraderClient:
             native_id=native_id.strip(),
         )
 
-        # Record-before-interpret: sinks first, decode second.
-        persisted = self._persist_before_interpret(verbatim, mapping)
+        # Record-before-interpret: accumulator (when bound) is the single first writer.
+        persisted = self._persist_before_interpret(
+            verbatim,
+            mapping,
+            kind=kind,
+            native_id=native_id.strip(),
+            receive_wall=receive_wall,
+            venue_instant=venue_instant,
+            revision=revision,
+            instrument=instrument,
+        )
         if is_refusal(persisted):
             return persisted
 
@@ -707,9 +738,40 @@ class LiveCTraderClient:
         return Ok(MappingProxyType(dict(record)))
 
     def _persist_before_interpret(
-        self, verbatim: Mapping[str, object], mapping: JournalMapping
+        self,
+        verbatim: Mapping[str, object],
+        mapping: JournalMapping,
+        *,
+        kind: WireKind,
+        native_id: str,
+        receive_wall: Instant,
+        venue_instant: Instant | None,
+        revision: object,
+        instrument: object,
     ) -> Result[bool]:
         """Emit verbatim wire + journal mapping before any scale conversion."""
+        if self._intake is not None:
+            stream_id = native_id
+            symbol = getattr(instrument, "symbol", None)
+            if isinstance(symbol, str) and symbol.strip() != "":
+                stream_id = symbol.strip()
+            recorded = self._intake.record(
+                observation_id=native_id,
+                stream_id=stream_id,
+                receive_wall=receive_wall,
+                payload=dict(verbatim),
+                kind=kind.value,
+                source="ctrader",
+                source_native_id=native_id,
+                revision=str(revision) if revision is not None else "0",
+                event_time=venue_instant if venue_instant is not None else receive_wall,
+                known_at=receive_wall,
+                venue_instant=venue_instant,
+                raw_payload=verbatim.get("raw_payload", verbatim),
+            )
+            if is_refusal(recorded):
+                return recorded
+            return Ok(True)
         if self._connection_manager is not None:
             obs = self._connection_manager.emit_command_observation(dict(verbatim))
             if is_refusal(obs):

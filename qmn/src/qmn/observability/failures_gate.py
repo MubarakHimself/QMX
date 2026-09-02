@@ -79,6 +79,12 @@ DESIGNED_TYPED_FAILURE_IDS: Final[frozenset[str]] = frozenset(
         "compose.risk_population.total_unique_rank",
         "compose.writer_ids",
         "compose.shadow_isolation",
+        "data.bootstrap.ad_hoc",
+        "data.bootstrap.live_network",
+        "data.bootstrap.span_cap",
+        "data.intake.ftr01_mapping",
+        "data.intake.observation_journal_type",
+        "data.intake.sibling_failover",
         "fingerprint.composition_fp",
         "lifecycle.stand_down",
         "money.boundary.re_seed",
@@ -327,9 +333,7 @@ def validate_failures_completeness(
             blank=tuple(blank_fields),
         )
 
-    emitted = (
-        emitted_ids if emitted_ids is not None else collect_emitted_failure_ids(src_root)
-    )
+    emitted = emitted_ids if emitted_ids is not None else collect_emitted_failure_ids(src_root)
     designed = (
         designed_ids
         if designed_ids is not None

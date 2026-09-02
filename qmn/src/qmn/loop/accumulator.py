@@ -420,6 +420,10 @@ class RecordingAccumulator:
         return Ok(False)
 
     def _record_and_journal(self, obs: InboundObservation) -> Result[bool]:
+        event_type = _journal_event_type(obs)
+        if is_refusal(event_type):
+            return event_type
+        identity = _identity_fields(obs.payload)
         record = {
             "kind": "governed-intake",
             "phase": "record-before-fold",
@@ -427,26 +431,23 @@ class RecordingAccumulator:
             "writer": self._writer_fields(),
             "observation": dict(obs.as_mapping()),
             "foldable": False,
+            **identity,
         }
+        raw = obs.payload.get("raw_payload")
+        if isinstance(raw, Mapping):
+            record["raw_payload"] = dict(cast("Mapping[str, object]", raw))
         emitted = self.observation_sink.emit(MappingProxyType(dict(record)))
         if is_refusal(emitted):
             return emitted
-        journal_row = {
-            "event_type": (
-                DATA_QUALITY_EVENT_TYPE
-                if obs.observation_class is ObservationClass.MARKET_DATA
-                else (
-                    "fill"
-                    if obs.observation_class is ObservationClass.EXECUTION
-                    else "control action"
-                )
-            ),
+        journal_row: dict[str, object] = {
+            "event_type": event_type.value,
             "kind": "accumulator-journal",
             "observation_id": obs.observation_id,
             "observation_class": obs.observation_class.value,
             "receive_wall_time_ns": obs.receive_wall.value_ns,
             "writer": self._writer_fields(),
             "sequence_hint": self._receive_seq + 1,
+            **identity,
         }
         if obs.venue_instant is not None:
             journal_row["venue_instant_ns"] = obs.venue_instant.value_ns
@@ -464,6 +465,73 @@ class RecordingAccumulator:
                 "boot_epoch_id": self.writer_id.boot_epoch_id,
             }
         )
+
+
+_CT13_SEVEN: Final[frozenset[str]] = frozenset(
+    {
+        "decision",
+        "order",
+        "fill",
+        "risk transition",
+        "promotion",
+        "data quality",
+        "control action",
+    }
+)
+_IDENTITY_KEYS: Final[tuple[str, ...]] = (
+    "source",
+    "source_native_id",
+    "revision",
+    "event_time_ns",
+    "known_at_ns",
+)
+
+
+def _identity_fields(payload: Mapping[str, object]) -> dict[str, object]:
+    fields: dict[str, object] = {}
+    for key in _IDENTITY_KEYS:
+        if key in payload:
+            fields[key] = payload[key]
+    return fields
+
+
+def _journal_event_type(obs: InboundObservation) -> Result[str]:
+    proposed = obs.payload.get("ct13_event_type") or obs.payload.get("event_type")
+    if isinstance(proposed, str) and proposed.strip() != "":
+        event_type = proposed.strip().lower()
+        if event_type == "observation":
+            return TypedRefusal(
+                category=RefusalCategory.UNSUPPORTED_CAPABILITY,
+                retryability=Retryability.NO,
+                context={
+                    "field": "event_type",
+                    "reason": "data intake never infers or mints an observation "
+                    "journal type; CT-13's closed seven stand (FTR-01)",
+                    "ftr": "FTR-01",
+                    "failure_id": "data.intake.observation_journal_type",
+                    "given": event_type,
+                    "allowed_ct13": sorted(_CT13_SEVEN),
+                },
+            )
+        if event_type not in _CT13_SEVEN:
+            return TypedRefusal(
+                category=RefusalCategory.UNSUPPORTED_CAPABILITY,
+                retryability=Retryability.NO,
+                context={
+                    "field": "event_type",
+                    "reason": "an eighth node-private journal type is refused (FTR-01)",
+                    "ftr": "FTR-01",
+                    "failure_id": "data.intake.observation_journal_type",
+                    "given": event_type,
+                    "allowed_ct13": sorted(_CT13_SEVEN),
+                },
+            )
+        return Ok(event_type)
+    if obs.observation_class is ObservationClass.MARKET_DATA:
+        return Ok(DATA_QUALITY_EVENT_TYPE)
+    if obs.observation_class is ObservationClass.EXECUTION:
+        return Ok("fill")
+    return Ok("control action")
 
 
 def _payload_kind(payload: object) -> object:
