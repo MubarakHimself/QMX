@@ -41,7 +41,7 @@ from qma.daemon.persistence import (
     PersistenceSubstrate,
 )
 from qma.daemon.persistence.lifecycle import DaemonStoreLifecycle
-from qma.daemon.staging import ProposalGate
+from qma.daemon.staging import AdmissionPipeline, ProposalGate
 from qma.daemon.taskgraph import (
     CompileRequest,
     MissionCompiler,
@@ -52,6 +52,7 @@ __all__ = [
     "AGENT_PATH_ENFORCEMENT_EVENTS",
     "AGENT_REACHABLE_WRITE_VERBS",
     "BYPASS_WRITE_PATHS",
+    "AdmissionPipeline",
     "AgentCapabilityStore",
     "AuthoritativeJournal",
     "CompileRequest",

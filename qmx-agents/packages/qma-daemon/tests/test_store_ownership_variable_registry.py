@@ -135,7 +135,7 @@ def test_definition_store_change_enters_only_as_refinement_proposal() -> None:
         edits=[
             {
                 "kind": "toolset",
-                "operation": "update",
+                "operation": "create",
                 "id": "research.readonly",
                 "content": {"tools": ["market.read"]},
             }
