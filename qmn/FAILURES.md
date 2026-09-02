@@ -1070,3 +1070,45 @@ designed failure; every typed refusal the node can emit belongs here.
   superseded-by-fill, reconnect-gap, unpersistable identity, queue-bound, and
   protective-stop-capability through the conformance double; do not wait for a
   live demo account and do not fill KSA numbers.
+
+### FR-67: Paper-milestone lifecycle campaign refused
+
+- **Failure class:** policy rejection / invalid input
+- **Detection:** the Story 28.4 lifecycle campaign refused a live VPS firewall
+  apply (`lifecycle_campaign.live_vps_firewall`), a live bucket restore
+  (`lifecycle_campaign.live_bucket_restore`), invented `disk_headroom_min`
+  (`lifecycle_campaign.invented_disk_headroom`), invalid inputs
+  (`lifecycle_campaign.inputs`), or an incomplete injection set
+  (`lifecycle_campaign.incomplete_injection`). Clean-host rehearsal and
+  restore cutover reuse `data.restore.clean_host_tonight` and
+  `data.restore.cutover`.
+- **Auto-recovery / retry:** none — re-run crash-loop, preflight, callback-wedge
+  quarantine, clock, disk, data-freshness, and SIGTERM injections through the
+  host campaign; never apply a live firewall or restore a live bucket.
+- **Visible degraded state:** the paper-milestone lifecycle campaign does not
+  seal; stand-down/quarantine/clock/disk/shutdown proofs stay unclaimed.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The lifecycle campaign could not prove its
+  degraded states. Inspect `read_status` on the evidence channel and run
+  `just node-lifecycle-campaign`. Clear stand-down only with operator
+  `resurrect`; leave quarantine only with operator `seat_reinstate`.
+
+### FR-68: Paper-milestone powers/secret probes refused
+
+- **Failure class:** policy rejection / invalid input
+- **Detection:** the Story 28.4 security probes refused a live VPS firewall
+  apply (`security_probes.live_vps_firewall`), a claim that DevOps recipes
+  can trade (`security_probes.devops_trade`), a secret appearing on the
+  probe journal (`security_probes.secret_exposed`), invalid inputs
+  (`security_probes.inputs`), or an incomplete probe set
+  (`security_probes.incomplete_probe`).
+- **Auto-recovery / retry:** none — retry unknown-peer, ops-forbidden,
+  automated-operator-UID, secret-leak, stale-state, and sandbox-promotion
+  probes; never apply a live firewall; DevOps recipes remain unable to trade.
+- **Visible degraded state:** the powers/secret campaign does not seal; the
+  attempt is journaled without exposing a secret value.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** A powers or secret probe was refused at the
+  boundary. Inspect `read_failure_detail` on the evidence channel and run
+  `just node-security-probes`. Retry from the operator principal; ops-toolkit
+  recipes cannot promote, activate, flatten, resurrect, or countersign.

@@ -35,6 +35,7 @@ def toolkit_principal() -> str:
     """The constrained principal every ``just node-…`` recipe runs as."""
     return OPS_PRINCIPAL_NAME
 
+
 # Closed allow-list of just node-… recipe names (AR-79). Bodies land later.
 ALLOWED_NODE_RECIPES: Final[frozenset[str]] = frozenset(
     {
@@ -51,6 +52,8 @@ ALLOWED_NODE_RECIPES: Final[frozenset[str]] = frozenset(
         "node-notify-test",
         "node-hub-publish",
         "node-host-loss-restore",
+        "node-lifecycle-campaign",
+        "node-security-probes",
     }
 )
 
@@ -90,6 +93,5 @@ def deploy_may_import(module: str) -> bool:
     if module in FORBIDDEN_DEPLOY_IMPORTS:
         return False
     return not any(
-        module == banned or module.startswith(f"{banned}.")
-        for banned in FORBIDDEN_DEPLOY_IMPORTS
+        module == banned or module.startswith(f"{banned}.") for banned in FORBIDDEN_DEPLOY_IMPORTS
     )

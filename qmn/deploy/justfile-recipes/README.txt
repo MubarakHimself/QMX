@@ -12,6 +12,12 @@ amend, flatten, promote, or activate (AR-79; DEC-0202; DEC-0211).
   qmn/deploy/demo.py (Story 28.2); production inventory with Book routing
   PAPER; check mode by default; --fixture-root for CI/tests; live --apply
   refused off-VPS; never procures a VPS or opens live credentials
+- `just node-lifecycle-campaign` — Story 28.4 lifecycle injection planner
+  in qmn/deploy/lifecycle.py; check mode by default; never live firewall
+  or live bucket restore; campaign proofs are qmn.host tests
+- `just node-security-probes` — Story 28.4 powers/secret probe planner
+  plus fixture unit/network/upgrade inspection in
+  qmn/deploy/security_probes.py; never applies a live VPS firewall
 - `just node-ci-lane` — pinned ubuntu-24.04 compensator suite in
   qmn/deploy/ci_lane.py
 - `just node-secrets-provision` — restricted wizard in

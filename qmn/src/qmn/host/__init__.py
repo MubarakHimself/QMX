@@ -27,6 +27,10 @@ settings status, failure register, compiled demo roster) without procuring a
 VPS or inventing KSA/latency numbers; soak-local human inputs are blocked ACs.
 Story 28.3 injects command, uncertainty, protection, and reconciliation failure
 paths through the conformance double without a live demo account (FTR-07).
+Story 28.4 proves lifecycle, security, recovery, and no-authority operations
+as injected campaigns and DevOps recipes — crash/preflight/quarantine/clock/
+disk/shutdown plus powers/secret probes — and skips a real VPS firewall
+campaign and a real bucket restore (AR-87).
 Child modules and doors never restamp, never hold a registry cache, and never
 persist lineage.
 """
@@ -87,6 +91,22 @@ from qmn.host.failure_campaign import (
     FailureCampaignReport,
     refuse_live_demo_account_required,
     run_paper_milestone_failure_campaign,
+)
+from qmn.host.lifecycle_campaign import (
+    LIFECYCLE_CAMPAIGN_CLASS,
+    LIFECYCLE_CAMPAIGN_FORMAT_VERSION,
+    LIFECYCLE_CAMPAIGN_SURFACE,
+    LIFECYCLE_INJECTIONS,
+    RUNS_LIVE_BUCKET_RESTORE,
+    RUNS_LIVE_VPS_FIREWALL,
+    DiskHeadroomBand,
+    DiskHeadroomDecision,
+    LifecycleCampaignInputs,
+    LifecycleCampaignReport,
+    evaluate_disk_headroom,
+    refuse_live_bucket_restore,
+    refuse_live_vps_firewall_campaign,
+    run_paper_milestone_lifecycle_campaign,
 )
 from qmn.host.light_heavy import (
     CHILD_MODULES_MAY_SELF_APPROVE,
@@ -203,6 +223,18 @@ from qmn.host.seat_concurrency import (
     SeatIsolationRecord,
     prove_seat_concurrency,
 )
+from qmn.host.security_probes import (
+    DEVOPS_FORBIDDEN_ACTIONS,
+    SECURITY_PROBE_NAMES,
+    SECURITY_PROBES_CLASS,
+    SECURITY_PROBES_FORMAT_VERSION,
+    SECURITY_PROBES_SURFACE,
+    SecurityProbeInputs,
+    SecurityProbeReport,
+    devops_recipe_may_trade,
+    refuse_live_vps_firewall_probe,
+    run_paper_milestone_security_probes,
+)
 from qmn.host.shakedown import (
     SHAKEDOWN_EXERCISES,
     SHAKEDOWN_FOR_HUMAN_SIGNATURE,
@@ -270,6 +302,7 @@ __all__ = [
     "COMPOSITION_ROOT_SURFACE",
     "CONCURRENCY_SURFACE",
     "DESIGNED_DEGRADED_STATES",
+    "DEVOPS_FORBIDDEN_ACTIONS",
     "DOMAIN_BACKGROUND_THREADS_ALLOWED",
     "DOOR_BIND_FAILURE_EXIT_CODE",
     "DOOR_LOCAL_REGISTRY_CACHE",
@@ -287,6 +320,10 @@ __all__ = [
     "INJECTED_COMMAND_FAULTS",
     "INVENTS_KSA_OR_LATENCY",
     "LAYER1_CHECKS",
+    "LIFECYCLE_CAMPAIGN_CLASS",
+    "LIFECYCLE_CAMPAIGN_FORMAT_VERSION",
+    "LIFECYCLE_CAMPAIGN_SURFACE",
+    "LIFECYCLE_INJECTIONS",
     "LIGHT_HEAVY_SURFACE",
     "LINEAGE_PERSIST_SURFACE",
     "LIVE_SENSING_HUMAN_INPUTS",
@@ -308,10 +345,16 @@ __all__ = [
     "REQUIRED_RISK_CONTRACTS",
     "REQUIRES_LIVE_DEMO_ACCOUNT",
     "RISK_POPULATION_SURFACE",
+    "RUNS_LIVE_BUCKET_RESTORE",
+    "RUNS_LIVE_VPS_FIREWALL",
     "RUNTIME_RISK_GATE_SURFACE",
     "RUNTIME_RISK_SCENARIOS",
     "SEAT_CONCURRENCY_OWNED_BY",
     "SEAT_CONCURRENCY_SURFACE",
+    "SECURITY_PROBES_CLASS",
+    "SECURITY_PROBES_FORMAT_VERSION",
+    "SECURITY_PROBES_SURFACE",
+    "SECURITY_PROBE_NAMES",
     "SERIALIZES_UNRELATED_WORK",
     "SHAKEDOWN_EXERCISES",
     "SHAKEDOWN_FOR_HUMAN_SIGNATURE",
@@ -344,6 +387,8 @@ __all__ = [
     "ConcurrencyProofReport",
     "CrashLoopFold",
     "CrashLoopVerdict",
+    "DiskHeadroomBand",
+    "DiskHeadroomDecision",
     "DrainOutcome",
     "FailureCampaignInputs",
     "FailureCampaignReport",
@@ -354,6 +399,8 @@ __all__ = [
     "InMemoryBootAttemptSink",
     "InjectedBounds",
     "Layer1PopulationProof",
+    "LifecycleCampaignInputs",
+    "LifecycleCampaignReport",
     "LifecycleState",
     "LifecycleSupervisor",
     "NotifyTransport",
@@ -381,6 +428,8 @@ __all__ = [
     "SeatInjectedBounds",
     "SeatIsolationRecord",
     "SeatRecord",
+    "SecurityProbeInputs",
+    "SecurityProbeReport",
     "SettingsStatusReport",
     "ShakedownEvidence",
     "ShakedownPlan",
@@ -408,6 +457,8 @@ __all__ = [
     "composition_cite_set",
     "compute_composition_fp",
     "continues_performance_edge",
+    "devops_recipe_may_trade",
+    "evaluate_disk_headroom",
     "evaluate_runtime_risk_coverage",
     "evaluate_safe_point",
     "evaluate_workload_claim",
@@ -427,7 +478,10 @@ __all__ = [
     "qmn_production_src_root",
     "refuse_invented_ksa_or_latency_number",
     "refuse_invented_soak_or_ksa_number",
+    "refuse_live_bucket_restore",
     "refuse_live_demo_account_required",
+    "refuse_live_vps_firewall_campaign",
+    "refuse_live_vps_firewall_probe",
     "refuse_manual_observation_as_proof",
     "refuse_paper_profit_as_proof",
     "refuse_procure_vps",
@@ -440,6 +494,8 @@ __all__ = [
     "run_check_mode",
     "run_demo_shakedown",
     "run_paper_milestone_failure_campaign",
+    "run_paper_milestone_lifecycle_campaign",
+    "run_paper_milestone_security_probes",
     "run_runtime_risk_gate",
     "sd_notify",
     "settings_status_from_config",

@@ -68,3 +68,15 @@ node-hub-publish *ARGS:
 
 node-host-loss-restore *ARGS:
     @echo "node-host-loss-restore: reserved (restore_drill_run power)"
+
+# Lifecycle campaign planner (Story 28.4 / TN-4/14/19/23). Check mode by
+# default. Never applies a live VPS firewall or a live bucket restore.
+# Campaign proofs run as qmn.host tests; this recipe never trades.
+node-lifecycle-campaign *ARGS:
+    uv run python "{{qmn_deploy}}/lifecycle.py" --check-mode {{ARGS}}
+
+# Powers/secret probes plus fixture unit/network/upgrade inspection
+# (Story 28.4 / QMX-F045/F064). Check mode by default. Never applies a
+# live VPS firewall. DevOps recipes remain unable to trade.
+node-security-probes *ARGS:
+    uv run python "{{qmn_deploy}}/security_probes.py" --check-mode {{ARGS}}
