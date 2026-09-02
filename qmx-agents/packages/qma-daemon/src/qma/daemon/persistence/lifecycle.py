@@ -23,6 +23,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
+from qma.core.content import content_address
 from qma.core.refusals import OperatorPrincipalRequired
 from qma.core.vocabulary import PrincipalClass
 from qma.daemon.journal.variables import (
@@ -63,6 +64,10 @@ __all__ = [
     "fixture_memory_storage",
     "fixture_xor_cipher",
 ]
+
+# FR-Q69 daemon-core targets (journal / ledger / task_graph / mailbox / staging)
+# share the declared-down or forward_only rule with plugin migrations; see
+# ``qma.daemon.plugins.migrations.DAEMON_CORE_MIGRATION_TARGETS``.
 
 
 # Migration targets named by FR-Q37 / AD-27 (DEC-0326).
@@ -286,11 +291,18 @@ class DaemonStoreLifecycle:
         source_root: Path | str,
         destination_root: Path | str,
         known_schema_version: int = 1,
+        rollback: object = None,
+        down: object = None,
+        correlation_id: object | None = None,
+        journal: AuthoritativeJournal | None = None,
     ) -> Result[DaemonMigrationReport]:
-        """Run preflight → backup first → dry-run → migrate → verify (FR-Q37).
+        """Run preflight → backup first → dry-run → migrate → verify (FR-Q37/FR-Q69).
 
         Never mutates the only copy in place. ``source_root`` remains the
-        documented restore path.
+        documented restore path. When ``rollback`` / ``down`` are supplied the
+        FR-Q69 declared-``down`` or ``forward_only`` rule is enforced; a journal
+        checkpoint written before the transaction is evidence only, never a
+        recovery copy.
         """
         if not isinstance(store, str) or store not in MIGRATABLE_STORES:
             return policy_rejection(
@@ -300,6 +312,34 @@ class DaemonStoreLifecycle:
                 given=repr(store),
                 allowed=sorted(MIGRATABLE_STORES),
             )
+
+        # FR-Q69: daemon-core migrations declare down or forward_only when asked.
+        if rollback is not None or down is not None:
+            if rollback == "forward_only":
+                if correlation_id is None:
+                    return policy_rejection(
+                        "forward_only_confirmation",
+                        "daemon-core forward-only migration requires correlation_id "
+                        "evidence (FR-Q69; AD-21)",
+                        store=store,
+                        signal="unconfirmed-forward-only",
+                    )
+            elif rollback is not None:
+                return policy_rejection(
+                    "rollback",
+                    "rollback must be 'forward_only' or omitted with a declared down "
+                    "(FR-Q69; AD-21)",
+                    store=store,
+                    given=repr(rollback),
+                )
+            elif down is None:
+                return policy_rejection(
+                    "down",
+                    "every daemon-core migration declares a down unless rollback is "
+                    "forward_only (FR-Q69; AD-21)",
+                    store=store,
+                )
+
         source = Path(source_root).resolve()
         destination = Path(destination_root).resolve()
         if destination == source:
@@ -311,10 +351,52 @@ class DaemonStoreLifecycle:
                 restore_path=str(source),
             )
 
+        # Journal checkpoint before the transaction — evidence, not recovery.
+        if correlation_id is not None:
+            if not isinstance(correlation_id, str) or not correlation_id.strip():
+                return invalid_input(
+                    "correlation_id",
+                    "migration journal checkpoint requires a non-empty correlation_id",
+                    given=repr(correlation_id),
+                )
+            identity = {
+                "event": "migration.checkpoint",
+                "owner": "daemon_core",
+                "target_id": store,
+                "correlation_id": correlation_id,
+                "is_recovery_copy": False,
+            }
+            fp = content_address(identity)
+            if is_refusal(fp):
+                return fp
+            if journal is not None:
+                appended = journal.append_event(
+                    "migration.checkpoint",
+                    payload=MappingProxyType(
+                        {
+                            "owner": "daemon_core",
+                            "target_id": store,
+                            "correlation_id": correlation_id,
+                            "fingerprint": fp.value.value,
+                            "is_recovery_copy": False,
+                        }
+                    ),
+                )
+                if is_refusal(appended):
+                    return appended
+            # Checkpoint is never a recovery copy (FR-Q69; CT-42).
+
         # --- preflight ---
         preflight = _read_snapshot(source, store)
         if is_refusal(preflight):
-            return preflight
+            return policy_rejection(
+                "preflight",
+                "migration preflight failed; journal checkpoint is evidence only "
+                "and is not a recovery copy (FR-Q69; AD-21)",
+                store=store,
+                checkpoint_is_recovery_copy=False,
+                cause=str(preflight.context.get("reason", preflight)),
+            )
         snap = preflight.value
         if snap.schema_version != known_schema_version:
             return refuse_unknown_store_schema(

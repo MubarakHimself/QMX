@@ -6,7 +6,9 @@ migrations → topological activation → publication over the wire surface.
 
 Reload is an explicit operator command. There is no file watcher and no
 reactive remount. Contribution types are imported from ``qma-core``; this
-module implements the daemon-owned loader only.
+module implements the daemon-owned loader only. Migrations (FR-Q69) run the
+five-step path with an ``fp1`` journal checkpoint; forward-only upgrades take
+a recorded ``operator`` confirmation.
 """
 
 from __future__ import annotations
@@ -14,24 +16,36 @@ from __future__ import annotations
 import re
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
+from pathlib import Path
 from types import MappingProxyType
-from typing import Final, Literal, cast
+from typing import TYPE_CHECKING, Final, Literal, cast
 
 from qma.core.plugins.context import Disposer, PluginContext
 from qma.core.plugins.manifest import (
     ManifestError,
     PluginManifest,
     parse_plugin_manifest,
+    validate_migration_rollback_contract,
 )
 from qma.core.ports.cardinality import Cardinality
 from qma.core.ports.permissions import check_plugin_permissions_at_load
 from qma.core.vocabulary.enums import PrincipalClass
 from qma.daemon.plugins.context import DaemonPluginContext, PluginContextError
 from qma.daemon.plugins.exit_stack import PluginExitStack
+from qma.daemon.plugins.migrations import (
+    DisableReceipt,
+    InstallPreflightResult,
+    PluginMigrationReport,
+    PluginMigrationRunner,
+    rollback_mode_for_manifest,
+)
 from qma.wire.principals import authorize_wire_command, parse_principal_class
 from qmf.core import Ok, Result, is_ok
 from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 from qmf.data.store.refusals import invalid_input, policy_rejection
+
+if TYPE_CHECKING:
+    from qma.daemon.journal.authoritative import AuthoritativeJournal
 
 __all__ = [
     "FILE_WATCHER_ENABLED",
@@ -211,14 +225,20 @@ class LoadedPlugin:
     exit_stack: PluginExitStack
     published: tuple[PublishedContribution, ...] = ()
     phases_completed: tuple[str, ...] = ()
+    migration_report: PluginMigrationReport | None = None
+    data_intact: bool = True
 
 
 @dataclass
 class PluginLoader:
-    """Daemon-owned loader for first-party desk plugins (AD-21; FR-Q68)."""
+    """Daemon-owned loader for first-party desk plugins (AD-21; FR-Q68/FR-Q69)."""
 
     daemon_qma_api: str = "0.1.0"
     permission_allowlist: frozenset[str] = frozenset()
+    migrations: PluginMigrationRunner = field(default_factory=PluginMigrationRunner)
+    journal: AuthoritativeJournal | None = None
+    migration_source_root: Path | None = None
+    migration_destination_root: Path | None = None
     _loaded: dict[str, LoadedPlugin] = field(default_factory=dict[str, LoadedPlugin], init=False)
     _singleton_owners: dict[tuple[str, str], str] = field(
         default_factory=dict[tuple[str, str], str], init=False
@@ -229,6 +249,7 @@ class PluginLoader:
     _published: list[PublishedContribution] = field(
         default_factory=list[PublishedContribution], init=False
     )
+    _disabled_data_intact: set[str] = field(default_factory=set[str], init=False)
 
     @property
     def file_watcher_enabled(self) -> bool:
@@ -283,16 +304,66 @@ class PluginLoader:
             )
 
     def _migrations_phase(self, manifest: PluginManifest) -> None:
-        # Story 48.1 validates the phase exists and empty sets pass; execution is 48.2.
-        if manifest.migrations and manifest.rollback is None:
-            for index, migration in enumerate(manifest.migrations):
-                if "down" not in migration:
-                    raise PluginLoadError(
-                        "migration missing declared 'down' without rollback: forward_only "
-                        f"(plugin_id={manifest.id!r}, index={index})",
-                        plugin_id=manifest.id,
-                        field="migrations",
-                    )
+        """Validate the rollback contract; execution happens in ``_execute_migrations``."""
+        try:
+            validate_migration_rollback_contract(manifest.migrations, manifest.rollback)
+        except ManifestError as exc:
+            raise PluginLoadError(
+                str(exc),
+                plugin_id=manifest.id,
+                field="migrations",
+            ) from exc
+        confirmed = self.migrations.has_forward_only_confirmation(manifest.id)
+        if manifest.rollback == "forward_only" and not confirmed:
+            raise PluginLoadError(
+                "forward-only upgrade requires operator confirmation in this session "
+                f"(plugin_id={manifest.id!r})",
+                plugin_id=manifest.id,
+                field="forward_only_confirmation",
+            )
+
+    def install_preflight(self, raw: Mapping[str, object]) -> Result[InstallPreflightResult]:
+        """Install-command preflight query — returns rollback mode over qma-wire."""
+        return self.migrations.install_preflight(raw)
+
+    def confirm_forward_only(
+        self,
+        *,
+        plugin_id: str,
+        correlation_id: object,
+        principal: object = PrincipalClass.OPERATOR,
+    ) -> Result[object]:
+        """Record operator confirmation for a forward-only upgrade (FR-Q69)."""
+        return self.migrations.confirm_forward_only(
+            plugin_id=plugin_id,
+            correlation_id=correlation_id,
+            principal=principal,
+            journal=self.journal,
+        )
+
+    def _execute_migrations(
+        self,
+        manifest: PluginManifest,
+        *,
+        correlation_id: object,
+    ) -> Result[PluginMigrationReport | None]:
+        if not manifest.migrations:
+            return Ok(None)
+        if self.migration_source_root is None or self.migration_destination_root is None:
+            return policy_rejection(
+                "migrations",
+                "plugin migrations require distinct source and destination roots "
+                "(documented restore path; FR-Q69; AD-27)",
+                plugin_id=manifest.id,
+            )
+        return self.migrations.run_plugin_migrations(
+            manifest,
+            source_root=self.migration_source_root,
+            destination_root=self.migration_destination_root,
+            correlation_id=correlation_id,
+            journal=self.journal,
+            require_confirmation=True,
+        )
 
     def _claim_bindings(self, context: DaemonPluginContext) -> list[Disposer]:
         """Claim daemon-wide singleton/multi keys; return claim disposers."""
@@ -385,6 +456,8 @@ class PluginLoader:
         self,
         manifest: PluginManifest,
         activator: PluginActivator,
+        *,
+        migration_report: PluginMigrationReport | None = None,
     ) -> LoadedPlugin:
         if manifest.id in self._loaded:
             raise PluginLoadError(
@@ -432,9 +505,38 @@ class PluginLoader:
             exit_stack=exit_stack,
             published=published,
             phases_completed=tuple(phases),
+            migration_report=migration_report,
+            data_intact=True,
         )
         self._loaded[manifest.id] = loaded
         return loaded
+
+    def _load_with_migrations(
+        self,
+        raw: Mapping[str, object],
+        *,
+        activator: PluginActivator,
+        correlation_id: object,
+    ) -> Result[LoadedPlugin]:
+        prepared = self._validate_manifest_phases(raw)
+        if not is_ok(prepared):
+            return prepared
+        migrated = self._execute_migrations(prepared.value, correlation_id=correlation_id)
+        if not is_ok(migrated):
+            return migrated
+        try:
+            loaded = self._activate(
+                prepared.value,
+                activator,
+                migration_report=migrated.value,
+            )
+        except PluginLoadError as exc:
+            return self._refuse(
+                exc.field or "activation",
+                str(exc),
+                plugin_id=exc.plugin_id,
+            )
+        return Ok(loaded)
 
     def _validate_manifest_phases(
         self,
@@ -481,23 +583,15 @@ class PluginLoader:
         *,
         activator: PluginActivator,
         principal: object = PrincipalClass.OPERATOR,
+        correlation_id: object = "plugin-install",
     ) -> Result[LoadedPlugin]:
         """Operator-principal install following the closed load-phase order."""
         gated = self._require_operator("plugin.install", principal)
         if not is_ok(gated):
             return gated
-        prepared = self._validate_manifest_phases(raw)
-        if not is_ok(prepared):
-            return prepared
-        try:
-            loaded = self._activate(prepared.value, activator)
-        except PluginLoadError as exc:
-            return self._refuse(
-                exc.field or "activation",
-                str(exc),
-                plugin_id=exc.plugin_id,
-            )
-        return Ok(loaded)
+        return self._load_with_migrations(
+            raw, activator=activator, correlation_id=correlation_id
+        )
 
     def enable(
         self,
@@ -505,23 +599,15 @@ class PluginLoader:
         *,
         activator: PluginActivator,
         principal: object = PrincipalClass.OPERATOR,
+        correlation_id: object = "plugin-enable",
     ) -> Result[LoadedPlugin]:
         """Operator-principal enable — same load order as install (FR-Q68)."""
         gated = self._require_operator("plugin.enable", principal)
         if not is_ok(gated):
             return gated
-        prepared = self._validate_manifest_phases(raw)
-        if not is_ok(prepared):
-            return prepared
-        try:
-            loaded = self._activate(prepared.value, activator)
-        except PluginLoadError as exc:
-            return self._refuse(
-                exc.field or "activation",
-                str(exc),
-                plugin_id=exc.plugin_id,
-            )
-        return Ok(loaded)
+        return self._load_with_migrations(
+            raw, activator=activator, correlation_id=correlation_id
+        )
 
     def reload(
         self,
@@ -529,6 +615,7 @@ class PluginLoader:
         *,
         activator: PluginActivator,
         principal: object = PrincipalClass.OPERATOR,
+        correlation_id: object = "plugin-reload",
     ) -> Result[LoadedPlugin]:
         """Explicit reload — no file watcher, no reactive remount (AD-21)."""
         if self.file_watcher_enabled:
@@ -546,18 +633,9 @@ class PluginLoader:
         plugin_id = raw.get("id")
         if isinstance(plugin_id, str) and plugin_id in self._loaded:
             self.unload(plugin_id)
-        prepared = self._validate_manifest_phases(raw)
-        if not is_ok(prepared):
-            return prepared
-        try:
-            loaded = self._activate(prepared.value, activator)
-        except PluginLoadError as exc:
-            return self._refuse(
-                exc.field or "activation",
-                str(exc),
-                plugin_id=exc.plugin_id,
-            )
-        return Ok(loaded)
+        return self._load_with_migrations(
+            raw, activator=activator, correlation_id=correlation_id
+        )
 
     def unload(self, plugin_id: str) -> int:
         """Close the plugin scope LIFO and remove every published contribution."""
@@ -568,12 +646,46 @@ class PluginLoader:
         self._drop_published(plugin_id)
         return count
 
+    def disable(
+        self,
+        plugin_id: str,
+        *,
+        principal: object = PrincipalClass.OPERATOR,
+    ) -> Result[DisableReceipt]:
+        """Disable a plugin: dispose scope, keep data intact; never roll back forward-only."""
+        gated = self._require_operator("plugin.enable", principal)
+        if not is_ok(gated):
+            return gated
+        loaded = self.get(plugin_id)
+        if loaded is not None and rollback_mode_for_manifest(loaded.manifest) == "forward_only":
+            self._disabled_data_intact.add(plugin_id)
+        self.unload(plugin_id)
+        return self.migrations.disable_forward_only(plugin_id)
+
+    def rollback_plugin(self, plugin_id: str) -> Result[object]:
+        """Refuse rollback for forward-only plugins (FR-Q69; CT-42)."""
+        loaded = self.get(plugin_id)
+        forward_only = plugin_id in self._disabled_data_intact
+        if loaded is not None:
+            forward_only = forward_only or (
+                rollback_mode_for_manifest(loaded.manifest) == "forward_only"
+            )
+        if forward_only:
+            return self.migrations.refuse_forward_only_rollback(plugin_id)
+        return policy_rejection(
+            "rollback",
+            "plugin rollback of reversible migrations uses declared downs under "
+            "the restore path, not disable (FR-Q69)",
+            plugin_id=plugin_id,
+        )
+
     def activate_roster(
         self,
         manifests: Sequence[Mapping[str, object]],
         *,
         activators: Mapping[str, PluginActivator],
         principal: object = PrincipalClass.OPERATOR,
+        correlation_id: object = "plugin-roster",
     ) -> Result[tuple[LoadedPlugin, ...]]:
         """Validate and topologically activate a set of manifests."""
         gated = self._require_operator("plugin.install", principal)
@@ -613,8 +725,21 @@ class PluginLoader:
                     f"no activator provided for plugin {plugin_id!r}",
                     plugin_id=plugin_id,
                 )
+            migrated = self._execute_migrations(
+                by_id[plugin_id], correlation_id=f"{correlation_id}:{plugin_id}"
+            )
+            if not is_ok(migrated):
+                for row in reversed(loaded_rows):
+                    self.unload(row.manifest.id)
+                return migrated
             try:
-                loaded_rows.append(self._activate(by_id[plugin_id], activator))
+                loaded_rows.append(
+                    self._activate(
+                        by_id[plugin_id],
+                        activator,
+                        migration_report=migrated.value,
+                    )
+                )
             except PluginLoadError as exc:
                 for row in reversed(loaded_rows):
                     self.unload(row.manifest.id)

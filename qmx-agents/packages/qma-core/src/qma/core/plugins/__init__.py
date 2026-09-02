@@ -40,8 +40,10 @@ from qma.core.plugins.manifest import (
     ManifestError,
     PluginManifest,
     PluginRosterEntry,
+    RollbackMode,
     parse_plugin_manifest,
     require_desk_prefix_plugin_id,
+    validate_migration_rollback_contract,
 )
 from qma.core.plugins.secret_schema import (
     FORBIDDEN_SECRET_PAYLOAD_KEYS,
@@ -95,6 +97,7 @@ __all__ = [
     "PluginContext",
     "PluginManifest",
     "PluginRosterEntry",
+    "RollbackMode",
     "assert_core_definitions_only",
     "assert_handle_kind_not_money_path",
     "assert_hook_result_phase_law",
@@ -111,4 +114,5 @@ __all__ = [
     "require_desk_prefix_plugin_id",
     "scan_daemon_imports",
     "scan_forbidden_runtime_calls",
+    "validate_migration_rollback_contract",
 ]

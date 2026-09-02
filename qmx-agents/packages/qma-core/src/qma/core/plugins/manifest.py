@@ -24,8 +24,10 @@ __all__ = [
     "ManifestError",
     "PluginManifest",
     "PluginRosterEntry",
+    "RollbackMode",
     "parse_plugin_manifest",
     "require_desk_prefix_plugin_id",
+    "validate_migration_rollback_contract",
 ]
 
 RollbackMode = Literal["forward_only"]
@@ -260,6 +262,8 @@ def parse_plugin_manifest(raw: Mapping[str, object]) -> PluginManifest:
     else:
         raise ManifestError(f"rollback must be 'forward_only' or omitted; got {rollback_raw!r}")
 
+    validate_migration_rollback_contract(tuple(migrations), rollback)
+
     return PluginManifest(
         id=plugin_id,
         version=version,
@@ -272,3 +276,34 @@ def parse_plugin_manifest(raw: Mapping[str, object]) -> PluginManifest:
         migrations=tuple(migrations),
         rollback=rollback,
     )
+
+
+def validate_migration_rollback_contract(
+    migrations: Sequence[Mapping[str, object]],
+    rollback: RollbackMode | None,
+) -> None:
+    """Enforce CT-42 rollback law for a migration set (FR-Q69).
+
+    Absent ``rollback`` means reversible-by-``down``. An empty migration set is
+    explicitly empty and must not declare ``rollback``. Every migration declares
+    ``down`` unless the manifest declares ``rollback: forward_only``.
+    """
+    if not migrations:
+        if rollback is not None:
+            raise ManifestError(
+                "empty migration set must not declare rollback; omit the key "
+                "(CT-42; FR-Q69)"
+            )
+        return
+    if rollback == "forward_only":
+        return
+    if rollback is not None:
+        raise ManifestError(
+            f"rollback must be 'forward_only' or omitted; got {rollback!r}"
+        )
+    for index, migration in enumerate(migrations):
+        if "down" not in migration:
+            raise ManifestError(
+                "every migration declares a 'down' unless the manifest declares "
+                f"rollback: forward_only (index={index})"
+            )

@@ -18,7 +18,8 @@
         "inspect_trace",
         "list_installed_plugins",
         "get_provider_health",
-        "list_mission_hooks"
+        "list_mission_hooks",
+        "plugin_install_preflight"
       ]
     },
     "args": { "type": "object" }
