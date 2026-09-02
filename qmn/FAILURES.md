@@ -989,3 +989,29 @@ designed failure; every typed refusal the node can emit belongs here.
   `restore_drill_run` or wait for the next `qmn-restore-sample` /
   `qmn-restore-full` timer; run `just node-host-loss-restore` only as the
   ops principal. Never cut over automatically.
+
+### FR-64: Paper-milestone readiness packet refused
+
+- **Failure class:** policy rejection / invalid input
+- **Detection:** the readiness assembler refused invented KSA/latency numbers
+  (`readiness.invented_ksa_or_latency`), a ratified VPS minimum
+  (`readiness.ratified_vps_minimum`), soak-local inputs treated as unrelated
+  epic blockers (`readiness.unrelated_epic_blocker`), a VPS procurement act
+  (`readiness.procure_vps`), missing machine-gate evidence
+  (`readiness.machine_gate`), an incomplete failure register
+  (`readiness.failure_register`), a demo roster without a paired paper target
+  (`readiness.demo_roster`), a settings catalog that is not 71 rows
+  (`readiness.settings_status`), or a missing branch/base commit
+  (`readiness.commit_lineage`).
+- **Auto-recovery / retry:** none — record the blocked soak-local human inputs
+  as local acceptance; do not fill KSA/latency numbers and do not procure a
+  VPS from this packet.
+- **Visible degraded state:** soak start remains blocked; unrelated epics stay
+  unblocked; live-sensing and go-live-only inputs stay off the demo week.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The paper-milestone packet could not claim soak
+  start. Inspect `read_status` on the evidence channel and run
+  `just node-config-validate`. Supply operator-ratified KSA values, measured
+  latency baselines, and the soak-local accounts when those acceptances run;
+  never invent the numbers and never treat a missing VPS as a blocker for
+  another epic.
