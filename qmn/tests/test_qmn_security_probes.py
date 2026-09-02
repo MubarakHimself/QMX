@@ -5,7 +5,8 @@ from __future__ import annotations
 import importlib.util
 import sys
 from pathlib import Path
-from typing import TypeVar
+from collections.abc import Mapping
+from typing import TypeVar, cast
 
 from qmf.core.refusal import RefusalCategory, Result, is_ok, is_refusal
 from qmn.host import (
@@ -67,8 +68,10 @@ def test_probes_refuse_and_journal_without_secret() -> None:
     assert tuple(report.probes) == SECURITY_PROBE_NAMES
     for name in SECURITY_PROBE_NAMES:
         section = report.sections[name]
-        assert section["refused"] is True
-        assert section["journaled"] is True
+        assert isinstance(section, Mapping)
+        mapped_section = cast("Mapping[str, object]", section)
+        assert mapped_section["refused"] is True
+        assert mapped_section["journaled"] is True
     mapped = report.as_mapping()
     assert "fixture-secret-zzzzzzzz" not in str(mapped)
     assert mapped["fingerprint"] == report.fingerprint.value

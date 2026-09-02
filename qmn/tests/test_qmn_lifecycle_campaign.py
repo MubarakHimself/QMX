@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TypeVar
+from collections.abc import Mapping
+from typing import TypeVar, cast
 
 from qmf.core import Fingerprint, RefusalCategory, Result, fingerprint
 from qmf.core.refusal import is_ok, is_refusal
@@ -119,20 +120,26 @@ def test_campaign_proves_lifecycle_injections() -> None:
     assert report.stack_required is False
     assert report.watcher_only_notifies is True
     assert tuple(report.injections) == LIFECYCLE_INJECTIONS
-    crash = report.sections["crash-loop"]
+
+    def _section(name: str) -> Mapping[str, object]:
+        value = report.sections[name]
+        assert isinstance(value, Mapping)
+        return cast("Mapping[str, object]", value)
+
+    crash = _section("crash-loop")
     assert crash["doors_serving"] is True
     assert crash["restart_clears"] is False
-    quarantine = report.sections["callback-wedge"]
+    quarantine = _section("callback-wedge")
     assert quarantine["survives_restart"] is True
     assert quarantine["state_after_restart"] == "quarantined"
-    clock = report.sections["clock"]
+    clock = _section("clock")
     assert clock["no_new_entry_stand_down"] is False
     assert clock["halt_stand_down"] is True
-    disk = report.sections["disk"]
+    disk = _section("disk")
     assert disk["degrades_before_full"] is True
-    shutdown = report.sections["shutdown"]
+    shutdown = _section("shutdown")
     assert shutdown["flattened"] is False
-    recovery = report.sections["recovery"]
+    recovery = _section("recovery")
     assert recovery["watcher_can_stop_entries"] is False
     assert recovery["restore_auto_cutover"] is False
     assert "fingerprint" in report.as_mapping()
