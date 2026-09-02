@@ -13,7 +13,6 @@ import json
 import os
 import subprocess
 import sys
-import time
 from collections.abc import Mapping
 from contextlib import suppress
 from dataclasses import dataclass
@@ -37,6 +36,7 @@ from qmb.runloop.observe import (
     RunLimits,
 )
 from qmf.core import (
+    Clock,
     Duration,
     Fingerprint,
     Ok,
@@ -76,6 +76,7 @@ from qmn.replay.session import (
     allocate_replay_writer,
     assert_outside_node_process,
 )
+from qmn.time import VpsClock
 
 __all__ = [
     "REPLAY_MODULE",
@@ -183,6 +184,7 @@ def start_replay_job(
     output_path: Path,
     cancel: CancelToken | None = None,
     limits: RunLimits | None = None,
+    clock: object = None,
 ) -> Result[ReplayLiveJob]:
     """Create the isolated run directory and start the child OS process."""
     outside = assert_outside_node_process()
@@ -196,6 +198,9 @@ def start_replay_job(
             "a cancelled job is not admitted; no process starts and no terminal line is written",
             cause=token.cause,
         )
+    bound_clock = _as_clock(clock, boot_epoch_id=spec.boot_epoch_id)
+    if is_refusal(bound_clock):
+        return bound_clock
     run_dir = output_path.parent
     try:
         run_dir.mkdir(parents=True, exist_ok=True)
@@ -218,7 +223,10 @@ def start_replay_job(
         return writer
     spec_path = run_dir / SPEC_NAME
     writer_path = run_dir / WRITER_NAME
-    start_ns = _wall_ns()
+    start = _stamp_wall_ns(bound_clock.value)
+    if is_refusal(start):
+        return start
+    start_ns = start.value
     spec_body = spec_to_jsonable(spec, evidence_root=evidence_root)
     try:
         spec_path.write_text(json.dumps(spec_body, sort_keys=True) + "\n", encoding="utf-8")
@@ -284,8 +292,11 @@ def start_replay_job(
             given=type(exc).__name__,
             requiring_review=True,
         )
-    started_mono = time.monotonic_ns()  # ambient-scan: allow - replay orchestrator
-    probe = ProcessLimitProbe(proc.pid, started_mono)
+    started_mono = _stamp_mono_ns(bound_clock.value)
+    if is_refusal(started_mono):
+        kill_owned_process(proc)
+        return started_mono
+    probe = ProcessLimitProbe(proc.pid, started_mono.value)
     return Ok(
         ReplayLiveJob(
             spec=spec,
@@ -312,6 +323,7 @@ def finish_replay_job(
     *,
     ledger: object,
     terminal: object = None,
+    clock: object = None,
 ) -> Result[ReplayTerminalRecord]:
     """Collect one spawned replay job and append exactly one terminal line.
 
@@ -332,26 +344,42 @@ def finish_replay_job(
     forced = _optional_status(terminal)
     if is_refusal(forced):
         return forced
+    bound_clock = _as_clock(clock, boot_epoch_id=job.value.spec.boot_epoch_id)
+    if is_refusal(bound_clock):
+        return bound_clock
     if forced.value == TERMINAL_TEARDOWN:
         kill_owned_process(job.value.process)
-        return _commit_terminal(job.value, sink.value, status=TERMINAL_TEARDOWN, exit_code=None)
+        return _commit_terminal(
+            job.value,
+            sink.value,
+            status=TERMINAL_TEARDOWN,
+            exit_code=None,
+            clock=bound_clock.value,
+        )
     status = _wait_for_job(job.value)
     if is_refusal(status):
         return status
     return _commit_terminal(
-        job.value, sink.value, status=status.value, exit_code=job.value.process.returncode
+        job.value,
+        sink.value,
+        status=status.value,
+        exit_code=job.value.process.returncode,
+        clock=bound_clock.value,
     )
 
 
-def teardown_replay_job(live: object, *, ledger: object) -> Result[ReplayTerminalRecord]:
+def teardown_replay_job(
+    live: object, *, ledger: object, clock: object = None
+) -> Result[ReplayTerminalRecord]:
     """Kill an in-flight admitted job and append the teardown terminal line."""
-    return finish_replay_job(live, ledger=ledger, terminal=TERMINAL_TEARDOWN)
+    return finish_replay_job(live, ledger=ledger, terminal=TERMINAL_TEARDOWN, clock=clock)
 
 
 def recover_replay_terminal(
     *,
     run_dir: object,
     ledger: object,
+    clock: object = None,
 ) -> Result[ReplayTerminalRecord]:
     """Scan the run directory and writer stream; append a missing terminal line.
 
@@ -383,7 +411,14 @@ def recover_replay_terminal(
         if is_refusal(appended):
             return _review(appended)
         return appended
-    inferred = _infer_from_run_dir(directory, manifest.value)
+    boot_raw = manifest.value.get("boot_epoch_id")
+    boot_epoch_id = (
+        boot_raw.strip() if isinstance(boot_raw, str) and boot_raw.strip() != "" else "replay-boot"
+    )
+    bound_clock = _as_clock(clock, boot_epoch_id=boot_epoch_id)
+    if is_refusal(bound_clock):
+        return bound_clock
+    inferred = _infer_from_run_dir(directory, manifest.value, clock=bound_clock.value)
     if is_refusal(inferred):
         return inferred
     decided = write_intent(directory, inferred.value)
@@ -404,6 +439,7 @@ def run_replay_job(
     cancel: CancelToken | None = None,
     limits: RunLimits | None = None,
     timeout_s: int | None = None,
+    clock: object = None,
 ) -> Result[ReplayTerminalRecord]:
     """Admit one replay job through the QMB orchestration seam and ledger it."""
     bound = limits
@@ -418,10 +454,11 @@ def run_replay_job(
         output_path=output_path,
         cancel=cancel,
         limits=bound,
+        clock=clock,
     )
     if is_refusal(started):
         return started
-    return finish_replay_job(started.value, ledger=ledger)
+    return finish_replay_job(started.value, ledger=ledger, clock=clock)
 
 
 def spawn_replay_job(
@@ -433,6 +470,7 @@ def spawn_replay_job(
     ledger: ReplayLedgerSink | None = None,
     cancel: CancelToken | None = None,
     limits: RunLimits | None = None,
+    clock: object = None,
 ) -> Result[ReplaySpawnReceipt]:
     """Spawn ``python -m qmn.replay`` and append exactly one terminal line."""
     outside = assert_outside_node_process()
@@ -458,6 +496,7 @@ def spawn_replay_job(
         cancel=cancel,
         limits=limits,
         timeout_s=timeout_s,
+        clock=clock,
     )
     if is_refusal(finished):
         return finished
@@ -556,8 +595,12 @@ def _commit_terminal(
     *,
     status: str,
     exit_code: int | None,
+    clock: Clock,
 ) -> Result[ReplayTerminalRecord]:
-    end_ns = _wall_ns()
+    ended = _stamp_wall_ns(clock)
+    if is_refusal(ended):
+        return ended
+    end_ns = ended.value
     envelope = _read_output_envelope(live.output_path, contain_within=live.run_dir)
     refusal, failure = _refusal_from_envelope(envelope, status=status, exit_code=exit_code)
     refs: dict[str, object] = {
@@ -594,7 +637,7 @@ def _commit_terminal(
 
 
 def _infer_from_run_dir(
-    run_dir: Path, manifest: Mapping[str, object]
+    run_dir: Path, manifest: Mapping[str, object], *, clock: Clock
 ) -> Result[ReplayTerminalRecord]:
     run_fp = Fingerprint.try_create(manifest.get("run_fp"))
     if is_refusal(run_fp):
@@ -644,6 +687,9 @@ def _infer_from_run_dir(
         else 0,
         "end_ns": end_raw if isinstance(end_raw, int) and not isinstance(end_raw, bool) else 0,
     }
+    ended = _stamp_wall_ns(clock)
+    if is_refusal(ended):
+        return ended
     return Ok(
         ReplayTerminalRecord(
             run_fp=run_fp.value,
@@ -653,7 +699,7 @@ def _infer_from_run_dir(
             interval=interval,
             status=status,
             start_ns=start_ns,
-            end_ns=_wall_ns(),
+            end_ns=ended.value,
             output_refs=refs,
             refusal=refusal,
             failure=failure,
@@ -789,5 +835,30 @@ def _review(refusal: TypedRefusal) -> TypedRefusal:
     )
 
 
-def _wall_ns() -> int:
-    return time.time_ns()  # ambient-scan: allow - replay job orchestrator composition root
+def _as_clock(clock: object, *, boot_epoch_id: str) -> Result[Clock]:
+    if clock is None:
+        bound = VpsClock.from_host_os(boot_epoch_id=boot_epoch_id)
+        if is_refusal(bound):
+            return bound
+        return Ok(bound.value)
+    if not isinstance(clock, Clock):
+        return invalid(
+            "clock",
+            "the composition root injects a Clock; replay spawn never reads the system clock",
+            given=repr(type(clock).__name__),
+        )
+    return Ok(clock)
+
+
+def _stamp_wall_ns(clock: Clock) -> Result[int]:
+    wall = clock.wall_now()
+    if is_refusal(wall):
+        return wall
+    return Ok(wall.value.value_ns)
+
+
+def _stamp_mono_ns(clock: Clock) -> Result[int]:
+    mono = clock.monotonic_now()
+    if is_refusal(mono):
+        return mono
+    return Ok(mono.value.value_ns)
