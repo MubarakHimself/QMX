@@ -175,5 +175,5 @@ def test_initialize_and_family_schemas_load() -> None:
         return cast(list[object], enum_obj)
 
     assert len(_name_enum("command")) == 9
-    assert len(_name_enum("query")) == 8
+    assert len(_name_enum("query")) == 9
     assert len(_name_enum("event")) == 10

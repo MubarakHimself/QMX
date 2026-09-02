@@ -34,6 +34,7 @@ from qma.daemon.plugins.context import DaemonPluginContext, PluginContextError
 from qma.daemon.plugins.exit_stack import PluginExitStack
 from qma.daemon.plugins.migrations import (
     DisableReceipt,
+    ForwardOnlyConfirmation,
     InstallPreflightResult,
     PluginMigrationReport,
     PluginMigrationRunner,
@@ -332,7 +333,7 @@ class PluginLoader:
         plugin_id: str,
         correlation_id: object,
         principal: object = PrincipalClass.OPERATOR,
-    ) -> Result[object]:
+    ) -> Result[ForwardOnlyConfirmation]:
         """Record operator confirmation for a forward-only upgrade (FR-Q69)."""
         return self.migrations.confirm_forward_only(
             plugin_id=plugin_id,
@@ -356,7 +357,7 @@ class PluginLoader:
                 "(documented restore path; FR-Q69; AD-27)",
                 plugin_id=manifest.id,
             )
-        return self.migrations.run_plugin_migrations(
+        migrated = self.migrations.run_plugin_migrations(
             manifest,
             source_root=self.migration_source_root,
             destination_root=self.migration_destination_root,
@@ -364,6 +365,10 @@ class PluginLoader:
             journal=self.journal,
             require_confirmation=True,
         )
+        if not is_ok(migrated):
+            return cast(Result[PluginMigrationReport | None], migrated)
+        report: PluginMigrationReport | None = migrated.value
+        return Ok(report)
 
     def _claim_bindings(self, context: DaemonPluginContext) -> list[Disposer]:
         """Claim daemon-wide singleton/multi keys; return claim disposers."""

@@ -353,7 +353,7 @@ class PluginMigrationRunner:
         journal: AuthoritativeJournal | None = None,
     ) -> Result[ForwardOnlyConfirmation]:
         """Record ``operator`` confirmation of a forward-only upgrade as evidence."""
-        if not isinstance(plugin_id, str) or not plugin_id:
+        if not plugin_id:
             return invalid_input("plugin_id", "plugin_id is required", given=repr(plugin_id))
         if not isinstance(correlation_id, str) or not correlation_id.strip():
             return invalid_input(
@@ -773,7 +773,7 @@ class PluginMigrationRunner:
         scope_dispose: Sequence[object] | None = None,
     ) -> Result[DisableReceipt]:
         """Disable a forward-only plugin: dispose scope, keep data intact, never roll back."""
-        if not isinstance(plugin_id, str) or not plugin_id:
+        if not plugin_id:
             return invalid_input("plugin_id", "plugin_id is required", given=repr(plugin_id))
         # scope_dispose is invoked by the caller (loader.unload); we only record.
         _ = scope_dispose
