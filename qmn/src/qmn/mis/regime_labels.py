@@ -446,12 +446,6 @@ def generate_regime_labels(
         if is_refusal(fitted):
             return fitted
         resolved_edges = fitted.value
-    elif not isinstance(resolved_edges, LabelEdgeFit):
-        return invalid(
-            "edges",
-            "label generation takes a LabelEdgeFit from train-only fitting",
-            given=type(resolved_edges).__name__,
-        )
 
     provenance = _provenance_fps(
         label_contract=label_contract,
@@ -502,7 +496,7 @@ def generate_regime_labels(
                 split_role = "unknown"
             elif exclusion is not None or range_ppb is None:
                 class_label = EXCLUSION_CLASS
-                split_role = role if role is not None else "unknown"
+                split_role = role
                 if exclusion is None:
                     exclusion = ExclusionReason.INSUFFICIENT_HORIZON
             else:
