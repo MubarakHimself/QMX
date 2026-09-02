@@ -847,15 +847,39 @@ designed failure; every typed refusal the node can emit belongs here.
   verification, and the two-copy rule; never infer retention from Backblaze
   or any other provider default.
 
-### FR-57: Live Backblaze or rclone bucket tonight
+### FR-57: Live Backblaze B2 without soak-local accounts
 
 - **Failure class:** policy rejection
-- **Detection:** a live object-storage client or bucket is opened
-  (`data.backup.backblaze_tonight`).
-- **Auto-recovery / retry:** none — Story 27.6 owns the B2/rclone push.
-- **Visible degraded state:** the provider row may be declared; no network
-  backup client starts.
+- **Detection:** a live Backblaze B2 or other networked object-storage
+  backend is opened outside soak-local acceptance
+  (`data.backup.backblaze_tonight`), or soak-local B2 is requested without a
+  human bucket account (`data.backup.missing_bucket_account`).
+- **Auto-recovery / retry:** none — factory tests use an isolated local
+  rclone backend and a generated test key; real B2 stays soak-local.
+- **Visible degraded state:** no live bucket client starts; local-test and
+  unrelated branches continue.
 - **Notification tier:** operator-visible (journaled).
 - **Product-user affordance:** Inspect `read_failure_detail` on the evidence
-  channel. Declare the provider as configuration only; the real bucket push
-  waits for Story 27.6.
+  channel. Provision the Backblaze bucket and escrowed payload key as
+  soak-local gates; missing human accounts do not block replay.
+
+### FR-58: Encrypted rclone off-host push refused
+
+- **Failure class:** storage failure / policy rejection
+- **Detection:** rclone copy rejected or unreachable
+  (`data.backup.rclone_transfer`), an uncommitted prefix
+  (`data.backup.uncommitted`), processed/rebuildable data included without a
+  citing result label (`data.backup.processed_excluded`), credentials or
+  plaintext in backup metadata/logs (`data.backup.secret_in_evidence`),
+  mutation of an existing versioned object (`data.backup.mutate_existing`),
+  `world = simulated` (`data.backup.world`), or a trading power on the
+  backup argv (`data.backup.trading_power`).
+- **Auto-recovery / retry:** rclone transfer is retryable on the next timer
+  firing; policy refusals are not retried.
+- **Visible degraded state:** no off-host completion is claimed; local
+  evidence is unchanged; ciphertext already staged is left for an
+  idempotent retry.
+- **Notification tier:** silent-degradation
+- **Product-user affordance:** Inspect `read_failure_detail` on the evidence
+  channel. The nightly backup copies only committed prefixes of immutable
+  raw archive, journals, registry, sealed-archive, and the research door.

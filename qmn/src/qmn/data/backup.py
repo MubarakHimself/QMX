@@ -660,15 +660,17 @@ def refuse_venue_shared_custody(*, holder: object, slot: object) -> TypedRefusal
 
 
 def refuse_live_bucket_tonight(*, provider: object) -> TypedRefusal:
-    """Real Backblaze/rclone/bucket stand-up waits for Story 27.6."""
+    """Real Backblaze B2 remains soak-local; factory tests use a local backend."""
     token = clean_token(provider)
     return policy(
         "provider",
-        "Story 27.5 records the provider row; a live Backblaze B2 bucket or "
-        "rclone path is not opened tonight (AR-87)",
+        "a live Backblaze B2 bucket is soak-local acceptance; factory tests "
+        "drive rclone against an isolated local backend and a generated test "
+        "key (AR-87)",
         failure_id=_BUCKET_ID,
         given=token if token is not None else repr(provider),
         live_bucket_tonight=LIVE_BUCKET_TONIGHT,
+        soak_local=False,
     )
 
 
