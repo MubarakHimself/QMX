@@ -23,6 +23,12 @@ node-switch *ARGS:
 node-rollback *ARGS:
     uv run python "{{qmn_deploy}}/switch.py" node-rollback --check-mode {{ARGS}}
 
+# First-deployment demo shape (Story 28.2 / TN-9/16). Check mode by default.
+# Live --apply is refused off-VPS; never procures a VPS or opens live
+# credentials. Book routing PAPER for the whole first-deployment window.
+node-demo-deploy *ARGS:
+    uv run python "{{qmn_deploy}}/demo.py" --check-mode {{ARGS}}
+
 # Pinned ubuntu-24.04 lane contract suite (NFR-18/21 compensators).
 node-ci-lane *ARGS:
     uv run python "{{qmn_deploy}}/ci_lane.py" {{ARGS}}

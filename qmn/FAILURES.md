@@ -1015,3 +1015,32 @@ designed failure; every typed refusal the node can emit belongs here.
   latency baselines, and the soak-local accounts when those acceptances run;
   never invent the numbers and never treat a missing VPS as a blocker for
   another epic.
+
+### FR-65: First-deployment demo shape refused
+
+- **Failure class:** policy rejection / invalid input
+- **Detection:** the first-deployment assembler refused non-PAPER Book routing
+  (`first_deployment.book_routing`), a live binding
+  (`first_deployment.live_binding`), live command stream
+  (`first_deployment.live_command_stream`), sequencer
+  (`first_deployment.live_sequencer`), or execution target
+  (`first_deployment.live_execution_target`), a VPS procurement act
+  (`first_deployment.procure_vps`), opening live credentials
+  (`first_deployment.open_live_credentials`), continuous human supervision
+  (`first_deployment.continuous_supervision`), missing pre-unattended notify
+  proofs (`first_deployment.pre_unattended`), treating late Spotware approval
+  as a demo-week blocker (`first_deployment.late_approval_blocks_demo`), or a
+  demo roster without a paired paper target (`first_deployment.demo_roster`).
+- **Auto-recovery / retry:** none — keep Book routing PAPER; add the live
+  environment as sensing-only when credentials already exist; do not procure a
+  VPS or open live credentials from this story.
+- **Visible degraded state:** first-deployment window does not seal; demo week
+  stays unblocked by missing live credentials; soak-local VPS absence remains
+  blocked infra, not an unrelated-epic blocker.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The first-deployment demo shape could not seal.
+  Inspect `read_status` on the evidence channel and run
+  `just node-demo-deploy`. Supply existing Spotware credentials only to open
+  sensing/recording; never add a live binding, command stream, sequencer, or
+  execution target during the window, and never treat a late approval as a
+  blocker for the demo week.

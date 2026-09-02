@@ -41,6 +41,7 @@ ALLOWED_NODE_RECIPES: Final[frozenset[str]] = frozenset(
         "node-install",
         "node-switch",
         "node-rollback",
+        "node-demo-deploy",
         "node-secrets-provision",
         "node-data-bootstrap",
         "node-replay",

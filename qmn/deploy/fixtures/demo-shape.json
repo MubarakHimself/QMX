@@ -1,0 +1,50 @@
+{
+  "book_routing": "PAPER",
+  "doors": ["powers", "evidence"],
+  "fault_injection": "declared-boundary-only",
+  "live_sensing": {
+    "allowed": [
+      "sensing",
+      "recording",
+      "capability-verification",
+      "baseline-accumulation"
+    ],
+    "forbidden": [
+      "live-binding",
+      "command-stream",
+      "sequencer",
+      "execution-target"
+    ],
+    "when": "credentials-present"
+  },
+  "node_timers": [
+    "qmn-news-calendar.timer",
+    "qmn-backup.timer",
+    "qmn-restore-sample.timer",
+    "qmn-restore-full.timer"
+  ],
+  "notes": "First-deployment demo shape is the production inventory with Book routing PAPER. Not ratified operational constants (L38).",
+  "observability_unit": "qmx-observability.service",
+  "opens_live_credentials": false,
+  "pre_unattended": ["synthetic-alert", "missing-heartbeat-notification"],
+  "principals": {
+    "node": "qmx",
+    "observability": "qmxobs",
+    "ops": "ops"
+  },
+  "procures_vps": false,
+  "trees": ["rooms", "evidence", "hub-inbox", "hub-published"],
+  "units": [
+    "qmn.service",
+    "qmn-news-calendar.service",
+    "qmn-news-calendar.timer",
+    "qmn-backup.service",
+    "qmn-backup.timer",
+    "qmn-restore-sample.service",
+    "qmn-restore-sample.timer",
+    "qmn-restore-full.service",
+    "qmn-restore-full.timer",
+    "qmx-observability.service"
+  ],
+  "window": "first-deployment"
+}

@@ -1,0 +1,59 @@
+First-deployment demo shape (Story 28.2 / TN-9/16 / FR-059)
+
+The paper-milestone week runs the production VPS inventory against the paired
+demo account. It is never a reduced paper substitute.
+
+This file is operations-toolkit documentation. It does not procure a VPS, open
+live credentials, or grant live authority.
+
+Inventory (same units node-install already renders)
+---------------------------------------------------
+  qmn.service
+  four node timers:
+    qmn-news-calendar.{service,timer}
+    qmn-backup.{service,timer}
+    qmn-restore-sample.{service,timer}
+    qmn-restore-full.{service,timer}
+  separate observability unit:
+    qmx-observability.service  (User=qmxobs; zero node authority)
+  writable trees under /var/lib/qmx:
+    rooms, evidence, hub-inbox, hub-published
+  doors:
+    powers  (/run/qmn/powers.sock, SO_PEERCRED)
+    evidence (localhost HTTP)
+  chrony (qmn.service After=chrony.service)
+  backups, news intake, KSA, protection, seats
+  paired demo account + paper virtual ledger
+
+Principals
+----------
+  qmx     node units (fixed; never DynamicUser)
+  qmxobs  observability stack
+  ops     operations toolkit / powers-channel ops principal
+
+Book routing
+------------
+  PAPER for the whole first-deployment window (TN-9/16).
+  Role demo, world = live, no Bot/Book twin.
+  Code/contract: qmn.paper.first_deployment
+
+Live sensing (only when Spotware credentials already exist)
+-----------------------------------------------------------
+  Allowed: sensing, recording, capability-verification, baseline-accumulation
+  Forbidden: live binding, command stream, sequencer, execution target
+  Late approval delays only live baseline/go-live, never the demo week.
+
+Pre-unattended proofs
+---------------------
+  Synthetic alert (notify_test) delivered end to end
+  Missing-heartbeat notification delivered end to end
+  Fault-injection drills only at declared boundary/drill points
+
+Recipe
+------
+  just node-demo-deploy          check-mode planner (default)
+  --fixture-root                 CI/tests only
+  live --apply without fixture   refused (this story does not provision a VPS)
+
+Checked-in fixture: qmn/deploy/fixtures/demo-shape.json
+Unit templates:     qmn/deploy/systemd/templates/

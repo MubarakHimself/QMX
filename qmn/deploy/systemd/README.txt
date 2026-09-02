@@ -28,3 +28,8 @@ qmx-observability.service runs as User=qmxobs with ReadWritePaths under
 checked-in compose file under qmn/deploy/observability/ (Story 25.17).
 qmn.service sets LogNamespace=qmn so Promtail reads a dedicated journal
 namespace rather than the system journal.
+
+First-deployment demo shape (Story 28.2) uses this same unit set — never a
+reduced paper substitute. Book routing PAPER for the window is a Book-level
+contract (`qmn.paper.first_deployment`), not a systemd Environment= value.
+See qmn/deploy/DEMO-SHAPE.txt and fixtures/demo-shape.json.

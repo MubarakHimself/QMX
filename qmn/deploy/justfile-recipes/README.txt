@@ -8,6 +8,10 @@ amend, flatten, promote, or activate (AR-79; DEC-0202; DEC-0211).
 - `just node-switch` / `just node-rollback` — release flip planner in
   qmn/deploy/switch.py (Story 25.18); check mode by default; --fixture-root
   for CI/tests; live --apply refused off-VPS
+- `just node-demo-deploy` — first-deployment demo-shape planner in
+  qmn/deploy/demo.py (Story 28.2); production inventory with Book routing
+  PAPER; check mode by default; --fixture-root for CI/tests; live --apply
+  refused off-VPS; never procures a VPS or opens live credentials
 - `just node-ci-lane` — pinned ubuntu-24.04 compensator suite in
   qmn/deploy/ci_lane.py
 - `just node-secrets-provision` — restricted wizard in
