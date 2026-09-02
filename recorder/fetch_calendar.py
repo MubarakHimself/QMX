@@ -91,7 +91,7 @@ def read_manifest() -> list:
     if not os.path.exists(MANIFEST_PATH):
         return []
     records = []
-    with open(MANIFEST_PATH, "r", encoding="utf-8") as handle:
+    with open(MANIFEST_PATH, encoding="utf-8") as handle:
         for line in handle:
             line = line.strip()
             if not line:
@@ -165,7 +165,7 @@ def record_source(variant: str, url: str, known: list) -> bool:
         append_manifest(record)
         log(f"  {variant:<4} FAILED  HTTP {error.code}")
         return False
-    except Exception as error:  # noqa: BLE001 - the run must always leave a trace
+    except Exception as error:
         record["error"] = f"{type(error).__name__}: {error}"
         append_manifest(record)
         log(f"  {variant:<4} FAILED  {record['error']}")

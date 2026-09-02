@@ -1,12 +1,12 @@
-import io
 import json
 import re
 import sys
 from collections import Counter
+from pathlib import Path
 
 sys.stdout.reconfigure(encoding='utf-8')
 path = sys.argv[1]
-raw = io.open(path, encoding='utf-8').read()
+raw = Path(path).read_text(encoding='utf-8')
 try:
     d = json.loads(raw)
 except Exception:
@@ -27,8 +27,8 @@ fixes = d.get('fixes') or []
 print('fix seats:', len(fixes))
 for i, fx in enumerate(fixes):
     s = fx if isinstance(fx, str) else json.dumps(fx)
-    refused = [l for l in s.split('\n') if re.search(r'refus|declin|left (the )?text|not applied|finding (is|was) wrong|disagree|no change', l, re.I)]
+    refused = [line for line in s.split('\n') if re.search(r'refus|declin|left (the )?text|not applied|finding (is|was) wrong|disagree|no change', line, re.I)]
     if refused:
-        print('--- fix[%d] refusal lines:' % i)
-        for l in refused[:8]:
-            print('   ', l.strip()[:300])
+        print(f'--- fix[{i}] refusal lines:')
+        for line in refused[:8]:
+            print('   ', line.strip()[:300])

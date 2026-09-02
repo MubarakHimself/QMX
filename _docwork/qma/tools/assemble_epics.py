@@ -3,10 +3,10 @@
 Replaces everything from the template tail marker ('<!-- Repeat for each epic in epics_list') to the end of file
 with the concatenated epic sections in numeric order, and sets frontmatter stepsCompleted: [1, 2, 3].
 """
-import io
 import os
 import re
 import sys
+from pathlib import Path
 
 import yaml
 
@@ -23,7 +23,7 @@ if missing:
     print('MISSING PARTS:', missing)
     sys.exit(1)
 
-doc = io.open(EPICS, encoding='utf-8').read().replace('\r\n', '\n')
+doc = Path(EPICS).read_text(encoding='utf-8').replace('\r\n', '\n')
 marker = '<!-- Repeat for each epic in epics_list'
 i = doc.find(marker)
 if i < 0:
@@ -37,7 +37,7 @@ head = doc[:i].rstrip('\n') + '\n\n'
 body = []
 stories = 0
 for f in parts:
-    t = io.open(os.path.join(PARTS, f), encoding='utf-8').read().replace('\r\n', '\n').strip('\n')
+    t = Path(PARTS, f).read_text(encoding='utf-8').replace('\r\n', '\n').strip('\n')
     stories += len(re.findall(r'^### Story \d+\.\d+:', t, re.M))
     body.append(t)
 out = head + '\n\n'.join(body) + '\n'
@@ -47,7 +47,7 @@ fm = out[4:fm_end]
 fm = re.sub(r'^stepsCompleted:.*$', 'stepsCompleted: [1, 2, 3]', fm, flags=re.M)
 out = '---\n' + fm + out[fm_end:]
 yaml.safe_load(fm)
-io.open(EPICS, 'w', encoding='utf-8', newline='\n').write(out)
+Path(EPICS).write_text(out, encoding='utf-8', newline='\n')
 epics = len(re.findall(r'^## Epic \d+: ', out, re.M))
 frs = sorted(set(re.findall(r'FR-Q\d\d', out)))
-print('assembled: %d epics, %d stories, %d distinct FR-Q ids cited' % (epics, stories, len(frs)))
+print(f'assembled: {epics} epics, {stories} stories, {len(frs)} distinct FR-Q ids cited')

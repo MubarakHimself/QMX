@@ -1,12 +1,12 @@
 """One-off: make the four anchor-sensitive fragments apply on both HEAD and the trading-node-edited tree."""
-import io
 import re
 import sys
+from pathlib import Path
 
 import yaml
 
 sys.stdout.reconfigure(encoding='utf-8')
-FR = '_docwork/qma/fragments/'
+FR = Path('_docwork/qma/fragments')
 
 
 def str_presenter(dumper, data):
@@ -19,12 +19,13 @@ yaml.add_representer(str, str_presenter)
 
 
 def load(fn):
-    return yaml.safe_load(io.open(FR + fn + '.yaml', encoding='utf-8'))
+    return yaml.safe_load((FR / f'{fn}.yaml').read_text(encoding='utf-8'))
 
 
 def save(fn, d):
-    io.open(FR + fn + '.yaml', 'w', encoding='utf-8', newline='\n').write(
-        yaml.dump(d, allow_unicode=True, sort_keys=False, width=100000))
+    (FR / f'{fn}.yaml').write_text(
+        yaml.dump(d, allow_unicode=True, sort_keys=False, width=100000),
+        encoding='utf-8', newline='\n')
 
 
 def esc(s):

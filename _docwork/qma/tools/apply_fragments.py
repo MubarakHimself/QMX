@@ -263,7 +263,7 @@ def op_glossary_insert_sorted(text, section_heading, entries):
         if term.lower() in existing_terms:
             continue
         body = e['text'].rstrip('\n')
-        blk = ['### ' + term, ''] + body.split('\n') + ['']
+        blk = ['### ' + term, '', *body.split('\n'), '']
         blocks.append([term, blk])
         existing_terms.add(term.lower())
         added += 1
@@ -276,7 +276,7 @@ def op_glossary_insert_sorted(text, section_heading, entries):
         blines = b[1]
         while blines and blines[-1].strip() == '':
             blines.pop()
-        out.extend(blines + [''])
+        out.extend([*blines, ''])
     new_section = intro + out
     while new_section and new_section[-1].strip() == '':
         new_section.pop()
@@ -382,7 +382,7 @@ def main():
                 failures += 1
                 continue
         try:
-            notes, changed = apply_fragment(a.root, frag, a.dry_run)
+            notes, _changed = apply_fragment(a.root, frag, a.dry_run)
             print('{} {} -> {}: {}'.format('DRY ' if a.dry_run else 'OK  ', fn, frag['target'], '; '.join(notes) or 'no ops'))
         except FragmentError as e:
             print('FAIL {} -> {}: {}'.format(fn, frag.get('target'), e))

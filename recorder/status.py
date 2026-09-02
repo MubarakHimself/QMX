@@ -41,7 +41,7 @@ def _unicode_ok() -> bool:
     try:
         "─│┌".encode(encoding)
         return True
-    except Exception:  # noqa: BLE001
+    except Exception:
         return False
 
 
@@ -56,7 +56,7 @@ def _colour_ok() -> bool:
 
             kernel32 = ctypes.windll.kernel32
             kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
-        except Exception:  # noqa: BLE001
+        except Exception:
             return False
     return True
 
@@ -124,7 +124,7 @@ def utc_now() -> datetime:
 def parse_utc(value: str):
     try:
         return datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-    except Exception:  # noqa: BLE001
+    except Exception:
         return None
 
 
@@ -152,14 +152,12 @@ def read_manifest() -> list:
     if not os.path.exists(MANIFEST_PATH):
         return []
     records = []
-    with open(MANIFEST_PATH, "r", encoding="utf-8") as handle:
+    with open(MANIFEST_PATH, encoding="utf-8") as handle:
         for line in handle:
             line = line.strip()
             if line:
-                try:
+                with contextlib.suppress(ValueError):
                     records.append(json.loads(line))
-                except ValueError:
-                    pass
     return records
 
 
@@ -183,7 +181,7 @@ def query_task(name: str):
             ["schtasks", "/query", "/tn", name, "/fo", "LIST", "/v"],
             capture_output=True, text=True, timeout=25,
         )
-    except Exception:  # noqa: BLE001
+    except Exception:
         return None
     if result.returncode != 0:
         return None
@@ -252,7 +250,7 @@ def section_events(path) -> None:
     try:
         with open(path, "rb") as handle:
             events = json.loads(handle.read().decode("utf-8"))
-    except Exception as error:  # noqa: BLE001
+    except Exception as error:
         row(c(f"Could not parse {os.path.basename(path)}: {error}", RED))
         return
 
