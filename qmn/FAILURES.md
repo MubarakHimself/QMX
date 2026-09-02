@@ -1251,3 +1251,42 @@ designed failure; every typed refusal the node can emit belongs here.
   Inspect `read_failure_detail` on the evidence channel. Re-run label
   generation under the accepted design; change the design through Story
   30.1 when a class is unsupported; do not train from this story.
+
+### FR-75: MIS regime offline training refusal
+
+- **Failure class:** policy rejection / unavailable dependency
+- **Detection:** Story 30.4 offline training is asked to run on a VPS or
+  cloud path (`mis.regime_train.vps_or_cloud`), open broker/node
+  credentials (`mis.regime_train.broker_or_node_credential`), open a live
+  network path (`mis.regime_train.live_network`), register a partial/
+  aborted/refused/checkpoint output as a model
+  (`mis.regime_train.partial_register`), peek sealed holdout during
+  training (`mis.regime_train.sealed_holdout_peek`), invent a CLI JSON
+  corpus loader (`mis.regime_train.cli_loader`), or a rerun mismatches
+  identical inputs (`mis.regime_train.reproducibility_mismatch`); also
+  missing LightGBM on a lightgbm backend
+  (`mis.regime_train.lightgbm_missing`), unreadable dependency lock
+  (`mis.regime_train.dependency_lock`), bad checkpoint
+  (`mis.regime_train.checkpoint`), insufficient train/validation rows
+  (`mis.regime_train.insufficient_train_rows` /
+  `mis.regime_train.insufficient_validation_rows`), session-coverage
+  gaps (`mis.regime_train.session_coverage`), or an unwritable output
+  directory (`mis.regime_train.output_dir`).
+- **Auto-recovery / retry:** none for policy refusals — run the offline
+  script on the operator machine from prepared Story 30.2/30.3 artifacts
+  with a declared seed; resume from the non-registerable checkpoint when
+  interrupted; only a completed terminal training record may later enter
+  Story 30.6 registration. Install LightGBM locally when choosing that
+  backend, or rehearse with `deterministic-surrogate`.
+- **Visible degraded state:** no VPS/cloud/credentialed training path
+  opens; partial outputs stay non-registerable; one terminal training
+  record reports completed/aborted/refused with cause; sealed holdout
+  stays unused for acceptance.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The MIS offline training script refused a
+  VPS/cloud/credential/network path, a partial-model registration, a
+  sealed-holdout peek, or a reproducibility mismatch. Inspect
+  `read_failure_detail` on the evidence channel. Re-run
+  `python -m qmn.mis.regime_train` (via the in-library API over prepared
+  labeled/cleaned corpora) on your own machine; do not train on the
+  trading VPS; do not register partial outputs.
