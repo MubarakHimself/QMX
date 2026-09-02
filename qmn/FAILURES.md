@@ -1207,3 +1207,25 @@ designed failure; every typed refusal the node can emit belongs here.
   `just node-config-validate`. Supply journaled pass/refuse evidence for
   every non-blocked checklist item; do not run the unattended week from
   the factory lane and do not treat paper performance as readiness.
+
+### FR-73: MIS regime corpus training-path refusal
+
+- **Failure class:** policy rejection
+- **Detection:** Story 30.2 corpus acquisition or cleaning is asked to
+  fetch a provider inside a training run
+  (`mis.regime_corpus.provider_fetch_in_training`), open a live network
+  path (`mis.regime_corpus.live_network`), silently repair or drop a row
+  (`mis.regime_corpus.silent_repair`), or claim that the corpus story
+  trains a model (`mis.regime_corpus.no_training`).
+- **Auto-recovery / retry:** none — acquire offline on the operator
+  machine through the governed QMF/QMB plan; count every cleaning refusal
+  in the quality report; leave training to Story 30.4.
+- **Visible degraded state:** no provider bytes are fetched in-training;
+  no live network path opens; no silent repair mutates the corpus; no
+  model weights are minted from Story 30.2.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The MIS regime corpus path refused a
+  training-time provider fetch, live network, silent repair, or early
+  training claim. Inspect `read_failure_detail` on the evidence channel.
+  Re-run offline acquisition and cleaning with declared sources only;
+  do not train from this story.
