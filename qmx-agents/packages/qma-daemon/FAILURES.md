@@ -18,7 +18,10 @@ Story 45.7 adds content-addressed ExperimentSpec identity, append-only
 CT-07 lineage, and Experiment Ledger authorship (FR-36 through FR-39).
 Epic 45 Story 45.8 adds the single QMB backtesting door: one analysis-backtest
 Tool Registry entry, one ``qmb`` job per environment, recorded-evidence
-replay only, and no package-import edge (FR-40 through FR-43).
+replay only, and no package-import edge (FR-40 through FR-43). Epic 45
+Story 45.9 adds the deployment envelope: workstation Docker workers, remote
+dial-out only, trading-node host-identity refusal, computer-use exclusion,
+and read-only dev/paper except the dev-zone candidate (FR-44 through FR-47).
 
 ### FR-1: A second daemon or writer is refused at the persistence boundary
 
@@ -634,3 +637,64 @@ replay only, and no package-import edge (FR-40 through FR-43).
 - **Notification tier:** silent-log (caller / CI).
 - **Product-user affordance:** QMA does not import QMB. It invokes `qmb`
   as a program.
+
+### FR-44: A deployed side that listens inbound or is dialed by the daemon is refused
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `DeploymentBoundary.deploy` validates the core dial-out
+  declaration and the `qma-wire` remote posture. A remote that does not
+  dial out, exposes an inbound listener, opens a second transport, or asks
+  the daemon to dial in is refused before the environment binds
+  (CT-46; AD-25; FR-Q56).
+- **Auto-recovery / retry:** none — the deployed side must dial out to the
+  daemon address and must not open a port.
+- **Visible degraded state:** no remote environment is registered; the
+  workstation Docker worker remains the ordinary placement.
+- **Notification tier:** operator-visible (deployment refusal).
+- **Product-user affordance:** remotes call the daemon. The daemon never
+  calls them, and the deployed box has no inbound port.
+
+### FR-45: A trading-node or credentialed host is refused by identity
+
+- **Failure class:** `policy rejection` (CT-04) as `ProhibitedReachability`.
+- **Detection:** registration of a remote workspace, research node, or
+  sandbox that names the trading-node VPS, or a host carrying a trading
+  credential or a running node, is refused at the reachability barrier
+  (SCN-0014; AD-28; FR-Q56).
+- **Auto-recovery / retry:** none — choose a host that is not the trading
+  node and carries no trading credential.
+- **Visible degraded state:** no QMA workload is placed on that host; the
+  trading-node VPS stays untouched.
+- **Notification tier:** operator-visible (registration refusal).
+- **Product-user affordance:** QMA cannot run on the trading-node VPS or
+  any host that holds a trading login or a running node.
+
+### FR-46: Computer-use stays excluded while the desktop host is unprovisioned
+
+- **Failure class:** `unavailable dependency` (CT-04) as `NoEnvironment`
+  at placement; computer-use `check_fn` returns false.
+- **Detection:** `DeploymentBoundary.start` never registers `desktop`.
+  Computer-use tools fail availability preflight; a `desktop`
+  `ComputeRequirement` returns `NoEnvironment`; Windows VPS provision is
+  refused as Deferred GAP-0070 (DEC-0324; FR-Q56).
+- **Auto-recovery / retry:** none in this story — GAP-0070 stays deferred.
+- **Visible degraded state:** computer-use schemas never reach a model;
+  Docker workers on the workstation still run.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** computer-use is not available until a
+  desktop environment is registered against a provisioned host.
+
+### FR-47: Dev and paper writes, promotion, and zone transition are refused
+
+- **Failure class:** `policy rejection` (CT-04).
+- **Detection:** `access_zone` admits read of `dev` and `paper` and the
+  content-addressed `dev` candidate write. Paper writes, live access,
+  `promote`, and `zone_transition` are refused. Treating paper as a
+  sandbox is refused. After a human promotes outside QMA the daemon
+  records only the artifact reference (AD-25; SCN-0014; L17; FR-Q56).
+- **Auto-recovery / retry:** none — a human promotes outside QMA.
+- **Visible degraded state:** the candidate remains in the `dev` zone;
+  paper remains a real-venue account role.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** QMA can write a research candidate in
+  `dev`. It cannot promote, change zones, or treat paper as a sandbox.

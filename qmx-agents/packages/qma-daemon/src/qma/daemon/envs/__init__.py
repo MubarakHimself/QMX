@@ -1,10 +1,11 @@
 """ExecutionEnvironment registry, Compute Router, JobHandle, and RLM runtime.
 
-AD-14, AD-17; FR-Q27, FR-Q47, FR-Q48, FR-Q49, FR-Q50, FR-Q51, FR-Q52.
+AD-14, AD-17, AD-25; FR-Q27, FR-Q47, FR-Q48, FR-Q49, FR-Q50, FR-Q51, FR-Q52,
+FR-Q56.
 
 JobHandle, host_request, and Dialogue/RLM runtimes live in sibling modules
 (``jobs``, ``host_bridge``, ``runtime``) so this package init stays free of
-the dispatcher cycle.
+the dispatcher cycle. The deployment envelope lives in ``boundary``.
 """
 
 from __future__ import annotations
@@ -28,6 +29,7 @@ from qma.core.ports.execution import (
     WorkerImageManifest,
 )
 from qma.core.vocabulary.enums import EnvironmentLifecycle
+from qma.daemon.envs.boundary import DeploymentBoundary, RemoteDeployment
 from qma.daemon.envs.registry import EnvironmentLease, ExecutionEnvironmentRegistry
 from qma.daemon.envs.router import ComputeRouter, PlacementDecision, QueuedPlacement
 
@@ -40,6 +42,7 @@ __all__ = [
     "ComputeRequirement",
     "ComputeRouter",
     "ComputerUseProfile",
+    "DeploymentBoundary",
     "EnvironmentLease",
     "EnvironmentLifecycle",
     "EnvironmentMount",
@@ -48,6 +51,7 @@ __all__ = [
     "GpuRequirement",
     "PlacementDecision",
     "QueuedPlacement",
+    "RemoteDeployment",
     "WorkerImageManifest",
     "environment_isolation",
     "match_compute_requirement",
