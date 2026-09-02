@@ -1044,3 +1044,29 @@ designed failure; every typed refusal the node can emit belongs here.
   sensing/recording; never add a live binding, command stream, sequencer, or
   execution target during the window, and never treat a late approval as a
   blocker for the demo week.
+
+### FR-66: Paper-milestone injected-fault campaign refused
+
+- **Failure class:** policy rejection / invalid input
+- **Detection:** the Story 28.3 campaign refused invented KSA/latency numbers
+  (`failure_campaign.invented_ksa_or_latency`), a required live demo account
+  (`failure_campaign.live_demo_account`), a non-conformance venue
+  (`failure_campaign.venue`), invalid inputs (`failure_campaign.inputs`), an
+  incomplete injected-fault set (`failure_campaign.incomplete_injection`),
+  live/double contract divergence (`failure_campaign.live_double_divergence`),
+  a demo SQS baseline claimed for live (`failure_campaign.demo_sqs_satisfies_live`),
+  venue-minus-virtual equity (`failure_campaign.equity_difference`), or an
+  invented kill-line floor (`failure_campaign.invented_kill_line_floor`).
+- **Auto-recovery / retry:** none — re-run the campaign against the conformance
+  double with Book-declared kill-line/bench/ratchet fixtures; never invent KSA
+  matrix values or a live demo account.
+- **Visible degraded state:** the paper-milestone failure campaign does not
+  seal; UNKNOWN/protection/reconcile proofs stay unclaimed; soak start is not
+  authorized by this packet.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The injected money-path campaign could not prove
+  its degraded states. Inspect `read_status` on the evidence channel and run
+  `just node-config-validate`. Drive timeout, transport-error, disconnect,
+  superseded-by-fill, reconnect-gap, unpersistable identity, queue-bound, and
+  protective-stop-capability through the conformance double; do not wait for a
+  live demo account and do not fill KSA numbers.

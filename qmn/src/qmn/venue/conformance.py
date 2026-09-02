@@ -3,6 +3,10 @@
 Deterministic, credential-free, and network-free. Selected by ``(world, VenueId)``.
 The same suite exercises this double and is reusable unchanged by live and replay
 implementations. Compound-command acceptance stays blocked until FTR-02 lands.
+Story 28.3 adds named money-path fault injection (timeout, transport-error,
+disconnect, superseded-by-fill, reconnect-gap, unpersistable identity, queue
+bound, protective-stop-capability) so the paper-milestone campaign can prove
+degraded states without a live demo account.
 """
 
 from __future__ import annotations
@@ -10,6 +14,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
+from types import MappingProxyType
 from typing import Final, cast
 
 from qmf.core import (
@@ -63,10 +68,14 @@ PORT_CONTRACT_CAPABILITY_KEYS: Final[frozenset[str]] = frozenset(
 
 __all__ = [
     "CONFORMANCE_CASES",
+    "INJECTED_COMMAND_FAULTS",
     "PORT_CONTRACT_CAPABILITY_KEYS",
+    "SHARED_FAULT_CONTRACT",
     "ConformanceCase",
     "ConformanceDouble",
+    "InjectedFault",
     "PositionModel",
+    "agree_live_and_double_fault_contract",
     "compare_port_contract_shapes",
     "compound_command_acceptance_blocked",
     "run_conformance_suite",
@@ -89,6 +98,55 @@ class ConformanceCase(StrEnum):
 
 
 CONFORMANCE_CASES: Final[tuple[ConformanceCase, ...]] = tuple(ConformanceCase)
+
+
+class InjectedFault(StrEnum):
+    """Named money-path faults the double (and node-local seams) can inject.
+
+    Timeout, transport-error, disconnect, and superseded-by-fill arm the matching
+    :class:`ConformanceCase`. Reconnect-gap, unpersistable identity, queue bound,
+    and protective-stop-capability are scripted flags the campaign drives through
+    reconnect, identity bind, the pacer, and the protective-stop gate.
+    """
+
+    TIMEOUT = "timeout"
+    TRANSPORT_ERROR = "transport-error"
+    DISCONNECT = "disconnect"
+    SUPERSEDED_BY_FILL = "superseded-by-fill"
+    RECONNECT_GAP = "reconnect-gap"
+    UNPERSISTABLE_IDENTITY = "unpersistable-identity"
+    QUEUE_BOUND = "queue-bound"
+    PROTECTIVE_STOP_CAPABILITY = "protective-stop-capability"
+
+
+INJECTED_COMMAND_FAULTS: Final[tuple[InjectedFault, ...]] = tuple(InjectedFault)
+
+# Outcomes both the double and a live client must honour for the four venue
+# command faults (TN-23). Live reuse is tagged ``@pytest.mark.live``; absence of
+# a live demo account does not weaken the double's contract.
+SHARED_FAULT_CONTRACT: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        InjectedFault.TIMEOUT.value: SubmissionOutcome.UNKNOWN.value,
+        InjectedFault.TRANSPORT_ERROR.value: SubmissionOutcome.UNKNOWN.value,
+        InjectedFault.DISCONNECT.value: SubmissionOutcome.UNKNOWN.value,
+        InjectedFault.SUPERSEDED_BY_FILL.value: (SubmissionOutcome.REJECTED_BY_VENUE.value),
+    }
+)
+
+_CASE_BY_FAULT: Final[Mapping[InjectedFault, ConformanceCase | None]] = MappingProxyType(
+    {
+        InjectedFault.TIMEOUT: ConformanceCase.TIMEOUT,
+        InjectedFault.TRANSPORT_ERROR: ConformanceCase.TRANSPORT_ERROR,
+        InjectedFault.DISCONNECT: ConformanceCase.DISCONNECT,
+        InjectedFault.SUPERSEDED_BY_FILL: ConformanceCase.SUPERSEDED_BY_FILL,
+        InjectedFault.RECONNECT_GAP: None,
+        InjectedFault.UNPERSISTABLE_IDENTITY: None,
+        InjectedFault.QUEUE_BOUND: None,
+        InjectedFault.PROTECTIVE_STOP_CAPABILITY: None,
+    }
+)
+
+_DEFAULT_STOP_FORMS: Final[dict[str, str]] = {"market": "entry-relative"}
 
 
 class PositionModel(StrEnum):
@@ -135,6 +193,14 @@ class ConformanceDouble:
     _ordinal: int = 0
     _verification: VenueFactVerification | None = None
     _verifier: VenueFactVerifier | None = None
+    _injected: InjectedFault | None = None
+    _armed_reconcile: ReconciliationVerdict | None = None
+    _identity_persistable: bool = True
+    _queue_bound_breached: bool = False
+    _protective_stop_forms: dict[str, str] = field(
+        default_factory=lambda: dict(_DEFAULT_STOP_FORMS)
+    )
+    _gap_recovered: list[dict[str, object]] = field(default_factory=list[dict[str, object]])
 
     @classmethod
     def try_create(cls, world: object, venue_id: object) -> Result[ConformanceDouble]:
@@ -219,6 +285,97 @@ class ConformanceDouble:
         self._armed = resolved
         return Ok(resolved)
 
+    def inject(self, fault: object) -> Result[InjectedFault]:
+        """Arm one named Story 28.3 money-path fault for the next drive."""
+        resolved = _coerce_injected_fault(fault)
+        if is_refusal(resolved):
+            return resolved
+        armed = resolved.value
+        self._clear_injection()
+        self._injected = armed
+        case = _CASE_BY_FAULT[armed]
+        if case is not None:
+            armed_case = self.arm(case)
+            if is_refusal(armed_case):
+                return armed_case
+        if armed is InjectedFault.RECONNECT_GAP:
+            self._gap_recovered = [
+                {
+                    "observation_id": "fill-gap-1",
+                    "kind": "fill",
+                    "receive_wall_ns": 1_700_000_000_000_000_100,
+                    "payload": {"qty": 1, "injected_fault": armed.value},
+                    "execution_id": "exec-gap-1",
+                }
+            ]
+            self._armed = ConformanceCase.DISCONNECT
+        elif armed is InjectedFault.UNPERSISTABLE_IDENTITY:
+            self._identity_persistable = False
+        elif armed is InjectedFault.QUEUE_BOUND:
+            self._queue_bound_breached = True
+        elif armed is InjectedFault.PROTECTIVE_STOP_CAPABILITY:
+            self._protective_stop_forms = {}
+        return Ok(armed)
+
+    def arm_reconcile(self, verdict: object) -> Result[ReconciliationVerdict]:
+        """Arm the next :meth:`reconcile` verdict (four-verdict injection)."""
+        if isinstance(verdict, ReconciliationVerdict):
+            resolved = verdict
+        elif isinstance(verdict, str):
+            try:
+                resolved = ReconciliationVerdict(verdict.strip().lower())
+            except ValueError:
+                return TypedRefusal(
+                    category=RefusalCategory.INVALID_INPUT,
+                    retryability=Retryability.NO,
+                    context={
+                        "field": "verdict",
+                        "reason": "armed reconcile verdict is "
+                        "reconciled|drift|unknown|out-of-lookback",
+                        "given": verdict,
+                    },
+                )
+        else:
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "verdict",
+                    "reason": "armed reconcile verdict is reconciled|drift|unknown|out-of-lookback",
+                    "given": repr(verdict),
+                },
+            )
+        self._armed_reconcile = resolved
+        return Ok(resolved)
+
+    def _clear_injection(self) -> None:
+        self._injected = None
+        self._armed = None
+        self._identity_persistable = True
+        self._queue_bound_breached = False
+        self._protective_stop_forms = dict(_DEFAULT_STOP_FORMS)
+        self._gap_recovered = []
+
+    @property
+    def injected_fault(self) -> InjectedFault | None:
+        return self._injected
+
+    @property
+    def identity_persistable(self) -> bool:
+        return self._identity_persistable
+
+    @property
+    def queue_bound_breached(self) -> bool:
+        return self._queue_bound_breached
+
+    @property
+    def protective_stop_forms(self) -> Mapping[str, str]:
+        return MappingProxyType(dict(self._protective_stop_forms))
+
+    def gap_recovered_observations(self) -> tuple[Mapping[str, object], ...]:
+        """Fill/lifecycle observations recovered after an injected reconnect gap."""
+        return tuple(dict(item) for item in self._gap_recovered)
+
     def open_session(self, account: object) -> Result[bool]:
         if not isinstance(account, Account):
             return TypedRefusal(
@@ -270,9 +427,7 @@ class ConformanceDouble:
         declaration = ctrader_static_declaration()
         if is_refusal(declaration):
             return declaration
-        verifier = VenueFactVerifier.try_create(
-            declaration.value, self._venue_id, self._account
-        )
+        verifier = VenueFactVerifier.try_create(declaration.value, self._venue_id, self._account)
         if is_refusal(verifier):
             return verifier
         receive = Instant.try_create(1_700_000_000_000_000_000)
@@ -320,6 +475,7 @@ class ConformanceDouble:
             ),
             "measured_checks": [fact.check.value for fact in outcome.profile.facts],
             "journal_event_types": [event.event_type for event in outcome.journal],
+            "protective_stop_forms": dict(self._protective_stop_forms),
         }
         self._observations.append({"kind": "capability-profile", "profile": dict(profile)})
         return Ok(profile)
@@ -401,10 +557,16 @@ class ConformanceDouble:
         return Ok(tuple(dict(item) for item in self._observations))
 
     def reconcile(self) -> Result[Reconciliation]:
+        verdict = (
+            self._armed_reconcile
+            if self._armed_reconcile is not None
+            else ReconciliationVerdict.RECONCILED
+        )
+        self._armed_reconcile = None
         return Ok(
             Reconciliation(
-                verdict=ReconciliationVerdict.RECONCILED,
-                detail="conformance double synthetic reconciliation",
+                verdict=verdict,
+                detail=f"conformance double synthetic reconciliation ({verdict.value})",
             )
         )
 
@@ -510,6 +672,126 @@ def _unknown(
             journal_event=JournalEvent.for_outcome(fp, kind, SubmissionOutcome.UNKNOWN),
         )
     )
+
+
+def _coerce_injected_fault(fault: object) -> Result[InjectedFault]:
+    if isinstance(fault, InjectedFault):
+        return Ok(fault)
+    if isinstance(fault, str):
+        try:
+            return Ok(InjectedFault(fault.strip().lower()))
+        except ValueError:
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": "fault",
+                    "reason": "unknown injected money-path fault",
+                    "given": fault,
+                    "allowed": [member.value for member in InjectedFault],
+                },
+            )
+    return TypedRefusal(
+        category=RefusalCategory.INVALID_INPUT,
+        retryability=Retryability.NO,
+        context={
+            "field": "fault",
+            "reason": "unknown injected money-path fault",
+            "given": repr(fault),
+            "allowed": [member.value for member in InjectedFault],
+        },
+    )
+
+
+def agree_live_and_double_fault_contract(
+    double_results: object,
+    live_results: object = None,
+) -> Result[Mapping[str, str]]:
+    """Prove the four venue-command fault outcomes match the shared contract.
+
+    ``live_results`` is optional: a missing live demo account does not fail the
+    credential-free campaign. When supplied, every shared key must match the
+    double and the contract (TN-23; QMX-F062/F063/D008).
+    """
+    double = _fault_result_map(double_results, "double_results")
+    if is_refusal(double):
+        return double
+    for key, expected in SHARED_FAULT_CONTRACT.items():
+        got = double.value.get(key)
+        if got != expected:
+            return TypedRefusal(
+                category=RefusalCategory.POLICY_REJECTION,
+                retryability=Retryability.NO,
+                context={
+                    "field": "double_results",
+                    "reason": "conformance double fault outcome diverged from the "
+                    "shared live/double contract",
+                    "fault": key,
+                    "expected": expected,
+                    "got": got,
+                },
+            )
+    if live_results is None:
+        return Ok(dict(SHARED_FAULT_CONTRACT))
+    live = _fault_result_map(live_results, "live_results")
+    if is_refusal(live):
+        return live
+    for key, expected in SHARED_FAULT_CONTRACT.items():
+        got = live.value.get(key)
+        if got != expected or got != double.value.get(key):
+            return TypedRefusal(
+                category=RefusalCategory.POLICY_REJECTION,
+                retryability=Retryability.NO,
+                context={
+                    "field": "live_results",
+                    "reason": "live and double fault-contract results disagree",
+                    "fault": key,
+                    "expected": expected,
+                    "double": double.value.get(key),
+                    "live": got,
+                },
+            )
+    return Ok(dict(SHARED_FAULT_CONTRACT))
+
+
+def _fault_result_map(value: object, field: str) -> Result[Mapping[str, str]]:
+    if not isinstance(value, Mapping):
+        return TypedRefusal(
+            category=RefusalCategory.INVALID_INPUT,
+            retryability=Retryability.NO,
+            context={
+                "field": field,
+                "reason": "fault-contract results are a mapping of fault → outcome",
+                "given": type(value).__name__,
+            },
+        )
+    body: dict[str, str] = {}
+    for key, item in cast("Mapping[object, object]", value).items():
+        token = key.value if isinstance(key, StrEnum) else key
+        if not isinstance(token, str) or token.strip() == "":
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": field,
+                    "reason": "fault-contract keys are fault name strings",
+                    "given": repr(key),
+                },
+            )
+        outcome = item.value if isinstance(item, StrEnum) else item
+        if not isinstance(outcome, str) or outcome.strip() == "":
+            return TypedRefusal(
+                category=RefusalCategory.INVALID_INPUT,
+                retryability=Retryability.NO,
+                context={
+                    "field": field,
+                    "reason": "fault-contract values are outcome strings",
+                    "fault": token,
+                    "given": repr(item),
+                },
+            )
+        body[token.strip()] = outcome.strip()
+    return Ok(body)
 
 
 def run_conformance_suite(client: object) -> Result[Mapping[str, str]]:
@@ -857,8 +1139,7 @@ def compare_port_contract_shapes(
                 retryability=Retryability.NO,
                 context={
                     "field": "capability_shape",
-                    "reason": "capability-key sets diverge across VenueClientPort "
-                    "implementations",
+                    "reason": "capability-key sets diverge across VenueClientPort implementations",
                     "kind": kind,
                     "expected": sorted(reference_keys),
                     "got": sorted(keys),
@@ -896,8 +1177,7 @@ def compare_port_contract_shapes(
                 retryability=Retryability.NO,
                 context={
                     "field": "refusal_shape",
-                    "reason": "submit refusal/outcome shape diverged from the "
-                    "kind's port contract",
+                    "reason": "submit refusal/outcome shape diverged from the kind's port contract",
                     "kind": kind,
                     "expected": expected,
                     "got": got_shape,
@@ -1087,4 +1367,3 @@ def _compound_probe(venue_id: VenueId, account: Account) -> Result[CompoundComma
     if is_refusal(parent):
         return parent
     return CompoundCommand.fan_out(parent.value, (0, 1))
-

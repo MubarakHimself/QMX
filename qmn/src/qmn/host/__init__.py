@@ -25,6 +25,8 @@ unwired import-only contracts, and never treats paper profit as proof.
 Story 28.1 assembles the paper-milestone readiness packet (gates, 71-row
 settings status, failure register, compiled demo roster) without procuring a
 VPS or inventing KSA/latency numbers; soak-local human inputs are blocked ACs.
+Story 28.3 injects command, uncertainty, protection, and reconciliation failure
+paths through the conformance double without a live demo account (FTR-07).
 Child modules and doors never restamp, never hold a registry cache, and never
 persist lineage.
 """
@@ -72,6 +74,19 @@ from qmn.host.concurrency import (
     ConcurrencyProofReport,
     InjectedBounds,
     prove_host_concurrency,
+)
+from qmn.host.failure_campaign import (
+    DESIGNED_DEGRADED_STATES,
+    FAILURE_CAMPAIGN_CLASS,
+    FAILURE_CAMPAIGN_FORMAT_VERSION,
+    FAILURE_CAMPAIGN_SURFACE,
+    INJECTED_COMMAND_FAULTS,
+    PROTECTION_COINCIDENCE_FIXTURES,
+    REQUIRES_LIVE_DEMO_ACCOUNT,
+    FailureCampaignInputs,
+    FailureCampaignReport,
+    refuse_live_demo_account_required,
+    run_paper_milestone_failure_campaign,
 )
 from qmn.host.light_heavy import (
     CHILD_MODULES_MAY_SELF_APPROVE,
@@ -254,17 +269,22 @@ __all__ = [
     "COMPOSITION_OCCURRENCE_KIND",
     "COMPOSITION_ROOT_SURFACE",
     "CONCURRENCY_SURFACE",
+    "DESIGNED_DEGRADED_STATES",
     "DOMAIN_BACKGROUND_THREADS_ALLOWED",
     "DOOR_BIND_FAILURE_EXIT_CODE",
     "DOOR_LOCAL_REGISTRY_CACHE",
     "DRAIN_WINDOW_BREACH_EXIT_CODE",
     "EVENT_LOOP_COUNT",
+    "FAILURE_CAMPAIGN_CLASS",
+    "FAILURE_CAMPAIGN_FORMAT_VERSION",
+    "FAILURE_CAMPAIGN_SURFACE",
     "FTR07_UNSETTABLE_NAMES",
     "FULL_PREFLIGHT_CHECKS",
     "GO_LIVE_ONLY_HUMAN_INPUTS",
     "HAS_ALTERNATE_IDENTITY_FUNCTION",
     "HAS_OPERATOR_CLI",
     "IDENTITY_FORBIDDEN_OCCURRENCE_KEYS",
+    "INJECTED_COMMAND_FAULTS",
     "INVENTS_KSA_OR_LATENCY",
     "LAYER1_CHECKS",
     "LIGHT_HEAVY_SURFACE",
@@ -278,6 +298,7 @@ __all__ = [
     "OPERATOR_PRINCIPAL",
     "PAPER_PROFIT_IS_PROOF",
     "PROCURES_VPS",
+    "PROTECTION_COINCIDENCE_FIXTURES",
     "READINESS_PACKET_CLASS",
     "READINESS_PACKET_FORMAT_VERSION",
     "READINESS_SURFACE",
@@ -285,6 +306,7 @@ __all__ = [
     "REQUESTED_RESTART_EXIT_CODE",
     "REQUESTED_RESTART_REASON",
     "REQUIRED_RISK_CONTRACTS",
+    "REQUIRES_LIVE_DEMO_ACCOUNT",
     "RISK_POPULATION_SURFACE",
     "RUNTIME_RISK_GATE_SURFACE",
     "RUNTIME_RISK_SCENARIOS",
@@ -323,6 +345,8 @@ __all__ = [
     "CrashLoopFold",
     "CrashLoopVerdict",
     "DrainOutcome",
+    "FailureCampaignInputs",
+    "FailureCampaignReport",
     "FourBoundDeclaration",
     "GateResult",
     "HumanInputRecord",
@@ -403,6 +427,7 @@ __all__ = [
     "qmn_production_src_root",
     "refuse_invented_ksa_or_latency_number",
     "refuse_invented_soak_or_ksa_number",
+    "refuse_live_demo_account_required",
     "refuse_manual_observation_as_proof",
     "refuse_paper_profit_as_proof",
     "refuse_procure_vps",
@@ -414,6 +439,7 @@ __all__ = [
     "run_boot_ceremony",
     "run_check_mode",
     "run_demo_shakedown",
+    "run_paper_milestone_failure_campaign",
     "run_runtime_risk_gate",
     "sd_notify",
     "settings_status_from_config",

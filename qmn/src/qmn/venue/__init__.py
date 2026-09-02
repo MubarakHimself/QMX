@@ -11,7 +11,8 @@ stream-gate shapes so ``qmn.order`` can enforce the exact ``(VenueId, account)``
 boundary without importing ``qmf.venue`` (QMX-F062). Story 24.8 adds reconnect
 gap-recovery, the TN-21 replay adapter, and the shared three-implementation
 port-contract suite. Story 24.9 re-exports subject-terminal resolution and
-records TN-24i requote / deep-history edge dispositions.
+records TN-24i requote / deep-history edge dispositions. Story 28.3 adds named
+money-path fault injection on the conformance double.
 """
 
 from __future__ import annotations
@@ -72,10 +73,14 @@ from qmf.venue.observation import REQUIRED_CONNECTION_CHECKS
 
 from qmn.venue.conformance import (
     CONFORMANCE_CASES,
+    INJECTED_COMMAND_FAULTS,
     PORT_CONTRACT_CAPABILITY_KEYS,
+    SHARED_FAULT_CONTRACT,
     ConformanceCase,
     ConformanceDouble,
+    InjectedFault,
     PositionModel,
+    agree_live_and_double_fault_contract,
     compare_port_contract_shapes,
     compound_command_acceptance_blocked,
     run_conformance_suite,
@@ -151,11 +156,13 @@ __all__ = [
     "DEEP_HISTORY_NODE_SOURCE",
     "FTR01_BLOCKED_KINDS",
     "FTR04_DISPOSITION",
+    "INJECTED_COMMAND_FAULTS",
     "PORT_CONTRACT_CAPABILITY_KEYS",
     "REPLAY_SUBMIT_REFUSAL_CATEGORY",
     "REQUIRED_CONNECTION_CHECKS",
     "REQUOTE_OUTCOME_TYPE_FORBIDDEN",
     "RISK_REDUCING_KINDS",
+    "SHARED_FAULT_CONTRACT",
     "TRANSPORT_LOCUS",
     "VOLUME_WIRE_SCALE_EXPONENT",
     "AdmissionDisposition",
@@ -175,6 +182,7 @@ __all__ = [
     "DeepHistorySourceRole",
     "FieldDefectKind",
     "InboundVenueEvent",
+    "InjectedFault",
     "JournalEvent",
     "JournalMapping",
     "LiveCTraderClient",
@@ -218,6 +226,7 @@ __all__ = [
     "VenueFactVerifier",
     "VenueNativeIdentity",
     "WireKind",
+    "agree_live_and_double_fault_contract",
     "companion_source_implementation_allowed",
     "compare_port_contract_shapes",
     "compound_command_acceptance_blocked",
