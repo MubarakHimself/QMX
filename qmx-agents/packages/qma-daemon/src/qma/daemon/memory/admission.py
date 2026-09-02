@@ -136,7 +136,7 @@ class MemoryProviderRegistry:
         plugin_id: str | None = None,
     ) -> Result[ProviderBinding]:
         """Bind exactly one MemoryProvider for ``desk``."""
-        if not isinstance(desk, str) or desk.strip() == "":
+        if desk.strip() == "":
             return invalid_input(
                 "desk",
                 "MemoryProvider is scoped per desk; desk is a non-empty string (CT-43; AD-1)",
@@ -158,11 +158,9 @@ class MemoryProviderRegistry:
         return Ok(binding)
 
     def unbind(self, desk: str) -> None:
-        self._by_desk.pop(desk.strip() if isinstance(desk, str) else desk, None)
+        self._by_desk.pop(desk.strip(), None)
 
     def get(self, desk: str) -> ProviderBinding | None:
-        if not isinstance(desk, str):
-            return None
         return self._by_desk.get(desk.strip())
 
     def is_bound(self, desk: str) -> bool:

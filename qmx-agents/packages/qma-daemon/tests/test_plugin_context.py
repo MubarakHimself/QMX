@@ -8,12 +8,54 @@ from typing import Any
 from qma.core.plugins import PluginContext, build_hook_event, build_hook_result
 from qma.core.plugins.hooks import HookSource
 from qma.core.ports.handles import EvidenceHandle
+from qma.core.ports.memory import MemoryCandidate
 from qma.core.vocabulary.enums import HookResultDecision
 from qma.daemon.plugins import DaemonPluginContext
+from qmf.core import Ok, Result
 
 
 class _MemoryStub:
     """Structural MemoryProvider stand-in for registration tests."""
+
+    def propose(self, candidate: MemoryCandidate) -> Result[MemoryCandidate]:
+        return Ok(candidate)
+
+    def admit(self, candidate: MemoryCandidate) -> Result[MemoryCandidate]:
+        return Ok(candidate)
+
+    def recall(self, scope: str, token_budget: int) -> Result[tuple[MemoryCandidate, ...]]:
+        _ = scope, token_budget
+        return Ok(())
+
+    def get(self, memory_id: str) -> Result[MemoryCandidate]:
+        _ = memory_id
+        msg = "MemoryStub has no store"
+        raise KeyError(msg)
+
+    def list(self, scope: str) -> Result[tuple[MemoryCandidate, ...]]:
+        _ = scope
+        return Ok(())
+
+    def history(self, memory_id: str) -> Result[tuple[MemoryCandidate, ...]]:
+        _ = memory_id
+        return Ok(())
+
+    def supersede(self, memory_id: str, successor: MemoryCandidate) -> Result[MemoryCandidate]:
+        _ = memory_id
+        return Ok(successor)
+
+    def invalidate(self, memory_id: str) -> Result[MemoryCandidate]:
+        _ = memory_id
+        msg = "MemoryStub has no store"
+        raise KeyError(msg)
+
+    def expire(self, memory_id: str) -> Result[MemoryCandidate]:
+        _ = memory_id
+        msg = "MemoryStub has no store"
+        raise KeyError(msg)
+
+    def scopes(self) -> Result[tuple[str, ...]]:
+        return Ok(())
 
 
 class _CompilerStub:

@@ -278,7 +278,7 @@ class MemoryCandidate:
     occurrence_time: int
     validation_state: MemoryValidationState = MemoryValidationState.PROPOSED
     id: str = field(default_factory=lambda: str(uuid4()))
-    content: Mapping[str, object] = field(default_factory=dict)
+    content: Mapping[str, object] = field(default_factory=dict[str, object])
     admission_confidence: float | None = None
     supersession: str | None = None
     corroboration_count: int = 0
