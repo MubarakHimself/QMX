@@ -74,7 +74,7 @@ def _refusal(result: Result[T]):
 
 
 @pytest.fixture(autouse=True)
-def _reset_writers() -> Iterator[None]:
+def reset_first_writer_registry() -> Iterator[None]:
     clear_first_writer_registry()
     yield
     clear_first_writer_registry()
