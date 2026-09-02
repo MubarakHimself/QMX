@@ -1,13 +1,63 @@
-"""MIS surface: governed signal snapshot and later zero-authority shadow lane.
+"""MIS surface: governed signal snapshot and V1 rule-based/fitted producers.
 
 Story 26.3 lands the compute-once environment-keyed signal snapshot dispatched
-to the Book door and the KSA only. Shadow-lane candidates remain TN-19 follow-on.
+to the Book door and the KSA only. Story 26.17 ships the six rule-based
+labelers plus fitted ``liquidity_stress_v1``. ``regime_classifier_v1`` stays
+unbound; shadow-lane candidates remain TN-19 follow-on (Story 26.18).
 """
 
 from __future__ import annotations
 
 from typing import Final
 
+from qmn.mis.catalog import (
+    DEGRADED_SENSORS_PRODUCER_ID,
+    FEED_STATE_PRODUCER_ID,
+    FITTED_PRODUCER_IDS,
+    GAP_EVENT_PRODUCER_ID,
+    IDENTITY_PRODUCER_ID,
+    LIQUIDITY_STRESS_PRODUCER_ID,
+    MIS_PRODUCER_SURFACE,
+    REGIME_CLASSIFIER_PRODUCER_ID,
+    RULE_BASED_PRODUCER_IDS,
+    SPREAD_STATE_PRODUCER_ID,
+    UNAUTHORITATIVE_CANDIDATES,
+    V1_GOVERNED_PRODUCER_IDS,
+    AlignmentPolicy,
+    ConfiguredMisProducer,
+    FormulaNature,
+    FrontierFrame,
+    MisFormula,
+    MisProducerCatalog,
+    MisProducerRole,
+    ProducerEmission,
+    SpreadState,
+    SqsBaselineArtifact,
+    configure_mis_producer,
+    empty_mis_catalog,
+    mis_formula,
+    refuse_trained_regime_classifier,
+    refuse_unauthoritative_candidate,
+    register_mis_producer,
+    v1_formula_catalog,
+    v1_mis_inventory,
+)
+from qmn.mis.labelers import (
+    assemble_governed_snapshot,
+    evaluate_degraded_sensors,
+    evaluate_feed_state,
+    evaluate_gap_event,
+    evaluate_identity,
+    evaluate_mis_producer,
+    evaluate_spread_state,
+    evaluate_sqs,
+)
+from qmn.mis.liquidity import (
+    LiquidityFitArtifact,
+    evaluate_liquidity_stress,
+    exact_nearest_rank_quantile,
+    fit_liquidity_quantiles,
+)
 from qmn.mis.signal_snapshot import (
     DECISION_FRESHNESS_BOUND_VARIABLE,
     GOVERNED_CONSUMERS,
@@ -30,23 +80,65 @@ from qmn.mis.signal_snapshot import (
 
 __all__ = [
     "DECISION_FRESHNESS_BOUND_VARIABLE",
+    "DEGRADED_SENSORS_PRODUCER_ID",
+    "FEED_STATE_PRODUCER_ID",
+    "FITTED_PRODUCER_IDS",
+    "GAP_EVENT_PRODUCER_ID",
     "GOVERNED_CONSUMERS",
+    "IDENTITY_PRODUCER_ID",
+    "LIQUIDITY_STRESS_PRODUCER_ID",
+    "MIS_PRODUCER_SURFACE",
     "MIS_SURFACE",
+    "REGIME_CLASSIFIER_PRODUCER_ID",
+    "RULE_BASED_PRODUCER_IDS",
     "SIGNAL_SNAPSHOT_FORMAT_VERSION",
     "SIGNAL_SNAPSHOT_SURFACE",
+    "SPREAD_STATE_PRODUCER_ID",
     "SQS_PRODUCER_ID",
+    "UNAUTHORITATIVE_CANDIDATES",
+    "V1_GOVERNED_PRODUCER_IDS",
+    "AlignmentPolicy",
     "CanonicalFeedState",
+    "ConfiguredMisProducer",
+    "FormulaNature",
+    "FrontierFrame",
     "GovernedConsumer",
+    "LiquidityFitArtifact",
+    "MisFormula",
+    "MisProducerCatalog",
+    "MisProducerRole",
+    "ProducerEmission",
     "ProducerReadiness",
     "ProducerSlot",
     "SignalSnapshot",
+    "SpreadState",
+    "SqsBaselineArtifact",
     "SqsBaselineKey",
     "SqsReading",
+    "assemble_governed_snapshot",
     "check_snapshot_freshness",
+    "configure_mis_producer",
     "consume_signal_snapshot",
+    "empty_mis_catalog",
+    "evaluate_degraded_sensors",
+    "evaluate_feed_state",
+    "evaluate_gap_event",
+    "evaluate_identity",
+    "evaluate_liquidity_stress",
+    "evaluate_mis_producer",
+    "evaluate_spread_state",
+    "evaluate_sqs",
+    "exact_nearest_rank_quantile",
+    "fit_liquidity_quantiles",
     "mint_signal_snapshot",
+    "mis_formula",
     "refuse_bot_consumer",
+    "refuse_trained_regime_classifier",
+    "refuse_unauthoritative_candidate",
+    "register_mis_producer",
     "sqs_baseline_key",
+    "v1_formula_catalog",
+    "v1_mis_inventory",
 ]
 
 MIS_SURFACE: Final[str] = "qmn.mis"
