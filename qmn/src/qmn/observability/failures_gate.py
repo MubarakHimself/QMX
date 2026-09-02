@@ -252,14 +252,18 @@ def resolve_operator_affordance(
 
 
 def validate_failures_completeness(
-    path: Path | None = None,
+    path: str | Path | None = None,
     *,
     src_root: Path | None = None,
     emitted_ids: frozenset[str] | None = None,
     designed_ids: frozenset[str] | None = None,
 ) -> Result[FailuresCompletenessReport]:
-    """Gate FAILURES.md against emitted ids, designed ids, and the allow-list."""
-    target = path if path is not None else default_failures_path()
+    """Gate FAILURES.md against emitted ids, designed ids, and the allow-list.
+
+    ``path`` may be a Path (contained O_NOFOLLOW read of FAILURES.md) or the
+    markdown text itself for fixture coverage without leaving the qmn root.
+    """
+    target: str | Path = path if path is not None else default_failures_path()
     parsed = parse_failures_register(target)
     if is_refusal(parsed):
         return parsed

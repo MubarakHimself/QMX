@@ -119,9 +119,6 @@ def test_missing_duplicate_and_orphan_rows_fail() -> None:
     assert is_refusal(duplicated)
     assert duplicated.context["fr_id"] == "FR-1"
 
-    import tempfile
-    from pathlib import Path
-
     missing_text = """
 ### FR-1: Incomplete coverage
 
@@ -142,36 +139,30 @@ def test_missing_duplicate_and_orphan_rows_fail() -> None:
 - **Notification tier:** operator-visible (journaled)
 - **Product-user affordance:** Inspect `read_failure_detail` on the evidence channel.
 """
-    with tempfile.TemporaryDirectory() as tmp:
-        missing_path = Path(tmp) / "missing.md"
-        missing_path.write_text(missing_text, encoding="utf-8")
-        missing = validate_failures_completeness(
-            missing_path,
-            emitted_ids=frozenset({"clock.band.warn", "storage.partial_write"}),
-            designed_ids=frozenset({"clock.band.warn", "storage.partial_write"}),
-        )
-        assert is_refusal(missing)
-        missing_emitted = missing.context.get("missing_emitted")
-        missing_designed = missing.context.get("missing_designed")
-        assert missing_emitted == ("storage.partial_write",) or missing_designed == (
-            "storage.partial_write",
-        )
+    # Markdown strings — Path fixtures outside the qmn root are refused by the
+    # contained O_NOFOLLOW reader before missing/orphan policy can run.
+    missing = validate_failures_completeness(
+        missing_text,
+        emitted_ids=frozenset({"clock.band.warn", "storage.partial_write"}),
+        designed_ids=frozenset({"clock.band.warn", "storage.partial_write"}),
+    )
+    assert is_refusal(missing)
+    missing_emitted = missing.context.get("missing_emitted")
+    missing_designed = missing.context.get("missing_designed")
+    assert missing_emitted == ("storage.partial_write",) or missing_designed == (
+        "storage.partial_write",
+    )
 
-        orphan_path = Path(tmp) / "orphan.md"
-        orphan_path.write_text(orphan_text, encoding="utf-8")
-        orphan = validate_failures_completeness(
-            orphan_path,
-            emitted_ids=frozenset(),
-            designed_ids=frozenset(),
-        )
-        assert is_refusal(orphan)
-        assert orphan.context.get("orphan") == ("not.a.designed.failure",)
+    orphan = validate_failures_completeness(
+        orphan_text,
+        emitted_ids=frozenset(),
+        designed_ids=frozenset(),
+    )
+    assert is_refusal(orphan)
+    assert orphan.context.get("orphan") == ("not.a.designed.failure",)
 
 
 def test_blank_nfr11_field_fails_completeness() -> None:
-    import tempfile
-    from pathlib import Path
-
     blank = """
 ### FR-1: Blank detection
 
@@ -182,11 +173,8 @@ def test_blank_nfr11_field_fails_completeness() -> None:
 - **Notification tier:** operator-visible (journaled)
 - **Product-user affordance:** Inspect `read_failure_detail` on the evidence channel.
 """
-    with tempfile.TemporaryDirectory() as tmp:
-        path = Path(tmp) / "FAILURES.md"
-        path.write_text(blank, encoding="utf-8")
-        refused = validate_failures_completeness(path)
-        assert is_refusal(refused)
+    refused = validate_failures_completeness(blank)
+    assert is_refusal(refused)
 
 
 def test_affordance_resolves_to_existing_door_or_recipe() -> None:
