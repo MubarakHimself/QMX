@@ -34,17 +34,6 @@ from qmf.core import (
     fingerprint_bytes,
     is_refusal,
 )
-from qmf.registry import (
-    EdgeLog,
-    EdgeType,
-    FieldSetKind,
-    KindRegistry,
-    LineageEdge,
-    Registrar,
-    RegistrationReceipt,
-    RegistrationRecord,
-    WriteOutcome,
-)
 
 from qmn.mis._refuse import clean_token, invalid, policy
 from qmn.mis.catalog import (
@@ -104,12 +93,63 @@ REGIME_REGISTER_ARTIFACT_ID: Final[str] = "regime_classifier_v1_registration"
 REGIME_REGISTER_FORMAT_VERSION: Final[int] = 1
 REGIME_MODEL_KIND: Final[str] = "regime-model-candidate"
 REGIME_MODEL_KIND_FORMAT_VERSION: Final[int] = 1
-REGISTRATION_LINEAGE_EDGE_TYPE: Final[EdgeType] = EdgeType.OCCURRENCE_OF
+# CT-07 edge type tokens — string form so mis never imports qmf.registry (host owns that seam).
+REGISTRATION_LINEAGE_EDGE_TYPE: Final[str] = "occurrence-of"
+_BRANCHES_FROM_EDGE_TYPE: Final[str] = "branches-from"
 FORBIDDEN_AUTHORITY_STATUSES: Final[frozenset[str]] = frozenset({"governed", "ratified", "active"})
 
 _BODY_FIELD: Final[str] = "content"
 _REGISTRATION_FILENAME: Final[str] = "registration_record.json"
 _LINEAGE_FILENAME: Final[str] = "lineage_edges.jsonl"
+
+
+@dataclass(frozen=True, slots=True)
+class _RegimeModelKindContract:
+    """Local KindContract for regime-model-candidate — no qmf.registry import."""
+
+    name: str
+    contract_format_version: int
+    required_fields: frozenset[str]
+    optional_fields: frozenset[str]
+
+    def validate_body(self, body: Mapping[str, object]) -> Result[Mapping[str, object]]:
+        keys = frozenset(body.keys())
+        allowed = self.required_fields | self.optional_fields
+        unknown = keys - allowed
+        if unknown:
+            return invalid(
+                "body",
+                "the body carries fields this kind's contract does not define; a kind "
+                "field set is addable in a later version, never redefined (FM-1)",
+                kind=self.name,
+                unknown=sorted(unknown),
+                allowed=sorted(allowed),
+            )
+        missing = self.required_fields - keys
+        if missing:
+            return invalid(
+                "body",
+                "the body is missing fields this kind's contract requires (FM-1)",
+                kind=self.name,
+                missing=sorted(missing),
+            )
+        return Ok(body)
+
+
+def _is_kind_registry(obj: object) -> bool:
+    return callable(getattr(obj, "register", None)) and callable(
+        getattr(obj, "contract_for", None)
+    )
+
+
+def _is_registrar(obj: object) -> bool:
+    return callable(getattr(obj, "register", None)) and not callable(
+        getattr(obj, "contract_for", None)
+    )
+
+
+def _is_edge_log(obj: object) -> bool:
+    return callable(getattr(obj, "append", None)) and callable(getattr(obj, "append_edge", None))
 
 
 class RegistrationAuthorityStatus(StrEnum):
@@ -245,23 +285,24 @@ class RegistrationLineageBundle:
 
     registration: RegimeModelRegistration
     registration_fp: Fingerprint
-    record: RegistrationRecord
-    outcome: WriteOutcome
-    edges: tuple[LineageEdge, ...]
+    record: object
+    outcome: object
+    edges: tuple[object, ...]
     prior_registration_fp: Fingerprint | None
     composition_fp_before: Fingerprint | None
     composition_fp_after: Fingerprint | None
 
     @property
     def stable_id(self) -> Fingerprint:
-        return self.record.stable_id
+        return self.record.stable_id  # type: ignore[attr-defined, no-any-return]
 
     def as_mapping(self) -> Mapping[str, object]:
+        outcome_token = getattr(self.outcome, "value", self.outcome)
         return MappingProxyType(
             {
                 "registration_fp": self.registration_fp.value,
                 "stable_id": self.stable_id.value,
-                "outcome": self.outcome.value,
+                "outcome": outcome_token,
                 "edge_count": len(self.edges),
                 "status": self.registration.status.value,
                 "provenance": self.registration.provenance,
@@ -349,19 +390,21 @@ def refuse_pretrained_reputation(*, family: object) -> TypedRefusal:
     )
 
 
-def regime_model_kind_contract() -> Result[FieldSetKind]:
+def regime_model_kind_contract() -> Result[_RegimeModelKindContract]:
     """CT-06 kind contract for the regime-model-candidate record."""
-    return FieldSetKind.try_create(
-        REGIME_MODEL_KIND,
-        REGIME_MODEL_KIND_FORMAT_VERSION,
-        required_fields=(_BODY_FIELD,),
-        optional_fields=(),
+    return Ok(
+        _RegimeModelKindContract(
+            name=REGIME_MODEL_KIND,
+            contract_format_version=REGIME_MODEL_KIND_FORMAT_VERSION,
+            required_fields=frozenset({_BODY_FIELD}),
+            optional_fields=frozenset(),
+        )
     )
 
 
-def install_regime_model_kind(registry: object) -> Result[FieldSetKind]:
+def install_regime_model_kind(registry: object) -> Result[_RegimeModelKindContract]:
     """Install the regime-model-candidate kind on a host KindRegistry."""
-    if not isinstance(registry, KindRegistry):
+    if not _is_kind_registry(registry):
         return invalid(
             "registry",
             "regime-model-candidate installs on a CT-06 KindRegistry",
@@ -370,7 +413,7 @@ def install_regime_model_kind(registry: object) -> Result[FieldSetKind]:
     contract = regime_model_kind_contract()
     if is_refusal(contract):
         return contract
-    admitted = registry.register(contract.value)
+    admitted = registry.register(contract.value)  # type: ignore[union-attr]
     if is_refusal(admitted):
         return admitted
     return Ok(contract.value)
@@ -852,13 +895,13 @@ def register_model_lineage(
         return refuse_live_consumer_binding(claim="registration authority flags")
     if registration.changes_composition_fp:
         return refuse_composition_fp_mutation(claim="registration.changes_composition_fp")
-    if not isinstance(registrar, Registrar):
+    if not _is_registrar(registrar):
         return invalid(
             "registrar",
             "registration stamps through a CT-06 Registrar",
             given=type(registrar).__name__,
         )
-    if not isinstance(edge_log, EdgeLog):
+    if not _is_edge_log(edge_log):
         return invalid(
             "edge_log",
             "lineage appends through a CT-07 EdgeLog",
@@ -892,7 +935,7 @@ def register_model_lineage(
 
     body = {_BODY_FIELD: registration.fp1_identity()}
     parents: list[Fingerprint] = [registration.design_fp, registration.model_fp]
-    receipt = registrar.register(
+    receipt = registrar.register(  # type: ignore[union-attr]
         kind=REGIME_MODEL_KIND,
         body=body,
         writer=writer,
@@ -902,11 +945,11 @@ def register_model_lineage(
     )
     if is_refusal(receipt):
         return receipt
-    admitted: RegistrationReceipt = receipt.value
+    admitted = receipt.value
 
-    edges: list[LineageEdge] = []
+    edges: list[object] = []
     for target in registration.lineage_targets():
-        appended = edge_log.append(
+        appended = edge_log.append(  # type: ignore[union-attr]
             edge_type=REGISTRATION_LINEAGE_EDGE_TYPE,
             from_ref=admitted.record.stable_id,
             to_ref=target,
@@ -917,8 +960,8 @@ def register_model_lineage(
 
     if prior.value is not None:
         # A changed byte/config mints a new version; link with branches-from.
-        branched = edge_log.append(
-            edge_type=EdgeType.BRANCHES_FROM,
+        branched = edge_log.append(  # type: ignore[union-attr]
+            edge_type=_BRANCHES_FROM_EDGE_TYPE,
             from_ref=admitted.record.stable_id,
             to_ref=prior.value,
         )

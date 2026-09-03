@@ -1344,7 +1344,14 @@ designed failure; every typed refusal the node can emit belongs here.
   identical content (`mis.regime_register.identical_version`), or write to an
   unwritable output directory (`mis.regime_register.output_dir`); also model
   fingerprint mismatch between training and evaluation
-  (`mis.regime_register.model_fp_mismatch`).
+  (`mis.regime_register.model_fp_mismatch`); accepted-path status misuse
+  (`mis.regime_register.accepted_status`); unknown external family
+  (`mis.regime_register.unknown_external_family`); completed training mislabeled
+  incomplete (`mis.regime_register.completed_as_incomplete`); accepted evaluation
+  mislabeled rejected (`mis.regime_register.accepted_as_rejected`); governed
+  producer still bound after registration
+  (`mis.regime_register.governed_binding_leak`); or sandbox provenance leaking
+  past publish/pull gates (`mis.regime_register.sandbox_gate_leak`).
 - **Auto-recovery / retry:** none for policy refusals — register only a
   completed accepted Story 30.4/30.5 lineage as a sandbox-provenance candidate;
   record incomplete/rejected/external candidates with honest provenance and
