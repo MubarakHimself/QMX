@@ -1290,3 +1290,43 @@ designed failure; every typed refusal the node can emit belongs here.
   `python -m qmn.mis.regime_train` (via the in-library API over prepared
   labeled/cleaned corpora) on your own machine; do not train on the
   trading VPS; do not register partial outputs.
+
+### FR-76: MIS regime offline evaluation refusal
+
+- **Failure class:** policy rejection / unavailable dependency
+- **Detection:** Story 30.5 offline evaluation is asked to infer profit
+  (`mis.regime_eval.profit_inference`), infer live/governed authority
+  (`mis.regime_eval.live_authority_inference`), apply a post-hoc acceptance
+  threshold (`mis.regime_eval.post_hoc_threshold`), mutate the trained
+  artifact (`mis.regime_eval.artifact_mutation`), mutate the sealed holdout
+  (`mis.regime_eval.holdout_mutation`), evaluate an incomplete training
+  artifact (`mis.regime_eval.incomplete_training`), invent a CLI JSON
+  loader (`mis.regime_eval.cli_loader`), or a rerun mismatches identical
+  inputs (`mis.regime_eval.reproducibility_mismatch`); also holdout-leak
+  contract breach (`mis.regime_eval.holdout_leak`), missing LightGBM on a
+  lightgbm backend (`mis.regime_eval.lightgbm_missing`), insufficient
+  train/validation/holdout rows (`mis.regime_eval.insufficient_train_rows`
+  / `mis.regime_eval.insufficient_validation_rows` /
+  `mis.regime_eval.insufficient_holdout_rows`), empty predictions
+  (`mis.regime_eval.empty_predictions`), unknown baseline id
+  (`mis.regime_eval.unknown_baseline`), or an unwritable output directory
+  (`mis.regime_eval.output_dir`).
+- **Auto-recovery / retry:** none for policy refusals — run the offline
+  evaluation script on the operator machine against a completed Story 30.4
+  artifact and immutable Story 30.2/30.3 split manifests; thresholds stay
+  those sealed in Story 30.1; evaluation never mutates the model or
+  sealed holdout. Install LightGBM locally when evaluating a lightgbm
+  artifact, or rehearse with `deterministic-surrogate`.
+- **Visible degraded state:** no profit/live-authority/post-hoc-threshold
+  path opens; trained artifact and sealed holdout stay unmodified; one
+  fingerprinted evaluation report records accepted/refused with cause
+  under the predeclared measures.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The MIS offline evaluation script refused a
+  profit/live-authority/post-hoc-threshold claim, an artifact or holdout
+  mutation, an incomplete training input, or a reproducibility mismatch.
+  Inspect `read_failure_detail` on the evidence channel. Re-run
+  `python -m qmn.mis.regime_eval` (via the in-library API over prepared
+  training/labeled/cleaned artifacts) on your own machine; do not change
+  thresholds after seeing results; do not grant money-path authority from
+  evaluation alone.

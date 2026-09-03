@@ -66,6 +66,7 @@ __all__ = [
     "TrialHyperparameters",
     "TrialRecord",
     "assert_registerable_training_artifact",
+    "build_labeled_feature_rows",
     "build_training_config",
     "build_training_matrix",
     "capture_machine_environment",
@@ -742,39 +743,51 @@ def build_training_config(
     )
 
 
-def build_training_matrix(
+def build_labeled_feature_rows(
     cleaned: object,
     labeled: object,
     *,
+    roles: frozenset[str] | set[str],
     peer_features: Mapping[str, Mapping[str, float]] | None = None,
     design: RegimeClassifierDesign | None = None,
     contract: ExecutableRegimeContract | None = None,
-    inspect_sealed_holdout: object = False,
-) -> Result[PreparedTrainingMatrix]:
-    """Build train/validation feature rows; sealed holdout stays unused."""
-    if inspect_sealed_holdout is True:
-        return policy(
-            "inspect_sealed_holdout",
-            "training must not inspect sealed holdout outcomes; evaluation is Story 30.5",
-            failure_id="mis.regime_train.sealed_holdout_peek",
-        )
-    if inspect_sealed_holdout not in (False, None):
-        return invalid(
-            "inspect_sealed_holdout",
-            "inspect_sealed_holdout is False for offline training",
-            given=repr(inspect_sealed_holdout),
-        )
+) -> Result[
+    tuple[
+        tuple[str, ...],
+        tuple[str, ...],
+        dict[str, tuple[tuple[str, tuple[float, ...], str, str], ...]],
+        int,
+    ]
+]:
+    """Causal feature rows for the requested split roles (shared by train/eval).
+
+    Each row is ``(row_id, features, class_label, session)``. Callers that must
+    keep the sealed holdout unused (Story 30.4) omit ``sealed-test`` from
+    ``roles``; Story 30.5 evaluation includes it read-only.
+    """
     if not isinstance(cleaned, CleanedCorpus):
         return invalid(
             "cleaned",
-            "training matrix takes a CleanedCorpus",
+            "feature rows take a CleanedCorpus",
             given=type(cleaned).__name__,
         )
     if not isinstance(labeled, LabeledCorpus):
         return invalid(
             "labeled",
-            "training matrix takes a LabeledCorpus",
+            "feature rows take a LabeledCorpus",
             given=type(labeled).__name__,
+        )
+    role_set = frozenset(roles)
+    allowed = {
+        SegmentRole.TRAIN.value,
+        SegmentRole.VALIDATION.value,
+        _SPLIT_ROLE_HOLDOUT,
+    }
+    if not role_set or not role_set.issubset(allowed):
+        return invalid(
+            "roles",
+            "roles is a non-empty subset of train/validation/sealed-test",
+            given=sorted(role_set),
         )
     resolved = _resolve_contract(design=design, contract=contract)
     if is_refusal(resolved):
@@ -792,10 +805,10 @@ def build_training_matrix(
         for index, row in enumerate(rows):
             index_by_id[row.row_id] = (instrument, index)
 
-    train_rows: list[tuple[str, tuple[float, ...], str]] = []
-    validation_rows: list[tuple[str, tuple[float, ...], str]] = []
+    buckets: dict[str, list[tuple[str, tuple[float, ...], str, str]]] = {
+        role: [] for role in role_set
+    }
     excluded = 0
-    sealed = 0
     for labeled_row in labeled.rows:
         if labeled_row.class_label == EXCLUSION_CLASS:
             excluded += 1
@@ -803,14 +816,12 @@ def build_training_matrix(
         if labeled_row.class_label not in REGIME_CLASS_VOCABULARY:
             return policy(
                 "class_label",
-                "training labels must stay inside the closed regime vocabulary",
+                "labels must stay inside the closed regime vocabulary",
                 given=labeled_row.class_label,
             )
-        if labeled_row.split_role == _SPLIT_ROLE_HOLDOUT:
-            sealed += 1
+        if labeled_row.split_role not in role_set:
             continue
-        cleaned_row = by_id.get(labeled_row.row_id)
-        if cleaned_row is None:
+        if labeled_row.row_id not in by_id:
             return policy(
                 "row_id",
                 "labeled row must cite a cleaned corpus row",
@@ -836,18 +847,64 @@ def build_training_matrix(
         )
         if is_refusal(features):
             return features
-        item = (labeled_row.row_id, features.value, labeled_row.class_label)
-        if labeled_row.split_role == SegmentRole.TRAIN.value:
-            train_rows.append(item)
-        elif labeled_row.split_role == SegmentRole.VALIDATION.value:
-            validation_rows.append(item)
-        else:
-            return policy(
-                "split_role",
-                "training matrix admits only train/validation/sealed-test roles",
-                given=labeled_row.split_role,
+        buckets[labeled_row.split_role].append(
+            (
+                labeled_row.row_id,
+                features.value,
+                labeled_row.class_label,
+                labeled_row.session,
             )
+        )
+    frozen = {role: tuple(rows) for role, rows in buckets.items()}
+    return Ok((feature_ids, REGIME_CLASS_VOCABULARY, frozen, excluded))
 
+
+def build_training_matrix(
+    cleaned: object,
+    labeled: object,
+    *,
+    peer_features: Mapping[str, Mapping[str, float]] | None = None,
+    design: RegimeClassifierDesign | None = None,
+    contract: ExecutableRegimeContract | None = None,
+    inspect_sealed_holdout: object = False,
+) -> Result[PreparedTrainingMatrix]:
+    """Build train/validation feature rows; sealed holdout stays unused."""
+    if inspect_sealed_holdout is True:
+        return policy(
+            "inspect_sealed_holdout",
+            "training must not inspect sealed holdout outcomes; evaluation is Story 30.5",
+            failure_id="mis.regime_train.sealed_holdout_peek",
+        )
+    if inspect_sealed_holdout not in (False, None):
+        return invalid(
+            "inspect_sealed_holdout",
+            "inspect_sealed_holdout is False for offline training",
+            given=repr(inspect_sealed_holdout),
+        )
+    built = build_labeled_feature_rows(
+        cleaned,
+        labeled,
+        roles={SegmentRole.TRAIN.value, SegmentRole.VALIDATION.value},
+        peer_features=peer_features,
+        design=design,
+        contract=contract,
+    )
+    if is_refusal(built):
+        return built
+    feature_ids, vocabulary, buckets, excluded = built.value
+    if not isinstance(labeled, LabeledCorpus):
+        return invalid("labeled", "training matrix takes a LabeledCorpus")
+    train_rows = tuple(
+        (row_id, features, label)
+        for row_id, features, label, _session in buckets.get(SegmentRole.TRAIN.value, ())
+    )
+    validation_rows = tuple(
+        (row_id, features, label)
+        for row_id, features, label, _session in buckets.get(
+            SegmentRole.VALIDATION.value, ()
+        )
+    )
+    sealed = sum(1 for row in labeled.rows if row.split_role == _SPLIT_ROLE_HOLDOUT)
     if not train_rows:
         return policy(
             "train_rows",
@@ -863,13 +920,13 @@ def build_training_matrix(
     return Ok(
         PreparedTrainingMatrix(
             feature_ids=feature_ids,
-            class_vocabulary=REGIME_CLASS_VOCABULARY,
-            train_rows=tuple(train_rows),
-            validation_rows=tuple(validation_rows),
+            class_vocabulary=vocabulary,
+            train_rows=train_rows,
+            validation_rows=validation_rows,
             excluded_count=excluded,
             sealed_holdout_count=sealed,
             sealed_holdout_unused=True,
-            peer_features_supplied=peer_supplied,
+            peer_features_supplied=peer_features is not None,
         )
     )
 
