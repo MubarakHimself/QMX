@@ -13,14 +13,17 @@ CI runs this for correctness only and never enforces a latency merge gate.
 
 from __future__ import annotations
 
+import importlib.util
 import math
 import statistics
+import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
+from functools import cache
 from pathlib import Path
-from types import MappingProxyType
-from typing import Final, cast
+from types import MappingProxyType, ModuleType
+from typing import Final, Protocol, cast
 
 from qmf.core import Fingerprint, Ok, Result, TypedRefusal, fingerprint, is_ok, is_refusal
 
@@ -121,6 +124,33 @@ _TREE_DIRS: Final[Mapping[str, str]] = MappingProxyType(
 )
 
 _GROWTH_ITEMS: Final[tuple[str, ...]] = ("journal", "log", "metrics", "backup")
+
+
+class _DeploySafeIO(Protocol):
+    def write_bytes_exclusive_no_follow(
+        self, path: Path, data: bytes, *, contain_within: Path
+    ) -> None: ...
+
+    def write_text_exclusive_no_follow(
+        self, path: Path, text: str, *, contain_within: Path
+    ) -> None: ...
+
+
+@cache
+def _deploy_safe_io() -> _DeploySafeIO:
+    """Load ``qmn/deploy/safe_io.py`` from the distribution root (SKY-D324)."""
+    name = "qmn_deploy_safe_io"
+    cached: ModuleType | None = sys.modules.get(name)
+    if cached is not None:
+        return cast(_DeploySafeIO, cached)
+    path = Path(__file__).resolve().parents[3] / "deploy" / "safe_io.py"
+    spec = importlib.util.spec_from_file_location(name, path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"cannot load {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return cast(_DeploySafeIO, module)
 
 
 class CapacityBand(StrEnum):
@@ -720,6 +750,7 @@ def materialize_representative_day(
     if sizes is not None:
         payload = dict(sizes)
     try:
+        writers = _deploy_safe_io()
         root.mkdir(parents=True, exist_ok=True)
         for name, relative in _TREE_DIRS.items():
             target = root / relative
@@ -733,12 +764,20 @@ def materialize_representative_day(
                     given=nbytes,
                     failure_id=_ID_INPUTS,
                 )
-            (target / "day.bin").write_bytes(b"\x00" * nbytes)
+            writers.write_bytes_exclusive_no_follow(
+                target / "day.bin",
+                b"\x00" * nbytes,
+                contain_within=root,
+            )
         trees = root / _TREE_DIRS["commit_trees"]
         for index in range(depth.value):
             leaf = trees / f"tree-{index:02d}"
             leaf.mkdir(parents=True, exist_ok=True)
-            (leaf / "HEAD").write_text("fixture", encoding="utf-8")
+            writers.write_text_exclusive_no_follow(
+                leaf / "HEAD",
+                "fixture",
+                contain_within=root,
+            )
     except OSError as exc:
         return invalid(
             "storage_root",

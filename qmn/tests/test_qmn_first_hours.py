@@ -240,6 +240,12 @@ def test_capacity_no_new_entry_trips_before_disk_exhaustion() -> None:
 
 def test_measure_storage_trees_from_fixture(tmp_path: Path) -> None:
     root = _ok(materialize_representative_day(tmp_path / "trees", sizes=_TREES, commit_trees=2))
+    journal = root / "rooms" / "journal" / "day.bin"
+    assert journal.is_file() and not journal.is_symlink()
+    assert journal.read_bytes() == b"\x00" * 256
+    head = root / "opt-qmx" / "tree-00" / "HEAD"
+    assert head.is_file() and not head.is_symlink()
+    assert head.read_text(encoding="utf-8") == "fixture"
     measured = _ok(
         measure_storage_trees(
             root,
@@ -254,6 +260,19 @@ def test_measure_storage_trees_from_fixture(tmp_path: Path) -> None:
     assert measured.metrics_growth_bytes == 256
     assert measured.backup_growth_bytes == 256
     assert measured.bytes_per_day == 1_024
+
+
+def test_representative_day_fixture_writes_route_through_deploy_safe_io() -> None:
+    qmn_root = Path(__file__).resolve().parents[1]
+    source = (qmn_root / "src" / "qmn" / "bench" / "baselines.py").read_text(encoding="utf-8")
+    safe_io = (qmn_root / "deploy" / "safe_io.py").read_text(encoding="utf-8")
+    assert "write_bytes_exclusive_no_follow" in source
+    assert "write_text_exclusive_no_follow" in source
+    assert 'deploy" / "safe_io.py"' in source
+    assert ".write_bytes(" not in source
+    assert ".write_text(" not in source
+    assert 'getattr(os, "O_NOFOLLOW", 0)' in safe_io
+    assert "os.open" in safe_io
 
 
 def test_derive_regression_thresholds_from_synthetic_marks() -> None:
