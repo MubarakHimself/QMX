@@ -21,13 +21,12 @@ import os
 import platform
 import random
 import sys
-import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Final
+from typing import Any, Final, cast
 
 from qmf.core import Fingerprint, Ok, Result, TypedRefusal, fingerprint, is_refusal
 from qmf.data import SegmentRole
@@ -96,8 +95,9 @@ _CHECKPOINT_FILENAME: Final[str] = "checkpoint.json"
 _CONFIG_FILENAME: Final[str] = "training_config.json"
 _TRIALS_FILENAME: Final[str] = "trials.jsonl"
 
+_TrainRow = tuple[str, tuple[float, ...], str]
 FitFn = Callable[
-    [Sequence[tuple[tuple[str, ...], tuple[float, ...], str]], Mapping[str, object], int],
+    [Sequence[_TrainRow], Mapping[str, object], int],
     tuple[str, int, int],
 ]
 
@@ -183,7 +183,7 @@ class TrialHyperparameters:
         }
 
     def fp1_identity(self) -> dict[str, object]:
-        body = {"class": "regime-training-trial-hyperparameters"}
+        body: dict[str, object] = {"class": "regime-training-trial-hyperparameters"}
         body.update(self.as_mapping())
         return body
 
@@ -698,7 +698,7 @@ def build_training_config(
     if command is None:
         cmd = ("python", "-m", "qmn.mis.regime_train", "--output-dir", out)
     elif isinstance(command, Sequence) and not isinstance(command, (str, bytes)):
-        tokens = tuple(str(item) for item in command)
+        tokens = tuple(str(item) for item in cast("Sequence[object]", command))
         if not tokens:
             return invalid("command", "command is a non-empty argv sequence")
         cmd = tokens
@@ -893,6 +893,7 @@ def run_offline_training(
     allow_live_network: object = False,
     allow_vps_or_cloud: object = False,
     allow_broker_or_node_credential: object = False,
+    clock_ns: Callable[[], int] | None = None,
 ) -> Result[TrainingArtifact | TrainingRecord]:
     """Run or resume the bounded offline training script.
 
@@ -900,8 +901,11 @@ def run_offline_training(
     ``TrainingRecord`` (``aborted`` / ``refused``). Never executes a multi-hour
     cloud/VPS job; the deterministic surrogate backend finishes in-process for
     tests and dry operator rehearsals. LightGBM is optional and imported lazily.
+    Duration comes from an injected nanosecond clock reader — never the host
+    clock below the composition root.
     """
-    start_mono = time.monotonic()
+    mono = _resolve_clock_ns(clock_ns)
+    start_mono_ns = mono()
     start_utc = _utc_now()
     machine = capture_machine_environment()
     lock = resolve_dependency_lock(lock_path=lock_path)
@@ -962,7 +966,8 @@ def run_offline_training(
             lock=lock.value,
             machine=machine,
             start_utc=start_utc,
-            start_mono=start_mono,
+            start_mono_ns=start_mono_ns,
+            clock_ns=mono,
             trials=(),
             best_trial_index=None,
             model_path=None,
@@ -994,7 +999,8 @@ def run_offline_training(
                 lock=lock.value,
                 machine=machine,
                 start_utc=start_utc,
-                start_mono=start_mono,
+                start_mono_ns=start_mono_ns,
+                clock_ns=mono,
                 trials=(),
                 best_trial_index=None,
                 model_path=None,
@@ -1051,7 +1057,8 @@ def run_offline_training(
             lock=lock.value,
             machine=machine,
             start_utc=start_utc,
-            start_mono=start_mono,
+            start_mono_ns=start_mono_ns,
+            clock_ns=mono,
             trials=tuple(completed),
             best_trial_index=best_index,
             model_path=None,
@@ -1085,7 +1092,7 @@ def run_offline_training(
             aborted = True
             break
         params = _draw_hyperparameters(rng, trial_index=trial_index, bounds=bounds)
-        trial_started = time.monotonic()
+        trial_started_ns = mono()
         try:
             model_text, score_ppb, _train_score = fitter.value(
                 train_payload,
@@ -1102,7 +1109,7 @@ def run_offline_training(
         except Exception as exc:
             aborted = True
             abort_cause = f"trial-fit-failed:{type(exc).__name__}"
-            elapsed_ms = int((time.monotonic() - trial_started) * 1000)
+            elapsed_ms = _elapsed_ms(trial_started_ns, mono)
             completed.append(
                 TrialRecord(
                     trial_index=trial_index,
@@ -1117,7 +1124,7 @@ def run_offline_training(
 
         model_digest = hashlib.sha256(model_text.encode("utf-8")).hexdigest()
         model_fp_value = f"fp1:sha256:{model_digest}"
-        elapsed_ms = int((time.monotonic() - trial_started) * 1000)
+        elapsed_ms = _elapsed_ms(trial_started_ns, mono)
         trial = TrialRecord(
             trial_index=trial_index,
             hyperparameters=params,
@@ -1161,7 +1168,8 @@ def run_offline_training(
             lock=lock.value,
             machine=machine,
             start_utc=start_utc,
-            start_mono=start_mono,
+            start_mono_ns=start_mono_ns,
+            clock_ns=mono,
             trials=tuple(completed),
             best_trial_index=best_index,
             model_path=None,
@@ -1184,7 +1192,8 @@ def run_offline_training(
             lock=lock.value,
             machine=machine,
             start_utc=start_utc,
-            start_mono=start_mono,
+            start_mono_ns=start_mono_ns,
+            clock_ns=mono,
             trials=tuple(completed),
             best_trial_index=None,
             model_path=None,
@@ -1207,7 +1216,8 @@ def run_offline_training(
         lock=lock.value,
         machine=machine,
         start_utc=start_utc,
-        start_mono=start_mono,
+        start_mono_ns=start_mono_ns,
+        clock_ns=mono,
         trials=tuple(completed),
         best_trial_index=best_index,
         model_path=_posix_rel(model_path),
@@ -1637,7 +1647,9 @@ def _select_fitter(backend: str) -> Result[FitFn]:
         return Ok(_deterministic_surrogate_fit)
     if backend == TRAINING_BACKEND_LIGHTGBM:
         try:
-            import lightgbm  # noqa: F401, PLC0415
+            import lightgbm  # noqa: F401, PLC0415  # pyright: ignore[reportMissingImports]
+
+            _ = lightgbm
         except ImportError:
             return policy(
                 "backend",
@@ -1651,7 +1663,7 @@ def _select_fitter(backend: str) -> Result[FitFn]:
 
 
 def _deterministic_surrogate_fit(
-    train_rows: Sequence[tuple[str, tuple[float, ...], str]],
+    train_rows: Sequence[_TrainRow],
     context: Mapping[str, object],
     seed: int,
 ) -> tuple[str, int, int]:
@@ -1660,14 +1672,38 @@ def _deterministic_surrogate_fit(
     Used for operator rehearsals and tests. Never opens network or credentials.
     Validation score is a deterministic fold over validation_rows when present.
     """
-    hyper = context.get("hyperparameters", {})
-    feature_ids = context.get("feature_ids", [])
-    vocabulary = context.get("class_vocabulary", list(REGIME_CLASS_VOCABULARY))
-    validation_rows = context.get("validation_rows")
+    hyper_obj = context.get("hyperparameters", {})
+    hyper: Mapping[str, object] = (
+        cast("Mapping[str, object]", hyper_obj) if isinstance(hyper_obj, Mapping) else {}
+    )
+    feature_ids_obj = context.get("feature_ids", [])
+    if isinstance(feature_ids_obj, Sequence) and not isinstance(
+        feature_ids_obj, (str, bytes)
+    ):
+        feature_ids = [str(item) for item in cast("Sequence[object]", feature_ids_obj)]
+    else:
+        feature_ids = []
+    vocab_obj = context.get("class_vocabulary", list(REGIME_CLASS_VOCABULARY))
+    if isinstance(vocab_obj, Sequence) and not isinstance(vocab_obj, (str, bytes)):
+        vocabulary = [str(item) for item in cast("Sequence[object]", vocab_obj)]
+    else:
+        vocabulary = list(REGIME_CLASS_VOCABULARY)
+    validation_obj = context.get("validation_rows")
+    validation_rows: tuple[_TrainRow, ...]
+    if isinstance(validation_obj, Sequence) and not isinstance(
+        validation_obj, (str, bytes)
+    ):
+        validation_rows = tuple(
+            cast("_TrainRow", row)
+            for row in cast("Sequence[object]", validation_obj)
+            if isinstance(row, tuple) and len(cast("tuple[object, ...]", row)) >= 3
+        )
+    else:
+        validation_rows = ()
     payload = {
         "class": "qmx-deterministic-surrogate-lightgbm-text",
         "seed": seed,
-        "hyperparameters": hyper,
+        "hyperparameters": dict(hyper),
         "feature_ids": feature_ids,
         "class_vocabulary": vocabulary,
         "train_row_ids": [row[0] for row in train_rows],
@@ -1681,24 +1717,24 @@ def _deterministic_surrogate_fit(
         "qmx_deterministic_surrogate_lightgbm_text_v1",
         f"seed={seed}",
         f"digest={digest}",
-        f"num_leaves={hyper.get('num_leaves') if isinstance(hyper, Mapping) else None}",
-        f"classes={','.join(str(item) for item in vocabulary)}",
-        f"features={','.join(str(item) for item in feature_ids)}",
+        f"num_leaves={hyper.get('num_leaves')}",
+        f"classes={','.join(vocabulary)}",
+        f"features={','.join(feature_ids)}",
         f"train_rows={len(train_rows)}",
     ]
     model_text = "\n".join(lines) + "\n"
     score = _surrogate_validation_score(
         train_rows,
-        validation_rows if isinstance(validation_rows, Sequence) else (),
+        validation_rows,
         seed=seed,
-        hyper=hyper if isinstance(hyper, Mapping) else {},
+        hyper=hyper,
     )
     return model_text, score, score
 
 
 def _surrogate_validation_score(
-    train_rows: Sequence[tuple[str, tuple[float, ...], str]],
-    validation_rows: Sequence[object],
+    train_rows: Sequence[_TrainRow],
+    validation_rows: Sequence[_TrainRow],
     *,
     seed: int,
     hyper: Mapping[str, object],
@@ -1716,8 +1752,6 @@ def _surrogate_validation_score(
     agree = 0
     total = 0
     for row in validation_rows:
-        if not isinstance(row, tuple) or len(row) < 3:
-            continue
         total += 1
         if row[2] == majority:
             agree += 1
@@ -1727,73 +1761,103 @@ def _surrogate_validation_score(
 
 
 def _lightgbm_fit(
-    train_rows: Sequence[tuple[str, tuple[float, ...], str]],
+    train_rows: Sequence[_TrainRow],
     context: Mapping[str, object],
     seed: int,
 ) -> tuple[str, int, int]:
     """Lazy LightGBM fit for a real operator-machine run (hours-scale data)."""
-    import lightgbm as lgb  # noqa: PLC0415
+    import lightgbm as lgb  # noqa: PLC0415  # pyright: ignore[reportMissingImports]
 
-    hyper = context.get("hyperparameters", {})
-    if not isinstance(hyper, Mapping):
+    lgb_api: Any = lgb
+    hyper_obj = context.get("hyperparameters", {})
+    if not isinstance(hyper_obj, Mapping):
         raise TypeError("hyperparameters mapping required")
-    vocabulary = list(context.get("class_vocabulary", list(REGIME_CLASS_VOCABULARY)))
+    hyper = cast("Mapping[str, object]", hyper_obj)
+    vocab_obj = context.get("class_vocabulary", list(REGIME_CLASS_VOCABULARY))
+    if isinstance(vocab_obj, Sequence) and not isinstance(vocab_obj, (str, bytes)):
+        vocabulary = [str(item) for item in cast("Sequence[object]", vocab_obj)]
+    else:
+        vocabulary = list(REGIME_CLASS_VOCABULARY)
     label_to_index = {name: index for index, name in enumerate(vocabulary)}
     x_train = [list(row[1]) for row in train_rows]
     y_train = [label_to_index[row[2]] for row in train_rows]
-    validation_rows = context.get("validation_rows")
+    validation_obj = context.get("validation_rows")
     x_valid: list[list[float]] = []
     y_valid: list[int] = []
-    if isinstance(validation_rows, Sequence):
-        for row in validation_rows:
-            if isinstance(row, tuple) and len(row) >= 3:
-                x_valid.append(list(row[1]))  # type: ignore[arg-type]
-                y_valid.append(label_to_index[str(row[2])])
-    train_set = lgb.Dataset(x_train, label=y_train, free_raw_data=False)
+    if isinstance(validation_obj, Sequence) and not isinstance(
+        validation_obj, (str, bytes)
+    ):
+        for row_obj in cast("Sequence[object]", validation_obj):
+            if not isinstance(row_obj, tuple):
+                continue
+            row = cast("tuple[object, ...]", row_obj)
+            if len(row) < 3:
+                continue
+            features = row[1]
+            if not isinstance(features, (tuple, list)):
+                continue
+            x_valid.append(
+                [
+                    _coerce_float(value)
+                    for value in cast("Sequence[object]", features)
+                ]
+            )
+            y_valid.append(label_to_index[str(row[2])])
+    train_set = lgb_api.Dataset(x_train, label=y_train, free_raw_data=False)
     valid_set = (
-        lgb.Dataset(x_valid, label=y_valid, reference=train_set, free_raw_data=False)
+        lgb_api.Dataset(x_valid, label=y_valid, reference=train_set, free_raw_data=False)
         if x_valid
         else None
     )
-    lr = hyper.get("learning_rate", [1, 100])
-    learning_rate = (
-        float(lr[0]) / float(lr[1]) if isinstance(lr, list) and len(lr) == 2 else 0.05
-    )
-    ff = hyper.get("feature_fraction", [1, 1])
-    feature_fraction = (
-        float(ff[0]) / float(ff[1]) if isinstance(ff, list) and len(ff) == 2 else 1.0
-    )
+    lr_obj = hyper.get("learning_rate", [1, 100])
+    if isinstance(lr_obj, list):
+        lr = cast("list[object]", lr_obj)
+        if len(lr) == 2:
+            learning_rate = _coerce_float(lr[0]) / _coerce_float(lr[1])
+        else:
+            learning_rate = 0.05
+    else:
+        learning_rate = 0.05
+    ff_obj = hyper.get("feature_fraction", [1, 1])
+    if isinstance(ff_obj, list):
+        ff = cast("list[object]", ff_obj)
+        if len(ff) == 2:
+            feature_fraction = _coerce_float(ff[0]) / _coerce_float(ff[1])
+        else:
+            feature_fraction = 1.0
+    else:
+        feature_fraction = 1.0
     params = {
         "objective": "multiclass",
         "num_class": len(vocabulary),
-        "num_leaves": int(hyper.get("num_leaves", 31)),
+        "num_leaves": _coerce_int(hyper.get("num_leaves", 31)),
         "learning_rate": learning_rate,
-        "min_data_in_leaf": int(hyper.get("min_data_in_leaf", 20)),
+        "min_data_in_leaf": _coerce_int(hyper.get("min_data_in_leaf", 20)),
         "feature_fraction": feature_fraction,
         "verbosity": -1,
         "seed": seed,
         "deterministic": True,
         "force_row_wise": True,
     }
-    callbacks = []
+    callbacks: list[Any] = []
     early = hyper.get("early_stopping_rounds")
     if valid_set is not None and isinstance(early, int) and early > 0:
-        callbacks.append(lgb.early_stopping(early, verbose=False))
-    booster = lgb.train(
+        callbacks.append(lgb_api.early_stopping(early, verbose=False))
+    booster = lgb_api.train(
         params,
         train_set,
         num_boost_round=200,
         valid_sets=[valid_set] if valid_set is not None else None,
         callbacks=callbacks or None,
     )
-    model_text = booster.model_to_string()
+    model_text = str(booster.model_to_string())
     if valid_set is None or not x_valid:
         score = 0
     else:
-        preds = booster.predict(x_valid)
+        preds = cast("Sequence[Sequence[float]]", booster.predict(x_valid))
         correct = 0
         for index, row in enumerate(preds):
-            predicted = max(range(len(row)), key=lambda i: row[i])
+            predicted = max(range(len(row)), key=lambda i, current=row: current[i])
             if predicted == y_valid[index]:
                 correct += 1
         score = (correct * 1_000_000_000) // max(1, len(y_valid))
@@ -1946,6 +2010,41 @@ def _persist_record(out_root: Path, record: TrainingRecord) -> None:
     _write_json(out_root / _RECORD_FILENAME, record.as_jsonable())
 
 
+def _resolve_clock_ns(clock_ns: object) -> Callable[[], int]:
+    """Bind an injected nanosecond clock reader; default is a no-op clock."""
+    if callable(clock_ns):
+        return cast("Callable[[], int]", clock_ns)
+    return lambda: 0
+
+
+def _elapsed_ms(started_ns: int, clock_ns: Callable[[], int]) -> int:
+    return max(0, (clock_ns() - started_ns) // 1_000_000)
+
+
+def _coerce_int(value: object) -> int:
+    if isinstance(value, bool):
+        raise TypeError("bool is not an int")
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value)
+    if isinstance(value, str):
+        return int(value)
+    raise TypeError(type(value).__name__)
+
+
+def _coerce_float(value: object) -> float:
+    if isinstance(value, bool):
+        raise TypeError("bool is not a float")
+    if isinstance(value, int):
+        return float(value)
+    if isinstance(value, float):
+        return value
+    if isinstance(value, str):
+        return float(value)
+    raise TypeError(type(value).__name__)
+
+
 def _load_checkpoint(out_root: Path) -> Result[TrainingCheckpoint | None]:
     path = out_root / _CHECKPOINT_FILENAME
     if not path.is_file():
@@ -1965,18 +2064,19 @@ def _load_checkpoint(out_root: Path) -> Result[TrainingCheckpoint | None]:
             "checkpoint payload must be an object",
             failure_id="mis.regime_train.checkpoint",
         )
-    if raw.get("registerable") is True:
+    payload = cast("dict[str, object]", raw)
+    if payload.get("registerable") is True:
         return refuse_partial_model_registration(status="checkpoint-file")
-    config_fp = Fingerprint.try_create(raw.get("config_fp"))
-    code_fp = Fingerprint.try_create(raw.get("code_fp"))
-    matrix_fp = Fingerprint.try_create(raw.get("matrix_fp"))
+    config_fp = Fingerprint.try_create(payload.get("config_fp"))
+    code_fp = Fingerprint.try_create(payload.get("code_fp"))
+    matrix_fp = Fingerprint.try_create(payload.get("matrix_fp"))
     if is_refusal(config_fp) or is_refusal(code_fp) or is_refusal(matrix_fp):
         return policy(
             "checkpoint",
             "checkpoint fingerprints must be fp1 values",
             failure_id="mis.regime_train.checkpoint",
         )
-    trials_raw = raw.get("completed_trials", [])
+    trials_raw = payload.get("completed_trials", [])
     if not isinstance(trials_raw, list):
         return policy(
             "checkpoint",
@@ -1984,18 +2084,34 @@ def _load_checkpoint(out_root: Path) -> Result[TrainingCheckpoint | None]:
             failure_id="mis.regime_train.checkpoint",
         )
     trials: list[TrialRecord] = []
-    for item in trials_raw:
+    for item in cast("list[object]", trials_raw):
         parsed = _trial_from_jsonable(item)
         if is_refusal(parsed):
             return parsed
         trials.append(parsed.value)
-    next_index = raw.get("next_trial_index")
+    next_index = payload.get("next_trial_index")
     if not isinstance(next_index, int) or isinstance(next_index, bool):
         return policy(
             "checkpoint",
             "next_trial_index must be an int",
             failure_id="mis.regime_train.checkpoint",
         )
+    best_trial_obj = payload.get("best_trial_index")
+    best_trial_index = (
+        best_trial_obj
+        if isinstance(best_trial_obj, int) or best_trial_obj is None
+        else None
+    )
+    if isinstance(best_trial_index, bool):
+        best_trial_index = None
+    best_score_obj = payload.get("best_validation_score_ppb")
+    best_validation_score_ppb = (
+        best_score_obj
+        if isinstance(best_score_obj, int) or best_score_obj is None
+        else None
+    )
+    if isinstance(best_validation_score_ppb, bool):
+        best_validation_score_ppb = None
     return Ok(
         TrainingCheckpoint(
             config_fp=config_fp.value,
@@ -2003,16 +2119,10 @@ def _load_checkpoint(out_root: Path) -> Result[TrainingCheckpoint | None]:
             matrix_fp=matrix_fp.value,
             completed_trials=tuple(trials),
             next_trial_index=next_index,
-            best_trial_index=raw.get("best_trial_index")
-            if isinstance(raw.get("best_trial_index"), int)
-            or raw.get("best_trial_index") is None
-            else None,
-            best_validation_score_ppb=raw.get("best_validation_score_ppb")
-            if isinstance(raw.get("best_validation_score_ppb"), int)
-            or raw.get("best_validation_score_ppb") is None
-            else None,
+            best_trial_index=best_trial_index,
+            best_validation_score_ppb=best_validation_score_ppb,
             registerable=False,
-            output_dir=str(raw.get("output_dir", out_root.as_posix())),
+            output_dir=str(payload.get("output_dir", out_root.as_posix())),
         )
     )
 
@@ -2024,16 +2134,26 @@ def _trial_from_jsonable(raw: object) -> Result[TrialRecord]:
             "trial record must be an object",
             failure_id="mis.regime_train.checkpoint",
         )
-    hyper_raw = raw.get("hyperparameters")
-    if not isinstance(hyper_raw, dict):
+    payload = cast("dict[str, object]", raw)
+    hyper_obj = payload.get("hyperparameters")
+    if not isinstance(hyper_obj, dict):
         return policy(
             "trial",
             "trial hyperparameters must be an object",
             failure_id="mis.regime_train.checkpoint",
         )
-    lr = hyper_raw.get("learning_rate", [1, 100])
-    ff = hyper_raw.get("feature_fraction", [1, 1])
-    if not (isinstance(lr, list) and len(lr) == 2 and isinstance(ff, list) and len(ff) == 2):
+    hyper_raw = cast("dict[str, object]", hyper_obj)
+    lr_obj = hyper_raw.get("learning_rate", [1, 100])
+    ff_obj = hyper_raw.get("feature_fraction", [1, 1])
+    if not isinstance(lr_obj, list) or not isinstance(ff_obj, list):
+        return policy(
+            "trial",
+            "trial rational hyperparameters must be [num, den] pairs",
+            failure_id="mis.regime_train.checkpoint",
+        )
+    lr = cast("list[object]", lr_obj)
+    ff = cast("list[object]", ff_obj)
+    if len(lr) != 2 or len(ff) != 2:
         return policy(
             "trial",
             "trial rational hyperparameters must be [num, den] pairs",
@@ -2041,24 +2161,28 @@ def _trial_from_jsonable(raw: object) -> Result[TrialRecord]:
         )
     try:
         hyper = TrialHyperparameters(
-            trial_index=int(hyper_raw["trial_index"]),
-            num_leaves=int(hyper_raw["num_leaves"]),
-            learning_rate_num=int(lr[0]),
-            learning_rate_den=int(lr[1]),
-            min_data_in_leaf=int(hyper_raw["min_data_in_leaf"]),
-            feature_fraction_num=int(ff[0]),
-            feature_fraction_den=int(ff[1]),
-            early_stopping_rounds=int(hyper_raw["early_stopping_rounds"]),
+            trial_index=_coerce_int(hyper_raw["trial_index"]),
+            num_leaves=_coerce_int(hyper_raw["num_leaves"]),
+            learning_rate_num=_coerce_int(lr[0]),
+            learning_rate_den=_coerce_int(lr[1]),
+            min_data_in_leaf=_coerce_int(hyper_raw["min_data_in_leaf"]),
+            feature_fraction_num=_coerce_int(ff[0]),
+            feature_fraction_den=_coerce_int(ff[1]),
+            early_stopping_rounds=_coerce_int(hyper_raw["early_stopping_rounds"]),
+        )
+        model_fp_obj = payload.get("model_bytes_fp")
+        model_bytes_fp = (
+            model_fp_obj
+            if model_fp_obj is None or isinstance(model_fp_obj, str)
+            else None
         )
         trial = TrialRecord(
-            trial_index=int(raw["trial_index"]),
+            trial_index=_coerce_int(payload["trial_index"]),
             hyperparameters=hyper,
-            validation_score_ppb=int(raw["validation_score_ppb"]),
-            status=str(raw["status"]),
-            model_bytes_fp=raw.get("model_bytes_fp")
-            if raw.get("model_bytes_fp") is None or isinstance(raw.get("model_bytes_fp"), str)
-            else None,
-            elapsed_ms=int(raw["elapsed_ms"]),
+            validation_score_ppb=_coerce_int(payload["validation_score_ppb"]),
+            status=str(payload["status"]),
+            model_bytes_fp=model_bytes_fp,
+            elapsed_ms=_coerce_int(payload["elapsed_ms"]),
         )
     except (KeyError, TypeError, ValueError):
         return policy(
@@ -2079,7 +2203,8 @@ def _terminal_record(
     lock: DependencyLockRecord,
     machine: MachineEnvironment,
     start_utc: str,
-    start_mono: float,
+    start_mono_ns: int,
+    clock_ns: Callable[[], int],
     trials: tuple[TrialRecord, ...],
     best_trial_index: int | None,
     model_path: str | None,
@@ -2087,7 +2212,7 @@ def _terminal_record(
     registerable: bool,
 ) -> TrainingRecord:
     end_utc = _utc_now()
-    elapsed_ms = int((time.monotonic() - start_mono) * 1000)
+    elapsed_ms = _elapsed_ms(start_mono_ns, clock_ns)
     locations = {
         "output_dir": config.output_dir,
         "config": f"{config.output_dir}/{_CONFIG_FILENAME}",
