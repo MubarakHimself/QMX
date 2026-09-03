@@ -1330,3 +1330,35 @@ designed failure; every typed refusal the node can emit belongs here.
   training/labeled/cleaned artifacts) on your own machine; do not change
   thresholds after seeing results; do not grant money-path authority from
   evaluation alone.
+
+### FR-77: MIS regime model registration refusal
+
+- **Failure class:** policy rejection / invalid input
+- **Detection:** Story 30.6 registration is asked to mint governed/ratified/
+  active status (`mis.regime_register.governed_status`), bind a live consumer
+  (`mis.regime_register.live_consumer_binding`), mutate node `composition_fp`
+  (`mis.regime_register.composition_fp_mutation`), treat pretrained reputation
+  as QMX evidence (`mis.regime_register.pretrained_reputation`), register an
+  accepted QMX path without an accepted evaluation
+  (`mis.regime_register.evaluation_not_accepted`), mint a new version from
+  identical content (`mis.regime_register.identical_version`), or write to an
+  unwritable output directory (`mis.regime_register.output_dir`); also model
+  fingerprint mismatch between training and evaluation
+  (`mis.regime_register.model_fp_mismatch`).
+- **Auto-recovery / retry:** none for policy refusals — register only a
+  completed accepted Story 30.4/30.5 lineage as a sandbox-provenance candidate;
+  record incomplete/rejected/external candidates with honest provenance and
+  no authority; leave promotion/recertification to Stories 30.7/30.8.
+- **Visible degraded state:** no governed/ratified/active status or live
+  consumer binding is granted; sandbox provenance stays visible in the
+  passive-hub inbox and remains refused at publish/pull; node
+  `composition_fp` is unchanged; incomplete and Kronos/HMM/BOCPD/MS-GARCH
+  candidates stay non-authoritative.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The MIS registration surface refused a
+  governed/active status claim, a live-consumer binding, a composition_fp
+  mutation, a pretrained-reputation shortcut, or an incomplete/mismatched
+  accepted-path registration. Inspect `read_failure_detail` on the evidence
+  channel. Register through `qmn.mis.regime_register` over prepared
+  training/evaluation artifacts; do not grant money-path authority from
+  registration alone; do not expect hub publish of sandbox provenance.
