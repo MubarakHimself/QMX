@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 from types import MappingProxyType
-from typing import Final
+from typing import Final, Protocol, TypeIs
 
 from qmf.core import (
     Fingerprint,
@@ -136,19 +136,86 @@ class _RegimeModelKindContract:
         return Ok(body)
 
 
-def _is_kind_registry(obj: object) -> bool:
+class _RegistrationRecordLike(Protocol):
+    """Structural CT-06 record — host owns the concrete type."""
+
+    kind: object
+    stable_id: Fingerprint
+
+
+class _RegistrationReceiptLike(Protocol):
+    """Structural CT-06 registration receipt."""
+
+    record: _RegistrationRecordLike
+    outcome: object
+
+
+class _LineageEdgeLike(Protocol):
+    """Structural CT-07 lineage edge — host owns the concrete type."""
+
+    edge_type: object
+    to_ref: Fingerprint
+
+    def canonical_line(self) -> Result[bytes]: ...
+
+
+class _EdgeAppendReceiptLike(Protocol):
+    """Structural CT-07 edge-append receipt."""
+
+    edge: _LineageEdgeLike
+
+
+class _KindRegistryHost(Protocol):
+    """Structural CT-06 KindRegistry — mis never imports qmf.registry."""
+
+    def register(self, contract: object, /) -> Result[object]: ...
+
+    def contract_for(self, kind: object, /) -> Result[object]: ...
+
+
+class _RegistrarHost(Protocol):
+    """Structural CT-06 Registrar — mis never imports qmf.registry."""
+
+    def register(
+        self,
+        *,
+        kind: object,
+        body: object,
+        writer: object,
+        sequence: object,
+        created_at: object,
+        at_birth_parent_refs: object = (),
+    ) -> Result[_RegistrationReceiptLike]: ...
+
+
+class _EdgeLogHost(Protocol):
+    """Structural CT-07 EdgeLog — mis never imports qmf.registry."""
+
+    def append(
+        self,
+        *,
+        edge_type: object,
+        from_ref: object,
+        to_ref: object,
+        contract_format_version: object = ...,
+    ) -> Result[_EdgeAppendReceiptLike]: ...
+
+    def append_edge(self, edge: object, /) -> Result[_EdgeAppendReceiptLike]: ...
+
+
+def _is_kind_registry(obj: object) -> TypeIs[_KindRegistryHost]:
     return callable(getattr(obj, "register", None)) and callable(
         getattr(obj, "contract_for", None)
     )
 
 
-def _is_registrar(obj: object) -> bool:
+def _is_registrar(obj: object) -> TypeIs[_RegistrarHost]:
     return callable(getattr(obj, "register", None)) and not callable(
         getattr(obj, "contract_for", None)
     )
 
 
-def _is_edge_log(obj: object) -> bool:
+def _is_edge_log(obj: object) -> TypeIs[_EdgeLogHost]:
     return callable(getattr(obj, "append", None)) and callable(getattr(obj, "append_edge", None))
 
 
@@ -285,16 +352,16 @@ class RegistrationLineageBundle:
 
     registration: RegimeModelRegistration
     registration_fp: Fingerprint
-    record: object
+    record: _RegistrationRecordLike
     outcome: object
-    edges: tuple[object, ...]
+    edges: tuple[_LineageEdgeLike, ...]
     prior_registration_fp: Fingerprint | None
     composition_fp_before: Fingerprint | None
     composition_fp_after: Fingerprint | None
 
     @property
     def stable_id(self) -> Fingerprint:
-        return self.record.stable_id  # type: ignore[attr-defined, no-any-return]
+        return self.record.stable_id
 
     def as_mapping(self) -> Mapping[str, object]:
         outcome_token = getattr(self.outcome, "value", self.outcome)
@@ -413,7 +480,7 @@ def install_regime_model_kind(registry: object) -> Result[_RegimeModelKindContra
     contract = regime_model_kind_contract()
     if is_refusal(contract):
         return contract
-    admitted = registry.register(contract.value)  # type: ignore[union-attr]
+    admitted = registry.register(contract.value)
     if is_refusal(admitted):
         return admitted
     return Ok(contract.value)
@@ -935,7 +1002,7 @@ def register_model_lineage(
 
     body = {_BODY_FIELD: registration.fp1_identity()}
     parents: list[Fingerprint] = [registration.design_fp, registration.model_fp]
-    receipt = registrar.register(  # type: ignore[union-attr]
+    receipt = registrar.register(
         kind=REGIME_MODEL_KIND,
         body=body,
         writer=writer,
@@ -947,9 +1014,9 @@ def register_model_lineage(
         return receipt
     admitted = receipt.value
 
-    edges: list[object] = []
+    edges: list[_LineageEdgeLike] = []
     for target in registration.lineage_targets():
-        appended = edge_log.append(  # type: ignore[union-attr]
+        appended = edge_log.append(
             edge_type=REGISTRATION_LINEAGE_EDGE_TYPE,
             from_ref=admitted.record.stable_id,
             to_ref=target,
@@ -960,7 +1027,7 @@ def register_model_lineage(
 
     if prior.value is not None:
         # A changed byte/config mints a new version; link with branches-from.
-        branched = edge_log.append(  # type: ignore[union-attr]
+        branched = edge_log.append(
             edge_type=_BRANCHES_FROM_EDGE_TYPE,
             from_ref=admitted.record.stable_id,
             to_ref=prior.value,
