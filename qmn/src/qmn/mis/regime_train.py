@@ -1647,7 +1647,7 @@ def _select_fitter(backend: str) -> Result[FitFn]:
         return Ok(_deterministic_surrogate_fit)
     if backend == TRAINING_BACKEND_LIGHTGBM:
         try:
-            import lightgbm  # noqa: F401, PLC0415  # pyright: ignore[reportMissingImports]
+            import lightgbm  # noqa: PLC0415  # pyright: ignore[reportMissingImports]
 
             _ = lightgbm
         except ImportError:
@@ -1812,19 +1812,17 @@ def _lightgbm_fit(
     lr_obj = hyper.get("learning_rate", [1, 100])
     if isinstance(lr_obj, list):
         lr = cast("list[object]", lr_obj)
-        if len(lr) == 2:
-            learning_rate = _coerce_float(lr[0]) / _coerce_float(lr[1])
-        else:
-            learning_rate = 0.05
+        learning_rate = (
+            _coerce_float(lr[0]) / _coerce_float(lr[1]) if len(lr) == 2 else 0.05
+        )
     else:
         learning_rate = 0.05
     ff_obj = hyper.get("feature_fraction", [1, 1])
     if isinstance(ff_obj, list):
         ff = cast("list[object]", ff_obj)
-        if len(ff) == 2:
-            feature_fraction = _coerce_float(ff[0]) / _coerce_float(ff[1])
-        else:
-            feature_fraction = 1.0
+        feature_fraction = (
+            _coerce_float(ff[0]) / _coerce_float(ff[1]) if len(ff) == 2 else 1.0
+        )
     else:
         feature_fraction = 1.0
     params = {
