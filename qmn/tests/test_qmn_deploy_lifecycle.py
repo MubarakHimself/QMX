@@ -25,8 +25,18 @@ def _load(name: str, path: Path) -> ModuleType:
     return module
 
 
+def _read_contained(path: Path, *, contain_within: Path) -> str:
+    name = "qmn_deploy_safe_io_lifecycle"
+    module = sys.modules.get(name)
+    if module is None:
+        module = _load(name, _DEPLOY / "safe_io.py")
+    return module.read_text_contained(
+        path, contain_within=contain_within, max_bytes=_MAX_READ_BYTES
+    )
+
+
 def _imported_modules(path: Path) -> list[str]:
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    tree = ast.parse(_read_contained(path, contain_within=_QMN_ROOT), filename=str(path))
     names: list[str] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -69,7 +79,9 @@ def test_recipes_are_on_the_closed_allow_list_and_cannot_trade(
         "countersign",
     ):
         assert boundary_mod.recipe_action_allowed(action) is False
-    just_text = (_DEPLOY / "justfile-recipes" / "node.just").read_text(encoding="utf-8")
+    just_text = _read_contained(
+        _DEPLOY / "justfile-recipes" / "node.just", contain_within=_QMN_ROOT
+    )
     assert "node-lifecycle-campaign" in just_text
     assert "node-security-probes" in just_text
     assert "never a trading control" in just_text.lower() or "never trades" in just_text.lower()
@@ -101,7 +113,7 @@ def test_lifecycle_plan_lists_injections_and_skips_live_campaigns(
     assert "live-vps-firewall" in targets
     assert "live-bucket-restore" in targets
     out = lifecycle_mod.apply_plan_to_fixture(plan, tmp_path)
-    payload = json.loads(out.read_text(encoding="utf-8"))
+    payload = json.loads(_read_contained(out, contain_within=tmp_path))
     assert payload["ok"] is True
     assert payload["runs_live_vps_firewall"] is False
 
@@ -133,7 +145,7 @@ def test_security_plan_inspects_units_and_refuses_live_firewall(
     assert "unknown-peer" in plan.probes
     assert "sandbox-promotion" in plan.probes
     out = security_mod.apply_plan_to_fixture(plan, tmp_path)
-    payload = json.loads(out.read_text(encoding="utf-8"))
+    payload = json.loads(_read_contained(out, contain_within=tmp_path))
     assert payload["no_dynamic_user"] is True
     assert payload["ok"] is True
 

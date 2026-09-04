@@ -15,6 +15,7 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import os
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
@@ -22,6 +23,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Final, cast
 
+from qmb.orchestrator.paths import write_bytes_exclusive_no_follow
 from qmf.core import Fingerprint, Ok, Result, TypedRefusal, fingerprint, is_refusal
 from qmf.data import SegmentRole
 
@@ -368,9 +370,7 @@ class EvaluationReport:
             "train_scores": self.train_scores.fp1_identity(),
             "validation_scores": self.validation_scores.fp1_identity(),
             "holdout_scores": self.holdout_scores.fp1_identity(),
-            "baseline_comparisons": [
-                row.fp1_identity() for row in self.baseline_comparisons
-            ],
+            "baseline_comparisons": [row.fp1_identity() for row in self.baseline_comparisons],
             "calibration_check": self.calibration_check,
             "stability_check": self.stability_check,
             "stability_agreed": self.stability_agreed,
@@ -422,8 +422,7 @@ def refuse_live_authority_inference(*, claim: object) -> TypedRefusal:
     """Evaluation acceptance is not live or governed authority (GAP-0051)."""
     return policy(
         "live_authority",
-        "evaluation acceptance grants no live consumer, governed binding, or "
-        "money-path authority",
+        "evaluation acceptance grants no live consumer, governed binding, or money-path authority",
         failure_id="mis.regime_eval.live_authority_inference",
         given=repr(claim),
     )
@@ -572,9 +571,7 @@ def build_evaluation_config(
             given=repr(allow_profit_inference),
         )
     if allow_live_authority_inference is True:
-        return refuse_live_authority_inference(
-            claim="allow_live_authority_inference=True"
-        )
+        return refuse_live_authority_inference(claim="allow_live_authority_inference=True")
     if allow_live_authority_inference not in (False, None):
         return invalid(
             "allow_live_authority_inference",
@@ -688,9 +685,7 @@ def build_evaluation_config(
     if eval_contract.refuse_profit_inference is not True:
         return refuse_profit_inference(claim="design.refuse_profit_inference=False")
     if eval_contract.refuse_live_authority_inference is not True:
-        return refuse_live_authority_inference(
-            claim="design.refuse_live_authority_inference=False"
-        )
+        return refuse_live_authority_inference(claim="design.refuse_live_authority_inference=False")
     if eval_contract.refuse_on_holdout_leak is not True:
         return policy(
             "holdout_leak",
@@ -698,11 +693,7 @@ def build_evaluation_config(
             failure_id="mis.regime_eval.holdout_leak",
         )
 
-    backend_token = (
-        EVALUATION_BACKEND_DETERMINISTIC
-        if backend is None
-        else clean_token(backend)
-    )
+    backend_token = EVALUATION_BACKEND_DETERMINISTIC if backend is None else clean_token(backend)
     if backend_token not in {
         EVALUATION_BACKEND_DETERMINISTIC,
         EVALUATION_BACKEND_LIGHTGBM,
@@ -713,9 +704,7 @@ def build_evaluation_config(
             given=repr(backend),
         )
     # Tests and poe never run LightGBM; operator machines may choose it.
-    if backend_token == EVALUATION_BACKEND_LIGHTGBM and _model_is_surrogate(
-        artifact.model_text
-    ):
+    if backend_token == EVALUATION_BACKEND_LIGHTGBM and _model_is_surrogate(artifact.model_text):
         backend_token = EVALUATION_BACKEND_DETERMINISTIC
 
     labeled_fp = labeled.fingerprint()
@@ -834,9 +823,7 @@ def run_offline_evaluation(
         mutate_trained_artifact=mutate_trained_artifact,
         mutate_sealed_holdout=mutate_sealed_holdout,
         acceptance_macro_f1_override=acceptance_macro_f1_override,
-        acceptance_min_per_class_recall_override=(
-            acceptance_min_per_class_recall_override
-        ),
+        acceptance_min_per_class_recall_override=(acceptance_min_per_class_recall_override),
     )
     if is_refusal(config):
         return config
@@ -853,17 +840,17 @@ def run_offline_evaluation(
         return lock
 
     out_root = Path(config.value.output_dir)
-    try:
-        out_root.mkdir(parents=True, exist_ok=True)
-        _write_json(out_root / _CONFIG_FILENAME, config.value.fp1_identity())
-    except OSError as exc:
-        return policy(
-            "output_dir",
-            "evaluation output directory is not writable",
-            path=str(out_root),
-            errno=getattr(exc, "errno", None),
-            failure_id="mis.regime_eval.output_dir",
-        )
+    prepared = _ensure_contained_dir(out_root, contain_within=out_root)
+    if is_refusal(prepared):
+        return prepared
+    written = _write_json(
+        out_root / _CONFIG_FILENAME,
+        config.value.fp1_identity(),
+        contain_within=out_root,
+        message="evaluation output directory is not writable",
+    )
+    if is_refusal(written):
+        return written
 
     matrix = build_evaluation_matrix(
         cleaned,
@@ -999,12 +986,8 @@ def run_offline_evaluation(
         stability_agreed=stability_agreed,
         acceptance_macro_f1_num=eval_contract.acceptance_macro_f1_num,
         acceptance_macro_f1_den=eval_contract.acceptance_macro_f1_den,
-        acceptance_min_per_class_recall_num=(
-            eval_contract.acceptance_min_per_class_recall_num
-        ),
-        acceptance_min_per_class_recall_den=(
-            eval_contract.acceptance_min_per_class_recall_den
-        ),
+        acceptance_min_per_class_recall_num=(eval_contract.acceptance_min_per_class_recall_num),
+        acceptance_min_per_class_recall_den=(eval_contract.acceptance_min_per_class_recall_den),
         output_locations=locations,
         trained_artifact_mutated=False,
         sealed_holdout_mutated=False,
@@ -1019,16 +1002,14 @@ def run_offline_evaluation(
         if is_refusal(check):
             return check
 
-    try:
-        _write_json(out_root / _REPORT_FILENAME, report.as_jsonable())
-    except OSError as exc:
-        return policy(
-            "output_dir",
-            "evaluation report could not be written",
-            path=str(out_root / _REPORT_FILENAME),
-            errno=getattr(exc, "errno", None),
-            failure_id="mis.regime_eval.output_dir",
-        )
+    written_report = _write_json(
+        out_root / _REPORT_FILENAME,
+        report.as_jsonable(),
+        contain_within=out_root,
+        message="evaluation report could not be written",
+    )
+    if is_refusal(written_report):
+        return written_report
     return Ok(report)
 
 
@@ -1102,11 +1083,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     args = parser.parse_args(list(argv) if argv is not None else None)
 
-    if (
-        args.artifact_json is None
-        or args.labeled_json is None
-        or args.cleaned_json is None
-    ):
+    if args.artifact_json is None or args.labeled_json is None or args.cleaned_json is None:
         print(
             "operator-prepared --artifact-json, --labeled-json, and --cleaned-json "
             "are required; this script never fetches providers or opens credentials",
@@ -1139,11 +1116,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         "failure_id": refusal.context.get("failure_id"),
         "command": list(sys.argv if argv is None else argv),
     }
-    try:
-        args.output_dir.mkdir(parents=True, exist_ok=True)
-        _write_json(args.output_dir / _REPORT_FILENAME, envelope)
-    except OSError:
-        pass
+    prepared = _ensure_contained_dir(args.output_dir, contain_within=args.output_dir)
+    if not is_refusal(prepared):
+        _write_json(
+            args.output_dir / _REPORT_FILENAME,
+            envelope,
+            contain_within=args.output_dir,
+            message="evaluation output directory is not writable",
+        )
     return 1
 
 
@@ -1203,11 +1183,117 @@ def _matrix_payload_fp(
     return f"fp1:sha256:{digest}"
 
 
-def _write_json(path: Path, payload: Mapping[str, object]) -> None:
-    path.write_text(
-        json.dumps(payload, sort_keys=True, indent=2, separators=(",", ": ")) + "\n",
-        encoding="utf-8",
+def _output_dir_refusal(
+    path: Path,
+    *,
+    message: str,
+    given: object | None = None,
+    errno: object | None = None,
+) -> TypedRefusal:
+    extra: dict[str, object] = {
+        "path": str(path),
+        "failure_id": "mis.regime_eval.output_dir",
+    }
+    if given is not None:
+        extra["given"] = given
+    if errno is not None:
+        extra["errno"] = errno
+    return policy("output_dir", message, **extra)
+
+
+def _contained_pair(path: Path, contain_within: Path) -> Result[tuple[Path, Path]]:
+    try:
+        resolved = Path(os.path.realpath(path))
+        root_real = Path(os.path.realpath(contain_within))
+    except OSError as exc:
+        return _output_dir_refusal(
+            path,
+            message="evaluation output directory is not writable",
+            given=type(exc).__name__,
+            errno=getattr(exc, "errno", None),
+        )
+    if path.is_symlink() or not resolved.is_relative_to(root_real):
+        return _output_dir_refusal(
+            path,
+            message="evaluation output directory is not writable",
+            given="symlink-or-escape",
+        )
+    return Ok((resolved, root_real))
+
+
+def _ensure_contained_dir(path: Path, *, contain_within: Path) -> Result[None]:
+    contained = _contained_pair(path, contain_within)
+    if is_refusal(contained):
+        return contained
+    try:
+        path.mkdir(  # skylos: ignore[SKY-D215] contained, no-follow
+            parents=True,
+            exist_ok=True,
+        )
+    except OSError as exc:
+        return _output_dir_refusal(
+            path,
+            message="evaluation output directory is not writable",
+            given=type(exc).__name__,
+            errno=getattr(exc, "errno", None),
+        )
+    return Ok(None)
+
+
+def _unlink_contained_regular(
+    path: Path,
+    *,
+    contain_within: Path,
+    missing_ok: bool = False,
+) -> Result[None]:
+    contained = _contained_pair(path, contain_within)
+    if is_refusal(contained):
+        return contained
+    if not path.exists() and not path.is_symlink():
+        if missing_ok:
+            return Ok(None)
+        return _output_dir_refusal(
+            path,
+            message="evaluation output directory is not writable",
+            given="missing",
+        )
+    if path.is_symlink() or not path.is_file():
+        return _output_dir_refusal(
+            path,
+            message="evaluation output directory is not writable",
+            given="symlink-or-non-regular",
+        )
+    try:
+        os.unlink(path)  # skylos: ignore[SKY-D215] contained, no-follow
+    except OSError as exc:
+        return _output_dir_refusal(
+            path,
+            message="evaluation output directory is not writable",
+            given=type(exc).__name__,
+            errno=getattr(exc, "errno", None),
+        )
+    return Ok(None)
+
+
+def _write_json(
+    path: Path,
+    payload: Mapping[str, object],
+    *,
+    contain_within: Path,
+    message: str,
+) -> Result[None]:
+    data = (json.dumps(payload, sort_keys=True, indent=2, separators=(",", ": ")) + "\n").encode(
+        "utf-8"
     )
+    unlinked = _unlink_contained_regular(path, contain_within=contain_within, missing_ok=True)
+    if is_refusal(unlinked):
+        return unlinked
+    written = write_bytes_exclusive_no_follow(
+        path, data, contain_within=contain_within, field="output_dir"
+    )
+    if is_refusal(written):
+        return _output_dir_refusal(path, message=message, given=written.context.get("reason"))
+    return Ok(None)
 
 
 def _model_is_surrogate(model_text: str) -> bool:
@@ -1367,10 +1453,7 @@ def _predictions_agree(
 ) -> bool:
     if len(left) != len(right):
         return False
-    return all(
-        a.fp1_identity() == b.fp1_identity()
-        for a, b in zip(left, right, strict=True)
-    )
+    return all(a.fp1_identity() == b.fp1_identity() for a, b in zip(left, right, strict=True))
 
 
 def _predictions_fp(rows: Sequence[PredictionRow]) -> str:
@@ -1403,11 +1486,7 @@ def _score_split(
     transitions = _transition_confusion(predictions)
     calibration = _calibration_bins(predictions, vocabulary)
     errors = _error_pairs(predictions)
-    recalls = [
-        (row.recall_num, row.recall_den)
-        for row in per_class
-        if row.support > 0
-    ]
+    recalls = [(row.recall_num, row.recall_den) for row in per_class if row.support > 0]
     if recalls:
         min_recall = min(recalls, key=lambda pair: (pair[0] * 10_000) // max(1, pair[1]))
     else:
@@ -1442,19 +1521,13 @@ def _per_class_metrics(
     rows: list[ClassMetricBundle] = []
     for label in vocabulary:
         tp = sum(
-            1
-            for row in predictions
-            if row.true_label == label and row.predicted_label == label
+            1 for row in predictions if row.true_label == label and row.predicted_label == label
         )
         fp = sum(
-            1
-            for row in predictions
-            if row.true_label != label and row.predicted_label == label
+            1 for row in predictions if row.true_label != label and row.predicted_label == label
         )
         fn = sum(
-            1
-            for row in predictions
-            if row.true_label == label and row.predicted_label != label
+            1 for row in predictions if row.true_label == label and row.predicted_label != label
         )
         support = sum(1 for row in predictions if row.true_label == label)
         precision_den = tp + fp
@@ -1704,9 +1777,7 @@ def _baseline_predict(
                     session=row[3],
                     true_label=row[2],
                     predicted_label=label,
-                    probability_ppb={
-                        name: (_PPB if name == label else 0) for name in vocabulary
-                    },
+                    probability_ppb={name: (_PPB if name == label else 0) for name in vocabulary},
                     split_role=_SPLIT_ROLE_HOLDOUT,
                 )
             )
@@ -1723,11 +1794,7 @@ def _baseline_predict(
             features = row[1]
             if extreme_idx >= 0 and extreme_idx < len(features) and features[extreme_idx] > 0:
                 label = "stressed"
-            elif (
-                elevated_idx >= 0
-                and elevated_idx < len(features)
-                and features[elevated_idx] > 0
-            ):
+            elif elevated_idx >= 0 and elevated_idx < len(features) and features[elevated_idx] > 0:
                 label = "elevated"
             else:
                 label = "normal"
@@ -1739,9 +1806,7 @@ def _baseline_predict(
                     session=row[3],
                     true_label=row[2],
                     predicted_label=label,
-                    probability_ppb={
-                        name: (_PPB if name == label else 0) for name in vocabulary
-                    },
+                    probability_ppb={name: (_PPB if name == label else 0) for name in vocabulary},
                     split_role=_SPLIT_ROLE_HOLDOUT,
                 )
             )

@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TypeVar
 
+import pytest
 from qmf.core import CalendarIdentity, RefusalCategory, is_ok, is_refusal
 from qmf.core.refusal import Result
 from qmf.data.dukascopy import DUKASCOPY_SOURCE, PERSONAL_USE_LICENSE
@@ -49,6 +50,14 @@ _CLOSE = 100_000
 def _ok(result: Result[T]) -> T:
     assert is_ok(result), result
     return result.value
+
+
+def _try_symlink(link: Path, target: Path) -> None:
+    """Create a symlink or skip where the platform forbids it (Windows dev)."""
+    try:
+        link.symlink_to(target)
+    except (OSError, NotImplementedError):
+        pytest.skip("symlink creation is not permitted on this platform")
 
 
 def _calendar() -> CalendarIdentity:
@@ -229,9 +238,7 @@ def test_policy_refusals_for_profit_live_threshold_and_mutation() -> None:
     )
     assert is_refusal(refused)
     assert refused.category is RefusalCategory.INVALID_INPUT
-    assert is_refusal(
-        build_evaluation_matrix(cleaned, labeled, mutate_sealed_holdout=True)
-    )
+    assert is_refusal(build_evaluation_matrix(cleaned, labeled, mutate_sealed_holdout=True))
     assert is_refusal(
         build_evaluation_config(
             artifact=object(),
@@ -274,3 +281,83 @@ def test_evaluation_module_stays_offline_without_eager_lightgbm() -> None:
     assert "mis.regime_eval.post_hoc_threshold" in text
     assert "python -m qmn.mis.regime_eval" in text
     assert "run_offline_training" not in text
+    assert "write_bytes_exclusive_no_follow" in text
+    assert ".write_text(" not in text
+    assert "skylos: ignore[SKY-D215] contained, no-follow" in text
+
+
+def test_evaluation_refuses_symlinked_config_sink(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    cleaned, labeled, artifact = _trained(tmp_path)
+    out = tmp_path / "eval-symlink"
+    out.mkdir()
+    target = out / "evaluation_config.json"
+    out_resolved = out.resolve()
+    real_is_symlink = Path.is_symlink
+
+    def detects_the_target_as_a_link(self: Path) -> bool:
+        try:
+            if self.name == "evaluation_config.json" and self.parent.resolve() == out_resolved:
+                return True
+        except OSError:
+            pass
+        return real_is_symlink(self)
+
+    monkeypatch.setattr(Path, "is_symlink", detects_the_target_as_a_link)
+    refused = run_offline_evaluation(
+        artifact=artifact,
+        labeled=labeled,
+        cleaned=cleaned,
+        output_dir=str(out),
+        backend=EVALUATION_BACKEND_DETERMINISTIC,
+    )
+    assert is_refusal(refused)
+    assert refused.context.get("field") == "output_dir"
+    assert refused.context.get("failure_id") == "mis.regime_eval.output_dir"
+    assert not target.exists()
+
+
+def test_evaluation_does_not_follow_planted_config_symlink(tmp_path: Path) -> None:
+    cleaned, labeled, artifact = _trained(tmp_path)
+    out = tmp_path / "eval-planted"
+    out.mkdir()
+    secret = tmp_path / "secret.json"
+    secret.write_text("keep", encoding="utf-8")
+    link = out / "evaluation_config.json"
+    _try_symlink(link, secret)
+    refused = run_offline_evaluation(
+        artifact=artifact,
+        labeled=labeled,
+        cleaned=cleaned,
+        output_dir=str(out),
+        backend=EVALUATION_BACKEND_DETERMINISTIC,
+    )
+    assert is_refusal(refused)
+    assert refused.context.get("field") == "output_dir"
+    assert refused.context.get("failure_id") == "mis.regime_eval.output_dir"
+    assert secret.read_text(encoding="utf-8") == "keep"
+
+
+def test_eval_cli_json_loader_still_refuses(tmp_path: Path) -> None:
+    from qmn.mis.regime_eval import main as eval_main
+
+    artifact = tmp_path / "artifact.json"
+    labeled = tmp_path / "labeled.json"
+    cleaned = tmp_path / "cleaned.json"
+    artifact.write_text("{}", encoding="utf-8")
+    labeled.write_text("{}", encoding="utf-8")
+    cleaned.write_text("{}", encoding="utf-8")
+    code = eval_main(
+        [
+            "--output-dir",
+            str(tmp_path / "out"),
+            "--artifact-json",
+            str(artifact),
+            "--labeled-json",
+            str(labeled),
+            "--cleaned-json",
+            str(cleaned),
+        ]
+    )
+    assert code == 1

@@ -28,6 +28,13 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Final, cast
 
+from qmb.orchestrator.paths import (
+    MAX_JSONL_BYTES,
+    append_bytes_no_follow,
+    read_contained_bytes,
+    read_contained_text,
+    write_bytes_exclusive_no_follow,
+)
 from qmf.core import Fingerprint, Ok, Result, TypedRefusal, fingerprint, is_refusal
 from qmf.data import SegmentRole
 
@@ -535,9 +542,20 @@ def resolve_dependency_lock(*, lock_path: object | None = None) -> Result[Depend
             )
         )
     try:
-        payload = path.read_bytes()
+        loaded = read_contained_bytes(
+            path,
+            contain_within=_worktree_root(),
+            max_bytes=MAX_JSONL_BYTES,
+            field="dependency_lock",
+        )
     except OSError as exc:
         return unavailable_lock(path, exc)
+    if is_refusal(loaded):
+        return unavailable_lock(
+            path,
+            OSError(str(loaded.context.get("reason", "unreadable"))),
+        )
+    payload = loaded.value
     digest = hashlib.sha256(payload).hexdigest()
     return Ok(
         DependencyLockRecord(
@@ -900,9 +918,7 @@ def build_training_matrix(
     )
     validation_rows = tuple(
         (row_id, features, label)
-        for row_id, features, label, _session in buckets.get(
-            SegmentRole.VALIDATION.value, ()
-        )
+        for row_id, features, label, _session in buckets.get(SegmentRole.VALIDATION.value, ())
     )
     sealed = sum(1 for row in labeled.rows if row.split_role == _SPLIT_ROLE_HOLDOUT)
     if not train_rows:
@@ -994,17 +1010,16 @@ def run_offline_training(
         return config_fp
 
     out_root = Path(config.value.output_dir)
-    try:
-        out_root.mkdir(parents=True, exist_ok=True)
-        _write_json(out_root / _CONFIG_FILENAME, config.value.fp1_identity())
-    except OSError as exc:
-        return policy(
-            "output_dir",
-            "training output directory is not writable",
-            path=str(out_root),
-            errno=getattr(exc, "errno", None),
-            failure_id="mis.regime_train.output_dir",
-        )
+    prepared = _ensure_contained_dir(out_root, contain_within=out_root)
+    if is_refusal(prepared):
+        return prepared
+    written = _write_json(
+        out_root / _CONFIG_FILENAME,
+        config.value.fp1_identity(),
+        contain_within=out_root,
+    )
+    if is_refusal(written):
+        return written
 
     matrix = build_training_matrix(
         cleaned,
@@ -1031,7 +1046,9 @@ def run_offline_training(
             model_fp=None,
             registerable=False,
         )
-        _persist_record(out_root, record)
+        persisted = _persist_record(out_root, record)
+        if is_refusal(persisted):
+            return persisted
         return Ok(record)
 
     matrix_fp = matrix.value.fingerprint()
@@ -1064,7 +1081,9 @@ def run_offline_training(
                 model_fp=None,
                 registerable=False,
             )
-            _persist_record(out_root, record)
+            persisted = _persist_record(out_root, record)
+            if is_refusal(persisted):
+                return persisted
             return Ok(record)
         if loaded.value is not None:
             checkpoint = loaded.value
@@ -1081,18 +1100,23 @@ def run_offline_training(
             best_score = checkpoint.best_validation_score_ppb
             if best_index is not None:
                 prior = out_root / "trials" / f"trial_{best_index:04d}" / _MODEL_FILENAME
-                if prior.is_file():
-                    best_model_text = prior.read_text(encoding="utf-8")
+                if prior.is_symlink() or prior.is_file():
+                    prior_text = read_contained_text(
+                        prior,
+                        contain_within=out_root,
+                        max_bytes=MAX_JSONL_BYTES,
+                        field="output_dir",
+                    )
+                    if is_refusal(prior_text):
+                        return _output_dir_refusal(prior, given=prior_text.context.get("reason"))
+                    best_model_text = prior_text.value
     elif resume not in (False, None):
         return invalid("resume", "resume is a bool", given=repr(resume))
 
-    if (
-        abort_after_trials is not None
-        and (
-            not isinstance(abort_after_trials, int)
-            or isinstance(abort_after_trials, bool)
-            or abort_after_trials < 0
-        )
+    if abort_after_trials is not None and (
+        not isinstance(abort_after_trials, int)
+        or isinstance(abort_after_trials, bool)
+        or abort_after_trials < 0
     ):
         return invalid(
             "abort_after_trials",
@@ -1122,7 +1146,9 @@ def run_offline_training(
             model_fp=None,
             registerable=False,
         )
-        _persist_record(out_root, record)
+        persisted = _persist_record(out_root, record)
+        if is_refusal(persisted):
+            return persisted
         return Ok(record)
 
     # Declared reproducible search RNG (NFR-03) — not a cryptographic source.
@@ -1133,17 +1159,15 @@ def run_offline_training(
         _draw_hyperparameters(rng, trial_index=trial_index, bounds=bounds)
 
     trials_path = out_root / _TRIALS_FILENAME
-    if start_trial == 0 and trials_path.exists():
-        trials_path.unlink()
+    if start_trial == 0 and (trials_path.exists() or trials_path.is_symlink()):
+        unlinked = _unlink_contained_regular(trials_path, contain_within=out_root, missing_ok=False)
+        if is_refusal(unlinked):
+            return unlinked
 
     aborted = False
     abort_cause = "operator-abort-after-trials"
-    train_payload = tuple(
-        (row[0], row[1], row[2]) for row in matrix.value.train_rows
-    )
-    valid_payload = tuple(
-        (row[0], row[1], row[2]) for row in matrix.value.validation_rows
-    )
+    train_payload = tuple((row[0], row[1], row[2]) for row in matrix.value.train_rows)
+    valid_payload = tuple((row[0], row[1], row[2]) for row in matrix.value.validation_rows)
     for trial_index in range(start_trial, config.value.max_trials):
         if abort_after_trials is not None and len(completed) >= abort_after_trials:
             aborted = True
@@ -1192,9 +1216,19 @@ def run_offline_training(
         )
         completed.append(trial)
         trial_dir = out_root / "trials" / f"trial_{trial_index:04d}"
-        trial_dir.mkdir(parents=True, exist_ok=True)
-        (trial_dir / _MODEL_FILENAME).write_text(model_text, encoding="utf-8")
-        _append_jsonl(trials_path, trial.fp1_identity())
+        prepared_trial = _ensure_contained_dir(trial_dir, contain_within=out_root)
+        if is_refusal(prepared_trial):
+            return prepared_trial
+        written_model = _write_contained_bytes(
+            trial_dir / _MODEL_FILENAME,
+            model_text.encode("utf-8"),
+            contain_within=out_root,
+        )
+        if is_refusal(written_model):
+            return written_model
+        appended = _append_jsonl(trials_path, trial.fp1_identity(), contain_within=out_root)
+        if is_refusal(appended):
+            return appended
         if best_score is None or score_ppb > best_score:
             best_score = score_ppb
             best_index = trial_index
@@ -1211,7 +1245,13 @@ def run_offline_training(
             registerable=False,
             output_dir=config.value.output_dir,
         )
-        _write_json(out_root / _CHECKPOINT_FILENAME, checkpoint.fp1_identity())
+        written_checkpoint = _write_json(
+            out_root / _CHECKPOINT_FILENAME,
+            checkpoint.fp1_identity(),
+            contain_within=out_root,
+        )
+        if is_refusal(written_checkpoint):
+            return written_checkpoint
         if checkpoint.registerable:
             return refuse_partial_model_registration(status="checkpoint")
 
@@ -1233,7 +1273,9 @@ def run_offline_training(
             model_fp=None,
             registerable=False,
         )
-        _persist_record(out_root, record)
+        persisted = _persist_record(out_root, record)
+        if is_refusal(persisted):
+            return persisted
         assert_register = assert_registerable_training_artifact(record)
         if not is_refusal(assert_register):
             return refuse_partial_model_registration(status=record.status.value)
@@ -1257,11 +1299,17 @@ def run_offline_training(
             model_fp=None,
             registerable=False,
         )
-        _persist_record(out_root, record)
+        persisted = _persist_record(out_root, record)
+        if is_refusal(persisted):
+            return persisted
         return Ok(record)
 
     model_path = out_root / _MODEL_FILENAME
-    model_path.write_text(best_model_text, encoding="utf-8")
+    written_best = _write_contained_bytes(
+        model_path, best_model_text.encode("utf-8"), contain_within=out_root
+    )
+    if is_refusal(written_best):
+        return written_best
     model_digest = hashlib.sha256(best_model_text.encode("utf-8")).hexdigest()
     model_fp = f"fp1:sha256:{model_digest}"
     record = _terminal_record(
@@ -1281,12 +1329,18 @@ def run_offline_training(
         model_fp=model_fp,
         registerable=True,
     )
-    _persist_record(out_root, record)
+    persisted = _persist_record(out_root, record)
+    if is_refusal(persisted):
+        return persisted
     # Drop the checkpoint after a completed terminal record so resume cannot
     # revive a finished search as a partial registerable model.
     checkpoint_path = out_root / _CHECKPOINT_FILENAME
-    if checkpoint_path.exists():
-        checkpoint_path.unlink()
+    if checkpoint_path.exists() or checkpoint_path.is_symlink():
+        unlinked = _unlink_contained_regular(
+            checkpoint_path, contain_within=out_root, missing_ok=False
+        )
+        if is_refusal(unlinked):
+            return unlinked
 
     model_fp_obj = Fingerprint.try_create(model_fp)
     if is_refusal(model_fp_obj):
@@ -1419,11 +1473,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         "training_location": TRAINING_LOCATION,
         "command": list(sys.argv if argv is None else argv),
     }
-    try:
-        args.output_dir.mkdir(parents=True, exist_ok=True)
-        _write_json(args.output_dir / _RECORD_FILENAME, envelope)
-    except OSError:
-        pass
+    prepared = _ensure_contained_dir(args.output_dir, contain_within=args.output_dir)
+    if not is_refusal(prepared):
+        _write_json(
+            args.output_dir / _RECORD_FILENAME,
+            envelope,
+            contain_within=args.output_dir,
+        )
     return 1
 
 
@@ -1472,8 +1528,10 @@ def _split_boundaries_from_labeled(
     holdout_end: int | None = None
     for row in labeled.rows:
         if row.split_role == SegmentRole.TRAIN.value:
-            train_end = row.event_time_ns + BAR_INTERVAL_M5_NS if train_end is None else max(
-                train_end, row.event_time_ns + BAR_INTERVAL_M5_NS
+            train_end = (
+                row.event_time_ns + BAR_INTERVAL_M5_NS
+                if train_end is None
+                else max(train_end, row.event_time_ns + BAR_INTERVAL_M5_NS)
             )
         elif row.split_role == SegmentRole.VALIDATION.value:
             validation_end = (
@@ -1734,9 +1792,7 @@ def _deterministic_surrogate_fit(
         cast("Mapping[str, object]", hyper_obj) if isinstance(hyper_obj, Mapping) else {}
     )
     feature_ids_obj = context.get("feature_ids", [])
-    if isinstance(feature_ids_obj, Sequence) and not isinstance(
-        feature_ids_obj, (str, bytes)
-    ):
+    if isinstance(feature_ids_obj, Sequence) and not isinstance(feature_ids_obj, (str, bytes)):
         feature_ids = [str(item) for item in cast("Sequence[object]", feature_ids_obj)]
     else:
         feature_ids = []
@@ -1747,9 +1803,7 @@ def _deterministic_surrogate_fit(
         vocabulary = list(REGIME_CLASS_VOCABULARY)
     validation_obj = context.get("validation_rows")
     validation_rows: tuple[_TrainRow, ...]
-    if isinstance(validation_obj, Sequence) and not isinstance(
-        validation_obj, (str, bytes)
-    ):
+    if isinstance(validation_obj, Sequence) and not isinstance(validation_obj, (str, bytes)):
         validation_rows = tuple(
             cast("_TrainRow", row)
             for row in cast("Sequence[object]", validation_obj)
@@ -1841,9 +1895,7 @@ def _lightgbm_fit(
     validation_obj = context.get("validation_rows")
     x_valid: list[list[float]] = []
     y_valid: list[int] = []
-    if isinstance(validation_obj, Sequence) and not isinstance(
-        validation_obj, (str, bytes)
-    ):
+    if isinstance(validation_obj, Sequence) and not isinstance(validation_obj, (str, bytes)):
         for row_obj in cast("Sequence[object]", validation_obj):
             if not isinstance(row_obj, tuple):
                 continue
@@ -1853,12 +1905,7 @@ def _lightgbm_fit(
             features = row[1]
             if not isinstance(features, (tuple, list)):
                 continue
-            x_valid.append(
-                [
-                    _coerce_float(value)
-                    for value in cast("Sequence[object]", features)
-                ]
-            )
+            x_valid.append([_coerce_float(value) for value in cast("Sequence[object]", features)])
             y_valid.append(label_to_index[str(row[2])])
     train_set = lgb_api.Dataset(x_train, label=y_train, free_raw_data=False)
     valid_set = (
@@ -1869,17 +1916,13 @@ def _lightgbm_fit(
     lr_obj = hyper.get("learning_rate", [1, 100])
     if isinstance(lr_obj, list):
         lr = cast("list[object]", lr_obj)
-        learning_rate = (
-            _coerce_float(lr[0]) / _coerce_float(lr[1]) if len(lr) == 2 else 0.05
-        )
+        learning_rate = _coerce_float(lr[0]) / _coerce_float(lr[1]) if len(lr) == 2 else 0.05
     else:
         learning_rate = 0.05
     ff_obj = hyper.get("feature_fraction", [1, 1])
     if isinstance(ff_obj, list):
         ff = cast("list[object]", ff_obj)
-        feature_fraction = (
-            _coerce_float(ff[0]) / _coerce_float(ff[1]) if len(ff) == 2 else 1.0
-        )
+        feature_fraction = _coerce_float(ff[0]) / _coerce_float(ff[1]) if len(ff) == 2 else 1.0
     else:
         feature_fraction = 1.0
     params = {
@@ -2027,17 +2070,25 @@ def _probe_peak_rss_bytes() -> int | None:
         return None
 
 
+def _worktree_root() -> Path:
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        if (parent / "uv.lock").is_file() or (parent / "uv.lock").is_symlink():
+            return parent
+    return here.parents[4]
+
+
 def _resolve_lock_path(lock_path: object | None) -> Path | None:
     if lock_path is not None:
         token = clean_token(lock_path)
         if token is None:
             return None
         path = Path(token)
-        return path if path.is_file() else None
+        return path if path.is_symlink() or path.is_file() else None
     here = Path(__file__).resolve()
     for parent in here.parents:
         candidate = parent / "uv.lock"
-        if candidate.is_file():
+        if candidate.is_symlink() or candidate.is_file():
             return candidate
     return None
 
@@ -2049,20 +2100,128 @@ def _posix_rel(path: Path) -> str:
         return path.as_posix()
 
 
-def _write_json(path: Path, payload: Mapping[str, object]) -> None:
-    path.write_text(
-        json.dumps(dict(payload), indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
+def _output_dir_refusal(
+    path: Path,
+    *,
+    given: object | None = None,
+    errno: object | None = None,
+) -> TypedRefusal:
+    extra: dict[str, object] = {
+        "path": str(path),
+        "failure_id": "mis.regime_train.output_dir",
+    }
+    if given is not None:
+        extra["given"] = given
+    if errno is not None:
+        extra["errno"] = errno
+    return policy(
+        "output_dir",
+        "training output directory is not writable",
+        **extra,
     )
 
 
-def _append_jsonl(path: Path, payload: Mapping[str, object]) -> None:
-    with path.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(dict(payload), sort_keys=True) + "\n")
+def _map_output_dir(result: Result[None], path: Path) -> Result[None]:
+    if not is_refusal(result):
+        return result
+    return _output_dir_refusal(path, given=result.context.get("reason"))
 
 
-def _persist_record(out_root: Path, record: TrainingRecord) -> None:
-    _write_json(out_root / _RECORD_FILENAME, record.as_jsonable())
+def _contained_pair(path: Path, contain_within: Path) -> Result[tuple[Path, Path]]:
+    try:
+        resolved = Path(os.path.realpath(path))
+        root_real = Path(os.path.realpath(contain_within))
+    except OSError as exc:
+        return _output_dir_refusal(
+            path, given=type(exc).__name__, errno=getattr(exc, "errno", None)
+        )
+    if path.is_symlink() or not resolved.is_relative_to(root_real):
+        return _output_dir_refusal(path, given="symlink-or-escape")
+    return Ok((resolved, root_real))
+
+
+def _ensure_contained_dir(path: Path, *, contain_within: Path) -> Result[None]:
+    contained = _contained_pair(path, contain_within)
+    if is_refusal(contained):
+        return contained
+    try:
+        path.mkdir(  # skylos: ignore[SKY-D215] contained, no-follow
+            parents=True,
+            exist_ok=True,
+        )
+    except OSError as exc:
+        return _output_dir_refusal(
+            path, given=type(exc).__name__, errno=getattr(exc, "errno", None)
+        )
+    return Ok(None)
+
+
+def _unlink_contained_regular(
+    path: Path,
+    *,
+    contain_within: Path,
+    missing_ok: bool = False,
+) -> Result[None]:
+    contained = _contained_pair(path, contain_within)
+    if is_refusal(contained):
+        return contained
+    if not path.exists() and not path.is_symlink():
+        if missing_ok:
+            return Ok(None)
+        return _output_dir_refusal(path, given="missing")
+    if path.is_symlink() or not path.is_file():
+        return _output_dir_refusal(path, given="symlink-or-non-regular")
+    try:
+        os.unlink(path)  # skylos: ignore[SKY-D215] contained, no-follow
+    except OSError as exc:
+        return _output_dir_refusal(
+            path, given=type(exc).__name__, errno=getattr(exc, "errno", None)
+        )
+    return Ok(None)
+
+
+def _write_contained_bytes(
+    path: Path,
+    data: bytes,
+    *,
+    contain_within: Path,
+) -> Result[None]:
+    unlinked = _unlink_contained_regular(path, contain_within=contain_within, missing_ok=True)
+    if is_refusal(unlinked):
+        return unlinked
+    written = write_bytes_exclusive_no_follow(
+        path, data, contain_within=contain_within, field="output_dir"
+    )
+    return _map_output_dir(written, path)
+
+
+def _write_json(
+    path: Path,
+    payload: Mapping[str, object],
+    *,
+    contain_within: Path,
+) -> Result[None]:
+    data = (json.dumps(dict(payload), indent=2, sort_keys=True) + "\n").encode("utf-8")
+    return _write_contained_bytes(path, data, contain_within=contain_within)
+
+
+def _append_jsonl(
+    path: Path,
+    payload: Mapping[str, object],
+    *,
+    contain_within: Path,
+) -> Result[None]:
+    data = (json.dumps(dict(payload), sort_keys=True) + "\n").encode("utf-8")
+    appended = append_bytes_no_follow(path, data, contain_within=contain_within, field="output_dir")
+    return _map_output_dir(appended, path)
+
+
+def _persist_record(out_root: Path, record: TrainingRecord) -> Result[None]:
+    return _write_json(
+        out_root / _RECORD_FILENAME,
+        record.as_jsonable(),
+        contain_within=out_root,
+    )
 
 
 def _resolve_clock_ns(clock_ns: object) -> Callable[[], int]:
@@ -2102,11 +2261,21 @@ def _coerce_float(value: object) -> float:
 
 def _load_checkpoint(out_root: Path) -> Result[TrainingCheckpoint | None]:
     path = out_root / _CHECKPOINT_FILENAME
+    if path.is_symlink():
+        return _output_dir_refusal(path, given="symlink")
     if not path.is_file():
         return Ok(None)
+    loaded = read_contained_text(
+        path,
+        contain_within=out_root,
+        max_bytes=MAX_JSONL_BYTES,
+        field="output_dir",
+    )
+    if is_refusal(loaded):
+        return _output_dir_refusal(path, given=loaded.context.get("reason"))
     try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        raw = json.loads(loaded.value)
+    except (json.JSONDecodeError, UnicodeDecodeError):
         return policy(
             "checkpoint",
             "checkpoint is not readable JSON",
@@ -2153,17 +2322,13 @@ def _load_checkpoint(out_root: Path) -> Result[TrainingCheckpoint | None]:
         )
     best_trial_obj = payload.get("best_trial_index")
     best_trial_index = (
-        best_trial_obj
-        if isinstance(best_trial_obj, int) or best_trial_obj is None
-        else None
+        best_trial_obj if isinstance(best_trial_obj, int) or best_trial_obj is None else None
     )
     if isinstance(best_trial_index, bool):
         best_trial_index = None
     best_score_obj = payload.get("best_validation_score_ppb")
     best_validation_score_ppb = (
-        best_score_obj
-        if isinstance(best_score_obj, int) or best_score_obj is None
-        else None
+        best_score_obj if isinstance(best_score_obj, int) or best_score_obj is None else None
     )
     if isinstance(best_validation_score_ppb, bool):
         best_validation_score_ppb = None
@@ -2227,9 +2392,7 @@ def _trial_from_jsonable(raw: object) -> Result[TrialRecord]:
         )
         model_fp_obj = payload.get("model_bytes_fp")
         model_bytes_fp = (
-            model_fp_obj
-            if model_fp_obj is None or isinstance(model_fp_obj, str)
-            else None
+            model_fp_obj if model_fp_obj is None or isinstance(model_fp_obj, str) else None
         )
         trial = TrialRecord(
             trial_index=_coerce_int(payload["trial_index"]),

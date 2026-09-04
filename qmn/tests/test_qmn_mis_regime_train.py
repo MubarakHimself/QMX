@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TypeVar
 
+import pytest
 from qmf.core import CalendarIdentity, RefusalCategory, fingerprint, is_ok, is_refusal
 from qmf.core.refusal import Result
 from qmf.data.dukascopy import DUKASCOPY_SOURCE, PERSONAL_USE_LICENSE
@@ -53,6 +54,14 @@ _CLOSE = 100_000
 def _ok(result: Result[T]) -> T:
     assert is_ok(result), result
     return result.value
+
+
+def _try_symlink(link: Path, target: Path) -> None:
+    """Create a symlink or skip where the platform forbids it (Windows dev)."""
+    try:
+        link.symlink_to(target)
+    except (OSError, NotImplementedError):
+        pytest.skip("symlink creation is not permitted on this platform")
 
 
 def _calendar() -> CalendarIdentity:
@@ -298,17 +307,21 @@ def test_policy_refusals_for_vps_network_credentials_and_holdout() -> None:
     )
     assert is_refusal(refused)
     assert refused.category is RefusalCategory.POLICY_REJECTION
-    assert is_refusal(assert_registerable_training_artifact(TrainingCheckpoint(
-        config_fp=_ok(fingerprint({"c": 1})),
-        code_fp=_ok(fingerprint({"code": 1})),
-        matrix_fp=_ok(fingerprint({"m": 1})),
-        completed_trials=(),
-        next_trial_index=0,
-        best_trial_index=None,
-        best_validation_score_ppb=None,
-        registerable=False,
-        output_dir="out",
-    )))
+    assert is_refusal(
+        assert_registerable_training_artifact(
+            TrainingCheckpoint(
+                config_fp=_ok(fingerprint({"c": 1})),
+                code_fp=_ok(fingerprint({"code": 1})),
+                matrix_fp=_ok(fingerprint({"m": 1})),
+                completed_trials=(),
+                next_trial_index=0,
+                best_trial_index=None,
+                best_validation_score_ppb=None,
+                registerable=False,
+                output_dir="out",
+            )
+        )
+    )
 
 
 def test_matrix_keeps_sealed_holdout_unused() -> None:
@@ -318,14 +331,8 @@ def test_matrix_keeps_sealed_holdout_unused() -> None:
     assert matrix.sealed_holdout_count >= 1
     assert matrix.train_rows
     assert matrix.validation_rows
-    holdout_ids = {
-        row.row_id
-        for row in labeled.rows
-        if row.split_role == "sealed-test"
-    }
-    used_ids = {row[0] for row in matrix.train_rows} | {
-        row[0] for row in matrix.validation_rows
-    }
+    holdout_ids = {row.row_id for row in labeled.rows if row.split_role == "sealed-test"}
+    used_ids = {row[0] for row in matrix.train_rows} | {row[0] for row in matrix.validation_rows}
     assert holdout_ids.isdisjoint(used_ids)
     assert accepted_regime_classifier_design().training_location == TRAINING_LOCATION
 
@@ -347,3 +354,204 @@ def test_training_module_stays_offline_without_eager_lightgbm() -> None:
     assert "mis.regime_train.partial_register" in text
     assert "mis.regime_train.vps_or_cloud" in text
     assert "python -m qmn.mis.regime_train" in text
+    assert "write_bytes_exclusive_no_follow" in text
+    assert "read_contained_bytes" in text
+    assert "read_contained_text" in text
+    assert "append_bytes_no_follow" in text
+    assert "MAX_JSONL_BYTES" in text
+    assert ".write_text(" not in text
+    assert ".read_text(" not in text
+    assert ".read_bytes(" not in text
+    assert 'open("a"' not in text
+    assert "open('a'" not in text
+    assert "skylos: ignore[SKY-D215] contained, no-follow" in text
+
+
+def test_training_refuses_symlinked_config_sink(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    cleaned, labeled = _prepared()
+    out = tmp_path / "run"
+    out.mkdir()
+    target = out / "training_config.json"
+    out_resolved = out.resolve()
+    real_is_symlink = Path.is_symlink
+
+    def detects_the_target_as_a_link(self: Path) -> bool:
+        try:
+            if self.name == "training_config.json" and self.parent.resolve() == out_resolved:
+                return True
+        except OSError:
+            pass
+        return real_is_symlink(self)
+
+    monkeypatch.setattr(Path, "is_symlink", detects_the_target_as_a_link)
+    refused = run_offline_training(
+        labeled=labeled,
+        cleaned=cleaned,
+        output_dir=str(out),
+        seed=DEFAULT_TRAINING_SEED,
+        backend=TRAINING_BACKEND_DETERMINISTIC,
+        max_trials=1,
+    )
+    assert is_refusal(refused)
+    assert refused.context.get("field") == "output_dir"
+    assert refused.context.get("failure_id") == "mis.regime_train.output_dir"
+    assert not target.exists()
+
+
+def test_training_does_not_follow_planted_config_symlink(tmp_path: Path) -> None:
+    cleaned, labeled = _prepared()
+    out = tmp_path / "run"
+    out.mkdir()
+    secret = tmp_path / "secret.json"
+    secret.write_text("keep", encoding="utf-8")
+    link = out / "training_config.json"
+    _try_symlink(link, secret)
+    refused = run_offline_training(
+        labeled=labeled,
+        cleaned=cleaned,
+        output_dir=str(out),
+        seed=DEFAULT_TRAINING_SEED,
+        backend=TRAINING_BACKEND_DETERMINISTIC,
+        max_trials=1,
+    )
+    assert is_refusal(refused)
+    assert refused.context.get("field") == "output_dir"
+    assert refused.context.get("failure_id") == "mis.regime_train.output_dir"
+    assert secret.read_text(encoding="utf-8") == "keep"
+
+
+def test_resume_refuses_symlinked_trial_model(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    cleaned, labeled = _prepared()
+    out = tmp_path / "resume-symlink"
+    aborted = _ok(
+        run_offline_training(
+            labeled=labeled,
+            cleaned=cleaned,
+            output_dir=str(out),
+            seed=7,
+            backend=TRAINING_BACKEND_DETERMINISTIC,
+            max_trials=4,
+            abort_after_trials=1,
+        )
+    )
+    assert isinstance(aborted, TrainingRecord)
+    assert aborted.status is TrainingTerminalStatus.ABORTED
+    prior = out / "trials" / "trial_0000" / "model.txt"
+    assert prior.is_file()
+    real_is_symlink = Path.is_symlink
+
+    def detects_the_trial_model_as_a_link(self: Path) -> bool:
+        if self.name == "model.txt" and self.parent.name == "trial_0000":
+            return True
+        return real_is_symlink(self)
+
+    monkeypatch.setattr(Path, "is_symlink", detects_the_trial_model_as_a_link)
+    refused = resume_offline_training(
+        labeled=labeled,
+        cleaned=cleaned,
+        output_dir=str(out),
+        seed=7,
+        backend=TRAINING_BACKEND_DETERMINISTIC,
+        max_trials=4,
+    )
+    assert is_refusal(refused)
+    assert refused.context.get("field") == "output_dir"
+    assert refused.context.get("failure_id") == "mis.regime_train.output_dir"
+    assert prior.read_text(encoding="utf-8")
+
+
+def test_resume_does_not_follow_planted_trial_model_symlink(tmp_path: Path) -> None:
+    cleaned, labeled = _prepared()
+    out = tmp_path / "resume-link"
+    aborted = _ok(
+        run_offline_training(
+            labeled=labeled,
+            cleaned=cleaned,
+            output_dir=str(out),
+            seed=7,
+            backend=TRAINING_BACKEND_DETERMINISTIC,
+            max_trials=4,
+            abort_after_trials=1,
+        )
+    )
+    assert isinstance(aborted, TrainingRecord)
+    assert aborted.status is TrainingTerminalStatus.ABORTED
+    secret = tmp_path / "secret-model.txt"
+    secret.write_text("keep-model", encoding="utf-8")
+    prior = out / "trials" / "trial_0000" / "model.txt"
+    assert prior.is_file()
+    prior.unlink()
+    _try_symlink(prior, secret)
+    refused = resume_offline_training(
+        labeled=labeled,
+        cleaned=cleaned,
+        output_dir=str(out),
+        seed=7,
+        backend=TRAINING_BACKEND_DETERMINISTIC,
+        max_trials=4,
+    )
+    assert is_refusal(refused)
+    assert refused.context.get("field") == "output_dir"
+    assert refused.context.get("failure_id") == "mis.regime_train.output_dir"
+    assert secret.read_text(encoding="utf-8") == "keep-model"
+
+
+def test_dependency_lock_refuses_symlink_leaf(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from qmn.mis import regime_train as train_mod
+
+    lock_file: Path | None = None
+    here = Path(train_mod.__file__).resolve()
+    for parent in here.parents:
+        candidate = parent / "uv.lock"
+        if candidate.is_file():
+            lock_file = candidate
+            break
+    assert lock_file is not None
+    real_is_symlink = Path.is_symlink
+
+    def detects_the_lock_as_a_link(self: Path) -> bool:
+        return True if self == lock_file else real_is_symlink(self)
+
+    monkeypatch.setattr(Path, "is_symlink", detects_the_lock_as_a_link)
+    refused = resolve_dependency_lock()
+    assert is_refusal(refused)
+    assert refused.context.get("field") == "dependency_lock"
+    assert refused.context.get("failure_id") == "mis.regime_train.dependency_lock"
+
+
+def test_dependency_lock_does_not_follow_planted_symlink(tmp_path: Path) -> None:
+    secret = tmp_path / "secret.lock"
+    secret.write_bytes(b"secret-bytes")
+    link = tmp_path / "uv.lock"
+    _try_symlink(link, secret)
+    refused = resolve_dependency_lock(lock_path=str(link))
+    assert is_refusal(refused)
+    assert refused.context.get("field") == "dependency_lock"
+    assert refused.context.get("failure_id") == "mis.regime_train.dependency_lock"
+    assert secret.read_bytes() == b"secret-bytes"
+
+
+def test_cli_json_loader_still_refuses(tmp_path: Path) -> None:
+    from qmn.mis.regime_train import main as train_main
+
+    labeled = tmp_path / "labeled.json"
+    cleaned = tmp_path / "cleaned.json"
+    labeled.write_text("{}", encoding="utf-8")
+    cleaned.write_text("{}", encoding="utf-8")
+    code = train_main(
+        [
+            "--output-dir",
+            str(tmp_path / "out"),
+            "--labeled-json",
+            str(labeled),
+            "--cleaned-json",
+            str(cleaned),
+        ]
+    )
+    assert code == 1
