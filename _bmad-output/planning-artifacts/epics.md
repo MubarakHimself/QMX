@@ -1,5 +1,6 @@
 ---
 stepsCompleted: [1, 2, 3, 4]
+tradingNodeWorkflowStepsCompleted: [1, 2, 3, 4]
 inputDocuments:
   - _bmad-output/planning-artifacts/prds/prd-QMX-2026-08-21/prd.md
   - _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md
@@ -9,16 +10,52 @@ inputDocuments:
   - _docwork/feature_inventory.yaml (FEAT-0001..0030)
   - docs/architecture/dependencies.yaml
   - _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/research-backtesting/specs/ (13 QMB intake dossiers)
+  - main@8abe6c2 (latest trading-node requirements snapshot; DEC-0261/0262)
+  - docs/components/trading-node.md (COMP-QMN; TN-1..TN-25)
+  - docs/decisions/ADR-0019-trading-node.md
+  - docs/architecture/overview.md (deployment view and process internals)
+  - docs/architecture/dependencies.yaml (COMP-QMN edges)
+  - docs/registry/variables.yaml (71 value-status-bearing node settings)
+  - docs/lenses/ops/runbook.md
+  - docs/lenses/ops/incident-playbook.md
+  - docs/lenses/observability/logging-spec.md
+  - docs/lenses/observability/metrics-and-alerts.md
+  - docs/lenses/security/security-model.md
+  - docs/lenses/testing/test-strategy.md
+  - docs/lenses/testing/fixtures-and-scenarios.md
+  - docs/lenses/performance/budgets.md
+  - docs/lenses/data/data-layer.md (local validation-only intake; ignored/absent from refs, with tracked requirement-equivalence proof recorded at FTR-08 so factory worktrees do not depend on it)
+  - docs/lenses/bugs/triage.md
+  - docs/contracts/ct-13-journal.yaml
+  - docs/contracts/ct-14-backup-restore.yaml
+  - docs/contracts/ct-18-venue-capabilities.yaml
+  - docs/contracts/ct-19-venue-command.yaml
+  - docs/contracts/ct-20-venue-event.yaml
+  - docs/contracts/ct-21-venue-secret-session.yaml
+  - docs/contracts/ct-24-book-mode.yaml
+  - docs/contracts/ct-25-risk-journal.yaml
+  - docs/contracts/ct-28-book-binding.yaml
+  - docs/contracts/ct-30-control-action.yaml
+  - docs/contracts/ct-31-control-window.yaml
+  - docs/glossary.md
+  - _docwork/feature_inventory.yaml (FEAT-0031)
+  - _docwork/ledger.yaml (DEC-0186..DEC-0262)
+  - _docwork/gaps.yaml (GAP-0050..GAP-0058)
+  - _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md (background only; docs/ governs)
+  - origin/integration@ef9bb25 (read-only implementation-base inventory; branch strictly off limits)
+excludedDocuments:
+  - _docwork/qma/epics-draft/ (QMA is documentation-only for this increment; operator ruling 2026-08-30)
 ---
 
 # QMX - Epic Breakdown
 
 ## Overview
 
-This document provides the complete epic and story breakdown for QMX V1
-(Phase 1: QMF + QMB + QML), decomposing the requirements from the QMX
-Platform PRD (final, 2026-08-21) and the three ratified architecture spines
-into implementable stories for the factory lanes.
+This document provides the complete epic and story breakdown for QMX V1:
+the shipped Phase-1 QMF + QMB + QML work (Epics 1–23) and the Phase-2
+trading-node increment (Epics 24–30). The node stories decompose the ratified
+COMP-QMN requirements body, DEC-0186..DEC-0262, and GAP-0050..GAP-0058 for
+the Grok epic-factory lane without changing the implementation base.
 
 PRD rule carried forward: each FR's cited artifact is the epic boundary and
 the source of its acceptance criteria; where an FR cites a `spec-*` intake
@@ -103,6 +140,38 @@ than epic granularity — never size a lane by counting FRs.
 - FR-049: Confluence definitions are authored as CT-34 artifacts. (CT-34)
 - FR-050: QML defines the bot runtime protocol that QMB (and later the trading node) hosts. (QL-spine)
 
+**I. Trading node (COMP-QMN; TN-1..TN-25, DEC-0186..DEC-0262)**
+
+- FR-051: The platform ships `qmn` as one application-layer product with modes `paper | live`, built ON QMF/QMB/QML, never published and never exposed through an operator command line; `just node-…` remains transport-constrained DevOps tooling with no trading authority. (TN-1; DEC-0186, DEC-0211)
+- FR-052: Each boot binds the supervisor and doors first, writes the boot-attempt record as its first durable act, then preflights, composes from one resolved config artifact, fingerprints to `composition_fp`, and seals an immutable boot epoch with pairwise-distinct WriterIds. (TN-2; DEC-0187)
+- FR-053: The node runs as one supervised process and one asyncio event loop, supports stand-down-alive with operator-only `resurrect`, restarts only at a safe point, and on shutdown flushes evidence and mints UNKNOWN for unresolved commands without flattening positions. (TN-4; DEC-0189, DEC-0226)
+- FR-054: The live runtime reuses QMB's `run_slice` loop unforked, one loop per `(VenueId, account)` command stream, behind a push-to-pull accumulator that records and journals every inbound observation before interpretation and commits a durable cursor only at slice end. (TN-5; DEC-0190)
+- FR-055: The order path wires the ratified bot → Book → BMS → operator chain, preserves exits under entry-side blocks, persists command identity before submission, keeps command ordinal distinct from journal sequence, attaches a venue-resident protective stop, and treats UNKNOWN as a full-stream block until reconciled or operator-attested. (TN-6; CT-19/20; DEC-0191, DEC-0221, DEC-0224)
+- FR-056: KSA is a scoped monotone fold over five fixed levels and four addable-never-redefined trigger classes; automatic transitions escalate only, operator `resume` alone de-escalates, and every effect-matrix cell declares a closed CT-30 effect, typed scope, satisfaction predicate, and paper disposition. (TN-7; DEC-0192, DEC-0237)
+- FR-057: The node runs AD-33..AD-41 and CT-29..CT-32 verbatim, including the one-name kill-line/loss-floor rule, currency-exposure-scoped news windows, entry-only dead zones, the environment-keyed SQS signal snapshot, the risk-non-increasing breakeven ratchet, the qualifying-loss bench fold, and total same-tick priority. (TN-8; DEC-0193, DEC-0255)
+- FR-058: Paper is a Book-level route to one paired demo account with its own BMS and virtual ledger; the node has no per-bot warm-up, probation, ramp, or paper lane, and the only return to paper after activation is a BMS/Book protective demotion. (TN-9; AD-35; DEC-0194, DEC-0261)
+- FR-059: The paper milestone is one full unattended first-deployment week for the whole system on the demo account with full live machinery; a credentialed live connection may sense and record only, and a live binding opens only after the TN-23 checklist and its own live-conditioned SQS and rung baselines pass. (TN-9/23; DEC-0194, DEC-0212, DEC-0261)
+- FR-060: Startup and periodic recovery execute the fixed doctrine and produce exactly four reconciliation verdicts (`reconciled | drift | unknown | out-of-lookback`) plus separate quantity and cash residuals in the exact-integer domain; live-role drift stands entries down while demo-role drift alarms and continues. (TN-10; CT-20; DEC-0195, DEC-0258)
+- FR-061: `VenueClientPort` is selected by `(world, VenueId)` and has exactly three implementations—live cTrader, replay, and the FEAT-0023 conformance double—while the direct asyncio TLS cTrader transport completes `qmf-venue.ConnectionManager` under the declared exemption or lands in `qmn.venue.ctrader` if the parent rejects that exemption. (TN-11; DEC-0196, DEC-0228, DEC-0243)
+- FR-062: The cTrader client verifies the full CT-18 static/observed capability profile before use, decodes wire money into exact scaled integers, records before interpreting, never retries commands, and defaults unmapped venue codes to an alarmed UNKNOWN posture. (TN-11; CT-18..21; DEC-0196)
+- FR-063: Secrets remain opaque references above `ConnectionManager`; VPS custody uses host-sealed bootstrap material plus AEAD-encrypted rotated state, the workstation mints and escrows the backup payload key, and the provisioning wizard streams secrets only through restricted SSH stdin. (TN-12; CT-21; DEC-0197, DEC-0217)
+- FR-064: Live ticks, bars, depth, fills, lifecycle events, and read-backs persist through the governed CT-10/15/20 paths; bootstrap is resumable and idempotent; the news-calendar timer consumes Forex Factory's free weekly file as the sole source with no paid fallback story or slot. (TN-13; DEC-0198, DEC-0214)
+- FR-065: The VPS pushes nightly encrypted Backblaze B2 backups through rclone and proves nightly sample restore, monthly full restore, and operator-triggered host-loss restore on a clean host; purge requires verified `sealed-archive` and off-host copies. (TN-13; CT-14; DEC-0198, DEC-0252, DEC-0261)
+- FR-066: The node stamps all QMX-owned events from the chrony-disciplined VPS clock, refuses trading before sync, keeps market-hours, day-boundary, and news-calendar identities distinct, and evaluates `ok | warn | no-new-entry | halt` as per-cycle clock states. (TN-14; DEC-0199)
+- FR-067: Operational logs, `qmn_` metrics, independent `/health` states, and the closed alert allow-list are exported without authority; the off-VPS liveness heartbeat is notification-only, the daily liveness digest does not exist, and the separate same-VPS Prometheus/Grafana/Loki-class stack remains zero-authority and optional to node operation. (TN-15; DEC-0200, DEC-0212, DEC-0261)
+- FR-068: The VPS variant deploys a plain CPython 3.14 systemd service on Ubuntu 24.04 using five node units, immutable per-commit trees and atomic switch/rollback, a check-mode dry run, a pinned Ubuntu 24.04 CI lane, and an observability compose stack as the only VPS containerized subsystem. (TN-16; DEC-0201)
+- FR-069: The node exposes exactly three doors—the in-process Python API, localhost HTTP evidence channel, and VPS unix-socket powers channel—and every closed-list power revalidates fresh state, is idempotent, journals requested versus enforced state, and authenticates the operator/ops principal split at the transport. (TN-17; DEC-0202, DEC-0234)
+- FR-070: One resolved JSON-Schema-class config artifact compiles the fixed roster → BMS → Book → node-default layers with no invocation layer, stores identity/eligibility but no runtime state, carries each resolved value's `blank | provisional-evidence | ratified` status, and applies changes only through a new version plus safe-point restart. (TN-18; DEC-0203, DEC-0223)
+- FR-071: All 71 `value_status_required` settings remain configurable and owner-scoped with explicit blank effects; a one-variable operator powers call countersigns provisional evidence by fp1 into a new config version, and no story invents KSA values or numeric latency budgets. (TN-18/23; registry; DEC-0231, DEC-0254, DEC-0256)
+- FR-072: The node hosts QL-7 seats under deadline, memory-ceiling, quarantine, and operator-only reinstatement, and builds the zero-authority MIS shadow seam with candidate registration, a separate WriterId/stream and `shadow_composition_fp`, and a comparison read model that cannot reach governed consumers. (TN-19; DEC-0204)
+- FR-073: Promotion and activation are separate human-only powers over a silent server-side battery; sandbox provenance refuses, promotion creates no intent or ledger, and activation takes effect only at the next boundary of the account-scoped day-boundary calendar with no manual override. (TN-20; DEC-0205, DEC-0213, DEC-0261)
+- FR-074: Replay runs in a separate process using the same config and loop, disjoint WriterIds, no credential or live sink, and one read-only import from `sealed-archive`; it reuses recorded signal snapshots, diffs decisions only, never simulates fills, and never gates live money. (TN-21; DEC-0206, DEC-0229)
+- FR-075: Multi-account and multi-broker behavior is roster/config plus restart, never singleton code; runtime keys use the ratified tuples, sensing-only entries are legal, netting attribution is exhaustive/disjoint, and protective pacing reserve cannot be consumed by entry work. (TN-22; DEC-0207)
+- FR-076: The node ships the permanent QA battery, one conformance suite against the double and live client, the wired proofs for SCN-0006/0008/0010/0011, a gated `FAILURES.md`, measured benchmark and disk baselines, nightly mutmut over node money-path modules, and one named story for every node QA-debt ID. (TN-23; DEC-0208)
+- FR-077: Position safety and accounting implement all TN-24 closures and TN-25 laws: virtual and venue positions stay distinct, per-binding exact-integer virtual ledgers are append-only, netting attribution partitions, money-boundary acts never touch positions, and complete `state_carry` is explicit and signed where carried. (TN-24/25; DEC-0209, DEC-0210)
+- FR-078: The single-machine placement is an in-scope placement of the same product, co-located with the agentic system and self-setting-up for a non-technical operator; its first and blocking story is a one-shot architecture increment for GAP-0058, and no VPS epic may depend on it. (DEC-0262; GAP-0058)
+- FR-079: MIS training is the last logical node epic but may run on a disjoint branch from the protection wave onward: it first designs `regime_classifier_v1`, then fetches/cleans/labels all-session data, trains through an operator-run offline script with seed/window recorded, registers versioned artifacts, shadow-rolls, and re-certifies across one full affected-Book cycle. (DEC-0261, DEC-0262; GAP-0051)
+
 ### NonFunctional Requirements
 
 - NFR-01 Environment: CPython 3.14; tier-1 OSes Windows 11 x86-64 and Ubuntu LTS x86-64. (ADR-0012)
@@ -116,6 +185,17 @@ than epic granularity — never size a lane by counting FRs.
 - NFR-09 Concurrency posture: QMF spawns no concurrency; applications own it (QMB's governor is the V1 instance); async only at the venue edge. (ADR-0014)
 - NFR-10 Operability & deployability: `uv add` install, no database server, no Docker for QMB; one-person deploy/monitor/repair from one canonical checkout; monitoring and evaluation built in; external monitoring planes are zero-authority. (operator ruling; DEC-0112, DEC-0041)
 - NFR-11 Failure-register discipline: every designed failure mode ships a register entry (class, detection, recovery semantics, degraded state, notification tier, product-user affordance) written for someone who was not in the design room. (PRD §8)
+- NFR-12 Fail-safe operation: missing, stale, ambiguous, unpersistable, or UNKNOWN state fails entries closed while preserving every risk-non-increasing act; recovery re-decides from evidence and never blindly retries a command. (TN-4/6/10; L39)
+- NFR-13 Availability: the VPS node is supervised 24/5, serves evidence and powers while stood down, provides an external liveness heartbeat, and proves a full unattended first-deployment week before the live milestone. (TN-4/9/15)
+- NFR-14 Node security: no secret values in repository, config, argv, logs, evidence, fingerprints, health, or metrics; secret scanning, host-key sealing, AEAD storage, least-privilege systemd hardening, default-deny network posture, `SO_PEERCRED`, and principal separation are acceptance gates. (TN-12/16/17; CT-21)
+- NFR-15 Durability: recording precedes interpretation, writer/boot sequences are gapless, committed prefixes alone are backed up, corrections append, and recoverability claims require verified sample, full, and host-loss restores. (TN-5/13; CT-13/14)
+- NFR-16 Observability without authority: logs never become journal evidence; metrics, health, dashboards, notifications, and the liveness watcher can observe and notify but can never authorize or affect a trading decision or command. (TN-15; DEC-0261)
+- NFR-17 Measured performance: wall time, peak RSS, bytes/day, and six live-path rungs are benchmarked on the target VPS at ratified load marks; thresholds derive from observed variance, and no unmeasured numeric latency budget becomes a gate. (TN-23; performance budgets)
+- NFR-18 Deployment reproducibility: CPython 3.14, `uv sync --frozen`, pinned dependencies/tools/images, immutable commit trees, rendered units, check mode, Ubuntu 24.04 CI, switch/rollback, and host-neutral factory commands must reproduce the same sealed composition. (TN-16)
+- NFR-19 Contract compatibility: all node boundaries use the annotated CT-13/14/18/19/20/21/24/25/28/30/31 shapes, public formats remain versioned/readable, and contradictions are resolved explicitly rather than by story-author invention. (ADR-0019; L15)
+- NFR-20 Configuration safety: every one of the 71 settings is schema-validated, unit-kinded, owner-scoped, value-status-bearing, blank-effect-tagged, and UI-editable by L38; runtime state never leaks into config. (TN-18; registry)
+- NFR-21 Verification depth: ruff, pyright strict, pytest, per-package coverage, isolated contract tests, scanners, requirements-first `qa/`, the Linux lane, mutation testing, failure-register completeness, golden scenarios, venue conformance, replay, and fault-injected soak proofs all gate acceptance. (TN-23; test strategy)
+- NFR-22 Self-setup usability: after GAP-0058's architecture ruling, the single-machine placement installs dependencies and provisions stores without technical knowledge, with the future desktop UI merely fronting the same backend installer rather than becoming a second setup path. (DEC-0262)
 
 ### Additional Requirements
 
@@ -221,6 +301,62 @@ implementation surface; deduplicated. Each is binding on story authoring.
 - AR-68: V1 sandbox enforcement is static AST/import scanning + capability starvation + host process isolation only; hardened OS-level confinement is deferred and V1 must not wait on it. (QL-8)
 - AR-69: Governed seats execute the canonical assignment only; non-default assignments exist solely as B-3 run-spec overrides in experimentation runs; promoting a tuned assignment mints a new Bot version. (QL-3)
 
+**Trading-node-specific**
+
+- AR-70: Code-carrying node work is specified against the read-only tree at `origin/integration@ef9bb25`; the integration branch is strictly off limits. After the operator's squash merge, every unstarted epic mechanically re-points its base to `main` without changing scope or acceptance. (DEC-0186; operator 2026-08-30)
+- AR-71: The latest requirements evidence is local `main@8abe6c2`; factory intake must contain DEC-0261/0262 and the `liveness_heartbeat_*` names before implementation begins. The separate code base remains the read-only `origin/integration@ef9bb25` inventory until the operator's squash-merge click. (DEC-0261/0262; operator 2026-08-30)
+- AR-72: `qmn/` follows the structural seed `host/`, `loop/`, `venue/`, `orderpath/`, `protection/`, `ledger/`, `paper/`, `reconcile/`, `seats/`, `promotion/`, `mis/`, `data/`, `time/`, `secrets/`, `config/`, `observability/`, `doors/`, `replay/`, `bench/`, and `deploy/`; no folder implies a second authority or alternate loop. (FEAT-0031)
+- AR-73: `qmn` sits at the top of the graph and nothing imports it; it consumes QMF, QMB, QML, and registered extensions, while only `qmn.venue` imports `qmf-venue`. The L30 boundary is a tier-1 static gate. (dependencies.yaml; DEC-0241)
+- AR-74: The cTrader increment uses direct asyncio TLS on port 5035 with the pinned protobuf/proto surface and no Spotware SDK or Twisted; dependency versions, hashes, licenses, `just`, observability images, and the container runtime are registered and pinned at the implementation gate. (TN-11/16; security model)
+- AR-75: `VenueClientPort` is implemented and contract-tested first against the FEAT-0023 double; the token-gated live test is a later acceptance step, not a blocker for port, replay, host, protection, data, or QA work. (TN-11/23)
+- AR-76: The parent-location fallback is declarative, not an epic decision: land the transport in `qmf-venue.ConnectionManager` under the named `qmf.venue.connection` async exemption; only a parent refusal moves it to `qmn.venue.ctrader`. (DEC-0196, DEC-0243)
+- AR-77: VPS deploy paths are `/opt/qmx` immutable commit trees, `/var/lib/qmx/{rooms,evidence,hub-inbox,hub-published,archive,state,staging}`, and `/run/qmn/powers.sock`; node and observability services use distinct accounts, storage, quotas, credentials, and authority. (TN-3/15/16)
+- AR-78: The VPS variant owns five node units (`qmn.service` plus news, backup, sample-restore, and full-restore timers); `qmx-observability.service` is a separate sixth checked-in unit and never counted as a node unit. (TN-16)
+- AR-79: The operations toolkit covers install, switch, rollback, secrets provisioning, data bootstrap, replay, config init/validate/explain, notify test, hub publish, and host-loss restore; recipes never import the composition root or expose trading controls. (TN-1/16/17)
+- AR-80: All 71 `value_status_required` rows—48 COMP-QMN, 20 COMP-QMF-RISK, 3 COMP-QMF-DATA—are compiled and tested. Their blank effects total 12 boot-blocking, 41 live-blocking, and 60 soak-blocking rows; provisional evidence behaves like blank for live and must be at least provisional where the soak checklist exercises it. (registry; DEC-0254/0256)
+- AR-81: `evidence_channel_budget` records its implementation-time unit choice (request rate or response size); `pool_constants`, `health_constants`, operational-log keys, liveness-heartbeat keys, and `qmn_` metric families may be implementation-minted/renamed only with registry/traceability updates, never silently. (registry implementation notes)
+- AR-82: The closed `FAILURES.md.notification tier` column is the sole alert-membership source. CI generates and compares the allow-list, and no registry variable or dashboard independently widens it. (TN-15/23; DEC-0257 narrowed by DEC-0261)
+- AR-83: The observability compose file, pinned images, seeded dashboards, loopback ports, read-only journal namespace, separate secret holder, and resource quota live under `qmn/deploy/observability/`; the node passes when this entire stack is stopped. (TN-15; DEC-0212)
+- AR-84: The benchmark harness is test-status work, never runs while slices are driven, records node lifecycle state, measures 10/40/100/200 seats, and establishes the VPS minimum and variance-derived regression thresholds during the soak's first hours. (TN-23; performance budgets; DEC-0261)
+- AR-85: The node's `qa/` lane names and discharges QMX-F045, F046, F062, F063, F064, F067, F068, F069, F102, D008, D010, E15-F01, E15-F02, E15-F03, E7-R28, E9-F04, E12-F01, E12-F04, and E12-F05 as separate stories; foundation debt remains out of scope. (TN-23)
+- AR-86: Nightly mutmut extends on the code-carrying branch to door-path wiring, command mint, equity derivation, drift decomposition, sizing, and virtual-ledger folds; a zero-classified-mutant run fails closed and alerts. (TN-16/23)
+- AR-87: Human/coordination gates remain local: VPS procurement and KSA matrix values gate soak; bucket, escrow, notification, and watcher accounts gate their own acceptance; Spotware approval/token, live KYC, and the written swap-free fee schedule gate live connection/go-live; none blocks unrelated code stories. (DEC-0260/0261)
+- AR-88: The single-machine epic may describe only the architecture increment before GAP-0058 is ruled; it may not choose a Windows/macOS supervisor, secret backend, powers transport, observability placement, container topology, or installer design inside an implementation story. (DEC-0262; GAP-0058)
+- AR-89: The MIS epic begins from the ratified catalog—six rule-based labelers, fitted `liquidity_stress_v1`, and trained `regime_classifier_v1`; Kronos/HMM/BOCPD/MS-GARCH remain unauthoritative candidates—and its design story owns the unruled model family, features, labels, windows, and evaluation. (DEC-0262)
+- AR-90: `docs/lenses/data/data-layer.md` was a valid local validation input but is ignored/absent from refs; FTR-08 records the completed equivalence proof to tracked TN/CT/DEC sources and story acceptance, so factory worktrees never require the local path. (prerequisite/final validation 2026-08-30)
+- AR-91: Contract conflicts found at prerequisite extraction—CT-20's `observation` mapping versus CT-13's seven-type vocabulary, CT-19's compound all-rejected outcome versus TN-6, and stale VPS-only wording under DEC-0262—are factory-time ruling items, never story-author choices. (validator input 2026-08-30)
+
+**Factory-time ruling items (explicit; no story may decide them silently)**
+
+- FTR-01: Reconcile CT-20's position/balance read-back mapping to an `observation` journal type with CT-13's closed seven-type vocabulary before the affected contract/recording story is accepted; prefer a contract annotation/migration over an eighth private node type.
+- FTR-02: Reconcile CT-19's compound-outcome statement (“any rejected child” → partially executed) with TN-6's “all children rejected” → rejected-by-venue rule before compound commands pass conformance.
+- FTR-03: Preserve DEC-0262's placement re-scope (“machine the roster names”) while leaving the concrete single-machine enforcement to Story 29.1; stale VPS-only refusal wording is not implementation authority.
+- FTR-04: The qmf-venue parent owns acceptance/refusal of the named async exemption. Epic 24 carries both locations and moves only on a formal parent disposition.
+- FTR-05: At implementation, record the final names/units for the pool/health constant families, evidence-channel budget, operational-log/liveness settings, and `qmn_` metric families with registry and traceability updates.
+- FTR-06: Pin and register `just`, the observability container runtime, images, protobuf/proto artifacts, and every newly introduced dependency/version/hash/licence at the implementation gate.
+- FTR-07: KSA matrix values remain a pre-soak operator ratification; numeric hot-path/latency gates remain unset until measured baselines exist. Neither may be filled by an epic worker.
+- FTR-08 — RESOLVED FOR FACTORY INTAKE: the ignored local `docs/lenses/data/data-layer.md` was inspected during planning, but `/run-epics` does not depend on that unavailable path. Its node-specific requirements are equivalently carried by tracked canonical sources and the acceptance stories below; the file may later be tracked as documentation without changing scope.
+
+**FTR-08 requirement-equivalence proof:**
+
+- source observations, idempotent revision intake, the single accumulator/first-writer law, record-before-interpret, and no sibling failover → tracked TN-5/TN-13 plus CT-10/15/20 → Stories 24.3–24.4 and 27.2;
+- role/world rooms, writer-scoped journals, read-time projections, retention, and verify-before-purge → tracked CT-11/13/14/25 plus TN-13/TN-25 → Stories 26.4 and 27.4–27.9;
+- evidence tier, `sealed-archive`, passive hub, and the one-way replay import → tracked TN-3/TN-13/TN-21 plus DEC-0229/DEC-0253 → Stories 27.4 and 27.7;
+- nightly encrypted backup and the three restore drills → tracked CT-14 plus TN-13 → Stories 27.5, 27.6, and 27.9;
+- calendar separation, writable-tree ownership, supervisor/protection-intent storage, and application-owned timers → tracked TN-3/TN-14/TN-16/TN-25 → Stories 24.6, 25.9, 25.12, 26.4, and 27.2–27.9.
+
+### GAP-0050..GAP-0058 dispositions
+
+- GAP-0050 stays deferred for the operator-owned KSA matrix values. Epic 26 builds the ruled shape; Epic 28 cannot start its soak until those values are ratified.
+- GAP-0051 stays catalog-deferred until Epic 30 produces and records the missing classifier design, training, shadow, and re-certification evidence. Epic 30 is the operator-authorized closure lane; no recovered model family carries prior authority.
+- GAP-0052 stays deferred. V1 applies a settings change only through a new config version and safe-point restart; no hot-apply path is introduced.
+- GAP-0053 stays deferred. V1 has no agent/MCP node door and no agent-reachable power.
+- GAP-0054 stays deferred. Epic 26 states and tests the V1 compensating seat controls without claiming hardened OS confinement.
+- GAP-0055 stays deferred. The evidence tier remains in the V1 placement; a later second-VPS move is configuration/placement work, not a node redesign in this increment.
+- GAP-0056 stays deferred. Replay diffs decisions only and never simulates fills or mints a fidelity value.
+- GAP-0057 is answered by DEC-0261: no per-bot warm-up, probation, ramp, or paper lane exists on the node; next-day activation and protective Book/BMS demotion are the only carried rules.
+- GAP-0058 is OPEN and in scope only through Epic 29. Story 29.1 owns the one-shot architecture ruling; every implementation story in that epic waits for it, and no VPS story does.
+
 **Starter template note (Epic 1 Story 1).** There is no external starter
 template; the spine prescribes the exact greenfield scaffold (AR-01..AR-11):
 uv workspace, `packages/` + `extensions/`, seven roster packages in src/
@@ -246,6 +382,15 @@ own prescribed scaffolds inside their own epics.
 - SC-10: Warm-up runs in-loop before the trading interval with trading locked; the result label's evidence range is the trading interval only. (B-2)
 - SC-11: A sweep resolves exactly one registry as-of at batch admission, frozen for every trial; TPE-class search proceeds in deterministic generations (propose → run → barrier → condition). (B-15/8)
 - SC-12: Book/BMS admission is strictly three ordered layers: machine linters at registration → technical shakedown on demo/paper binding → single operator signature. (AD-32)
+- SC-13: The first node code story is the cTrader transport increment plus `VenueClientPort` and the FEAT-0023 conformance double; it must be provable without Spotware credentials, and its live-client test is the first story unblocked when the sandbox token arrives. (TN-11; operator sequencing)
+- SC-14: After the port contract/double exists, the VPS host/config/doors/observability lane and the remaining venue/accumulator/order-path lane may proceed concurrently on disjoint branches; neither waits on single-machine design or go-live credentials. (W1/W2)
+- SC-15: The protection/paper/reconciliation/virtual-ledger lane follows the executable order path and may overlap late host/data work through its pure rulebook and conformance fixtures. (W3)
+- SC-16: Live data, news, backup/restore, evidence tier/hub, secrets, and replay follow the recorder/port seams and may run in parallel where their writable trees and contracts are disjoint. (W4)
+- SC-17: The paper-milestone epic integrates all prior VPS lanes, deploys to the procured VPS, establishes benchmark/storage baselines in the first hours, runs the full unattended week, and is the sole live-milestone gate. (W5; TN-23)
+- SC-18: The single-machine epic is parallel-capable and never blocks a VPS epic, but it contains a hard internal gate: its one-shot `bmad-architecture` GAP-0058 story must land before any other story in that epic begins. (DEC-0262)
+- SC-19: MIS training/shadow rollout is numbered last but is PARALLEL-CAPABLE on its own branch from W3 onward; it touches no node code until an already-built shadow lane consumes a registered candidate. (W6; DEC-0261/0262)
+- SC-20: Human steps block only the story that consumes them: Spotware token → live conformance; VPS procurement → soak; KSA values → soak; bucket/escrow/notification/watcher accounts → their drills; KYC and fee schedule → go-live. (DEC-0260)
+- SC-21: No unstarted epic changes its implementation base until the operator's squash-merge click; after that click, base references re-point from read-only `ef9bb25` to `main` without touching `origin/integration`. (operator 2026-08-30)
 
 ### UX Design Requirements
 
@@ -305,6 +450,35 @@ deferred (ADR-0011), and QMB's chart output is data, never rendering
 - FR-048: Epic 12 — technical-never-performance conformance
 - FR-049: Epic 11 — CT-34 confluence artifacts
 - FR-050: Epic 12 — bot runtime protocol QMB hosts
+- FR-051: Epic 25 — one node product, modes paper/live, no operator CLI
+- FR-052: Epic 25 — compose/fingerprint/seal boot ceremony
+- FR-053: Epic 25 — supervised lifecycle, safe restart, stand-down-alive
+- FR-054: Epic 24 — unforked run_slice loop behind the accumulator
+- FR-055: Epic 24 — executable order path and UNKNOWN discipline
+- FR-056: Epic 26 — scoped monotone KSA protection authority
+- FR-057: Epic 26 — inherited protection set wired verbatim
+- FR-058: Epic 26 — Book-level paper and protective demotion only
+- FR-059: Epic 28 — full-system unattended paper milestone
+- FR-060: Epic 26 — four-verdict reconciliation and exact residuals
+- FR-061: Epic 24 — three-implementation VenueClientPort and transport placement fallback
+- FR-062: Epic 24 — verified cTrader capabilities and exact decode
+- FR-063: Epic 27 — reference-only secret custody and provisioning
+- FR-064: Epic 27 — live evidence, bootstrap, and free news-calendar intake
+- FR-065: Epic 27 — encrypted B2 backup and three restore drills
+- FR-066: Epic 25 — chrony-disciplined live time boundary
+- FR-067: Epic 25 — zero-authority observability and liveness heartbeat
+- FR-068: Epic 25 — reproducible Ubuntu/systemd VPS deployment
+- FR-069: Epic 25 — three UI-ready doors and principal enforcement
+- FR-070: Epic 25 — one value-status-bearing resolved config artifact
+- FR-071: Epic 25 — all 71 settings compiled and gated
+- FR-072: Epic 26 — hosted QML seats and the MIS shadow seam
+- FR-073: Epic 26 — separate promotion/activation with next-day effect
+- FR-074: Epic 27 — external-process decision-diff replay
+- FR-075: Epic 25 — roster-driven multi-account/multi-broker runtime
+- FR-076: Epic 28 — permanent battery, golden proofs, QA-debt discharge, measured baselines
+- FR-077: Epic 26 — position-safety closures and virtual-ledger accounting
+- FR-078: Epic 29 — architecture-gated single-machine self-setup placement
+- FR-079: Epic 30 — offline MIS training, shadow rollout, re-certification
 
 ## Epic List
 
@@ -426,6 +600,84 @@ Monte Carlo, the pre-build significance gate, and walk-forward — interfaces no
 Claim-class-labeled synthetic generation that never validates edge.
 **FRs covered:** FR-041
 **Notes:** After Epic 14.
+
+### Trading-node factory routing and wave rules
+
+Epics 1–23 are shipped history and retain their original lane labels. Epics
+24–30 route to the Grok epic-factory lane through `/run-epics`, with Grok
+4.5 as the workhorse and Grok 4.6 as orchestrator and reviewer. Code work is
+planned against the read-only inventory `origin/integration@ef9bb25`; the
+branch itself is strictly off limits. Once the operator squash-merges that
+code to `main`, unstarted epic briefs re-point mechanically to `main`.
+
+The dependency spine is `24 → {25, then 26/27} → 28`. Epic 29 is independent
+of the VPS chain but internally architecture-gated. Epic 30 is numbered last
+yet may run on its own disjoint branch from Wave N3 onward. Human-only steps
+gate only the acceptance that consumes them; they never serialize unrelated
+epics.
+
+**Factory touch ownership (branch-conflict rule):**
+
+| Epic | Exclusive writable surface while parallel | Must not edit in parallel |
+|---|---|---|
+| 24 | `qmn/venue/` (all three venue-adapter implementations), `qmn/loop/`, `qmn/orderpath/`, the standing protection-intent persistence/dispatch seam, the owner-approved `qmf-venue` transport location, venue conformance fixtures, and the qmf-venue README correction | node config/compiler, deployment units, protection origination/arbitration/effects, risk/ledger, replay orchestration, installer; Epic 26 calls but never edits the protection-intent seam |
+| 25 | `qmn` composition/config/doors/time/ops surfaces, the shared config compiler/schema, every VPS systemd/unit template, `just node-…` recipe wiring, and `qmn/deploy/observability/` | venue internals, protection/ledger, data/replay implementations, single-machine adapters, MIS training |
+| 26 | `qmn` protection origination/arbitration/effects, paper, reconciliation, virtual ledger, seats, rule/fitted labelers, and shadow-publication seam | Epic 24's standing protection-intent persistence/dispatch files, shared config compiler, and all deployment/unit templates |
+| 27 | `qmn/{secrets,data,backup,replay}` orchestration and executable timer targets; replay consumes Epic 24's venue adapter | all `qmn/venue` adapter files, shared config/compiler, and every systemd/unit template; Epic 25 owns stable launcher/rendering hooks |
+| 28 | milestone manifests, deployment-instance config, fault/scenario orchestration, and acceptance evidence | component internals except a separately routed defect fix |
+| 29 | architecture-ratified single-machine placement adapters and backend installer surfaces | VPS units/recipes and any design choice not landed by Story 29.1 |
+| 30 | offline MIS design/data/training/evaluation/registry artifacts; later shadow manifests through the stable seam | node decision code, venue/protection authority, or the Epic 26 shadow implementation |
+
+A change outside an epic's owned surface is re-routed to the owning branch or
+sequenced after it; workers do not resolve overlap by editing the same file in
+parallel.
+
+**Trading-node wave plan:**
+
+| Wave | Factory lanes | Exit / gate |
+|---|---|---|
+| N0 — broker seed | Story 24.1 first: direct cTrader transport + `VenueClientPort` + FEAT-0023 double + parent-location disposition | Credential-free shared conformance contract; Spotware token unlocks only tagged live acceptance |
+| N1 — host + broker tail | Epic 25 on its owned `qmn`/deploy surfaces in parallel with Stories 24.2–24.10 | Deployable, observable VPS node against the double plus complete broker/order-path conformance |
+| N2 — protected accounting | Epic 26 ledger first, then protection, paper/demotion, reconciliation, promotion/activation | Exact virtual ledger and protection set runnable without an unruled KSA value |
+| N3 — seats/data/parallel research | Epic 26 seats + rule/fitted labelers + shadow seam; Stories 27.1–27.6 and 27.9; Epic 29 after its internal architecture gate; offline Stories 30.1–30.6 on a disjoint branch | Stable signal-snapshot/decision/shadow seams; backup/data mechanics ready; no trained candidate has authority |
+| N4 — replay completion | Stories 27.7–27.8 after Epic 26's decision seams; remaining credentialed data/backup acceptances when their accounts exist | Recoverable evidence/data/secrets/replay lane complete |
+| N5 — paper milestone | Epic 28 deploys the whole system, establishes first-hours baselines, and runs the uninterrupted first-deployment week | TN-23 machinery verdict; the sole live-milestone gate, never a profit gate |
+| N6 — MIS logical last | Stories 30.7–30.8 shadow-roll and re-certify over one full affected-Book cycle | Candidate remains shadow-only/retired or enters a separate human-ratified governed version |
+
+### Epic 24: A proven broker boundary and executable order path (Wave N0/N1, PARALLEL-SEED)
+The operator can rely on one venue-neutral, conformance-proven path that senses cTrader, records before interpreting, drives the unforked QMB slice loop, preserves protective action, and exposes no command retry ambiguity.
+**FRs covered:** FR-054, FR-055, FR-061, FR-062
+**Notes:** Story 24.1 is the first node code story and lands the direct cTrader transport, `VenueClientPort`, FEAT-0023 double, and parent-location disposition together without credentials. Remaining capability, decode, loop, and order-path work may overlap Epic 25 once that contract lands. The sandbox token unlocks only separately tagged live acceptance; the epic never adjudicates the parent fallback silently.
+
+### Epic 25: A deployable, observable VPS node ready for desktop control (Wave N1, PARALLEL after 24.1)
+The operator can install, boot, inspect, configure, stand down, resurrect, switch, and roll back one secure Ubuntu node through UI-ready doors and DevOps recipes, with time, config, health, alerts, and authority boundaries proven before money is possible.
+**FRs covered:** FR-051, FR-052, FR-053, FR-066, FR-067, FR-068, FR-069, FR-070, FR-071, FR-075
+**Notes:** Runs alongside Epic 24's tail on disjoint `qmn` areas. It uses the conformance double until the live transport is ready. It delivers the VPS variant only; nothing here waits on GAP-0058. No CLI story exists.
+
+### Epic 26: Capital-protected paper/live operation with exact accounting (Wave N2/N3)
+The operator can host approved bots under the ratified Book/BMS/KSA protection set, route protective demotions to paper, reconcile uncertainty and drift, account per binding in an exact virtual ledger, and promote/activate only through human powers whose effect begins at the next day boundary.
+**FRs covered:** FR-056, FR-057, FR-058, FR-060, FR-072, FR-073, FR-077
+**Notes:** Builds on Epic 24's executable path and Epic 25's config/door primitives. Pure folds and conformance fixtures may start before live connectivity. This epic builds the rule-based labelers, fitted `liquidity_stress_v1`, and the shadow-lane seam; it does not train `regime_classifier_v1`.
+
+### Epic 27: Recoverable evidence, secrets, data intake, and replay (Wave N3/N4, PARALLEL-CAPABLE)
+The operator can provision credentials without leakage, capture and retain live evidence, ingest the sole free news source, recover the node from encrypted off-host copies, and replay a recorded day as a credential-free decision diff.
+**FRs covered:** FR-063, FR-064, FR-065, FR-074
+**Notes:** Secrets, data, and recovery may split across branches after their Epic 24/25 seams exist. Stories 27.7–27.8 wait for Epic 26's signal-snapshot and decision seams; that tail is not a sibling dependency hidden inside the early parallel lane. Account creation and escrow steps gate only their own end-to-end drills. No paid news fallback or replay fill simulation may appear.
+
+### Epic 28: The unattended paper milestone and live-readiness verdict (Wave N5, INTEGRATION GATE)
+The operator can deploy the whole VPS system to a demo account, leave it unattended for one full first-deployment week, inspect a journaled TN-23 machinery verdict, and know whether the separate live binding is ready without treating profit as evidence.
+**FRs covered:** FR-059, FR-076
+**Notes:** Integrates Epics 24–27. VPS procurement and pre-soak KSA values gate the week; Spotware approval/KYC gate live connection or go-live, not the demo week. The first hours establish VPS and storage baselines. Every acceptance item is journaled and fault-injected where specified.
+
+### Epic 29: Out-of-the-box single-machine placement (Parallel track, ARCHITECTURE-GATED)
+A non-technical operator can install the same QMX product with the node co-located beside the agentic system on one machine, using one backend self-setup path that a later desktop install page can front.
+**FRs covered:** FR-078
+**Notes:** Story 29.1 is a one-shot `bmad-architecture` increment that answers GAP-0058. No other story in Epic 29 may start until that ruling lands. Stories 29.2–29.4 may then build the architecture-ratified placement adapters; installer integration and clean-machine acceptance consume the shared node core when it is available. No VPS epic depends on Epic 29, and no story pre-designs supervision, secrets, powers transport, observability placement, or installer choices.
+
+### Epic 30: MIS training and shadow re-certification (Wave N6 logical-last; PARALLEL-CAPABLE from N3)
+The operator can design, train on his own machine, register, shadow-roll, compare, and re-certify `regime_classifier_v1` without granting an unratified model any governed or money-path authority.
+**FRs covered:** FR-079
+**Notes:** Numbered last by ruling. Offline design, data, training, evaluation, and registration run on a disjoint branch from Wave N3; only shadow rollout and re-certification wait for Epic 26's stable shadow seam. Design precedes data fetch/clean/label, then the hours-long operator-run training script, versioned registration, shadow rollout, and one full affected-Book re-certification cycle. Kronos/HMM/BOCPD/MS-GARCH remain candidates only.
 
 ## Epic 1: qmf-core — exact domain foundation
 
@@ -4691,3 +4943,1867 @@ failures are counted and reported as typed refusals, never silently dropped
 beyond an explicit filtered-count line (B-5; R7, R8).
 
 **Traceability:** FR-041; B-5, B-7, B-10; NFR-03; AR-50; spec R3, R5, R7, R8.
+
+## Epic 24: A proven broker boundary and executable order path
+
+The operator can rely on one venue-neutral, conformance-proven path that senses cTrader, records before interpreting, drives the unforked QMB slice loop, preserves protective action, and exposes no command-retry ambiguity. This epic is the first node code lane and uses only the read-only inventory at `origin/integration@ef9bb25`; it never modifies the integration branch.
+
+### Story 24.1: Build the cTrader transport, VenueClientPort, and conformance double first
+
+As a node developer,
+I want the direct cTrader transport, node-owned venue port, and deterministic conformance double to land as the first code story,
+So that every downstream lane builds against one executable CT-18/19/20 boundary before any live credential is needed.
+
+**Traceability:** FR-053, FR-061, FR-062.
+
+**Acceptance Criteria:**
+
+**Given** the FEAT-0023 contracts and conformance-double surface at `ef9bb25`
+**When** the first node code story lands
+**Then** a minimal top-level `qmn` distribution exposes `qmn.venue.VenueClientPort` over CT-19 commands, CT-20 events/read-backs, CT-18 capability verification, session lifecycle, and typed refusals
+**And** no `qmn` module outside `qmn.venue` imports `qmf-venue`. (FR-061; AR-73; DEC-0228)
+
+**Given** `qmf.venue.connection.ConnectionManager` and the existing proto surface
+**When** the cTrader transport increment lands in the same story
+**Then** it uses direct asyncio TLS to the cTrader Open API on port 5035, pinned proto tag 91, and registered `protobuf==7.36.0`
+**And** it imports neither Spotware SDK nor Twisted code and never creates a second event loop or connection manager. (TN-11; AR-74)
+
+**Given** the parent async-conformance rule
+**When** the implementation location is resolved
+**Then** it lands in `qmf-venue.ConnectionManager` with the exemption named exactly `qmf.venue.connection`
+**And** if and only if the parent formally refuses that exemption, the unchanged transport contract lands in `qmn.venue.ctrader`; the story carries both outcomes and never chooses silently. (AR-76; FTR-04; DEC-0243)
+
+**Given** the port contract and FEAT-0023 double selected by `(world, VenueId)`
+**When** the owner-defined conformance suite runs
+**Then** it deterministically exercises success, rejection, timeout, transport error, disconnect, partial, superseded-by-fill, netting, and hedging without network access or credentials, and the same suite is reusable unchanged by live and replay implementations
+**And** compound-command acceptance remains blocked until FTR-02's CT-19/TN-6 all-rejected contract annotation lands. (TN-11/23; FTR-02)
+
+**Given** Story 24.1 is the parallel seed
+**When** Tier 1 and the isolated Tier-2 contract suite run
+**Then** they pass from a clean install on the code-carrying branch and emit no external call
+**And** Spotware approval, token, KYC, VPS, bucket, and UI are not prerequisites. (SC-13; AR-75)
+
+**Given** the Spotware sandbox token later becomes available
+**When** the separately tagged live transport smoke/conformance acceptance runs
+**Then** it proves the same handshake/session/transport contract against cTrader without widening the credential-free story gate
+**And** this is the first credentialed acceptance unblocked by Applications → Sandbox → Get token. (SC-13; AR-87)
+
+### Story 24.2: [D008] Verify every live venue fact before use
+
+As a QMX operator,
+I want cTrader capabilities and broker-specific facts verified at connection time,
+So that no order or evidence decode relies on a guessed timestamp, exponent, price basis, or amendment behavior.
+
+**Acceptance Criteria:**
+
+**Given** a newly established demo or live session
+**When** the verification suite runs
+**Then** it verifies timestamp unit, venue daily boundary, BID/ASK trendbar basis, pip formula, account money exponent, netting-versus-hedging mode, amend atomicity, pacing scope, supported protective-stop forms, and all other CT-18 required fields
+**And** static declarations remain distinct from the measured per-account venue-observation profile. (D008; FR-062; CT-18)
+
+**Given** Spotware approval or a sandbox token is not yet available
+**When** this story's implementation acceptance runs
+**Then** the same verifier passes against the FEAT-0023 conformance double, and the credentialed session check is a separately tagged live acceptance that becomes runnable when the token arrives
+**And** the missing token blocks neither this story's code lane nor any unrelated epic. (SC-13; AR-87)
+
+**Given** any required field is absent, contradictory, stale, or unverified
+**When** a binding, command, or evidence-bearing decode is attempted
+**Then** verify-or-refuse returns the appropriate typed refusal and journals `data quality`
+**And** no command sequencer opens and market data remains recordable where safe. (TN-11; NFR-12)
+
+**Given** the broker fact changes later
+**When** re-verification detects drift
+**Then** the prior observation profile is retained as evidence, a new version is minted, and affected bindings refuse until revalidated
+**And** no measured fact is silently changed in place. (CT-18; NFR-19)
+
+### Story 24.3: Decode, record, and expose the live cTrader client
+
+As a node runtime consumer,
+I want a live VenueClientPort implementation that converts and records the broker stream exactly,
+So that the node can sense safely before it is ever allowed to trade.
+
+**Acceptance Criteria:**
+
+**Given** FTR-01's CT-20 `observation` wording has not yet been reconciled with CT-13's closed seven event types
+**When** position or balance read-back mapping is evaluated
+**Then** this story remains unaccepted for those observation kinds until the tracked contract annotation maps them onto the existing vocabulary
+**And** no eighth node-private journal type is introduced. (FTR-01; CT-13/20)
+
+**Given** verified CT-18 capabilities and an injected SecretStore/Clock/sink set
+**When** the live client receives spots, trendbars-in-spots, depth, fills, lifecycle events, positions, or balance read-backs
+**Then** it persists the verbatim wire evidence and journal mapping before interpretation, converts money/volume only through declared exact-integer scale boundaries, and retains receive-wall time separately from venue event time
+**And** a float crossing without a declared rounding rule is refused. (FR-062; CT-20; NFR-15)
+
+**Given** a venue error code absent from the pinned map
+**When** it is decoded
+**Then** the client emits an alarmed transient/non-retryable/UNKNOWN posture with the raw code retained as evidence
+**And** no command is retried automatically. (TN-11; CT-19)
+
+**Given** no Spotware token is present
+**When** Tier 1 and double-backed Tier 2 run
+**Then** this story remains green without live network use
+**And** the separately tagged live-client conformance acceptance becomes runnable—not required for unrelated stories—the moment Applications → Sandbox → Get token is complete. (SC-13; AR-87)
+
+### Story 24.4: Drive the unforked slice loop behind the recording accumulator
+
+As a QMX operator,
+I want live observations to drive the same deterministic loop proven by QMB,
+So that live and replay behavior cannot drift through a second implementation.
+
+**Acceptance Criteria:**
+
+**Given** VenueClientPort observations for one `(VenueId, account)` stream
+**When** they reach `qmn.loop`
+**Then** one push-to-pull accumulator is their single first writer, recording through the governed intake and journaling under the venue WriterId before making them foldable
+**And** no sibling feed or module writes an inbound observation directly. (FR-054; TN-5)
+
+**Given** recorded observations with receive-wall instants
+**When** a frontier closes
+**Then** the node calls QMB `run_slice` unforked through its six pinned sub-phases, one loop instance per command stream, and commits the durable interpretation cursor only after the slice completes
+**And** forming bars are never visible or actionable. (DEC-0190; QMB B-2)
+
+**Given** accumulator pressure or a slice-latency breach
+**When** capacity is exceeded
+**Then** execution/system observations are never dropped, market data coalescing emits explicit data-quality evidence, and the affected cycle receives an entry-side `no-new-entry`
+**And** every exit or protection act remains enactable. (NFR-12; L39)
+
+### Story 24.5: Wire command identity, protection priority, and submission timing
+
+As a QMX operator,
+I want every authorized intent to become at most one durable, attributable venue command,
+So that reconnects, queueing, and competing actions cannot duplicate money-path effects.
+
+**Acceptance Criteria:**
+
+**Given** a Book-authorized intent after the protection gate
+**When** the node mints a command
+**Then** it allocates a lifetime-monotone command ordinal distinct from the CT-13 journal sequence, recovers the ordinal high-water before opening the sequencer, and persists the command-fingerprint-to-venue-id binding before wire handoff
+**And** ordinal reuse or unpersistable identity blocks submission. (FR-055; DEC-0224)
+
+**Given** a `place_order`
+**When** capability verification cannot prove a venue-resident protective stop in the required order form
+**Then** the entry is refused before submission
+**And** no unprotected entry reaches the broker. (TN-6; CT-18/19)
+
+**Given** queued entry work competes with cancel, close, or risk-non-increasing protection
+**When** the pacer dispatches
+**Then** protective reserve capacity is unavailable to entry work, submission deadline begins only at wire handoff, and a local queue-bound breach is a door refusal rather than UNKNOWN
+**And** no command is retried after handoff. (TN-6/22)
+
+**Given** a compound command can produce all-rejected child outcomes
+**When** order-path conformance reaches that case
+**Then** acceptance waits for FTR-02's tracked CT-19/TN-6 annotation and implements that single ruled outcome
+**And** no worker chooses between `rejected-by-venue` and `partially-executed` from contradictory prose. (FTR-02)
+
+### Story 24.6: [QMX-F062] Enforce UNKNOWN at the exact command-stream boundary
+
+As a QMX operator,
+I want an uncertain command outcome to block exactly its `(VenueId, account)` stream,
+So that the node neither guesses nor unnecessarily disables independent demo/live streams.
+
+**Traceability:** FR-053, FR-055, FR-062.
+
+**Acceptance Criteria:**
+
+**Given** timeout, transport error, disconnect mid-command, or another ratified UNKNOWN trigger
+**When** the command outcome becomes uncertain
+**Then** the entire affected command stream blocks—including new protection dispatch—while sensing and recording continue and every other command stream remains independent
+**And** the state is UNKNOWN, never translated into a rejection. (QMX-F062; CT-19/20; TN-24c)
+
+**Given** a risk-non-increasing act arrives while that stream is blocked
+**When** it cannot be dispatched
+**Then** it is journaled as a persistent standing protection intent and re-decided when the block clears, never marked refused, retried, or dropped
+**And** failure of the normal journal uses the reserved protection-intent extent or becomes honestly UNDELIVERABLE and alarmed. (TN-6/7)
+
+**Given** a reconciled read-back inside the configured lookback is unambiguous
+**When** UNKNOWN resolution runs
+**Then** the node may resolve automatically; otherwise only an operator-principal attestation over the served read-back detail may resolve it
+**And** `drift`, reconciliation `unknown`, or `out-of-lookback` never auto-resolves the command. (DEC-0195, DEC-0258)
+
+### Story 24.7: [QMX-F063] Prove amendment atomicity and preserve every tightening act
+
+As a QMX operator,
+I want protective amendments bounded by measured venue semantics,
+So that a stop-tightening request cannot be lost, weakened, duplicated, or emulated unsafely.
+
+**Traceability:** FR-055, FR-062.
+
+**Acceptance Criteria:**
+
+**Given** the connection-time verification profile
+**When** amend atomicity has not been measured for the account/order type
+**Then** dynamic protection is limited to the ratified single-sided breakeven ratchet form or refuses before origination as required by the Book policy
+**And** the command path never invents an amend sequence. (QMX-F063; TN-8/11)
+
+**Given** a risk-non-increasing `amend_protection` has been originated
+**When** it enters the order path
+**Then** no node component suppresses it through `amend_min_improvement`, because that value is origination policy only, and the act is journaled before dispatch
+**And** UNKNOWN holds it as a standing intent for re-decision. (AD-34; DEC-0150)
+
+**Given** partial close is requested or an implementation proposes close-then-replace
+**When** the V1 command vocabulary is enforced
+**Then** `close_partial` is refused as unsupported and fractional close is never emulated
+**And** the five CT-19 command kinds remain closed. (CT-19; TN-6)
+
+### Story 24.8: Reconnect, gap-recover, and prove all three port implementations
+
+As a QMX operator,
+I want reconnect and replay behavior to satisfy the same venue contract as the live client,
+So that recovery never resubmits commands and a later replay cannot smuggle live authority.
+
+**Acceptance Criteria:**
+
+**Given** a lost session
+**When** ConnectionManager reconnects
+**Then** it refreshes/authenticates by credential reference, re-verifies required capabilities, gap-replays and persists fills/lifecycle events before declaring healthy, reconciles outstanding commands, and never resubmits a command
+**And** the receive frontier and interpretation cursor remain distinct. (TN-10/11)
+
+**Given** the replay implementation
+**When** injected recorded CT-20/CT-10 observations are read
+**Then** it implements the same VenueClientPort without resolving a credential, opening a socket, or accepting a submit side effect
+**And** any command attempt returns a typed policy refusal. (FR-061; TN-21)
+
+**Given** the double, replay adapter, and live client
+**When** the shared suite runs
+**Then** all three pass the same port contract; the double and replay run on every relevant CI lane, while the credentialed live suite is an explicit token-gated acceptance
+**And** a capability or refusal-shape divergence fails the suite. (TN-23; SC-13)
+
+### Story 24.9: Close the remaining TN-24 venue-edge dispositions
+
+As a QMX operator,
+I want duplicate fills, requotes, and terminal-subject races to have exact recorded outcomes,
+So that an edge at the broker boundary cannot overwrite evidence, invent vocabulary, or create a false UNKNOWN.
+
+**Acceptance Criteria:**
+
+**Given** two fills with the same venue-native deal/execution identity within one account
+**When** their content is equal versus different
+**Then** an equal duplicate is idempotently ignored after the first durable copy, while different content raises a data-quality alarm and preserves both pieces of evidence without overwriting the first
+**And** neither case mints a second virtual-ledger effect. (FR-077; TN-24b)
+
+**Given** a cTrader requote or a deep-history source inventory
+**When** the node maps it
+**Then** requote is an ordinary mapped venue rejection with no new outcome type, and Dukascopy remains the node source while TrueFX and HistData are recorded nonblocking companions only
+**And** this story adds no companion-source implementation or fallback. (FR-062/064/077; TN-24i)
+
+**Given** a node close races a venue liquidation or venue-initiated terminal event
+**When** the subject terminal observation wins
+**Then** the command resolves `rejected-by-venue` with qualifier `superseded-by-terminal-subject`, named resolving evidence, CT-29 reason `venue_liquidation | venue_initiated_close`, and `closing_authority = venue`, never UNKNOWN
+**And** if the subject is absent or terminal before handoff, it resolves without submission and never as a naked close. (FR-055/077; TN-24j; CT-19/20/29)
+
+### Story 24.10: Correct the stale qmf-venue README
+
+As a node developer,
+I want the parent venue README to describe the ratified boundary actually used by the node,
+So that a factory worker does not revive the stale adapter or ownership model.
+
+**Acceptance Criteria:**
+
+**Given** `packages/qmf-venue/README.md`
+**When** the documentation correction lands
+**Then** it states the current CT-18..21 surface, ConnectionManager authority, named `qmf.venue.connection` async exemption, and `qmn.venue` composition boundary
+**And** it carries the parent-refusal fallback to `qmn.venue.ctrader` without choosing that disposition. (FR-061; DEC-0243/0245)
+
+**Given** the correction-only story
+**When** validation runs
+**Then** links and examples agree with the implemented contracts and no executable behavior or public API changes
+**And** the story remains independently mergeable. (NFR-08)
+
+## Epic 25: A deployable, observable VPS node ready for desktop control
+
+The operator can install, boot, inspect, configure, stand down, resurrect, switch, and roll back one secure Ubuntu node through UI-ready doors and DevOps recipes, with time, config, health, alerts, and authority boundaries proven before money is possible. This epic uses Epic 24's port/double and never waits on the single-machine placement.
+
+### Story 25.1: Scaffold one qmn product with no operator command line
+
+As a QMX operator,
+I want one installable `qmn` application with an enforced no-CLI boundary,
+So that deployment tooling and future desktop control cannot become an accidental second trading surface.
+
+**Acceptance Criteria:**
+
+**Given** the workspace at the read-only `ef9bb25` inventory
+**When** the node application scaffold is completed
+**Then** `qmn` is a top-level CPython 3.14 uv-workspace application beside `qmb/` and `qml/`, contains the FEAT-0031 structural seed, imports QMF/QMB/QML as declared, and is never a `qmf.*` roster package
+**And** nothing in the workspace imports `qmn`. (FR-051; AR-72/73)
+
+**Given** package metadata and the root task surface
+**When** Tier 1 scans them
+**Then** `qmn` exposes no console-script entry point, operator command parser, typed operator door, or publishable index target
+**And** `qmb` remains the platform's single command-line surface. (DEC-0211)
+
+**Given** later DevOps recipes
+**When** they are added
+**Then** the scaffold exposes a `deploy/` operations-toolkit boundary that cannot import the composition root or Python API
+**And** its contract explicitly excludes place, cancel, amend, flatten, promote, activate, settings, `resurrect`, attestation, and countersign. (AR-79)
+
+### Story 25.2: Compile one resolved config with all 71 value-status rows
+
+As a QMX operator,
+I want one explainable, fingerprinted node configuration with explicit missing-value effects,
+So that the node can never invent an operational value or hide whether it is safe to boot, soak, or bind live.
+
+**Acceptance Criteria:**
+
+**Given** the registry schema and roster/BMS/Book inputs
+**When** config compilation runs
+**Then** it applies exactly roster → BMS fragment → Book fragment → node defaults, with no invocation/runtime override layer, validates a versioned JSON-Schema-class artifact, and records one resolved value plus `blank | provisional-evidence | ratified` for every applicable row
+**And** runtime folds do not enter the artifact. (FR-070; TN-18)
+
+**Given** the 71 `value_status_required` registry rows
+**When** compiler coverage is checked
+**Then** all 48 COMP-QMN, 20 COMP-QMF-RISK, and 3 COMP-QMF-DATA rows are unit-kinded, owner-scoped, `configurable: true`, and blank-effect tested—12 boot-blocking, 41 live-blocking, 60 soak-blocking
+**And** the `liveness_heartbeat_*` names from DEC-0261 replace the superseded pre-veto names. (FR-071; AR-80)
+
+**Given** an operator countersign request
+**When** exactly one provisional row is cited with its evidence fp1 through the powers contract
+**Then** a new config version records the value as ratified and journals the change; missing/mismatched evidence or a multi-row call refuses
+**And** a provisional live-gating value behaves like blank until that countersign. (DEC-0231, DEC-0254)
+
+**Given** `config init`, `validate`, or `explain`
+**When** the operations toolkit invokes it without a running composition root
+**Then** it renders missing rows, source layer, owner, admission impact, blank effects, and value status deterministically
+**And** no secret value is ever printed or fingerprinted. (TN-18; CT-21)
+
+### Story 25.3: [E12-F01] Mint composition-root registry records once
+
+As a QMX evidence auditor,
+I want the composition root to mint every identity-bearing runtime record through the canonical registry boundary,
+So that node occurrence identity cannot diverge across host, doors, timers, or accounts.
+
+**Traceability:** FR-052, FR-070.
+
+**Acceptance Criteria:**
+
+**Given** a valid resolved config and registered dependencies
+**When** Compose constructs Books, BMS instances, bindings, seats, calendar identities, capability profiles, and producer definitions
+**Then** fingerprintable content is minted through the existing qmf-registry record seam exactly once per fingerprint and never restamped inside a child module
+**And** each occurrence cites the canonical definition record and `composition_fp`. (E12-F01; CT-06/09)
+
+**Given** duplicate content is composed in two processes or timers
+**When** registration is attempted
+**Then** fingerprint-keyed dedup returns the existing record and creates only the permitted occurrence evidence
+**And** no door-local registry cache or alternate identity function exists. (QMB B-15; AD-16)
+
+### Story 25.4: [E12-F04] Persist composition lineage and occurrence evidence
+
+As a QMX evidence auditor,
+I want every sealed composition and derived runtime artifact linked by append-only lineage,
+So that a later incident can reconstruct which exact definitions and config produced each act.
+
+**Traceability:** FR-052, FR-070.
+
+**Acceptance Criteria:**
+
+**Given** a successful Compose/Fingerprint/Seal ceremony
+**When** the boot epoch becomes eligible to run
+**Then** the composition occurrence, config version, definition refs, capability-profile refs, deployment tuple, code commit, and calendar identities persist through the ratified registry→data edge with append-only typed lineage
+**And** a sink refusal prevents readiness rather than losing the edge. (E12-F04; CT-07/09/11)
+
+**Given** a config or definition changes
+**When** the next boot seals
+**Then** it mints new content/occurrence identities and lineage without rewriting the prior epoch
+**And** `continues-performance` and `carries-ledger` remain two explicit, non-inferred edges. (TN-18/25)
+
+### Story 25.5: Bind doors first, then preflight, compose, fingerprint, and seal
+
+As a QMX operator,
+I want a failed boot to remain observable and recoverable,
+So that an unsafe node stands down alive instead of crash-looping invisibly.
+
+**Acceptance Criteria:**
+
+**Given** process start
+**When** boot begins
+**Then** the supervisor/evidence/powers layer binds first and the boot-attempt record is the first durable write under a reserved supervisor WriterId
+**And** only inability to bind the doors exits nonzero before stand-down can serve. (FR-052; TN-2)
+
+**Given** bound doors
+**When** the ordered ceremony runs
+**Then** preflight checks host/machine tuple, disk headroom, chrony, required credentials by `is_set`, stores, tree ownership/modes, dependency pins, unit principals, and WriterId namespace before state mutation; Compose allocates pairwise-distinct WriterIds; Fingerprint computes `composition_fp`; Seal freezes the epoch
+**And** any detected refusal enters stand-down-alive with status evidence. (DEC-0187)
+
+**Given** `check mode`
+**When** it runs without live credentials or a venue connection
+**Then** it binds its diagnostic surface, compiles, preflights the venue-independent subset, fingerprints, seals, opens no sequencer, and exits nonzero on refusal
+**And** it is safe on production paths without mutating runtime state. (TN-16)
+
+### Story 25.6: Supervise safe points, stand-down, watchdog, and shutdown
+
+As a QMX operator,
+I want lifecycle transitions to preserve evidence and protective authority,
+So that restart and failure management never become hidden flatten or entry paths.
+
+**Acceptance Criteria:**
+
+**Given** one systemd-supervised process
+**When** it reaches readiness
+**Then** it runs exactly one asyncio event loop, async only at venue edge/doors, uses stdlib raw `sd_notify`, and the supervisor/door layer owns watchdog and slice-progress monitoring
+**And** domain work never moves onto an undeclared background thread. (FR-053; TN-4)
+
+**Given** crash-loop threshold, preflight refusal, clock halt, or another stand-down trigger
+**When** stand-down begins
+**Then** doors remain serving, entries refuse, risk-non-increasing acts remain enactable or persist as standing intents, and only operator-principal `resurrect` naming the scope opens a new lifecycle epoch
+**And** a restart alone never clears the state. (TN-4/15)
+
+**Given** requested restart or SIGTERM
+**When** drain begins
+**Then** a safe point occurs only between slices with `suspend_new`, commands terminal or explicitly UNKNOWN, and sinks flushed; requested restart exits 75 without advancing crash-loop counters; SIGTERM closes sessions, mints UNKNOWN for unresolved commands, flushes, and never flattens
+**And** drain never waits for positions to be flat. (DEC-0226)
+
+### Story 25.7: [QMX-F045] Enforce human-only signers at the powers transport
+
+As a QMX operator,
+I want human-only actions accepted only from my declared principal,
+So that automation, service accounts, recipes, and agents cannot acquire live authority by calling the same endpoint.
+
+**Acceptance Criteria:**
+
+**Given** the VPS powers socket
+**When** a connection arrives
+**Then** `SO_PEERCRED` resolves exactly the declared operator or ops UID, neither equal to the fixed `qmx` service account, and an unknown peer is refused by the transport and journaled
+**And** no claimed identity inside the payload can override peer credentials. (QMX-F045; DEC-0234)
+
+**Given** the ops principal
+**When** it calls any trading, protection, promotion, activation, settings, `resurrect`, attestation, or countersign power
+**Then** the transport refuses before handler dispatch; only `notify_test`, `restore_drill_run`, `config_validate`, `hub_publish`, and evidence reads are eligible
+**And** `just node-…` recipes run only as this constrained principal. (FR-069; TN-17)
+
+**Given** systemd units or preflight configuration
+**When** a unit would run under the operator UID or an automated unit under the operator principal
+**Then** preflight refuses and the node stands down
+**And** an agent signer is never added to the principal set. (security model)
+
+### Story 25.8: Serve three parity-tested, UI-ready doors
+
+As a future desktop UI consumer,
+I want read and action capabilities exposed through thin, versioned doors,
+So that I can control the node later without a CLI or a second business-logic implementation.
+
+**Acceptance Criteria:**
+
+**Given** a library capability
+**When** it is exposed
+**Then** the in-process Python API, localhost HTTP evidence channel, and unix-socket powers channel are the only doors; shared capabilities call the same pure function and return equivalent typed values/refusals
+**And** there is no agent/MCP or command-line wrapper. (FR-069; GAP-0053 deferred)
+
+**Given** an evidence-channel read
+**When** status, health, projections, config explanation, failure detail, or metrics are requested
+**Then** it publishes and never acts, includes `boot_epoch`, `composition_fp`, knowledge-time/provenance, and respects `evidence_channel_budget`
+**And** stale evidence cannot authorize a powers call. (TN-17)
+
+**Given** an eligible powers call
+**When** the operator invokes it
+**Then** fresh state is revalidated, the call is idempotent by artifact key, requested and enforced outcomes are journaled separately, and retries cannot duplicate an act
+**And** refusals retain the same machine-readable shape across doors. (DEC-0202)
+
+### Story 25.9: Discipline the live clock and the three calendar kinds
+
+As a QMX operator,
+I want time uncertainty made visible and fail-closed before every decision,
+So that broker skew, host drift, and calendar naming cannot silently move a trading boundary.
+
+**Acceptance Criteria:**
+
+**Given** VPS startup
+**When** chrony has not passed `chronyc waitsync` against the configured source set
+**Then** the node cannot trade; it records unsynchronized intervals and enters the configured preflight/stand-down posture
+**And** all stored QMX-owned timestamps remain UTC nanoseconds from the injected VPS clock. (FR-066; TN-14)
+
+**Given** each decision cycle
+**When** drift evaluates to `ok | warn | no-new-entry | halt`
+**Then** warn publishes evidence, no-new-entry blocks only entries, and halt enters stand-down while preserving exits/protection
+**And** machine-versus-truth drift is measured separately from node-versus-broker skew. (DEC-0199)
+
+**Given** configuration or prose
+**When** a time rule is named
+**Then** market-hours calendar, account-scoped day-boundary calendar, and news calendar remain distinct identities; local time, broker server time, and a bare `calendar` never substitute for them
+**And** activation uses the account day-boundary rule later consumed by Epic 26. (FR-073)
+
+### Story 25.10: Export structured logs, metrics, and independent health states
+
+As a QMX operator,
+I want one evidence-linked operational view of the running node,
+So that I can diagnose safety, connection, data, and lifecycle without treating logs as authoritative evidence.
+
+**Acceptance Criteria:**
+
+**Given** an operational event
+**When** it is logged
+**Then** stdlib logging emits one JSON object per journald line with required time, severity, logger/event, boot/composition/world, opaque stream/account, applicable seat/binding, correlation, and typed-failure fields
+**And** logs never satisfy CT-13 evidence or contain secrets/raw account numbers. (NFR-16; logging spec)
+
+**Given** `/metrics`
+**When** Prometheus scrapes the existing evidence listener
+**Then** registered `qmn_` families cover clock, session, command stream, reconciliation, protection, latency, data, backup, seat, evidence-channel, process, and liveness-heartbeat behavior without spawning a server thread
+**And** labels are bounded and non-secret. (FR-067; AR-81)
+
+**Given** `/health`
+**When** health is read
+**Then** it returns independent provenance-stamped safety, execution-readiness, connection, reconciliation, data-freshness, lifecycle, and sync states
+**And** never collapses them to one global colour. (TN-15)
+
+### Story 25.11: Generate closed alerts and prove zero-authority liveness monitoring
+
+As a QMX operator,
+I want actionable notification when the node or VPS silently degrades,
+So that I can intervene without giving monitoring any control over trading.
+
+**Acceptance Criteria:**
+
+**Given** the typed failure enum and `FAILURES.md`
+**When** alert configuration is generated
+**Then** membership comes only from the register's `notification tier` and covers the accepted money-boundary, protection-escalation, and silent-degradation classes
+**And** an unregistered failure cannot be alerted or pass CI. (AR-82)
+
+**Given** the liveness heartbeat
+**When** the node is alive
+**Then** it sends an outbound alive-ping on configured cadence through an injected HTTP sink; the acceptance double proves that stopped pings produce the expected out-of-band notification state
+**And** it holds zero authority, has no inbound node path, and cannot stop entries, close positions, or call a door. (DEC-0261)
+
+**Given** no free watcher account exists yet
+**When** this story's code and contract tests run
+**Then** they pass against the local watcher double, while the real free-tier watcher check remains a separately tagged soak acceptance consumed by Epic 28
+**And** account creation does not block this story or another branch. (AR-87)
+
+**Given** product requirements
+**When** notification stories are enumerated
+**Then** no daily liveness digest or quiet-hours feature exists, while the soak-scoped demo-drift reporting remains a distinct failure/evidence view
+**And** the UI's later streamed health view is not implemented here. (FR-067)
+
+### Story 25.12: Install the Ubuntu service and five governed units
+
+As a QMX operator,
+I want a reproducible Ubuntu installation with the complete governed unit set,
+So that the node and its timers start in the ratified production shape without turning deployment tooling into a trading interface.
+
+**Acceptance Criteria:**
+
+**Given** Ubuntu 24.04 x86-64
+**When** `just node-install` runs as the ops principal
+**Then** it installs pinned uv, CPython 3.14, just, required observability runtime, immutable per-commit trees under `/opt/qmx`, declared writable trees under `/var/lib/qmx`, the powers socket path, fixed accounts/groups, and five node units plus the separate observability unit
+**And** node code installs through `uv sync --frozen`. (FR-068; AR-77/78)
+
+**Given** any node unit is rendered
+**When** the IaC/security contract inspects it
+**Then** it runs as fixed `User=qmx` with no `DynamicUser`, declares only required `ReadWritePaths`, and enables `ProtectSystem=strict`, `NoNewPrivileges`, `PrivateTmp`, `ProtectHome`, and the architecture-declared `RestrictAddressFamilies`
+**And** each credential-consuming unit uses only its scoped `LoadCredentialEncrypted` material sealed with `systemd-creds --with-key=host`. (NFR-14; security model)
+
+**Given** the VPS firewall and service listeners
+**When** network posture is validated
+**Then** inbound is default-deny with one SSH service restricted to the operator identity, the provisioning key-only identity, and the hub-inbox write-only identity; HTTP/evidence stays loopback, powers stays on its Unix socket, and no node door is public
+**And** outbound is exhaustively limited to cTrader, notification/liveness-heartbeat delivery, Backblaze B2, Dukascopy/history, Forex Factory news, the pinned distribution index, the observability image registry or vendored image source, and NTP
+**And** the observability stack exposes no public or inbound authority path. (FR-067/069; NFR-14)
+
+### Story 25.13: [QMX-F064] Gate runtime hygiene, parameters, secrets, and boot reset
+
+As a QMX operator,
+I want mechanical gates against forbidden runtime shortcuts,
+So that a convenient SDK, undeclared value, leaked secret, or stale boot counter cannot bypass the architecture.
+
+**Acceptance Criteria:**
+
+**Given** Tier 1 static checks
+**When** node and qmf-venue imports are scanned
+**Then** Spotware SDK/Twisted, a second event loop, a `qmf-venue` import outside `qmn.venue`, a node console script, and composition-root imports from recipes all fail the gate
+**And** the existing secret scanner covers source, fixtures, unit files, rendered config, logs, and refusal snapshots. (QMX-F064)
+
+**Given** config compilation
+**When** an undeclared parameter, literal operational default, missing unit/owner/status, unknown layer, or hard-coded node value appears
+**Then** compilation or the registry-schema gate refuses it
+**And** no invocation layer supplies it at runtime. (FR-071)
+
+**Given** crash-loop and boot-attempt state
+**When** a requested restart, operator `resurrect`, or new boot epoch occurs
+**Then** counters advance/reset exactly per the declared fold and never reset merely because the process restarted
+**And** an unrequested crash cannot masquerade as a clean operator cycle. (TN-4)
+
+### Story 25.14: [E7-R28] Enforce light/heavy claims at the composition root
+
+As a QMX operator,
+I want workload claims checked where the node assembles producers and seats,
+So that a component cannot declare itself light while exceeding the ratified dependency or resource envelope.
+
+**Traceability:** FR-070, FR-072, FR-076.
+
+**Acceptance Criteria:**
+
+**Given** registered indicator, structure, labeler, or seat definitions
+**When** Compose resolves the runtime graph
+**Then** it evaluates the inherited light/heavy four-bound declaration over the assembled dependencies and refuses a contradiction before Seal
+**And** no child module self-approves its effective composition class. (E7-R28; AD-24)
+
+**Given** a class-affecting definition or dependency changes
+**When** the next composition is resolved
+**Then** its identity and evidence record change, and any affected admission/baseline check reruns
+**And** the prior composition remains readable. (NFR-19)
+
+### Story 25.15: Build the hot-path benchmark harness without invented budgets
+
+As a QMX operator,
+I want a portable hot-path benchmark harness with all unmeasured limits represented honestly,
+So that the host epic can finish without inventing a release gate or waiting for the later VPS soak.
+
+**Traceability:** FR-071, FR-076.
+
+**Acceptance Criteria:**
+
+**Given** the benchmark harness and the conformance double
+**When** pre-soak local/CI measurements run
+**Then** they record wall time, peak RSS, queue behavior, and each named hot-path rung with OS/CPU/deployment/lifecycle provenance
+**And** placeholder budgets are reported as unset evidence, never silently enforced. (E9-F04; NFR-17)
+
+**Given** no deployment-specific baseline exists yet
+**When** this story is accepted
+**Then** the harness, output schema, provenance fields, variance method, and unset-value behavior are complete without a future numeric constant
+**And** Story 28.7—not this story—owns the actual-VPS measurements and `[E9-F04]` closure. (AR-84)
+
+### Story 25.16: Prove host concurrency and backpressure without asserting them
+
+As a QMX operator,
+I want the node's concurrency posture exercised under load,
+So that event-loop liveness and door responsiveness are evidence-backed before seats are introduced.
+
+**Traceability:** FR-053, FR-072, FR-076.
+
+**Acceptance Criteria:**
+
+**Given** the node event loop, doors, accumulator, and configured CPU/memory budgets
+**When** deterministic load drives concurrent streams, reads, and timers
+**Then** measurements prove one event loop, bounded in-flight work, explicit enqueue/backpressure, responsive evidence/powers doors, and no silent observation loss
+**And** results record load, seed, deployment tuple, lifecycle state, wall time, and peak RSS. (NFR-17)
+
+**Given** a bound is exceeded
+**When** the load test crosses it
+**Then** the designed typed refusal, coalescing/data-quality evidence, backpressure, or entry-side degradation occurs as specified
+**And** no test passes on a log-only assertion. (NFR-12/21)
+
+### Story 25.17: Deploy the separate zero-authority observability stack
+
+As a QMX operator,
+I want a replaceable monitoring stack beside the node,
+So that dashboards and retained operational logs can disappear without changing trading behavior.
+
+**Acceptance Criteria:**
+
+**Given** `qmn/deploy/observability/`
+**When** the Prometheus/Grafana/Loki-class stack starts
+**Then** pinned compose/images, loopback ports, dashboard-as-code, read-only journal access, distinct non-`qmx` account, credentials, quota, and the separate observability unit are present
+**And** this directory is the only VPS surface allowed to use containers. (FR-067; AR-83)
+
+**Given** a running node and monitoring stack
+**When** the entire stack is stopped, corrupted, or denied its scrape path
+**Then** the node keeps running and its decision, command, protection, and powers behavior remains byte-for-byte unchanged
+**And** monitoring exposes no inbound authority path. (NFR-16)
+
+### Story 25.18: Switch, roll back, and verify the Ubuntu release
+
+As a QMX operator,
+I want release switching and rollback proved on the pinned host lane,
+So that operational recovery is reproducible without turning a DevOps recipe into a trading control.
+
+**Acceptance Criteria:**
+
+**Given** a new commit/config pair or rollback request after Story 25.12
+**When** `just node-switch` or `just node-rollback` runs
+**Then** check mode passes first, the `current` symlink flips atomically at a safe restart, commit and config version remain paired, and the previous retained tree stays recoverable
+**And** no recipe imports the composition root or calls a forbidden power. (FR-068; TN-16)
+
+**Given** package, runtime, OS, or application updates are available
+**When** routine upgrade tooling runs
+**Then** it may stage and verify artifacts but never reboots the VPS or restarts/switches the node automatically
+**And** only an explicit ops-principal `just node-switch` at a node safe point changes the running release. (NFR-18; security model)
+
+**Given** CI
+**When** the pinned `ubuntu-24.04` lane runs
+**Then** Linux typing, isolated clean install, unit-file/IaC scan, check-mode boot, and a scratch-credstore real systemd boot execute
+**And** the absence of a staging host is compensated by this lane, replay, check mode, and rollback. (NFR-18/21)
+
+### Story 25.19: Compose roster-driven multi-account and multi-broker runtime keys
+
+As a QMX operator,
+I want accounts and brokers added through governed roster/config records rather than singleton code,
+So that one node product can sense or operate several declared streams without widening authority or protection scope.
+
+**Acceptance Criteria:**
+
+**Given** a valid roster/config change that adds or changes a venue/account
+**When** the safe-point restart composes the node
+**Then** the runtime is keyed by the ratified `(VenueId, account)`, binding, Book/BMS, and world tuples with no default venue/account singleton, and the new composition/WriterIds are sealed before use
+**And** adding a broker requires adapter/roster configuration plus restart, never edits to core node logic. (FR-075; TN-22)
+
+**Given** a sensing-only roster entry
+**When** its session opens
+**Then** market and account observations may be recorded and served, but no Book binding, command sequencer authority, promotion, or live intent exists for that entry
+**And** sensing-only is a legal compiled state, not an incomplete binding. (FR-059/075)
+
+**Given** several Books or streams share capacity
+**When** config validation and pacing composition run
+**Then** netting attribution declarations are jointly exhaustive/disjoint where required and protective pacing reserve is isolated per command stream so entry work cannot consume it
+**And** one stream's UNKNOWN or failure does not freeze another stream. (FR-055/075/077; CT-28)
+
+## Epic 26: Capital-protected paper/live operation with exact accounting
+
+The operator can host approved bots under the ratified Book/BMS/KSA protection set, route protective demotions to paper, reconcile uncertainty and drift, account per binding in an exact virtual ledger, and promote/activate only through human powers whose effect begins at the next day boundary. This epic builds no per-bot warm-up and invents no KSA value.
+
+### Story 26.1: Fold scoped KSA severity and execute only ratified effects
+
+As a QMX operator,
+I want KSA severity to escalate deterministically at the affected scope,
+So that connectivity, unknown state, news, and black-swan risks cannot decay or widen through implementation guesswork.
+
+**Acceptance Criteria:**
+
+**Given** registered KSA triggers
+**When** records fold within a level epoch
+**Then** levels use exactly `GREEN | YELLOW | ORANGE | RED | BLACK`, trigger classes use `scheduled_news | black_swan | connectivity | unknown_state` plus addable-never-redefined extensions, and the fold is monotone non-decreasing at global or `(VenueId, account)` scope
+**And** WriterId byte order and elapsed quiet time never lower severity. (FR-056; TN-7)
+
+**Given** a requested de-escalation
+**When** the operator calls `resume`
+**Then** it names the exact scope and opens a new level epoch after fresh-state validation; reconnect, reconciliation, restart, or absence of triggers never de-escalates automatically
+**And** a live-stream connectivity escalation does not block the separate paired-demo stream unless the scope is global. (DEC-0192)
+
+**Given** `registry:ksa_effect_matrix`
+**When** a cell is compiled
+**Then** it declares one CT-30 effect from `suspend_new | drain | flatten`, a typed scope, one closed satisfaction predicate, and `routes-to-paper | blocks-paper`; blank or provisional cells block live and soak as declared
+**And** the story supplies no matrix value—the operator ratifies values before soak. (GAP-0050; AR-87)
+
+### Story 26.2: Dispatch ranked controls and persistent protective intents
+
+As a QMX operator,
+I want one evidence-first protection dispatcher per stream,
+So that competing actions compose or arbitrate predictably and no safety act disappears under failure.
+
+**Acceptance Criteria:**
+
+**Given** pending CT-30/control and risk-non-increasing acts
+**When** the dispatcher evaluates one stream
+**Then** it uses the BMS-declared total unique AD-37 rank, collapses only identical mechanical commands, executes composing actions, never uses arrival order, and never lets a lower rank undo or weaken a higher one
+**And** venue-resident Tier-1 protection stays outside this ordering. (FR-057; SCN-0010)
+
+**Given** `suspend_new`, `drain`, or `flatten` under a dead/UNKNOWN wire
+**When** satisfaction is checked
+**Then** suspend/drain use `never-auto`, flatten requires `scope-flat-at-reconciled-verdict`, and a command outcome alone satisfies nothing
+**And** `drift | unknown | out-of-lookback` holds the intent open and alarms. (TN-7)
+
+**Given** a journal sink refusal
+**When** a protective act is ready
+**Then** evidence-first dispatch blocks and persists the standing intent in the normal journal or reserved protection-intent extent; failure of both becomes UNDELIVERABLE and alarmed
+**And** the act is re-decided, never blindly retried. (NFR-12/15)
+
+### Story 26.3: Enforce news windows, dead zones, and the signal snapshot
+
+As a QMX operator,
+I want market-risk windows and sensor state applied at the Book door without blocking exits,
+So that stale news or a degraded signal cannot open risk while a protective act remains available.
+
+**Acceptance Criteria:**
+
+**Given** a news observation and dated currency-exposure record
+**When** a decision falls in a configured blackout
+**Then** entries on exposed instruments refuse in live and paper, while exits/protection/recording pass, and missing scope or stale news fails entries closed
+**And** currency is never parsed from the instrument symbol. (FR-057; CT-31; SCN-0008)
+
+**Given** a news revision would narrow, remove, downgrade, delay, or shorten an in-force or same-trading-day window
+**When** it is ingested
+**Then** evidence appends but the prior block stays effective through its declared end unless an operator act cites both revisions; widening/addition may apply automatically
+**And** there is no live skip power. (TN-8)
+
+**Given** a dead zone or session-handover buffer
+**When** it is active
+**Then** only entries pause and exits/safety/data continue; widths/anchor are resolved settings with no invented defaults
+**And** market-hours, day-boundary, and news calendars remain distinct. (CT-31)
+
+**Given** a decision instant
+**When** the Book door or KSA reads configured producers
+**Then** one immutable signal snapshot carries exactly one value/marker per producer including SQS, keyed by environment and bounded by `decision_freshness_bound`
+**And** bots never receive the market-condition snapshot. (DEC-0230)
+
+### Story 26.4: Maintain exact virtual positions and the per-binding ledger
+
+As a QMX operator,
+I want every Book binding to carry its own exact accounting record,
+So that sizing, kill-line protection, attribution, and treasury boundaries remain reconstructable on netting and hedging accounts.
+
+**Acceptance Criteria:**
+
+**Given** a fill attributed through command identity
+**When** the risk-domain writer folds it
+**Then** it appends to one binding-scoped exact-integer virtual ledger and virtual-position fold, preserving admission identity and frozen R faces; venue positions remain a separate observation-derived fold
+**And** an entry on an instrument with an open virtual position refuses as no-scale-in. (FR-077; TN-25; CT-25)
+
+**Given** a partially filled ENTRY reaches its first terminal state
+**When** the virtual position is finalized
+**Then** `original_risk_amount` is re-based exactly once to the filled quantity, the admission value remains the declared plan through a lineage edge, and the short fill is recorded as execution-quality evidence
+**And** the node never tops up the short fill; any later tranche requires a new admission under a later Book version. (FR-077; TN-24a)
+
+**Given** CT-18 declares netting
+**When** bindings compile
+**Then** fill-to-virtual-position attribution declarations are jointly exhaustive and disjoint, absence/overlap refuses, and overlapping Books require the declared shared-flatten operator signature
+**And** the sum of virtual positions reconciles arithmetically to the venue position. (TN-22/25; CT-28)
+
+**Given** accounting rollover, sweep, refund, re-seed, or paper reset
+**When** the operator signs the treasury boundary act
+**Then** an append-only boundary event is journaled, never touches positions, never rebases frozen R, and missed rollover is reconstructed as a correction
+**And** paper P&L never becomes treasury cash. (TN-24f; TN-25)
+
+**Given** a binding/config epoch transition
+**When** state is carried or reset
+**Then** `ledger | cycle | budget | bench_counter | exposure` each declare `carry | reset`, carry requires a signed `carries-ledger` edge, and `continues-performance` remains independent
+**And** absence is an invalid-input refusal. (FR-077; CT-28)
+
+### Story 26.5: Route Book paper mode and protective demotions without a per-bot lane
+
+As a QMX operator,
+I want paper to be one explicit Book routing state plus protective demotion,
+So that the node cannot smuggle probation or paper performance into admission.
+
+**Acceptance Criteria:**
+
+**Given** an operator-signed CT-24 Book-mode transition
+**When** the Book enters PAPER
+**Then** a dated binding epoch routes intents to exactly one paired account with role `demo`, `world = live`, its own BMS, execution-target records, paper epoch, and virtual ledger
+**And** no Bot/Book twin is minted. (FR-058; SCN-0006)
+
+**Given** a capital/authority versus market-risk block
+**When** routing resolves
+**Then** benched-seat and kill-line demotions route to the paired target while market-risk windows/KSA block paper and live entries alike
+**And** a silent paper outage raises the live alarm class. (AD-35)
+
+**Given** a newly promoted bot
+**When** its node journey is inspected
+**Then** no per-bot warm-up, probation, ramp, paper namespace, or paper-performance gate exists; backtest/iteration/paper testing occurred outside the node
+**And** the only post-activation paper route is BMS/Book protective demotion. (DEC-0261)
+
+### Story 26.6: Reconcile four verdicts and two exact residuals
+
+As a QMX operator,
+I want startup and cadence reconciliation to explain mismatch without false arithmetic,
+So that uncertainty, stale read-back, and real drift receive different safe responses.
+
+**Acceptance Criteria:**
+
+**Given** startup or scheduled reconciliation
+**When** recorded fills/commands/virtual positions are compared with venue position and balance read-backs
+**Then** the result is exactly `reconciled | drift | unknown | out-of-lookback`, with quantity residual and cash residual reported separately in exact scaled integers
+**And** venue equity and virtual-ledger equity are shown side by side but never differenced. (FR-060; DEC-0258)
+
+**Given** an explained cash component such as deposit, withdrawal, fee, financing, commission, or boundary act
+**When** the cash residual is decomposed
+**Then** each component is named and evidenced, floating P&L is shown in the equity narrative but never enters either residual, and `reconciliation_epsilon = 0` absorbs no representation error
+**And** foreign float cannot enter the arithmetic. (TN-10/25)
+
+**Given** `drift`
+**When** binding role is live versus demo
+**Then** live enters an entries-only stand-down cleared only by operator `resume` after fresh review, while demo raises the same-severity alarm and continues the soak
+**And** role—not world—selects the behavior. (DEC-0195; TN-24d)
+
+### Story 26.7: Run the kill line, breakeven ratchet, and qualifying-loss bench
+
+As a QMX operator,
+I want binding capital floors, protective tightening, and loss benches evaluated from exact evidence,
+So that drawdown protection works identically in paper and live without a composite score.
+
+**Acceptance Criteria:**
+
+**Given** a binding virtual-ledger equity update from fill, held-instrument price, or accounting rollover
+**When** it crosses `kill_line_capital_floor`—the one registry key that is AD-40 `loss_floor`
+**Then** only that binding is flattened under `kill_line_flat`, enters binding state `stood-down`, and routes to its paired demo target; other bindings of the same Book definition remain unaffected
+**And** only an operator signature restores it. (FR-057/077; DEC-0255)
+
+**Given** the breakeven ratchet's Book origination policy
+**When** trigger/offset/minimum-improvement conditions originate a risk-non-increasing proposal
+**Then** the command path dispatches the single-sided `amend_protection` without reapplying the origination threshold
+**And** no other dynamic-protection grammar exists in V1. (TN-8; TN-24g)
+
+**Given** persisted CT-29 virtual-position exits
+**When** the bench fold evaluates `realized_r <= -q`
+**Then** every exit uses exactly `qualifying_loss_exit | scratch-or-partial-loss | breakeven`; breakevens never count, scratches/partials count only where the declared family q includes them, the fold boundary is the binding epoch, and stale exit persistence refuses the next intent
+**And** breakeven clustering is reported separately while a benched seat routes to paper and its Book stays LIVE. (FR-077; TN-24e; SCN-0011)
+
+### Story 26.8: Host governed QL-7 seats
+
+As a QMX operator,
+I want approved bots isolated behind the runtime protocol,
+So that a bad callback cannot escape its declared evidence, time, or resource boundary.
+
+**Acceptance Criteria:**
+
+**Given** a QL-7 conformant bot and declared footprint
+**When** a seat runs
+**Then** it receives only declared as-of evidence, no clock/Book/venue/signal-snapshot object, executes the canonical assignment, and remains within callback deadline and memory ceiling
+**And** violation quarantines automatically; only operator `seat_reinstate` exits quarantine. (FR-072; TN-19)
+
+### Story 26.9: Promote separately, activate at the next day boundary
+
+As a QMX operator,
+I want approval and exposure to remain separate human acts,
+So that a reviewed bot cannot trade merely because its artifact entered the live zone.
+
+**Acceptance Criteria:**
+
+**Given** a promotion card
+**When** the operator invokes promotion
+**Then** the silent battery checks three admission layers, Book/BMS/bot/config fingerprints, CT-18 capabilities, required live baselines, admission impacts, blanks, and ratified value statuses; sandbox provenance refuses at publish and pull
+**And** success lands ADMITTED with no intent, ledger, or exposure. (FR-073; TN-20)
+
+**Given** an admitted bot/binding
+**When** the operator separately activates it during a trading day
+**Then** an activation record is accepted but becomes effective only at the next boundary of the account-scoped day-boundary calendar
+**And** no manual override, warm-up, ramp, or same-day trade path exists. (DEC-0261)
+
+**Given** activation at or after the boundary
+**When** readiness is revalidated
+**Then** fresh config/capability/baseline/protection state must still pass before the first intent
+**And** an intervening refusal leaves the bot admitted but inactive. (TN-20)
+
+### Story 26.10: [QMX-F046] Persist promotion and activation through their closed journal paths
+
+As a QMX evidence auditor,
+I want human live-zone acts recorded in the canonical journal vocabulary,
+So that promotion and activation can be reconstructed without a private ledger.
+
+**Traceability:** FR-073.
+
+**Acceptance Criteria:**
+
+**Given** an accepted promotion occurrence
+**When** its CT-13 event persists
+**Then** it uses the existing `promotion` type and its payload contains only the promotion-card `fp1` plus `correlation_id` as the closed contract requires
+**And** operator/artifact/config/binding detail remains in the referenced promotion card and read-time projections rather than widening the event payload. (QMX-F046; CT-13/25)
+
+**Given** requested, refused, or successful activation
+**When** it is recorded
+**Then** it uses the CT-24 binding transition and that contract's existing CT-13 transition mapping, never the `promotion` event type
+**And** requested versus enforced state and principal evidence are reconstructed through the referenced transition/control records without minting a new event type or private stream. (FR-073; CT-13/24/25)
+
+**Given** a journal sink refusal
+**When** a promotion or activation would otherwise change state
+**Then** the state change refuses before effect
+**And** a log line never substitutes for the missing journal record. (NFR-15/16)
+
+### Story 26.11: [QMX-F067] Prove runtime risk population, windows, shakedown, and cardinality
+
+As a QMX operator,
+I want the assembled risk graph tested as a whole,
+So that valid individual records cannot collapse into an invalid runtime population.
+
+**Traceability:** FR-056, FR-057, FR-075, FR-077.
+
+**Acceptance Criteria:**
+
+**Given** roster, BMS, Book, binding, seat, paired target, window, priority, and capability records
+**When** Compose performs Layer-1 admission
+**Then** cardinalities, referential integrity, total unique rank, declared scopes, netting partitions, one-BMS-per-account/many-Books, one-Book-per-bot, and one active paper target are all checked together
+**And** a mismatch refuses before Seal. (QMX-F067; D010)
+
+**Given** the technical demo shakedown layer
+**When** it runs
+**Then** required windows, protection effects, paper ledger, kill line, reconciliation, SQS baseline conditioning, callback containment, and command-path dry runs are exercised without a live binding
+**And** shakedown evidence is assembled for the human signature rather than treated as performance proof. (AD-32)
+
+### Story 26.12: [QMX-F068] Enforce frozen R on the actual door path
+
+As a QMX operator,
+I want the R faces admitted once and preserved through real dispatch and accounting,
+So that sizing evidence cannot change between a Book decision and the venue command.
+
+**Traceability:** FR-057, FR-077.
+
+**Acceptance Criteria:**
+
+**Given** an admitted entry
+**When** it crosses the Book door
+**Then** requested_r is Book-resolved, full-loss price is present, dimensional/unit checks pass, and the three R faces freeze into the authorized intent before command mint
+**And** the bot never supplies final size. (QMX-F068; CT-23)
+
+**Given** fills, partial entry fill, protection amendments, rollover, configuration changes, or treasury acts
+**When** the virtual position and CT-29 exit record are produced
+**Then** frozen R remains unchanged except the one ratified terminal-partial-entry rebase, which is journaled and idempotent
+**And** every later realized_r is recomputable from persisted original risk. (TN-24/25)
+
+### Story 26.13: [QMX-F069] Gate failure completeness and journal-before-dispatch
+
+As a QMX operator,
+I want every designed money-path failure both documented and mechanically ordered before effect,
+So that an incident never produces an untraceable command or an unactionable alarm.
+
+**Traceability:** FR-055, FR-067, FR-076.
+
+**Acceptance Criteria:**
+
+**Given** the node's typed failure IDs
+**When** CI validates `FAILURES.md`
+**Then** each ID has failure class, detection, retry/recovery, visible degraded state, notification tier, and resolvable operator affordance; missing/duplicate/orphan rows fail
+**And** the generated alert allow-list matches the notification column exactly. (QMX-F069; NFR-11)
+
+**Given** any command, control, protection, promotion, activation, treasury, or settings effect
+**When** it is dispatched/applied
+**Then** required journal/evidence persists first under atomic or ordered-with-recovery semantics; a partial write becomes storage failure and blocks entries/effect as specified
+**And** no log-only or best-effort path can pass the test. (TN-24h)
+
+### Story 26.14: [D010] Verify the complete runtime risk gate
+
+As a QMX operator,
+I want one executable gate over the actual node composition,
+So that defined-unwired QMF risk contracts become proven runtime behavior before soak.
+
+**Acceptance Criteria:**
+
+**Given** the conformance double, deterministic clocks, and seeded risk fixtures
+**When** the runtime risk gate runs
+**Then** it exercises CT-22/23/24/25/27/28/29/30/31/32 through the node composition root, including entry preservation, exits under blocks, paper routing, UNKNOWN, four-verdict reconciliation, priority compose/conflict, bench, kill line, and next-day activation
+**And** every refusal category and evidence record is asserted structurally. (D010; FR-056..060, FR-073, FR-077)
+
+**Given** any risk contract is merely importable but unwired
+**When** the gate evaluates coverage
+**Then** it fails with the missing runtime path and traceability ID
+**And** no paper profit or manual observation satisfies the gate. (TN-23)
+
+### Story 26.15: [E12-F05] Prevent the ungoverned Python-bot tunnel from bypassing gates
+
+As a QMX operator,
+I want every governed node seat to enter through the same admission and Book doors,
+So that the plain-Python authoring path cannot bypass conformance, sizing, protection, or evidence rules.
+
+**Acceptance Criteria:**
+
+**Given** arbitrary plain-Python bot logic from the experimentation tunnel
+**When** it is proposed for a node seat
+**Then** the node requires a registered CT-33 definition, QML runtime-protocol conformance, prediction linter, declared footprint, canonical assignment, Book binding, and all admission layers before hosting
+**And** direct callback injection or composition-root imports refuse. (E12-F05; QL-8)
+
+**Given** a hosted callback
+**When** it emits an intent
+**Then** the intent crosses the Book/BMS/protection/order path, cannot size, cannot read clock/Book/venue/signal snapshot, and cannot directly construct CT-19
+**And** ungoverned evidence can never cite a governed seat occurrence. (FR-072)
+
+### Story 26.16: [E15-F03] State the V1 seat-containment limit honestly
+
+As a QMX operator,
+I want seat resource containment tested without claiming an OS guarantee that does not exist,
+So that deferred hardening remains visible and current controls are still falsifiable.
+
+**Traceability:** FR-072, FR-076.
+
+**Acceptance Criteria:**
+
+**Given** V1 seat execution
+**When** deadline, cooperative memory probe, exception, or non-returning callback failure is injected
+**Then** the node cancels where cooperative, quarantines automatically, alarms, and uses the slice-progress watchdog/supervised restart as last resort; only operator `seat_reinstate` clears quarantine
+**And** the test records which limit was advisory versus enforced. (E15-F03; TN-19)
+
+**Given** release or security documentation
+**When** containment is described
+**Then** it explicitly states there is no hardened OS-level memory/security confinement in V1, cites GAP-0054, and retains QL-8 static scan, capability starvation, host process isolation, callback deadline, memory ceiling, and quarantine as compensating controls
+**And** no story closes GAP-0054 by assertion. (GAP-0054)
+
+### Story 26.17: Ship the rule-based and fitted MIS producers
+
+As a QMX operator,
+I want the ratified non-trained labelers available as governed producers,
+So that sensing and protection can consume declared evidence without waiting for the trained classifier lane.
+
+**Acceptance Criteria:**
+
+**Given** the MIS starting inventory
+**When** V1 producers are registered
+**Then** identity, spread-state, gap-event, feed-state, SQS, and degraded-sensors ship as six rule-based labelers, and `liquidity_stress_v1` ships as a CPU quantile fit under CT-16/AD-24
+**And** each producer has versioned identity, inputs, evidence freshness, refusal behavior, and conformance fixtures. (FR-072; AR-89)
+
+**Given** `regime_classifier_v1` or a recovered candidate
+**When** this story resolves the inventory
+**Then** no trained model is selected, trained, registered, or bound
+**And** Kronos/HMM/BOCPD/MS-GARCH remain unauthoritative candidates. (DEC-0262)
+
+### Story 26.18: Publish candidates through the zero-authority MIS shadow seam
+
+As a QMX operator,
+I want candidate labelers compared through a separate publish-only lane,
+So that evaluation cannot re-identify or influence governed decisions.
+
+**Acceptance Criteria:**
+
+**Given** a registered candidate labeler
+**When** shadow evaluation runs
+**Then** it writes through a distinct WriterId/manifest prefix and `shadow_composition_fp`, comparison reads remain publish-only, and registering/changing it does not alter governed `composition_fp`
+**And** no candidate output reaches the Book door, KSA, bot, venue, or any command/control fold. (FR-072; DEC-0204)
+
+**Given** missing, late, refused, or disagreeing candidate output
+**When** the comparison projection evaluates
+**Then** it records the condition with source identity and instant without substituting governed output or delaying the slice
+**And** the shadow lane can be disabled or removed without changing node decisions. (NFR-16)
+
+### Story 26.19: [E15-F02] Prove seat concurrency and end-to-end backpressure
+
+As a QMX operator,
+I want concurrent seat callbacks exercised with the real node seams under deterministic load,
+So that seat isolation and backpressure are evidence-backed without waiting for a production VPS.
+
+**Traceability:** FR-053, FR-072, FR-076.
+
+**Acceptance Criteria:**
+
+**Given** Stories 25.16 and 26.8 plus the accumulator, doors, and configured CPU/memory budgets
+**When** deterministic local/CI load drives concurrent streams, reads, timers, and seat callbacks
+**Then** measurements prove one event loop, bounded in-flight work, explicit enqueue/backpressure, responsive evidence/powers doors, and no silent observation loss
+**And** results record load, seed, deployment tuple, lifecycle state, wall time, and peak RSS. (E15-F02; NFR-17)
+
+**Given** a callback deadline, memory ceiling, or queue bound is exceeded
+**When** the load test crosses it
+**Then** the designed quarantine, typed refusal, coalescing/data-quality evidence, or entry-side degradation occurs with exits/protection preserved
+**And** no test passes on a log-only assertion or claims OS-level confinement. (E15-F02; NFR-13/21)
+
+## Epic 27: Recoverable evidence, secrets, data intake, and replay
+
+The operator can provision credentials without leakage, capture and retain live evidence, ingest the sole free news source, recover the node from encrypted off-host copies, and replay a recorded day as a credential-free decision diff. Account creation and escrow steps gate only their own end-to-end acceptance.
+
+### Story 27.1: Provision and rotate reference-only secrets through the restricted wizard
+
+As a QMX operator,
+I want to provision node secrets without placing values in files, arguments, logs, or config,
+So that the live boundary retains one auditable custody path.
+
+**Acceptance Criteria:**
+
+**Given** a workstation provisioning source
+**When** `just node-secrets-provision` runs
+**Then** it reads named secrets from Windows Credential Manager, streams them over a dedicated restricted key-only SSH identity through stdin, never argv/file/echo/log, and installs bootstrap material through `systemd-creds --with-key=host`
+**And** the VPS never mints the backup payload key. (FR-063; TN-12)
+
+**Given** a running node
+**When** venue, bucket, notification, or observability credentials rotate
+**Then** rotation is scoped by opaque credential reference, store-before-discard, with one refresher per reference and AEAD-encrypted rotated state under `/var/lib/qmx/state`
+**And** no secret value exists above the connection manager or designated holder. (CT-21)
+
+**Given** the four named VPS secret holders
+**When** preflight and the secret scanner run
+**Then** only ConnectionManager, backup unit, notification path, and observability stack may resolve their exact references; a fifth holder, enumeration, or value in config/evidence/logs/health/metrics/refusals fails
+**And** the compromise drill uses demo credentials. (NFR-14)
+
+### Story 27.2: Record live observations and bootstrap governed history
+
+As a QMX operator,
+I want live and historical market facts captured through the same governed evidence boundary,
+So that the node can recover, reconcile, and replay without a sibling recorder or broker-history dependency.
+
+**Acceptance Criteria:**
+
+**Given** live ticks, trendbars, depth, fills, lifecycle events, positions, or balances
+**When** the node receives them
+**Then** the accumulator is the single first writer, raw payload and event/known-at/revision/source identity persist through CT-10/15/20, and position/balance read-backs map onto the declared journal vocabulary without minting a private event stream
+**And** interpretation waits for persistence. (FR-064; TN-13)
+
+**Given** FTR-01's tracked contract annotation is absent
+**When** the live CT-20 position/balance observation mapping would be accepted
+**Then** this story refuses acceptance for that mapping until the annotation names its mapping onto CT-13's existing seven types
+**And** data intake never infers or mints an `observation` journal type. (FTR-01; CT-13/20)
+
+**Given** first deployment
+**When** `just node-data-bootstrap` runs
+**Then** Dukascopy history is downloaded idempotently/resumably into the immutable raw archive with provider identity/licence/provenance, and venue paging bridges only the recent continuity gap within rate limits
+**And** runs never fetch data ad hoc. (TN-13; FR-042 inheritance)
+
+**Given** a reconnect or overlapping delivery
+**When** a venue-native identity key repeats
+**Then** idempotent intake deduplicates the same revision and appends a changed revision
+**And** no silent sibling-feed failover occurs. (TN-13; CT-10/15; DEC-0198)
+
+### Story 27.3: Ingest only the free Forex Factory news calendar
+
+As a QMX operator,
+I want news windows fed by the ruled free source and to fail closed when it is stale,
+So that no paid dependency or hidden fallback can enter the trading plan.
+
+**Acceptance Criteria:**
+
+**Given** `qmn-news-calendar.timer`
+**When** it fires on the resolved cadence
+**Then** it downloads Forex Factory's free weekly file through the ratified CT-15 adapter, respects the provider request budget with configured attempts/backoff, stores each revision append-only, and journals data-quality outcomes under its own WriterId
+**And** no paid provider package, registry fallback row, story, or code path exists. (FR-064; DEC-0214)
+
+**Given** refresh failure or `news_calendar_max_staleness` breach
+**When** a decision cycle evaluates
+**Then** entries fail closed without a live skip while exits/protection/recording continue
+**And** the failure enters the accepted silent-degradation alert class. (TN-13/15)
+
+**Given** a later second free source or agent-produced JSON
+**When** it is ever proposed
+**Then** it must use the same CT-15 intake shape and a future ruled config row
+**And** this story implements neither. (R4)
+
+### Story 27.4: Sync hot rooms into the sealed evidence tier and passive hub
+
+As a QMX evidence auditor,
+I want live evidence copied one way into a durable sealed role and promotion artifacts exchanged through a passive hub,
+So that replay and backup never depend on hot files and sandbox material cannot self-promote.
+
+**Traceability:** FR-064, FR-065, FR-074.
+
+**Acceptance Criteria:**
+
+**Given** committed hot-room prefixes per world
+**When** evidence sync runs
+**Then** it copies one-way, watermarked, idempotent, resumable material into the `sealed-archive` eighth room role under verify-before-purge and never acts as a second writer
+**And** the node loop does not block on the copy. (TN-3/13; DEC-0253)
+
+**Given** `hot_room_retention_window`
+**When** purge eligibility evaluates
+**Then** a verified sealed-archive copy and verified off-host copy are both required; otherwise purge refuses
+**And** raw evidence, journals, registry, cited research artifacts, and lineage remain under their retention law. (NFR-15)
+
+**Given** the passive hub
+**When** sandbox fragments arrive or `hub_publish` runs
+**Then** the inbox is write-only, published area read-only, each fragment WriterId-scoped, and provenance=sandbox refuses both publication and promotion pull
+**And** the only inbound crossings remain confined sandbox push and click-gated promotion pull. (TN-3/20)
+
+### Story 27.5: [QMX-F102] Close backup numerics, crypto, cadence, and custody debt
+
+As a QMX operator,
+I want backup objectives and key custody represented as governed configuration and measured evidence,
+So that “nightly backup” is not mistaken for a proven recovery guarantee.
+
+**Traceability:** FR-063, FR-065, FR-071.
+
+**Acceptance Criteria:**
+
+**Given** the value-status registry
+**When** backup configuration compiles
+**Then** recovery-point objective, integrity-restore objective, full-DR objective, retention, verification cadence, provider, and payload-key custody are distinct unit-kinded rows with blank/soak effects and evidence citations
+**And** RPO is derived from the actual schedule while the two RTOs come from their respective drills. (QMX-F102; AR-80)
+
+**Given** cryptographic material
+**When** backup encrypt/decrypt occurs
+**Then** the payload key was workstation-generated, resides in Credential Manager plus one offline escrow copy, is never VPS-generated, never shares venue-secret custody, and the algorithm/dependency/version are pinned in `DEPENDENCIES.md`
+**And** restore refuses on missing/wrong key without destructive fallback. (DEC-0217)
+
+**Given** retention or purge
+**When** a copy ages out
+**Then** the declared retention law, successful verification, and two-copy rule are checked and journaled
+**And** no value is inferred from a provider default. (TN-13)
+
+### Story 27.6: Push encrypted Backblaze B2 copies through the ruled contract
+
+As a QMX operator,
+I want committed evidence copied off host through the pinned B2/rclone path,
+So that backup production is secure and testable before the restore drills depend on it.
+
+**Acceptance Criteria:**
+
+**Given** the Story 27.5 contract and a configured Backblaze B2 bucket with workstation-escrowed payload key
+**When** `qmn-backup` runs through rclone
+**Then** the VPS pushes nightly encrypted, versioned, ciphertext-only committed prefixes for immutable raw archive, journals, registry, sealed archive, and research door; processed/rebuildable data is excluded
+**And** credentials and plaintext never enter backup metadata/logs. (FR-065; CT-14)
+
+**Given** no real bucket account or escrow ceremony is available yet
+**When** implementation acceptance runs
+**Then** the same rclone command, manifest, encryption, idempotency, failure, and retention paths pass against an isolated local test backend and generated test key
+**And** the real B2 push is a separately tagged soak-local acceptance; missing human accounts block no replay or unrelated branch. (AR-87)
+
+**Given** Epic 25 owns the unit templates
+**When** the nightly backup entry point is integrated
+**Then** this story supplies the executable target and schedule/config contract without editing shared systemd templates in parallel
+**And** the rendered unit invokes no trading power. (factory touch ownership)
+
+### Story 27.7: Replay one recorded day as a credential-free decision diff
+
+As a QMX operator,
+I want to replay recorded node evidence through the same composition and loop,
+So that an order-path or protection change can be diagnosed without sending or simulating orders.
+
+**Acceptance Criteria:**
+
+**Given** Epic 26's stable signal-snapshot/decision seams, a resolved node config, and a selected sealed-archive interval
+**When** replay starts
+**Then** it spawns as a process outside the node, sets `world = replay`, uses disjoint WriterIds and replay VenueClientPort, resolves no secret, opens no network/live sink, and reads live evidence only through the named one-way replay-import port
+**And** no cross-world write is possible. (FR-074; TN-21)
+
+**Given** recorded signal snapshots
+**When** slices execute
+**Then** replay reuses them rather than recomputing SQS, drives the same unforked run_slice, and reports structured decision/control/command diffs with complete provenance
+**And** it neither simulates fills nor submits/resends any command. (GAP-0056 remains deferred)
+
+**Given** a replay diff
+**When** results publish
+**Then** they are diagnostic evidence only, never an admission/live gate, and replay state cannot restore into live/paper seats
+**And** a clean diff is required by later order-path changes and the soak acceptance. (TN-21/23)
+
+### Story 27.8: [E15-F01] Append exactly one terminal ledger record for every replay job
+
+As a QMX evidence auditor,
+I want every replay job to terminate with one and only one durable run record,
+So that cancellation, teardown, or partial failure cannot erase or duplicate its outcome.
+
+**Traceability:** FR-074, FR-076.
+
+**Acceptance Criteria:**
+
+**Given** a replay job admitted through the QMB orchestration seam
+**When** it completes, refuses, aborts, is cancelled, exceeds a bound, or fails during teardown
+**Then** exactly one terminal ledger line is appended with run/config/data/composition fingerprints, interval, status, refusal/failure, start/end instants, and output references
+**And** zero or two terminal lines fail the acceptance test. (E15-F01; CT-13/QMB ledger)
+
+**Given** a crash between output persistence and terminal append
+**When** recovery scans the run directory and writer stream
+**Then** ordered-with-recovery logic appends the missing terminal record idempotently or exposes an explicit storage failure requiring review
+**And** it never rewrites an existing terminal line. (NFR-15)
+
+### Story 27.9: Execute the three restore drills and enforce verify-before-purge
+
+As a QMX operator,
+I want sample, full-integrity, and clean-host recovery exercised as separate proofs,
+So that an off-host copy becomes a measured recovery claim rather than backup theatre.
+
+**Acceptance Criteria:**
+
+**Given** the encrypted backup contract and restore schedules
+**When** nightly sample restore and monthly full-integrity restore run
+**Then** each uses its own WriterId, verifies decrypted content/identity before any purge claim, records duration/result against its distinct objective, and exposes failure without silent retry
+**And** generated local-backend fixtures prove the mechanics before real B2 acceptance. (FR-065; DEC-0252)
+
+**Given** operator `restore_drill_run` and the separately tagged real bucket/key prerequisites
+**When** a host-loss rehearsal executes on a clean host holding only the escrowed payload key
+**Then** the documented runbook restores code/config/data/evidence, verifies identity and readable history, measures full-DR time, and never cuts over automatically
+**And** the original node remains authoritative until the operator explicitly decides otherwise. (TN-13; NFR-15)
+
+**Given** hot-room or off-host retention evaluates a purge candidate
+**When** either a verified sealed-archive copy or verified off-host copy is absent
+**Then** purge refuses and journals the unmet proof
+**And** no provider default or monitoring result substitutes for restore verification. (FR-065; CT-14)
+
+## Epic 28: The unattended paper milestone and live-readiness verdict
+
+The operator can deploy the whole VPS system to a demo account, leave it unattended for one full first-deployment week, inspect a journaled TN-23 machinery verdict, and know whether the separate live binding is ready without treating profit as evidence. This epic integrates Epics 24–27 and grants no live authority by itself.
+
+### Story 28.1: Assemble the paper-milestone readiness packet without serializing unrelated work
+
+As a QMX operator,
+I want one explicit list of human inputs and machine prerequisites for the week,
+So that missing procurement or accounts block only the acceptance that consumes them.
+
+**Acceptance Criteria:**
+
+**Given** the completed code lanes
+**When** soak readiness is assessed
+**Then** the packet proves green Tier 1/2/Linux/check-mode/systemd/conformance/replay gates, all 71 applicable settings at required value status, no boot/live/soak blanks, a complete failure register, and a compiled demo roster with paired paper target
+**And** it records each artifact by fingerprint and branch/base commit. (FR-059/076)
+
+**Given** human-only inputs
+**When** readiness is listed
+**Then** VPS procurement, KSA matrix values, Backblaze bucket, backup-key escrow, notification account, and free liveness-watcher account are soak-local gates; Spotware app approval/sandbox token and live credentials allow live sensing; live KYC and written swap-free admin-fee schedule gate go-live only
+**And** none is represented as a blocker for an unrelated epic. (AR-87)
+
+**Given** a candidate VPS
+**When** procurement evidence is recorded
+**Then** Ubuntu 24.04, roughly 4 vCPU/8 GB/~100 GB SSD near the cTrader server is labeled a starting point only
+**And** no minimum is ratified until the node benchmark measures the deployed tuple. (DEC-0261)
+
+### Story 28.2: Deploy the full system to demo and open live sensing only when available
+
+As a QMX operator,
+I want the exact production shape running on the demo account before the week begins,
+So that the milestone exercises the whole system rather than a reduced paper substitute.
+
+**Traceability:** FR-059, FR-068.
+
+**Acceptance Criteria:**
+
+**Given** the procured VPS and readiness packet
+**When** deployment switches to the candidate commit/config
+**Then** `qmn.service`, four node timers, separate observability unit, rooms/evidence/hub trees, powers/evidence doors, chrony, backups, news intake, KSA, protection, seats, paired demo account, and paper virtual ledger are running under the ratified principals
+**And** Book routing is PAPER for the whole first-deployment window. (TN-9/16)
+
+**Given** Spotware credentials exist at any point before or during the week
+**When** the live environment is added to the roster
+**Then** the live connection opens for sensing/recording/capability verification and baseline accumulation only, with no live binding, command stream, sequencer, or execution target
+**And** a late approval delays only live baseline/go-live, never the demo week. (DEC-0260/0261)
+
+**Given** the node is left unattended
+**When** the continuous interval begins
+**Then** a synthetic alert and missing-heartbeat notification have already been delivered end to end
+**And** fault-injection drills occur only at declared boundary/drill points, not as continuous human supervision. (NFR-13)
+
+### Story 28.3: Prove command, uncertainty, protection, and reconciliation failure paths
+
+As a QMX operator,
+I want injected money-path failures demonstrated on the demo binding,
+So that a future live error has a known safe state and operator affordance.
+
+**Acceptance Criteria:**
+
+**Given** the conformance double and demo client
+**When** timeout, transport error, disconnect, superseded-by-fill, reconnect gap, unpersistable identity, queue bound, and protective-stop-capability faults are injected
+**Then** UNKNOWN blocks exactly one stream, protective intents survive, fills persist before healthy, no command retries, unprotected entries refuse, and every designed failure resolves to its documented degraded state/affordance
+**And** the live and double contract results agree. (TN-23; QMX-F062/F063/D008)
+
+**Given** KSA, kill-line, news, dead-zone, SQS, and AD-37 fixtures
+**When** their faults/actions coincide
+**Then** scoped monotone escalation, operator-only de-escalation, compose/conflict/collapse, exit preservation, paper kill-line flatten/stand-down, news widen-not-shrink, demo-vs-live SQS separation, ratchet, and bench-to-paper routing all pass
+**And** no control blocks a risk-reducing exit. (FR-056..058; SCN-0008/0010/0011)
+
+**Given** injected read-back mismatch, stale lookback, and command uncertainty
+**When** reconciliation runs
+**Then** all four verdicts and both residuals are proven, demo drift alarms and continues, live-role drift fixture stands entries down, and out-of-lookback cannot auto-resolve
+**And** venue equity is never subtracted from virtual-ledger equity. (FR-060)
+
+### Story 28.4: Prove lifecycle, security, recovery, and no-authority operations
+
+As a QMX operator,
+I want operational failures rehearsed without live exposure,
+So that restart, restore, credentials, monitoring, and principal boundaries are evidence-backed before go-live.
+
+**Acceptance Criteria:**
+
+**Given** crash-loop, preflight, callback wedge, clock, disk, data freshness, and shutdown injections
+**When** the campaign runs
+**Then** stand-down keeps doors serving, only `resurrect` clears it, quarantine survives restart until `seat_reinstate`, clock no-new-entry/halt behave separately, disk headroom degrades before full, and SIGTERM flushes/mints UNKNOWN/never flattens
+**And** protective acts remain available or honestly persistent. (TN-4/14/19/23)
+
+**Given** powers and secret probes
+**When** unknown peer, ops-principal forbidden call, automated operator UID, secret leak pattern, stale-state authorization, or sandbox promotion is attempted
+**Then** each refuses at the specified boundary and journals the attempt without exposing a secret
+**And** DevOps recipes remain unable to trade. (QMX-F045/F064)
+
+**Given** the installed units, firewall, and listeners
+**When** the Epic 28 security campaign runs
+**Then** it asserts fixed `qmx` identity/no `DynamicUser`, all required systemd hardening directives and exact writable paths, per-unit host-sealed credentials, inbound default-deny except SSH, loopback/Unix-only doors, the outbound allow-list, and no automatic reboot/restart on upgrade
+**And** any drift fails the milestone before the unattended week. (FR-068/069; NFR-14/18)
+
+**Given** backup and monitoring systems
+**When** sample/full/host-loss restore, stack shutdown, alert delivery, and heartbeat loss are exercised
+**Then** all restore claims verify, the node runs unchanged without the stack, the watcher only notifies, and failure of either subsystem grants no node authority
+**And** results carry measured timings and evidence fingerprints. (FR-065/067)
+
+### Story 28.5: Wire and prove the four golden node scenarios
+
+As a QMX evidence auditor,
+I want the ratified risk scenarios executed through the real node composition,
+So that defined contracts become release-quality end-to-end proofs.
+
+**Traceability:** FR-057, FR-060, FR-076, FR-077.
+
+**Acceptance Criteria:**
+
+**Given** SCN-0006
+**When** Book paper transition and routing execute
+**Then** the append-only epoch, frozen per-intent target, separate-stream UNKNOWN, immutable paper money, and human-signed return behavior match the scenario exactly. (SCN-0006)
+
+**Given** SCN-0008
+**When** pair-scoped news windows and revisions execute
+**Then** declared exposure, fail-closed missing scope/staleness, entry-only block, exit preservation, widen-not-shrink, and sole free-source evidence match exactly. (SCN-0008)
+
+**Given** SCN-0010
+**When** conflicting/composing controls execute
+**Then** one arbiter per stream, total rank, collapse/conflict/compose, scope refusal, and exit preservation match exactly. (SCN-0010)
+
+**Given** SCN-0011
+**When** virtual-position exits and bench fold execute
+**Then** one CT-29 record per close, breakeven exclusion, stale-evidence refusal, binding-epoch counter, and seat-to-paper/Book-LIVE routing match exactly. (SCN-0011)
+
+**Given** scenario fixtures
+**When** QA validates them
+**Then** each carries proof key, COMP/CT/DEC/GAP references, exact Given/When/Then, injected clock, seed, source class, and fp1
+**And** synthetic data proves infrastructure/failure only, never trading edge. (fixtures strategy)
+
+### Story 28.6: Verify every named QA-debt story and the permanent battery
+
+As a QMX operator,
+I want a machine-readable closure matrix for every node QA debt,
+So that no named defect disappears into a general “tests passed” claim.
+
+**Acceptance Criteria:**
+
+**Given** the node QA-debt roster
+**When** the paper milestone gate runs
+**Then** it resolves separate story/evidence links for QMX-F045, F046, F062, F063, F064, F067, F068, F069, F102, D008, D010, E15-F01, E15-F02, E15-F03, E7-R28, E9-F04, E12-F01, E12-F04, and E12-F05
+**And** a missing link fails the gate rather than marking the ID inherited or implicit. (FR-076; AR-85)
+
+**Given** the permanent battery
+**When** it runs on the code-carrying branch
+**Then** ruff, pyright strict, pytest, coverage, isolated contract suites, secret/money/time/dependency/static scanners, Skylos/IaC, vulture, requirements-first `qa/`, Ubuntu 24.04, systemd/check-mode, conformance, replay, failure-register, and scenario gates pass
+**And** foundation debt is not reclassified as node debt. (NFR-21)
+
+**Given** nightly mutmut
+**When** it covers door wiring, command mint, equity derivation, drift decomposition, sizing, and virtual-ledger folds
+**Then** classified survivors are triaged with evidence and a zero-classified-mutant execution fails closed/alerts
+**And** mutation status is part of the milestone verdict. (AR-86)
+
+### Story 28.7: [E9-F04] Establish first-hours VPS and storage baselines
+
+As a QMX operator,
+I want capacity and latency measured on the actual VPS before it is left alone,
+So that procurement and regression gates rest on evidence instead of remembered targets.
+
+**Traceability:** FR-059, FR-071, FR-076.
+
+**Acceptance Criteria:**
+
+**Given** the node is deployed but not driving production slices during a benchmark sample
+**When** the test-status harness runs at 10/40/100/200 seats
+**Then** it records wall time, peak RSS, six live-path rung latencies, queue/backpressure behavior, deployment tuple, and lifecycle state, and derives regression thresholds as declared multiples of observed variance
+**And** the watched ~50 ms figure is recorded but never used as a gate. (E9-F04; AR-84)
+
+**Given** the evidence/observability/data trees
+**When** the first hours and representative day complete
+**Then** bytes/day, journal/log/metrics/backup growth, hot-room headroom, observability quota, retained commit-tree depth, and protection-intent reserve are measured against `vps_disk_budget`
+**And** a capacity refusal or no-new-entry threshold occurs before disk exhaustion. (TN-3/23)
+
+**Given** measurements fail the starting VPS
+**When** the result is reviewed
+**Then** the procurement evidence is revised and the same code/config is re-tested on an adequate host
+**And** no story weakens the thresholds or drops observability to fit the box. (DEC-0261)
+
+### Story 28.8: Run the full unattended week and publish the live-readiness verdict
+
+As a QMX operator,
+I want one week-long journaled machinery verdict,
+So that live readiness is decided from operation and recovery evidence, never profitability.
+
+**Acceptance Criteria:**
+
+**Given** Stories 28.1–28.7 have passed their pre-week or declared boundary checks
+**When** the demo binding runs continuously for one full first-deployment week
+**Then** the whole system—venue verification, loop, protections, reconciliation, seats, paper ledger, recording, news, backups, restore timers, doors, alerts, heartbeat, and observability stack—runs under ordinary supervision without a watching operator
+**And** unplanned interruption restarts the full-week clock unless the ratified checklist explicitly classifies it as a tested planned drill boundary. (FR-059)
+
+**Given** the week completes
+**When** the TN-23 checklist folds its journaled items
+**Then** it publishes pass/refuse per item with evidence fingerprints, incidents, recovery proof, QA-debt matrix, benchmark/storage baselines, and any provisional/ratified value status
+**And** profit, loss, win rate, or paper performance never enters the verdict. (AD-32; FR-076)
+
+**Given** live credentials and sensing evidence exist
+**When** live readiness is evaluated
+**Then** each intended live instrument requires its own verified capability profile, live-conditioned SQS baseline, live-path rung baseline on the deployment tuple, KYC, written fee schedule, current config, and silent battery pass
+**And** absence delays the live binding without invalidating the demo milestone. (TN-9/20)
+
+**Given** the verdict passes
+**When** the operator chooses to proceed
+**Then** promotion/activation remain separate powers and activation still waits for the next account day boundary; this epic itself opens no live binding and grants no live-money authority
+**And** the paper milestone artifact remains immutable evidence. (DEC-0261)
+
+## Epic 29: Out-of-the-box single-machine placement
+
+A non-technical operator can install the same QMX product with the node co-located beside the agentic system on one machine, using one backend self-setup path that a later desktop install page can front. This epic is independent of the VPS chain but cannot implement anything until its own architecture gate rules GAP-0058.
+
+### Story 29.1: Run the one-shot GAP-0058 architecture change increment
+
+As a QMX operator,
+I want the single-machine placement designed once against the ratified VPS invariants,
+So that implementation does not improvise platform supervision, secrets, powers, observability, or installation.
+
+**Acceptance Criteria:**
+
+**Given** DEC-0262 and open GAP-0058
+**When** the story runs
+**Then** it invokes a one-shot `bmad-architecture` change increment whose intake is the tracked node/QMA/application architecture and whose questions explicitly cover supervision without systemd, secrets without systemd-creds, powers without a unix socket/SO_PEERCRED, observability placement, container boundaries, backend self-setup/upgrade/rollback, stores, and the future UI install-page seam
+**And** it treats VPS requirements as inherited evidence, not implementation defaults for another OS. (FR-078; AR-88)
+
+**Given** one product with two placements
+**When** the architecture chooses boundaries
+**Then** it records how the roster names the active machine, re-scopes the compose/SecretStore refusal to that named machine, preserves one `qmn` behavior/config/contract surface, and proves why no second product or fork is created
+**And** it states what the single-machine placement may never do. (DEC-0262)
+
+**Given** architecture completion
+**When** validation runs
+**Then** the increment produces/updates the required ADR, component/deployment views, dependency edges, contracts, registry variables, security/ops/observability/test lenses, glossary, gap disposition, traceability, and changelog; its normal validator workflow is green
+**And** every design choice and deferred item is explicit enough to size the remaining Epic 29 stories. (NFR-19)
+
+**Given** Story 29.1 has not landed and been validated
+**When** any Story 29.2–29.7 is considered
+**Then** it is blocked and no code/scaffold/config choice is made
+**And** every VPS epic remains unblocked. (SC-18)
+
+### Story 29.2: Implement the architecture-ratified single-machine supervisor
+
+As a non-technical operator,
+I want the co-located node to start, stop, recover, update, and stand down through the ruled host lifecycle,
+So that I receive the same safety semantics without learning system administration.
+
+**Acceptance Criteria:**
+
+**Given** the validated Story 29.1 lifecycle/supervision contract
+**When** the host-specific lifecycle adapter runs through its isolated contract harness on a supported fixture
+**Then** it implements exactly that host-specific supervisor adapter while reusing the same boot-attempt, preflight → compose → fingerprint → seal, safe-point, stand-down-alive, watchdog, requested-restart, shutdown/UNKNOWN, and operator-only resurrection semantics
+**And** it does not add a second event loop, fork domain logic, or require the later installer orchestration. (FR-052/053 carried into FR-078)
+
+**Given** an unsupported host/version or missing supervisor capability
+**When** preflight runs
+**Then** it returns the architecture-defined typed refusal with remediation surfaced to the installer
+**And** it never falls back to an unsupervised live process. (NFR-12)
+
+### Story 29.3: Implement the architecture-ratified local secrets and powers boundary
+
+As a non-technical operator,
+I want local credentials and operator actions protected by the host's ruled mechanisms,
+So that co-location does not weaken secret custody or human-only authority.
+
+**Acceptance Criteria:**
+
+**Given** the validated Story 29.1 secret-store and principal contracts
+**When** the secret adapter contract harness provisions, rotates, and resolves disposable fixture references
+**Then** it implements the named backend(s), reference-only custody, exact-holder allow-list, backup-key separation, redaction/scanning, store-before-discard rotation, and recovery behavior exactly as ruled
+**And** no systemd-creds, Windows/macOS, container-secret, file-based choice, or installer dependency is inferred beyond the architecture. (AR-88)
+
+**Given** the validated local powers transport/principal model
+**When** operator or installer acts are requested
+**Then** the implementation enforces the same closed power list, operator-versus-ops authority, fresh-state validation, idempotency, journaling, and agent/service denial through the ruled authentication mechanism
+**And** it introduces no CLI or ambient local-admin bypass. (FR-051/069)
+
+### Story 29.4: Implement the ruled stores and zero-authority observability placement
+
+As a non-technical operator,
+I want local storage, backup, health, logs, and dashboards provisioned automatically,
+So that the single-machine installation is recoverable and inspectable without manual topology work.
+
+**Acceptance Criteria:**
+
+**Given** the validated Story 29.1 storage/observability/container topology
+**When** the placement adapters provision a disposable test root through their isolated contract harness
+**Then** it creates the architecture-named stores, permissions, room roles, evidence tier/hub, backup destination integration, log/metric/health exports, liveness watcher, quotas, and zero-authority observability consumers
+**And** containers are used only where the architecture proves they earn their place; Story 29.5 alone later orchestrates these adapters as installation. (DEC-0262)
+
+**Given** the observability subsystem is stopped or unavailable
+**When** the node operates
+**Then** trading-node safety and evidence behavior remain unchanged, the condition is visible, and monitoring cannot write to the node
+**And** the daily liveness digest remains absent. (FR-067)
+
+### Story 29.5: Build one idempotent backend self-setup flow
+
+As a non-technical operator,
+I want QMX to install its own dependencies and stores out of the box,
+So that a colleague can set up the single-machine product without a terminal tutorial.
+
+**Acceptance Criteria:**
+
+**Given** a supported clean machine
+**When** backend self-setup runs
+**Then** it performs the architecture-defined prerequisite detection, dependency/runtime installation, source/artifact verification, store/account/principal creation, configuration initialization, secret onboarding handoff, health checks, and first check-mode boot with resumable idempotent steps
+**And** every step exposes structured progress/refusal/remediation for a later UI install page. (FR-078; NFR-22)
+
+**Given** setup is interrupted or rerun
+**When** it resumes
+**Then** completed verified steps are not duplicated, partial state is repaired or rolled back per the architecture, and no secret is requested twice without need
+**And** failure leaves no partially authoritative node. (NFR-12/14)
+
+### Story 29.6: Upgrade and roll back through the same backend transaction
+
+As a non-technical operator,
+I want upgrades and rollback to reuse the installed product's verified backend path,
+So that recovery does not require a terminal tutorial or a second installer.
+
+**Acceptance Criteria:**
+
+**Given** a compatible installed version and an architecture-supported update
+**When** the operator chooses upgrade through the future UI-facing backend contract
+**Then** source/artifact verification, code/config/schema compatibility, backup, preflight, safe restart, health verification, and structured progress follow the architecture-defined transaction
+**And** the VPS `just node-…` recipes are not exposed as the product interface. (FR-078; DEC-0262)
+
+**Given** an interrupted/failed update or operator rollback
+**When** the transaction recovers
+**Then** it resumes or selects the last verified compatible version/config/store state exactly as ruled, records the result, and leaves no partially authoritative node
+**And** secrets and evidence are neither rolled back unsafely nor exposed. (NFR-14/19)
+
+### Story 29.7: Prove out-of-the-box single-machine acceptance
+
+As a non-technical operator,
+I want a clean-machine acceptance proof from install to safe paper readiness,
+So that “self-setup” means a reproducible product outcome rather than an engineer-assisted demo.
+
+**Traceability:** FR-078.
+
+**Acceptance Criteria:**
+
+**Given** each architecture-supported host class
+**When** an acceptance run starts from a clean supported machine using only the backend setup contract a future UI will front
+**Then** install, restart/resume, config explanation, secret provisioning, check mode, supervised boot, evidence/health/log access, alert/heartbeat test, backup/restore sample, upgrade, rollback, and clean uninstall/recovery outcomes follow the ruled journey
+**And** manual shell edits or undocumented admin knowledge fail the acceptance. (NFR-22)
+
+**Given** co-located QMA and trading node
+**When** security and dependency tests run
+**Then** they use only the architecture-ratified QMA contract/conformance harness to prove the Story 29.1 process/store/credential/principal/network boundaries and QMA's lack of venue, broker, exchange, or trading-node-host reachability
+**And** this story never builds or modifies QMA runtime code, never consumes `_docwork/qma/epics-draft/`, and leaves actual QMA integration to its separately authorized implementation. (DEC-0262; QMA money-path barrier)
+
+**Given** acceptance completion
+**When** documentation and release evidence publish
+**Then** it states the supported hosts, prerequisites, container use, resource evidence, limitations, rollback/recovery path, and any remaining deferred gaps
+**And** VPS acceptance remains independently valid. (SC-18)
+
+## Epic 30: MIS training and shadow re-certification
+
+The operator can design, train on his own machine, register, shadow-roll, compare, and re-certify `regime_classifier_v1` without granting an unratified model any governed or money-path authority. The epic is numbered last by ruling; Stories 30.1–30.6 are branch-parallel from Wave N3, while only Stories 30.7–30.8 wait for Epic 26's stable shadow seam.
+
+### Story 30.1: Design regime_classifier_v1 before selecting a model
+
+As a QMX operator,
+I want a decision-grade classifier design grounded in the node's actual signal and session needs,
+So that model family, features, labels, data windows, and evaluation are ruled before data preparation or training code commits to them.
+
+**Acceptance Criteria:**
+
+**Given** the ratified inventory—six rule-based labelers, fitted `liquidity_stress_v1`, one undesigned `regime_classifier_v1`, and unauthoritative Kronos/HMM/BOCPD/MS-GARCH candidates
+**When** the design story runs
+**Then** it evaluates candidate model families and records the chosen family, feature set, input timing/as-of law, label-generation method, class vocabulary, all-session data windows, leakage controls, split strategy, imbalance treatment, hyperparameter/search bounds, evaluation measures, acceptance/refusal criteria, compute estimate, retraining trigger, and failure modes
+**And** recovered/pretrained candidates receive no authority merely by being evaluated. (FR-079; DEC-0262)
+
+**Given** time-series and QMX evidence laws
+**When** the design is validated
+**Then** it proves no future data, forming bar, sealed holdout, post-event revision, or live outcome leaks into training/features/labels; market-hours, day-boundary, and news calendars remain named apart; and all three trading sessions are represented as declared
+**And** synthetic data cannot validate trading edge. (L19/L20; NFR-19)
+
+**Given** operator review
+**When** the design is accepted
+**Then** the resulting decision artifact and executable data/training/evaluation contract are fingerprinted and cited by every later Story 30.x artifact
+**And** no later story silently changes a design dimension. (GAP-0051)
+
+### Story 30.2: Fetch and clean the governed all-session training corpus
+
+As a QMX research operator,
+I want reproducible source data covering every declared session and regime window,
+So that training is not biased by a convenient local subset or undocumented correction.
+
+**Acceptance Criteria:**
+
+**Given** the accepted Story 30.1 data contract
+**When** data acquisition runs on the operator's machine
+**Then** it fetches only declared governed sources through existing QMF/QMB data tools, records source/dataset/revision/calendar identities and licence tags, and covers the specified windows across all sessions
+**And** no provider fetch occurs inside a training run. (FR-079; CT-10/12/15)
+
+**Given** raw data
+**When** cleaning executes
+**Then** duplicate/gap/out-of-order/bad-scale/session-boundary/correction handling follows the design, emits a complete quality report and refusal counts, preserves raw evidence, and produces a fingerprinted cleaned dataset with lineage
+**And** no row is silently repaired or dropped. (NFR-15)
+
+**Given** split and holdout rules
+**When** the corpus materializes
+**Then** time-ordered non-overlapping train/validation/holdout manifests are fingerprinted, the no-peek seal is enforced, and the exact dataset/as-of set is immutable for the training run
+**And** the story does not train a model. (CT-12)
+
+### Story 30.3: Generate and audit classifier labels
+
+As a QMX research operator,
+I want deterministic labels with explicit provenance and class-balance evidence,
+So that the classifier learns the ruled target rather than a hidden heuristic.
+
+**Traceability:** FR-079.
+
+**Acceptance Criteria:**
+
+**Given** the cleaned dataset and accepted label contract
+**When** label generation runs
+**Then** every label is deterministically derived using only allowed as-of inputs, carries generator/config/code/data fingerprints and event/knowledge-time bounds, and maps to the closed class vocabulary
+**And** ambiguous or insufficient-evidence rows follow the designed refusal/exclusion class rather than an invented default. (Story 30.1 contract)
+
+**Given** all sessions and splits
+**When** label audit completes
+**Then** it reports counts, balance, transition frequencies, gaps, missingness, session/instrument/window distribution, and leakage checks per split without inspecting sealed evaluation outcomes beyond the declared process
+**And** materially unsupported classes return to Story 30.1's governed design-change process, not an ad hoc label tweak. (NFR-03/08)
+
+**Given** the labeled corpus
+**When** it is persisted
+**Then** it mints a fingerprinted derivative with lineage to cleaned/raw data and label-design artifact
+**And** it remains research evidence with no node or money-path authority. (CT-07/11)
+
+### Story 30.4: Train through an operator-run offline script
+
+As a QMX operator,
+I want one bounded, reproducible script I can run on my own machine over a few hours,
+So that training needs no VPS, cloud service, or hidden factory orchestration.
+
+**Acceptance Criteria:**
+
+**Given** the accepted design and labeled split manifests
+**When** the operator launches the training script
+**Then** it records command/config, code fp1, dependency lock, machine/OS/CPU/memory, RNG algorithm and seed, exact data/split windows, start/end time, resource use, trial/hyperparameter record, and deterministic output locations
+**And** it runs offline from prepared data with no broker/node credential or trading-VPS access. (FR-079; DEC-0262)
+
+**Given** a multi-hour run
+**When** it is interrupted, bounded, resumed, or fails
+**Then** checkpoints/resume semantics follow the design, partial outputs cannot register as a model, and one terminal training record reports completed/aborted/refused with cause
+**And** rerun under identical inputs reproduces the governed artifact or returns an explicit reproducibility refusal. (NFR-03)
+
+### Story 30.5: Evaluate the trained candidate against the ruled design
+
+As a QMX research operator,
+I want evaluation separated from the multi-hour training transaction,
+So that acceptance evidence can be reproduced and reviewed without silently changing the model or threshold.
+
+**Acceptance Criteria:**
+
+**Given** a completed training artifact and immutable split manifests
+**When** train/validation and the declared final evaluation execute
+**Then** measures, uncertainty, per-session/per-class results, calibration/stability checks, baseline comparisons, error analysis, and acceptance/refusal criteria follow Story 30.1 exactly
+**And** no profit, live authority, or post-hoc threshold is inferred. (FR-079; GAP-0051)
+
+**Given** another evaluator runs against the same artifacts
+**When** the report is reproduced
+**Then** inputs, code/dependency identity, measures, thresholds, exclusions, and result agree or produce a typed reproducibility refusal with the differing identity
+**And** evaluation never mutates the trained artifact or sealed holdout. (NFR-03/19)
+
+### Story 30.6: Register the model and training lineage as versioned artifacts
+
+As a QMX evidence auditor,
+I want each candidate model registered with complete training provenance,
+So that shadow results can never be detached from the exact data, code, seed, and design that produced them.
+
+**Acceptance Criteria:**
+
+**Given** a completed accepted training run
+**When** registration occurs
+**Then** the model artifact, preprocessing/feature schema, class mapping, evaluation report, training config, code/dependency identity, seed, data/split manifests, and design decision are content-fingerprinted and linked by append-only lineage
+**And** a changed byte or semantic config mints a new version. (FR-079; CT-05/06/07)
+
+**Given** rejected/incomplete training or an external candidate such as Kronos/HMM/BOCPD/MS-GARCH
+**When** registration is attempted
+**Then** it may be recorded as a candidate with honest provenance but cannot receive governed/ratified/active status or a live consumer binding
+**And** no pretrained reputation substitutes for QMX evidence. (DEC-0262)
+
+**Given** registry publication
+**When** the artifact enters the passive hub
+**Then** sandbox provenance remains visible and promotion rules still refuse it until the separate human/recertification path is satisfied
+**And** registering a candidate never changes node `composition_fp`. (TN-19/20)
+
+### Story 30.7: Shadow-roll the registered classifier with zero authority
+
+As a QMX operator,
+I want the candidate compared against governed signals without affecting them,
+So that live-distribution behavior is observable before any re-certification decision.
+
+**Acceptance Criteria:**
+
+**Given** a registered candidate and Epic 26 shadow seam
+**When** shadow rollout is configured
+**Then** the candidate runs under its own WriterId/manifest prefix and `shadow_composition_fp`, reads only the declared snapshot fields at the same as-of instant, and writes candidate labels plus latency/refusal/resource evidence to the shadow stream
+**And** it has no route to Book, KSA, bot, venue, powers, or governed producer registry. (FR-072/079)
+
+**Given** rule-based, fitted, and trained outputs
+**When** the comparison read model reports
+**Then** it aligns by source instant/identity and exposes agreement, disagreement, transition, missing/refused, per-session/class, latency, and stability evidence under the Story 30.1 evaluation contract
+**And** it publishes and never acts. (GAP-0051)
+
+**Given** candidate failure or resource breach
+**When** it occurs
+**Then** the shadow runner refuses/quarantines or stops the candidate as designed, records the failure, and leaves the governed node unchanged
+**And** the node remains acceptable with the candidate removed. (NFR-16)
+
+### Story 30.8: Re-certify over one full affected-Book cycle
+
+As a QMX operator,
+I want a complete cycle of shadow evidence reviewed before any governed adoption,
+So that model updates remain human-ruled, versioned, and reversible.
+
+**Acceptance Criteria:**
+
+**Given** a full affected-Book cycle of shadow evidence
+**When** re-certification evaluates the candidate
+**Then** it applies the predeclared evaluation/acceptance criteria across sessions/classes/regimes, reviews failure/refusal/latency/stability and comparison evidence, and records pass/refuse with cited artifact fingerprints
+**And** the cycle boundary is declared and never shortened after seeing results. (FR-079)
+
+**Given** a pass
+**When** the operator chooses governed adoption
+**Then** ratification is a separate human act that mints the next registered version/config/binding, reruns affected conformance/admission tests, and schedules safe-point application; shadow evidence alone changes nothing
+**And** any later rollback selects a prior version through the same governed path. (GAP-0051)
+
+**Given** a refusal or inconclusive result
+**When** the cycle closes
+**Then** the candidate remains shadow-only or is retired with reasons and evidence; changes to model family/features/labels/windows/evaluation return to a new design version
+**And** no live consumer or money-path authority is granted. (DEC-0262)
