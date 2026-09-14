@@ -23,7 +23,9 @@ from qma.core.refusals import (
     NAMED_REFUSAL_VARIANTS,
     CredentialOutOfScope,
     CursorScopeMismatch,
+    ExtensionSurfaceRefused,
     LaptopOffContinuationRefused,
+    NoCodeAuthoringRefused,
     NoEligibleDeployment,
     NoEligibleReviewer,
     NoEnvironment,
@@ -37,6 +39,7 @@ from qma.core.refusals import (
     SlugUnavailable,
     StaleSnapshot,
     StoreVersionMismatch,
+    UiContributionDeferred,
     UnauthenticatedProxy,
     UnauthorizedCancelWriter,
     UnknownHostRequest,
@@ -69,6 +72,9 @@ EXPECTED_VARIANTS = (
     "StoreVersionMismatch",
     "LaptopOffContinuationRefused",
     "UnauthorizedCancelWriter",
+    "UiContributionDeferred",
+    "NoCodeAuthoringRefused",
+    "ExtensionSurfaceRefused",
 )
 
 
@@ -186,6 +192,12 @@ def test_all_variant_factories_carry_structured_context() -> None:
         ),
         LaptopOffContinuationRefused.of(reason="laptop_only", detail="remote_unreachable"),
         UnauthorizedCancelWriter.of(writer="plugin", state="cancelled", surface="job_handle"),
+        UiContributionDeferred.of(contribution_point="ui_view"),
+        NoCodeAuthoringRefused.of(request="qml_revival"),
+        ExtensionSurfaceRefused.of(
+            reason="work_environment_roster_kind",
+            surface="work_environment_roster",
+        ),
     ]
     assert len(samples) == len(EXPECTED_VARIANTS)
     for sample in samples:

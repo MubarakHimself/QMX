@@ -5,7 +5,7 @@ type: component-spec
 status: ratified
 component: COMP-QMA-WIRE
 depends_on: [COMP-QMA-CORE, COMP-QMF-CORE]
-decisions: [DEC-0278, DEC-0304, DEC-0303, DEC-0313, DEC-0323, DEC-0333, DEC-0336, DEC-0329, DEC-0347, DEC-0337, DEC-0331, DEC-0348]
+decisions: [DEC-0278, DEC-0280, DEC-0304, DEC-0303, DEC-0313, DEC-0323, DEC-0333, DEC-0336, DEC-0329, DEC-0347, DEC-0337, DEC-0331, DEC-0348]
 sources: [DEC-0304, DEC-0303, DEC-0313, DEC-0323, DEC-0333, DEC-0336, DEC-0329, DEC-0347, DEC-0337, DEC-0331, DEC-0348, _bmad-output/planning-artifacts/architecture/architecture-QMA-2026-08-28/ARCHITECTURE-SPINE.md, docs/contracts/ct-40-qma-wire-envelope.yaml, docs/decisions/ADR-0020-qma-agentic-system.md]
 generated: '2026-08-29'
 verified: '2026-08-29'
@@ -109,7 +109,7 @@ Every authenticated wire connection carries exactly one principal class, `operat
 
 ### The deferred UI contract (AD-5)
 
-`qma-ui-contract` ships as a stub only in v1 (`GAP-0081`): the UI presentation architecture, the Rust extension technology, the UI SDK surfaces, the UI contribution points and UI plugin packaging are a later session's work, revisited once the daemon API is live and stable (DEC-0333). The wire contract and the AD-26 variables registry are not deferred and bind now, because the UI may be live by the time epics are coded and both sides must bind to a fixed, versioned wire; Profile records are client state that no daemon read or store touches, specified in that later session (DEC-0333) (DEC-0337).
+`qma-ui-contract` ships as a stub only in v1 (`GAP-0081`): the UI presentation architecture, the Rust extension technology, the UI SDK surfaces, the UI contribution points and UI plugin packaging are a later session's work, revisited once the daemon API is live and stable (DEC-0333). Rung 4 of the extensibility ladder is that deferred SDK — it does not bind, and there is no `ui_view` contribution point on the wire (DEC-0280) (DEC-0300). The wire contract and the AD-26 variables registry are not deferred and bind now, because the UI may be live by the time epics are coded and both sides must bind to a fixed, versioned wire; Profile records are client state that no daemon read or store touches, specified in that later session (DEC-0333) (DEC-0337).
 
 ## Configuration
 

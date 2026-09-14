@@ -674,14 +674,24 @@ class PluginLoader:
         boundary = self._check_trust_and_peer_boundary(raw)
         if not is_ok(boundary):
             plugin_raw = raw.get("id")
+            extras: dict[str, object] = {}
+            for key in (
+                "gap",
+                "gap_status",
+                "contribution_point",
+                "cut_surfaces",
+                "variant",
+                "package",
+                "package_status",
+                "ui_view_minted",
+            ):
+                if key in boundary.context:
+                    extras[key] = boundary.context[key]
             return self._refuse(
                 str(boundary.context.get("field", "trust")),
                 str(boundary.context.get("reason", boundary)),
                 plugin_id=str(plugin_raw) if isinstance(plugin_raw, str) else None,
-                gap=boundary.context.get("gap"),
-                gap_status=boundary.context.get("gap_status"),
-                contribution_point=boundary.context.get("contribution_point"),
-                cut_surfaces=boundary.context.get("cut_surfaces"),
+                **extras,
             )
         try:
             manifest = parse_plugin_manifest(raw)

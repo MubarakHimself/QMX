@@ -14,6 +14,7 @@ from types import MappingProxyType
 from typing import Final, Literal
 
 from qma.core.ports.cardinality import PORT_CONTRACT_BY_NAME, Cardinality
+from qma.core.ports.extensibility import refuse_ui_contribution
 from qmf.core import Ok, Result
 from qmf.core.refusal import TypedRefusal
 from qmf.data.store.refusals import policy_rejection
@@ -236,7 +237,9 @@ def excluded_contribution_refusal(point: str) -> Result[str]:
     gap = EXCLUDED_CONTRIBUTION_POINTS.get(point)
     if gap is None:
         return Ok(point)
-    status = GAP_0077_STATUS if gap == "GAP-0077" else GAP_0081_STATUS
+    if gap == "GAP-0081":
+        return refuse_ui_contribution(point)
+    status = GAP_0077_STATUS
     return policy_rejection(
         "contributions",
         f"contribution point {point!r} is an explicit exclusion ({gap}; status={status}); "

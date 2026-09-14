@@ -16,7 +16,9 @@ __all__ = [
     "NAMED_REFUSAL_VARIANTS",
     "CredentialOutOfScope",
     "CursorScopeMismatch",
+    "ExtensionSurfaceRefused",
     "LaptopOffContinuationRefused",
+    "NoCodeAuthoringRefused",
     "NoEligibleDeployment",
     "NoEligibleReviewer",
     "NoEnvironment",
@@ -29,6 +31,7 @@ __all__ = [
     "SlugUnavailable",
     "StaleSnapshot",
     "StoreVersionMismatch",
+    "UiContributionDeferred",
     "UnauthenticatedProxy",
     "UnauthorizedCancelWriter",
     "UnknownHostRequest",
@@ -316,6 +319,91 @@ class LaptopOffContinuationRefused(QmaRefusal):
         return cls.create(context=context)
 
 
+class UiContributionDeferred(QmaRefusal):
+    """UI widget / SDK contribution asked while rung 4 is GAP-0081 deferred.
+
+    No ``ui_view`` contribution point is minted (FR-W37; DEC-0280; DEC-0300).
+    """
+
+    VARIANT: ClassVar[str] = "UiContributionDeferred"
+    CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.POLICY_REJECTION
+
+    @classmethod
+    def of(
+        cls,
+        *,
+        contribution_point: str = "ui_view",
+        plugin_id: str | None = None,
+        local_id: str | None = None,
+    ) -> UiContributionDeferred:
+        context: dict[str, object] = {
+            "field": "contributions",
+            "contribution_point": contribution_point,
+            "gap": "GAP-0081",
+            "gap_status": "deferred",
+            "package": "qma-ui-contract",
+            "package_status": "stub",
+            "ui_view_minted": False,
+            "reason": "gap_0081_deferred",
+        }
+        if plugin_id is not None:
+            context["plugin_id"] = plugin_id
+        if local_id is not None:
+            context["local_id"] = local_id
+        return cls.create(context=context)
+
+
+class NoCodeAuthoringRefused(QmaRefusal):
+    """No-code authoring presented as an extension rung (FR-W37; FR-W40; DEC-0172).
+
+    SQ-style building-block DSL, RandomCondition editor, and ``.qml`` revival
+    are refused. Ordinary Python (rung 2) remains the logic path.
+    """
+
+    VARIANT: ClassVar[str] = "NoCodeAuthoringRefused"
+    CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.POLICY_REJECTION
+
+    @classmethod
+    def of(
+        cls,
+        *,
+        request: str,
+        logic_path: str = "ordinary_python",
+        logic_rung: int = 2,
+    ) -> NoCodeAuthoringRefused:
+        return cls.create(
+            context={
+                "request": request,
+                "logic_path": logic_path,
+                "logic_rung": logic_rung,
+                "reason": "no_code_not_an_extension_rung",
+            }
+        )
+
+
+class ExtensionSurfaceRefused(QmaRefusal):
+    """Undeclared extension surface: QMB-as-plugin or a work-environment roster kind.
+
+    ``plugin`` stays QMA-scoped (DEC-0346). The work-environment roster remains a
+    later UI alias over fingerprints and is not minted (NFR-W06 A2; FR-W16).
+    """
+
+    VARIANT: ClassVar[str] = "ExtensionSurfaceRefused"
+    CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.POLICY_REJECTION
+
+    @classmethod
+    def of(
+        cls,
+        *,
+        reason: str,
+        surface: str,
+        **extra: object,
+    ) -> ExtensionSurfaceRefused:
+        context: dict[str, object] = {"reason": reason, "surface": surface}
+        context.update(extra)
+        return cls.create(context=context)
+
+
 class UnauthorizedCancelWriter(QmaRefusal):
     """A writer other than JobHandle.cancel tried to cancel or set terminal state.
 
@@ -393,4 +481,7 @@ NAMED_REFUSAL_VARIANTS: Final[tuple[type[QmaRefusal], ...]] = (
     StoreVersionMismatch,
     LaptopOffContinuationRefused,
     UnauthorizedCancelWriter,
+    UiContributionDeferred,
+    NoCodeAuthoringRefused,
+    ExtensionSurfaceRefused,
 )
