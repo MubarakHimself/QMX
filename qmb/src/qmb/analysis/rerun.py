@@ -18,6 +18,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 from typing import Final, cast
 
 from qmf.core.fingerprint import Fingerprint
@@ -68,11 +69,13 @@ _SPEC_FIELDS: Final[tuple[str, ...]] = (
 _SQLITE_FIELDS: Final[tuple[str, ...]] = ("daemon_sqlite", "database", "sqlite")
 _QUERY_TOKENS: Final[frozenset[str]] = frozenset({"none", "query"})
 _RUN_TOKENS: Final[frozenset[str]] = frozenset({"job", "run"})
-_PORT_KEYS: Final[Mapping[str, str]] = {
-    "cost_port": COST_ADAPTER_KEY,
-    "fill_port": FILL_ADAPTER_KEY,
-    "financing_port": FINANCING_SCHEDULE_KEY,
-}
+_PORT_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "cost_port": COST_ADAPTER_KEY,
+        "fill_port": FILL_ADAPTER_KEY,
+        "financing_port": FINANCING_SCHEDULE_KEY,
+    }
+)
 
 
 @dataclass(frozen=True, slots=True)
