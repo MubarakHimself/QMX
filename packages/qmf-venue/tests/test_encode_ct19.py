@@ -107,7 +107,12 @@ def _qty(value: int = 100, scale: int = 2) -> Quantity:
     return _ok(Quantity.try_create(value, "lot", scale))
 
 
-def _add_field(message: object, name: str, number: int, typ: int) -> None:
+def _add_field(
+    message: descriptor_pb2.DescriptorProto,
+    name: str,
+    number: int,
+    typ: descriptor_pb2.FieldDescriptorProto.Type.ValueType,
+) -> None:
     field = message.field.add()
     field.name = name
     field.number = number
@@ -115,7 +120,11 @@ def _add_field(message: object, name: str, number: int, typ: int) -> None:
     field.type = typ
 
 
-def _add_message(file_proto: object, name: str, fields: tuple[tuple[str, int, int], ...]) -> None:
+def _add_message(
+    file_proto: descriptor_pb2.FileDescriptorProto,
+    name: str,
+    fields: tuple[tuple[str, int, descriptor_pb2.FieldDescriptorProto.Type.ValueType], ...],
+) -> None:
     message = file_proto.message_type.add()
     message.name = name
     for field_name, number, typ in fields:
