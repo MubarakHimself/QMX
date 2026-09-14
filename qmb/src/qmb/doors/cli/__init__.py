@@ -39,6 +39,10 @@ from qmb.doors.cli.tree import (
     DATA_QUERY_OCCUPANCY,
     DATA_RUN_COMMANDS,
     HOLDS_CACHE,
+    LIBRARY_COMMANDS,
+    LIBRARY_KINDS_OCCUPANCY,
+    LIBRARY_MINTS_CT32,
+    LIBRARY_MINTS_EXPERIMENT_SPEC,
     ORCHESTRATOR_ENTRY,
     SWEEP_BATCH_OCCUPANCY,
     SWEEP_COMMANDS,
@@ -55,6 +59,7 @@ from qmb.doors.cli.tree import (
     invoke_data,
     invoke_ledger_bar,
     invoke_ledger_merge,
+    invoke_library_kinds,
     invoke_optimize_estimate,
     invoke_optimize_run,
     invoke_optimize_space,
@@ -68,7 +73,7 @@ from qmb.doors.cli.tree import (
     require_prerequisites,
 )
 from qmb.optimize import CostEstimate
-from qmb.registryread import RegistryReadPort
+from qmb.registryread import LibraryKindRoster, RegistryReadPort
 from qmb.robustness import (
     PROCEDURE_MC_CANDLE_PERTURBATION,
     PROCEDURE_MC_TRADE_SHUFFLE,
@@ -100,6 +105,10 @@ __all__ = [
     "DATA_QUERY_OCCUPANCY",
     "DATA_RUN_COMMANDS",
     "HOLDS_CACHE",
+    "LIBRARY_COMMANDS",
+    "LIBRARY_KINDS_OCCUPANCY",
+    "LIBRARY_MINTS_CT32",
+    "LIBRARY_MINTS_EXPERIMENT_SPEC",
     "ORCHESTRATOR_ENTRY",
     "SWEEP_BATCH_OCCUPANCY",
     "SWEEP_COMMANDS",
@@ -116,6 +125,7 @@ __all__ = [
     "invoke_data",
     "invoke_ledger_bar",
     "invoke_ledger_merge",
+    "invoke_library_kinds",
     "invoke_optimize_estimate",
     "invoke_optimize_run",
     "invoke_optimize_space",
@@ -1080,6 +1090,18 @@ def ledger_bar(ctx: click.Context, root: str | None, world: str | None) -> None:
     _transport(ctx, invoke_ledger_bar(root=payload.get("root"), world=payload.get("world")))
 
 
+@main.group("library")
+def library_group() -> None:
+    """Projection over existing fp1 kinds. Query only; no new COMP."""
+
+
+@library_group.command("kinds")
+@click.pass_context
+def library_kinds(ctx: click.Context) -> None:
+    """Enumerate Library kinds (existing fp1 list; coordinated ExperimentSpec)."""
+    _transport(ctx, invoke_library_kinds())
+
+
 @main.group("config")
 def config_group() -> None:
     """The B-3 config compiler: one resolved, fingerprinted run-config."""
@@ -1206,6 +1228,7 @@ def _format_ok(value: object) -> str:
         value,
         (
             CandlePerturbationResult,
+            LibraryKindRoster,
             SignificanceResult,
             SweepBatchReport,
             SweepRanking,

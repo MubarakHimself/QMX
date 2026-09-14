@@ -46,7 +46,15 @@ from qmb.orchestrator import (
     read_merge_view,
     spawn_run,
 )
-from qmb.registryread import RegistryCompletion, RegistryReadPort
+from qmb.registryread import (
+    LIBRARY_KINDS_OCCUPANCY,
+    LIBRARY_MINTS_CT32,
+    LIBRARY_MINTS_EXPERIMENT_SPEC,
+    LibraryKindRoster,
+    RegistryCompletion,
+    RegistryReadPort,
+    enumerate_library_kinds,
+)
 from qmb.robustness import (
     PROCEDURE_MC_CANDLE_PERTURBATION,
     PROCEDURE_MC_TRADE_SHUFFLE,
@@ -87,6 +95,10 @@ __all__ = [
     "DATA_QUERY_OCCUPANCY",
     "DATA_RUN_COMMANDS",
     "HOLDS_CACHE",
+    "LIBRARY_COMMANDS",
+    "LIBRARY_KINDS_OCCUPANCY",
+    "LIBRARY_MINTS_CT32",
+    "LIBRARY_MINTS_EXPERIMENT_SPEC",
     "ORCHESTRATOR_ENTRY",
     "SWEEP_BATCH_OCCUPANCY",
     "SWEEP_COMMANDS",
@@ -103,6 +115,7 @@ __all__ = [
     "invoke_data",
     "invoke_ledger_bar",
     "invoke_ledger_merge",
+    "invoke_library_kinds",
     "invoke_optimize_estimate",
     "invoke_optimize_run",
     "invoke_optimize_space",
@@ -123,8 +136,10 @@ COMMAND_GROUPS: Final[tuple[str, ...]] = (
     "sweep",
     "robustness",
     "ledger",
+    "library",
     "config",
 )
+LIBRARY_COMMANDS: Final[tuple[str, ...]] = ("kinds",)
 COMPUTES_RUN_ID: Final[bool] = False
 HOLDS_CACHE: Final[bool] = False
 ORCHESTRATOR_ENTRY: Final[str] = "qmb.orchestrator.spawn_run"
@@ -163,6 +178,7 @@ _COMMAND_TREE: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         # B-14 rungs are the Epic 22 procedure keys — no second robustness roster.
         "robustness": ROBUSTNESS_PROCEDURES,
         "ledger": ("merge", "bar"),
+        "library": LIBRARY_COMMANDS,
         "config": ("compile", "show"),
     }
 )
@@ -209,6 +225,7 @@ _COMMAND_PREREQS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         f"robustness.{PROCEDURE_RULE_SIGNIFICANCE}": ("signals", "base_seed"),
         "ledger.merge": ("root", "world", "role"),
         "ledger.bar": ("root", "world"),
+        "library.kinds": (),
         "config.compile": ("port", "book_fragment", "bms_fragment", "run_spec"),
         "config.show": (),
     }
@@ -258,6 +275,9 @@ def cli_tree_identity() -> dict[str, object]:
         },
         "data_mints_ct32": DATA_MINTS_CT32,
         "data_mints_experiment_spec": DATA_MINTS_EXPERIMENT_SPEC,
+        "library_occupancy": LIBRARY_KINDS_OCCUPANCY,
+        "library_mints_ct32": LIBRARY_MINTS_CT32,
+        "library_mints_experiment_spec": LIBRARY_MINTS_EXPERIMENT_SPEC,
     }
 
 
@@ -312,6 +332,17 @@ def require_prerequisites(command: object, provided: object) -> Result[None]:
             required=list(required.value),
         )
     return Ok(None)
+
+
+def invoke_library_kinds() -> Result[LibraryKindRoster]:
+    """Enumerate the closed Library fp1 kind list (Story 34.1).
+
+    Occupancy is a query: no CT-32, no ExperimentSpec successor, no new COMP.
+    """
+    checked = require_prerequisites("library.kinds", {})
+    if is_refusal(checked):
+        return checked
+    return Ok(enumerate_library_kinds())
 
 
 def invoke_config_show() -> Result[Mapping[str, object]]:

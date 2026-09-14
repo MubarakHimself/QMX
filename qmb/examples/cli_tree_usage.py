@@ -7,8 +7,8 @@ Executable::
 Shows the things Story 16.1 / B-1 / AR-10 pin down:
 
 1. The command tree is the platform's single CLI surface: backtest, data,
-   optimize, sweep, robustness, ledger, and config groups, built on the
-   ``qmb_cli_pin`` click door. Capabilities live in the library; the door
+   optimize, sweep, robustness, ledger, library, and config groups, built on
+   the ``qmb_cli_pin`` click door. Capabilities live in the library; the door
    parses and transports.
 2. Commands declare config/resource prerequisites and return a typed refusal
    when they are absent.
@@ -56,6 +56,7 @@ def tree_is_the_platform_surface() -> None:
         "sweep",
         "robustness",
         "ledger",
+        "library",
         "config",
     )
     runner = CliRunner()

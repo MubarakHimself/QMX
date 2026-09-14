@@ -1348,6 +1348,25 @@ def test_store_taint_usage_example_runs_clean() -> None:
     assert "store taint ok" in completed.stdout
 
 
+def test_library_kinds_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "library_kinds_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "library kinds ok" in completed.stdout
+    assert "bot-definition" in completed.stdout
+    assert "experiment-spec lane: coordinated only" in completed.stdout
+    assert "logic source-manifest cites CT-33" in completed.stdout
+    assert "staging refused" in completed.stdout
+    assert "STRATS remains KnowledgeSource" in completed.stdout
+    assert "display aliases" in completed.stdout
+    assert "no qmx-library package" in completed.stdout
+
+
 def test_import_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_EXAMPLE)],
