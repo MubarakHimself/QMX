@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import ctypes
 import os
+import subprocess
 import sys
 import time
 from collections.abc import Mapping
@@ -54,6 +55,7 @@ __all__ = [
 ABORT_KILLS_SIBLINGS: Final[bool] = False
 ENFORCEMENT: Final[str] = "orchestrator-os-process"
 WATCH_POLL_S: Final[float] = 0.05
+_KILL_WAIT_S: Final[float] = 1.0
 _LEDGER_ROLE_ABORTED: Final[str] = "aborted"
 _PROC_STATUS: Final[str] = "status"
 
@@ -125,10 +127,15 @@ def process_memory_bytes(pid: int) -> Result[int]:
 
 
 def kill_owned_process(process: object) -> None:
-    """Terminate one ``Popen`` process. Does not walk or signal siblings."""
+    """Terminate one ``Popen`` process. Does not walk or signal siblings.
+
+    Reap via ``wait`` on the process handle. ``communicate`` waits for pipe
+    EOF, so a sibling that inherited those pipe handles would stall abort
+    until that sibling exited.
+    """
     poll = getattr(process, "poll", None)
     kill = getattr(process, "kill", None)
-    communicate = getattr(process, "communicate", None)
+    wait = getattr(process, "wait", None)
     if not callable(poll) or not callable(kill):
         return
     if poll() is None:
@@ -136,11 +143,12 @@ def kill_owned_process(process: object) -> None:
             kill()
         except OSError:
             return
-    if callable(communicate):
-        try:
-            communicate()
-        except OSError:
-            return
+    if not callable(wait):
+        return
+    try:
+        wait(timeout=_KILL_WAIT_S)
+    except (OSError, subprocess.TimeoutExpired):
+        return
 
 
 def is_aborted_refusal(value: object) -> bool:

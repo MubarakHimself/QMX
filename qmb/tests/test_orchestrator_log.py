@@ -75,12 +75,14 @@ def _hanging_with_log(tmp_path: Path, *, tag: str) -> qmb.LiveSpawn:
             correlation_id=correlation,
         )
     )
+    flags = subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0
     process = subprocess.Popen(
         [sys.executable, "-c", "import time; time.sleep(60)"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        encoding="utf-8",
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+        creationflags=flags,
     )
     return qmb.LiveSpawn(
         run_id=config.fingerprint,
@@ -261,6 +263,8 @@ def test_crashed_run_leaves_partial_log_without_touching_sibling_or_ledger(
 ) -> None:
     victim = _hanging_with_log(tmp_path, tag="victim")
     sibling = _hanging_with_log(tmp_path, tag="sibling")
+    assert victim.process.poll() is None
+    assert sibling.process.poll() is None
     aborted = qmb.abort_run(victim)
     assert is_refusal(aborted)
     assert aborted.context["terminal"] == "aborted"
