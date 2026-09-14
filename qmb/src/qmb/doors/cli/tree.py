@@ -16,6 +16,13 @@ from qmf.core.fingerprint import Fingerprint
 from qmf.core.refusal import Ok, Result, is_refusal
 
 from qmb._refuse import clean_token, invalid, policy, unavailable
+from qmb.analysis import (
+    ANALYSIS_PROJECT_MINTS_CT32,
+    ANALYSIS_PROJECT_MINTS_EXPERIMENT_SPEC,
+    ANALYSIS_PROJECT_OCCUPANCY,
+    ProjectionView,
+    project,
+)
 from qmb.config import (
     BMS_RECORD_KIND,
     BOOK_RECORD_KIND,
@@ -96,6 +103,10 @@ from qmb.sweep import (
 )
 
 __all__ = [
+    "ANALYSIS_COMMANDS",
+    "ANALYSIS_PROJECT_MINTS_CT32",
+    "ANALYSIS_PROJECT_MINTS_EXPERIMENT_SPEC",
+    "ANALYSIS_PROJECT_OCCUPANCY",
     "AUTOCOMPLETE",
     "AUTOCOMPLETE_PORT",
     "BMS_RECORD_KIND",
@@ -125,6 +136,7 @@ __all__ = [
     "command_tree",
     "complete_registry",
     "data_command_occupancy",
+    "invoke_analysis_project",
     "invoke_backtest",
     "invoke_config_compile",
     "invoke_config_show",
@@ -155,9 +167,12 @@ COMMAND_GROUPS: Final[tuple[str, ...]] = (
     "robustness",
     "ledger",
     "library",
+    "analysis",
     "config",
 )
 LIBRARY_COMMANDS: Final[tuple[str, ...]] = ("kinds", "search", "candidates")
+# Story 35.1 occupancy: analysis.project is a query. It consumes none.
+ANALYSIS_COMMANDS: Final[tuple[str, ...]] = ("project",)
 COMPUTES_RUN_ID: Final[bool] = False
 HOLDS_CACHE: Final[bool] = False
 ORCHESTRATOR_ENTRY: Final[str] = "qmb.orchestrator.spawn_run"
@@ -197,6 +212,7 @@ _COMMAND_TREE: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         "robustness": ROBUSTNESS_PROCEDURES,
         "ledger": ("merge", "bar"),
         "library": LIBRARY_COMMANDS,
+        "analysis": ANALYSIS_COMMANDS,
         "config": ("compile", "show"),
     }
 )
@@ -246,6 +262,7 @@ _COMMAND_PREREQS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         "library.kinds": (),
         "library.search": ("kind",),
         "library.candidates": (),
+        "analysis.project": ("source_ct32", "source_ct29", "predicate"),
         "config.compile": ("port", "book_fragment", "bms_fragment", "run_spec"),
         "config.show": (),
     }
@@ -304,6 +321,9 @@ def cli_tree_identity() -> dict[str, object]:
         "library_candidates_occupancy": CANDIDATE_SET_OCCUPANCY,
         "library_candidates_mints_ct32": CANDIDATE_SET_MINTS_CT32,
         "library_candidates_mints_experiment_spec": CANDIDATE_SET_MINTS_EXPERIMENT_SPEC,
+        "analysis_occupancy": ANALYSIS_PROJECT_OCCUPANCY,
+        "analysis_mints_ct32": ANALYSIS_PROJECT_MINTS_CT32,
+        "analysis_mints_experiment_spec": ANALYSIS_PROJECT_MINTS_EXPERIMENT_SPEC,
     }
 
 
@@ -511,6 +531,84 @@ def invoke_library_candidates(
         return saved
     persisted: CandidateSet | SavedCandidateView = saved.value
     return Ok(persisted)
+
+
+def invoke_analysis_project(
+    *,
+    source_ct32: object = None,
+    source_ct29: object = None,
+    predicate: object = None,
+    as_of: object = None,
+    config: object = None,
+    body: object = None,
+    cite: object = None,
+    hours: object = None,
+    days: object = None,
+    session: object = None,
+    max_trades: object = None,
+    include: object = None,
+    exclude: object = None,
+    trades: object = None,
+    trade_list: object = None,
+    copied_trades: object = None,
+    occupancy: object = None,
+    ledger: object = None,
+    mint_ct32: object = None,
+    experiment_spec: object = None,
+    successor: object = None,
+    sqlite: object = None,
+    role: object = None,
+    admission: object = None,
+    claim_class: object = None,
+) -> Result[ProjectionView]:
+    """Thin wrapper over ``qmb.project`` (Story 35.1).
+
+    Occupancy is a query: no CT-32, no ExperimentSpec successor, no ledger line.
+    QMA must call this door (or the library) and must not reimplement the filter.
+    """
+    folded_predicate = predicate
+    if folded_predicate is None and any(
+        item is not None for item in (hours, days, session, max_trades, include, exclude)
+    ):
+        folded_predicate = True
+    if cite is None and body is None:
+        checked = require_prerequisites(
+            "analysis.project",
+            {
+                "source_ct32": source_ct32,
+                "source_ct29": source_ct29,
+                "predicate": folded_predicate,
+            },
+        )
+        if is_refusal(checked):
+            return checked
+    return project(
+        source_ct32=source_ct32,
+        source_ct29=source_ct29,
+        predicate=predicate,
+        as_of=as_of,
+        config=config,
+        body=body,
+        cite=cite,
+        hours=hours,
+        days=days,
+        session=session,
+        max_trades=max_trades,
+        include=include,
+        exclude=exclude,
+        trades=trades,
+        trade_list=trade_list,
+        copied_trades=copied_trades,
+        occupancy=occupancy,
+        ledger=ledger,
+        mint_ct32=mint_ct32,
+        experiment_spec=experiment_spec,
+        successor=successor,
+        sqlite=sqlite,
+        role=role,
+        admission=admission,
+        claim_class=claim_class,
+    )
 
 
 def invoke_config_show() -> Result[Mapping[str, object]]:

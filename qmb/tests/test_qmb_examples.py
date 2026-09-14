@@ -1385,6 +1385,26 @@ def test_library_search_usage_example_runs_clean() -> None:
     assert "fourth store refused" in completed.stdout
 
 
+def test_analysis_project_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "analysis_project_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "analysis.project ok" in completed.stdout
+    assert "canonical saved-view JSON" in completed.stdout
+    assert "as_of is source registry_as_of" in completed.stdout
+    assert "fp1 is of that JSON" in completed.stdout
+    assert "query occupancy, no CT-32" in completed.stdout
+    assert "claim-class is projection" in completed.stdout
+    assert "citation without a body refused" in completed.stdout
+    assert "copied trade list is not a saved view" in completed.stdout
+    assert "query-time as_of refused" in completed.stdout
+
+
 def test_library_candidates_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "library_candidates_usage.py")],

@@ -60,6 +60,7 @@ T = TypeVar("T")
 _NS = 1_700_000_000_000_000_000
 _REQUIRED_REFUSAL_KEYS = ("category", "context", "retryability")
 _CLI_INVOKERS: dict[str, str] = {
+    "invoke_analysis_project": "analysis.project",
     "invoke_backtest": "backtest.run",
     "invoke_config_compile": "config.compile",
     "invoke_config_show": "config.show",

@@ -20,10 +20,15 @@ from click.shell_completion import CompletionItem
 from qmf.core.refusal import Result, is_ok, is_refusal
 
 from qmb._display import __version__
+from qmb.analysis import ProjectionView
 from qmb.config import ResolvedRunConfig
 from qmb.doors import CLI_PROG
 from qmb.doors.cli.render import render_refusal
 from qmb.doors.cli.tree import (
+    ANALYSIS_COMMANDS,
+    ANALYSIS_PROJECT_MINTS_CT32,
+    ANALYSIS_PROJECT_MINTS_EXPERIMENT_SPEC,
+    ANALYSIS_PROJECT_OCCUPANCY,
     AUTOCOMPLETE,
     AUTOCOMPLETE_PORT,
     BMS_RECORD_KIND,
@@ -53,6 +58,7 @@ from qmb.doors.cli.tree import (
     command_tree,
     complete_registry,
     data_command_occupancy,
+    invoke_analysis_project,
     invoke_backtest,
     invoke_config_compile,
     invoke_config_show,
@@ -94,6 +100,10 @@ from qmb.sweep import SweepBatchReport, SweepRanking
 _T = TypeVar("_T")
 
 __all__ = [
+    "ANALYSIS_COMMANDS",
+    "ANALYSIS_PROJECT_MINTS_CT32",
+    "ANALYSIS_PROJECT_MINTS_EXPERIMENT_SPEC",
+    "ANALYSIS_PROJECT_OCCUPANCY",
     "AUTOCOMPLETE",
     "AUTOCOMPLETE_PORT",
     "BMS_RECORD_KIND",
@@ -123,6 +133,7 @@ __all__ = [
     "command_tree",
     "complete_registry",
     "data_command_occupancy",
+    "invoke_analysis_project",
     "invoke_backtest",
     "invoke_config_compile",
     "invoke_config_show",
@@ -1275,6 +1286,112 @@ def library_candidates(
     )
 
 
+@main.group("analysis")
+def analysis_group() -> None:
+    """Named analysis methods: projection saved views (query). Path-dependent is 35.3.
+
+    Occupancy: analysis.project is a query. It consumes no ExecutionEnvironment
+    occupancy, mints no CT-32, and mints no ExperimentSpec successor. Claim-class
+    is projection — never admission evidence, never B-4 role=confirmation.
+    """
+
+
+@analysis_group.command("project")
+@click.option("--source-ct32", default=None, help="Cited CT-32 artifact, run-dir, or fp1.")
+@click.option("--source-ct29", default=None, help="Paired CT-29 stream cite or records.")
+@click.option("--predicate", default=None, help="Permitted predicate JSON.")
+@click.option("--as-of", "as_of", default=None, help="Source CT-32 registry_as_of Instant.")
+@click.option("--hours", default=None, help="UTC hours window, e.g. 8-16.")
+@click.option("--days", default=None, help="Weekdays, comma-separated.")
+@click.option("--session", default=None, help="Caller-declared UTC session window, e.g. 7-16.")
+@click.option("--max-trades", default=None, type=int, help="Max-trades cap.")
+@click.option("--include", default=None, help="Include cites, comma-separated.")
+@click.option("--exclude", default=None, help="Exclude cites, comma-separated.")
+@click.option(
+    "--cite",
+    default=None,
+    help="Refused without a body: a citation is not a saved view.",
+)
+@click.option(
+    "--trades",
+    is_flag=True,
+    default=False,
+    help="Refused: a copied trade list is not a saved view.",
+)
+@click.option(
+    "--role",
+    default=None,
+    help="Refused when confirmation: claim-class is projection.",
+)
+@click.option(
+    "--occupancy",
+    default=None,
+    help="Refused when run: analysis.project is a query.",
+)
+@click.pass_context
+def analysis_project(
+    ctx: click.Context,
+    source_ct32: str | None,
+    source_ct29: str | None,
+    predicate: str | None,
+    as_of: str | None,
+    hours: str | None,
+    days: str | None,
+    session: str | None,
+    max_trades: int | None,
+    include: str | None,
+    exclude: str | None,
+    cite: str | None,
+    trades: bool,
+    role: str | None,
+    occupancy: str | None,
+) -> None:
+    """Project a CT-32/CT-29 stream into canonical saved-view JSON via qmb.project."""
+    payload = _payload(
+        ctx,
+        source_ct32=source_ct32,
+        source_ct29=source_ct29,
+        predicate=predicate,
+        as_of=as_of,
+        hours=hours,
+        days=days.split(",") if days else None,
+        session=session,
+        max_trades=max_trades,
+        include=include.split(",") if include else None,
+        exclude=exclude.split(",") if exclude else None,
+        cite=cite,
+        occupancy=occupancy,
+        role=role,
+    )
+    _transport(
+        ctx,
+        invoke_analysis_project(
+            source_ct32=payload.get("source_ct32"),
+            source_ct29=payload.get("source_ct29"),
+            predicate=payload.get("predicate"),
+            as_of=payload.get("as_of"),
+            config=payload.get("config"),
+            body=payload.get("body"),
+            cite=payload.get("cite"),
+            hours=payload.get("hours"),
+            days=payload.get("days"),
+            session=payload.get("session"),
+            max_trades=payload.get("max_trades"),
+            include=payload.get("include"),
+            exclude=payload.get("exclude"),
+            trades=trades if trades else payload.get("trades"),
+            occupancy=payload.get("occupancy"),
+            ledger=payload.get("ledger"),
+            mint_ct32=payload.get("mint_ct32"),
+            experiment_spec=payload.get("experiment_spec"),
+            sqlite=payload.get("sqlite"),
+            role=payload.get("role"),
+            admission=payload.get("admission"),
+            claim_class=payload.get("claim_class"),
+        ),
+    )
+
+
 @main.group("config")
 def config_group() -> None:
     """The B-3 config compiler: one resolved, fingerprinted run-config."""
@@ -1404,6 +1521,7 @@ def _format_ok(value: object) -> str:
             CandidateSet,
             LibraryKindRoster,
             LibrarySearch,
+            ProjectionView,
             SavedCandidateView,
             SignificanceResult,
             SweepBatchReport,

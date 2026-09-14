@@ -53,6 +53,7 @@ def test_seed_identities_exclude_semver() -> None:
         qmb.library_kinds_identity(),
         qmb.library_search_identity(),
         qmb.candidate_set_identity(),
+        qmb.analysis_project_identity(),
     )
     for payload in payloads:
         assert qmb.__version__ not in payload.values()

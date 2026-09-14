@@ -57,6 +57,7 @@ def tree_is_the_platform_surface() -> None:
         "robustness",
         "ledger",
         "library",
+        "analysis",
         "config",
     )
     runner = CliRunner()

@@ -126,6 +126,7 @@ def test_command_tree_exposes_platform_groups() -> None:
         "robustness",
         "ledger",
         "library",
+        "analysis",
         "config",
     )
     assert tree["backtest"] == ("run",)
@@ -135,6 +136,7 @@ def test_command_tree_exposes_platform_groups() -> None:
     assert tree["robustness"] == qmb.ROBUSTNESS_PROCEDURES
     assert tree["ledger"] == ("merge", "bar")
     assert tree["library"] == ("kinds", "search", "candidates")
+    assert tree["analysis"] == ("project",)
     assert tree["config"] == ("compile", "show")
     identity = cli_tree_identity()
     assert identity["computes_run_id"] is COMPUTES_RUN_ID is False
