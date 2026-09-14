@@ -9,13 +9,14 @@ adapter: one ``qmb`` job per environment through the QMB door.
 
 from __future__ import annotations
 
+import importlib
 import importlib.util
 import json
 import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from types import MappingProxyType
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from qma.core.ontology.records import Agent, Subagent
 from qma.core.plugins.manifest import PluginManifest, parse_plugin_manifest
@@ -34,7 +35,6 @@ from qma.core.ports.knowledge import KnowledgeSource
 from qma.core.ports.memory import MemoryProvider, refuse_memory_promote
 from qma.core.ports.qmb import QMB_BACKTEST_TOOL_ID, QMB_OWNED_CONCERNS
 from qma.core.vocabulary.enums import PrincipalClass
-from qma.daemon.backtest.service import BacktestingService
 from qma.daemon.capabilities.spawn import SpawnRequest, spawn_agent
 from qma.daemon.knowledge import KnowledgeSourceRegistry
 from qma.daemon.memory import MemoryAdmissionGate
@@ -48,6 +48,9 @@ from qma.daemon.staging.proposal import ProposalGate
 from qma.daemon.taskgraph.compiler import GraphTemplateCatalog, MissionCompiler
 from qma.daemon.taskgraph.records import GraphTemplate
 from qmf.core import Ok, Result, is_ok, is_refusal
+
+if TYPE_CHECKING:
+    from qma.daemon.backtest.service import BacktestingService
 from qmf.data.store.refusals import invalid_input, policy_rejection
 
 __all__ = [
@@ -179,7 +182,11 @@ class DeskPluginRoster:
     ) -> None:
         self.plugins_root = plugins_root if plugins_root is not None else default_plugins_root()
         self.loader = loader if loader is not None else PluginLoader()
-        self.backtesting = backtesting if backtesting is not None else BacktestingService()
+        if backtesting is not None:
+            self.backtesting = backtesting
+        else:
+            service_mod = importlib.import_module("qma.daemon.backtest.service")
+            self.backtesting = service_mod.BacktestingService()
         self.templates = GraphTemplateCatalog()
         self.compiler = MissionCompiler(templates=self.templates)
         self.memory = MemoryAdmissionGate()

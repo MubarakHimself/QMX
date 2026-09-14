@@ -66,7 +66,7 @@ The daemon binds loopback by default; any non-loopback bind requires TLS — `ws
 
 ### Attach, detach and replay (AD-5)
 
-`wire.attach(scope, since_seq)` and `wire.detach` are client state only: attachment never changes an actor's identity and never stops a run, which is what makes closing a client harmless (DEC-0304). A cursor is valid only for the scope that issued it; `wire.attach` interprets `since_seq` in that same scope, and a `wire.attach` carrying a cursor from another scope is refused with the typed refusal `CursorScopeMismatch`, never silently re-based (DEC-0304). Session replay is `wire.attach(since_seq=0)`, read-only over the durable event stream for that scope; the daemon streams the scope's events from the requested `seq` and replay authority stays with the journal (DEC-0304).
+`wire.attach(scope, since_seq)` and `wire.detach` are client state only: attachment never changes an actor's identity and never stops a run, which is what makes closing a client harmless (DEC-0304). Closing a tab or calling `wire.detach` does not invoke `JobHandle.cancel` and does not write `cancelled`, `aborted`, `failed`, or `done` on a coordinated JobHandle (FR-W36; UX-DR5). A cursor is valid only for the scope that issued it; `wire.attach` interprets `since_seq` in that same scope, and a `wire.attach` carrying a cursor from another scope is refused with the typed refusal `CursorScopeMismatch`, never silently re-based (DEC-0304). Session replay is `wire.attach(since_seq=0)`, read-only over the durable event stream for that scope; the daemon streams the scope's events from the requested `seq` and replay authority stays with the journal (DEC-0304).
 
 ```mermaid
 sequenceDiagram

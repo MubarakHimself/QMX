@@ -30,6 +30,30 @@ def test_attach_detach_method_names_are_qualified() -> None:
     assert DETACH_METHOD == "wire.detach"
 
 
+def test_tab_close_does_not_invoke_job_handle_cancel() -> None:
+    state = ClientAttachmentState(quant_identity="quant:research/alpha", quant_work_active=True)
+    request = AttachRequest.try_create(scope=SCOPE_A, since_seq=2)
+    assert isinstance(request, Ok)
+    assert is_ok(state.attach(request.value))
+    closed = state.tab_close()
+    assert isinstance(closed, Ok)
+    assert closed.value.event == "tab_close"
+    assert closed.value.invokes_job_handle_cancel is False
+    assert closed.value.sets_cancelled is False
+    assert closed.value.sets_aborted is False
+    assert closed.value.sets_failed is False
+    assert closed.value.sets_done is False
+    assert closed.value.job_handle_state_unchanged is True
+    assert closed.value.stops_quant_work is False
+    assert state.quant_work_active is True
+    assert state.quant_identity == "quant:research/alpha"
+    assert state.attached_scopes == frozenset()
+    detach = DetachRequest.try_create(scope=SCOPE_A)
+    assert isinstance(detach, Ok)
+    assert detach.value.cancels_job_handle is False
+    assert detach.value.sets_terminal_job_handle is False
+
+
 def test_attach_changes_client_state_only_never_quant() -> None:
     state = ClientAttachmentState(quant_identity="quant:research/alpha", quant_work_active=True)
     request = AttachRequest.try_create(scope=SCOPE_A, since_seq=4)

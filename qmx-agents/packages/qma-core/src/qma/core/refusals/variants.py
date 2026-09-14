@@ -30,6 +30,7 @@ __all__ = [
     "StaleSnapshot",
     "StoreVersionMismatch",
     "UnauthenticatedProxy",
+    "UnauthorizedCancelWriter",
     "UnknownHostRequest",
 ]
 
@@ -315,6 +316,37 @@ class LaptopOffContinuationRefused(QmaRefusal):
         return cls.create(context=context)
 
 
+class UnauthorizedCancelWriter(QmaRefusal):
+    """A writer other than JobHandle.cancel tried to cancel or set terminal state.
+
+    Coordinated cancel authority is JobHandle.cancel only (FR-W36; DEC-0278).
+    Plugin, Routine, worker, and UI widget writers are refused. Tab-close is
+    not this refusal — it is a no-op on JobHandle state.
+    """
+
+    VARIANT: ClassVar[str] = "UnauthorizedCancelWriter"
+    CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.POLICY_REJECTION
+
+    @classmethod
+    def of(
+        cls,
+        *,
+        writer: str,
+        state: str | None = None,
+        surface: str | None = None,
+    ) -> UnauthorizedCancelWriter:
+        context: dict[str, object] = {
+            "writer": writer,
+            "authority": "JobHandle.cancel",
+            "reason": "coordinated_cancel_authority",
+        }
+        if state is not None:
+            context["state"] = state
+        if surface is not None:
+            context["surface"] = surface
+        return cls.create(context=context)
+
+
 class StoreVersionMismatch(QmaRefusal):
     """Store lifecycle refused an unknown ``store_schema_version`` (AD-27).
 
@@ -360,4 +392,5 @@ NAMED_REFUSAL_VARIANTS: Final[tuple[type[QmaRefusal], ...]] = (
     CredentialOutOfScope,
     StoreVersionMismatch,
     LaptopOffContinuationRefused,
+    UnauthorizedCancelWriter,
 )

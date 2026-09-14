@@ -1,16 +1,19 @@
 """``wire.attach`` / ``wire.detach`` scoped replay (CT-40; AD-5; FR-Q15).
 
 Attachment is client state only: it never changes a Quant's identity and never
-stops its work. ``wire.attach(since_seq=0)`` is read-only replay of that scope's
-durable event stream. A cursor is valid only for the scope that issued it; using
-it on another scope returns ``CursorScopeMismatch`` and never silently re-bases,
-broadens, or narrows the cursor.
+stops its work. Tab-close and ``wire.detach`` never invoke ``JobHandle.cancel``
+and never write a terminal JobHandle state (FR-W36; UX-DR5).
+``wire.attach(since_seq=0)`` is read-only replay of that scope's durable event
+stream. A cursor is valid only for the scope that issued it; using it on another
+scope returns ``CursorScopeMismatch`` and never silently re-bases, broadens, or
+narrows the cursor.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+from types import MappingProxyType
 from typing import Final, Literal, cast
 
 from qma.core.refusals import CursorScopeMismatch
@@ -30,6 +33,7 @@ __all__ = [
     "AttachRequest",
     "AttachSubscription",
     "ClientAttachmentState",
+    "ClientDetachOutcome",
     "DetachRequest",
     "ReplayCursor",
     "format_scope_key",
@@ -157,10 +161,42 @@ class AttachRequest:
 
 
 @dataclass(frozen=True, slots=True)
+class ClientDetachOutcome:
+    """Tab-close / wire.detach result. Never a JobHandle.cancel (FR-W36)."""
+
+    event: str
+    detached_scopes: tuple[str, ...]
+    job_handle_state_unchanged: Literal[True] = True
+    sets_cancelled: Literal[False] = False
+    sets_aborted: Literal[False] = False
+    sets_failed: Literal[False] = False
+    sets_done: Literal[False] = False
+    stops_quant_work: Literal[False] = False
+    invokes_job_handle_cancel: Literal[False] = False
+
+    def to_payload(self) -> Mapping[str, object]:
+        return MappingProxyType(
+            {
+                "event": self.event,
+                "detached_scopes": list(self.detached_scopes),
+                "job_handle_state_unchanged": self.job_handle_state_unchanged,
+                "sets_cancelled": self.sets_cancelled,
+                "sets_aborted": self.sets_aborted,
+                "sets_failed": self.sets_failed,
+                "sets_done": self.sets_done,
+                "stops_quant_work": self.stops_quant_work,
+                "invokes_job_handle_cancel": self.invokes_job_handle_cancel,
+            }
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class DetachRequest:
     """``wire.detach`` params — drops client subscription for one scope."""
 
     scope: tuple[ScopeSegment, ...]
+    cancels_job_handle: Literal[False] = False
+    sets_terminal_job_handle: Literal[False] = False
 
     @classmethod
     def try_create(cls, *, scope: object) -> Result[DetachRequest]:
@@ -267,6 +303,17 @@ class ClientAttachmentState:
         key = request.scope_key
         self._subscriptions.pop(key, None)
         return Ok(key)
+
+    def tab_close(self) -> Result[ClientDetachOutcome]:
+        """Drop every client subscription. JobHandle state is not a writer here."""
+        detached = tuple(sorted(self._subscriptions))
+        self._subscriptions.clear()
+        return Ok(
+            ClientDetachOutcome(
+                event="tab_close",
+                detached_scopes=detached,
+            )
+        )
 
     def subscription_for(
         self,

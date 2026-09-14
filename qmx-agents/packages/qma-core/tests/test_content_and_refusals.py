@@ -38,6 +38,7 @@ from qma.core.refusals import (
     StaleSnapshot,
     StoreVersionMismatch,
     UnauthenticatedProxy,
+    UnauthorizedCancelWriter,
     UnknownHostRequest,
     variant_name,
 )
@@ -67,6 +68,7 @@ EXPECTED_VARIANTS = (
     "CredentialOutOfScope",
     "StoreVersionMismatch",
     "LaptopOffContinuationRefused",
+    "UnauthorizedCancelWriter",
 )
 
 
@@ -183,6 +185,7 @@ def test_all_variant_factories_carry_structured_context() -> None:
             store_schema_version=9,
         ),
         LaptopOffContinuationRefused.of(reason="laptop_only", detail="remote_unreachable"),
+        UnauthorizedCancelWriter.of(writer="plugin", state="cancelled", surface="job_handle"),
     ]
     assert len(samples) == len(EXPECTED_VARIANTS)
     for sample in samples:

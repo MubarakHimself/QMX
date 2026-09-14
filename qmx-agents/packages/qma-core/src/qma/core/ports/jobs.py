@@ -3,7 +3,8 @@
 Declared here; the daemon Compute Router / JobHandle service implements
 ``submit``, ``JobHandle.attach``, ``wait``, ``JobHandle.reattach``, ``wake``,
 ``cancel`` and ``stream``. Mapping onto Task state is defined here and applied
-only by the daemon (DEC-0316; FR-Q51).
+only by the daemon (DEC-0316; FR-Q51). Coordinated cancel authority is
+``JobHandle.cancel`` only; tab-close and UI detach cancel nothing (FR-W36).
 """
 
 from __future__ import annotations

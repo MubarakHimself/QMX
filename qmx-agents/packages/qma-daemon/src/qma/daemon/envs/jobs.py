@@ -3,9 +3,10 @@
 ``submit`` queues and returns immediately. ``JobHandle.attach`` is a live view
 that does not change identity. ``wait`` signals; the durable store is truth.
 ``JobHandle.reattach`` restores that store after detach or restart. ``wake``
-targets the owning Quant mailbox stored at submit. ``cancel`` is explicit.
-``stream`` is harness telemetry, never a ledger. Mapping onto Task state is
-applied here through the dispatcher alone (DEC-0316).
+targets the owning Quant mailbox stored at submit. ``cancel`` is the only
+coordinated cancel authority (FR-W36). UI client detach / tab-close leaves
+JobHandle state unchanged. ``stream`` is harness telemetry, never a ledger.
+Mapping onto Task state is applied here through the dispatcher alone (DEC-0316).
 """
 
 from __future__ import annotations
@@ -15,6 +16,12 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 
 from qma.core.ontology import ActorId, Quant
+from qma.core.ports.cancel_authority import (
+    COORDINATED_CANCEL_AUTHORITY,
+    authorize_coordinated_cancel,
+    authorize_terminal_writer,
+    parse_client_detach_event,
+)
 from qma.core.ports.compute import ComputeRequirement
 from qma.core.ports.jobs import (
     JOB_HANDLE_OPERATIONS,
@@ -431,8 +438,57 @@ class JobHandleService:
             return Ok(self._emit_wake(updated))
         return Ok(record)
 
-    def cancel(self, job_id: str) -> Result[JobHandle]:
-        """Explicit cancel. Distinct from aborted (environment/supervisor kill)."""
+    def on_client_detach(
+        self,
+        job_id: str,
+        *,
+        event: str = "tab_close",
+    ) -> Result[JobHandle]:
+        """UI detach / tab-close. JobHandle state is unchanged (FR-W36; UX-DR5)."""
+        parsed = parse_client_detach_event(event)
+        if is_refusal(parsed):
+            return parsed
+        handle = self._require(job_id)
+        if is_refusal(handle):
+            return handle
+        current = handle.value
+        self._append_stream(
+            job_id,
+            "client_detach",
+            {
+                "event": parsed.value.value,
+                "state": current.state.value,
+                "unchanged": True,
+                "sets_cancelled": False,
+                "sets_aborted": False,
+                "sets_failed": False,
+                "sets_done": False,
+                "invokes_job_handle_cancel": False,
+            },
+        )
+        reread = self._store.get(job_id)
+        if reread is None:
+            return invalid_input(
+                "job_id",
+                "JobHandle disappeared during client detach",
+                given=job_id,
+            )
+        return Ok(reread)
+
+    def cancel(
+        self,
+        job_id: str,
+        *,
+        writer: str = COORDINATED_CANCEL_AUTHORITY,
+    ) -> Result[JobHandle]:
+        """Explicit cancel. Distinct from aborted (environment/supervisor kill).
+
+        Coordinated cancel authority is ``JobHandle.cancel`` only. A plugin,
+        Routine, worker, or UI widget cannot take this path (FR-W36).
+        """
+        authorized = authorize_coordinated_cancel(writer)
+        if is_refusal(authorized):
+            return authorized
         handle = self._store.get(job_id)
         if handle is None:
             return invalid_input("job_id", "cancel requires a minted job id", given=job_id)
@@ -458,7 +514,13 @@ class JobHandleService:
             return handle
         return self._transition(handle.value, JobHandleState.RUNNING, event="start")
 
-    def complete(self, job_id: str, state: JobHandleState | str) -> Result[JobHandle]:
+    def complete(
+        self,
+        job_id: str,
+        state: JobHandleState | str,
+        *,
+        writer: str = "daemon",
+    ) -> Result[JobHandle]:
         """Known application outcome: done or failed. Never a timeout."""
         parsed = _parse_state(state)
         if is_refusal(parsed):
@@ -470,12 +532,21 @@ class JobHandleService:
                 "unknown have dedicated paths (CT-46; FR-Q51)",
                 given=parsed.value.value,
             )
+        authorized = authorize_terminal_writer(writer, state=parsed.value)
+        if is_refusal(authorized):
+            return authorized
         handle = self._require(job_id)
         if is_refusal(handle):
             return handle
         return self._transition(handle.value, parsed.value, event="complete")
 
-    def abort(self, job_id: str, *, reason: str) -> Result[JobHandle]:
+    def abort(
+        self,
+        job_id: str,
+        *,
+        reason: str,
+        writer: str = "environment",
+    ) -> Result[JobHandle]:
         """Known non-completion by environment or supervisor — not cancel."""
         if is_unknown_trigger(reason):
             return policy_rejection(
@@ -487,6 +558,9 @@ class JobHandleService:
             )
         if not is_abort_trigger(reason) and not reason.strip():
             return invalid_input("abort_reason", "aborted requires a recorded reason")
+        authorized = authorize_terminal_writer(writer, state=JobHandleState.ABORTED)
+        if is_refusal(authorized):
+            return authorized
         handle = self._require(job_id)
         if is_refusal(handle):
             return handle

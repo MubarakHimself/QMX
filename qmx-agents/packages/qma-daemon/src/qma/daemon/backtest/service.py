@@ -12,8 +12,15 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
+from typing import Literal
 
 from qma.core.ontology import ActorId
+from qma.core.ports.cancel_authority import (
+    COORDINATED_CANCEL_AUTHORITY,
+    RECORDING_DOOR_MAPS_CANCEL_TO_QMB_ABORT,
+    is_unauthorized_cancel_writer,
+    refuse_unauthorized_cancel,
+)
 from qma.core.ports.jobs import JobHandle
 from qma.core.ports.qmb import (
     ANALYSIS_BACKTEST_PLUGIN_ID,
@@ -60,13 +67,34 @@ def _job_id_for(request: QmbBacktestRequest) -> str:
 
 @dataclass
 class RecordingQmbDoorTransport:
-    """Runtime QMB door. Records CLI/MCP invocations and never imports ``qmb``."""
+    """Runtime QMB door. Records CLI/MCP invocations and never imports ``qmb``.
 
+    ``JobHandle.cancel`` still enters ``cancelled`` on the QMA handle. Mapping
+    that cancel onto a live ``qmb`` abort is Epic 36, not this transport.
+    """
+
+    maps_cancel_to_qmb_abort: Literal[False] = RECORDING_DOOR_MAPS_CANCEL_TO_QMB_ABORT
     _invocations: list[QmbDoorInvocation] = field(default_factory=list[QmbDoorInvocation])
+    _abort_invocations: list[str] = field(default_factory=list[str])
 
     @property
     def invocations(self) -> tuple[QmbDoorInvocation, ...]:
         return tuple(self._invocations)
+
+    @property
+    def abort_invocations(self) -> tuple[str, ...]:
+        return tuple(self._abort_invocations)
+
+    def abort(self, job_id: str) -> Result[None]:
+        """Live qmb abort is Epic 36. Recording door records nothing."""
+        return policy_rejection(
+            "qmb_abort",
+            "mapping JobHandle.cancel onto a live qmb abort is Epic 36, "
+            "not Story 32.2 (AR-W04; FR-W08)",
+            job_id=job_id,
+            transport="RecordingQmbDoorTransport",
+            maps_cancel_to_qmb_abort=self.maps_cancel_to_qmb_abort,
+        )
 
     def submit(self, invocation: QmbDoorInvocation) -> Result[QmbDoorReceipt]:
         if invocation.import_edge or invocation.program != QMB_CLI_PROGRAM:
@@ -356,11 +384,28 @@ class BacktestingService:
             started = self._jobs.start(job_id)
             if is_refusal(started):
                 return started
-        completed = self._jobs.complete(job_id, state)
+        completed = self._jobs.complete(job_id, state, writer="qmb_outcome")
         if is_refusal(completed):
             return completed
         self._release_terminal()
         return completed
+
+    def cancel(
+        self,
+        job_id: str,
+        *,
+        writer: str = COORDINATED_CANCEL_AUTHORITY,
+    ) -> Result[JobHandle]:
+        """JobHandle.cancel only. Recording door does not map onto a live qmb abort."""
+        cancelled = self._jobs.cancel(job_id, writer=writer)
+        if is_refusal(cancelled):
+            return cancelled
+        self._release_terminal()
+        return cancelled
+
+    @property
+    def maps_cancel_to_qmb_abort(self) -> bool:
+        return bool(getattr(self._transport, "maps_cancel_to_qmb_abort", False))
 
     def import_qmb_package(self) -> Result[None]:
         """There is no import edge. Calling this is always a policy rejection."""
@@ -370,7 +415,14 @@ class BacktestingService:
         _ = workers
         return refuse_qmb_owned_concern(concern="intra_node_parallelism")
 
-    def append_run_ledger(self, entry: Mapping[str, object]) -> Result[None]:
+    def append_run_ledger(
+        self,
+        entry: Mapping[str, object],
+        *,
+        writer: str = "daemon",
+    ) -> Result[None]:
+        if is_unauthorized_cancel_writer(writer):
+            return refuse_unauthorized_cancel(writer=writer, surface="qmb_ledger")
         _ = entry
         return refuse_qmb_owned_concern(concern="run_ledger")
 

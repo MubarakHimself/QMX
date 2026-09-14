@@ -25,6 +25,7 @@ from qma.core.refusals.variants import (
     StaleSnapshot,
     StoreVersionMismatch,
     UnauthenticatedProxy,
+    UnauthorizedCancelWriter,
     UnknownHostRequest,
 )
 
@@ -47,6 +48,7 @@ __all__ = [
     "StaleSnapshot",
     "StoreVersionMismatch",
     "UnauthenticatedProxy",
+    "UnauthorizedCancelWriter",
     "UnknownHostRequest",
     "variant_name",
 ]

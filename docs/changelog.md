@@ -14,6 +14,12 @@ decisions: [DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0192
 
 This records changes to the QMF knowledge base. It is not a software release log and does not convert provisional decisions into implementation authority.
 
+## 2026-09-14 — Story 32.2: Tab-close cancels nothing
+
+`JobHandle.cancel` is the only coordinated cancel authority (DEC-0278; FR-W36). UI client detach and tab-close leave JobHandle state unchanged and never write `cancelled`, `aborted`, `failed`, or `done`. A plugin, Routine, worker, or UI widget cannot set a terminal JobHandle or QMB ledger state. While the QMA→QMB door is `RecordingQmbDoorTransport`, `JobHandle.cancel` still enters `cancelled` (Story 45.4) and does not map onto a live `qmb` abort (Epic 36). Ungoverned `qmb.run()` process death writes nothing to the QMB ledger or Experiment Ledger.
+
+Touched: [qma-core.md](components/qma-core.md), [qma-daemon.md](components/qma-daemon.md), [qma-wire.md](components/qma-wire.md).
+
 ## 2026-09-14 — Story 32.1: Continuation is a daemon property
 
 Laptop-off continuation is owned by `qma-daemon` plus a reachable remote ExecutionEnvironment plus the durable outbox (DEC-0278). A laptop-only reachable set is a typed refusal. GAP-0062's always-on host stays operator config — no machine name is invented. QMB process-per-run and Story 46.7 continuation budgets are unchanged.

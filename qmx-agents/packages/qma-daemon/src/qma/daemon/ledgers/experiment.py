@@ -15,6 +15,10 @@ from typing import Final
 from qma.core.content import content_address
 from qma.core.ontology import ActorId
 from qma.core.plugins.hooks import HookResult
+from qma.core.ports.cancel_authority import (
+    UngovernedProcessDeath,
+    record_ungoverned_caller_death,
+)
 from qma.core.ports.ledgers import named_lease_kind
 from qma.core.vocabulary.enums import LeaseKind
 from qma.daemon.hooks.ledger_gate import (
@@ -143,6 +147,18 @@ class ExperimentLedgerStore:
 
     def announcements(self) -> tuple[LedgerAppendAnnouncement, ...]:
         return tuple(self._announcements)
+
+    def on_ungoverned_caller_death(self) -> UngovernedProcessDeath:
+        """Ungoverned ``qmb.run()`` process death writes nothing (FR-W04; FR-W36)."""
+        return record_ungoverned_caller_death()
+
+    def invent_ungoverned_cancel_record(self) -> Result[None]:
+        """Story 32.2 does not invent an ungoverned cancel record."""
+        return policy_rejection(
+            "ungoverned_cancel",
+            "ungoverned qmb.run() process death writes nothing to the QMB ledger "
+            "or Experiment Ledger (FR-W04; FR-W36)",
+        )
 
     def get(self, experiment_id: str) -> ExperimentLedger | None:
         return self._ledgers.get(experiment_id)
