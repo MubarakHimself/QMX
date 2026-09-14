@@ -1,4 +1,4 @@
-"""Live cTrader :class:`~qmn.venue.port.VenueClientPort` (Story 24.3).
+"""Live cTrader :class:`~qmn.venue.port.VenueClientPort` (Story 24.3, Story 31.2).
 
 Converts and records the broker stream exactly: verbatim wire evidence and the
 CT-13 journal mapping land **before** interpretation, money/volume cross only
@@ -13,11 +13,19 @@ Unmapped venue error codes take the fail-closed alarmed
 ``transient / non-retryable / UNKNOWN`` posture with the raw code retained; the
 client never retries a command automatically. Credential-free gates inject a
 Clock and sink set; live-network conformance stays ``@pytest.mark.live``.
+
+Production ``open_session`` drives the node's injected
+:class:`~qmf.venue.connection.ConnectionManager` through ``connect_open_api``
+on that same loop (Open API port 5035, injected proto tag, opaque
+:class:`~qmf.core.SecretRef` only). The client never constructs a loop or a
+second manager. Tagged smoke against ``demo.ctraderapi.com`` stays extra.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+import asyncio
+import ssl
+from collections.abc import Awaitable, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 from types import MappingProxyType
@@ -33,6 +41,8 @@ from qmf.core import (
     RefusalCategory,
     Result,
     Retryability,
+    SecretRef,
+    SecretValue,
     TypedRefusal,
     VenueId,
     World,
@@ -40,7 +50,11 @@ from qmf.core import (
 )
 from qmf.venue.capabilities import ErrorMap, ErrorMapResolution
 from qmf.venue.commands import Command, CompoundCommand, SubmissionResult
-from qmf.venue.connection import ConnectionManager
+from qmf.venue.connection import (
+    CTRADER_OPEN_API_PORT,
+    AccountBinding,
+    ConnectionManager,
+)
 from qmf.venue.ctrader import (
     MARKET_DATA_WIRE_SCALE_EXPONENT,
     decode_execution_price,
@@ -243,8 +257,11 @@ class LiveCTraderClient:
     """Live cTrader client composed around ``qmf-venue`` shapes (DEC-0196, DEC-0228).
 
     Network dial stays optional: credential-free tests inject a :class:`~qmf.core.Clock`
-    and sink set and push wire frames through :meth:`receive`. Automatic command
-    retry is impossible — there is no retry path.
+    and sink set and push wire frames through :meth:`receive`. Production
+    compositions inject the node's :class:`~qmf.venue.connection.ConnectionManager`,
+    loop, Open API host, and proto tag so :meth:`open_session` can call
+    ``connect_open_api``. Automatic command retry is impossible — there is no
+    retry path.
     """
 
     _world: World
@@ -255,8 +272,17 @@ class LiveCTraderClient:
     _connection_manager: ConnectionManager | None = None
     _recorder: EventRecorder | None = None
     _intake: _LiveIntake | None = None
+    _event_loop: asyncio.AbstractEventLoop | None = None
+    _open_api_host: str | None = None
+    _proto_tag: int | None = None
+    _open_api_port: int = CTRADER_OPEN_API_PORT
+    _ssl_context: ssl.SSLContext | None = None
+    _server_hostname: str | None = None
+    _credential_ref: SecretRef | None = None
     _account: Account | None = None
+    _account_binding: AccountBinding | None = None
     _session_open: bool = False
+    _opened_open_api: bool = False
     _capabilities_verified: bool = False
     _verification: VenueFactVerification | None = None
     _observations: list[dict[str, object]] = field(default_factory=list[dict[str, object]])
@@ -274,6 +300,13 @@ class LiveCTraderClient:
         connection_manager: object = None,
         recorder: object = None,
         intake: object = None,
+        event_loop: object = None,
+        open_api_host: object = None,
+        proto_tag: object = None,
+        open_api_port: object = CTRADER_OPEN_API_PORT,
+        ssl_context: object = None,
+        server_hostname: object = None,
+        credential_ref: object = None,
     ) -> Result[LiveCTraderClient]:
         """Build a live client for ``(world, VenueId)`` with injected Clock/ErrorMap."""
         if not isinstance(world, World):
@@ -358,6 +391,54 @@ class LiveCTraderClient:
                 "when supplied, intake is a GovernedLiveIntake (record method)",
                 given=repr(type(intake).__name__),
             )
+        loop = _coerce_event_loop(event_loop)
+        if is_refusal(loop):
+            return loop
+        host = _coerce_optional_host(open_api_host)
+        if is_refusal(host):
+            return host
+        tag = _coerce_optional_proto_tag(proto_tag)
+        if is_refusal(tag):
+            return tag
+        port = _coerce_open_api_port(open_api_port)
+        if is_refusal(port):
+            return port
+        tls = _coerce_optional_ssl_context(ssl_context)
+        if is_refusal(tls):
+            return tls
+        hostname = _coerce_optional_host(server_hostname, field_name="server_hostname")
+        if is_refusal(hostname):
+            return hostname
+        cred = _coerce_optional_credential_ref(credential_ref)
+        if is_refusal(cred):
+            return cred
+        production_host = host.value
+        if production_host is not None:
+            if cm is None:
+                return _invalid(
+                    "connection_manager",
+                    "production Open API connect uses the node's injected "
+                    "ConnectionManager; LiveCTraderClient never constructs one",
+                )
+            if loop.value is None:
+                return _invalid(
+                    "event_loop",
+                    "production Open API connect requires the node's injected "
+                    "asyncio loop; LiveCTraderClient never creates one",
+                )
+            if tag.value is None:
+                return _invalid(
+                    "proto_tag",
+                    "the Spotware proto release tag is a positive integer injected "
+                    "from registry:venue_protocol_artifact",
+                    given=repr(proto_tag),
+                )
+        if cred.value is not None and cm is None:
+            return _invalid(
+                "connection_manager",
+                "credential session open uses the node's injected ConnectionManager; "
+                "LiveCTraderClient never constructs one",
+            )
         return Ok(
             cls(
                 _world=world,
@@ -368,6 +449,13 @@ class LiveCTraderClient:
                 _connection_manager=cm,
                 _recorder=rec,
                 _intake=bound_intake,
+                _event_loop=loop.value,
+                _open_api_host=production_host,
+                _proto_tag=tag.value,
+                _open_api_port=port.value,
+                _ssl_context=tls.value,
+                _server_hostname=hostname.value,
+                _credential_ref=cred.value,
             )
         )
 
@@ -407,15 +495,127 @@ class LiveCTraderClient:
                 venue=self._venue_id.value,
                 account_venue=account.venue.value,
             )
+        secret = self._open_secret_session(account)
+        if is_refusal(secret):
+            return secret
+        if self._open_api_host is not None:
+            connected = self._connect_open_api()
+            if is_refusal(connected):
+                self._rollback_secret_session()
+                return connected
         self._account = account
         self._session_open = True
         return Ok(True)
 
     def close_session(self) -> Result[bool]:
+        if self._opened_open_api:
+            cm = self._connection_manager
+            if cm is not None and cm.transport_open:
+                closed = self._drive_on_node_loop(cm.close_transport())
+                if is_refusal(closed):
+                    return closed
+            self._opened_open_api = False
+        rolled = self._rollback_secret_session()
+        if is_refusal(rolled):
+            return rolled
         self._session_open = False
         self._account = None
         self._capabilities_verified = False
         return Ok(True)
+
+    def _open_secret_session(self, account: Account) -> Result[bool]:
+        """Hold the credential by opaque reference in the injected manager (CT-21)."""
+        if self._credential_ref is None:
+            return Ok(True)
+        cm = self._connection_manager
+        if cm is None:
+            return _invalid(
+                "connection_manager",
+                "credential session open uses the node's injected ConnectionManager; "
+                "LiveCTraderClient never constructs one",
+            )
+        binding = AccountBinding.try_create(
+            self._venue_id, account, self._world, self._credential_ref
+        )
+        if is_refusal(binding):
+            return binding
+        opened = cm.open_session(binding.value)
+        if is_refusal(opened):
+            return opened
+        self._account_binding = binding.value
+        return Ok(True)
+
+    def _rollback_secret_session(self) -> Result[bool]:
+        cm = self._connection_manager
+        binding = self._account_binding
+        self._account_binding = None
+        if cm is None or binding is None:
+            return Ok(True)
+        if not cm.holds_secret(binding.secret_ref):
+            return Ok(True)
+        closed = cm.close_session(binding.secret_ref)
+        if is_refusal(closed):
+            return closed
+        return Ok(True)
+
+    def _connect_open_api(self) -> Result[bool]:
+        """Production caller of :meth:`ConnectionManager.connect_open_api` (DEC-0265)."""
+        cm = self._connection_manager
+        host = self._open_api_host
+        tag = self._proto_tag
+        if cm is None:
+            return _invalid(
+                "connection_manager",
+                "production Open API connect uses the node's injected "
+                "ConnectionManager; LiveCTraderClient never constructs one",
+            )
+        if host is None:
+            return _invalid(
+                "open_api_host",
+                "Open API host is a non-blank deployment host reference",
+            )
+        if tag is None:
+            return _invalid(
+                "proto_tag",
+                "the Spotware proto release tag is a positive integer injected from "
+                "registry:venue_protocol_artifact",
+            )
+        connected = self._drive_on_node_loop(
+            cm.connect_open_api(
+                host,
+                proto_tag=tag,
+                port=self._open_api_port,
+                ssl_context=self._ssl_context,
+                server_hostname=self._server_hostname,
+            )
+        )
+        if is_refusal(connected):
+            return connected
+        self._opened_open_api = True
+        return connected
+
+    def _drive_on_node_loop(self, awaitable: object) -> Result[bool]:
+        """Run one ConnectionManager coroutine on the injected loop.
+
+        The venue edge may drive the node's single loop; it never creates a
+        second loop (DEC-0243).
+        """
+        loop = self._event_loop
+        if loop is None:
+            _close_awaitable(awaitable)
+            return _loop_required()
+        if loop.is_running():
+            _close_awaitable(awaitable)
+            return TypedRefusal(
+                category=RefusalCategory.POLICY_REJECTION,
+                retryability=Retryability.NO,
+                context={
+                    "field": "event_loop",
+                    "reason": "open_session drives connect_open_api on the node's "
+                    "injected loop; a second loop is refused",
+                },
+            )
+        return loop.run_until_complete(cast("Awaitable[Result[bool]]", awaitable))
 
     def verify_capabilities(self) -> Result[Mapping[str, object]]:
         """CT-18 readiness — static declaration present; measured profile from verifier.
@@ -1057,6 +1257,107 @@ def _invalid(field_name: str, reason: str, **extra: object) -> TypedRefusal:
         retryability=Retryability.NO,
         context=context,
     )
+
+
+def _loop_required() -> TypedRefusal:
+    return TypedRefusal(
+        category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+        retryability=Retryability.AFTER_CONDITION,
+        context={
+            "field": "event_loop",
+            "reason": "connect_open_api requires the node's injected asyncio loop; "
+            "LiveCTraderClient never creates one",
+        },
+        after_condition_descriptor="run on the node's injected asyncio loop",
+    )
+
+
+def _close_awaitable(awaitable: object) -> None:
+    closer = getattr(awaitable, "close", None)
+    if callable(closer):
+        closer()
+
+
+def _coerce_event_loop(value: object) -> Result[asyncio.AbstractEventLoop | None]:
+    if value is None:
+        return Ok(None)
+    if isinstance(value, asyncio.AbstractEventLoop):
+        return Ok(value)
+    return _invalid(
+        "event_loop",
+        "production Open API connect requires the node's injected asyncio loop; "
+        "LiveCTraderClient never creates one",
+        given=type(value).__name__,
+    )
+
+
+def _coerce_optional_host(
+    value: object, *, field_name: str = "open_api_host"
+) -> Result[str | None]:
+    if value is None:
+        return Ok(None)
+    if not isinstance(value, str) or value.strip() == "":
+        return _invalid(
+            field_name,
+            "Open API host is a non-blank deployment host reference",
+            given=repr(value),
+        )
+    return Ok(value)
+
+
+def _coerce_optional_proto_tag(value: object) -> Result[int | None]:
+    if value is None:
+        return Ok(None)
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        return _invalid(
+            "proto_tag",
+            "the Spotware proto release tag is a positive integer injected from "
+            "registry:venue_protocol_artifact",
+            given=repr(value),
+        )
+    return Ok(value)
+
+
+def _coerce_open_api_port(value: object) -> Result[int]:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1 or value > 65535:
+        return _invalid(
+            "open_api_port",
+            "Open API port is a TCP port in 1..65535",
+            given=repr(value),
+        )
+    return Ok(value)
+
+
+def _coerce_optional_ssl_context(value: object) -> Result[ssl.SSLContext | None]:
+    if value is None:
+        return Ok(None)
+    if isinstance(value, ssl.SSLContext):
+        return Ok(value)
+    return _invalid(
+        "ssl_context",
+        "when supplied, ssl_context must be an ssl.SSLContext",
+        given=type(value).__name__,
+    )
+
+
+def _coerce_optional_credential_ref(value: object) -> Result[SecretRef | None]:
+    if value is None:
+        return Ok(None)
+    if isinstance(value, SecretValue):
+        return _invalid(
+            "credential_ref",
+            "the live client passes an opaque SecretRef; ConnectionManager is the "
+            "sole in-memory value holder",
+            given=type(value).__name__,
+        )
+    if not isinstance(value, SecretRef):
+        return _invalid(
+            "credential_ref",
+            "the live client passes an opaque SecretRef; ConnectionManager is the "
+            "sole in-memory value holder",
+            given=type(value).__name__,
+        )
+    return Ok(value)
 
 
 def _coerce_wire(value: object) -> WireKind | None:
