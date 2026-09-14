@@ -65,6 +65,16 @@ BMS_NAMESPACES: Final[frozenset[str]] = frozenset(
     {"accounting", "constraints", "kill-line", "reporting"}
 )
 
+# CT-22 / CT-27 VERSION identity keys. Registry occurrence facts (zone, origin,
+# money_path_relevant, approval_request) may ride the CT-06 body so a candidate
+# set can see `dev`, but they never enter Book/BMS truth (DEC-0274, AD-10).
+_DEFINITION_IDENTITY_KEYS: Final[tuple[str, ...]] = (
+    "accounting_currency",
+    "class",
+    "contract_format_version",
+    "sections",
+)
+
 # CT-22 sections projected into Book-owned fragment namespaces. Unmapped
 # sections (charter, control_policy, protection_windows) stay on the source
 # definition — cited by source fp1 — and never become fragment keys.
@@ -396,7 +406,7 @@ def _materialize_definition(
     extracted = _extract_keys(record.body, projection, source_kind=source_kind)
     if is_refusal(extracted):
         return extracted
-    source = fingerprint(_plain(record.body))
+    source = fingerprint(_definition_identity_body(record.body))
     if is_refusal(source):
         return invalid(
             "body",
@@ -532,7 +542,7 @@ def _source_fp1(record: RegistrationRecord | None, fallback: Fingerprint) -> Res
     expected = "book-definition" if record.kind == BOOK_RECORD_KIND else "bms-definition"
     if class_token != expected:
         return Ok(record.stable_id)
-    derived = fingerprint(_plain(record.body))
+    derived = fingerprint(_definition_identity_body(record.body))
     if is_refusal(derived):
         return invalid(
             "body",
@@ -540,6 +550,11 @@ def _source_fp1(record: RegistrationRecord | None, fallback: Fingerprint) -> Res
             cause=dict(derived.context),
         )
     return Ok(derived.value)
+
+
+def _definition_identity_body(body: Mapping[str, object]) -> dict[str, object]:
+    """CT-22/CT-27 version identity: zone/origin stay occurrence, not Book truth."""
+    return {key: _plain(body[key]) for key in _DEFINITION_IDENTITY_KEYS if key in body}
 
 
 def _require_port(port: object) -> Result[RegistryReadPort]:

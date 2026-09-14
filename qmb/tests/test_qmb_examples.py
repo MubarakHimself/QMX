@@ -1429,6 +1429,27 @@ def test_analysis_rerun_usage_example_runs_clean() -> None:
     assert "coordinated Experiment Ledger is Epic 36" in completed.stdout
 
 
+def test_analysis_book_bms_variants_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "analysis_book_bms_variants_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "book/bms variants ok" in completed.stdout
+    assert "dev-zone candidate is a complete CT-22" in completed.stdout
+    assert "patch record refused as a definition" in completed.stdout
+    assert "trade-list rescale is not Book/BMS truth" in completed.stdout
+    assert "evaluation is analysis.rerun citing that fingerprint" in completed.stdout
+    assert "QMA-emitted candidate remains money_path_relevant" in completed.stdout
+    assert "QMA never fills an unset money-path field" in completed.stdout
+    assert "COMP-QMF-RISK remains the shape owner" in completed.stdout
+    assert "composition root remains the mint" in completed.stdout
+    assert "mint does not move into QMB or QMA" in completed.stdout
+
+
 def test_library_candidates_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "library_candidates_usage.py")],
