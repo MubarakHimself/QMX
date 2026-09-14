@@ -7,12 +7,18 @@ sources: [_docwork/ledger.yaml, _docwork/gaps.yaml, _docwork/feature_inventory.y
 generated: 2026-08-18
 verified: '2026-08-30'
 stale_after: 90d
-decisions: [DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0192, DEC-0193, DEC-0194, DEC-0195, DEC-0196, DEC-0197, DEC-0198, DEC-0199, DEC-0200, DEC-0201, DEC-0202, DEC-0203, DEC-0204, DEC-0205, DEC-0206, DEC-0207, DEC-0208, DEC-0209, DEC-0210, DEC-0211, DEC-0212, DEC-0213, DEC-0214, DEC-0215, DEC-0216, DEC-0231, DEC-0236, DEC-0237, DEC-0238, DEC-0239, DEC-0240, DEC-0241, DEC-0242, DEC-0243, DEC-0244, DEC-0245, DEC-0246, DEC-0247, DEC-0248, DEC-0249, DEC-0250, DEC-0251, DEC-0252, DEC-0253, DEC-0254, DEC-0255, DEC-0256, DEC-0257, DEC-0258, DEC-0259, DEC-0260, DEC-0261, DEC-0262, DEC-0114, DEC-0121, DEC-0142, DEC-0300, DEC-0304, DEC-0315, DEC-0316, DEC-0324, DEC-0327, DEC-0328, DEC-0329, DEC-0330, DEC-0331, DEC-0334, DEC-0335, DEC-0337, DEC-0338, DEC-0340, DEC-0341, DEC-0343, DEC-0344, DEC-0345, DEC-0346, DEC-0347, DEC-0349, DEC-0350, DEC-0360, DEC-0379]
+decisions: [DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0192, DEC-0193, DEC-0194, DEC-0195, DEC-0196, DEC-0197, DEC-0198, DEC-0199, DEC-0200, DEC-0201, DEC-0202, DEC-0203, DEC-0204, DEC-0205, DEC-0206, DEC-0207, DEC-0208, DEC-0209, DEC-0210, DEC-0211, DEC-0212, DEC-0213, DEC-0214, DEC-0215, DEC-0216, DEC-0231, DEC-0236, DEC-0237, DEC-0238, DEC-0239, DEC-0240, DEC-0241, DEC-0242, DEC-0243, DEC-0244, DEC-0245, DEC-0246, DEC-0247, DEC-0248, DEC-0249, DEC-0250, DEC-0251, DEC-0252, DEC-0253, DEC-0254, DEC-0255, DEC-0256, DEC-0257, DEC-0258, DEC-0259, DEC-0260, DEC-0261, DEC-0262, DEC-0114, DEC-0121, DEC-0142, DEC-0278, DEC-0300, DEC-0304, DEC-0315, DEC-0316, DEC-0324, DEC-0327, DEC-0328, DEC-0329, DEC-0330, DEC-0331, DEC-0334, DEC-0335, DEC-0337, DEC-0338, DEC-0340, DEC-0341, DEC-0343, DEC-0344, DEC-0345, DEC-0346, DEC-0347, DEC-0349, DEC-0350, DEC-0360, DEC-0379]
 ---
 
 # QMF Documentation Changelog
 
 This records changes to the QMF knowledge base. It is not a software release log and does not convert provisional decisions into implementation authority.
+
+## 2026-09-14 — Story 32.1: Continuation is a daemon property
+
+Laptop-off continuation is owned by `qma-daemon` plus a reachable remote ExecutionEnvironment plus the durable outbox (DEC-0278). A laptop-only reachable set is a typed refusal. GAP-0062's always-on host stays operator config — no machine name is invented. QMB process-per-run and Story 46.7 continuation budgets are unchanged.
+
+Touched: [qma-daemon.md](components/qma-daemon.md), [qma-wire.md](components/qma-wire.md), [variables.yaml](registry/variables.yaml).
 
 ## 2026-09-02 — Story 26.16: V1 seat-containment limit stated honestly
 

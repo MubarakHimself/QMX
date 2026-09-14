@@ -23,6 +23,7 @@ from qma.core.refusals import (
     NAMED_REFUSAL_VARIANTS,
     CredentialOutOfScope,
     CursorScopeMismatch,
+    LaptopOffContinuationRefused,
     NoEligibleDeployment,
     NoEligibleReviewer,
     NoEnvironment,
@@ -65,6 +66,7 @@ EXPECTED_VARIANTS = (
     "OperatorPrincipalRequired",
     "CredentialOutOfScope",
     "StoreVersionMismatch",
+    "LaptopOffContinuationRefused",
 )
 
 
@@ -102,6 +104,18 @@ def test_variants_are_returned_not_raised() -> None:
     assert refusal.context["desk"] == "research"
     assert variant_name(refusal) == "NoMemoryProvider"
     assert NoMemoryProvider.matches(refusal)
+
+
+def test_laptop_off_refusal_leaves_host_as_operator_config() -> None:
+    refusal = LaptopOffContinuationRefused.of(
+        reason="laptop_only",
+        detail="remote_unreachable",
+    )
+    assert is_refusal(refusal)
+    assert refusal.context["variant"] == "LaptopOffContinuationRefused"
+    assert refusal.context["gap"] == "GAP-0062"
+    assert refusal.context["host_machine"] == "operator_config"
+    assert "vps" not in str(refusal.context).casefold()
 
 
 def test_store_version_refusal_names_store_and_both_versions() -> None:
@@ -168,6 +182,7 @@ def test_all_variant_factories_carry_structured_context() -> None:
             expected_schema_version=2,
             store_schema_version=9,
         ),
+        LaptopOffContinuationRefused.of(reason="laptop_only", detail="remote_unreachable"),
     ]
     assert len(samples) == len(EXPECTED_VARIANTS)
     for sample in samples:

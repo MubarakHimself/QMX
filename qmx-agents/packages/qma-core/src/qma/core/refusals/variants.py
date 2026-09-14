@@ -16,6 +16,7 @@ __all__ = [
     "NAMED_REFUSAL_VARIANTS",
     "CredentialOutOfScope",
     "CursorScopeMismatch",
+    "LaptopOffContinuationRefused",
     "NoEligibleDeployment",
     "NoEligibleReviewer",
     "NoEnvironment",
@@ -285,6 +286,35 @@ class CredentialOutOfScope(QmaRefusal):
         return cls.create(context={"credential_ref": credential_ref})
 
 
+class LaptopOffContinuationRefused(QmaRefusal):
+    """Laptop-off promised while daemon and reachable envs are laptop-only (FR-W35).
+
+    The concrete always-on host stays GAP-0062 operator config; this variant
+    never names a machine.
+    """
+
+    VARIANT: ClassVar[str] = "LaptopOffContinuationRefused"
+    CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.POLICY_REJECTION
+
+    @classmethod
+    def of(
+        cls,
+        *,
+        reason: str,
+        detail: str | None = None,
+        **extra: object,
+    ) -> LaptopOffContinuationRefused:
+        context: dict[str, object] = {
+            "reason": reason,
+            "gap": "GAP-0062",
+            "host_machine": "operator_config",
+        }
+        if detail is not None:
+            context["detail"] = detail
+        context.update(extra)
+        return cls.create(context=context)
+
+
 class StoreVersionMismatch(QmaRefusal):
     """Store lifecycle refused an unknown ``store_schema_version`` (AD-27).
 
@@ -329,4 +359,5 @@ NAMED_REFUSAL_VARIANTS: Final[tuple[type[QmaRefusal], ...]] = (
     OperatorPrincipalRequired,
     CredentialOutOfScope,
     StoreVersionMismatch,
+    LaptopOffContinuationRefused,
 )

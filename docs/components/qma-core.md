@@ -5,7 +5,7 @@ type: component-spec
 status: ratified
 component: COMP-QMA-CORE
 depends_on: [COMP-QMF-CORE]
-decisions: [DEC-0300, DEC-0301, DEC-0302, DEC-0306, DEC-0309, DEC-0311, DEC-0312, DEC-0313, DEC-0314, DEC-0315, DEC-0316, DEC-0317, DEC-0318, DEC-0319, DEC-0321, DEC-0323, DEC-0325, DEC-0326, DEC-0327, DEC-0329, DEC-0335, DEC-0337, DEC-0345, DEC-0347, DEC-0349]
+decisions: [DEC-0278, DEC-0300, DEC-0301, DEC-0302, DEC-0306, DEC-0309, DEC-0311, DEC-0312, DEC-0313, DEC-0314, DEC-0315, DEC-0316, DEC-0317, DEC-0318, DEC-0319, DEC-0321, DEC-0323, DEC-0325, DEC-0326, DEC-0327, DEC-0329, DEC-0335, DEC-0337, DEC-0345, DEC-0347, DEC-0349]
 sources: [DEC-0300, DEC-0301, DEC-0302, DEC-0306, DEC-0309, DEC-0311, DEC-0312, DEC-0313, DEC-0314, DEC-0315, DEC-0316, DEC-0317, DEC-0318, DEC-0319, DEC-0321, DEC-0323, DEC-0325, DEC-0326, DEC-0327, DEC-0329, DEC-0335, DEC-0337, DEC-0345, DEC-0347, DEC-0349, _bmad-output/planning-artifacts/architecture/architecture-QMA-2026-08-28/ARCHITECTURE-SPINE.md]
 generated: 2026-08-29
 verified: 2026-08-29
@@ -88,7 +88,7 @@ Every closed vocabulary is closed-and-addable, defined in the AD that owns it an
 - **Principal classes (two)** (AD-24): `operator`, `machine`; every authenticated wire connection carries exactly one, and no `machine` principal may acquire, borrow, cache or impersonate the `operator` class (DEC-0323).
 - **Memory `validation_state` (seven)** (AD-18): `proposed`, `validated`, `admitted`, `superseded`, `invalidated`, `expired`, `contradicted` (DEC-0317).
 - **Node kinds (ten)** (AD-13): `task`, `conditional`, `parallel_branch`, `join`, `approval_gate`, `human_gate`, `deterministic_script`, `loop`, `agent`, `artifact_dependency`; only `task`, `agent` and `loop` emit Tasks (DEC-0312).
-- **ExecutionEnvironment kinds (six) and `network` values (two)** (AD-17, AD-28): kinds `local`, `docker`, `remote_container`, `remote_host`, `browser`, `desktop`; `network` is exactly `none` or `allowlist`, with no open default and no third value (DEC-0316) (DEC-0327).
+- **ExecutionEnvironment kinds (six) and `network` values (two)** (AD-17, AD-28): kinds `local`, `docker`, `remote_container`, `remote_host`, `browser`, `desktop`; `network` is exactly `none` or `allowlist`, with no open default and no third value (DEC-0316) (DEC-0327). Laptop-off continuation is a daemon property over those kinds plus the durable outbox: a promised laptop-off configuration whose daemon and every reachable env live only on the sleeping laptop is the typed refusal `LaptopOffContinuationRefused`; the always-on host remains operator config (GAP-0062) (DEC-0278).
 - **RefinementProposal edit kinds (nine)** (AD-22): `prompt`, `memory`, `skill`, `toolset`, `worker_template`, `hook`, `graph_template`, `loop`, `role`; there is no `variable` edit kind (DEC-0321) (DEC-0325).
 - **Variable scopes (eight)** (AD-26): `global`, `desk`, `role`, `quant`, `mission`, `plugin`, `execution_environment`, `routine` (DEC-0325).
 - **`host_request` verbs** (AD-14): a closed-and-addable set in `qma-wire`, each verb mapping to exactly one daemon-owned primitive and running that primitive's `before_*` hook; a host call with no mapped primitive returns the typed refusal `UnknownHostRequest` (DEC-0313).

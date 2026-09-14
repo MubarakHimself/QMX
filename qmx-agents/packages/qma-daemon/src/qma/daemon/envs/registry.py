@@ -25,6 +25,10 @@ from qma.core.barriers.reachability import (
     validate_worker_image,
 )
 from qma.core.ports.compute import ComputeRequirement, match_compute_requirement
+from qma.core.ports.continuation_host import (
+    ContinuationEnvView,
+    is_workstation_colocated_kind,
+)
 from qma.core.ports.execution import (
     ComputerUseProfile,
     ExecutionEnvironment,
@@ -155,6 +159,7 @@ class ExecutionEnvironmentRegistry:
         self._provider_ids: dict[str, str] = {}
         self._declarations: dict[str, ExecutionEnvironmentDeclaration] = {}
         self._profiles: dict[str, ComputerUseProfile] = {}
+        self._continuation_reachable: dict[str, bool] = {}
 
     def register(
         self,
@@ -202,6 +207,7 @@ class ExecutionEnvironmentRegistry:
         stored = barrier.value
         self._by_kind[token] = environment
         self._declarations[token] = stored
+        self._continuation_reachable.setdefault(token, True)
         if provider_id is not None:
             self._provider_ids[token] = provider_id
         elif stored.provider_ref:
@@ -318,6 +324,40 @@ class ExecutionEnvironmentRegistry:
 
     def kinds(self) -> frozenset[str]:
         return frozenset(self._by_kind)
+
+    def mark_continuation_reachable(
+        self,
+        kind: ExecutionEnvironmentKind | str,
+        reachable: bool,
+    ) -> Result[str]:
+        """Fixture/runtime mark. Does not probe a live host (NFR-W05)."""
+        token = _kind_token(kind)
+        if token not in self._by_kind:
+            return NoEnvironment.of(kind=token)
+        self._continuation_reachable[token] = reachable
+        return Ok(token)
+
+    def continuation_reachable(self, kind: ExecutionEnvironmentKind | str) -> bool | None:
+        """Declared continuation reachability, or None when the kind is unbound."""
+        token = _kind_token(kind)
+        if token not in self._by_kind:
+            return None
+        return self._continuation_reachable.get(token, True)
+
+    def continuation_env_views(self) -> tuple[ContinuationEnvView, ...]:
+        """Registered envs as laptop-off views. ``env_id`` is the kind token."""
+        views: list[ContinuationEnvView] = []
+        for token in sorted(self._declarations):
+            stored = self._declarations[token]
+            views.append(
+                ContinuationEnvView(
+                    env_id=token,
+                    kind=stored.kind,
+                    colocated_with_daemon=is_workstation_colocated_kind(stored.kind),
+                    reachable=self._continuation_reachable.get(token, True),
+                )
+            )
+        return tuple(views)
 
     def match_requirement(
         self,
@@ -467,6 +507,10 @@ class ExecutionEnvironmentRegistry:
                 "max_in_flight": {
                     kind: declaration.max_in_flight
                     for kind, declaration in self._declarations.items()
+                },
+                "continuation_reachable": {
+                    kind: self._continuation_reachable.get(kind, True)
+                    for kind in self._declarations
                 },
             }
         )

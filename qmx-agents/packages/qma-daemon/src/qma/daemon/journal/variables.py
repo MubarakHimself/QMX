@@ -363,6 +363,14 @@ def builtin_qma_variable_rows() -> tuple[VariableRow, ...]:
             default="declared-per-installation",
         ),
         _row(
+            "continuation.laptop_off_promised",
+            owning_subsystem=daemon,
+            scope=g,
+            value_type="boolean",
+            units="boolean",
+            default=False,
+        ),
+        _row(
             "store.backup_cadence",
             owning_subsystem=daemon,
             scope=g,

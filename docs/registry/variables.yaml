@@ -1911,6 +1911,17 @@ variables:
     configurable: true
     notes: "The escalation target for an exhausted continuation budget, the Agent's Quant mailbox (AD-29). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global (AD-26 pins none explicitly). No spine default (DEC-0328, DEC-0325)."
 
+  - name: continuation.laptop_off_promised
+    symbol: null
+    value: false
+    formula: null
+    units: boolean
+    type: boolean
+    component: COMP-QMA-DAEMON
+    decision: DEC-0278
+    configurable: true
+    notes: "Whether the operator promises laptop-off continuation. When true, qma-daemon plus a reachable remote ExecutionEnvironment plus the durable ordered/fsynced outbox are required; a laptop-only reachable set is a typed refusal (FR-W35). The concrete always-on host remains operator config (GAP-0062). Registry-homed: set by an operator-principal variable.set (AD-24). Scope global."
+
   - name: store.backup_cadence
     symbol: null
     value: nightly

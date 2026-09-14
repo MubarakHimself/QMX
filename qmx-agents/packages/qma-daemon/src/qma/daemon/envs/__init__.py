@@ -30,14 +30,26 @@ from qma.core.ports.execution import (
 )
 from qma.core.vocabulary.enums import EnvironmentLifecycle
 from qma.daemon.envs.boundary import DeploymentBoundary, RemoteDeployment
+from qma.daemon.envs.continuation_host import (
+    CONTINUATION_LAPTOP_OFF_PROMISED_KEY,
+    GAP_0062_ALWAYS_ON_HOST,
+    GAP_0062_HOST_MACHINE,
+    LAPTOP_OFF_OWNERS,
+    LaptopOffContinuationGate,
+    durable_outbox_posture,
+)
 from qma.daemon.envs.registry import EnvironmentLease, ExecutionEnvironmentRegistry
 from qma.daemon.envs.router import ComputeRouter, PlacementDecision, QueuedPlacement
 
 __all__ = [
     "COMPUTE_REQUIREMENT_FIELDS",
+    "CONTINUATION_LAPTOP_OFF_PROMISED_KEY",
     "ENVIRONMENT_MAX_IN_FLIGHT_DEFAULT",
     "ENVIRONMENT_MAX_IN_FLIGHT_KEY",
+    "GAP_0062_ALWAYS_ON_HOST",
+    "GAP_0062_HOST_MACHINE",
     "GAP_0070_DESKTOP_EXCLUSION",
+    "LAPTOP_OFF_OWNERS",
     "PINNED_SINGLE_SLOT_KINDS",
     "ComputeRequirement",
     "ComputeRouter",
@@ -49,10 +61,12 @@ __all__ = [
     "ExecutionEnvironmentDeclaration",
     "ExecutionEnvironmentRegistry",
     "GpuRequirement",
+    "LaptopOffContinuationGate",
     "PlacementDecision",
     "QueuedPlacement",
     "RemoteDeployment",
     "WorkerImageManifest",
+    "durable_outbox_posture",
     "environment_isolation",
     "match_compute_requirement",
     "parse_compute_requirement",
