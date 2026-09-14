@@ -5,9 +5,10 @@ CT-13 journal mapping land **before** interpretation, money/volume cross only
 declared exact-integer scale boundaries, and receive-wall time stays distinct
 from venue event time. A float without a declared rounding rule is refused.
 
-FTR-01 leaves position/balance read-back mapping onto CT-13 unresolved — those
-observation kinds are refused here and no eighth node-private journal type is
-minted. Spots, trendbars-in-spots, depth, fills, and lifecycle keep going.
+Position/balance read-backs are CT-20 observation kinds (DEC-0247). They
+journal as CT-13 ``data quality`` before interpretation; the adapter never
+synthesizes them. ``reconcile()`` returns the four-verdict ``Reconciliation``
+over the declared CT-18 lookback (do-not-default). No eighth journal type.
 
 Unmapped venue error codes take the fail-closed alarmed
 ``transient / non-retryable / UNKNOWN`` posture with the raw code retained; the
@@ -47,6 +48,7 @@ from typing import Final, Protocol, cast
 from qmf.core import (
     Account,
     Clock,
+    Duration,
     Fingerprint,
     Instant,
     MonotonicReading,
@@ -99,7 +101,7 @@ from qmf.venue.events import (
     InboundVenueEvent,
     ObservationKind,
     Reconciliation,
-    ReconciliationVerdict,
+    ReconciliationReadback,
     TransactionBoundary,
     VenueNativeIdentity,
 )
@@ -117,14 +119,13 @@ from qmn.venue.verify import VenueFactVerification, ctrader_static_declaration
 
 __all__ = [
     "CT13_SEVEN_EVENT_TYPES",
-    "FTR01_BLOCKED_KINDS",
+    "READBACK_WIRE_KINDS",
     "VOLUME_WIRE_SCALE_EXPONENT",
     "JournalMapping",
     "LiveCTraderClient",
     "WireKind",
     "ct13_journal_event_type",
     "decode_volume",
-    "ftr01_position_balance_blocked",
 ]
 
 
@@ -140,7 +141,7 @@ class _LiveIntake(Protocol):
 # — exact scale-2 integers, never a binary-float divide (DEC-0135, DEC-0141).
 VOLUME_WIRE_SCALE_EXPONENT: Final[int] = 2
 
-# AD-21 / CT-13 closed seven — never an eighth node-private type (FTR-01).
+# AD-21 / CT-13 closed seven — never an eighth node-private type.
 CT13_SEVEN_EVENT_TYPES: Final[frozenset[str]] = frozenset(
     {
         "decision",
@@ -153,21 +154,9 @@ CT13_SEVEN_EVENT_TYPES: Final[frozenset[str]] = frozenset(
     }
 )
 
-_FTR01_REFUSAL: Final[TypedRefusal] = TypedRefusal(
-    category=RefusalCategory.UNSUPPORTED_CAPABILITY,
-    retryability=Retryability.NO,
-    context={
-        "field": "observation_kind",
-        "reason": "position/balance read-back mapping onto CT-13 remains unresolved "
-        "(FTR-01); no eighth node-private journal type is minted",
-        "ftr": "FTR-01",
-        "blocked": ("position-readback", "balance-readback"),
-    },
-)
-
 
 class WireKind(StrEnum):
-    """Inbound live-stream kinds the Story 24.3 client accepts or refuses."""
+    """Inbound live-stream kinds the live client records before interpretation."""
 
     SPOT = "spot"
     TRENDBAR_IN_SPOT = "trendbar-in-spot"
@@ -178,8 +167,16 @@ class WireKind(StrEnum):
     BALANCE_READBACK = "balance-readback"
 
 
-FTR01_BLOCKED_KINDS: Final[frozenset[WireKind]] = frozenset(
+READBACK_WIRE_KINDS: Final[frozenset[WireKind]] = frozenset(
     {WireKind.POSITION_READBACK, WireKind.BALANCE_READBACK}
+)
+
+# CT-20 hyphenation aliases (DEC-0247). WireKind values stay the Story 24.3 tokens.
+_WIRE_ALIASES: Final[Mapping[str, WireKind]] = MappingProxyType(
+    {
+        "position-read-back": WireKind.POSITION_READBACK,
+        "balance-read-back": WireKind.BALANCE_READBACK,
+    }
 )
 
 # Lifecycle CT-20 observation kinds that journal as CT-13 ``order``.
@@ -193,23 +190,19 @@ _LIFECYCLE_OBS: Final[frozenset[ObservationKind]] = frozenset(
 )
 
 
-def ftr01_position_balance_blocked() -> TypedRefusal:
-    """Typed refusal every position/balance read-back path returns until FTR-01 lands."""
-    return _FTR01_REFUSAL
-
-
 def ct13_journal_event_type(kind: object) -> Result[str]:
     """Map an accepted wire/observation kind onto one of CT-13's seven event types.
 
-    Position/balance read-backs are refused (FTR-01). Market-data kinds journal as
-    ``data quality`` occurrence provenance for the intake mapping row — never a new
-    type. Fills → ``fill``; lifecycle → ``order``.
+    Position/balance read-backs and market-data kinds journal as ``data quality``.
+    Fills → ``fill``; lifecycle → ``order``. ``observation`` is not a journal type.
     """
     wire = _coerce_wire(kind)
     if wire is not None:
-        if wire in FTR01_BLOCKED_KINDS:
-            return ftr01_position_balance_blocked()
-        if wire in {WireKind.SPOT, WireKind.TRENDBAR_IN_SPOT, WireKind.DEPTH}:
+        if wire in READBACK_WIRE_KINDS or wire in {
+            WireKind.SPOT,
+            WireKind.TRENDBAR_IN_SPOT,
+            WireKind.DEPTH,
+        }:
             return Ok("data quality")
         if wire is WireKind.FILL:
             return Ok("fill")
@@ -332,6 +325,9 @@ class LiveCTraderClient:
     _trade_side: str | None = None
     _volume: object | None = None
     _handed_off: dict[str, SubmissionResult] = field(default_factory=dict[str, SubmissionResult])
+    _declared_lookback: Duration | None = None
+    _reconcile_expected: object | None = None
+    _has_reconcile_expected: bool = False
 
     @classmethod
     def try_create(
@@ -352,6 +348,7 @@ class LiveCTraderClient:
         ssl_context: object = None,
         server_hostname: object = None,
         credential_ref: object = None,
+        declared_lookback: object = None,
     ) -> Result[LiveCTraderClient]:
         """Build a live client for ``(world, VenueId)`` with injected Clock/ErrorMap."""
         if not isinstance(world, World):
@@ -457,6 +454,12 @@ class LiveCTraderClient:
         cred = _coerce_optional_credential_ref(credential_ref)
         if is_refusal(cred):
             return cred
+        lookback: Duration | None = None
+        if declared_lookback is not None:
+            resolved_lookback = _coerce_declared_lookback(declared_lookback)
+            if is_refusal(resolved_lookback):
+                return resolved_lookback
+            lookback = resolved_lookback.value
         production_host = host.value
         if production_host is not None:
             if cm is None:
@@ -501,6 +504,7 @@ class LiveCTraderClient:
                 _ssl_context=tls.value,
                 _server_hostname=hostname.value,
                 _credential_ref=cred.value,
+                _declared_lookback=lookback,
             )
         )
 
@@ -732,6 +736,24 @@ class LiveCTraderClient:
         self._verification = verification
         return Ok(True)
 
+    def bind_declared_lookback(self, lookback: object) -> Result[Duration]:
+        """Bind the CT-18 do-not-default reconciliation lookback (node-owned value)."""
+        resolved = _coerce_declared_lookback(lookback)
+        if is_refusal(resolved):
+            return resolved
+        self._declared_lookback = resolved.value
+        return Ok(resolved.value)
+
+    def bind_reconcile_expected(self, expected_state: object) -> Result[bool]:
+        """Bind the local expected snapshot for CT-20 verdict comparison.
+
+        The adapter never synthesizes venue observations; the caller supplies
+        the local projection. Quantity/cash residual arithmetic stays Story 26.6.
+        """
+        self._reconcile_expected = expected_state
+        self._has_reconcile_expected = True
+        return Ok(True)
+
     def bind_encode_context(
         self,
         *,
@@ -949,20 +971,48 @@ class LiveCTraderClient:
         return Ok(tuple(dict(item) for item in self._observations))
 
     def reconcile(self) -> Result[Reconciliation]:
-        # Position/balance read-back mapping is FTR-01-blocked; reconciliation that
-        # would journal those kinds as an eighth type is refused as unavailable.
-        return TypedRefusal(
-            category=RefusalCategory.UNSUPPORTED_CAPABILITY,
-            retryability=Retryability.NO,
-            context={
-                "field": "reconcile",
-                "reason": "on-demand reconciliation that surfaces position/balance "
-                "read-backs stays blocked until FTR-01's CT-13 mapping annotation "
-                "lands; no eighth journal type is minted",
-                "ftr": "FTR-01",
-                "verdict_vocabulary": [m.value for m in ReconciliationVerdict],
-            },
+        """On-demand CT-20 read-back over the declared lookback (do-not-default).
+
+        Verdict is exactly ``reconciled | drift | unknown | out-of-lookback``.
+        Observations come from inbound persist only — this method never mints them.
+        Residuals stay Story 26.6; venue equity is never subtracted from virtual-ledger
+        equity here.
+        """
+        if not self._session_open:
+            return TypedRefusal(
+                category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+                retryability=Retryability.AFTER_CONDITION,
+                context={
+                    "field": "session",
+                    "reason": "reconcile requires an open session",
+                },
+                after_condition_descriptor="open_session",
+            )
+        if self._declared_lookback is None:
+            return _invalid(
+                "declared_lookback",
+                "the reconciliation lookback is a mandatory declared adapter "
+                "parameter under do-not-default (CT-18); the adapter never defaults it",
+            )
+        wall = self._clock.wall_now()
+        if is_refusal(wall):
+            return wall
+        evidence, earliest, both_kinds = self._persisted_readback_evidence()
+        if earliest is None:
+            earliest = wall.value
+        readback = ReconciliationReadback.try_create(
+            wall.value,
+            self._declared_lookback,
+            earliest,
+            evidence,
         )
+        if is_refusal(readback):
+            return readback
+        observed: object | None = evidence if both_kinds else None
+        expected: object | None = (
+            self._reconcile_expected if self._has_reconcile_expected else observed
+        )
+        return readback.value.verdict(expected, observed)
 
     def resolve_venue_error(
         self, venue_code: object, context: object
@@ -1038,7 +1088,8 @@ class LiveCTraderClient:
 
         Order is mandatory: observation-sink emit and journal mapping append happen
         **before** scale conversion / interpretation. Position and balance
-        read-backs refuse under FTR-01 without recording an eighth journal type.
+        read-backs persist verbatim and journal as ``data quality``; the adapter
+        never synthesizes them.
         """
         kind = _coerce_wire(wire_kind)
         if kind is None:
@@ -1048,8 +1099,6 @@ class LiveCTraderClient:
                 given=repr(wire_kind),
                 allowed=[m.value for m in WireKind],
             )
-        if kind in FTR01_BLOCKED_KINDS:
-            return ftr01_position_balance_blocked()
         if not isinstance(raw_payload, Mapping):
             return _invalid(
                 "raw_payload",
@@ -1322,6 +1371,14 @@ class LiveCTraderClient:
                 lifecycle_kind=lifecycle_kind,
             )
 
+        if kind in READBACK_WIRE_KINDS:
+            out["observation_kind"] = (
+                "position-read-back" if kind is WireKind.POSITION_READBACK else "balance-read-back"
+            )
+            out["ct13_event_type"] = "data quality"
+            out["synthesized"] = False
+            return Ok(out)
+
         # spots / trendbars-in-spots / depth — market-data only path
         return Ok(out)
 
@@ -1474,6 +1531,44 @@ class LiveCTraderClient:
         out["ct13_event_type"] = "order"
         return Ok(out)
 
+    def _persisted_readback_evidence(
+        self,
+    ) -> tuple[dict[str, object], Instant | None, bool]:
+        """Collect inbound wire evidence. Never invents position/balance rows."""
+        positions: list[Mapping[str, object]] = []
+        balances: list[Mapping[str, object]] = []
+        earliest: Instant | None = None
+        for row in self._observations:
+            kind = row.get("kind")
+            if not isinstance(kind, str):
+                continue
+            token = kind.strip().lower().replace("_", "-")
+            wire = _coerce_wire(token)
+            if wire is None:
+                continue
+            ns = row.get("venue_instant_ns")
+            if not isinstance(ns, int) or isinstance(ns, bool):
+                ns = row.get("receive_wall_time_ns")
+            if isinstance(ns, int) and not isinstance(ns, bool):
+                built = Instant.try_create(ns)
+                if is_ok(built) and (earliest is None or built.value.value_ns < earliest.value_ns):
+                    earliest = built.value
+            payload = row.get("raw_payload")
+            evidence_row: Mapping[str, object]
+            if isinstance(payload, Mapping):
+                evidence_row = cast("Mapping[str, object]", payload)
+            else:
+                evidence_row = dict(row)
+            if wire is WireKind.POSITION_READBACK:
+                positions.append(evidence_row)
+            elif wire is WireKind.BALANCE_READBACK:
+                balances.append(evidence_row)
+        evidence: dict[str, object] = {
+            "positions": tuple(positions),
+            "balances": tuple(balances),
+        }
+        return evidence, earliest, bool(positions) and bool(balances)
+
 
 def _unknown_after_encode(
     command: Command,
@@ -1614,12 +1709,41 @@ def _coerce_optional_credential_ref(value: object) -> Result[SecretRef | None]:
     return Ok(value)
 
 
+def _coerce_declared_lookback(value: object) -> Result[Duration]:
+    """CT-18 lookback is a strictly-positive Duration; never defaulted."""
+    if isinstance(value, Duration):
+        duration = value
+    elif isinstance(value, bool) or not isinstance(value, int):
+        return _invalid(
+            "declared_lookback",
+            "the reconciliation lookback is a mandatory declared adapter parameter "
+            "under do-not-default (a qmf-core Duration)",
+            given=repr(value),
+        )
+    else:
+        built = Duration.try_create(value)
+        if is_refusal(built):
+            return built
+        duration = built.value
+    if duration.value_ns <= 0:
+        return _invalid(
+            "declared_lookback",
+            "a reconciliation lookback is a strictly-positive span",
+            given=str(duration.value_ns),
+        )
+    return Ok(duration)
+
+
 def _coerce_wire(value: object) -> WireKind | None:
     if isinstance(value, WireKind):
         return value
     if isinstance(value, str):
+        token = value.strip().lower().replace("_", "-")
+        alias = _WIRE_ALIASES.get(token)
+        if alias is not None:
+            return alias
         try:
-            return WireKind(value)
+            return WireKind(token)
         except ValueError:
             return None
     return None

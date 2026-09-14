@@ -8,7 +8,7 @@ DEC-0190 / Story 27.2).
 
 Reconnect overlap is idempotent on ``(source, source-native id, revision)``:
 the same revision is deduplicated; a changed revision appends. No silent
-sibling-feed failover. FTR-01 position/balance mapping is refused.
+sibling-feed failover. Position/balance read-backs journal as ``data quality``.
 """
 
 from __future__ import annotations
@@ -24,9 +24,7 @@ from qmf.core import Instant, Ok, Result, TypedRefusal, World, is_refusal
 from qmn.data._refuse import clean_token, invalid, policy
 from qmn.data.mapping import (
     CT13_SEVEN_EVENT_TYPES,
-    FTR01_BLOCKED_KINDS,
     journal_event_for_kind,
-    refuse_ftr01_mapping,
     refuse_observation_journal_type,
 )
 from qmn.loop.accumulator import RecordingAccumulator, first_writer_for
@@ -251,8 +249,6 @@ class GovernedLiveIntake:
             )
         if kind_token is not None:
             normalized_kind = kind_token.strip().lower().replace("_", "-")
-            if normalized_kind in FTR01_BLOCKED_KINDS:
-                return refuse_ftr01_mapping(kind=normalized_kind)
             if normalized_kind == "observation":
                 return refuse_observation_journal_type(given=normalized_kind)
 

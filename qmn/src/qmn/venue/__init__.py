@@ -6,7 +6,7 @@ DEC-0228). Story 24.1 lands the port, the FEAT-0023 conformance double, the
 FTR-04 parent-disposition record, and the credential-free conformance suite.
 Story 24.2 adds CT-18 verify-or-refuse at connection time (D008). Story 24.3
 adds the live cTrader client: record-before-interpret, exact scale decode, and
-FTR-01-blocked position/balance read-backs. Story 24.6 re-exports the UNKNOWN
+position/balance read-backs journaled as CT-13 ``data quality``. Story 24.6 re-exports the UNKNOWN
 stream-gate shapes so ``qmn.order`` can enforce the exact ``(VenueId, account)``
 boundary without importing ``qmf.venue`` (QMX-F062). Story 24.8 adds reconnect
 gap-recovery, the TN-21 replay adapter, and the shared three-implementation
@@ -109,14 +109,13 @@ from qmn.venue.edge import (
 )
 from qmn.venue.live import (
     CT13_SEVEN_EVENT_TYPES,
-    FTR01_BLOCKED_KINDS,
+    READBACK_WIRE_KINDS,
     VOLUME_WIRE_SCALE_EXPONENT,
     JournalMapping,
     LiveCTraderClient,
     WireKind,
     ct13_journal_event_type,
     decode_volume,
-    ftr01_position_balance_blocked,
 )
 from qmn.venue.port import (
     VenueClientKind,
@@ -157,10 +156,10 @@ __all__ = [
     "CTRADER_OPEN_API_PORT",
     "DATA_QUALITY_EVENT_TYPE",
     "DEEP_HISTORY_NODE_SOURCE",
-    "FTR01_BLOCKED_KINDS",
     "FTR04_DISPOSITION",
     "INJECTED_COMMAND_FAULTS",
     "PORT_CONTRACT_CAPABILITY_KEYS",
+    "READBACK_WIRE_KINDS",
     "REPLAY_SUBMIT_REFUSAL_CATEGORY",
     "REQUIRED_CONNECTION_CHECKS",
     "REQUOTE_OUTCOME_TYPE_FORBIDDEN",
@@ -239,7 +238,6 @@ __all__ = [
     "declared_command_kinds",
     "decode_volume",
     "deep_history_source_inventory",
-    "ftr01_position_balance_blocked",
     "is_risk_reducing",
     "map_requote",
     "omitted_command_kind_refusal",

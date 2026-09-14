@@ -636,19 +636,19 @@ designed failure; every typed refusal the node can emit belongs here.
 
 - **Failure class:** unsupported capability
 - **Detection:** governed live intake or the recording accumulator is asked to journal `observation` or any eighth type outside CT-13's closed seven (`data.intake.observation_journal_type`).
-- **Auto-recovery / retry:** none — FTR-01 blocks the mapping; do not invent a private event stream.
+- **Auto-recovery / retry:** none — CT-13's closed seven stand; do not invent a private event stream.
 - **Visible degraded state:** the observation is not foldable; interpretation does not run; no eighth journal type is persisted.
 - **Notification tier:** operator-visible (journaled).
-- **Product-user affordance:** Position and balance read-backs stay unmapped until the CT-20 annotation names a closed-seven row. Inspect `read_failure_detail` on the evidence channel. History bootstrap remains `just node-data-bootstrap`.
+- **Product-user affordance:** Position and balance read-backs journal as CT-13 `data quality`. Inspect `read_failure_detail` on the evidence channel. History bootstrap remains `just node-data-bootstrap`.
 
-### FR-44: Position/balance CT-20 mapping accepted before FTR-01
+### FR-44: Eighth journal type minted for a position/balance read-back
 
 - **Failure class:** unsupported capability
-- **Detection:** live intake would accept a position/balance read-back mapping onto CT-13 (`data.intake.ftr01_mapping`).
-- **Auto-recovery / retry:** none — this story refuses that mapping until the annotation lands.
-- **Visible degraded state:** ticks, bars, depth, fills, and lifecycle keep recording; the blocked kinds never mint an `observation` type.
+- **Detection:** mapping or journal append is asked to mint `observation` or any type outside CT-13's closed seven for a position/balance read-back (`data.intake.observation_journal_type`).
+- **Auto-recovery / retry:** none — DEC-0247's word observation names the CT-20 kind, not a journal type.
+- **Visible degraded state:** ticks, bars, depth, fills, lifecycle, and accepted read-backs keep recording; the invented type is never persisted.
 - **Notification tier:** operator-visible (journaled).
-- **Product-user affordance:** The node refused a blocked CT-20 mapping. Inspect `read_failure_detail` on the evidence channel. Do not treat a read-back as a new journal type.
+- **Product-user affordance:** The node refused an eighth journal type. Inspect `read_failure_detail` on the evidence channel. Read-backs journal as `data quality`.
 
 ### FR-45: Silent sibling-feed failover
 

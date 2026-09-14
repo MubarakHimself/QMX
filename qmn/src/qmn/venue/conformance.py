@@ -1503,44 +1503,13 @@ def _reconcile_shape(
     reconciled: Result[Reconciliation],
     kind: VenueClientKind,
 ) -> Result[Mapping[str, object]]:
-    if kind is VenueClientKind.CTRADER:
-        # Live reconcile stays FTR-01-blocked until position/balance mapping lands.
-        if not is_refusal(reconciled):
-            return TypedRefusal(
-                category=RefusalCategory.POLICY_REJECTION,
-                retryability=Retryability.NO,
-                context={
-                    "field": "reconcile_shape",
-                    "reason": "live reconcile must remain FTR-01 unsupported-capability "
-                    "until position/balance CT-13 mapping lands",
-                    "kind": kind.value,
-                },
-            )
-        if reconciled.category is not RefusalCategory.UNSUPPORTED_CAPABILITY:
-            return TypedRefusal(
-                category=RefusalCategory.POLICY_REJECTION,
-                retryability=Retryability.NO,
-                context={
-                    "field": "reconcile_shape",
-                    "reason": "live reconcile refusal category diverged",
-                    "expected": RefusalCategory.UNSUPPORTED_CAPABILITY.value,
-                    "got": reconciled.category.value,
-                },
-            )
-        return Ok(
-            {
-                "form": "refusal",
-                "category": reconciled.category.value,
-                "ftr": reconciled.context.get("ftr"),
-            }
-        )
     if is_refusal(reconciled):
         return TypedRefusal(
             category=RefusalCategory.POLICY_REJECTION,
             retryability=Retryability.NO,
             context={
                 "field": "reconcile_shape",
-                "reason": "double/replay reconcile must succeed in the shared suite",
+                "reason": "reconcile must return a four-verdict Reconciliation",
                 "kind": kind.value,
                 "category": reconciled.category.value,
             },

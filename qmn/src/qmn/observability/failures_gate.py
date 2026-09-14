@@ -107,7 +107,6 @@ DESIGNED_TYPED_FAILURE_IDS: Final[frozenset[str]] = frozenset(
         "data.bootstrap.ad_hoc",
         "data.bootstrap.live_network",
         "data.bootstrap.span_cap",
-        "data.intake.ftr01_mapping",
         "data.intake.observation_journal_type",
         "data.intake.sibling_failover",
         "data.news_calendar.budget_breach",

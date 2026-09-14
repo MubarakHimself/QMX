@@ -32,7 +32,7 @@ from qmf.venue.connection import ConnectionManager, venue_writer_id
 from qmf.venue.events import EventRecorder, ObservationKind
 from qmn.venue import (
     CT13_SEVEN_EVENT_TYPES,
-    FTR01_BLOCKED_KINDS,
+    READBACK_WIRE_KINDS,
     VOLUME_WIRE_SCALE_EXPONENT,
     LiveCTraderClient,
     VenueClientKind,
@@ -42,7 +42,6 @@ from qmn.venue import (
     ct13_journal_event_type,
     ctrader_static_declaration,
     decode_volume,
-    ftr01_position_balance_blocked,
     select_venue_client,
 )
 from qmn.venue.verify import VenueFactVerifier
@@ -213,22 +212,36 @@ def test_live_client_is_venue_client_port() -> None:
     assert client.commands_retried == 0
 
 
-def test_ftr01_blocks_position_and_balance_without_eighth_type() -> None:
-    client, _ = _client()
-    blocked = ftr01_position_balance_blocked()
-    assert blocked.context["ftr"] == "FTR-01"
-    assert WireKind.POSITION_READBACK in FTR01_BLOCKED_KINDS
-    assert WireKind.BALANCE_READBACK in FTR01_BLOCKED_KINDS
-
-    for kind in (WireKind.POSITION_READBACK, WireKind.BALANCE_READBACK, "balance-readback"):
-        refused = _refusal(client.receive(kind, {"wire": 1}, native_id="pos-1"))
-        assert refused.context["ftr"] == "FTR-01"
-        assert "eighth" in str(refused.context["reason"])
-
-    mapping = _refusal(ct13_journal_event_type(WireKind.POSITION_READBACK))
-    assert mapping.context["ftr"] == "FTR-01"
-    # Closed seven unchanged — no invented observation journal type.
+def test_position_and_balance_readbacks_journal_as_data_quality() -> None:
+    client, sinks = _client(with_sinks=True)
+    assert sinks is not None
+    assert WireKind.POSITION_READBACK in READBACK_WIRE_KINDS
+    assert WireKind.BALANCE_READBACK in READBACK_WIRE_KINDS
     assert "observation" not in CT13_SEVEN_EVENT_TYPES
+    assert len(CT13_SEVEN_EVENT_TYPES) == 7
+
+    for kind in (WireKind.POSITION_READBACK, WireKind.BALANCE_READBACK, "balance-read-back"):
+        mapped = _ok(ct13_journal_event_type(kind))
+        assert mapped == "data quality"
+
+    position = dict(
+        _ok(client.receive(WireKind.POSITION_READBACK, {"volume": 100}, native_id="pos-1"))
+    )
+    assert position["verbatim_recorded"] is True
+    assert position["synthesized"] is False
+    mapping = cast("dict[str, object]", position["journal_mapping"])
+    assert mapping["event_type"] == "data quality"
+    assert position["ct13_event_type"] == "data quality"
+
+    balance = dict(_ok(client.receive("balance-read-back", {"cash": 50_000}, native_id="bal-1")))
+    assert balance["synthesized"] is False
+    balance_mapping = cast("dict[str, object]", balance["journal_mapping"])
+    assert balance_mapping["event_type"] == "data quality"
+
+    first_obs = cast("dict[str, object]", sinks.obs.emitted[0])
+    assert first_obs["interpreted"] is False
+    first_journal = cast("dict[str, object]", sinks.journal.appended[0])
+    assert first_journal["event_type"] == "data quality"
 
 
 def test_record_before_interpret_for_spot_and_trendbar_and_depth() -> None:
@@ -407,10 +420,19 @@ def test_mapped_error_still_never_auto_retries() -> None:
     assert client.commands_retried == 0
 
 
-def test_reconcile_blocked_under_ftr01() -> None:
+def test_reconcile_refuses_missing_lookback_not_ftr01() -> None:
     client, _ = _client()
+    missing = _refusal(client.reconcile())
+    assert missing.context["field"] == "declared_lookback"
+    assert "ftr" not in missing.context
+    bound = _ok(client.bind_declared_lookback(1_000_000_000))
+    assert bound.value_ns == 1_000_000_000
+    rec = _ok(client.reconcile())
+    assert rec.verdict.value in {"reconciled", "drift", "unknown", "out-of-lookback"}
+    closed = _ok(client.close_session())
+    assert closed is True
     refused = _refusal(client.reconcile())
-    assert refused.context["ftr"] == "FTR-01"
+    assert refused.context["field"] == "session"
 
 
 def test_submit_unreadiness_no_retry() -> None:

@@ -1,7 +1,7 @@
 """Live observation intake, history bootstrap, news calendar, and sealed sync.
 
 The recording accumulator is the single first writer. CT-10 identity persists
-through governed intake; position/balance CT-20 mapping stays FTR-01-blocked.
+through governed intake; position/balance CT-20 kinds journal as ``data quality``.
 History bootstrap is the operations-toolkit recipe, never an ad-hoc fetch.
 Story 27.3 ingests Forex Factory's free weekly news-calendar file only.
 Story 27.4 copies committed hot-room prefixes one-way into sealed-archive.
@@ -104,11 +104,10 @@ from qmn.data.intake import (
 )
 from qmn.data.mapping import (
     CT13_SEVEN_EVENT_TYPES,
-    FTR01_BLOCKED_KINDS,
     OBSERVATION_JOURNAL_TYPE,
+    READBACK_KINDS,
     assert_no_eighth_journal_type,
     journal_event_for_kind,
-    refuse_ftr01_mapping,
     refuse_observation_journal_type,
 )
 from qmn.data.news_calendar import (
@@ -210,7 +209,6 @@ __all__ = [
     "FOREX_FACTORY_WEEKLY_JSON",
     "FREE_FEED_BUDGET_DOWNLOADS",
     "FREE_FEED_BUDGET_WINDOW_NS",
-    "FTR01_BLOCKED_KINDS",
     "FULL_DRILL",
     "FULL_OBJECTIVE",
     "FULL_WRITER_ROLE",
@@ -237,6 +235,7 @@ __all__ = [
     "PERSONAL_USE_LICENSE",
     "RCLONE_BINARY",
     "RCLONE_REMOTE_NAME",
+    "READBACK_KINDS",
     "RESTORE_ALARM_CLASS",
     "RESTORE_AUTO_CUTOVER",
     "RESTORE_SURFACE",
@@ -312,7 +311,6 @@ __all__ = [
     "refuse_clean_host_rehearsal_tonight",
     "refuse_destructive_restore_fallback",
     "refuse_feed_budget_breach",
-    "refuse_ftr01_mapping",
     "refuse_live_b2_without_soak",
     "refuse_live_bucket_tonight",
     "refuse_live_network",

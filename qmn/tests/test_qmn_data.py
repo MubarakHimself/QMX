@@ -25,8 +25,8 @@ from qmf.core import (
 from qmn.data import (
     CANONICAL_LIVE_SOURCE,
     CT13_SEVEN_EVENT_TYPES,
-    FTR01_BLOCKED_KINDS,
     OBSERVATION_JOURNAL_TYPE,
+    READBACK_KINDS,
     GovernedLiveIntake,
     LiveIntakeOutcome,
     assert_no_eighth_journal_type,
@@ -38,7 +38,7 @@ from qmn.loop import (
     clear_first_writer_registry,
     first_writer_for,
 )
-from qmn.venue.live import LiveCTraderClient, WireKind, ftr01_position_balance_blocked
+from qmn.venue.live import LiveCTraderClient, WireKind
 
 T = TypeVar("T")
 
@@ -141,16 +141,16 @@ def test_closed_seven_never_includes_observation() -> None:
     assert invented.context["failure_id"] == "data.intake.observation_journal_type"
 
 
-def test_journal_mapping_skips_ftr01_position_balance() -> None:
-    for kind in FTR01_BLOCKED_KINDS:
-        refused = _refusal(journal_event_for_kind(kind))
-        assert refused.context["ftr"] == "FTR-01"
-        assert refused.context["failure_id"] == "data.intake.ftr01_mapping"
+def test_journal_mapping_readbacks_are_data_quality() -> None:
+    for kind in READBACK_KINDS:
+        assert _ok(journal_event_for_kind(kind)) == "data quality"
     assert _ok(journal_event_for_kind("spot")) == "data quality"
     assert _ok(journal_event_for_kind("trendbar")) == "data quality"
     assert _ok(journal_event_for_kind("depth")) == "data quality"
     assert _ok(journal_event_for_kind("fill")) == "fill"
     assert _ok(journal_event_for_kind("lifecycle")) == "order"
+    assert "observation" not in CT13_SEVEN_EVENT_TYPES
+    assert len(CT13_SEVEN_EVENT_TYPES) == 7
 
 
 def test_accumulator_is_single_first_writer_and_record_precedes_fold() -> None:
@@ -295,27 +295,30 @@ def test_sibling_feed_failover_is_refused() -> None:
     assert journal.appended == []
 
 
-def test_ftr01_position_balance_refused_without_eighth_type() -> None:
+def test_position_balance_readbacks_journal_as_data_quality() -> None:
     intake, acc, obs, journal = _intake()
-    blocked = ftr01_position_balance_blocked()
-    assert blocked.context["ftr"] == "FTR-01"
-    for kind in (WireKind.POSITION_READBACK, WireKind.BALANCE_READBACK, "position-read-back"):
-        refused = _refusal(
+    for index, kind in enumerate(
+        (WireKind.POSITION_READBACK, WireKind.BALANCE_READBACK, "position-read-back")
+    ):
+        receipt = _ok(
             intake.record(
-                observation_id="pos-1",
+                observation_id=f"rb-{index}",
                 stream_id="eurusd",
-                receive_wall=_instant(_WALL_NS),
-                payload={"kind": str(kind)},
+                receive_wall=_instant(_WALL_NS + index),
+                payload={"kind": str(kind), "wire": index},
                 kind=kind,
+                source_native_id=f"native-{index}",
+                revision="r1",
             )
         )
-        assert refused.context["ftr"] == "FTR-01"
-        assert "eighth" in str(refused.context["reason"]) or "mapping" in str(
-            refused.context["reason"]
-        )
-    assert acc.depth == 0
-    assert obs.emitted == []
-    assert journal.appended == []
+        assert receipt.journal_event_type == "data quality"
+        assert receipt.foldable is True
+        assert receipt.raw_payload["wire"] == index
+    assert acc.depth == 3
+    assert len(obs.emitted) == 3
+    types = {_as_map(row)["event_type"] for row in journal.appended}
+    assert types == {"data quality"}
+    assert "observation" not in types
 
 
 def test_observation_journal_type_refused_on_accumulator_payload() -> None:

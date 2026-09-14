@@ -1,8 +1,9 @@
 """CT-13 journal mapping for live intake — closed seven, no ``observation`` type.
 
-FTR-01: position/balance read-back mapping onto CT-13 is refused until a
-contract annotation names the row. This module never infers or mints an
-``observation`` journal type and never adds an eighth type (CT-13/CT-20).
+Position/balance read-backs are CT-20 observation kinds (DEC-0247). They map
+onto CT-13 ``data quality``. This module never infers or mints an
+``observation`` journal type and never adds an eighth type (CT-13/CT-20;
+DEC-0266).
 """
 
 from __future__ import annotations
@@ -15,11 +16,10 @@ from qmn.data._refuse import clean_token, invalid, unsupported
 
 __all__ = [
     "CT13_SEVEN_EVENT_TYPES",
-    "FTR01_BLOCKED_KINDS",
     "OBSERVATION_JOURNAL_TYPE",
+    "READBACK_KINDS",
     "assert_no_eighth_journal_type",
     "journal_event_for_kind",
-    "refuse_ftr01_mapping",
     "refuse_observation_journal_type",
 ]
 
@@ -38,7 +38,9 @@ CT13_SEVEN_EVENT_TYPES: Final[frozenset[str]] = frozenset(
 
 OBSERVATION_JOURNAL_TYPE: Final[str] = "observation"
 
-FTR01_BLOCKED_KINDS: Final[frozenset[str]] = frozenset(
+# CT-20 observation kinds (DEC-0247). The word "observation" names the kind,
+# not a journal type — these rows journal as CT-13 ``data quality`` (DEC-0266).
+READBACK_KINDS: Final[frozenset[str]] = frozenset(
     {
         "position-readback",
         "position-read-back",
@@ -79,25 +81,11 @@ def refuse_observation_journal_type(*, given: object = None) -> TypedRefusal:
     return unsupported(
         "event_type",
         "data intake never infers or mints an observation journal type; CT-13's "
-        "closed seven stand and FTR-01 blocks an eighth type",
+        "closed seven stand and an eighth type is refused",
         ftr="FTR-01",
         failure_id="data.intake.observation_journal_type",
         given=OBSERVATION_JOURNAL_TYPE if given is None else repr(given),
         allowed_ct13=sorted(CT13_SEVEN_EVENT_TYPES),
-    )
-
-
-def refuse_ftr01_mapping(*, kind: object) -> TypedRefusal:
-    """Refuse accepting a live position/balance → CT-13 mapping (FTR-01)."""
-    return unsupported(
-        "observation_kind",
-        "position/balance read-back mapping onto CT-13 remains unresolved "
-        "(FTR-01); this story refuses acceptance for that mapping and does not "
-        "mint an eighth node-private journal type",
-        ftr="FTR-01",
-        failure_id="data.intake.ftr01_mapping",
-        blocked=sorted(FTR01_BLOCKED_KINDS),
-        given=repr(kind),
     )
 
 
@@ -130,8 +118,8 @@ def assert_no_eighth_journal_type(proposed: object) -> Result[str]:
 def journal_event_for_kind(kind: object) -> Result[str]:
     """Map an accepted live observation kind onto one of CT-13's seven types.
 
-    Position/balance read-backs are FTR-01-blocked (the mapping AC is skipped).
-    Asking for an ``observation`` event type is refused.
+    Position/balance read-backs journal as ``data quality``. Asking for an
+    ``observation`` event type is refused — that word is the CT-20 kind name.
     """
     token = clean_token(kind)
     if token is None:
@@ -143,8 +131,8 @@ def journal_event_for_kind(kind: object) -> Result[str]:
     normalized = token.strip().lower().replace("_", "-")
     if normalized == OBSERVATION_JOURNAL_TYPE:
         return refuse_observation_journal_type(given=normalized)
-    if normalized in FTR01_BLOCKED_KINDS:
-        return refuse_ftr01_mapping(kind=normalized)
+    if normalized in READBACK_KINDS:
+        return Ok("data quality")
     if normalized in _MARKET:
         return Ok("data quality")
     if normalized in _FILL:

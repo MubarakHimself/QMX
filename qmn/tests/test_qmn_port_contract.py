@@ -10,6 +10,7 @@ from qmf.core import (
     Account,
     AccountRole,
     DataDrivenClock,
+    Duration,
     Instant,
     RefusalCategory,
     Result,
@@ -71,9 +72,7 @@ def _double() -> ConformanceDouble:
 def _replay() -> ReplayAdapter:
     venue = _venue("venue-ctrader-demo")
     account = _account(venue)
-    recorded: list[dict[str, object]] = [
-        {"kind": "fill", "observation_id": "r1", "payload": {}}
-    ]
+    recorded: list[dict[str, object]] = [{"kind": "fill", "observation_id": "r1", "payload": {}}]
     return _ok(
         ReplayAdapter.try_create(
             World.REPLAY,
@@ -98,6 +97,7 @@ def _live() -> LiveCTraderClient:
             venue,
             clock=clock,
             error_map=_ok(ErrorMap.try_create(1, [])),
+            declared_lookback=_ok(Duration.try_create(1_000_000_000)),
         )
     )
     _ok(client.accept_verification(_verification(venue, account)))
@@ -187,9 +187,7 @@ def test_capability_or_refusal_divergence_fails_suite() -> None:
         "form": "refusal",
         "category": RefusalCategory.POLICY_REJECTION.value,
     }
-    refused_submit = compare_port_contract_shapes(
-        {"conformance": submit_diverged, "replay": good}
-    )
+    refused_submit = compare_port_contract_shapes({"conformance": submit_diverged, "replay": good})
     assert is_refusal(refused_submit)
     assert refused_submit.context["field"] == "refusal_shape"
 

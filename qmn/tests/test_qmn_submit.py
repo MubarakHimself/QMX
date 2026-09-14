@@ -11,6 +11,7 @@ from qmf.core import (
     Account,
     AccountRole,
     DataDrivenClock,
+    Duration,
     Instant,
     Instrument,
     Price,
@@ -170,7 +171,11 @@ def compiled_protooa():
 def _client() -> LiveCTraderClient:
     return _ok(
         LiveCTraderClient.try_create(
-            World.LIVE, _venue(), clock=_clock(), error_map=_ok(ErrorMap.try_create(1, ()))
+            World.LIVE,
+            _venue(),
+            clock=_clock(),
+            error_map=_ok(ErrorMap.try_create(1, ())),
+            declared_lookback=_ok(Duration.try_create(1_000_000_000)),
         )
     )
 
