@@ -23,7 +23,7 @@ def _venue(value: str = "conformance:ctrader-demo") -> VenueId:
 
 
 def test_selection_by_world_and_venue_id() -> None:
-    live = select_venue_client(World.LIVE, _venue("venue-ctrader-demo"))
+    live = select_venue_client(World.LIVE, _venue("venue-ctrader-demo"), VenueClientKind.CTRADER)
     assert is_ok(live)
     assert live.value.kind is VenueClientKind.CTRADER
 

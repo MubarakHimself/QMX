@@ -86,6 +86,7 @@ def _binding(
     state_carry: dict[str, StateCarryChoice] | None = None,
     carries_ledger_signature: str | None = None,
     bms_instance_id: str = "bms-1",
+    venue_client_kind: str | VenueClientKind | None = VenueClientKind.CTRADER,
 ) -> AccountBindingDecl:
     if books is None:
         books = (
@@ -113,6 +114,7 @@ def _binding(
         position_model=position_model,
         opaque_metric_id=f"m-{account_id}",
         carries_ledger_signature=carries_ledger_signature,
+        venue_client_kind=venue_client_kind,
     )
 
 
@@ -152,7 +154,7 @@ def test_compose_keys_by_tuples_and_seals_writer_streams() -> None:
     assert all(p.pacer.owned_by_connection for p in composition.command_streams)
     assert all(p.entry_may_consume_reserve is False for p in composition.pacer_buckets)
 
-    # Second broker selected by (world, VenueId) — ctrader kind, no core edit.
+    # Second broker selected by (world, VenueId, roster VenueClientKind).
     kinds = {s.kind for s in composition.port_selections}
     assert VenueClientKind.CTRADER in kinds
     assert {s.venue_id.value for s in composition.port_selections} == {
@@ -179,6 +181,7 @@ def test_sensing_only_is_legal_compiled_state_without_sequencer() -> None:
         account_id="acct-live-sense",
         credential_reference="qmx/venue-live",
         opaque_metric_id="m-sense",
+        venue_client_kind=VenueClientKind.CTRADER,
     )
     demo = _binding()
     composition = _ok(
@@ -478,6 +481,7 @@ def test_mapping_form_compose_and_fingerprint_stable() -> None:
                     "throttle_scope": "connection",
                     "position_model": "hedging",
                     "opaque_metric_id": "m-1",
+                    "venue_client_kind": "ctrader",
                 },
             ),
             sensing_only=(
@@ -487,6 +491,7 @@ def test_mapping_form_compose_and_fingerprint_stable() -> None:
                     "account_id": "acct-sense",
                     "credential_reference": "qmx/venue-live",
                     "opaque_metric_id": "m-sense",
+                    "venue_client_kind": "ctrader",
                 },
             ),
             protective_reserve_capacity=3,
@@ -516,6 +521,7 @@ def test_mapping_form_compose_and_fingerprint_stable() -> None:
                     "throttle_scope": "connection",
                     "position_model": "hedging",
                     "opaque_metric_id": "m-1",
+                    "venue_client_kind": "ctrader",
                 },
             ),
             sensing_only=(
@@ -525,6 +531,7 @@ def test_mapping_form_compose_and_fingerprint_stable() -> None:
                     "account_id": "acct-sense",
                     "credential_reference": "qmx/venue-live",
                     "opaque_metric_id": "m-sense",
+                    "venue_client_kind": "ctrader",
                 },
             ),
             protective_reserve_capacity=3,

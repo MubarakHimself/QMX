@@ -200,7 +200,7 @@ def _accept_verification(client: LiveCTraderClient) -> None:
 
 
 def test_selection_resolves_ctrader_kind_for_live_venue() -> None:
-    selected = select_venue_client(World.LIVE, _venue())
+    selected = select_venue_client(World.LIVE, _venue(), VenueClientKind.CTRADER)
     assert is_ok(selected)
     assert selected.value.kind is VenueClientKind.CTRADER
 

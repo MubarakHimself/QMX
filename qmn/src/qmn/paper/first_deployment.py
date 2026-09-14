@@ -768,6 +768,14 @@ def _as_sensing_decl(value: object) -> Result[SensingOnlyDecl]:
             "credential_reference, and opaque_metric_id",
             failure_id=_ID_OPEN_CREDS,
         )
+    kind_raw = body.get("venue_client_kind")
+    kind_token: str | None
+    if kind_raw is None:
+        kind_token = None
+    elif isinstance(kind_raw, str):
+        kind_token = kind_raw
+    else:
+        kind_token = str(kind_raw)
     return Ok(
         SensingOnlyDecl(
             venue_id=venue_id,
@@ -776,6 +784,7 @@ def _as_sensing_decl(value: object) -> Result[SensingOnlyDecl]:
             credential_reference=credential_reference,
             opaque_metric_id=opaque,
             world=World.LIVE,
+            venue_client_kind=kind_token,
         )
     )
 

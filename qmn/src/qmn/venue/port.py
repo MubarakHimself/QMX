@@ -2,9 +2,10 @@
 
 ``qmf-venue`` exposes no injectable port seam at the inventory baseline, so the
 node mints this Protocol over the CT-19 command and CT-20 event/reconciliation
-shapes. V1 implementations are selected by the pair ``(world, VenueId)`` — never
-by ``VenueId`` alone — and a replay composition refuses any venue-connecting
-implementation (DEC-0196, DEC-0228).
+shapes. V1 implementations are selected by ``(world, VenueId)`` plus an explicit
+roster ``VenueClientKind`` on a live binding — never by ``VenueId`` spelling,
+except the credential-free ``conformance:`` prefix convention. A replay
+composition refuses any venue-connecting implementation (DEC-0196, DEC-0228).
 """
 
 from __future__ import annotations
@@ -98,19 +99,27 @@ class VenueClientPort(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class VenueClientSelection:
-    """Resolved ``(world, VenueId) → implementation kind`` selection (DEC-0196)."""
+    """Resolved ``(world, VenueId, roster VenueClientKind)`` selection (DEC-0196)."""
 
     world: World
     venue_id: VenueId
     kind: VenueClientKind
 
 
-def select_venue_client(world: object, venue_id: object) -> Result[VenueClientSelection]:
-    """Select a :class:`VenueClientPort` implementation by ``(world, VenueId)``.
+def select_venue_client(
+    world: object,
+    venue_id: object,
+    venue_client_kind: object = None,
+) -> Result[VenueClientSelection]:
+    """Select a :class:`VenueClientPort` implementation fail-closed.
 
-    ``world = replay`` selects the replay implementation for every ``VenueId``.
-    A venue-connecting kind is never bound into a replay composition. Unknown
-    worlds or a malformed venue are typed refusals (DEC-0196, DEC-0228).
+    ``world = replay`` selects replay for every ``VenueId``; a roster
+    ``ctrader`` / ``conformance`` kind cannot bind in replay. ``world =
+    simulated`` is reserved-unusable and constructs no client. Live selection
+    requires an explicit roster ``VenueClientKind`` of ``ctrader`` or
+    ``conformance``; the only spelling inference is the credential-free
+    ``conformance:`` VenueId prefix. Unknown worlds or a malformed venue are
+    typed refusals (DEC-0196, DEC-0228).
     """
     resolved_world = _coerce_world(world)
     if resolved_world is None:
@@ -134,11 +143,22 @@ def select_venue_client(world: object, venue_id: object) -> Result[VenueClientSe
                 "given": repr(venue_id),
             },
         )
+    kind_token = _roster_kind_token(venue_client_kind)
     if resolved_world is World.REPLAY:
+        if kind_token in {VenueClientKind.CTRADER.value, VenueClientKind.CONFORMANCE.value}:
+            return TypedRefusal(
+                category=RefusalCategory.UNSUPPORTED_CAPABILITY,
+                retryability=Retryability.NO,
+                context={
+                    "field": "venue_client_kind",
+                    "reason": "world=replay binds the replay VenueClientPort; "
+                    "ctrader and conformance kinds cannot bind in replay",
+                    "given": _roster_kind_given(venue_client_kind),
+                    "world": resolved_world.value,
+                },
+            )
         kind = VenueClientKind.REPLAY
     elif resolved_world is World.SIMULATED:
-        # Simulated stays reserved-unusable until fidelity content lands; refuse
-        # binding a venue-connecting client rather than inventing a fourth kind.
         return TypedRefusal(
             category=RefusalCategory.UNSUPPORTED_CAPABILITY,
             retryability=Retryability.NO,
@@ -148,14 +168,47 @@ def select_venue_client(world: object, venue_id: object) -> Result[VenueClientSe
                 "world": resolved_world.value,
             },
         )
-    # world=live: conformance double is selected by an explicit VenueId convention
-    # for credential-free gates; live cTrader otherwise. Callers that want the
-    # double under live pass a VenueId whose value starts with "conformance:".
-    elif venue_id.value.startswith("conformance:"):
+    elif kind_token == VenueClientKind.CTRADER.value:
+        kind = VenueClientKind.CTRADER
+    elif kind_token == VenueClientKind.CONFORMANCE.value or venue_id.value.startswith(
+        "conformance:"
+    ):
         kind = VenueClientKind.CONFORMANCE
     else:
-        kind = VenueClientKind.CTRADER
+        return TypedRefusal(
+            category=RefusalCategory.UNSUPPORTED_CAPABILITY,
+            retryability=Retryability.NO,
+            context={
+                "field": "venue_client_kind",
+                "reason": "live VenueClientPort selection requires roster "
+                "VenueClientKind ctrader | conformance; kind is never inferred "
+                "from VenueId spelling",
+                "given": _roster_kind_given(venue_client_kind),
+                "world": resolved_world.value,
+                "venue_id": venue_id.value,
+            },
+        )
     return Ok(VenueClientSelection(world=resolved_world, venue_id=venue_id, kind=kind))
+
+
+def _roster_kind_token(value: object) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, VenueClientKind):
+        return value.value
+    if isinstance(value, str):
+        return value.strip()
+    return None
+
+
+def _roster_kind_given(value: object) -> object:
+    if value is None:
+        return None
+    if isinstance(value, VenueClientKind):
+        return value.value
+    if isinstance(value, str):
+        return value
+    return repr(value)
 
 
 def _coerce_world(value: object) -> World | None:

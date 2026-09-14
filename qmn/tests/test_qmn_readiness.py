@@ -40,6 +40,7 @@ from qmn.host import (
 )
 from qmn.observability.failures_gate import DESIGNED_TYPED_FAILURE_IDS
 from qmn.paper import build_paired_demo_target
+from qmn.venue import VenueClientKind
 
 T = TypeVar("T")
 
@@ -90,6 +91,7 @@ def _demo_binding() -> AccountBindingDecl:
         throttle_scope=ThrottleScope.CONNECTION,
         position_model=PositionModelDecl.HEDGING,
         opaque_metric_id="m-demo-1",
+        venue_client_kind=VenueClientKind.CTRADER,
     )
 
 

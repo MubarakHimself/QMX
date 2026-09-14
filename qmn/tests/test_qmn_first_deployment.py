@@ -55,6 +55,7 @@ from qmn.paper.first_deployment import (
     FIRST_DEPLOYMENT_WINDOW_CLASS,
     FIRST_DEPLOYMENT_WINDOW_FORMAT_VERSION,
 )
+from qmn.venue import VenueClientKind
 
 T = TypeVar("T")
 
@@ -103,6 +104,7 @@ def _demo_binding() -> AccountBindingDecl:
         throttle_scope=ThrottleScope.CONNECTION,
         position_model=PositionModelDecl.HEDGING,
         opaque_metric_id="m-demo-1",
+        venue_client_kind=VenueClientKind.CTRADER,
     )
 
 
@@ -129,6 +131,7 @@ def _sensing() -> SensingOnlyDecl:
         account_id="acct-live-sense",
         credential_reference="qmx/venue-live",
         opaque_metric_id="m-sense",
+        venue_client_kind=VenueClientKind.CTRADER,
     )
 
 

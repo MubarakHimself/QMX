@@ -2,12 +2,13 @@
 
 Composition/config surface only: every runtime object is keyed by the ratified
 tuples — never a singleton venue or account (DEC-0207). Adding a broker is a
-roster row plus ``VenueClientPort`` selection by ``(world, VenueId)`` and a
-safe-point restart; core node logic does not change. Sensing-only entries are
-a legal compiled state (no Book, BMS, or command sequencer). Netting
-attribution declarations are proved jointly exhaustive and disjoint at compose.
-Protective pacing reserve is planned per connection so entry work cannot
-consume it; one stream's UNKNOWN never freezes another.
+roster row plus ``VenueClientPort`` selection by ``(world, VenueId)`` and the
+explicit roster ``VenueClientKind`` field, then a safe-point restart; core node
+logic does not change. Sensing-only entries are a legal compiled state (no
+Book, BMS, or command sequencer). Netting attribution declarations are proved
+jointly exhaustive and disjoint at compose. Protective pacing reserve is
+planned per connection so entry work cannot consume it; one stream's UNKNOWN
+never freezes another.
 """
 
 from __future__ import annotations
@@ -31,7 +32,12 @@ from qmf.core import (
 from qmf.core.fingerprint import fingerprint
 
 from qmn.config._refuse import clean_token, invalid, policy, unsupported
-from qmn.venue import VenueClientSelection, select_venue_client, venue_command_stream
+from qmn.venue import (
+    VenueClientKind,
+    VenueClientSelection,
+    select_venue_client,
+    venue_command_stream,
+)
 
 __all__ = [
     "ADDING_BROKER_REQUIRES_CORE_CODE_CHANGE",
@@ -138,6 +144,7 @@ class AccountBindingDecl:
     position_model: PositionModelDecl
     opaque_metric_id: str
     carries_ledger_signature: str | None = None
+    venue_client_kind: str | VenueClientKind | None = None
 
     def identity(self) -> dict[str, object]:
         body: dict[str, object] = {
@@ -159,6 +166,9 @@ class AccountBindingDecl:
         }
         if self.carries_ledger_signature is not None:
             body["carries_ledger_signature"] = self.carries_ledger_signature
+        kind_token = _identity_kind_token(self.venue_client_kind)
+        if kind_token is not None:
+            body["venue_client_kind"] = kind_token
         return body
 
 
@@ -172,9 +182,10 @@ class SensingOnlyDecl:
     credential_reference: str
     opaque_metric_id: str
     world: World = World.LIVE
+    venue_client_kind: str | VenueClientKind | None = None
 
     def identity(self) -> dict[str, object]:
-        return {
+        body: dict[str, object] = {
             "kind": "sensing_only",
             "venue_id": self.venue_id,
             "environment": self.environment,
@@ -183,6 +194,10 @@ class SensingOnlyDecl:
             "opaque_metric_id": self.opaque_metric_id,
             "world": self.world.value,
         }
+        kind_token = _identity_kind_token(self.venue_client_kind)
+        if kind_token is not None:
+            body["venue_client_kind"] = kind_token
+        return body
 
 
 @dataclass(frozen=True, slots=True)
@@ -447,7 +462,7 @@ def compose_roster_runtime(
                 connection=conn.token,
             )
 
-        selection = select_venue_client(binding.world, venue.value)
+        selection = select_venue_client(binding.world, venue.value, binding.venue_client_kind)
         if is_refusal(selection):
             return selection
         port_key = f"{selection.value.world.value}|{selection.value.venue_id.value}"
@@ -497,7 +512,7 @@ def compose_roster_runtime(
             return venue
         conn = ConnectionRuntimeKey(venue_id=sensing.venue_id, environment=sensing.environment)
         connections[conn.token] = conn
-        selection = select_venue_client(sensing.world, venue.value)
+        selection = select_venue_client(sensing.world, venue.value, sensing.venue_client_kind)
         if is_refusal(selection):
             return selection
         port_key = f"{selection.value.world.value}|{selection.value.venue_id.value}"
@@ -694,6 +709,7 @@ def _parse_account_binding(raw: object, *, index: int) -> Result[AccountBindingD
             position_model=position,
             opaque_metric_id=opaque,
             carries_ledger_signature=sig_token,
+            venue_client_kind=_pass_through_kind(body.get("venue_client_kind")),
         )
 
     binding = raw
@@ -862,6 +878,7 @@ def _parse_sensing_only(raw: object, *, index: int) -> Result[SensingOnlyDecl]:
             credential_reference=credential_reference,
             opaque_metric_id=opaque,
             world=world,
+            venue_client_kind=_pass_through_kind(body.get("venue_client_kind")),
         )
     else:
         return invalid(
@@ -1114,6 +1131,26 @@ def _coerce_position_model(value: object) -> PositionModelDecl | None:
         return PositionModelDecl(token)
     except ValueError:
         return None
+
+
+def _pass_through_kind(value: object) -> str | VenueClientKind | None:
+    if value is None:
+        return None
+    if isinstance(value, VenueClientKind):
+        return value
+    if isinstance(value, str):
+        return value
+    return str(value)
+
+
+def _identity_kind_token(value: object) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, VenueClientKind):
+        return value.value
+    if isinstance(value, str):
+        return value
+    return str(value)
 
 
 def _coerce_carry(value: object) -> StateCarryChoice | None:
