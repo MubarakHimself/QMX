@@ -43,6 +43,7 @@ from qmf.risk.exit_record import ExitRecord, ExitRecordStream
 from qmf.risk.performance import PerformanceResult
 
 from qmb._refuse import clean_token, invalid, policy
+from qmb.analysis.deferred import refuse_live_money_gating, refuse_synthetic_portfolio
 from qmb.config.compiler import ResolvedRunConfig
 
 __all__ = [
@@ -104,6 +105,7 @@ PROJECTION_HOMES: Final[tuple[str, ...]] = (
 PROJECTION_SIDECAR_FILENAME: Final[str] = "projection-view.json"
 
 _ROLE_CONFIRMATION: Final[str] = "confirmation"
+_EVIDENCE_CONFIRMED: Final[str] = "confirmed"
 _REGISTRY_AS_OF_KEY: Final[str] = "registry_as_of"
 _QMB_EXTENSIONS_KEY: Final[str] = "qmb_extensions"
 _BODY_FIELDS: Final[tuple[str, ...]] = (
@@ -234,6 +236,8 @@ class ProjectionView:
     mints_experiment_spec: bool = False
     is_admission_evidence: bool = False
     b4_role: str | None = None
+    world: str | None = None
+    confirmed: bool = False
     home: str = _HOME_UNGOVERNED
     durable: bool = False
     is_library_object: bool = False
@@ -326,6 +330,13 @@ def project(
     orchestrator: object = None,
     spawn_run: object = None,
     spawn_orchestrator: object = None,
+    gating_live: object = None,
+    confirmed: object = None,
+    evidence_class: object = None,
+    portfolio: object = None,
+    synthetic_portfolio: object = None,
+    combine: object = None,
+    combination: object = None,
     **extra: object,
 ) -> Result[ProjectionView]:
     """Filter one cited CT-32 and its CT-29 stream into a projection saved view.
@@ -334,6 +345,15 @@ def project(
     that JSON. QMA must call this function (or the thin door) and must not
     reimplement the filter. Forbidden axes are path-dependent (Story 35.2).
     """
+    f07 = refuse_synthetic_portfolio(
+        extra=extra,
+        portfolio=portfolio,
+        synthetic_portfolio=synthetic_portfolio,
+        combine=combine,
+        combination=combination,
+    )
+    if f07 is not None:
+        return f07
     extra_blocked = _refuse_forbidden_fields(extra)
     if extra_blocked is not None:
         return extra_blocked
@@ -380,6 +400,8 @@ def project(
         admission=admission,
         admission_evidence=admission_evidence,
         claim_class=claim_class,
+        confirmed=confirmed,
+        evidence_class=evidence_class,
         trades=trades,
         trade_list=trade_list,
         copied_trades=copied_trades,
@@ -418,6 +440,10 @@ def project(
     matched = apply_projection_predicate(records, resolved_predicate.value)
     if is_refusal(matched):
         return matched
+    inherited_world = _inherited_world(source_ct32, identity)
+    gated = refuse_live_money_gating(gating_live=gating_live, world=inherited_world)
+    if gated is not None:
+        return gated
     body_json = {
         "as_of": dict(as_of_identity.value),
         "method": METHOD_PROJECTION,
@@ -435,6 +461,11 @@ def project(
         as_of=as_of_identity.value,
         fingerprint=stamped.value,
         matched_count=len(matched.value),
+        world=inherited_world,
+        confirmed=False,
+        b4_role=None,
+        is_admission_evidence=False,
+        claim_class=CLAIM_CLASS_PROJECTION,
     )
     return _place_view(
         view,
@@ -1336,6 +1367,21 @@ def _hour_in_window(hour: int, window: object) -> bool:
     return hour >= start or hour < end
 
 
+def _inherited_world(
+    source: object,
+    identity: Mapping[str, object] | None,
+) -> str | None:
+    if isinstance(source, PerformanceResult):
+        return source.result_label.world.value
+    if identity is not None:
+        label = identity.get("result_label")
+        if isinstance(label, Mapping):
+            world = cast("Mapping[str, object]", label).get("world")
+            if isinstance(world, str) and world.strip() != "":
+                return world
+    return None
+
+
 def _utc_hour_and_weekday(instant: Instant) -> tuple[int, int]:
     seconds = instant.value_ns // 1_000_000_000
     dt = datetime.fromtimestamp(seconds, tz=timezone.utc)
@@ -1434,6 +1480,30 @@ def _refuse_side_effects(
             given=claim,
             claim_class=CLAIM_CLASS_PROJECTION,
             is_admission_evidence=False,
+        )
+    confirmed = fields.get("confirmed")
+    if confirmed not in (None, False):
+        token = _fold(clean_token(confirmed) or "") if not isinstance(confirmed, bool) else ""
+        if confirmed is True or token in {"confirmed", "true", "yes", "1"}:
+            return policy(
+                "confirmed",
+                "a projection saved view is never confirmed; claim-class is projection "
+                "and it has no B-4 role (FR-W28, SCN-0016)",
+                claim_class=CLAIM_CLASS_PROJECTION,
+                confirmed=False,
+                b4_role=None,
+                is_admission_evidence=False,
+            )
+    evidence = clean_token(fields.get("evidence_class"))
+    if evidence is not None and _fold(evidence) == _EVIDENCE_CONFIRMED:
+        return policy(
+            "evidence_class",
+            "a projection saved view is never confirmed; it inherits the source world "
+            "and has no B-4 role (FR-W28, DEC-0283)",
+            claim_class=CLAIM_CLASS_PROJECTION,
+            confirmed=False,
+            b4_role=None,
+            given=evidence,
         )
     return None
 

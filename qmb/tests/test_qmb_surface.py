@@ -56,6 +56,7 @@ def test_seed_identities_exclude_semver() -> None:
         qmb.analysis_project_identity(),
         qmb.analysis_rerun_identity(),
         qmb.book_bms_variant_identity(),
+        qmb.compare_runs_identity(),
     )
     for payload in payloads:
         assert qmb.__version__ not in payload.values()

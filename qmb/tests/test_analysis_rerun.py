@@ -415,7 +415,7 @@ def test_python_api_and_cli_are_thin_doors(tmp_path: Path) -> None:
     assert api.rerun is qmb.rerun
     assert "rerun" in required_library_names()
     assert "analysis.rerun" in flatten_capabilities()
-    assert command_tree()["analysis"] == ("project", "rerun")
+    assert command_tree()["analysis"] == ("project", "rerun", "compare")
     tree = ast.parse(textwrap.dedent(inspect.getsource(invoke_analysis_rerun)))
     names = {
         node.func.id

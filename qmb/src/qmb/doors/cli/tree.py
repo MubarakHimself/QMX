@@ -23,8 +23,13 @@ from qmb.analysis import (
     ANALYSIS_RERUN_MINTS_CT32,
     ANALYSIS_RERUN_MINTS_EXPERIMENT_SPEC,
     ANALYSIS_RERUN_OCCUPANCY,
+    COMPARE_RUNS_MINTS_CT32,
+    COMPARE_RUNS_MINTS_EXPERIMENT_SPEC,
+    COMPARE_RUNS_OCCUPANCY,
+    CompareReadout,
     ProjectionView,
     RerunOutcome,
+    compare_runs,
     project,
     rerun,
 )
@@ -109,6 +114,7 @@ from qmb.sweep import (
 
 __all__ = [
     "ANALYSIS_COMMANDS",
+    "ANALYSIS_NAMED_METHODS",
     "ANALYSIS_PROJECT_MINTS_CT32",
     "ANALYSIS_PROJECT_MINTS_EXPERIMENT_SPEC",
     "ANALYSIS_PROJECT_OCCUPANCY",
@@ -121,6 +127,9 @@ __all__ = [
     "BOOK_RECORD_KIND",
     "BOT_RECORD_KIND",
     "COMMAND_GROUPS",
+    "COMPARE_RUNS_MINTS_CT32",
+    "COMPARE_RUNS_MINTS_EXPERIMENT_SPEC",
+    "COMPARE_RUNS_OCCUPANCY",
     "COMPUTES_RUN_ID",
     "DATA_DOWNLOAD_OCCUPANCY",
     "DATA_GENERATE_OCCUPANCY",
@@ -148,6 +157,7 @@ __all__ = [
     "invoke_analysis_project",
     "invoke_analysis_rerun",
     "invoke_backtest",
+    "invoke_compare_runs",
     "invoke_config_compile",
     "invoke_config_show",
     "invoke_data",
@@ -182,7 +192,9 @@ COMMAND_GROUPS: Final[tuple[str, ...]] = (
 )
 LIBRARY_COMMANDS: Final[tuple[str, ...]] = ("kinds", "search", "candidates")
 # Story 35.1 occupancy: analysis.project is a query. Story 35.3: rerun is a run.
-ANALYSIS_COMMANDS: Final[tuple[str, ...]] = ("project", "rerun")
+# Story 35.5: compare is a readout query, not a named analysis method.
+ANALYSIS_COMMANDS: Final[tuple[str, ...]] = ("project", "rerun", "compare")
+ANALYSIS_NAMED_METHODS: Final[tuple[str, ...]] = ("project", "rerun")
 COMPUTES_RUN_ID: Final[bool] = False
 HOLDS_CACHE: Final[bool] = False
 ORCHESTRATOR_ENTRY: Final[str] = "qmb.orchestrator.spawn_run"
@@ -274,6 +286,7 @@ _COMMAND_PREREQS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         "library.candidates": (),
         "analysis.project": ("source_ct32", "source_ct29", "predicate"),
         "analysis.rerun": ("source_ct32", "slices", "output_root", "ledger"),
+        "analysis.compare": ("left", "right"),
         "config.compile": ("port", "book_fragment", "bms_fragment", "run_spec"),
         "config.show": (),
     }
@@ -592,6 +605,12 @@ def invoke_analysis_project(
     spawn: object = None,
     orchestrator: object = None,
     spawn_run: object = None,
+    portfolio: object = None,
+    synthetic_portfolio: object = None,
+    combine: object = None,
+    combination: object = None,
+    gating_live: object = None,
+    confirmed: object = None,
 ) -> Result[ProjectionView]:
     """Thin wrapper over ``qmb.project`` (Story 35.1 / 35.2).
 
@@ -654,6 +673,12 @@ def invoke_analysis_project(
         ports=ports,
         execution_ports=execution_ports,
         starting_capital=starting_capital,
+        portfolio=portfolio,
+        synthetic_portfolio=synthetic_portfolio,
+        combine=combine,
+        combination=combination,
+        gating_live=gating_live,
+        confirmed=confirmed,
     )
 
 
@@ -684,6 +709,11 @@ def invoke_analysis_rerun(
     workbench_lane: object = None,
     experiment_spec: object = None,
     sqlite: object = None,
+    role: object = None,
+    portfolio: object = None,
+    synthetic_portfolio: object = None,
+    combine: object = None,
+    combination: object = None,
 ) -> Result[RerunOutcome]:
     """Thin wrapper over ``qmb.rerun`` (Story 35.3).
 
@@ -745,6 +775,66 @@ def invoke_analysis_rerun(
         workbench_lane=workbench_lane,
         experiment_spec=experiment_spec,
         sqlite=sqlite,
+        role=role,
+        portfolio=portfolio,
+        synthetic_portfolio=synthetic_portfolio,
+        combine=combine,
+        combination=combination,
+    )
+
+
+def invoke_compare_runs(
+    *,
+    left: object = None,
+    right: object = None,
+    occupancy: object = None,
+    ledger: object = None,
+    mint_ct32: object = None,
+    experiment_spec: object = None,
+    successor: object = None,
+    role: object = None,
+    confirmation_label: object = None,
+    analysis_method: object = None,
+    lane: object = None,
+    workbench_lane: object = None,
+    gating_live: object = None,
+    portfolio: object = None,
+    synthetic_portfolio: object = None,
+    combine: object = None,
+    combination: object = None,
+) -> Result[CompareReadout]:
+    """Thin wrapper over ``qmb.compare_runs`` (Story 35.5).
+
+    Occupancy is a query: no CT-32, no ledger line, no confirmation label.
+    compare_runs is a readout, not a named analysis method.
+    """
+    checked = require_prerequisites(
+        "analysis.compare",
+        {
+            "left": left,
+            "right": right,
+        },
+    )
+    if is_refusal(checked):
+        return checked
+    return compare_runs(
+        left,
+        right,
+        occupancy=occupancy,
+        ledger=ledger,
+        mint_ct32=mint_ct32,
+        experiment_spec=experiment_spec,
+        successor=successor,
+        role=role,
+        confirmation_label=confirmation_label,
+        analysis_method=analysis_method,
+        lane=lane,
+        workbench_lane=workbench_lane,
+        gating_live=gating_live,
+        portfolio=portfolio,
+        synthetic_portfolio=synthetic_portfolio,
+        combine=combine,
+        combination=combination,
     )
 
 
@@ -754,13 +844,17 @@ def analysis_command_occupancy(command: object) -> Result[str]:
     if token is None:
         return invalid("command", "an analysis command name is a non-blank token")
     name = token[9:] if token.startswith("analysis.") else token
+    if name == "compare_runs":
+        name = "compare"
     if name == "project":
         return Ok(ANALYSIS_PROJECT_OCCUPANCY)
     if name == "rerun":
         return Ok(ANALYSIS_RERUN_OCCUPANCY)
+    if name == "compare":
+        return Ok(COMPARE_RUNS_OCCUPANCY)
     return invalid(
         "command",
-        "analysis occupancy classifies project (query) and rerun (run)",
+        "analysis occupancy classifies project (query), rerun (run), and compare (query readout)",
         given=token,
         legal=list(ANALYSIS_COMMANDS),
     )

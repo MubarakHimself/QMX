@@ -1429,6 +1429,30 @@ def test_analysis_rerun_usage_example_runs_clean() -> None:
     assert "coordinated Experiment Ledger is Epic 36" in completed.stdout
 
 
+def test_analysis_compare_runs_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "analysis_compare_runs_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "compare_runs ok" in completed.stdout
+    assert "compare_runs is a readout of cited CT-32 fields" in completed.stdout
+    assert "no artifact, no ledger line, no confirmation label, no occupancy" in completed.stdout
+    assert "CT-32 and B-4 gain no lane or analysis_method field" in completed.stdout
+    assert (
+        "projection has no B-4 role, claim-class projection, inherited world, never confirmed"
+        in completed.stdout
+    )
+    assert "L20 forbids gating live money on replay-world verdicts" in completed.stdout
+    assert "rerun B-4 role is the role of that run, not admission evidence" in completed.stdout
+    assert "admission evidence remains B-4 role=confirmation only" in completed.stdout
+    assert "F07 synthetic portfolio combination is refused as deferred" in completed.stdout
+    assert "run occupancy, minted artifact, and confirmation label are refused" in completed.stdout
+
+
 def test_analysis_book_bms_variants_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "analysis_book_bms_variants_usage.py")],

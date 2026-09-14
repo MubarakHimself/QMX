@@ -20,7 +20,7 @@ from click.shell_completion import CompletionItem
 from qmf.core.refusal import Result, is_ok, is_refusal
 
 from qmb._display import __version__
-from qmb.analysis import ProjectionView, RerunOutcome
+from qmb.analysis import CompareReadout, ProjectionView, RerunOutcome
 from qmb.config import ResolvedRunConfig
 from qmb.doors import CLI_PROG
 from qmb.doors.cli.render import render_refusal
@@ -38,6 +38,9 @@ from qmb.doors.cli.tree import (
     BOOK_RECORD_KIND,
     BOT_RECORD_KIND,
     COMMAND_GROUPS,
+    COMPARE_RUNS_MINTS_CT32,
+    COMPARE_RUNS_MINTS_EXPERIMENT_SPEC,
+    COMPARE_RUNS_OCCUPANCY,
     COMPUTES_RUN_ID,
     DATA_DOWNLOAD_OCCUPANCY,
     DATA_GENERATE_OCCUPANCY,
@@ -65,6 +68,7 @@ from qmb.doors.cli.tree import (
     invoke_analysis_project,
     invoke_analysis_rerun,
     invoke_backtest,
+    invoke_compare_runs,
     invoke_config_compile,
     invoke_config_show,
     invoke_data,
@@ -118,6 +122,9 @@ __all__ = [
     "BOOK_RECORD_KIND",
     "BOT_RECORD_KIND",
     "COMMAND_GROUPS",
+    "COMPARE_RUNS_MINTS_CT32",
+    "COMPARE_RUNS_MINTS_EXPERIMENT_SPEC",
+    "COMPARE_RUNS_OCCUPANCY",
     "COMPUTES_RUN_ID",
     "DATA_DOWNLOAD_OCCUPANCY",
     "DATA_GENERATE_OCCUPANCY",
@@ -145,6 +152,7 @@ __all__ = [
     "invoke_analysis_project",
     "invoke_analysis_rerun",
     "invoke_backtest",
+    "invoke_compare_runs",
     "invoke_config_compile",
     "invoke_config_show",
     "invoke_data",
@@ -1302,8 +1310,10 @@ def analysis_group() -> None:
 
     Occupancy: analysis.project is a query. analysis.rerun consumes one qmb run
     invocation per ExecutionEnvironment; its canonical artifact is a new CT-32.
-    workbench_lane=governed lives on the QMB ledger line citing that CT-32 by
-    _ref — never on CT-32 or B-4. Coordinated Experiment Ledger is Epic 36.
+    compare_runs is a readout query, not a named analysis method: it mints no
+    artifact, ledger line, or confirmation label. workbench_lane=governed lives
+    on the QMB ledger line citing that CT-32 by _ref — never on CT-32 or B-4.
+    Coordinated Experiment Ledger is Epic 36.
     """
 
 
@@ -1426,6 +1436,9 @@ def analysis_project(
             spawn=payload.get("spawn"),
             orchestrator=payload.get("orchestrator"),
             spawn_run=payload.get("spawn_run"),
+            portfolio=payload.get("portfolio"),
+            gating_live=payload.get("gating_live"),
+            confirmed=payload.get("confirmed"),
         ),
     )
 
@@ -1504,6 +1517,69 @@ def analysis_rerun(
             workbench_lane=payload.get("workbench_lane"),
             experiment_spec=payload.get("experiment_spec"),
             sqlite=payload.get("sqlite"),
+            role=payload.get("role"),
+        ),
+    )
+
+
+@analysis_group.command("compare")
+@click.option("--left", default=None, help="Cited CT-32 artifact, run-dir, or fp1.")
+@click.option("--right", default=None, help="Cited CT-32 artifact, run-dir, or fp1.")
+@click.option(
+    "--occupancy",
+    default=None,
+    help="Refused when run: compare_runs is a query readout.",
+)
+@click.option(
+    "--portfolio",
+    is_flag=True,
+    default=False,
+    help="Refused: F07 synthetic portfolio combination is deferred.",
+)
+@click.option(
+    "--gating-live",
+    "gating_live",
+    is_flag=True,
+    default=False,
+    help="Refused: L20 forbids gating live money on replay-world verdicts.",
+)
+@click.pass_context
+def analysis_compare(
+    ctx: click.Context,
+    left: str | None,
+    right: str | None,
+    occupancy: str | None,
+    portfolio: bool,
+    gating_live: bool,
+) -> None:
+    """Read two cited CT-32s. A readout: no artifact, ledger, or confirmation."""
+    payload = _payload(
+        ctx,
+        left=left,
+        right=right,
+        occupancy=occupancy,
+        portfolio=portfolio if portfolio else None,
+        gating_live=gating_live if gating_live else None,
+    )
+    _transport(
+        ctx,
+        invoke_compare_runs(
+            left=payload.get("left"),
+            right=payload.get("right"),
+            occupancy=payload.get("occupancy"),
+            ledger=payload.get("ledger"),
+            mint_ct32=payload.get("mint_ct32"),
+            experiment_spec=payload.get("experiment_spec"),
+            role=payload.get("role"),
+            confirmation_label=payload.get("confirmation_label"),
+            analysis_method=payload.get("analysis_method"),
+            lane=payload.get("lane"),
+            workbench_lane=payload.get("workbench_lane"),
+            gating_live=payload.get("gating_live"),
+            portfolio=payload.get("portfolio"),
+            synthetic_portfolio=payload.get("synthetic_portfolio"),
+            combine=payload.get("combine"),
+            combination=payload.get("combination"),
         ),
     )
 
@@ -1637,6 +1713,7 @@ def _format_ok(value: object) -> str:
             CandidateSet,
             LibraryKindRoster,
             LibrarySearch,
+            CompareReadout,
             ProjectionView,
             RerunOutcome,
             SavedCandidateView,

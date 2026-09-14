@@ -7,10 +7,29 @@ Story 35.3 ships ``analysis.rerun``: a new governed QMB run whose canonical
 artifact is a new CT-32.
 Story 35.4 ships complete Book/BMS ``dev``-zone candidates; evaluation is
 ``analysis.rerun`` citing that fingerprint.
+Story 35.5 ships ``compare_runs`` as a readout of cited CT-32 fields: no
+artifact, no ledger line, no confirmation label, no occupancy. Labels stay
+parent-shaped. F07 synthetic portfolio combination is refused as deferred.
 """
 
 from __future__ import annotations
 
+from qmb.analysis.compare import (
+    COMPARE_RUNS_CLASS,
+    COMPARE_RUNS_IS_ANALYSIS_METHOD,
+    COMPARE_RUNS_MINTS_CT32,
+    COMPARE_RUNS_MINTS_EXPERIMENT_SPEC,
+    COMPARE_RUNS_OCCUPANCY,
+    CompareReadout,
+    compare_runs,
+    compare_runs_identity,
+)
+from qmb.analysis.deferred import (
+    F07_FEATURE,
+    F07_FIELDS,
+    refuse_live_money_gating,
+    refuse_synthetic_portfolio,
+)
 from qmb.analysis.project import (
     ANALYSIS_PROJECT_CLASS,
     ANALYSIS_PROJECT_IS_LIBRARY_OBJECT,
@@ -70,6 +89,13 @@ __all__ = [
     "BOOK_BMS_MINT_SURFACE",
     "BOOK_BMS_SHAPE_OWNER",
     "CLAIM_CLASS_PROJECTION",
+    "COMPARE_RUNS_CLASS",
+    "COMPARE_RUNS_IS_ANALYSIS_METHOD",
+    "COMPARE_RUNS_MINTS_CT32",
+    "COMPARE_RUNS_MINTS_EXPERIMENT_SPEC",
+    "COMPARE_RUNS_OCCUPANCY",
+    "F07_FEATURE",
+    "F07_FIELDS",
     "FORBIDDEN_PROJECTION_AXES",
     "METHOD_PROJECTION",
     "METHOD_RERUN",
@@ -82,6 +108,7 @@ __all__ = [
     "VARIANT_ZONE",
     "WORKBENCH_LANE_GOVERNED",
     "BookBmsVariant",
+    "CompareReadout",
     "ProjectionView",
     "RerunOutcome",
     "analysis_project_identity",
@@ -89,8 +116,12 @@ __all__ = [
     "apply_projection_predicate",
     "book_bms_variant_identity",
     "cite_projection",
+    "compare_runs",
+    "compare_runs_identity",
     "evaluate_book_bms_variant",
     "project",
+    "refuse_live_money_gating",
+    "refuse_synthetic_portfolio",
     "register_book_bms_variant",
     "rerun",
 ]

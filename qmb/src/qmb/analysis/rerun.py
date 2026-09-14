@@ -26,10 +26,12 @@ from qmf.core.refusal import Ok, Result, TypedRefusal, is_ok, is_refusal
 from qmf.risk.performance import PerformanceResult
 
 from qmb._refuse import clean_token, invalid, policy, storage
+from qmb.analysis.deferred import refuse_synthetic_portfolio
 from qmb.config.compiler import ResolvedRunConfig, compile_run_config
 from qmb.config.replay import STARTING_CAPITAL_KEY
 from qmb.execution.binder import COST_ADAPTER_KEY, FILL_ADAPTER_KEY, FINANCING_SCHEDULE_KEY
 from qmb.ledger.line import (
+    ROLE_CONFIRMATION,
     WORKBENCH_LANE_COORDINATED,
     WORKBENCH_LANE_GOVERNED,
     LedgerLine,
@@ -97,6 +99,16 @@ class RerunOutcome:
         """Always ``rerun`` — this is a new run, not a projection saved view."""
         return METHOD_RERUN
 
+    @property
+    def b4_role(self) -> str:
+        """B-4 role of this run, never a confirmation label borrowed from the source."""
+        return self.ledger_line.role
+
+    @property
+    def is_admission_evidence(self) -> bool:
+        """Admission evidence is B-4 ``role=confirmation`` only (FR-W28)."""
+        return self.ledger_line.role == ROLE_CONFIRMATION
+
     def fp1_identity(self) -> dict[str, object]:
         """Identity-bearing rerun outcome. Package SemVer is omitted."""
         return {
@@ -158,6 +170,11 @@ def rerun(
     sqlite: object = None,
     database: object = None,
     daemon_sqlite: object = None,
+    role: object = None,
+    portfolio: object = None,
+    synthetic_portfolio: object = None,
+    combine: object = None,
+    combination: object = None,
     **extra: object,
 ) -> Result[RerunOutcome]:
     """Spawn a new governed QMB run through the tunnel. Canonical artifact: CT-32.
@@ -181,6 +198,15 @@ def rerun(
     )
     if blocked is not None:
         return blocked
+    f07 = refuse_synthetic_portfolio(
+        extra=extra,
+        portfolio=portfolio,
+        synthetic_portfolio=synthetic_portfolio,
+        combine=combine,
+        combination=combination,
+    )
+    if f07 is not None:
+        return f07
     source = _cite_source(source_ct32)
     if is_refusal(source):
         return source
@@ -203,8 +229,7 @@ def rerun(
     if slices is None:
         return invalid(
             "slices",
-            "analysis.rerun is a new QMB run and requires the event slices the "
-            "tunnel feeds run()",
+            "analysis.rerun is a new QMB run and requires the event slices the tunnel feeds run()",
         )
     if output_root is None:
         return invalid(
@@ -245,6 +270,7 @@ def rerun(
         compiled.value,
         outcome_identity=isolated.outcome_identity,
         ct32_fingerprint=stamped,
+        role=ROLE_CONFIRMATION if role is None else role,
         workbench_lane=WORKBENCH_LANE_GOVERNED,
     )
     if is_refusal(minted):
