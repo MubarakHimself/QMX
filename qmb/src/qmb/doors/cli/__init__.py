@@ -59,6 +59,7 @@ from qmb.doors.cli.tree import (
     invoke_data,
     invoke_ledger_bar,
     invoke_ledger_merge,
+    invoke_library_candidates,
     invoke_library_kinds,
     invoke_library_search,
     invoke_optimize_estimate,
@@ -75,6 +76,7 @@ from qmb.doors.cli.tree import (
 )
 from qmb.optimize import CostEstimate
 from qmb.registryread import LibraryKindRoster, RegistryReadPort
+from qmb.registryread.candidates import CandidateSet, SavedCandidateView
 from qmb.registryread.search import LibrarySearch
 from qmb.robustness import (
     PROCEDURE_MC_CANDLE_PERTURBATION,
@@ -127,6 +129,7 @@ __all__ = [
     "invoke_data",
     "invoke_ledger_bar",
     "invoke_ledger_merge",
+    "invoke_library_candidates",
     "invoke_library_kinds",
     "invoke_library_search",
     "invoke_optimize_estimate",
@@ -1156,6 +1159,122 @@ def library_search(
     )
 
 
+@library_group.command("candidates")
+@click.option("--kind", default=None, help="Optional Library kind filter.")
+@click.option("--fp1", default=None, help="Optional source kind fp1 filter.")
+@click.option("--zone", default=None, help="Optional zone filter: dev or live.")
+@click.option("--world", default=None, help="World the ledger merge view reads.")
+@click.option("--role", default=None, help="Role the ledger merge view reads.")
+@click.option("--lane", default=None, help="ungoverned, governed, or coordinated.")
+@click.option("--sweep-id", default=None, help="Sweep id when ranking via sweep.rank.")
+@click.option("--objective", default=None, help="Roster measure_identity for sweep.rank.")
+@click.option("--direction", default=None, help="ascending or descending.")
+@click.option("--home", default=None, help="ungoverned, governed, or coordinated.")
+@click.option("--run-dir", default=None, help="Source run-dir for governed JSON sidecar.")
+@click.option(
+    "--cite",
+    default=None,
+    help="Refused without a body: a citation is not a saved view.",
+)
+@click.option(
+    "--staging",
+    is_flag=True,
+    default=False,
+    help="Refused: candidate-set query does not read QMA staging.",
+)
+@click.option(
+    "--persist",
+    is_flag=True,
+    default=False,
+    help="Refused: candidate set does not persist copied rows.",
+)
+@click.option(
+    "--database",
+    default=None,
+    help="Refused: candidate set is not a sqlite table (DEC-0084 stays dead).",
+)
+@click.option(
+    "--sqlite",
+    is_flag=True,
+    default=False,
+    help="Refused: candidate set is not a sqlite table (DEC-0084 stays dead).",
+)
+@click.option(
+    "--registry-kind",
+    is_flag=True,
+    default=False,
+    help="Refused: candidates are not a new qmf-registry kind.",
+)
+@click.pass_context
+def library_candidates(
+    ctx: click.Context,
+    kind: str | None,
+    fp1: str | None,
+    zone: str | None,
+    world: str | None,
+    role: str | None,
+    lane: str | None,
+    sweep_id: str | None,
+    objective: str | None,
+    direction: str | None,
+    home: str | None,
+    run_dir: str | None,
+    cite: str | None,
+    staging: bool,
+    persist: bool,
+    database: str | None,
+    sqlite: bool,
+    registry_kind: bool,
+) -> None:
+    """Retain / filter / rank candidates as a read-time view (Story 34.3)."""
+    payload = _payload(
+        ctx,
+        kind=kind,
+        fp1=fp1,
+        zone=zone,
+        world=world,
+        role=role,
+        lane=lane,
+        sweep_id=sweep_id,
+        objective=objective,
+        direction=direction,
+        home=home,
+        run_dir=run_dir,
+        cite=cite,
+        database=database,
+    )
+    _transport(
+        ctx,
+        invoke_library_candidates(
+            kind=payload.get("kind"),
+            fp1=payload.get("fp1"),
+            zone=payload.get("zone"),
+            port=payload.get("port"),
+            ledger_lines=payload.get("ledger_lines"),
+            world=payload.get("world"),
+            role=payload.get("role"),
+            experiment_refs=payload.get("experiment_refs"),
+            lane=payload.get("lane"),
+            sweep_id=payload.get("sweep_id"),
+            objective=payload.get("objective"),
+            constraints=payload.get("constraints"),
+            direction=payload.get("direction"),
+            home=payload.get("home"),
+            run_dir=payload.get("run_dir"),
+            body=payload.get("body"),
+            cite=payload.get("cite"),
+            staging=staging if staging else payload.get("staging"),
+            persist=persist if persist else payload.get("persist"),
+            database=payload.get("database"),
+            sqlite=sqlite if sqlite else payload.get("sqlite"),
+            mint_registry_kind=(
+                registry_kind if registry_kind else payload.get("mint_registry_kind")
+            ),
+            registry_kind=registry_kind if registry_kind else payload.get("registry_kind"),
+        ),
+    )
+
+
 @main.group("config")
 def config_group() -> None:
     """The B-3 config compiler: one resolved, fingerprinted run-config."""
@@ -1282,8 +1401,10 @@ def _format_ok(value: object) -> str:
         value,
         (
             CandlePerturbationResult,
+            CandidateSet,
             LibraryKindRoster,
             LibrarySearch,
+            SavedCandidateView,
             SignificanceResult,
             SweepBatchReport,
             SweepRanking,

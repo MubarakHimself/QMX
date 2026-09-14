@@ -18,6 +18,10 @@ and no unbiased pass/fail verdict — the per-combo verdict rule and the
 multiple-comparisons statistic stay deferred to GAP-0048/0049 (B-10; B-14;
 SC-06; SC-07; FR-034; FR-038; DEC-0162, DEC-0169).
 
+Story 34.3: this fold **is** the candidate-set rank — the same read-time view
+over ledger lines — and still publishes no copied-row artifact (FR-W20,
+DEC-0282).
+
 A combo whose ledger line is a refusal/``aborted`` outcome with no CT-32 measures
 — or a completed combo whose objective (or a constraint metric) is an
 :class:`~qmf.risk.performance.UndefinedMeasure` — is excluded from the objective
@@ -60,8 +64,10 @@ __all__ = [
     "RANK_DESCENDING",
     "RANK_DIRECTIONS",
     "RANK_FORBIDDEN_ACTS",
+    "RANK_IS_CANDIDATE_SET_VIEW",
     "RANK_MAKES_EDGE_CLAIM",
     "RANK_MAKES_PASS_FAIL_VERDICT",
+    "RANK_PUBLISHES_COPIED_ROW_ARTIFACT",
     "RANK_PUBLISHES_NEVER_ACTS",
     "ConstraintFilter",
     "IncompleteCombo",
@@ -133,6 +139,8 @@ RANK_PUBLISHES_NEVER_ACTS: Final[bool] = True
 RANK_MAKES_EDGE_CLAIM: Final[bool] = False
 RANK_MAKES_PASS_FAIL_VERDICT: Final[bool] = False
 RANK_ADDS_COMPUTATION: Final[bool] = False
+RANK_IS_CANDIDATE_SET_VIEW: Final[bool] = True
+RANK_PUBLISHES_COPIED_ROW_ARTIFACT: Final[bool] = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -359,6 +367,7 @@ def sweep_rank_identity() -> dict[str, object]:
     """Identity-bearing ranking-fold fields. Package SemVer is omitted."""
     return {
         "adds_computation": RANK_ADDS_COMPUTATION,
+        "candidate_set_view": RANK_IS_CANDIDATE_SET_VIEW,
         "class": RANKING_CLASS,
         "constraint_operators": CONSTRAINT_OPERATORS,
         "directions": RANK_DIRECTIONS,
@@ -367,6 +376,7 @@ def sweep_rank_identity() -> dict[str, object]:
         "incomplete_reasons": INCOMPLETE_REASONS,
         "makes_edge_claim": RANK_MAKES_EDGE_CLAIM,
         "makes_pass_fail_verdict": RANK_MAKES_PASS_FAIL_VERDICT,
+        "publishes_copied_row_artifact": RANK_PUBLISHES_COPIED_ROW_ARTIFACT,
         "publishes_never_acts": RANK_PUBLISHES_NEVER_ACTS,
         "taint": TAINT_OPTIMISTIC,
     }

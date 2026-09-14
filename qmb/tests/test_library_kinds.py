@@ -226,4 +226,4 @@ def test_cli_and_api_enumerate_the_same_kinds() -> None:
     assert helped.exit_code == 0, helped.output
     assert "kinds" in helped.output
     assert "search" in helped.output
-    assert command_tree()["library"] == ("kinds", "search")
+    assert command_tree()["library"] == ("kinds", "search", "candidates")

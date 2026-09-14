@@ -1385,6 +1385,25 @@ def test_library_search_usage_example_runs_clean() -> None:
     assert "fourth store refused" in completed.stdout
 
 
+def test_library_candidates_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "library_candidates_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "library candidates ok" in completed.stdout
+    assert "dev-zone candidate included" in completed.stdout
+    assert "sweep.rank is the candidate-set rank" in completed.stdout
+    assert "ungoverned is a return value" in completed.stdout
+    assert "governed sidecar written" in completed.stdout
+    assert "citation without a body refused" in completed.stdout
+    assert "sqlite and registry-kind refused" in completed.stdout
+    assert "staging is not read" in completed.stdout
+
+
 def test_import_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_EXAMPLE)],

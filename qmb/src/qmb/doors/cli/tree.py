@@ -55,6 +55,15 @@ from qmb.registryread import (
     RegistryReadPort,
     enumerate_library_kinds,
 )
+from qmb.registryread.candidates import (
+    CANDIDATE_SET_MINTS_CT32,
+    CANDIDATE_SET_MINTS_EXPERIMENT_SPEC,
+    CANDIDATE_SET_OCCUPANCY,
+    CandidateSet,
+    SavedCandidateView,
+    query_candidates,
+    save_candidate_view,
+)
 from qmb.registryread.search import (
     LIBRARY_SEARCH_MINTS_CT32,
     LIBRARY_SEARCH_MINTS_EXPERIMENT_SPEC,
@@ -122,6 +131,7 @@ __all__ = [
     "invoke_data",
     "invoke_ledger_bar",
     "invoke_ledger_merge",
+    "invoke_library_candidates",
     "invoke_library_kinds",
     "invoke_library_search",
     "invoke_optimize_estimate",
@@ -147,7 +157,7 @@ COMMAND_GROUPS: Final[tuple[str, ...]] = (
     "library",
     "config",
 )
-LIBRARY_COMMANDS: Final[tuple[str, ...]] = ("kinds", "search")
+LIBRARY_COMMANDS: Final[tuple[str, ...]] = ("kinds", "search", "candidates")
 COMPUTES_RUN_ID: Final[bool] = False
 HOLDS_CACHE: Final[bool] = False
 ORCHESTRATOR_ENTRY: Final[str] = "qmb.orchestrator.spawn_run"
@@ -235,6 +245,7 @@ _COMMAND_PREREQS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         "ledger.bar": ("root", "world"),
         "library.kinds": (),
         "library.search": ("kind",),
+        "library.candidates": (),
         "config.compile": ("port", "book_fragment", "bms_fragment", "run_spec"),
         "config.show": (),
     }
@@ -290,6 +301,9 @@ def cli_tree_identity() -> dict[str, object]:
         "library_search_occupancy": LIBRARY_SEARCH_OCCUPANCY,
         "library_search_mints_ct32": LIBRARY_SEARCH_MINTS_CT32,
         "library_search_mints_experiment_spec": LIBRARY_SEARCH_MINTS_EXPERIMENT_SPEC,
+        "library_candidates_occupancy": CANDIDATE_SET_OCCUPANCY,
+        "library_candidates_mints_ct32": CANDIDATE_SET_MINTS_CT32,
+        "library_candidates_mints_experiment_spec": CANDIDATE_SET_MINTS_EXPERIMENT_SPEC,
     }
 
 
@@ -406,6 +420,97 @@ def invoke_library_search(
         new_store=new_store,
         identity_store=identity_store,
     )
+
+
+def invoke_library_candidates(
+    *,
+    kind: object = None,
+    fp1: object = None,
+    zone: object = None,
+    port: object = None,
+    ledger_lines: object = None,
+    world: object = None,
+    role: object = None,
+    experiment_refs: object = None,
+    lane: object = None,
+    sweep_id: object = None,
+    objective: object = None,
+    constraints: object = None,
+    direction: object = None,
+    home: object = None,
+    run_dir: object = None,
+    body: object = None,
+    cite: object = None,
+    staging: object = None,
+    qma_staging: object = None,
+    refinement_proposals: object = None,
+    persist: object = None,
+    persist_candidates: object = None,
+    copied_rows: object = None,
+    persist_copied_rows: object = None,
+    candidate_database: object = None,
+    database: object = None,
+    store: object = None,
+    sqlite: object = None,
+    databank: object = None,
+    mint_registry_kind: object = None,
+    registry_kind: object = None,
+) -> Result[CandidateSet | SavedCandidateView]:
+    """Thin wrapper over ``qmb.query_candidates`` (Story 34.3).
+
+    Occupancy is a query: no CT-32, no ExperimentSpec successor, no copied-row
+    store, no qmf-registry kind. Staging is not read. ``sweep.rank`` is the
+    rank fold when ranking fields are supplied. A saved-view ``home`` follows
+    FR-W24; coordinated persistence is Epic 36.
+    """
+    checked = require_prerequisites("library.candidates", {})
+    if is_refusal(checked):
+        return checked
+    found = query_candidates(
+        kind=kind,
+        fp1=fp1,
+        zone=zone,
+        port=port,
+        ledger_lines=ledger_lines,
+        world=world,
+        role=role,
+        experiment_refs=experiment_refs,
+        lane=lane,
+        sweep_id=sweep_id,
+        objective=objective,
+        constraints=constraints,
+        direction=direction,
+        staging=staging,
+        qma_staging=qma_staging,
+        refinement_proposals=refinement_proposals,
+        persist=persist,
+        persist_candidates=persist_candidates,
+        copied_rows=copied_rows,
+        persist_copied_rows=persist_copied_rows,
+        candidate_database=candidate_database,
+        database=database,
+        store=store,
+        sqlite=sqlite,
+        databank=databank,
+        mint_registry_kind=mint_registry_kind,
+        registry_kind=registry_kind,
+    )
+    if is_refusal(found):
+        return found
+    if home is None:
+        queried: CandidateSet | SavedCandidateView = found.value
+        return Ok(queried)
+    saved = save_candidate_view(
+        found.value,
+        home=home,
+        body=body,
+        run_dir=run_dir,
+        cite=cite,
+    )
+    if is_refusal(saved):
+        return saved
+    persisted: CandidateSet | SavedCandidateView = saved.value
+    return Ok(persisted)
 
 
 def invoke_config_show() -> Result[Mapping[str, object]]:

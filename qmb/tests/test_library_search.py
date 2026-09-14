@@ -384,7 +384,7 @@ def test_cli_and_api_search_the_same_fold() -> None:
     helped = runner.invoke(main, ["library", "--help"])
     assert helped.exit_code == 0, helped.output
     assert "search" in helped.output
-    assert command_tree()["library"] == ("kinds", "search")
+    assert command_tree()["library"] == ("kinds", "search", "candidates")
     staging = runner.invoke(
         main,
         ["library", "search", "--kind", "bot-definition", "--staging"],
