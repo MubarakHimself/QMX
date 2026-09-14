@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from typing import TypeVar, cast
 
+import pytest
 from click.testing import CliRunner
 from qmb.doors import api, flatten_capabilities, required_library_names
 from qmb.doors.cli import (
@@ -229,21 +230,20 @@ def test_candle_perturbation_adapter_equals_the_library() -> None:
 
 
 def test_rule_significance_adapter_equals_the_library() -> None:
-    kwargs = {
-        "signals": _signals(),
-        "base_seed": 7,
-        "config": {
-            RESAMPLING_SCHEME_KEY: "iid",
-            ITERATIONS_KEY: 80,
-        },
+    signals = _signals()
+    config = {
+        RESAMPLING_SCHEME_KEY: "iid",
+        ITERATIONS_KEY: 80,
     }
-    library = run_significance_gate(**kwargs)
-    door = invoke_robustness_rule_significance(**kwargs)
+    library = run_significance_gate(signals=signals, base_seed=7, config=config)
+    door = invoke_robustness_rule_significance(
+        signals=signals, base_seed=7, config=config
+    )
     assert door == library
     assert is_ok(door)
 
 
-def test_adapters_call_the_library_not_a_copy(monkeypatch) -> None:
+def test_adapters_call_the_library_not_a_copy(monkeypatch: pytest.MonkeyPatch) -> None:
     sentinel = object()
     calls: list[str] = []
 
