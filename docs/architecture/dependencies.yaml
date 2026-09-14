@@ -110,10 +110,15 @@ components:
       library + the qmb CLI in one wheel (uv add qmb; own SemVer,
       display-only provenance never identity), consuming the QMF workspace in
       lockstep (DEC-0159, DEC-0167). QMB is an application composition root —
-      the first sanctioned place the defined-unwired risk contracts
+      the first sanctioned place the risk contracts
       (CT-22/23/27/28/29/32) are legally wired, in world=replay only; the
       default-deny no-import posture governs roster packages, and wiring at a
       composition root is the ratified pattern (DEC-0146, DEC-0158, DEC-0169).
+      Workbench connect/extend owner for named analysis (analysis.project /
+      analysis.rerun), CLI coverage of robustness/sweep, and data commands
+      wrapping qmf-data (DEC-0285); no new COMP and no new depends_on edge.
+      Older defined-unwired / "no code exists" wording for those CTs is
+      superseded by source-inspected on integration@1b451a8 (DEC-0286).
       No edge to COMP-QMF-VENUE: live adapters and brokerage ports are
       trading-node territory (spine Deferred); B-2's clock/adapter seam is
       where they will bind, and replay execution binds the B-6 fill/cost/
@@ -144,8 +149,12 @@ components:
       contract are QML-local on QML's own AD-5 ladder (DEC-0171, DEC-0177,
       DEC-0178). CT-33/CT-34 are AUTHORED via QML but OWNED by qmf-registry
       like every kind; the strategy-family record is a CT-06 metadata kind, no
-      new CT number (DEC-0173, DEC-0175, DEC-0176). Dependency stance: imports
-      qmf-core, qmf-registry, and qmf-risk (CT-23/CT-29 types) at its
+      new CT number (DEC-0173, DEC-0175, DEC-0176). Workbench extend owner for
+      structure-generation authoring of new CT-33/CT-34 + logic (DEC-0285);
+      no new COMP and no new depends_on edge. Older defined-unwired /
+      "no code exists" wording for CT-33/CT-34 is superseded by
+      source-inspected on integration@1b451a8 (DEC-0286). Dependency stance:
+      imports qmf-core, qmf-registry, and qmf-risk (CT-23/CT-29 types) at its
       composition root, and NEVER qmf-venue; the QMF default-deny
       Dependency-direction rule is read roster-scoped — it governs the seven
       roster packages internally, never applications built on the workspace,
@@ -354,7 +363,14 @@ components:
       package, worker or plugin, part of the money-path reachability barrier
       (DEC-0341, DEC-0347). There is NO edge to COMP-QMB — the qmb door is an
       AD-17 job placement by the analysis-backtest plugin, a runtime interaction
-      not a package import. There is NO edge to COMP-QML. The daemon owns the
+      not a package import. There is NO edge to COMP-QML. Workbench connect
+      owner for the real QMA→QMB CLI transport, ExperimentSpec/ledger
+      persistence, and composed asyncio daemon process (DEC-0285); CT-47 and
+      CT-40..CT-51 matching source is source-inspected on
+      integration@1b451a8 — older defined-unwired / "no code exists" wording
+      is superseded there (DEC-0286); RecordingQmbDoorTransport default and
+      missing process composition remain connect work. No new COMP and no new
+      depends_on edge. The daemon owns the
       journal, the closed store list with its sixteen-member definition store,
       the hooks registry, the Task Graph and
       Mission Compiler, the three ledgers, the Agent Bus, the scheduler and
