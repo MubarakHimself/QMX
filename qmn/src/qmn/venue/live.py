@@ -22,8 +22,8 @@ on that same loop (Open API port 5035, injected proto tag, opaque
 second manager. Tagged smoke against ``demo.ctraderapi.com`` stays extra.
 
 Story 31.3: :meth:`LiveCTraderClient.encode_command` translates a CT-19
-``Command`` onto the qmf-venue ProtoOA encode symbols. This module does not
-import generated proto modules or compile proto messages.
+``Command`` onto the qmf-venue ProtoOA encode symbols. This module never
+loads compiled proto modules and never compiles proto messages.
 
 Story 31.4: :meth:`LiveCTraderClient.submit` hands a ready well-formed
 ``Command`` to that encode path. The Story 24.3 sensing-only refusal is gone
@@ -851,7 +851,7 @@ class LiveCTraderClient:
     ) -> Result[EncodedCommand]:
         """Translate a CT-19 ``Command`` onto qmf-venue ProtoOA encode symbols.
 
-        Does not compile proto or import generated modules. A
+        Never compiles proto messages and never loads compiled proto modules. A
         :class:`~qmf.venue.commands.CompoundCommand` keeps the FTR-02
         unsupported-capability block (GAP-0059).
         """

@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import importlib.util
+import sys
 from collections.abc import Mapping
+from pathlib import Path
 from typing import TypeVar, cast
 
 import pytest
@@ -32,7 +35,19 @@ from qmn.venue import (
     run_port_contract_suite,
 )
 from qmn.venue.verify import VenueFactVerifier
-from test_qmn_submit import compiled_protooa
+
+
+def _compiled_protooa():
+    path = Path(__file__).resolve().with_name("test_qmn_submit.py")
+    spec = importlib.util.spec_from_file_location("qmn_submit_helpers", path)
+    assert spec is not None and spec.loader is not None
+    module = sys.modules.get(spec.name)
+    if module is None:
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+    return module.compiled_protooa()
+
 
 T = TypeVar("T")
 
@@ -103,7 +118,7 @@ def _live() -> LiveCTraderClient:
     _ok(client.accept_verification(_verification(venue, account)))
     _ok(
         client.bind_encode_context(
-            compiled=compiled_protooa(),
+            compiled=_compiled_protooa(),
             ctid_trader_account_id=42,
             symbol_id=1,
             trade_side="buy",
