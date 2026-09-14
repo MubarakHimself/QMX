@@ -7,6 +7,10 @@ transition routes a Book to exactly one paired demo account (role ``demo``,
 Capital/authority demotions route to that target; market-risk windows and KSA
 block paper and live alike; a silent paper outage raises the live alarm class
 (FR-058; DEC-0149, DEC-0194, DEC-0261; SCN-0006).
+
+Story 31.6 seals the honest FX paper claim on the vendor demo host: same live
+client, submit encode, and position/balance read-back. It does not run a soak
+week or grant live-money authority.
 """
 
 from __future__ import annotations
@@ -55,6 +59,34 @@ from qmn.paper.first_deployment import (
     require_first_deployment_book_routing,
     resolve_first_deployment_execution_target,
 )
+from qmn.paper.fx_claim import (
+    CANONICAL_SOURCE_TOKEN,
+    FX_PAPER_CLAIM_SURFACE,
+    FX_PAPER_REQUIRED_ELEMENTS,
+    GRANTS_LIVE_MONEY,
+    ILLEGAL_PAPER_SKIPS,
+    INVENTS_KSA_VALUES,
+    LOCAL_MATCHING_ENGINE,
+    PROFIT_IS_EVIDENCE,
+    RUNS_SOAK_WEEK,
+    SPOT_FX_INCLUDED,
+    V1_VENUE_CLIENT_KINDS,
+    VENDOR_DEMO_HOST,
+    FxPaperClaim,
+    encoded_kinds_from_client,
+    evaluate_fx_paper_claim,
+    live_client_implementation_for,
+    readback_kinds_from_client,
+    refuse_fourth_venue_client_kind,
+    refuse_fx_paper_illegal_skip,
+    refuse_fx_paper_invented_ksa,
+    refuse_fx_paper_live_authority,
+    refuse_fx_paper_local_matching,
+    refuse_fx_paper_profit,
+    refuse_fx_paper_soak_week,
+    refuse_fx_paper_twins,
+    refuse_non_ctrader_live_mapping,
+)
 from qmn.paper.lane import (
     FORBIDDEN_PER_BOT_PAPER_SURFACES,
     POST_ACTIVATION_PAPER_ROUTE,
@@ -78,6 +110,7 @@ from qmn.paper.transition import (
 )
 
 __all__ = [
+    "CANONICAL_SOURCE_TOKEN",
     "CAPITAL_AUTHORITY_DEMOTION_KINDS",
     "DECLARED_FAULT_INJECTION_POINTS",
     "DEMO_SHAPE_MACHINERY",
@@ -87,10 +120,16 @@ __all__ = [
     "FIRST_DEPLOYMENT_BOOK_ROUTING",
     "FIRST_DEPLOYMENT_SURFACE",
     "FORBIDDEN_PER_BOT_PAPER_SURFACES",
+    "FX_PAPER_CLAIM_SURFACE",
+    "FX_PAPER_REQUIRED_ELEMENTS",
+    "GRANTS_LIVE_MONEY",
+    "ILLEGAL_PAPER_SKIPS",
+    "INVENTS_KSA_VALUES",
     "LATE_LIVE_APPROVAL_DELAYS",
     "LIVE_OUTAGE_ALARM_CLASS",
     "LIVE_SENSING_ALLOWED",
     "LIVE_SENSING_FORBIDDEN",
+    "LOCAL_MATCHING_ENGINE",
     "MARKET_RISK_BLOCK_KINDS",
     "NODE_PAPER_ACCOUNT_ROLE",
     "NODE_PAPER_WORLD",
@@ -101,8 +140,14 @@ __all__ = [
     "POST_ACTIVATION_PAPER_ROUTE",
     "PRE_UNATTENDED_PROOFS",
     "PROCURES_VPS",
+    "PROFIT_IS_EVIDENCE",
+    "RUNS_SOAK_WEEK",
+    "SPOT_FX_INCLUDED",
+    "V1_VENUE_CLIENT_KINDS",
+    "VENDOR_DEMO_HOST",
     "BotNodeJourney",
     "FirstDeploymentWindow",
+    "FxPaperClaim",
     "LiveSensingAdmission",
     "MarketRiskBlockKind",
     "PairedDemoBinding",
@@ -116,14 +161,27 @@ __all__ = [
     "begin_unattended_interval",
     "build_paired_demo_target",
     "compose_first_deployment_window",
+    "encoded_kinds_from_client",
+    "evaluate_fx_paper_claim",
     "fold_book_mode",
     "inspect_bot_node_journey",
+    "live_client_implementation_for",
     "mint_operator_paper_flip",
     "raise_paper_outage_alarm",
+    "readback_kinds_from_client",
     "record_pre_unattended_proofs",
     "refuse_continuous_supervision",
     "refuse_first_deployment_live_authority",
+    "refuse_fourth_venue_client_kind",
+    "refuse_fx_paper_illegal_skip",
+    "refuse_fx_paper_invented_ksa",
+    "refuse_fx_paper_live_authority",
+    "refuse_fx_paper_local_matching",
+    "refuse_fx_paper_profit",
+    "refuse_fx_paper_soak_week",
+    "refuse_fx_paper_twins",
     "refuse_late_approval_blocks_demo",
+    "refuse_non_ctrader_live_mapping",
     "refuse_open_live_credentials",
     "refuse_per_bot_paper_lane",
     "refuse_procure_vps",

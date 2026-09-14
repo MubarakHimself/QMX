@@ -1369,3 +1369,30 @@ designed failure; every typed refusal the node can emit belongs here.
   channel. Register through `qmn.mis.regime_register` over prepared
   training/evaluation artifacts; do not grant money-path authority from
   registration alone; do not expect hub publish of sandbox provenance.
+
+### FR-78: Honest FX paper claim refused
+
+- **Failure class:** policy rejection / unsupported capability
+- **Detection:** Story 31.6 refused an FX paper claim missing a required
+  element (`fx_paper.missing_element`), a live-capital or spot-FX-later skip
+  (`fx_paper.illegal_skip`), a fourth VenueClientKind
+  (`fx_paper.fourth_kind`), mapping a non-ctrader kind onto the live client
+  (`fx_paper.non_ctrader_mapping`), a live binding
+  (`fx_paper.live_binding`), live command stream
+  (`fx_paper.live_command_stream`), sequencer (`fx_paper.live_sequencer`),
+  or execution target (`fx_paper.live_execution_target`), promotion
+  (`fx_paper.promotion`) or go-live (`fx_paper.go_live`), running the
+  unattended week (`fx_paper.soak_week`), invented KSA values
+  (`fx_paper.invented_ksa`), profit as evidence (`fx_paper.profit`), a Bot
+  or Book twin (`fx_paper.twins`), or a local matching engine
+  (`fx_paper.local_matching`).
+- **Auto-recovery / retry:** none — assemble vendor demo host, demo role,
+  world=live, ctrader LiveCTraderClient, submit encode of every bound CT-18
+  kind, and position/balance read-back together; keep live-role entries
+  sensing-only until a live binding.
+- **Visible degraded state:** the FX paper claim does not seal; soak may not
+  call the demo path paper; live money, promotion, and go-live stay closed.
+- **Notification tier:** operator-visible (journaled).
+- **Product-user affordance:** The honest FX paper claim was refused. Inspect
+  `read_failure_detail` on the evidence channel. Do not treat profit as
+  evidence and do not start the unattended week from this story.

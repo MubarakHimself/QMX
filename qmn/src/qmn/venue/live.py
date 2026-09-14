@@ -65,7 +65,7 @@ from qmf.core import (
     is_ok,
     is_refusal,
 )
-from qmf.venue.capabilities import ErrorMap, ErrorMapResolution
+from qmf.venue.capabilities import CapabilityDeclaration, ErrorMap, ErrorMapResolution
 from qmf.venue.commands import (
     Command,
     CommandKind,
@@ -533,6 +533,24 @@ class LiveCTraderClient:
     def account(self) -> Account | None:
         """The open-session account, if any."""
         return self._account
+
+    @property
+    def open_api_host(self) -> str | None:
+        """Injected Open API host, or ``None`` on the credential-free path."""
+        return self._open_api_host
+
+    @property
+    def capabilities_verified(self) -> bool:
+        """True after an open session accepted a verified CT-18 profile."""
+        return self._capabilities_verified
+
+    @property
+    def bound_declaration(self) -> CapabilityDeclaration | None:
+        """The bound CT-18 static declaration, if verification was accepted."""
+        verification = self._verification
+        if verification is None:
+            return None
+        return verification.declaration
 
     def open_session(self, account: object) -> Result[bool]:
         if not isinstance(account, Account):
