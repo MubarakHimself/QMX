@@ -31,7 +31,9 @@ from qmb.doors.cli import (
     invoke_robustness_rule_significance,
     invoke_robustness_trade_shuffle,
     invoke_robustness_walk_forward,
+    invoke_sweep_batch,
     invoke_sweep_count,
+    invoke_sweep_rank,
     main,
     render_refusal,
 )
@@ -99,6 +101,24 @@ def test_t16_1_b_each_capability_forwards_to_one_library_function(monkeypatch) -
             {"signals": 1},
             "signals",
         ),
+        (
+            "run_sweep_batch",
+            lambda: invoke_sweep_batch(
+                admitted=1,
+                output_root=1,
+                ledger=1,
+                combo_slices=1,
+                projected_peak_memory=1,
+            ),
+            {"admitted": 1},
+            "admitted",
+        ),
+        (
+            "rank_sweep",
+            lambda: invoke_sweep_rank(lines=1, sweep_id=1, objective=1, world=1),
+            {"lines": 1},
+            "lines",
+        ),
     ):
         calls: list[tuple[tuple, dict]] = []
 
@@ -138,6 +158,9 @@ def test_t16_1_d_single_surface_capability_groups_enumerable() -> None:
         "robustness.monte-carlo-trade-shuffle",
         "robustness.monte-carlo-candle-perturbation",
         "robustness.rule-significance",
+        "sweep.count",
+        "sweep.batch",
+        "sweep.rank",
     } <= leaves
 
 

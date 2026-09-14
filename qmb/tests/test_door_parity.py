@@ -73,7 +73,9 @@ _CLI_INVOKERS: dict[str, str] = {
     "invoke_robustness_rule_significance": "robustness.rule-significance",
     "invoke_robustness_trade_shuffle": "robustness.monte-carlo-trade-shuffle",
     "invoke_robustness_walk_forward": "robustness.walk-forward",
+    "invoke_sweep_batch": "sweep.batch",
     "invoke_sweep_count": "sweep.count",
+    "invoke_sweep_rank": "sweep.rank",
 }
 
 

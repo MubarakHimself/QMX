@@ -33,6 +33,9 @@ from qmb.doors.cli.tree import (
     COMPUTES_RUN_ID,
     HOLDS_CACHE,
     ORCHESTRATOR_ENTRY,
+    SWEEP_BATCH_OCCUPANCY,
+    SWEEP_COMMANDS,
+    SWEEP_RANK_OCCUPANCY,
     BacktestSubmission,
     cli_tree_identity,
     command_prerequisites,
@@ -51,7 +54,9 @@ from qmb.doors.cli.tree import (
     invoke_robustness_rule_significance,
     invoke_robustness_trade_shuffle,
     invoke_robustness_walk_forward,
+    invoke_sweep_batch,
     invoke_sweep_count,
+    invoke_sweep_rank,
     require_prerequisites,
 )
 from qmb.optimize import CostEstimate
@@ -67,6 +72,7 @@ from qmb.robustness import (
     TradeShuffleResult,
     WalkForwardPlan,
 )
+from qmb.sweep import SweepBatchReport, SweepRanking
 
 _T = TypeVar("_T")
 
@@ -80,6 +86,9 @@ __all__ = [
     "COMPUTES_RUN_ID",
     "HOLDS_CACHE",
     "ORCHESTRATOR_ENTRY",
+    "SWEEP_BATCH_OCCUPANCY",
+    "SWEEP_COMMANDS",
+    "SWEEP_RANK_OCCUPANCY",
     "BacktestSubmission",
     "cli_tree_identity",
     "command_prerequisites",
@@ -98,7 +107,9 @@ __all__ = [
     "invoke_robustness_rule_significance",
     "invoke_robustness_trade_shuffle",
     "invoke_robustness_walk_forward",
+    "invoke_sweep_batch",
     "invoke_sweep_count",
+    "invoke_sweep_rank",
     "main",
     "render_refusal",
     "require_prerequisites",
@@ -624,7 +635,7 @@ def optimize_estimate(
 
 @main.group("sweep")
 def sweep_group() -> None:
-    """Declare a permutation sweep and inspect its pre-flight run count (B-12)."""
+    """Permutation sweep: pre-flight count, batch run, and rank query (B-12)."""
 
 
 @sweep_group.command("count")
@@ -674,6 +685,120 @@ def sweep_count(
         seconds=seconds,
     )
     _transport(ctx, invoke_sweep_count(declaration=declaration))
+
+
+# Occupancy: a governed CLI sweep.batch invocation is one qmb run unit wrapping
+# the combo children. Each combo still writes exactly one ledger line (Story 20.3).
+# Process-per-run children inside that invocation are not additional QMA jobs.
+# This door does not place CT-47 ExperimentSpec (Epic 36).
+
+
+@sweep_group.command("batch")
+@click.option("--output-root", default=None, help="Isolated batch output root.")
+@click.option(
+    "--projected-peak-memory",
+    default=None,
+    type=int,
+    help="Governor projected-peak memory in bytes.",
+)
+@click.pass_context
+def sweep_batch(
+    ctx: click.Context,
+    output_root: str | None,
+    projected_peak_memory: int | None,
+) -> None:
+    """Run an admitted sweep batch via qmb.sweep.run_sweep_batch."""
+    payload = _payload(ctx, output_root=output_root, projected_peak_memory=projected_peak_memory)
+    _transport(
+        ctx,
+        invoke_sweep_batch(
+            admitted=payload.get("admitted"),
+            output_root=payload.get("output_root"),
+            ledger=payload.get("ledger"),
+            combo_slices=payload.get("combo_slices"),
+            projected_peak_memory=payload.get("projected_peak_memory"),
+            cpu_budget=payload.get("cpu_budget"),
+            memory_budget=payload.get("memory_budget"),
+            budgets=payload.get("budgets"),
+            on_full=payload.get("on_full"),
+            cpu_cost=payload.get("cpu_cost"),
+            invocation_flags=payload.get("invocation_flags"),
+            workspace_defaults=payload.get("workspace_defaults"),
+            condition_presets=payload.get("condition_presets", ()),
+            role=payload.get("role"),
+            factory_sandbox=payload.get("factory_sandbox"),
+        ),
+    )
+
+
+# Occupancy: sweep.rank is a query. It consumes no occupancy, mints no CT-32,
+# and mints no ExperimentSpec successor. A persist/database request is refused.
+
+
+@sweep_group.command("rank")
+@click.option("--sweep-id", default=None, help="Sweep id the fold reads (one sweep).")
+@click.option("--objective", default=None, help="Roster measure_identity to order by.")
+@click.option("--world", default=None, help="World the fold reads; never mixed.")
+@click.option("--role", default=None, help="Ledger role the fold reads; never mixed.")
+@click.option("--direction", default=None, help="ascending or descending.")
+@click.option(
+    "--persist",
+    is_flag=True,
+    default=False,
+    help="Refused: ranking is a fold, not a candidate database.",
+)
+@click.option(
+    "--database",
+    default=None,
+    help="Refused: ranking does not persist a candidate database.",
+)
+@click.option(
+    "--candidate-database",
+    default=None,
+    help="Refused: ranking does not persist a candidate database.",
+)
+@click.pass_context
+def sweep_rank(
+    ctx: click.Context,
+    sweep_id: str | None,
+    objective: str | None,
+    world: str | None,
+    role: str | None,
+    direction: str | None,
+    persist: bool,
+    database: str | None,
+    candidate_database: str | None,
+) -> None:
+    """Rank a completed sweep as a read-time fold via qmb.sweep.rank_sweep."""
+    payload = _payload(
+        ctx,
+        sweep_id=sweep_id,
+        objective=objective,
+        world=world,
+        role=role,
+        direction=direction,
+        persist=persist,
+        database=database,
+        candidate_database=candidate_database,
+    )
+    _transport(
+        ctx,
+        invoke_sweep_rank(
+            lines=payload.get("lines"),
+            sweep_id=payload.get("sweep_id"),
+            objective=payload.get("objective"),
+            world=payload.get("world"),
+            role=payload.get("role"),
+            constraints=payload.get("constraints"),
+            direction=payload.get("direction"),
+            persist=payload.get("persist"),
+            persist_candidates=payload.get("persist_candidates"),
+            candidate_database=payload.get("candidate_database"),
+            database=payload.get("database"),
+            store=payload.get("store"),
+            databank=payload.get("databank"),
+        ),
+    )
 
 
 @main.group("robustness")
@@ -997,7 +1122,14 @@ def _format_ok(value: object) -> str:
         return str(len(cast("tuple[object, ...]", value)))
     if isinstance(
         value,
-        (CandlePerturbationResult, SignificanceResult, TradeShuffleResult, WalkForwardPlan),
+        (
+            CandlePerturbationResult,
+            SignificanceResult,
+            SweepBatchReport,
+            SweepRanking,
+            TradeShuffleResult,
+            WalkForwardPlan,
+        ),
     ):
         return json.dumps(_jsonable_payload(value.fp1_identity()), ensure_ascii=False)
     return "ok"

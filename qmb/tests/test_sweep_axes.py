@@ -213,7 +213,7 @@ def test_sweep_count_is_catalogued_and_on_both_doors() -> None:
     # tree and its library surface from the adapters' AST, never a hand catalog.
     assert "sweep.count" in flatten_capabilities()
     assert "preflight_run_count" in required_library_names()
-    assert command_tree()["sweep"] == ("count",)
+    assert command_tree()["sweep"] == ("count", "batch", "rank")
     for name in ("preflight_run_count",):
         assert name in required_library_names()
         assert hasattr(api, name)

@@ -15,7 +15,7 @@ from typing import Final, cast
 from qmf.core.fingerprint import Fingerprint
 from qmf.core.refusal import Ok, Result, is_refusal
 
-from qmb._refuse import clean_token, invalid, unavailable
+from qmb._refuse import clean_token, invalid, policy, unavailable
 from qmb.config import (
     BMS_RECORD_KIND,
     BOOK_RECORD_KIND,
@@ -35,9 +35,10 @@ from qmb.data import (
 from qmb.data import download as run_download
 from qmb.data import generate as run_generate
 from qmb.doors import CLI_PIN_KEY, CLI_PROG
-from qmb.ledger import LedgerLine
+from qmb.ledger import ROLE_CONFIRMATION, LedgerLine
 from qmb.optimize import CostEstimate, estimate_study_cost, parameter_space_from_bot
 from qmb.orchestrator import (
+    ON_FULL_ENQUEUE,
     GovernorBudgets,
     IsolatedRun,
     read_book_bar,
@@ -60,7 +61,14 @@ from qmb.robustness import (
     run_significance_gate,
     run_trade_shuffle,
 )
-from qmb.sweep import preflight_run_count
+from qmb.sweep import (
+    RANK_DESCENDING,
+    SweepBatchReport,
+    SweepRanking,
+    preflight_run_count,
+    rank_sweep,
+    run_sweep_batch,
+)
 
 __all__ = [
     "AUTOCOMPLETE",
@@ -72,6 +80,9 @@ __all__ = [
     "COMPUTES_RUN_ID",
     "HOLDS_CACHE",
     "ORCHESTRATOR_ENTRY",
+    "SWEEP_BATCH_OCCUPANCY",
+    "SWEEP_COMMANDS",
+    "SWEEP_RANK_OCCUPANCY",
     "BacktestSubmission",
     "cli_tree_identity",
     "command_prerequisites",
@@ -90,7 +101,9 @@ __all__ = [
     "invoke_robustness_rule_significance",
     "invoke_robustness_trade_shuffle",
     "invoke_robustness_walk_forward",
+    "invoke_sweep_batch",
     "invoke_sweep_count",
+    "invoke_sweep_rank",
     "require_prerequisites",
 ]
 
@@ -109,13 +122,26 @@ ORCHESTRATOR_ENTRY: Final[str] = "qmb.orchestrator.spawn_run"
 AUTOCOMPLETE: Final[str] = "click.shell_complete"
 AUTOCOMPLETE_PORT: Final[str] = "qmb.registryread"
 BOT_RECORD_KIND: Final[str] = "bot-definition"
+# Story 33.2 occupancy: batch is one governed qmb run wrapping combo children;
+# rank is a query fold and consumes none.
+SWEEP_COMMANDS: Final[tuple[str, ...]] = ("count", "batch", "rank")
+SWEEP_BATCH_OCCUPANCY: Final[str] = "run"
+SWEEP_RANK_OCCUPANCY: Final[str] = "query"
+_RANK_PERSIST_FIELDS: Final[tuple[str, ...]] = (
+    "persist",
+    "persist_candidates",
+    "candidate_database",
+    "database",
+    "store",
+    "databank",
+)
 
 _COMMAND_TREE: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
     {
         "backtest": ("run",),
         "data": DATA_COMMANDS,
         "optimize": ("run", "space", "estimate"),
-        "sweep": ("count",),
+        "sweep": SWEEP_COMMANDS,
         # B-14 rungs are the Epic 22 procedure keys — no second robustness roster.
         "robustness": ROBUSTNESS_PROCEDURES,
         "ledger": ("merge", "bar"),
@@ -145,6 +171,14 @@ _COMMAND_PREREQS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         "optimize.space": ("declaration",),
         "optimize.estimate": ("budget",),
         "sweep.count": ("declaration",),
+        "sweep.batch": (
+            "admitted",
+            "output_root",
+            "ledger",
+            "combo_slices",
+            "projected_peak_memory",
+        ),
+        "sweep.rank": ("lines", "sweep_id", "objective", "world"),
         f"robustness.{PROCEDURE_WALK_FORWARD}": ("windows",),
         f"robustness.{PROCEDURE_MC_TRADE_SHUFFLE}": (
             "trades",
@@ -477,6 +511,149 @@ def invoke_sweep_count(*, declaration: object = None) -> Result[int]:
     if is_refusal(checked):
         return checked
     return preflight_run_count(declaration)
+
+
+def invoke_sweep_batch(
+    *,
+    admitted: object = None,
+    output_root: object = None,
+    ledger: object = None,
+    combo_slices: object = None,
+    projected_peak_memory: object = None,
+    cpu_budget: object = None,
+    memory_budget: object = None,
+    budgets: object = None,
+    on_full: object = None,
+    cpu_cost: object = None,
+    invocation_flags: object = None,
+    workspace_defaults: object = None,
+    condition_presets: object = (),
+    role: object = None,
+    factory_sandbox: object = None,
+) -> Result[SweepBatchReport]:
+    """Thin wrapper over ``qmb.sweep.run_sweep_batch`` (Story 20.3, Story 33.2).
+
+    The Cartesian expansion and per-combo isolation live once in Epic 20. This
+    door parses and transports; it invents no second expander.
+
+    Occupancy: a governed CLI invocation of this command is one qmb run unit
+    wrapping the combo children. Process-per-run children inside that
+    invocation are not additional QMA jobs. Each combo still writes exactly
+    one ledger line. CT-47 ExperimentSpec placement is Epic 36 — this door
+    does not mint it.
+    """
+    checked = require_prerequisites(
+        "sweep.batch",
+        {
+            "admitted": admitted,
+            "output_root": output_root,
+            "ledger": ledger,
+            "combo_slices": combo_slices,
+            "projected_peak_memory": projected_peak_memory,
+        },
+    )
+    if is_refusal(checked):
+        return checked
+    return run_sweep_batch(
+        admitted,
+        output_root=output_root,
+        ledger=ledger,
+        combo_slices=combo_slices,
+        projected_peak_memory=projected_peak_memory,
+        cpu_budget=cpu_budget,
+        memory_budget=memory_budget,
+        budgets=budgets,
+        on_full=ON_FULL_ENQUEUE if on_full is None else on_full,
+        cpu_cost=1 if cpu_cost is None else cpu_cost,
+        invocation_flags=invocation_flags,
+        workspace_defaults=workspace_defaults,
+        condition_presets=condition_presets,
+        role=ROLE_CONFIRMATION if role is None else role,
+        factory_sandbox=factory_sandbox,
+    )
+
+
+def invoke_sweep_rank(
+    *,
+    lines: object = None,
+    sweep_id: object = None,
+    objective: object = None,
+    world: object = None,
+    role: object = None,
+    constraints: object = None,
+    direction: object = None,
+    persist: object = None,
+    persist_candidates: object = None,
+    candidate_database: object = None,
+    database: object = None,
+    store: object = None,
+    databank: object = None,
+) -> Result[SweepRanking]:
+    """Thin wrapper over ``qmb.sweep.rank_sweep`` (Story 20.4, Story 33.2).
+
+    Ranking is a read-time fold over the sweep's ledger lines. This door
+    publishes the fold and never a copied-row artifact; it mints no CT-32 and
+    no CT-47 successor.
+
+    Occupancy: query — a governed CLI invocation consumes no ExecutionEnvironment
+    occupancy.
+
+    A request to persist a candidate database is a typed policy refusal: the
+    operator is left with the fold, not a second store (FR-W20, DEC-0269).
+    """
+    requested = _requested_rank_persist(
+        {
+            "persist": persist,
+            "persist_candidates": persist_candidates,
+            "candidate_database": candidate_database,
+            "database": database,
+            "store": store,
+            "databank": databank,
+        }
+    )
+    if requested is not None:
+        return policy(
+            requested,
+            "sweep.rank is a read-time fold over the sweep's ledger lines: it "
+            "publishes no copied-row artifact and does not persist a candidate "
+            "database — the operator is left with the fold, not a second store "
+            "(FR-W20, DEC-0269)",
+            occupancy=SWEEP_RANK_OCCUPANCY,
+            mints_ct32=False,
+            mints_experiment_spec=False,
+        )
+    checked = require_prerequisites(
+        "sweep.rank",
+        {
+            "lines": lines,
+            "sweep_id": sweep_id,
+            "objective": objective,
+            "world": world,
+        },
+    )
+    if is_refusal(checked):
+        return checked
+    return rank_sweep(
+        lines,
+        sweep_id=sweep_id,
+        objective=objective,
+        world=world,
+        role=ROLE_CONFIRMATION if role is None else role,
+        constraints=() if constraints is None else constraints,
+        direction=RANK_DESCENDING if direction is None else direction,
+    )
+
+
+def _requested_rank_persist(fields: Mapping[str, object]) -> str | None:
+    """Return the persist-store field a caller asked rank to write, else None."""
+    for name in _RANK_PERSIST_FIELDS:
+        value = fields.get(name)
+        if value is None or value is False:
+            continue
+        if isinstance(value, str) and value.strip() == "":
+            continue
+        return name
+    return None
 
 
 def invoke_robustness_walk_forward(

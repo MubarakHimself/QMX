@@ -130,7 +130,7 @@ def test_command_tree_exposes_platform_groups() -> None:
     assert tree["backtest"] == ("run",)
     assert tree["data"] == qmb.DATA_COMMANDS
     assert tree["optimize"] == ("run", "space", "estimate")
-    assert tree["sweep"] == ("count",)
+    assert tree["sweep"] == ("count", "batch", "rank")
     assert tree["robustness"] == qmb.ROBUSTNESS_PROCEDURES
     assert tree["ledger"] == ("merge", "bar")
     assert tree["config"] == ("compile", "show")
@@ -522,6 +522,8 @@ def test_click_commands_return_typed_refusal_when_prereqs_absent() -> None:
         ["data", "generate"],
         ["optimize", "run"],
         ["optimize", "space"],
+        ["sweep", "batch"],
+        ["sweep", "rank"],
         ["robustness", "walk-forward"],
         ["robustness", "monte-carlo-trade-shuffle"],
         ["robustness", "monte-carlo-candle-perturbation"],
