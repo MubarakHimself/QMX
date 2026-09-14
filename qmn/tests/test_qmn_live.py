@@ -413,17 +413,17 @@ def test_reconcile_blocked_under_ftr01() -> None:
     assert refused.context["ftr"] == "FTR-01"
 
 
-def test_submit_sensing_only_no_retry() -> None:
+def test_submit_unreadiness_no_retry() -> None:
     client, _ = _client()
-    _accept_verification(client)
     from qmf.venue.commands import Command
 
     account = client.account
     assert account is not None
-    command = _ok(Command.cancel_order(client.venue_id, account, "ep", 1, "sub-1"))
+    command = _ok(Command.cancel_order(client.venue_id, account, "ep", 1, "1001"))
     refused = _refusal(client.submit(command))
-    assert refused.context["auto_retry"] is False
+    assert refused.category is RefusalCategory.UNAVAILABLE_DEPENDENCY
     assert client.commands_retried == 0
+    assert client.auto_retry_enabled is False
 
 
 def test_credential_free_path_needs_no_spotware_token() -> None:

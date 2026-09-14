@@ -23,7 +23,11 @@ from qmf.core import (
     Duration,
     Fingerprint,
     Instant,
+    Instrument,
     Ok,
+    Price,
+    PriceDelta,
+    Quantity,
     RefusalCategory,
     Result,
     Retryability,
@@ -33,18 +37,25 @@ from qmf.core import (
     is_ok,
     is_refusal,
 )
+from qmf.venue.capabilities import CapabilityDeclaration, CapabilityFieldName
 from qmf.venue.commands import (
     Command,
     CommandKind,
     CommandObservation,
     CompoundCommand,
     JournalEvent,
+    OrderParameters,
+    OrderType,
+    ProtectionAmendment,
+    ProtectionSide,
     SubmissionOutcome,
     SubmissionResult,
+    TimeInForce,
     UnknownTrigger,
 )
 from qmf.venue.events import Reconciliation, ReconciliationVerdict, SubjectResolution
 
+from qmn.order.protection import require_venue_resident_protective_stop
 from qmn.venue.port import VenueClientKind, VenueClientPort
 from qmn.venue.verify import (
     VenueFactVerification,
@@ -78,8 +89,11 @@ __all__ = [
     "agree_live_and_double_fault_contract",
     "compare_port_contract_shapes",
     "compound_command_acceptance_blocked",
+    "declared_command_kinds",
+    "omitted_command_kind_refusal",
     "run_conformance_suite",
     "run_port_contract_suite",
+    "submit_not_ready_refusal",
 ]
 
 
@@ -172,6 +186,82 @@ _FTR02_BLOCK: Final[TypedRefusal] = TypedRefusal(
 def compound_command_acceptance_blocked() -> TypedRefusal:
     """The typed refusal every compound-command acceptance path returns until FTR-02."""
     return _FTR02_BLOCK
+
+
+def submit_not_ready_refusal() -> TypedRefusal:
+    """Session closed or capabilities unverified — never encode or open a socket."""
+    return TypedRefusal(
+        category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
+        retryability=Retryability.AFTER_CONDITION,
+        context={
+            "field": "readiness",
+            "reason": "submit requires an open session and verified capabilities",
+        },
+        after_condition_descriptor="open_session then verify_capabilities",
+    )
+
+
+def declared_command_kinds(declaration: object) -> Result[frozenset[str]]:
+    """CT-19 kinds named by the bound CT-18 ``acknowledgement_modes`` map."""
+    if not isinstance(declaration, CapabilityDeclaration):
+        return TypedRefusal(
+            category=RefusalCategory.INVALID_INPUT,
+            retryability=Retryability.NO,
+            context={
+                "field": "declaration",
+                "reason": "declared command kinds are read from a CapabilityDeclaration",
+                "given": type(declaration).__name__,
+            },
+        )
+    raw = declaration.static_value(CapabilityFieldName.ACKNOWLEDGEMENT_MODES)
+    if is_refusal(raw):
+        return raw
+    value = raw.value
+    if not isinstance(value, Mapping):
+        return TypedRefusal(
+            category=RefusalCategory.INVALID_INPUT,
+            retryability=Retryability.NO,
+            context={
+                "field": "acknowledgement_modes",
+                "reason": "acknowledgement_modes is a mapping of command kind to mode",
+                "given": type(value).__name__,
+                "capability": "acknowledgement_modes",
+            },
+        )
+    return Ok(frozenset(str(key) for key in cast("Mapping[object, object]", value)))
+
+
+def omitted_command_kind_refusal(kind: CommandKind, declared: frozenset[str]) -> TypedRefusal:
+    """Unsupported-capability submit when the bound CT-18 omits this kind."""
+    return TypedRefusal(
+        category=RefusalCategory.UNSUPPORTED_CAPABILITY,
+        retryability=Retryability.NO,
+        context={
+            "field": "acknowledgement_modes",
+            "reason": "the CT-18 declaration does not name this command kind",
+            "requested": kind.value,
+            "declared": sorted(declared),
+            "capability": "acknowledgement_modes",
+        },
+    )
+
+
+def protective_stop_forms_from_verification(
+    verification: VenueFactVerification | None,
+) -> Mapping[str, object]:
+    """Measured CT-18 protective-stop forms, or empty when unproven."""
+    if verification is None:
+        return MappingProxyType({})
+    for fact in verification.profile.facts:
+        if fact.check.value != "protective-stop-forms":
+            continue
+        raw = fact.measured.get("forms_per_order_type")
+        if isinstance(raw, Mapping):
+            forms: dict[str, object] = {
+                str(key): value for key, value in cast("Mapping[object, object]", raw).items()
+            }
+            return MappingProxyType(forms)
+    return MappingProxyType({})
 
 
 @dataclass
@@ -499,15 +589,19 @@ class ConformanceDouble:
                 },
             )
         if not self._session_open or not self._capabilities_verified:
-            return TypedRefusal(
-                category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
-                retryability=Retryability.AFTER_CONDITION,
-                context={
-                    "field": "readiness",
-                    "reason": "submit requires an open session and verified capabilities",
-                },
-                after_condition_descriptor="open_session then verify_capabilities",
-            )
+            return submit_not_ready_refusal()
+        declaration = self._verification.declaration if self._verification is not None else None
+        if declaration is not None:
+            declared = declared_command_kinds(declaration)
+            if is_refusal(declared):
+                return declared
+            if command.kind.value not in declared.value:
+                return omitted_command_kind_refusal(command.kind, declared.value)
+        stop = require_venue_resident_protective_stop(
+            command, forms_per_order_type=self._protective_stop_forms
+        )
+        if is_refusal(stop):
+            return stop
         case = self._armed if self._armed is not None else ConformanceCase.SUCCESS
         receive = Instant.try_create(1_700_000_000_000_000_000)
         if is_refusal(receive):
@@ -519,6 +613,14 @@ class ConformanceDouble:
         fp = fp_result.value
         result = _resolve_case(case, command, fp, instant)
         if is_ok(result):
+            self._observations.append(
+                {
+                    "kind": "encode-handoff",
+                    "command_kind": command.kind.value,
+                    "auto_retry": False,
+                    "encoded": True,
+                }
+            )
             self._observations.append(
                 {
                     "kind": "command-outcome",
@@ -1004,6 +1106,9 @@ def run_port_contract_suite(
     submit_shape = _probe_submit_shape(client, resolved_account, kind)
     if is_refusal(submit_shape):
         return submit_shape
+    kind_shapes = _probe_supported_kind_shapes(client, resolved_account)
+    if is_refusal(kind_shapes):
+        return kind_shapes
 
     compound_cmd = _compound_probe(client.venue_id, resolved_account)
     if is_refusal(compound_cmd):
@@ -1055,6 +1160,7 @@ def run_port_contract_suite(
             ),
             "capability_verified": True,
             "submit_shape": dict(submit_shape.value),
+            "kind_submit_shapes": dict(kind_shapes.value),
             "reconcile_shape": dict(reconcile_shape.value),
             "observation_count": len(observed.value),
         }
@@ -1183,6 +1289,24 @@ def compare_port_contract_shapes(
                     "got": got_shape,
                 },
             )
+        kind_submit_shapes = result.get("kind_submit_shapes")
+        if isinstance(kind_submit_shapes, Mapping) and kind != VenueClientKind.REPLAY.value:
+            for command_kind, shape in cast("Mapping[object, object]", kind_submit_shapes).items():
+                if not isinstance(shape, Mapping):
+                    continue
+                form = dict(cast("Mapping[str, object]", shape)).get("form")
+                if form != "encode-handoff":
+                    return TypedRefusal(
+                        category=RefusalCategory.POLICY_REJECTION,
+                        retryability=Retryability.NO,
+                        context={
+                            "field": "refusal_shape",
+                            "reason": "supported-kind submit must encode-handoff, not refuse",
+                            "kind": kind,
+                            "command_kind": command_kind,
+                            "got": dict(cast("Mapping[str, object]", shape)),
+                        },
+                    )
 
     return Ok(
         {
@@ -1205,15 +1329,10 @@ def _expected_submit_shape(kind: str) -> dict[str, object]:
             "form": "refusal",
             "category": RefusalCategory.POLICY_REJECTION.value,
         }
-    if kind == VenueClientKind.CONFORMANCE.value:
-        return {
-            "form": "outcome",
-            "outcome": SubmissionOutcome.ACCEPTED_BY_VENUE.value,
-        }
-    # Live cTrader: credential-free path refuses wire handoff (no auto-retry).
+    # Live and the conformance double agree: supported-kind submit is encode-handoff.
     return {
-        "form": "refusal",
-        "category": RefusalCategory.UNSUPPORTED_CAPABILITY.value,
+        "form": "encode-handoff",
+        "auto_retry": False,
     }
 
 
@@ -1227,7 +1346,7 @@ def _probe_submit_shape(
         account,
         "port-contract-session",
         1,
-        "order-port-contract",
+        "1001",
     )
     if is_refusal(command):
         return command
@@ -1264,41 +1383,120 @@ def _probe_submit_shape(
                 "category": submitted.category.value,
             }
         )
-    if kind is VenueClientKind.CONFORMANCE:
-        if is_refusal(submitted):
-            return TypedRefusal(
-                category=RefusalCategory.POLICY_REJECTION,
-                retryability=Retryability.NO,
-                context={
-                    "field": "refusal_shape",
-                    "reason": "conformance success case must yield a SubmissionResult",
-                    "category": submitted.category.value,
-                },
-            )
-        return Ok(
-            {
-                "form": "outcome",
-                "outcome": submitted.value.outcome.value,
-            }
-        )
-    # Live: expect a typed refusal (wire handoff not invented) — never an auto-accept.
-    if not is_refusal(submitted):
+    classified = _classify_encode_handoff(submitted, kind)
+    if is_refusal(classified):
+        return classified
+    return classified
+
+
+def _classify_encode_handoff(
+    submitted: Result[SubmissionResult],
+    kind: VenueClientKind,
+) -> Result[Mapping[str, object]]:
+    """Live and double agree: a supported kind is encode-handoff, never sensing-only."""
+    if is_refusal(submitted):
         return TypedRefusal(
             category=RefusalCategory.POLICY_REJECTION,
             retryability=Retryability.NO,
             context={
                 "field": "refusal_shape",
-                "reason": "live credential-free submit must not invent an accepted "
-                "outcome; expected a typed refusal",
+                "reason": "supported-kind submit must encode-handoff, not refuse",
                 "kind": kind.value,
+                "category": submitted.category.value,
+                "refusal_field": submitted.context.get("field"),
             },
         )
-    return Ok(
-        {
-            "form": "refusal",
-            "category": submitted.category.value,
-        }
+    if (
+        kind is VenueClientKind.CTRADER
+        and submitted.value.outcome is SubmissionOutcome.ACCEPTED_BY_VENUE
+    ):
+        return TypedRefusal(
+            category=RefusalCategory.POLICY_REJECTION,
+            retryability=Retryability.NO,
+            context={
+                "field": "refusal_shape",
+                "reason": "live credential-free submit must not invent accepted-by-venue",
+                "kind": kind.value,
+                "outcome": submitted.value.outcome.value,
+            },
+        )
+    return Ok({"form": "encode-handoff", "auto_retry": False})
+
+
+def _probe_supported_kind_shapes(
+    client: VenueClientPort,
+    account: Account,
+) -> Result[Mapping[str, object]]:
+    """Submit every bound CT-19 kind; live and double must encode-handoff each."""
+    if client.kind is VenueClientKind.REPLAY:
+        return Ok({})
+    if client.kind is VenueClientKind.CONFORMANCE and isinstance(client, ConformanceDouble):
+        armed = client.arm(ConformanceCase.SUCCESS)
+        if is_refusal(armed):
+            return armed
+    shapes: dict[str, object] = {}
+    for index, command_kind in enumerate(CommandKind, start=10):
+        command = _port_command_for_kind(client.venue_id, account, command_kind, ordinal=index)
+        if is_refusal(command):
+            return command
+        submitted = client.submit(command.value)
+        classified = _classify_encode_handoff(submitted, client.kind)
+        if is_refusal(classified):
+            return classified
+        shapes[command_kind.value] = dict(classified.value)
+    return Ok(shapes)
+
+
+def _port_command_for_kind(
+    venue_id: VenueId,
+    account: Account,
+    kind: CommandKind,
+    *,
+    ordinal: int,
+) -> Result[Command]:
+    session = "port-contract-kinds"
+    if kind is CommandKind.CANCEL_ORDER:
+        return Command.cancel_order(venue_id, account, session, ordinal, "1001")
+    if kind is CommandKind.CLOSE_POSITION:
+        return Command.close_position(
+            venue_id, account, session, ordinal, "instrument-within-binding", "2002"
+        )
+    if kind is CommandKind.CLOSE_ALL:
+        return Command.close_all(venue_id, account, session, ordinal, "account", "acct-001")
+    instrument = Instrument.try_create(venue_id, "EURUSD")
+    if is_refusal(instrument):
+        return instrument
+    qty = Quantity.try_create(100, "lot", 2)
+    if is_refusal(qty):
+        return qty
+    delta = PriceDelta.try_create(80, instrument.value, 5)
+    if is_refusal(delta):
+        return delta
+    if kind is CommandKind.PLACE_ORDER:
+        params = OrderParameters.try_create(
+            OrderType.MARKET,
+            TimeInForce.GOOD_TILL_CANCEL,
+            qty.value,
+            protective_stop_distance=delta.value,
+        )
+        if is_refusal(params):
+            return params
+        return Command.place_order(venue_id, account, session, ordinal, params.value)
+    price = Price.try_create(1_10000, instrument.value, 5)
+    if is_refusal(price):
+        return price
+    original = PriceDelta.try_create(100, instrument.value, 5)
+    if is_refusal(original):
+        return original
+    amendment = ProtectionAmendment.try_create(
+        ProtectionSide.STOP,
+        delta.value,
+        price.value,
+        original_risk_distance=original.value,
     )
+    if is_refusal(amendment):
+        return amendment
+    return Command.amend_protection(venue_id, account, session, ordinal, amendment.value, "2002")
 
 
 def _reconcile_shape(

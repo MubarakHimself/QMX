@@ -1,4 +1,4 @@
-"""Live cTrader :class:`~qmn.venue.port.VenueClientPort` (Story 24.3, Story 31.2).
+"""Live cTrader :class:`~qmn.venue.port.VenueClientPort` (Story 24.3, Story 31.2, Story 31.4).
 
 Converts and records the broker stream exactly: verbatim wire evidence and the
 CT-13 journal mapping land **before** interpretation, money/volume cross only
@@ -23,6 +23,15 @@ second manager. Tagged smoke against ``demo.ctraderapi.com`` stays extra.
 Story 31.3: :meth:`LiveCTraderClient.encode_command` translates a CT-19
 ``Command`` onto the qmf-venue ProtoOA encode symbols. This module does not
 import generated proto modules or compile proto messages.
+
+Story 31.4: :meth:`LiveCTraderClient.submit` hands a ready well-formed
+``Command`` to that encode path. The Story 24.3 sensing-only refusal is gone
+for every CT-19 kind the bound CT-18 declaration supports. Session closed or
+capabilities unverified stay ``unavailable dependency`` — submit does not
+encode or open a socket to skip readiness. An omitted kind is the remaining
+single-kind unsupported-capability submit. Unprotected ``place_order`` is
+refused before encode. No command is retried after wire handoff; UNKNOWN is a
+state; timeout is not reject.
 """
 
 from __future__ import annotations
@@ -38,6 +47,7 @@ from typing import Final, Protocol, cast
 from qmf.core import (
     Account,
     Clock,
+    Fingerprint,
     Instant,
     MonotonicReading,
     Ok,
@@ -50,10 +60,20 @@ from qmf.core import (
     TypedRefusal,
     VenueId,
     World,
+    is_ok,
     is_refusal,
 )
 from qmf.venue.capabilities import ErrorMap, ErrorMapResolution
-from qmf.venue.commands import Command, CommandKind, CompoundCommand, SubmissionResult
+from qmf.venue.commands import (
+    Command,
+    CommandKind,
+    CommandObservation,
+    CompoundCommand,
+    JournalEvent,
+    SubmissionOutcome,
+    SubmissionResult,
+    UnknownTrigger,
+)
 from qmf.venue.connection import (
     CTRADER_OPEN_API_PORT,
     AccountBinding,
@@ -84,7 +104,14 @@ from qmf.venue.events import (
     VenueNativeIdentity,
 )
 
-from qmn.venue.conformance import compound_command_acceptance_blocked
+from qmn.order.protection import require_venue_resident_protective_stop
+from qmn.venue.conformance import (
+    compound_command_acceptance_blocked,
+    declared_command_kinds,
+    omitted_command_kind_refusal,
+    protective_stop_forms_from_verification,
+    submit_not_ready_refusal,
+)
 from qmn.venue.port import VenueClientKind
 from qmn.venue.verify import VenueFactVerification, ctrader_static_declaration
 
@@ -299,6 +326,12 @@ class LiveCTraderClient:
     _verification: VenueFactVerification | None = None
     _observations: list[dict[str, object]] = field(default_factory=list[dict[str, object]])
     _commands_retried: int = 0
+    _compiled: object | None = None
+    _ctid_trader_account_id: int | None = None
+    _symbol_id: int | None = None
+    _trade_side: str | None = None
+    _volume: object | None = None
+    _handed_off: dict[str, SubmissionResult] = field(default_factory=dict[str, SubmissionResult])
 
     @classmethod
     def try_create(
@@ -533,6 +566,7 @@ class LiveCTraderClient:
         self._session_open = False
         self._account = None
         self._capabilities_verified = False
+        self._handed_off.clear()
         return Ok(True)
 
     def _open_secret_session(self, account: Account) -> Result[bool]:
@@ -698,6 +732,71 @@ class LiveCTraderClient:
         self._verification = verification
         return Ok(True)
 
+    def bind_encode_context(
+        self,
+        *,
+        compiled: object,
+        ctid_trader_account_id: object,
+        symbol_id: object = None,
+        trade_side: object = None,
+        volume: object = None,
+    ) -> Result[bool]:
+        """Inject Story 31.3 encode inputs. This client never compiles proto."""
+        if compiled is None:
+            return _invalid(
+                "compiled",
+                "encode consumes an in-house CompiledProto; LiveCTraderClient never compiles proto",
+            )
+        if isinstance(ctid_trader_account_id, bool) or not isinstance(ctid_trader_account_id, int):
+            return _invalid(
+                "ctid_trader_account_id",
+                "a venue-native identifier is a non-negative exact integer",
+                given=repr(ctid_trader_account_id),
+            )
+        if ctid_trader_account_id < 1:
+            return _invalid(
+                "ctid_trader_account_id",
+                "a venue-native identifier is a non-negative exact integer",
+                given=repr(ctid_trader_account_id),
+            )
+        resolved_symbol: int | None
+        if symbol_id is None:
+            resolved_symbol = None
+        elif isinstance(symbol_id, bool) or not isinstance(symbol_id, int) or symbol_id < 1:
+            return _invalid(
+                "symbol_id",
+                "a venue-native identifier is a non-negative exact integer",
+                given=repr(symbol_id),
+            )
+        else:
+            resolved_symbol = symbol_id
+        resolved_side: str | None
+        if trade_side is None:
+            resolved_side = None
+        elif not isinstance(trade_side, str) or trade_side.strip().lower() not in {
+            "buy",
+            "sell",
+        }:
+            return _invalid(
+                "trade_side",
+                "place_order encodes ProtoOA tradeSide buy | sell",
+                given=repr(trade_side),
+            )
+        else:
+            resolved_side = trade_side.strip().lower()
+        if volume is not None and not isinstance(volume, Quantity):
+            return _invalid(
+                "volume",
+                "close volume is an exact qmf-core Quantity; a binary float is refused",
+                given=repr(volume),
+            )
+        self._compiled = compiled
+        self._ctid_trader_account_id = ctid_trader_account_id
+        self._symbol_id = resolved_symbol
+        self._trade_side = resolved_side
+        self._volume = volume
+        return Ok(True)
+
     def encode_command(
         self,
         command: object,
@@ -778,28 +877,73 @@ class LiveCTraderClient:
                 given=type(command).__name__,
             )
         if not self._session_open or not self._capabilities_verified:
-            return TypedRefusal(
-                category=RefusalCategory.UNAVAILABLE_DEPENDENCY,
-                retryability=Retryability.AFTER_CONDITION,
-                context={
-                    "field": "readiness",
-                    "reason": "submit requires an open session and verified capabilities",
-                },
-                after_condition_descriptor="open_session then verify_capabilities",
-            )
-        # Story 24.3 senses and records; wire handoff of money-path commands waits
-        # for the order-path stories. Never invent an accepted outcome or retry.
-        return TypedRefusal(
-            category=RefusalCategory.UNSUPPORTED_CAPABILITY,
-            retryability=Retryability.NO,
-            context={
-                "field": "submit",
-                "reason": "live command wire handoff is out of Story 24.3 scope; "
-                "sensing/recording only — no automatic retry",
-                "auto_retry": False,
-                "commands_retried": self._commands_retried,
-            },
+            return submit_not_ready_refusal()
+        verification = self._verification
+        if verification is None:
+            return submit_not_ready_refusal()
+        stop = require_venue_resident_protective_stop(
+            command,
+            forms_per_order_type=protective_stop_forms_from_verification(verification),
         )
+        if is_refusal(stop):
+            return stop
+        declared = declared_command_kinds(verification.declaration)
+        if is_refusal(declared):
+            return declared
+        if command.kind.value not in declared.value:
+            return omitted_command_kind_refusal(command.kind, declared.value)
+        fp = command.fingerprint()
+        if is_refusal(fp):
+            return fp
+        prior = self._handed_off.get(fp.value.value)
+        if prior is not None:
+            return Ok(prior)
+        wall = self._clock.wall_now()
+        if is_refusal(wall):
+            return wall
+        encoded = self.encode_command(
+            command,
+            compiled=self._compiled,
+            declaration=verification.declaration,
+            ctid_trader_account_id=self._ctid_trader_account_id,
+            symbol_id=self._symbol_id,
+            trade_side=self._trade_side,
+            volume=self._volume,
+        )
+        if is_refusal(encoded):
+            return encoded
+        trigger = self._send_encoded_once(encoded.value)
+        result = _unknown_after_encode(command, fp.value, wall.value, trigger=trigger)
+        self._observations.append(
+            {
+                "kind": "encode-handoff",
+                "command_kind": command.kind.value,
+                "payload_type": encoded.value.payload_type,
+                "client_msg_id": encoded.value.client_msg_id,
+                "auto_retry": False,
+                "encoded": True,
+                "socket_opened": self._opened_open_api,
+                "outcome": result.outcome.value,
+                "unknown_trigger": None if trigger is None else trigger.value,
+            }
+        )
+        self._handed_off[fp.value.value] = result
+        return Ok(result)
+
+    def _send_encoded_once(self, encoded: EncodedCommand) -> UnknownTrigger | None:
+        """Transmit at most once on an already-open socket. Never opens one."""
+        cm = self._connection_manager
+        if cm is None or not self._opened_open_api or not cm.transport_open:
+            return None
+        sent = self._drive_on_node_loop(cm.send_framed(encoded.envelope))
+        if is_ok(sent):
+            return None
+        reason = str(sent.context.get("trigger", ""))
+        if reason == UnknownTrigger.DISCONNECT.value:
+            return UnknownTrigger.DISCONNECT
+        if reason == UnknownTrigger.TIMEOUT.value:
+            return UnknownTrigger.TIMEOUT
+        return UnknownTrigger.TRANSPORT_ERROR
 
     def observations(self) -> Result[Sequence[Mapping[str, object]]]:
         return Ok(tuple(dict(item) for item in self._observations))
@@ -1329,6 +1473,34 @@ class LiveCTraderClient:
         out["observation_kind"] = obs.value
         out["ct13_event_type"] = "order"
         return Ok(out)
+
+
+def _unknown_after_encode(
+    command: Command,
+    fp: Fingerprint,
+    receive_instant: Instant,
+    *,
+    trigger: UnknownTrigger | None,
+) -> SubmissionResult:
+    """UNKNOWN is a state after encode-handoff; timeout is never a reject."""
+    observation = CommandObservation(
+        command_fp1=fp,
+        kind=command.kind,
+        outcome=SubmissionOutcome.UNKNOWN,
+        receive_instant=receive_instant,
+        unknown_trigger=trigger,
+        detail=(
+            "encode-handoff completed; UNKNOWN is a state; timeout is not reject; "
+            "no command is retried after handoff"
+        ),
+    )
+    return SubmissionResult(
+        command_fp1=fp,
+        kind=command.kind,
+        outcome=SubmissionOutcome.UNKNOWN,
+        observation=observation,
+        journal_event=JournalEvent.for_outcome(fp, command.kind, SubmissionOutcome.UNKNOWN),
+    )
 
 
 def _invalid(field_name: str, reason: str, **extra: object) -> TypedRefusal:

@@ -31,6 +31,7 @@ from qmn.venue import (
     run_port_contract_suite,
 )
 from qmn.venue.verify import VenueFactVerifier
+from test_qmn_submit import compiled_protooa
 
 T = TypeVar("T")
 
@@ -100,6 +101,14 @@ def _live() -> LiveCTraderClient:
         )
     )
     _ok(client.accept_verification(_verification(venue, account)))
+    _ok(
+        client.bind_encode_context(
+            compiled=compiled_protooa(),
+            ctid_trader_account_id=42,
+            symbol_id=1,
+            trade_side="buy",
+        )
+    )
     return client
 
 
@@ -152,10 +161,17 @@ def test_port_contract_suite_includes_credential_free_live_shape() -> None:
         "replay",
     ]
     live_submit = cast("Mapping[str, object]", live_shape["submit_shape"])
+    double_submit = cast("Mapping[str, object]", double_shape["submit_shape"])
     replay_submit = cast("Mapping[str, object]", replay_shape["submit_shape"])
-    assert live_submit["form"] == "refusal"
-    assert live_submit["category"] == RefusalCategory.UNSUPPORTED_CAPABILITY.value
+    assert live_submit["form"] == "encode-handoff"
+    assert double_submit["form"] == "encode-handoff"
+    assert live_submit == double_submit
+    assert replay_submit["form"] == "refusal"
     assert replay_submit["category"] == RefusalCategory.POLICY_REJECTION.value
+    live_kinds = cast("Mapping[str, object]", live_shape["kind_submit_shapes"])
+    double_kinds = cast("Mapping[str, object]", double_shape["kind_submit_shapes"])
+    assert live_kinds == double_kinds
+    assert live_submit["auto_retry"] is False
 
 
 def test_capability_or_refusal_divergence_fails_suite() -> None:

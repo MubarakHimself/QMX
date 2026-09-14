@@ -83,8 +83,11 @@ from qmn.venue.conformance import (
     agree_live_and_double_fault_contract,
     compare_port_contract_shapes,
     compound_command_acceptance_blocked,
+    declared_command_kinds,
+    omitted_command_kind_refusal,
     run_conformance_suite,
     run_port_contract_suite,
+    submit_not_ready_refusal,
 )
 from qmn.venue.disposition import (
     ASYNC_EXEMPTION_MODULE,
@@ -233,11 +236,13 @@ __all__ = [
     "conformance_measured_facts",
     "ct13_journal_event_type",
     "ctrader_static_declaration",
+    "declared_command_kinds",
     "decode_volume",
     "deep_history_source_inventory",
     "ftr01_position_balance_blocked",
     "is_risk_reducing",
     "map_requote",
+    "omitted_command_kind_refusal",
     "replay_command_attempt_refused",
     "requote_error_map_row",
     "resolve_subject_terminal",
@@ -245,6 +250,7 @@ __all__ = [
     "run_conformance_suite",
     "run_port_contract_suite",
     "select_venue_client",
+    "submit_not_ready_refusal",
     "venue_command_stream",
     "venue_writer_id",
 ]

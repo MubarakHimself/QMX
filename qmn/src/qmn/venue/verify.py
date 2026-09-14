@@ -808,16 +808,28 @@ _MEASURED_ROSTER: Final[frozenset[CapabilityFieldName]] = frozenset(
 # --- static declaration + conformance measured facts ------------------------
 
 
+_DEFAULT_ACKNOWLEDGEMENT_MODES: Final[dict[str, str]] = {
+    "place_order": "explicit-event",
+    "cancel_order": "explicit-event",
+    "close_position": "explicit-event",
+    "close_all": "explicit-event",
+    "amend_protection": "explicit-event",
+}
+
+
 def ctrader_static_declaration(
     *,
     adapter_version: str = "qmn.venue/24.2",
     proto_release_tag: int = 91,
     descriptor_digest: str = "sha256:" + ("a" * 64),
+    acknowledgement_modes: Mapping[str, str] | None = None,
 ) -> Result[CapabilityDeclaration]:
     """Build the credential-free static CT-18 declaration for the cTrader adapter.
 
     Measured-at-connection roster fields carry no static value. The verification
-    suite field lists every Story 24.2 required check.
+    suite field lists every Story 24.2 required check. ``acknowledgement_modes``
+    names the CT-19 kinds the bound declaration supports; omit a kind to prove
+    the Story 31.4 unsupported-capability submit.
     """
     artifact = ProtoArtifact.try_create(
         "openapi-proto-messages", proto_release_tag, descriptor_digest
@@ -847,7 +859,12 @@ def ctrader_static_declaration(
             CapabilityFieldName.COMMAND_SCOPES,
             ["account", "account-binding", "instrument-within-binding"],
         ),
-        (CapabilityFieldName.ACKNOWLEDGEMENT_MODES, {"place_order": "explicit-event"}),
+        (
+            CapabilityFieldName.ACKNOWLEDGEMENT_MODES,
+            dict(acknowledgement_modes)
+            if acknowledgement_modes is not None
+            else dict(_DEFAULT_ACKNOWLEDGEMENT_MODES),
+        ),
         (CapabilityFieldName.POSITION_MODEL, None),
         (CapabilityFieldName.SESSION_TOPOLOGY, "two-connections-demo-live-separate-hosts"),
         (CapabilityFieldName.THROTTLE_SCOPE, "connection"),
