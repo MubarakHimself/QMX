@@ -81,6 +81,8 @@ def _hanging_with_log(tmp_path: Path, *, tag: str) -> qmb.LiveSpawn:
         stdin=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
+        text=True,
+        encoding="utf-8",
         start_new_session=True,
         creationflags=flags,
     )
