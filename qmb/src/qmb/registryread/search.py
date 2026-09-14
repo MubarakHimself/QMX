@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Final, Protocol, cast, runtime_checkable
 
 from qmf.core.fingerprint import Fingerprint
@@ -90,15 +91,17 @@ _PERFORMANCE_RESULT: Final[str] = "performance-result"
 _EXPERIMENT_SPEC: Final[str] = "experiment-spec"
 _SOURCE_KIND_CT32: Final[str] = _PERFORMANCE_RESULT
 
-_CITATION_ALIASES: Final[Mapping[str, str]] = {
-    "saved-view": CITATION_KIND_SAVED_VIEW,
-    "savedview": CITATION_KIND_SAVED_VIEW,
-    "saved-views": CITATION_KIND_SAVED_VIEW,
-    "analysis-publication": CITATION_KIND_PUBLICATION,
-    "analysis.published": CITATION_KIND_PUBLICATION,
-    "analysis-published": CITATION_KIND_PUBLICATION,
-    "analysispublication": CITATION_KIND_PUBLICATION,
-}
+_CITATION_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "saved-view": CITATION_KIND_SAVED_VIEW,
+        "savedview": CITATION_KIND_SAVED_VIEW,
+        "saved-views": CITATION_KIND_SAVED_VIEW,
+        "analysis-publication": CITATION_KIND_PUBLICATION,
+        "analysis.published": CITATION_KIND_PUBLICATION,
+        "analysis-published": CITATION_KIND_PUBLICATION,
+        "analysispublication": CITATION_KIND_PUBLICATION,
+    }
+)
 
 _FOURTH_STORE_FIELDS: Final[tuple[str, ...]] = (
     "store",

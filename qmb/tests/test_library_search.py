@@ -37,7 +37,7 @@ from qmb.registryread import (
     search_library,
 )
 from qmf.core.chrono import Instant, WriterId
-from qmf.core.fingerprint import World, fingerprint
+from qmf.core.fingerprint import Fingerprint, World, fingerprint
 from qmf.core.refusal import RefusalCategory, Result, is_ok, is_refusal
 from qmf.registry import RegistrationRecord
 
@@ -115,11 +115,11 @@ def _port(
     )
 
 
-def _fp(*parts: object) -> object:
+def _fp(*parts: object) -> Fingerprint:
     return _ok(fingerprint({"parts": list(parts)}))
 
 
-def _line(ct32: object, *, run: str = "run-a") -> LedgerLine:
+def _line(ct32: Fingerprint, *, run: str = "run-a") -> LedgerLine:
     return LedgerLine(
         run_id=_ok(fingerprint({"run": run})),
         role="confirmation",
@@ -127,7 +127,7 @@ def _line(ct32: object, *, run: str = "run-a") -> LedgerLine:
         result_label={"class": "result-label", "world": World.REPLAY.value},
         book_bar_fp1=_ok(fingerprint({"bar": run})),
         measures=(),
-        ct32_fingerprint=ct32 if hasattr(ct32, "value") else _ok(fingerprint({"ct32": run})),
+        ct32_fingerprint=ct32,
     )
 
 
@@ -297,7 +297,9 @@ def test_staging_is_not_read_and_cannot_fold_into_library() -> None:
     assert is_refusal(folded)
     assert folded.category is RefusalCategory.POLICY_REJECTION
     assert folded.context["reads_staging"] is False
-    assert tuple(folded.context["surfaces"]) == QUERY_SURFACES
+    surfaces = folded.context["surfaces"]
+    assert isinstance(surfaces, tuple)
+    assert surfaces == QUERY_SURFACES
     kind = search_library("staging", port=port)
     assert is_refusal(kind)
     assert kind.context["is_library_kind"] is False
