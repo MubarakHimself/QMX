@@ -19,6 +19,10 @@ Production ``open_session`` drives the node's injected
 on that same loop (Open API port 5035, injected proto tag, opaque
 :class:`~qmf.core.SecretRef` only). The client never constructs a loop or a
 second manager. Tagged smoke against ``demo.ctraderapi.com`` stays extra.
+
+Story 31.3: :meth:`LiveCTraderClient.encode_command` translates a CT-19
+``Command`` onto the qmf-venue ProtoOA encode symbols. This module does not
+import generated proto modules or compile proto messages.
 """
 
 from __future__ import annotations
@@ -49,7 +53,7 @@ from qmf.core import (
     is_refusal,
 )
 from qmf.venue.capabilities import ErrorMap, ErrorMapResolution
-from qmf.venue.commands import Command, CompoundCommand, SubmissionResult
+from qmf.venue.commands import Command, CommandKind, CompoundCommand, SubmissionResult
 from qmf.venue.connection import (
     CTRADER_OPEN_API_PORT,
     AccountBinding,
@@ -61,6 +65,14 @@ from qmf.venue.ctrader import (
     decode_market_data_price,
     decode_money,
     decode_timestamp,
+)
+from qmf.venue.encode import (
+    EncodedCommand,
+    encode_amend_protection,
+    encode_cancel_order,
+    encode_close_all,
+    encode_close_position,
+    encode_place_order,
 )
 from qmf.venue.events import (
     EventRecorder,
@@ -685,6 +697,76 @@ class LiveCTraderClient:
             )
         self._verification = verification
         return Ok(True)
+
+    def encode_command(
+        self,
+        command: object,
+        *,
+        compiled: object,
+        declaration: object,
+        ctid_trader_account_id: object,
+        symbol_id: object = None,
+        trade_side: object = None,
+        volume: object = None,
+        client_msg_id: object = None,
+    ) -> Result[EncodedCommand]:
+        """Translate a CT-19 ``Command`` onto qmf-venue ProtoOA encode symbols.
+
+        Does not compile proto or import generated modules. A
+        :class:`~qmf.venue.commands.CompoundCommand` keeps the FTR-02
+        unsupported-capability block (GAP-0059).
+        """
+        if isinstance(command, CompoundCommand):
+            return compound_command_acceptance_blocked()
+        if not isinstance(command, Command):
+            return _invalid(
+                "command",
+                "encode requires a CT-19 Command",
+                given=type(command).__name__,
+            )
+        if command.kind is CommandKind.PLACE_ORDER:
+            return encode_place_order(
+                command,
+                compiled=compiled,
+                declaration=declaration,
+                ctid_trader_account_id=ctid_trader_account_id,
+                symbol_id=symbol_id,
+                trade_side=trade_side,
+                client_msg_id=client_msg_id,
+            )
+        if command.kind is CommandKind.CANCEL_ORDER:
+            return encode_cancel_order(
+                command,
+                compiled=compiled,
+                declaration=declaration,
+                ctid_trader_account_id=ctid_trader_account_id,
+                client_msg_id=client_msg_id,
+            )
+        if command.kind is CommandKind.CLOSE_POSITION:
+            return encode_close_position(
+                command,
+                compiled=compiled,
+                declaration=declaration,
+                ctid_trader_account_id=ctid_trader_account_id,
+                volume=volume,
+                client_msg_id=client_msg_id,
+            )
+        if command.kind is CommandKind.CLOSE_ALL:
+            return encode_close_all(
+                command,
+                compiled=compiled,
+                declaration=declaration,
+                ctid_trader_account_id=ctid_trader_account_id,
+                symbol_id=symbol_id,
+                client_msg_id=client_msg_id,
+            )
+        return encode_amend_protection(
+            command,
+            compiled=compiled,
+            declaration=declaration,
+            ctid_trader_account_id=ctid_trader_account_id,
+            client_msg_id=client_msg_id,
+        )
 
     def submit(self, command: object) -> Result[SubmissionResult]:
         if isinstance(command, CompoundCommand):

@@ -139,6 +139,12 @@ recovery never resubmits a command (:class:`~qmf.venue.ctrader.SessionRecovery`)
 profile, verify-or-refuse — and which broker fronts the platform is deployment configuration,
 so :class:`~qmf.venue.ctrader.CTraderAdapter` names no broker and stays venue-blind above the
 port (FR-025, FR-026, AR-42, AR-46; DEC-0135, DEC-0139).
+
+Story 31.3 adds ProtoOA encode symbols for the five CT-19 kinds
+(:mod:`qmf.venue.encode`): ``place_order``, ``cancel_order``, ``close_position``,
+``close_all``, and ``amend_protection`` emit length-prefixed Open API 5035
+``ProtoMessage`` frames through the in-house compiled proto. ``qmn.venue.live``
+translates a ``Command`` onto those symbols and does not compile proto itself.
 """
 
 from __future__ import annotations
@@ -245,6 +251,21 @@ from qmf.venue.ctrader import (
     decode_timestamp,
     tick_span_within_cap,
 )
+from qmf.venue.encode import (
+    PRICE_WIRE_SCALE_EXPONENT,
+    PROTO_OA_AMEND_POSITION_SLTP_REQ,
+    PROTO_OA_CANCEL_ORDER_REQ,
+    PROTO_OA_CLOSE_POSITION_REQ,
+    PROTO_OA_NEW_ORDER_REQ,
+    VOLUME_WIRE_SCALE_EXPONENT,
+    EncodedCommand,
+    encode_amend_protection,
+    encode_cancel_order,
+    encode_close_all,
+    encode_close_position,
+    encode_command,
+    encode_place_order,
+)
 from qmf.venue.events import (
     EventRecorder,
     InboundVenueEvent,
@@ -318,13 +339,19 @@ __all__ = [
     "MARKET_DATA_WIRE_SCALE_EXPONENT",
     "MONEY_BEARING_MESSAGES",
     "NON_HISTORICAL_RATE_LIMIT_PER_SECOND",
+    "PRICE_WIRE_SCALE_EXPONENT",
     "PROBE_V1_CHECKS",
+    "PROTO_OA_AMEND_POSITION_SLTP_REQ",
+    "PROTO_OA_CANCEL_ORDER_REQ",
+    "PROTO_OA_CLOSE_POSITION_REQ",
+    "PROTO_OA_NEW_ORDER_REQ",
     "REFRESH_TOKEN_LIFETIME_CLASS",
     "REQUIRED_CONNECTION_CHECKS",
     "RISK_REDUCING_KINDS",
     "SEQUENCE_CURSOR_RECORD_CLASS",
     "SESSION_DUTIES",
     "SPOTWARE_PROTO_PACKAGE",
+    "VOLUME_WIRE_SCALE_EXPONENT",
     "AccountBinding",
     "AccountMoneyRecord",
     "AdmissionDisposition",
@@ -353,6 +380,7 @@ __all__ = [
     "ConnectionManager",
     "DecodedExecutionPrice",
     "DecodedTimestamp",
+    "EncodedCommand",
     "ErrorMap",
     "ErrorMapResolution",
     "ErrorMapRow",
@@ -436,7 +464,13 @@ __all__ = [
     "derive_child_identity",
     "descriptor_set_digest",
     "detect_out_of_sequence",
+    "encode_amend_protection",
+    "encode_cancel_order",
+    "encode_close_all",
+    "encode_close_position",
+    "encode_command",
     "encode_framed_payload",
+    "encode_place_order",
     "fold_order_state",
     "is_legal_transition",
     "is_risk_reducing",
