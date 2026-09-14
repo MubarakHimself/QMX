@@ -396,7 +396,7 @@ def test_python_api_and_cli_are_thin_doors() -> None:
     assert api.apply_projection_predicate is qmb.apply_projection_predicate
     assert "project" in required_library_names()
     assert "analysis.project" in flatten_capabilities()
-    assert command_tree()["analysis"] == ("project",)
+    assert command_tree()["analysis"] == ("project", "rerun")
     tree = ast.parse(textwrap.dedent(inspect.getsource(invoke_analysis_project)))
     names = {
         node.func.id

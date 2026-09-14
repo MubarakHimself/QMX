@@ -14,8 +14,8 @@ trade list is not a saved view (DEC-0273, FR-W21, FR-W22, SCN-0016).
 
 Story 35.2: a predicate or extra field that would change size, R, Book/BMS
 fragments, execution ports, or ``starting_capital`` is a typed refusal naming
-that axis as path-dependent (a new run, a new CT-32). This story does not
-implement ``analysis.rerun``. Homes: ungoverned is a return value only (not
+that axis as path-dependent (a new run, a new CT-32). ``analysis.rerun`` is
+Story 35.3. Homes: ungoverned is a return value only (not
 durable, not a Library object); governed-without-QMA writes the canonical JSON
 sidecar in the source run-dir (no orchestrator spawn, no QMB ledger line, no
 CT-32); coordinated ``analysis.published`` persistence is Epic 36.

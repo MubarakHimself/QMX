@@ -20,8 +20,13 @@ from qmb.analysis import (
     ANALYSIS_PROJECT_MINTS_CT32,
     ANALYSIS_PROJECT_MINTS_EXPERIMENT_SPEC,
     ANALYSIS_PROJECT_OCCUPANCY,
+    ANALYSIS_RERUN_MINTS_CT32,
+    ANALYSIS_RERUN_MINTS_EXPERIMENT_SPEC,
+    ANALYSIS_RERUN_OCCUPANCY,
     ProjectionView,
+    RerunOutcome,
     project,
+    rerun,
 )
 from qmb.config import (
     BMS_RECORD_KIND,
@@ -107,6 +112,9 @@ __all__ = [
     "ANALYSIS_PROJECT_MINTS_CT32",
     "ANALYSIS_PROJECT_MINTS_EXPERIMENT_SPEC",
     "ANALYSIS_PROJECT_OCCUPANCY",
+    "ANALYSIS_RERUN_MINTS_CT32",
+    "ANALYSIS_RERUN_MINTS_EXPERIMENT_SPEC",
+    "ANALYSIS_RERUN_OCCUPANCY",
     "AUTOCOMPLETE",
     "AUTOCOMPLETE_PORT",
     "BMS_RECORD_KIND",
@@ -131,12 +139,14 @@ __all__ = [
     "SWEEP_COMMANDS",
     "SWEEP_RANK_OCCUPANCY",
     "BacktestSubmission",
+    "analysis_command_occupancy",
     "cli_tree_identity",
     "command_prerequisites",
     "command_tree",
     "complete_registry",
     "data_command_occupancy",
     "invoke_analysis_project",
+    "invoke_analysis_rerun",
     "invoke_backtest",
     "invoke_config_compile",
     "invoke_config_show",
@@ -171,8 +181,8 @@ COMMAND_GROUPS: Final[tuple[str, ...]] = (
     "config",
 )
 LIBRARY_COMMANDS: Final[tuple[str, ...]] = ("kinds", "search", "candidates")
-# Story 35.1 occupancy: analysis.project is a query. It consumes none.
-ANALYSIS_COMMANDS: Final[tuple[str, ...]] = ("project",)
+# Story 35.1 occupancy: analysis.project is a query. Story 35.3: rerun is a run.
+ANALYSIS_COMMANDS: Final[tuple[str, ...]] = ("project", "rerun")
 COMPUTES_RUN_ID: Final[bool] = False
 HOLDS_CACHE: Final[bool] = False
 ORCHESTRATOR_ENTRY: Final[str] = "qmb.orchestrator.spawn_run"
@@ -263,6 +273,7 @@ _COMMAND_PREREQS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         "library.search": ("kind",),
         "library.candidates": (),
         "analysis.project": ("source_ct32", "source_ct29", "predicate"),
+        "analysis.rerun": ("source_ct32", "slices", "output_root", "ledger"),
         "config.compile": ("port", "book_fragment", "bms_fragment", "run_spec"),
         "config.show": (),
     }
@@ -321,9 +332,18 @@ def cli_tree_identity() -> dict[str, object]:
         "library_candidates_occupancy": CANDIDATE_SET_OCCUPANCY,
         "library_candidates_mints_ct32": CANDIDATE_SET_MINTS_CT32,
         "library_candidates_mints_experiment_spec": CANDIDATE_SET_MINTS_EXPERIMENT_SPEC,
-        "analysis_occupancy": ANALYSIS_PROJECT_OCCUPANCY,
-        "analysis_mints_ct32": ANALYSIS_PROJECT_MINTS_CT32,
-        "analysis_mints_experiment_spec": ANALYSIS_PROJECT_MINTS_EXPERIMENT_SPEC,
+        "analysis_occupancy": {
+            "project": ANALYSIS_PROJECT_OCCUPANCY,
+            "rerun": ANALYSIS_RERUN_OCCUPANCY,
+        },
+        "analysis_mints_ct32": {
+            "project": ANALYSIS_PROJECT_MINTS_CT32,
+            "rerun": ANALYSIS_RERUN_MINTS_CT32,
+        },
+        "analysis_mints_experiment_spec": {
+            "project": ANALYSIS_PROJECT_MINTS_EXPERIMENT_SPEC,
+            "rerun": ANALYSIS_RERUN_MINTS_EXPERIMENT_SPEC,
+        },
     }
 
 
@@ -634,6 +654,115 @@ def invoke_analysis_project(
         ports=ports,
         execution_ports=execution_ports,
         starting_capital=starting_capital,
+    )
+
+
+def invoke_analysis_rerun(
+    *,
+    source_ct32: object = None,
+    config: object = None,
+    port: object = None,
+    book_fragment: object = None,
+    bms_fragment: object = None,
+    run_spec: object = None,
+    invocation_flags: object = None,
+    workspace_defaults: object = None,
+    condition_presets: object = (),
+    starting_capital: object = None,
+    fill_port: object = None,
+    cost_port: object = None,
+    financing_port: object = None,
+    slices: object = None,
+    output_root: object = None,
+    ledger: object = None,
+    occupancy: object = None,
+    cpu_budget: object = None,
+    memory_budget: object = None,
+    projected_peak_memory: object = None,
+    analysis_method: object = None,
+    lane: object = None,
+    workbench_lane: object = None,
+    experiment_spec: object = None,
+    sqlite: object = None,
+) -> Result[RerunOutcome]:
+    """Thin wrapper over ``qmb.rerun`` (Story 35.3).
+
+    Occupancy is a run: one governed spawn, one new CT-32, one ledger line with
+    workbench_lane=governed citing that CT-32 by _ref. QMA must call this door
+    (or the library) and must not reimplement the tunnel.
+    """
+    provided: dict[str, object] = {
+        "source_ct32": source_ct32,
+        "slices": slices,
+        "output_root": output_root,
+        "ledger": ledger,
+    }
+    if config is not None:
+        provided["config"] = config
+    else:
+        provided["port"] = port
+        provided["book_fragment"] = book_fragment
+        provided["bms_fragment"] = bms_fragment
+        provided["run_spec"] = run_spec
+    checked = require_prerequisites("analysis.rerun", provided)
+    if is_refusal(checked):
+        return checked
+    if config is None:
+        layers = require_prerequisites(
+            "config.compile",
+            {
+                "port": port,
+                "book_fragment": book_fragment,
+                "bms_fragment": bms_fragment,
+                "run_spec": run_spec,
+            },
+        )
+        if is_refusal(layers):
+            return layers
+    return rerun(
+        source_ct32=source_ct32,
+        config=config,
+        port=port,
+        book_fragment=book_fragment,
+        bms_fragment=bms_fragment,
+        run_spec=run_spec,
+        invocation_flags=invocation_flags,
+        workspace_defaults=workspace_defaults,
+        condition_presets=condition_presets,
+        starting_capital=starting_capital,
+        fill_port=fill_port,
+        cost_port=cost_port,
+        financing_port=financing_port,
+        slices=slices,
+        output_root=output_root,
+        ledger=ledger,
+        occupancy=occupancy,
+        cpu_budget=cpu_budget,
+        memory_budget=memory_budget,
+        projected_peak_memory=projected_peak_memory,
+        analysis_method=analysis_method,
+        lane=lane,
+        workbench_lane=workbench_lane,
+        experiment_spec=experiment_spec,
+        sqlite=sqlite,
+    )
+
+
+def analysis_command_occupancy(command: object) -> Result[str]:
+    """Classify an analysis command as occupancy ``run`` or query (FR-W11)."""
+    token = clean_token(command)
+    if token is None:
+        return invalid("command", "an analysis command name is a non-blank token")
+    name = token[9:] if token.startswith("analysis.") else token
+    if name == "project":
+        return Ok(ANALYSIS_PROJECT_OCCUPANCY)
+    if name == "rerun":
+        return Ok(ANALYSIS_RERUN_OCCUPANCY)
+    return invalid(
+        "command",
+        "analysis occupancy classifies project (query) and rerun (run)",
+        given=token,
+        legal=list(ANALYSIS_COMMANDS),
     )
 
 

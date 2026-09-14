@@ -20,7 +20,7 @@ from click.shell_completion import CompletionItem
 from qmf.core.refusal import Result, is_ok, is_refusal
 
 from qmb._display import __version__
-from qmb.analysis import ProjectionView
+from qmb.analysis import ProjectionView, RerunOutcome
 from qmb.config import ResolvedRunConfig
 from qmb.doors import CLI_PROG
 from qmb.doors.cli.render import render_refusal
@@ -29,6 +29,9 @@ from qmb.doors.cli.tree import (
     ANALYSIS_PROJECT_MINTS_CT32,
     ANALYSIS_PROJECT_MINTS_EXPERIMENT_SPEC,
     ANALYSIS_PROJECT_OCCUPANCY,
+    ANALYSIS_RERUN_MINTS_CT32,
+    ANALYSIS_RERUN_MINTS_EXPERIMENT_SPEC,
+    ANALYSIS_RERUN_OCCUPANCY,
     AUTOCOMPLETE,
     AUTOCOMPLETE_PORT,
     BMS_RECORD_KIND,
@@ -53,12 +56,14 @@ from qmb.doors.cli.tree import (
     SWEEP_COMMANDS,
     SWEEP_RANK_OCCUPANCY,
     BacktestSubmission,
+    analysis_command_occupancy,
     cli_tree_identity,
     command_prerequisites,
     command_tree,
     complete_registry,
     data_command_occupancy,
     invoke_analysis_project,
+    invoke_analysis_rerun,
     invoke_backtest,
     invoke_config_compile,
     invoke_config_show,
@@ -104,6 +109,9 @@ __all__ = [
     "ANALYSIS_PROJECT_MINTS_CT32",
     "ANALYSIS_PROJECT_MINTS_EXPERIMENT_SPEC",
     "ANALYSIS_PROJECT_OCCUPANCY",
+    "ANALYSIS_RERUN_MINTS_CT32",
+    "ANALYSIS_RERUN_MINTS_EXPERIMENT_SPEC",
+    "ANALYSIS_RERUN_OCCUPANCY",
     "AUTOCOMPLETE",
     "AUTOCOMPLETE_PORT",
     "BMS_RECORD_KIND",
@@ -128,12 +136,14 @@ __all__ = [
     "SWEEP_COMMANDS",
     "SWEEP_RANK_OCCUPANCY",
     "BacktestSubmission",
+    "analysis_command_occupancy",
     "cli_tree_identity",
     "command_prerequisites",
     "command_tree",
     "complete_registry",
     "data_command_occupancy",
     "invoke_analysis_project",
+    "invoke_analysis_rerun",
     "invoke_backtest",
     "invoke_config_compile",
     "invoke_config_show",
@@ -1288,11 +1298,12 @@ def library_candidates(
 
 @main.group("analysis")
 def analysis_group() -> None:
-    """Named analysis methods: projection saved views (query). Path-dependent is 35.3.
+    """Named analysis methods: projection (query) and path-dependent rerun (run).
 
-    Occupancy: analysis.project is a query. It consumes no ExecutionEnvironment
-    occupancy, mints no CT-32, and mints no ExperimentSpec successor. Claim-class
-    is projection — never admission evidence, never B-4 role=confirmation.
+    Occupancy: analysis.project is a query. analysis.rerun consumes one qmb run
+    invocation per ExecutionEnvironment; its canonical artifact is a new CT-32.
+    workbench_lane=governed lives on the QMB ledger line citing that CT-32 by
+    _ref — never on CT-32 or B-4. Coordinated Experiment Ledger is Epic 36.
     """
 
 
@@ -1415,6 +1426,84 @@ def analysis_project(
             spawn=payload.get("spawn"),
             orchestrator=payload.get("orchestrator"),
             spawn_run=payload.get("spawn_run"),
+        ),
+    )
+
+
+@analysis_group.command("rerun")
+@click.option(
+    "--source-ct32",
+    default=None,
+    help="Cited completed CT-32 artifact, run-dir, or fp1.",
+)
+@click.option("--output-root", default=None, help="Isolated run output root.")
+@click.option(
+    "--starting-capital",
+    default=None,
+    help="Invocation-flag seed override; stamps seed_overridden and fold unrated.",
+)
+@click.option("--fill-port", default=None, help="Fill adapter-id bound from the new run-config.")
+@click.option("--cost-port", default=None, help="Cost adapter-id bound from the new run-config.")
+@click.option(
+    "--financing-port",
+    default=None,
+    help="Financing schedule token bound from the new run-config.",
+)
+@click.option(
+    "--occupancy",
+    default=None,
+    help="Refused when query: analysis.rerun is a run.",
+)
+@click.pass_context
+def analysis_rerun(
+    ctx: click.Context,
+    source_ct32: str | None,
+    output_root: str | None,
+    starting_capital: str | None,
+    fill_port: str | None,
+    cost_port: str | None,
+    financing_port: str | None,
+    occupancy: str | None,
+) -> None:
+    """Spawn a governed path-dependent rerun via qmb.rerun. Canonical artifact: CT-32."""
+    payload = _payload(
+        ctx,
+        source_ct32=source_ct32,
+        output_root=output_root,
+        starting_capital=starting_capital,
+        fill_port=fill_port,
+        cost_port=cost_port,
+        financing_port=financing_port,
+        occupancy=occupancy,
+    )
+    _transport(
+        ctx,
+        invoke_analysis_rerun(
+            source_ct32=payload.get("source_ct32"),
+            config=payload.get("config"),
+            port=payload.get("port"),
+            book_fragment=payload.get("book_fragment"),
+            bms_fragment=payload.get("bms_fragment"),
+            run_spec=payload.get("run_spec"),
+            invocation_flags=payload.get("invocation_flags"),
+            workspace_defaults=payload.get("workspace_defaults"),
+            condition_presets=payload.get("condition_presets", ()),
+            starting_capital=payload.get("starting_capital"),
+            fill_port=payload.get("fill_port"),
+            cost_port=payload.get("cost_port"),
+            financing_port=payload.get("financing_port"),
+            slices=payload.get("slices"),
+            output_root=payload.get("output_root"),
+            ledger=payload.get("ledger"),
+            occupancy=payload.get("occupancy"),
+            cpu_budget=payload.get("cpu_budget"),
+            memory_budget=payload.get("memory_budget"),
+            projected_peak_memory=payload.get("projected_peak_memory"),
+            analysis_method=payload.get("analysis_method"),
+            lane=payload.get("lane"),
+            workbench_lane=payload.get("workbench_lane"),
+            experiment_spec=payload.get("experiment_spec"),
+            sqlite=payload.get("sqlite"),
         ),
     )
 
@@ -1549,6 +1638,7 @@ def _format_ok(value: object) -> str:
             LibraryKindRoster,
             LibrarySearch,
             ProjectionView,
+            RerunOutcome,
             SavedCandidateView,
             SignificanceResult,
             SweepBatchReport,

@@ -39,9 +39,14 @@ __all__ = [
     "ROLE_TRIAL",
     "RUN_ROLES",
     "STORES_VERDICT",
+    "WORKBENCH_LANES",
+    "WORKBENCH_LANE_COORDINATED",
+    "WORKBENCH_LANE_GOVERNED",
+    "WORKBENCH_LANE_UNGOVERNED",
     "LedgerLine",
     "book_bar_fingerprint",
     "book_bar_lines",
+    "ct32_ref",
     "merge_ledger_lines",
     "mint_aborted_line",
     "mint_aborted_line_for",
@@ -65,6 +70,16 @@ BOOK_BAR_READ_ROLE: Final[str] = ROLE_CONFIRMATION
 PROVENANCE_SANDBOX: Final[str] = "sandbox"
 ONE_LINE_PER_RUN: Final[bool] = True
 STORES_VERDICT: Final[bool] = False
+WORKBENCH_LANE_UNGOVERNED: Final[str] = "ungoverned"
+WORKBENCH_LANE_GOVERNED: Final[str] = "governed"
+WORKBENCH_LANE_COORDINATED: Final[str] = "coordinated"
+WORKBENCH_LANES: Final[tuple[str, ...]] = (
+    WORKBENCH_LANE_UNGOVERNED,
+    WORKBENCH_LANE_GOVERNED,
+    WORKBENCH_LANE_COORDINATED,
+)
+_B4_LABEL_FIELDS: Final[frozenset[str]] = frozenset({"analysis_method", "lane"})
+_WORKBENCH_LANE_SET: Final[frozenset[str]] = frozenset(WORKBENCH_LANES)
 _VERDICT_KEYS: Final[frozenset[str]] = frozenset(
     {
         "bar-fail",
@@ -110,6 +125,7 @@ class LedgerLine:
     ct32_fingerprint: Fingerprint | None = None
     refusal: Mapping[str, object] | None = None
     sweep_coordinates: Mapping[str, object] | None = None
+    workbench_lane: str | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "result_label", MappingProxyType(dict(self.result_label)))
@@ -123,7 +139,11 @@ class LedgerLine:
             )
 
     def fp1_identity(self) -> dict[str, object]:
-        """Canonical identity content. Writer/occurrence and SemVer are omitted."""
+        """Canonical identity content. Writer/occurrence and SemVer are omitted.
+
+        ``workbench_lane`` is workbench metadata on this JSONL line, never a B-4
+        role and never an ``analysis_method`` / ``lane`` field (DEC-0270, DEC-0283).
+        """
         content: dict[str, object] = {
             "book_bar_fp1": self.book_bar_fp1.value,
             "class": LEDGER_LINE_CLASS,
@@ -140,6 +160,10 @@ class LedgerLine:
             content["refusal"] = dict(self.refusal)
         if self.sweep_coordinates is not None:
             content["sweep_coordinates"] = dict(self.sweep_coordinates)
+        if self.workbench_lane is not None:
+            content["workbench_lane"] = self.workbench_lane
+            if self.ct32_fingerprint is not None:
+                content["ct32"] = ct32_ref(self.ct32_fingerprint)
         return content
 
     @classmethod
@@ -221,6 +245,15 @@ class LedgerLine:
                 "a ledger line stores raw unit-kinded measures, never a pass/fail verdict",
                 keys=sorted(banned),
             )
+        labels = _refuse_b4_label_fields(body)
+        if labels is not None:
+            return labels
+        lane = _as_workbench_lane(body.get("workbench_lane"))
+        if is_refusal(lane):
+            return lane
+        cited = _as_ct32_ref(body.get("ct32"), ct32)
+        if is_refusal(cited):
+            return cited
         return Ok(
             cls(
                 run_id=run_id.value,
@@ -232,8 +265,14 @@ class LedgerLine:
                 ct32_fingerprint=ct32,
                 refusal=refusal,
                 sweep_coordinates=coordinates,
+                workbench_lane=lane.value,
             )
         )
+
+
+def ct32_ref(fingerprint: Fingerprint) -> dict[str, str]:
+    """Workbench ``_ref`` citation of a CT-32 fingerprint (FR-W25)."""
+    return {"_ref": fingerprint.value}
 
 
 def book_bar_fingerprint(config: object) -> Result[Fingerprint]:
@@ -267,12 +306,14 @@ def mint_completed_line(
     role: object = ROLE_CONFIRMATION,
     factory_sandbox: object = False,
     sweep_coordinates: object = None,
+    workbench_lane: object = None,
 ) -> Result[LedgerLine]:
     """Mint the completed-run line. Role is never ``aborted``.
 
     ``sweep_coordinates`` — when this run is one combination of a sweep — stamps
     the ``{sweep_id, instrument, bar_spec, param_hash}`` a read-time fold groups
     by; it is omitted for a standalone run (B-4; spec R10, R11).
+    ``workbench_lane`` is workbench metadata on this line, never a B-4 role.
     """
     if not isinstance(config, ResolvedRunConfig):
         return invalid(
@@ -324,6 +365,9 @@ def mint_completed_line(
     coordinates = _as_sweep_coordinates(sweep_coordinates)
     if is_refusal(coordinates):
         return coordinates
+    lane = _as_workbench_lane(workbench_lane)
+    if is_refusal(lane):
+        return lane
     label = _label_payload(artifact.value.result_label, factory_sandbox=factory_sandbox)
     measures = tuple(item.fp1_identity() for item in artifact.value.measure_set)
     return _build_line(
@@ -336,6 +380,7 @@ def mint_completed_line(
         ct32_fingerprint=stamped.value,
         refusal=None,
         sweep_coordinates=coordinates.value,
+        workbench_lane=lane.value,
     )
 
 
@@ -345,6 +390,7 @@ def mint_aborted_line(
     *,
     factory_sandbox: object = False,
     sweep_coordinates: object = None,
+    workbench_lane: object = None,
 ) -> Result[LedgerLine]:
     """Mint the aborted line with refusal context. Never silently absent.
 
@@ -368,6 +414,7 @@ def mint_aborted_line(
         refusal=refusal,
         factory_sandbox=factory_sandbox,
         sweep_coordinates=sweep_coordinates,
+        workbench_lane=workbench_lane,
     )
 
 
@@ -379,6 +426,7 @@ def mint_aborted_line_for(
     refusal: object,
     factory_sandbox: object = False,
     sweep_coordinates: object = None,
+    workbench_lane: object = None,
 ) -> Result[LedgerLine]:
     """Mint an aborted line from an explicit run id, world, and Book bar (B-4).
 
@@ -431,6 +479,9 @@ def mint_aborted_line_for(
     if is_refusal(label):
         return label
     payload = _label_payload(label.value, factory_sandbox=factory_sandbox)
+    lane = _as_workbench_lane(workbench_lane)
+    if is_refusal(lane):
+        return lane
     return _build_line(
         run_id=parsed_run_id.value,
         role=ROLE_ABORTED,
@@ -441,6 +492,7 @@ def mint_aborted_line_for(
         ct32_fingerprint=None,
         refusal=_refusal_payload(refusal),
         sweep_coordinates=coordinates.value,
+        workbench_lane=lane.value,
     )
 
 
@@ -522,6 +574,7 @@ def _build_line(
     ct32_fingerprint: Fingerprint | None,
     refusal: Mapping[str, object] | None,
     sweep_coordinates: Mapping[str, object] | None = None,
+    workbench_lane: str | None = None,
 ) -> Result[LedgerLine]:
     line = LedgerLine(
         run_id=run_id,
@@ -533,6 +586,7 @@ def _build_line(
         ct32_fingerprint=ct32_fingerprint,
         refusal=refusal,
         sweep_coordinates=sweep_coordinates,
+        workbench_lane=workbench_lane,
     )
     banned = _verdict_keys(line.fp1_identity())
     if banned:
@@ -541,7 +595,79 @@ def _build_line(
             "a ledger line stores raw unit-kinded measures, never a pass/fail verdict",
             keys=sorted(banned),
         )
+    labels = _refuse_b4_label_fields(line.fp1_identity())
+    if labels is not None:
+        return labels
     return Ok(line)
+
+
+def _refuse_b4_label_fields(body: Mapping[str, object]) -> TypedRefusal | None:
+    present = [key for key in _B4_LABEL_FIELDS if key in body]
+    if not present:
+        return None
+    return policy(
+        present[0],
+        "analysis_method and lane are not CT-32 or B-4 fields; workbench_lane is "
+        "workbench metadata on the QMB ledger line citing the CT-32 by _ref "
+        "(FR-W07, FR-W25, FR-W28, DEC-0270, DEC-0283)",
+        given=present,
+        b4_roles=list(RUN_ROLES),
+    )
+
+
+def _as_workbench_lane(value: object) -> Result[str | None]:
+    if value is None:
+        empty: str | None = None
+        return Ok(empty)
+    token = clean_token(value)
+    if token is None:
+        return invalid(
+            "workbench_lane",
+            "workbench_lane is ungoverned, governed, or coordinated metadata, "
+            "never a B-4 role (DEC-0270)",
+            given=repr(value),
+            legal=list(WORKBENCH_LANES),
+        )
+    folded = token.casefold()
+    if folded not in _WORKBENCH_LANE_SET:
+        return invalid(
+            "workbench_lane",
+            "workbench_lane is ungoverned, governed, or coordinated metadata, "
+            "never a B-4 role (DEC-0270)",
+            given=token,
+            legal=list(WORKBENCH_LANES),
+        )
+    return Ok(folded)
+
+
+def _as_ct32_ref(raw: object, ct32: Fingerprint | None) -> Result[None]:
+    if raw is None:
+        return Ok(None)
+    if not isinstance(raw, Mapping):
+        return invalid(
+            "ct32",
+            "a workbench CT-32 cite is {_ref: fp1}",
+            given=repr(type(raw).__name__),
+        )
+    body = cast("Mapping[str, object]", raw)
+    token = clean_token(body.get("_ref"))
+    if token is None:
+        return invalid(
+            "ct32",
+            "a workbench CT-32 cite is {_ref: fp1}",
+            given=repr(sorted(body)),
+        )
+    parsed = Fingerprint.try_create(token)
+    if is_refusal(parsed):
+        return parsed
+    if ct32 is not None and parsed.value != ct32:
+        return policy(
+            "ct32",
+            "the workbench _ref must cite this line's CT-32 fingerprint",
+            given=parsed.value.value,
+            expected=ct32.value,
+        )
+    return Ok(None)
 
 
 def _as_sweep_coordinates(value: object) -> Result[Mapping[str, object] | None]:

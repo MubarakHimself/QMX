@@ -1409,6 +1409,26 @@ def test_analysis_project_usage_example_runs_clean() -> None:
     assert "coordinated persistence is Epic 36" in completed.stdout
 
 
+def test_analysis_rerun_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "analysis_rerun_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "analysis.rerun ok" in completed.stdout
+    assert "analysis.rerun is a new QMB run" in completed.stdout
+    assert "canonical artifact is a new CT-32" in completed.stdout
+    assert "occupancy is run, not a query" in completed.stdout
+    assert "workbench_lane=governed cites CT-32 by _ref" in completed.stdout
+    assert "analysis_method and lane are not CT-32 or B-4 fields" in completed.stdout
+    assert "starting_capital override stamps seed_overridden and fold unrated" in completed.stdout
+    assert "query occupancy refused" in completed.stdout
+    assert "coordinated Experiment Ledger is Epic 36" in completed.stdout
+
+
 def test_library_candidates_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_QMB_ROOT / "examples" / "library_candidates_usage.py")],
