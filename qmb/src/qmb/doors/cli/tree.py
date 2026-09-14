@@ -55,6 +55,13 @@ from qmb.registryread import (
     RegistryReadPort,
     enumerate_library_kinds,
 )
+from qmb.registryread.search import (
+    LIBRARY_SEARCH_MINTS_CT32,
+    LIBRARY_SEARCH_MINTS_EXPERIMENT_SPEC,
+    LIBRARY_SEARCH_OCCUPANCY,
+    LibrarySearch,
+    search_library,
+)
 from qmb.robustness import (
     PROCEDURE_MC_CANDLE_PERTURBATION,
     PROCEDURE_MC_TRADE_SHUFFLE,
@@ -116,6 +123,7 @@ __all__ = [
     "invoke_ledger_bar",
     "invoke_ledger_merge",
     "invoke_library_kinds",
+    "invoke_library_search",
     "invoke_optimize_estimate",
     "invoke_optimize_run",
     "invoke_optimize_space",
@@ -139,7 +147,7 @@ COMMAND_GROUPS: Final[tuple[str, ...]] = (
     "library",
     "config",
 )
-LIBRARY_COMMANDS: Final[tuple[str, ...]] = ("kinds",)
+LIBRARY_COMMANDS: Final[tuple[str, ...]] = ("kinds", "search")
 COMPUTES_RUN_ID: Final[bool] = False
 HOLDS_CACHE: Final[bool] = False
 ORCHESTRATOR_ENTRY: Final[str] = "qmb.orchestrator.spawn_run"
@@ -226,6 +234,7 @@ _COMMAND_PREREQS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         "ledger.merge": ("root", "world", "role"),
         "ledger.bar": ("root", "world"),
         "library.kinds": (),
+        "library.search": ("kind",),
         "config.compile": ("port", "book_fragment", "bms_fragment", "run_spec"),
         "config.show": (),
     }
@@ -278,6 +287,9 @@ def cli_tree_identity() -> dict[str, object]:
         "library_occupancy": LIBRARY_KINDS_OCCUPANCY,
         "library_mints_ct32": LIBRARY_MINTS_CT32,
         "library_mints_experiment_spec": LIBRARY_MINTS_EXPERIMENT_SPEC,
+        "library_search_occupancy": LIBRARY_SEARCH_OCCUPANCY,
+        "library_search_mints_ct32": LIBRARY_SEARCH_MINTS_CT32,
+        "library_search_mints_experiment_spec": LIBRARY_SEARCH_MINTS_EXPERIMENT_SPEC,
     }
 
 
@@ -343,6 +355,57 @@ def invoke_library_kinds() -> Result[LibraryKindRoster]:
     if is_refusal(checked):
         return checked
     return Ok(enumerate_library_kinds())
+
+
+def invoke_library_search(
+    *,
+    kind: object = None,
+    fp1: object = None,
+    port: object = None,
+    ledger_lines: object = None,
+    world: object = None,
+    role: object = None,
+    experiment_refs: object = None,
+    saved_views: object = None,
+    lane: object = None,
+    staging: object = None,
+    qma_staging: object = None,
+    refinement_proposals: object = None,
+    store: object = None,
+    sqlite: object = None,
+    database: object = None,
+    fourth_store: object = None,
+    new_store: object = None,
+    identity_store: object = None,
+) -> Result[LibrarySearch]:
+    """Thin wrapper over ``qmb.search_library`` (Story 34.2).
+
+    Occupancy is a query: no CT-32, no ExperimentSpec successor, no door-side
+    registry cache, no fourth store. Staging is not read.
+    """
+    checked = require_prerequisites("library.search", {"kind": kind})
+    if is_refusal(checked):
+        return checked
+    return search_library(
+        kind,
+        fp1=fp1,
+        port=port,
+        ledger_lines=ledger_lines,
+        world=world,
+        role=role,
+        experiment_refs=experiment_refs,
+        saved_views=saved_views,
+        lane=lane,
+        staging=staging,
+        qma_staging=qma_staging,
+        refinement_proposals=refinement_proposals,
+        store=store,
+        sqlite=sqlite,
+        database=database,
+        fourth_store=fourth_store,
+        new_store=new_store,
+        identity_store=identity_store,
+    )
 
 
 def invoke_config_show() -> Result[Mapping[str, object]]:

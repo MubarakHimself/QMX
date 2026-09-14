@@ -60,6 +60,7 @@ from qmb.doors.cli.tree import (
     invoke_ledger_bar,
     invoke_ledger_merge,
     invoke_library_kinds,
+    invoke_library_search,
     invoke_optimize_estimate,
     invoke_optimize_run,
     invoke_optimize_space,
@@ -74,6 +75,7 @@ from qmb.doors.cli.tree import (
 )
 from qmb.optimize import CostEstimate
 from qmb.registryread import LibraryKindRoster, RegistryReadPort
+from qmb.registryread.search import LibrarySearch
 from qmb.robustness import (
     PROCEDURE_MC_CANDLE_PERTURBATION,
     PROCEDURE_MC_TRADE_SHUFFLE,
@@ -126,6 +128,7 @@ __all__ = [
     "invoke_ledger_bar",
     "invoke_ledger_merge",
     "invoke_library_kinds",
+    "invoke_library_search",
     "invoke_optimize_estimate",
     "invoke_optimize_run",
     "invoke_optimize_space",
@@ -1102,6 +1105,57 @@ def library_kinds(ctx: click.Context) -> None:
     _transport(ctx, invoke_library_kinds())
 
 
+@library_group.command("search")
+@click.option("--kind", default=None, help="Library kind or saved-view citation.")
+@click.option("--fp1", default=None, help="Source kind fp1; never name@version.")
+@click.option("--world", default=None, help="World the ledger merge view reads.")
+@click.option("--role", default=None, help="Role the ledger merge view reads.")
+@click.option("--lane", default=None, help="ungoverned, governed, or coordinated.")
+@click.option(
+    "--staging",
+    is_flag=True,
+    default=False,
+    help="Refused: Library search does not read QMA staging.",
+)
+@click.option(
+    "--store",
+    default=None,
+    help="Refused: Library search does not open a fourth store.",
+)
+@click.pass_context
+def library_search(
+    ctx: click.Context,
+    kind: str | None,
+    fp1: str | None,
+    world: str | None,
+    role: str | None,
+    lane: str | None,
+    staging: bool,
+    store: str | None,
+) -> None:
+    """Search Library kinds over as-of, ledger merge, and Experiment Ledger refs."""
+    payload = _payload(ctx, kind=kind, fp1=fp1, world=world, role=role, lane=lane, store=store)
+    _transport(
+        ctx,
+        invoke_library_search(
+            kind=payload.get("kind"),
+            fp1=payload.get("fp1"),
+            port=payload.get("port"),
+            ledger_lines=payload.get("ledger_lines"),
+            world=payload.get("world"),
+            role=payload.get("role"),
+            experiment_refs=payload.get("experiment_refs"),
+            saved_views=payload.get("saved_views"),
+            lane=payload.get("lane"),
+            staging=staging if staging else payload.get("staging"),
+            store=payload.get("store"),
+            sqlite=payload.get("sqlite"),
+            database=payload.get("database"),
+            fourth_store=payload.get("fourth_store"),
+        ),
+    )
+
+
 @main.group("config")
 def config_group() -> None:
     """The B-3 config compiler: one resolved, fingerprinted run-config."""
@@ -1229,6 +1283,7 @@ def _format_ok(value: object) -> str:
         (
             CandlePerturbationResult,
             LibraryKindRoster,
+            LibrarySearch,
             SignificanceResult,
             SweepBatchReport,
             SweepRanking,

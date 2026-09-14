@@ -1367,6 +1367,24 @@ def test_library_kinds_usage_example_runs_clean() -> None:
     assert "no qmx-library package" in completed.stdout
 
 
+def test_library_search_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "library_search_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "library search ok" in completed.stdout
+    assert "registry-as-of" in completed.stdout
+    assert "ledger-merge" in completed.stdout
+    assert "experiment-ledger" in completed.stdout
+    assert "saved-view cites source CT-32" in completed.stdout
+    assert "staging is not read" in completed.stdout
+    assert "fourth store refused" in completed.stdout
+
+
 def test_import_usage_example_runs_clean() -> None:
     completed = subprocess.run(
         [sys.executable, str(_EXAMPLE)],

@@ -22,7 +22,8 @@ from qmf.core.refusal import Ok, Result, TypedRefusal, is_ok, is_refusal
 from qmf.registry import EdgeType, LineageEdge, RegistrationRecord
 
 from qmb._refuse import clean_token, invalid, unsupported
-from qmb.registryread import RegistryFragment, RegistryReadPort
+from qmb.registryread.as_of import RegistryFragment
+from qmb.registryread.port import RegistryReadPort
 
 __all__ = [
     "BMS_NAMESPACES",

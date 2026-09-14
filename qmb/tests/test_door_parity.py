@@ -67,6 +67,7 @@ _CLI_INVOKERS: dict[str, str] = {
     "invoke_ledger_bar": "ledger.bar",
     "invoke_ledger_merge": "ledger.merge",
     "invoke_library_kinds": "library.kinds",
+    "invoke_library_search": "library.search",
     "invoke_optimize_estimate": "optimize.estimate",
     "invoke_optimize_run": "optimize.run",
     "invoke_optimize_space": "optimize.space",

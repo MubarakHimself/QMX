@@ -43,7 +43,7 @@ from qmb.config.replay import (
     mint_replay_binding,
     resolve_starting_capital,
 )
-from qmb.registryread import RegistryReadPort, ResolvedRef
+from qmb.registryread.port import RegistryReadPort, ResolvedRef
 
 __all__ = [
     "ASSIGNMENT_IS_CANONICAL_KEY",
