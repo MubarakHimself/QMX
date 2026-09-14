@@ -57,6 +57,9 @@ import qmb
 
 T = TypeVar("T")
 
+_RERUN = inspect.getmodule(rerun)
+assert _RERUN is not None
+_ensure_output_root = _RERUN._ensure_output_root  # pyright: ignore[reportPrivateUsage]
 _SRC = Path(__file__).resolve().parents[1] / "src" / "qmb"
 _NS = 1_700_000_000_000_000_000
 _BOOT = "boot-1"
@@ -483,6 +486,85 @@ def test_door_calls_the_library_not_a_copy(monkeypatch: pytest.MonkeyPatch) -> N
     assert is_ok(result)
     assert result.value is sentinel
     assert calls == ["rerun"]
+
+
+def _try_symlink(link: Path, target: Path) -> None:
+    """Create a symlink or skip where the platform forbids it (Windows dev)."""
+    try:
+        link.symlink_to(target)
+    except (OSError, NotImplementedError):
+        pytest.skip("symlink creation is not permitted on this platform")
+
+
+def test_rerun_requires_isolated_output_root() -> None:
+    refused = rerun(
+        source_ct32=_source_ct32(),
+        config=_config(tag="no-root"),
+        slices=_slices(),
+        output_root=None,
+    )
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.INVALID_INPUT
+    assert refused.context["field"] == "output_root"
+
+
+def test_ensure_output_root_creates_contained_directory(tmp_path: Path) -> None:
+    root = tmp_path / "runs"
+    created = _ensure_output_root(root)
+    assert is_ok(created)
+    assert created.value == root
+    assert root.is_dir()
+    assert not root.is_symlink()
+
+
+def test_ensure_output_root_refuses_a_target_detected_as_a_symlink(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path / "runs"
+    real_is_symlink = Path.is_symlink
+
+    def detects_the_target_as_a_link(self: Path) -> bool:
+        return True if self == root else real_is_symlink(self)
+
+    monkeypatch.setattr(Path, "is_symlink", detects_the_target_as_a_link)
+    refused = _ensure_output_root(root)
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.STORAGE_FAILURE
+    assert refused.context["field"] == "output_root"
+    assert not root.exists()
+
+
+def test_ensure_output_root_refuses_a_symlinked_directory(tmp_path: Path) -> None:
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "marker.txt").write_text("keep", encoding="utf-8")
+    link = tmp_path / "runs"
+    _try_symlink(link, outside)
+    refused = _ensure_output_root(link)
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.STORAGE_FAILURE
+    assert refused.context["field"] == "output_root"
+    assert (outside / "marker.txt").read_text(encoding="utf-8") == "keep"
+
+
+def test_rerun_refuses_symlinked_output_root(tmp_path: Path) -> None:
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "marker.txt").write_text("keep", encoding="utf-8")
+    link = tmp_path / "runs"
+    _try_symlink(link, outside)
+    refused = rerun(
+        source_ct32=_source_ct32(),
+        config=_config(tag="symlink-root"),
+        slices=_slices(),
+        output_root=link,
+        ledger=_sink(tmp_path),
+    )
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.STORAGE_FAILURE
+    assert refused.context["field"] == "output_root"
+    assert (outside / "marker.txt").read_text(encoding="utf-8") == "keep"
+    assert {path.name for path in outside.iterdir()} == {"marker.txt"}
 
 
 def test_module_does_not_open_sqlite_or_import_qma() -> None:

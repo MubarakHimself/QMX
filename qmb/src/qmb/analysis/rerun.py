@@ -25,7 +25,7 @@ from qmf.core.fingerprint import Fingerprint
 from qmf.core.refusal import Ok, Result, TypedRefusal, is_ok, is_refusal
 from qmf.risk.performance import PerformanceResult
 
-from qmb._refuse import clean_token, invalid, policy, storage
+from qmb._refuse import clean_token, invalid, policy
 from qmb.analysis.deferred import refuse_synthetic_portfolio
 from qmb.config.compiler import ResolvedRunConfig, compile_run_config
 from qmb.config.replay import STARTING_CAPITAL_KEY
@@ -39,6 +39,7 @@ from qmb.ledger.line import (
     mint_completed_line,
 )
 from qmb.orchestrator.ledger import LedgerSink
+from qmb.orchestrator.paths import mkdir_contained
 from qmb.orchestrator.spawn import IsolatedRun, SpawnJob, spawn_governed
 from qmb.results.ct32 import as_ct32_artifact
 
@@ -463,16 +464,7 @@ def _ensure_output_root(output_root: object) -> Result[Path]:
                 given=repr(type(output_root).__name__),
             )
         root = Path(token)
-    try:
-        root.mkdir(parents=True, exist_ok=True)
-    except OSError as exc:
-        return storage(
-            "output_root",
-            "analysis.rerun could not create the isolated output root",
-            given=type(exc).__name__,
-            path=str(root),
-        )
-    return Ok(root)
+    return mkdir_contained(root, contain_within=root, field="output_root")
 
 
 def _as_ledger(ledger: object) -> Result[LedgerSink]:

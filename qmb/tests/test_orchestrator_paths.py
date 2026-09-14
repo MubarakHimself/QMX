@@ -12,6 +12,7 @@ from qmb.orchestrator import watch as watch_mod
 from qmb.orchestrator.paths import (
     MAX_BYTES,
     append_bytes_no_follow,
+    mkdir_contained,
     open_write_handle,
     read_contained_bytes,
     read_contained_text,
@@ -109,6 +110,58 @@ def test_write_refuses_a_path_that_escapes_the_root(tmp_path: Path) -> None:
     assert is_refusal(refused)
     assert refused.category is RefusalCategory.STORAGE_FAILURE
     assert outside.read_text(encoding="utf-8") == "keep"
+
+
+def test_mkdir_contained_creates_a_directory_inside_the_root(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    root.mkdir()
+    child = root / "runs" / "nested"
+    created = _ok(mkdir_contained(child, contain_within=root))
+    assert created == child
+    assert child.is_dir()
+    assert not child.is_symlink()
+
+
+def test_mkdir_contained_refuses_a_path_that_escapes_the_root(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    root.mkdir()
+    outside = tmp_path / "secret"
+    refused = mkdir_contained(root / ".." / "secret", contain_within=root)
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.STORAGE_FAILURE
+    assert not outside.exists()
+
+
+def test_mkdir_contained_refuses_a_symlinked_directory(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    root.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "marker.txt").write_text("keep", encoding="utf-8")
+    link = root / "runs"
+    _try_symlink(link, outside)
+    refused = mkdir_contained(link, contain_within=root)
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.STORAGE_FAILURE
+    assert (outside / "marker.txt").read_text(encoding="utf-8") == "keep"
+
+
+def test_mkdir_contained_refuses_a_target_detected_as_a_symlink(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path / "root"
+    root.mkdir()
+    target = root / "runs"
+    real_is_symlink = Path.is_symlink
+
+    def detects_the_target_as_a_link(self: Path) -> bool:
+        return True if self == target else real_is_symlink(self)
+
+    monkeypatch.setattr(Path, "is_symlink", detects_the_target_as_a_link)
+    refused = mkdir_contained(target, contain_within=root)
+    assert is_refusal(refused)
+    assert refused.category is RefusalCategory.STORAGE_FAILURE
+    assert not target.exists()
 
 
 def test_read_refuses_an_oversize_file(tmp_path: Path) -> None:

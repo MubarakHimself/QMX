@@ -5,7 +5,8 @@ the intended root, cap the size, then open with ``O_NOFOLLOW`` where the
 platform offers it. Exclusive writes use ``O_CREAT | O_EXCL | O_WRONLY``
 plus the same containment and symlink refusal. JSONL append cannot use
 ``O_EXCL``; it still refuses a symlink, stays inside the fragment root, and
-opens with ``O_APPEND | O_NOFOLLOW``.
+opens with ``O_APPEND | O_NOFOLLOW``. Directory creation resolves the path,
+refuses a symlink or a realpath outside the intended root, then mkdir.
 """
 
 from __future__ import annotations
@@ -24,6 +25,7 @@ __all__ = [
     "MAX_JSONL_BYTES",
     "MAX_PROC_STATUS_BYTES",
     "append_bytes_no_follow",
+    "mkdir_contained",
     "open_write_handle",
     "read_contained_bytes",
     "read_contained_text",
@@ -330,3 +332,50 @@ def open_write_handle(
             path=str(path),
             root=str(contain_within),
         )
+
+
+def mkdir_contained(
+    path: Path,
+    *,
+    contain_within: Path,
+    field: str = "path",
+) -> Result[Path]:
+    """Create *path* as a directory inside *contain_within*, never following a symlink.
+
+    Guards sit with the ``mkdir`` they protect: a leaf symlink or an out-of-root
+    realpath is refused first. SKY-D215 is suppressed on the mkdir only — it
+    flags any tainted path at a filesystem sink with no guard escape, the same
+    way the contained no-follow open suppresses it after those same checks.
+    """
+    try:
+        resolved = Path(os.path.realpath(path))
+        root_real = Path(os.path.realpath(contain_within))
+    except OSError as exc:
+        return storage(
+            field,
+            "could not resolve a contained filesystem path",
+            given=type(exc).__name__,
+            path=str(path),
+            root=str(contain_within),
+        )
+    if path.is_symlink() or not resolved.is_relative_to(root_real):
+        return storage(
+            field,
+            "refusing to follow a symlink or a path that resolves outside the intended root",
+            path=str(path),
+            root=str(contain_within),
+        )
+    try:
+        path.mkdir(  # skylos: ignore[SKY-D215] contained, no-follow
+            parents=True,
+            exist_ok=True,
+        )
+    except OSError as exc:
+        return storage(
+            field,
+            "contained no-follow mkdir failed",
+            given=type(exc).__name__,
+            path=str(path),
+            root=str(contain_within),
+        )
+    return Ok(path)
