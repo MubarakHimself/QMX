@@ -69,6 +69,10 @@ _CLI_INVOKERS: dict[str, str] = {
     "invoke_optimize_estimate": "optimize.estimate",
     "invoke_optimize_run": "optimize.run",
     "invoke_optimize_space": "optimize.space",
+    "invoke_robustness_candle_perturbation": "robustness.monte-carlo-candle-perturbation",
+    "invoke_robustness_rule_significance": "robustness.rule-significance",
+    "invoke_robustness_trade_shuffle": "robustness.monte-carlo-trade-shuffle",
+    "invoke_robustness_walk_forward": "robustness.walk-forward",
     "invoke_sweep_count": "sweep.count",
 }
 

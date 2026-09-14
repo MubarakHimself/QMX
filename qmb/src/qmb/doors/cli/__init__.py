@@ -47,11 +47,26 @@ from qmb.doors.cli.tree import (
     invoke_optimize_estimate,
     invoke_optimize_run,
     invoke_optimize_space,
+    invoke_robustness_candle_perturbation,
+    invoke_robustness_rule_significance,
+    invoke_robustness_trade_shuffle,
+    invoke_robustness_walk_forward,
     invoke_sweep_count,
     require_prerequisites,
 )
 from qmb.optimize import CostEstimate
 from qmb.registryread import RegistryReadPort
+from qmb.robustness import (
+    PROCEDURE_MC_CANDLE_PERTURBATION,
+    PROCEDURE_MC_TRADE_SHUFFLE,
+    PROCEDURE_RULE_SIGNIFICANCE,
+    PROCEDURE_WALK_FORWARD,
+    RESAMPLING_SCHEMES,
+    CandlePerturbationResult,
+    SignificanceResult,
+    TradeShuffleResult,
+    WalkForwardPlan,
+)
 
 _T = TypeVar("_T")
 
@@ -79,6 +94,10 @@ __all__ = [
     "invoke_optimize_estimate",
     "invoke_optimize_run",
     "invoke_optimize_space",
+    "invoke_robustness_candle_perturbation",
+    "invoke_robustness_rule_significance",
+    "invoke_robustness_trade_shuffle",
+    "invoke_robustness_walk_forward",
     "invoke_sweep_count",
     "main",
     "render_refusal",
@@ -657,6 +676,165 @@ def sweep_count(
     _transport(ctx, invoke_sweep_count(declaration=declaration))
 
 
+@main.group("robustness")
+def robustness_group() -> None:
+    """B-14 robustness ladder over the Epic 22 library.
+
+    Walk-forward, trade-shuffle MC, candle-perturbation MC, and the pre-build
+    rule-significance gate. Each command adapts the existing library rung.
+    """
+
+
+# Occupancy: a governed CLI robustness invocation is one qmb run unit.
+# Process-per-run children inside that invocation are not additional QMA jobs.
+# This door does not place CT-47 ExperimentSpec (Epic 36).
+# Command registration order matches ROBUSTNESS_PROCEDURES (the tree).
+
+
+@robustness_group.command(PROCEDURE_MC_TRADE_SHUFFLE)
+@click.option("--base-seed", default=None, type=int)
+@click.option("--scenario-count", default=None, type=int)
+@click.option("--metric", "metrics", multiple=True)
+@click.pass_context
+def robustness_trade_shuffle(
+    ctx: click.Context,
+    base_seed: int | None,
+    scenario_count: int | None,
+    metrics: tuple[str, ...],
+) -> None:
+    """Trade-shuffle Monte Carlo via qmb.robustness.run_trade_shuffle."""
+    payload = _payload(ctx, base_seed=base_seed, scenario_count=scenario_count)
+    if metrics:
+        payload.setdefault("metrics", metrics)
+    _transport(
+        ctx,
+        invoke_robustness_trade_shuffle(
+            trades=payload.get("trades"),
+            starting_capital=payload.get("starting_capital"),
+            period=payload.get("period"),
+            base_seed=payload.get("base_seed"),
+            metrics=payload.get("metrics"),
+            config=payload.get("config"),
+            scenario_count=payload.get("scenario_count"),
+            band_probabilities=payload.get("band_probabilities", ()),
+        ),
+    )
+
+
+@robustness_group.command(PROCEDURE_MC_CANDLE_PERTURBATION)
+@click.option("--base-seed", default=None, type=int)
+@click.option("--block-length", default=None, type=int)
+@click.option("--scenario-count", default=None, type=int)
+@click.pass_context
+def robustness_candle_perturbation(
+    ctx: click.Context,
+    base_seed: int | None,
+    block_length: int | None,
+    scenario_count: int | None,
+) -> None:
+    """Candle-perturbation Monte Carlo via qmb.robustness.run_candle_perturbation."""
+    payload = _payload(
+        ctx,
+        base_seed=base_seed,
+        block_length=block_length,
+        scenario_count=scenario_count,
+    )
+    _transport(
+        ctx,
+        invoke_robustness_candle_perturbation(
+            candles=payload.get("candles"),
+            base_seed=payload.get("base_seed"),
+            block_length=payload.get("block_length"),
+            scenario_count=payload.get("scenario_count"),
+            config=payload.get("config"),
+            seed_price=payload.get("seed_price"),
+            run_root=payload.get("run_root"),
+            objective_identity=payload.get("objective_identity"),
+            scenario_objectives=payload.get("scenario_objectives"),
+            objective_direction=payload.get("objective_direction"),
+            band_probabilities=payload.get("band_probabilities", ()),
+        ),
+    )
+
+
+@robustness_group.command(PROCEDURE_RULE_SIGNIFICANCE)
+@click.option("--base-seed", default=None, type=int)
+@click.option(
+    "--resampling-scheme",
+    default=None,
+    type=click.Choice(list(RESAMPLING_SCHEMES), case_sensitive=False),
+)
+@click.option("--block-length", default=None, type=int)
+@click.option("--iterations", default=None, type=int)
+@click.option("--minimum-observations", default=None, type=int)
+@click.pass_context
+def robustness_rule_significance(
+    ctx: click.Context,
+    base_seed: int | None,
+    resampling_scheme: str | None,
+    block_length: int | None,
+    iterations: int | None,
+    minimum_observations: int | None,
+) -> None:
+    """Pre-build rule-significance gate via qmb.robustness.run_significance_gate."""
+    payload = _payload(
+        ctx,
+        base_seed=base_seed,
+        resampling_scheme=resampling_scheme,
+        block_length=block_length,
+        iterations=iterations,
+        minimum_observations=minimum_observations,
+    )
+    _transport(
+        ctx,
+        invoke_robustness_rule_significance(
+            signals=payload.get("signals"),
+            base_seed=payload.get("base_seed"),
+            resampling_scheme=payload.get("resampling_scheme"),
+            block_length=payload.get("block_length"),
+            iterations=payload.get("iterations"),
+            minimum_observations=payload.get("minimum_observations"),
+            config=payload.get("config"),
+            band_probabilities=payload.get("band_probabilities", ()),
+            stream_id=payload.get("stream_id"),
+        ),
+    )
+
+
+@robustness_group.command(PROCEDURE_WALK_FORWARD)
+@click.option("--window-count", default=None, type=int)
+@click.option("--in-sample-span", default=None, type=int)
+@click.option("--out-of-sample-span", default=None, type=int)
+@click.option("--step", default=None, type=int)
+@click.pass_context
+def robustness_walk_forward(
+    ctx: click.Context,
+    window_count: int | None,
+    in_sample_span: int | None,
+    out_of_sample_span: int | None,
+    step: int | None,
+) -> None:
+    """Walk-forward window sequence via qmb.robustness.plan_walk_forward."""
+    payload = _payload(
+        ctx,
+        window_count=window_count,
+        in_sample_span=in_sample_span,
+        out_of_sample_span=out_of_sample_span,
+        step=step,
+    )
+    _transport(
+        ctx,
+        invoke_robustness_walk_forward(
+            windows=payload.get("windows"),
+            config=payload.get("config"),
+            window_count=payload.get("window_count"),
+            in_sample_span=payload.get("in_sample_span"),
+            out_of_sample_span=payload.get("out_of_sample_span"),
+            step=payload.get("step"),
+        ),
+    )
+
+
 @main.group("ledger")
 def ledger_group() -> None:
     """WriterId-scoped ledger merge views; never a stored pass/fail (B-4)."""
@@ -817,6 +995,11 @@ def _format_ok(value: object) -> str:
             return command
     if isinstance(value, tuple):
         return str(len(cast("tuple[object, ...]", value)))
+    if isinstance(
+        value,
+        (CandlePerturbationResult, SignificanceResult, TradeShuffleResult, WalkForwardPlan),
+    ):
+        return json.dumps(_jsonable_payload(value.fp1_identity()), ensure_ascii=False)
     return "ok"
 
 

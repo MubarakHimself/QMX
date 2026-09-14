@@ -27,6 +27,10 @@ from qmb.doors.cli import (
     invoke_config_show,
     invoke_ledger_merge,
     invoke_optimize_space,
+    invoke_robustness_candle_perturbation,
+    invoke_robustness_rule_significance,
+    invoke_robustness_trade_shuffle,
+    invoke_robustness_walk_forward,
     invoke_sweep_count,
     main,
     render_refusal,
@@ -73,6 +77,28 @@ def test_t16_1_b_each_capability_forwards_to_one_library_function(monkeypatch) -
         ("parameter_space_from_bot", lambda: invoke_optimize_space(declaration={"d": 1}),
          {"declaration": {"d": 1}}, "declaration"),
         ("run_config_identity", lambda: invoke_config_show(), {}, None),
+        ("plan_walk_forward", lambda: invoke_robustness_walk_forward(windows=("w",)),
+         {"windows": ("w",)}, "windows"),
+        (
+            "run_trade_shuffle",
+            lambda: invoke_robustness_trade_shuffle(
+                trades=1, starting_capital=1, period=1, base_seed=1, metrics=1
+            ),
+            {"trades": 1},
+            "trades",
+        ),
+        (
+            "run_candle_perturbation",
+            lambda: invoke_robustness_candle_perturbation(candles=1, base_seed=1),
+            {"candles": 1},
+            "candles",
+        ),
+        (
+            "run_significance_gate",
+            lambda: invoke_robustness_rule_significance(signals=1, base_seed=1),
+            {"signals": 1},
+            "signals",
+        ),
     ):
         calls: list[tuple[tuple, dict]] = []
 
@@ -98,11 +124,21 @@ def test_t16_1_d_single_surface_capability_groups_enumerable() -> None:
     assert isinstance(main, click.Group)
     assert main.name == "qmb"
     groups = {name for name, cmd in main.commands.items() if isinstance(cmd, click.Group)}
-    for expected in ("backtest", "data", "optimize", "sweep", "ledger", "config"):
+    for expected in ("backtest", "data", "optimize", "sweep", "robustness", "ledger", "config"):
         assert expected in groups, f"missing capability group: {expected}"
     # every group is enumerable to leaves
     leaves = e.derive_cli_leaves(main)
-    assert {"backtest.run", "data.download", "optimize.run", "ledger.merge", "config.compile"} <= leaves
+    assert {
+        "backtest.run",
+        "data.download",
+        "optimize.run",
+        "ledger.merge",
+        "config.compile",
+        "robustness.walk-forward",
+        "robustness.monte-carlo-trade-shuffle",
+        "robustness.monte-carlo-candle-perturbation",
+        "robustness.rule-significance",
+    } <= leaves
 
 
 # --- T-16.1-e ----------------------------------------------------------------

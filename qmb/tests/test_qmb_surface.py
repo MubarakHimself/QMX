@@ -252,5 +252,5 @@ def test_cli_version_is_display_only() -> None:
     helped = runner.invoke(main, ["--help"])
     assert helped.exit_code == 0, helped.output
     assert "experimentation/backtesting" in helped.output
-    for group in ("backtest", "data", "optimize", "ledger", "config"):
+    for group in ("backtest", "data", "optimize", "sweep", "robustness", "ledger", "config"):
         assert group in helped.output

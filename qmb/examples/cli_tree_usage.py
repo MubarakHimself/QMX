@@ -7,8 +7,9 @@ Executable::
 Shows the things Story 16.1 / B-1 / AR-10 pin down:
 
 1. The command tree is the platform's single CLI surface: backtest, data,
-   optimize, ledger, and config groups, built on the ``qmb_cli_pin`` click
-   door. Capabilities live in the library; the door parses and transports.
+   optimize, sweep, robustness, ledger, and config groups, built on the
+   ``qmb_cli_pin`` click door. Capabilities live in the library; the door
+   parses and transports.
 2. Commands declare config/resource prerequisites and return a typed refusal
    when they are absent.
 3. A backtest compiles through ``qmb.config.compile_run_config`` and submits
@@ -48,7 +49,15 @@ def _unwrap(result: Result[T], what: str) -> T:
 def tree_is_the_platform_surface() -> None:
     tree = command_tree()
     assert tuple(tree) == COMMAND_GROUPS
-    assert COMMAND_GROUPS == ("backtest", "data", "optimize", "sweep", "ledger", "config")
+    assert COMMAND_GROUPS == (
+        "backtest",
+        "data",
+        "optimize",
+        "sweep",
+        "robustness",
+        "ledger",
+        "config",
+    )
     runner = CliRunner()
     helped = runner.invoke(cli_main, ["--help"])
     assert helped.exit_code == 0, helped.output

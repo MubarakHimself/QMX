@@ -45,6 +45,21 @@ from qmb.orchestrator import (
     spawn_run,
 )
 from qmb.registryread import RegistryCompletion, RegistryReadPort
+from qmb.robustness import (
+    PROCEDURE_MC_CANDLE_PERTURBATION,
+    PROCEDURE_MC_TRADE_SHUFFLE,
+    PROCEDURE_RULE_SIGNIFICANCE,
+    PROCEDURE_WALK_FORWARD,
+    ROBUSTNESS_PROCEDURES,
+    CandlePerturbationResult,
+    SignificanceResult,
+    TradeShuffleResult,
+    WalkForwardPlan,
+    plan_walk_forward,
+    run_candle_perturbation,
+    run_significance_gate,
+    run_trade_shuffle,
+)
 from qmb.sweep import preflight_run_count
 
 __all__ = [
@@ -71,6 +86,10 @@ __all__ = [
     "invoke_optimize_estimate",
     "invoke_optimize_run",
     "invoke_optimize_space",
+    "invoke_robustness_candle_perturbation",
+    "invoke_robustness_rule_significance",
+    "invoke_robustness_trade_shuffle",
+    "invoke_robustness_walk_forward",
     "invoke_sweep_count",
     "require_prerequisites",
 ]
@@ -80,6 +99,7 @@ COMMAND_GROUPS: Final[tuple[str, ...]] = (
     "data",
     "optimize",
     "sweep",
+    "robustness",
     "ledger",
     "config",
 )
@@ -96,6 +116,8 @@ _COMMAND_TREE: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         "data": DATA_COMMANDS,
         "optimize": ("run", "space", "estimate"),
         "sweep": ("count",),
+        # B-14 rungs are the Epic 22 procedure keys — no second robustness roster.
+        "robustness": ROBUSTNESS_PROCEDURES,
         "ledger": ("merge", "bar"),
         "config": ("compile", "show"),
     }
@@ -123,6 +145,16 @@ _COMMAND_PREREQS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
         "optimize.space": ("declaration",),
         "optimize.estimate": ("budget",),
         "sweep.count": ("declaration",),
+        f"robustness.{PROCEDURE_WALK_FORWARD}": ("windows",),
+        f"robustness.{PROCEDURE_MC_TRADE_SHUFFLE}": (
+            "trades",
+            "starting_capital",
+            "period",
+            "base_seed",
+            "metrics",
+        ),
+        f"robustness.{PROCEDURE_MC_CANDLE_PERTURBATION}": ("candles", "base_seed"),
+        f"robustness.{PROCEDURE_RULE_SIGNIFICANCE}": ("signals", "base_seed"),
         "ledger.merge": ("root", "world", "role"),
         "ledger.bar": ("root", "world"),
         "config.compile": ("port", "book_fragment", "bms_fragment", "run_spec"),
@@ -445,6 +477,185 @@ def invoke_sweep_count(*, declaration: object = None) -> Result[int]:
     if is_refusal(checked):
         return checked
     return preflight_run_count(declaration)
+
+
+def invoke_robustness_walk_forward(
+    *,
+    windows: object = None,
+    config: object = None,
+    window_count: object = None,
+    in_sample_span: object = None,
+    out_of_sample_span: object = None,
+    step: object = None,
+) -> Result[WalkForwardPlan]:
+    """Thin wrapper over ``qmb.robustness.plan_walk_forward`` (B-14).
+
+    The walk-forward sequence lives once in the Epic 22 library. This door
+    parses and transports; it invents no OOS pass battery (GAP-0048/GAP-0049).
+
+    Occupancy: a governed CLI invocation of this command is one qmb run unit.
+    Process-per-run children inside that invocation are not additional QMA
+    jobs. CT-47 ExperimentSpec placement is Epic 36 — this door does not mint
+    it.
+    """
+    checked = require_prerequisites(
+        f"robustness.{PROCEDURE_WALK_FORWARD}",
+        {"windows": windows},
+    )
+    if is_refusal(checked):
+        return checked
+    return plan_walk_forward(
+        windows,
+        config=config,
+        window_count=window_count,
+        in_sample_span=in_sample_span,
+        out_of_sample_span=out_of_sample_span,
+        step=step,
+    )
+
+
+def invoke_robustness_trade_shuffle(
+    *,
+    trades: object = None,
+    starting_capital: object = None,
+    period: object = None,
+    base_seed: object = None,
+    metrics: object = None,
+    config: object = None,
+    scenario_count: object = None,
+    band_probabilities: object = (),
+) -> Result[TradeShuffleResult]:
+    """Thin wrapper over ``qmb.robustness.run_trade_shuffle`` (B-14).
+
+    The Monte Carlo trade-shuffle lives once in the Epic 22 library. This door
+    parses and transports; it invents no pass/fail battery (GAP-0048/GAP-0049).
+
+    Occupancy: a governed CLI invocation of this command is one qmb run unit.
+    Process-per-run children inside that invocation are not additional QMA
+    jobs. CT-47 ExperimentSpec placement is Epic 36 — this door does not mint
+    it.
+    """
+    checked = require_prerequisites(
+        f"robustness.{PROCEDURE_MC_TRADE_SHUFFLE}",
+        {
+            "trades": trades,
+            "starting_capital": starting_capital,
+            "period": period,
+            "base_seed": base_seed,
+            "metrics": metrics,
+        },
+    )
+    if is_refusal(checked):
+        return checked
+    return run_trade_shuffle(
+        trades=trades,
+        starting_capital=starting_capital,
+        period=period,
+        base_seed=base_seed,
+        metrics=metrics,
+        config=config,
+        scenario_count=scenario_count,
+        band_probabilities=band_probabilities,
+    )
+
+
+def invoke_robustness_candle_perturbation(
+    *,
+    candles: object = None,
+    base_seed: object = None,
+    block_length: object = None,
+    scenario_count: object = None,
+    config: object = None,
+    seed_price: object = None,
+    run_root: object = None,
+    objective_identity: object = None,
+    scenario_objectives: object = None,
+    objective_direction: object = None,
+    band_probabilities: object = (),
+) -> Result[CandlePerturbationResult]:
+    """Thin wrapper over ``qmb.robustness.run_candle_perturbation`` (B-14).
+
+    The Monte Carlo candle-perturbation lives once in the Epic 22 library.
+    This door parses and transports; it invents no pass/fail battery
+    (GAP-0048/GAP-0049).
+
+    Occupancy: a governed CLI invocation of this command is one qmb run unit.
+    Process-per-run children inside that invocation are not additional QMA
+    jobs. CT-47 ExperimentSpec placement is Epic 36 — this door does not mint
+    it.
+    """
+    checked = require_prerequisites(
+        f"robustness.{PROCEDURE_MC_CANDLE_PERTURBATION}",
+        {"candles": candles, "base_seed": base_seed},
+    )
+    if is_refusal(checked):
+        return checked
+    return run_candle_perturbation(
+        candles=candles,
+        base_seed=base_seed,
+        block_length=block_length,
+        scenario_count=scenario_count,
+        config=config,
+        seed_price=seed_price,
+        run_root=run_root,
+        objective_identity=objective_identity,
+        scenario_objectives=scenario_objectives,
+        objective_direction=objective_direction,
+        band_probabilities=band_probabilities,
+    )
+
+
+def invoke_robustness_rule_significance(
+    *,
+    signals: object = None,
+    base_seed: object = None,
+    resampling_scheme: object = None,
+    block_length: object = None,
+    iterations: object = None,
+    minimum_observations: object = None,
+    config: object = None,
+    band_probabilities: object = (),
+    stream_id: object = None,
+) -> Result[SignificanceResult]:
+    """Thin wrapper over ``qmb.robustness.run_significance_gate`` (B-14).
+
+    The pre-build rule-significance gate lives once in the Epic 22 library.
+    This door parses and transports; it invents no alpha battery
+    (GAP-0048/GAP-0049).
+
+    Occupancy: a governed CLI invocation of this command is one qmb run unit.
+    Process-per-run children inside that invocation are not additional QMA
+    jobs. CT-47 ExperimentSpec placement is Epic 36 — this door does not mint
+    it.
+    """
+    checked = require_prerequisites(
+        f"robustness.{PROCEDURE_RULE_SIGNIFICANCE}",
+        {"signals": signals, "base_seed": base_seed},
+    )
+    if is_refusal(checked):
+        return checked
+    if isinstance(stream_id, str):
+        return run_significance_gate(
+            signals=signals,
+            base_seed=base_seed,
+            resampling_scheme=resampling_scheme,
+            block_length=block_length,
+            iterations=iterations,
+            minimum_observations=minimum_observations,
+            config=config,
+            band_probabilities=band_probabilities,
+            stream_id=stream_id,
+        )
+    return run_significance_gate(
+        signals=signals,
+        base_seed=base_seed,
+        resampling_scheme=resampling_scheme,
+        block_length=block_length,
+        iterations=iterations,
+        minimum_observations=minimum_observations,
+        config=config,
+        band_probabilities=band_probabilities,
+    )
 
 
 def invoke_data(command: object, provided: object = None) -> Result[Mapping[str, object]]:

@@ -118,11 +118,20 @@ def test_click_runtime_matches_pyproject_pin() -> None:
 def test_command_tree_exposes_platform_groups() -> None:
     tree = command_tree()
     assert tuple(tree) == COMMAND_GROUPS
-    assert COMMAND_GROUPS == ("backtest", "data", "optimize", "sweep", "ledger", "config")
+    assert COMMAND_GROUPS == (
+        "backtest",
+        "data",
+        "optimize",
+        "sweep",
+        "robustness",
+        "ledger",
+        "config",
+    )
     assert tree["backtest"] == ("run",)
     assert tree["data"] == qmb.DATA_COMMANDS
     assert tree["optimize"] == ("run", "space", "estimate")
     assert tree["sweep"] == ("count",)
+    assert tree["robustness"] == qmb.ROBUSTNESS_PROCEDURES
     assert tree["ledger"] == ("merge", "bar")
     assert tree["config"] == ("compile", "show")
     identity = cli_tree_identity()
@@ -513,6 +522,10 @@ def test_click_commands_return_typed_refusal_when_prereqs_absent() -> None:
         ["data", "generate"],
         ["optimize", "run"],
         ["optimize", "space"],
+        ["robustness", "walk-forward"],
+        ["robustness", "monte-carlo-trade-shuffle"],
+        ["robustness", "monte-carlo-candle-perturbation"],
+        ["robustness", "rule-significance"],
         ["ledger", "merge"],
         ["ledger", "bar"],
         ["config", "compile"],
