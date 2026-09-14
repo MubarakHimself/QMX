@@ -31,6 +31,13 @@ from qmb.doors.cli.tree import (
     BOT_RECORD_KIND,
     COMMAND_GROUPS,
     COMPUTES_RUN_ID,
+    DATA_DOWNLOAD_OCCUPANCY,
+    DATA_GENERATE_OCCUPANCY,
+    DATA_MINTS_CT32,
+    DATA_MINTS_EXPERIMENT_SPEC,
+    DATA_QUERY_COMMANDS,
+    DATA_QUERY_OCCUPANCY,
+    DATA_RUN_COMMANDS,
     HOLDS_CACHE,
     ORCHESTRATOR_ENTRY,
     SWEEP_BATCH_OCCUPANCY,
@@ -41,6 +48,7 @@ from qmb.doors.cli.tree import (
     command_prerequisites,
     command_tree,
     complete_registry,
+    data_command_occupancy,
     invoke_backtest,
     invoke_config_compile,
     invoke_config_show,
@@ -84,6 +92,13 @@ __all__ = [
     "BOT_RECORD_KIND",
     "COMMAND_GROUPS",
     "COMPUTES_RUN_ID",
+    "DATA_DOWNLOAD_OCCUPANCY",
+    "DATA_GENERATE_OCCUPANCY",
+    "DATA_MINTS_CT32",
+    "DATA_MINTS_EXPERIMENT_SPEC",
+    "DATA_QUERY_COMMANDS",
+    "DATA_QUERY_OCCUPANCY",
+    "DATA_RUN_COMMANDS",
     "HOLDS_CACHE",
     "ORCHESTRATOR_ENTRY",
     "SWEEP_BATCH_OCCUPANCY",
@@ -94,6 +109,7 @@ __all__ = [
     "command_prerequisites",
     "command_tree",
     "complete_registry",
+    "data_command_occupancy",
     "invoke_backtest",
     "invoke_config_compile",
     "invoke_config_show",
@@ -233,7 +249,18 @@ def backtest_run(
 
 @main.group("data")
 def data_group() -> None:
-    """Thin fronts over qmf-data (download, verify, gap-check, list, catalog, generate)."""
+    """Thin fronts over qmf-data rooms: download is a run; queries listed below.
+
+    gap-check|verify|catalog|list are queries. No clone store, CDN product, or
+    second catalog. Occupancy: data.download that mutates rooms is one qmb run
+    invocation. Queries consume no occupancy, mint no CT-32, and mint no
+    ExperimentSpec successor. Quality surfaces are read models over CT-13
+    data-quality events and gap_check reports, not analysis.project. Derived
+    datasets are fingerprinted qmf-data artifacts with a CT-07 lineage edge,
+    never Library kinds. Vendor-style timezone clones that auto-update the
+    source under a running experiment are refused; data_ref cites frozen CT-12
+    split fingerprints.
+    """
 
 
 @data_group.command("download")
@@ -265,6 +292,30 @@ def data_group() -> None:
 )
 @click.option("--license-tag", default=None, help="Per-window licence tag metadata.")
 @click.option("--world", default=None, help="World-scoped raw room (default: replay).")
+@click.option(
+    "--timezone-clone",
+    is_flag=True,
+    default=False,
+    help="Refused: auto-updating timezone clones are not allowed.",
+)
+@click.option(
+    "--auto-update",
+    is_flag=True,
+    default=False,
+    help="Refused: source auto-update under a running experiment is not allowed.",
+)
+@click.option(
+    "--csv-store",
+    is_flag=True,
+    default=False,
+    help="Refused: CSV/file import is a CT-15 adapter extend, not a new store.",
+)
+@click.option(
+    "--cdn",
+    is_flag=True,
+    default=False,
+    help="Refused: no CDN product or second catalog.",
+)
 @click.pass_context
 def data_download(
     ctx: click.Context,
@@ -278,8 +329,17 @@ def data_download(
     overwrite: bool,
     license_tag: str | None,
     world: str | None,
+    timezone_clone: bool,
+    auto_update: bool,
+    csv_store: bool,
+    cdn: bool,
 ) -> None:
-    """Download-once into the immutable raw archive (B-11)."""
+    """Download-once into the immutable raw archive (occupancy: run; mutates rooms).
+
+    Vendor-style timezone clones that auto-update the source under a running
+    experiment are refused; ExperimentSpec data_ref and governed run-config
+    cite frozen CT-12 split fingerprints.
+    """
     symbol: str | tuple[str, ...] | None
     if len(symbols) == 0:
         symbol = None
@@ -308,6 +368,10 @@ def data_download(
                 overwrite=overwrite,
                 license_tag=license_tag,
                 world=world,
+                timezone_clone=timezone_clone,
+                auto_update=auto_update,
+                csv_store=csv_store,
+                cdn=cdn,
             ),
         ),
     )
@@ -353,7 +417,11 @@ def data_verify(
     world: str | None,
     correlation_id: str | None,
 ) -> None:
-    """Verify an acquired window's integrity (Story 18.4)."""
+    """Verify window integrity (query: no occupancy, no CT-32).
+
+    Quality surfaces are read models over CT-13 data-quality events and this
+    report.
+    """
     _transport(
         ctx,
         invoke_data(
@@ -420,7 +488,11 @@ def data_gap_check(
     always_open: bool,
     world: str | None,
 ) -> None:
-    """Calendar-aware gap detection (Story 18.5)."""
+    """Calendar-aware gap detection (query: no occupancy, no CT-32).
+
+    Quality surfaces are read models over CT-13 data-quality events and
+    gap_check reports — not analysis.project.
+    """
     _transport(
         ctx,
         invoke_data(
@@ -469,7 +541,10 @@ def data_list(
     end: str | None,
     world: str | None,
 ) -> None:
-    """List coverage per (venue, symbol, resolution, side) over Parquet rooms."""
+    """List coverage over Parquet rooms (query: no occupancy, no CT-32).
+
+    The catalog is a rebuildable view over qmf-data rooms, never a second store.
+    """
     _transport(
         ctx,
         invoke_data(
@@ -515,7 +590,10 @@ def data_catalog(
     end: str | None,
     world: str | None,
 ) -> None:
-    """Alias of ``data list`` — same machine-readable coverage payload."""
+    """Alias of ``data list`` (query: no occupancy, no CT-32).
+
+    Same machine-readable coverage payload. Not a second catalog product.
+    """
     _transport(
         ctx,
         invoke_data(
@@ -539,7 +617,11 @@ def data_catalog(
 @click.option("--destination", default=None)
 @click.pass_context
 def data_generate(ctx: click.Context, destination: str | None) -> None:
-    """Store-persisted synthetic series (world=simulated; not governed evidence)."""
+    """Store-persisted synthetic series (occupancy: run; mutates rooms).
+
+    world=simulated; not governed evidence. Derived series are fingerprinted
+    artifacts with a CT-07 lineage edge, not Library kinds.
+    """
     _transport(ctx, invoke_data("generate", _payload(ctx, destination=destination)))
 
 

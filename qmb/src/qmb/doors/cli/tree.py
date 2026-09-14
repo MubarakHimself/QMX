@@ -28,6 +28,7 @@ from qmb.data import (
     catalog,
     data_front_identity,
     gap_check,
+    guard_data_door,
     has_generator_config,
     list_data,
     verify,
@@ -78,6 +79,13 @@ __all__ = [
     "BOT_RECORD_KIND",
     "COMMAND_GROUPS",
     "COMPUTES_RUN_ID",
+    "DATA_DOWNLOAD_OCCUPANCY",
+    "DATA_GENERATE_OCCUPANCY",
+    "DATA_MINTS_CT32",
+    "DATA_MINTS_EXPERIMENT_SPEC",
+    "DATA_QUERY_COMMANDS",
+    "DATA_QUERY_OCCUPANCY",
+    "DATA_RUN_COMMANDS",
     "HOLDS_CACHE",
     "ORCHESTRATOR_ENTRY",
     "SWEEP_BATCH_OCCUPANCY",
@@ -88,6 +96,7 @@ __all__ = [
     "command_prerequisites",
     "command_tree",
     "complete_registry",
+    "data_command_occupancy",
     "invoke_backtest",
     "invoke_config_compile",
     "invoke_config_show",
@@ -127,6 +136,15 @@ BOT_RECORD_KIND: Final[str] = "bot-definition"
 SWEEP_COMMANDS: Final[tuple[str, ...]] = ("count", "batch", "rank")
 SWEEP_BATCH_OCCUPANCY: Final[str] = "run"
 SWEEP_RANK_OCCUPANCY: Final[str] = "query"
+# Story 33.3 occupancy: download (and generate) that mutate rooms are one
+# governed qmb run invocation. gap-check/verify/catalog/list are queries.
+DATA_RUN_COMMANDS: Final[tuple[str, ...]] = ("download", "generate")
+DATA_QUERY_COMMANDS: Final[tuple[str, ...]] = ("gap-check", "verify", "catalog", "list")
+DATA_DOWNLOAD_OCCUPANCY: Final[str] = "run"
+DATA_GENERATE_OCCUPANCY: Final[str] = "run"
+DATA_QUERY_OCCUPANCY: Final[str] = "query"
+DATA_MINTS_CT32: Final[bool] = False
+DATA_MINTS_EXPERIMENT_SPEC: Final[bool] = False
 _RANK_PERSIST_FIELDS: Final[tuple[str, ...]] = (
     "persist",
     "persist_candidates",
@@ -234,6 +252,12 @@ def cli_tree_identity() -> dict[str, object]:
         "orchestrator_entry": ORCHESTRATOR_ENTRY,
         "pin_key": CLI_PIN_KEY,
         "prog": CLI_PROG,
+        "data_occupancy": {
+            name: DATA_DOWNLOAD_OCCUPANCY if name in DATA_RUN_COMMANDS else DATA_QUERY_OCCUPANCY
+            for name in DATA_COMMANDS
+        },
+        "data_mints_ct32": DATA_MINTS_CT32,
+        "data_mints_experiment_spec": DATA_MINTS_EXPERIMENT_SPEC,
     }
 
 
@@ -835,8 +859,38 @@ def invoke_robustness_rule_significance(
     )
 
 
+def data_command_occupancy(command: object) -> Result[str]:
+    """Classify a data command as occupancy ``run`` or query (FR-W11).
+
+    ``data.download`` that mutates rooms is one qmb run invocation. ``generate``
+    likewise mutates rooms. ``data.gap-check|verify|catalog|list`` are queries:
+    they consume no occupancy, mint no CT-32, and mint no ExperimentSpec
+    successor.
+    """
+    token = clean_token(command)
+    if token is None:
+        return invalid("command", "a data command name is a non-blank token")
+    name = token[5:] if token.startswith("data.") else token
+    if name in DATA_RUN_COMMANDS:
+        return Ok(DATA_DOWNLOAD_OCCUPANCY if name == "download" else DATA_GENERATE_OCCUPANCY)
+    if name in DATA_QUERY_COMMANDS:
+        return Ok(DATA_QUERY_OCCUPANCY)
+    return invalid(
+        "command",
+        "data occupancy classifies download, generate, gap-check, verify, catalog, list",
+        given=token,
+        legal=list(DATA_COMMANDS),
+    )
+
+
 def invoke_data(command: object, provided: object = None) -> Result[Mapping[str, object]]:
-    """Thin data-command front over the ratified qmf-data contracts (B-11)."""
+    """Thin data-command front over the ratified qmf-data contracts (B-11).
+
+    Occupancy: download/generate that mutate rooms are run invocations;
+    gap-check/verify/catalog/list are queries (FR-W11). Vendor-style timezone
+    clones, clone stores, CDN products, and Library-kind derived datasets are
+    refused (FR-W30, FR-W31).
+    """
     token = clean_token(command)
     if token is None or token not in DATA_COMMANDS:
         return invalid(
@@ -856,6 +910,9 @@ def invoke_data(command: object, provided: object = None) -> Result[Mapping[str,
             "command prerequisites are a key->value mapping",
             given=repr(type(provided).__name__),
         )
+    guarded = guard_data_door(token, resources)
+    if is_refusal(guarded):
+        return guarded
     checked = require_prerequisites(f"data.{token}", resources)
     if is_refusal(checked):
         return checked
@@ -865,35 +922,35 @@ def invoke_data(command: object, provided: object = None) -> Result[Mapping[str,
             return receipt
         payload: dict[str, object] = dict(receipt.value.as_mapping())
         payload.update(data_front_identity())
-        return Ok(payload)
+        return Ok(_stamp_data_occupancy(payload, token))
     if token == "verify":  # noqa: S105 — command name, not a secret
         integrity = verify(resources)
         if is_refusal(integrity):
             return integrity
         verified: dict[str, object] = dict(integrity.value.as_mapping())
         verified.update(data_front_identity())
-        return Ok(verified)
+        return Ok(_stamp_data_occupancy(verified, token))
     if token == "gap-check":  # noqa: S105 — command name, not a secret
         checked_gaps = gap_check(resources)
         if is_refusal(checked_gaps):
             return checked_gaps
         gapped: dict[str, object] = dict(checked_gaps.value.as_mapping())
         gapped.update(data_front_identity())
-        return Ok(gapped)
+        return Ok(_stamp_data_occupancy(gapped, token))
     if token == "list":  # noqa: S105 — command name, not a secret
         coverage = list_data(resources, command=token)
         if is_refusal(coverage):
             return coverage
         listed: dict[str, object] = dict(coverage.value.as_mapping())
         listed.update(data_front_identity())
-        return Ok(listed)
+        return Ok(_stamp_data_occupancy(listed, token))
     if token == "catalog":  # noqa: S105 — command name, not a secret
         coverage = catalog(resources)
         if is_refusal(coverage):
             return coverage
         aliased: dict[str, object] = dict(coverage.value.as_mapping())
         aliased.update(data_front_identity())
-        return Ok(aliased)
+        return Ok(_stamp_data_occupancy(aliased, token))
     # generate — a resolved config runs the config-selected adapters; a bare
     # destination reports the generator front's capability surface (B-11).
     if has_generator_config(resources):
@@ -902,10 +959,21 @@ def invoke_data(command: object, provided: object = None) -> Result[Mapping[str,
             return generated
         produced: dict[str, object] = dict(generated.value.as_mapping())
         produced.update(data_front_identity())
-        return Ok(produced)
+        return Ok(_stamp_data_occupancy(produced, token))
     front: dict[str, object] = {"command": token}
     front.update(data_front_identity())
-    return Ok(front)
+    return Ok(_stamp_data_occupancy(front, token))
+
+
+def _stamp_data_occupancy(payload: dict[str, object], command: str) -> dict[str, object]:
+    """Stamp occupancy classification onto a data-door payload (FR-W11)."""
+    classified = data_command_occupancy(command)
+    if is_refusal(classified):
+        return payload
+    payload["occupancy"] = classified.value
+    payload["mints_ct32"] = DATA_MINTS_CT32
+    payload["mints_experiment_spec"] = DATA_MINTS_EXPERIMENT_SPEC
+    return payload
 
 
 def invoke_ledger_merge(
