@@ -1328,6 +1328,17 @@ def analysis_group() -> None:
     default=None,
     help="Refused when run: analysis.project is a query.",
 )
+@click.option(
+    "--home",
+    default=None,
+    help="ungoverned return-value, governed-without-QMA sidecar, coordinated refused.",
+)
+@click.option(
+    "--run-dir",
+    "run_dir",
+    default=None,
+    help="Source run-dir for the governed-without-QMA JSON sidecar.",
+)
 @click.pass_context
 def analysis_project(
     ctx: click.Context,
@@ -1345,6 +1356,8 @@ def analysis_project(
     trades: bool,
     role: str | None,
     occupancy: str | None,
+    home: str | None,
+    run_dir: str | None,
 ) -> None:
     """Project a CT-32/CT-29 stream into canonical saved-view JSON via qmb.project."""
     payload = _payload(
@@ -1362,6 +1375,8 @@ def analysis_project(
         cite=cite,
         occupancy=occupancy,
         role=role,
+        home=home,
+        run_dir=run_dir,
     )
     _transport(
         ctx,
@@ -1388,6 +1403,18 @@ def analysis_project(
             role=payload.get("role"),
             admission=payload.get("admission"),
             claim_class=payload.get("claim_class"),
+            home=payload.get("home"),
+            run_dir=payload.get("run_dir") or payload.get("output_dir"),
+            size=payload.get("size"),
+            r=payload.get("r"),
+            book=payload.get("book"),
+            bms=payload.get("bms"),
+            ports=payload.get("ports"),
+            execution_ports=payload.get("execution_ports"),
+            starting_capital=payload.get("starting_capital"),
+            spawn=payload.get("spawn"),
+            orchestrator=payload.get("orchestrator"),
+            spawn_run=payload.get("spawn_run"),
         ),
     )
 

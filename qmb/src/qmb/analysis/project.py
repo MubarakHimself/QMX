@@ -1,4 +1,4 @@
-"""Projection saved views over one cited CT-32 and its CT-29 stream (Story 35.1).
+"""Projection saved views over one cited CT-32 and its CT-29 stream.
 
 ``analysis.project`` is a COMP-QMB library function. It filters one cited CT-32
 and its paired CT-29 stream with a permitted predicate and returns a saved view
@@ -11,14 +11,23 @@ no ExperimentSpec successor, and consumes no ExecutionEnvironment occupancy.
 Claim-class is always ``projection`` — never admission evidence, never B-4
 ``role=confirmation``. A citation without that JSON body is refused. A copied
 trade list is not a saved view (DEC-0273, FR-W21, FR-W22, SCN-0016).
+
+Story 35.2: a predicate or extra field that would change size, R, Book/BMS
+fragments, execution ports, or ``starting_capital`` is a typed refusal naming
+that axis as path-dependent (a new run, a new CT-32). This story does not
+implement ``analysis.rerun``. Homes: ungoverned is a return value only (not
+durable, not a Library object); governed-without-QMA writes the canonical JSON
+sidecar in the source run-dir (no orchestrator spawn, no QMB ledger line, no
+CT-32); coordinated ``analysis.published`` persistence is Epic 36.
 """
 
 from __future__ import annotations
 
 import json
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
+from pathlib import Path
 from types import MappingProxyType
 from typing import Final, cast
 
@@ -38,12 +47,17 @@ from qmb.config.compiler import ResolvedRunConfig
 
 __all__ = [
     "ANALYSIS_PROJECT_CLASS",
+    "ANALYSIS_PROJECT_IS_LIBRARY_OBJECT",
     "ANALYSIS_PROJECT_MINTS_CT32",
     "ANALYSIS_PROJECT_MINTS_EXPERIMENT_SPEC",
     "ANALYSIS_PROJECT_OCCUPANCY",
+    "ANALYSIS_PROJECT_OPENS_SQLITE",
     "CLAIM_CLASS_PROJECTION",
+    "FORBIDDEN_PROJECTION_AXES",
     "METHOD_PROJECTION",
     "PERMITTED_PREDICATE_KEYS",
+    "PROJECTION_HOMES",
+    "PROJECTION_SIDECAR_FILENAME",
     "ProjectionView",
     "analysis_project_identity",
     "apply_projection_predicate",
@@ -55,6 +69,8 @@ ANALYSIS_PROJECT_CLASS: Final[str] = "qmb-projection-view"
 ANALYSIS_PROJECT_OCCUPANCY: Final[str] = "query"
 ANALYSIS_PROJECT_MINTS_CT32: Final[bool] = False
 ANALYSIS_PROJECT_MINTS_EXPERIMENT_SPEC: Final[bool] = False
+ANALYSIS_PROJECT_IS_LIBRARY_OBJECT: Final[bool] = False
+ANALYSIS_PROJECT_OPENS_SQLITE: Final[bool] = False
 CLAIM_CLASS_PROJECTION: Final[str] = "projection"
 METHOD_PROJECTION: Final[str] = "projection"
 PERMITTED_PREDICATE_KEYS: Final[tuple[str, ...]] = (
@@ -65,6 +81,27 @@ PERMITTED_PREDICATE_KEYS: Final[tuple[str, ...]] = (
     "max_trades",
     "session",
 )
+_AXIS_SIZE: Final[str] = "size"
+_AXIS_R: Final[str] = "R"
+_AXIS_BOOK: Final[str] = "Book/BMS fragments"
+_AXIS_PORTS: Final[str] = "execution ports"
+_AXIS_CAPITAL: Final[str] = "starting_capital"
+FORBIDDEN_PROJECTION_AXES: Final[tuple[str, ...]] = (
+    _AXIS_SIZE,
+    _AXIS_R,
+    _AXIS_BOOK,
+    _AXIS_PORTS,
+    _AXIS_CAPITAL,
+)
+_HOME_UNGOVERNED: Final[str] = "ungoverned"
+_HOME_GOVERNED: Final[str] = "governed"
+_HOME_COORDINATED: Final[str] = "coordinated"
+PROJECTION_HOMES: Final[tuple[str, ...]] = (
+    _HOME_UNGOVERNED,
+    _HOME_GOVERNED,
+    _HOME_COORDINATED,
+)
+PROJECTION_SIDECAR_FILENAME: Final[str] = "projection-view.json"
 
 _ROLE_CONFIRMATION: Final[str] = "confirmation"
 _REGISTRY_AS_OF_KEY: Final[str] = "registry_as_of"
@@ -108,16 +145,60 @@ _KIND_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
 )
 _FORBIDDEN_AXES: Final[Mapping[str, str]] = MappingProxyType(
     {
-        "bms": "Book/BMS fragments",
-        "book": "Book/BMS fragments",
-        "book_fragment": "Book/BMS fragments",
-        "execution_ports": "execution ports",
-        "ports": "execution ports",
-        "r": "R",
-        "size": "size",
-        "starting-capital": "starting_capital",
-        "starting_capital": "starting_capital",
+        "binding_seed": _AXIS_CAPITAL,
+        "bms": _AXIS_BOOK,
+        "bms_fragment": _AXIS_BOOK,
+        "bms_fragments": _AXIS_BOOK,
+        "bms_fp1": _AXIS_BOOK,
+        "book": _AXIS_BOOK,
+        "book_bms": _AXIS_BOOK,
+        "book_fragment": _AXIS_BOOK,
+        "book_fragments": _AXIS_BOOK,
+        "book_fp1": _AXIS_BOOK,
+        "cost_port": _AXIS_PORTS,
+        "cost_ports": _AXIS_PORTS,
+        "execution_port": _AXIS_PORTS,
+        "execution_ports": _AXIS_PORTS,
+        "fill_port": _AXIS_PORTS,
+        "fill_ports": _AXIS_PORTS,
+        "financing_port": _AXIS_PORTS,
+        "financing_ports": _AXIS_PORTS,
+        "lot": _AXIS_SIZE,
+        "lot_size": _AXIS_SIZE,
+        "lots": _AXIS_SIZE,
+        "port": _AXIS_PORTS,
+        "ports": _AXIS_PORTS,
+        "position_size": _AXIS_SIZE,
+        "r": _AXIS_R,
+        "r_multiple": _AXIS_R,
+        "rescale": _AXIS_SIZE,
+        "risk_r": _AXIS_R,
+        "seed_capital": _AXIS_CAPITAL,
+        "size": _AXIS_SIZE,
+        "size_rescale": _AXIS_SIZE,
+        "starting_capital": _AXIS_CAPITAL,
+        "starting_equity": _AXIS_CAPITAL,
     }
+)
+_HOME_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "analysis_published": _HOME_COORDINATED,
+        "coordinated": _HOME_COORDINATED,
+        "epic_36": _HOME_COORDINATED,
+        "governed": _HOME_GOVERNED,
+        "governed_without_qma": _HOME_GOVERNED,
+        "in_process": _HOME_UNGOVERNED,
+        "library": _HOME_UNGOVERNED,
+        "return_value": _HOME_UNGOVERNED,
+        "sidecar": _HOME_GOVERNED,
+        "ungoverned": _HOME_UNGOVERNED,
+    }
+)
+_SPAWN_FIELDS: Final[tuple[str, ...]] = (
+    "orchestrator",
+    "spawn",
+    "spawn_orchestrator",
+    "spawn_run",
 )
 _TRADE_LIST_KEYS: Final[tuple[str, ...]] = (
     "copied_trade_list",
@@ -153,6 +234,13 @@ class ProjectionView:
     mints_experiment_spec: bool = False
     is_admission_evidence: bool = False
     b4_role: str | None = None
+    home: str = _HOME_UNGOVERNED
+    durable: bool = False
+    is_library_object: bool = False
+    path: str | None = None
+    opens_sqlite: bool = False
+    spawns_orchestrator: bool = False
+    appends_ledger: bool = False
 
     @property
     def method(self) -> str:
@@ -180,12 +268,19 @@ def analysis_project_identity() -> dict[str, object]:
         "claim_class": CLAIM_CLASS_PROJECTION,
         "class": ANALYSIS_PROJECT_CLASS,
         "command": "analysis.project",
+        "forbidden_axes": list(FORBIDDEN_PROJECTION_AXES),
+        "homes": list(PROJECTION_HOMES),
         "is_admission_evidence": False,
+        "is_library_object": ANALYSIS_PROJECT_IS_LIBRARY_OBJECT,
         "method": METHOD_PROJECTION,
         "mints_ct32": ANALYSIS_PROJECT_MINTS_CT32,
         "mints_experiment_spec": ANALYSIS_PROJECT_MINTS_EXPERIMENT_SPEC,
         "occupancy": ANALYSIS_PROJECT_OCCUPANCY,
+        "opens_sqlite": ANALYSIS_PROJECT_OPENS_SQLITE,
         "permitted_predicates": list(PERMITTED_PREDICATE_KEYS),
+        "sidecar_filename": PROJECTION_SIDECAR_FILENAME,
+        "spawns_orchestrator": False,
+        "ungoverned_durable": False,
     }
 
 
@@ -225,21 +320,47 @@ def project(
     max_trades: object = None,
     include: object = None,
     exclude: object = None,
+    home: object = None,
+    run_dir: object = None,
+    spawn: object = None,
+    orchestrator: object = None,
+    spawn_run: object = None,
+    spawn_orchestrator: object = None,
+    **extra: object,
 ) -> Result[ProjectionView]:
     """Filter one cited CT-32 and its CT-29 stream into a projection saved view.
 
     Occupancy is a query. The durable body is the canonical JSON; ``fp1`` is of
     that JSON. QMA must call this function (or the thin door) and must not
-    reimplement the filter.
+    reimplement the filter. Forbidden axes are path-dependent (Story 35.2).
     """
+    extra_blocked = _refuse_forbidden_fields(extra)
+    if extra_blocked is not None:
+        return extra_blocked
+    spawn_blocked = _refuse_spawn(
+        spawn=spawn,
+        orchestrator=orchestrator,
+        spawn_run=spawn_run,
+        spawn_orchestrator=spawn_orchestrator,
+    )
+    if spawn_blocked is not None:
+        return spawn_blocked
     if body is not None or cite is not None:
-        return cite_projection(
+        cited = cite_projection(
             body=body,
             cite=cite,
             trades=trades,
             trade_list=trade_list,
             copied_trades=copied_trades,
             copied_trade_list=copied_trade_list,
+        )
+        if is_refusal(cited):
+            return cited
+        return _place_view(
+            cited.value,
+            home=home,
+            run_dir=run_dir,
+            source_ct32=source_ct32,
         )
     blocked = _refuse_side_effects(
         occupancy=occupancy,
@@ -307,15 +428,19 @@ def project(
     stamped = fingerprint(body_json)
     if is_refusal(stamped):
         return stamped
-    return Ok(
-        ProjectionView(
-            source_ct32=ct32_fp.value,
-            source_ct29=cite_token,
-            predicate=resolved_predicate.value,
-            as_of=as_of_identity.value,
-            fingerprint=stamped.value,
-            matched_count=len(matched.value),
-        )
+    view = ProjectionView(
+        source_ct32=ct32_fp.value,
+        source_ct29=cite_token,
+        predicate=resolved_predicate.value,
+        as_of=as_of_identity.value,
+        fingerprint=stamped.value,
+        matched_count=len(matched.value),
+    )
+    return _place_view(
+        view,
+        home=home,
+        run_dir=run_dir,
+        source_ct32=source_ct32,
     )
 
 
@@ -603,7 +728,7 @@ def _canonicalize_predicate(raw: object) -> Result[dict[str, object]]:
         if folded is None:
             forbidden = _forbidden_axis(kind_token)
             if forbidden is not None:
-                return _refuse_forbidden_axis(forbidden)
+                return _refuse_forbidden_axis(forbidden, field=kind_token)
             return invalid(
                 "predicate",
                 "a permitted predicate kind is hours, days, session, max_trades, "
@@ -628,7 +753,7 @@ def _canonicalize_predicate(raw: object) -> Result[dict[str, object]]:
     for key in mapping:
         forbidden = _forbidden_axis(key)
         if forbidden is not None:
-            return _refuse_forbidden_axis(forbidden)
+            return _refuse_forbidden_axis(forbidden, field=str(key))
     folded_keys = {_fold(key): key for key in mapping}
     unknown = [folded_keys[key] for key in folded_keys if key not in _PERMITTED_SET]
     if unknown:
@@ -1324,14 +1449,17 @@ def _refuse_copied_trade_list(field: str) -> TypedRefusal:
     )
 
 
-def _refuse_forbidden_axis(axis: str) -> TypedRefusal:
+def _refuse_forbidden_axis(axis: str, *, field: str = "predicate") -> TypedRefusal:
     return policy(
-        "predicate",
+        field,
         f"{axis} is forbidden as projection: that change is path-dependent "
         "(a new run, a new CT-32 via analysis.rerun) (FR-W23, SCN-0016 Branch A, DEC-0273)",
         axis=axis,
+        path_dependent=True,
         occupancy=ANALYSIS_PROJECT_OCCUPANCY,
         mints_ct32=False,
+        implements_rerun=False,
+        spawns_orchestrator=False,
         legal=list(PERMITTED_PREDICATE_KEYS),
     )
 
@@ -1339,6 +1467,219 @@ def _refuse_forbidden_axis(axis: str) -> TypedRefusal:
 def _forbidden_axis(key: object) -> str | None:
     token = _fold(clean_token(key) or "")
     return _FORBIDDEN_AXES.get(token)
+
+
+def _refuse_forbidden_fields(fields: Mapping[str, object]) -> TypedRefusal | None:
+    unknown: list[str] = []
+    for name, value in fields.items():
+        if value is None:
+            continue
+        axis = _forbidden_axis(name)
+        if axis is not None:
+            return _refuse_forbidden_axis(axis, field=name)
+        unknown.append(name)
+    if unknown:
+        return invalid(
+            unknown[0],
+            "analysis.project extra fields that would change size, R, Book/BMS "
+            "fragments, execution ports, or starting_capital are path-dependent; "
+            "other extra fields are not a permitted predicate "
+            "(FR-W23, SCN-0016 Branch A, DEC-0273)",
+            given=unknown[0],
+            extra=unknown,
+            legal=list(PERMITTED_PREDICATE_KEYS),
+            forbidden_axes=list(FORBIDDEN_PROJECTION_AXES),
+        )
+    return None
+
+
+def _refuse_spawn(**fields: object) -> TypedRefusal | None:
+    listed = _requested_field(fields, _SPAWN_FIELDS)
+    if listed is None:
+        return None
+    return policy(
+        listed,
+        "analysis.project does not spawn an orchestrator and does not implement "
+        "analysis.rerun; a path-dependent change is a new run, a new CT-32 "
+        "(FR-W23, FR-W24, Story 35.3)",
+        occupancy=ANALYSIS_PROJECT_OCCUPANCY,
+        mints_ct32=False,
+        spawns_orchestrator=False,
+        implements_rerun=False,
+        appends_ledger=False,
+    )
+
+
+def _place_view(
+    view: ProjectionView,
+    *,
+    home: object,
+    run_dir: object,
+    source_ct32: object,
+) -> Result[ProjectionView]:
+    resolved = _as_home(home)
+    if isinstance(resolved, TypedRefusal):
+        return resolved
+    if resolved == _HOME_COORDINATED:
+        return policy(
+            "home",
+            "coordinated analysis.published persistence is Epic 36; "
+            "analysis.project does not open daemon sqlite (FR-W24, DEC-0273)",
+            home=_HOME_COORDINATED,
+            occupancy=ANALYSIS_PROJECT_OCCUPANCY,
+            opens_sqlite=False,
+            mints_ct32=False,
+            spawns_orchestrator=False,
+            appends_ledger=False,
+            epic="36",
+        )
+    if resolved == _HOME_UNGOVERNED:
+        return Ok(
+            replace(
+                view,
+                home=_HOME_UNGOVERNED,
+                durable=False,
+                is_library_object=False,
+                path=None,
+                opens_sqlite=False,
+                spawns_orchestrator=False,
+                appends_ledger=False,
+            )
+        )
+    return _write_governed_sidecar(view, run_dir=run_dir, source_ct32=source_ct32)
+
+
+def _as_home(value: object) -> str | TypedRefusal:
+    if value is None:
+        return _HOME_UNGOVERNED
+    token = clean_token(value)
+    if token is None:
+        return invalid(
+            "home",
+            "a projection saved-view home is ungoverned, governed-without-QMA, or coordinated",
+            given=repr(value),
+            legal=list(PROJECTION_HOMES),
+        )
+    aliased = _HOME_ALIASES.get(_fold(token))
+    if aliased is None:
+        return invalid(
+            "home",
+            "a projection saved-view home is ungoverned, governed-without-QMA, or coordinated",
+            given=token,
+            legal=list(PROJECTION_HOMES),
+        )
+    return aliased
+
+
+def _write_governed_sidecar(
+    view: ProjectionView,
+    *,
+    run_dir: object,
+    source_ct32: object,
+) -> Result[ProjectionView]:
+    root = _resolve_governed_run_dir(run_dir, source_ct32)
+    if is_refusal(root):
+        return root
+    from qmb.orchestrator.paths import write_bytes_exclusive_no_follow  # noqa: PLC0415
+
+    target = root.value / PROJECTION_SIDECAR_FILENAME
+    payload = json.dumps(view.body(), ensure_ascii=False, sort_keys=True).encode("utf-8")
+    written = write_bytes_exclusive_no_follow(
+        target,
+        payload,
+        contain_within=root.value,
+        field="run_dir",
+    )
+    if is_refusal(written):
+        return written
+    return Ok(
+        replace(
+            view,
+            home=_HOME_GOVERNED,
+            durable=True,
+            is_library_object=False,
+            path=str(target),
+            opens_sqlite=False,
+            spawns_orchestrator=False,
+            appends_ledger=False,
+        )
+    )
+
+
+def _resolve_governed_run_dir(run_dir: object, source_ct32: object) -> Result[Path]:
+    if run_dir is not None:
+        return _as_existing_run_dir(run_dir)
+    inferred = _infer_run_dir(source_ct32)
+    if inferred is not None:
+        return Ok(inferred)
+    return invalid(
+        "run_dir",
+        "governed-without-QMA writes the saved-view JSON sidecar in the source "
+        "run-dir (FR-W24, DEC-0273)",
+        home=_HOME_GOVERNED,
+        mints_ct32=False,
+        spawns_orchestrator=False,
+        appends_ledger=False,
+    )
+
+
+def _as_existing_run_dir(run_dir: object) -> Result[Path]:
+    if isinstance(run_dir, Path):
+        root = run_dir
+    else:
+        token = clean_token(run_dir)
+        if token is None:
+            return invalid(
+                "run_dir",
+                "governed-without-QMA writes the saved-view JSON sidecar in the source "
+                "run-dir (FR-W24, DEC-0273)",
+                given=repr(run_dir),
+                home=_HOME_GOVERNED,
+            )
+        root = Path(token)
+    if not root.is_dir():
+        return invalid(
+            "run_dir",
+            "governed-without-QMA writes the saved-view JSON sidecar in the source "
+            "run-dir; the directory must already exist (no new orchestrator spawn)",
+            given=str(root),
+            home=_HOME_GOVERNED,
+            spawns_orchestrator=False,
+            mints_ct32=False,
+        )
+    return Ok(root)
+
+
+def _infer_run_dir(source: object) -> Path | None:
+    output = getattr(source, "output_dir", None)
+    if output is not None:
+        token = output if isinstance(output, Path) else clean_token(output)
+        if isinstance(token, Path) and token.is_dir():
+            return token
+        if isinstance(token, str):
+            path = Path(token)
+            if path.is_dir():
+                return path
+    if isinstance(source, Path):
+        return _run_dir_from_path(source)
+    token = clean_token(source)
+    if token is not None:
+        return _run_dir_from_path(Path(token))
+    return None
+
+
+def _run_dir_from_path(path: Path) -> Path | None:
+    if path.is_dir():
+        return path
+    if not path.is_file():
+        return None
+    from qmb.results.ct32 import CT32_ARTIFACT_NAME, RESULTS_DIR_NAME  # noqa: PLC0415
+
+    if path.name == CT32_ARTIFACT_NAME and path.parent.name == RESULTS_DIR_NAME:
+        root = path.parent.parent
+        return root if root.is_dir() else None
+    parent = path.parent
+    return parent if parent.is_dir() else None
 
 
 def _requested_field(values: Mapping[str, object], names: Sequence[str]) -> str | None:

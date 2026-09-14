@@ -560,11 +560,25 @@ def invoke_analysis_project(
     role: object = None,
     admission: object = None,
     claim_class: object = None,
+    home: object = None,
+    run_dir: object = None,
+    size: object = None,
+    r: object = None,
+    book: object = None,
+    bms: object = None,
+    ports: object = None,
+    execution_ports: object = None,
+    starting_capital: object = None,
+    spawn: object = None,
+    orchestrator: object = None,
+    spawn_run: object = None,
 ) -> Result[ProjectionView]:
-    """Thin wrapper over ``qmb.project`` (Story 35.1).
+    """Thin wrapper over ``qmb.project`` (Story 35.1 / 35.2).
 
     Occupancy is a query: no CT-32, no ExperimentSpec successor, no ledger line.
     QMA must call this door (or the library) and must not reimplement the filter.
+    Forbidden axes are path-dependent; ungoverned is a return value; governed
+    writes the sidecar in the source run-dir.
     """
     folded_predicate = predicate
     if folded_predicate is None and any(
@@ -608,6 +622,18 @@ def invoke_analysis_project(
         role=role,
         admission=admission,
         claim_class=claim_class,
+        home=home,
+        run_dir=run_dir,
+        spawn=spawn,
+        orchestrator=orchestrator,
+        spawn_run=spawn_run,
+        size=size,
+        r=r,
+        book=book,
+        bms=bms,
+        ports=ports,
+        execution_ports=execution_ports,
+        starting_capital=starting_capital,
     )
 
 
