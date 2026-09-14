@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Final, cast
+from typing import TYPE_CHECKING, Final, cast
 
 from qmf.core.refusal import Ok, Result, TypedRefusal, is_refusal
 from qmf.risk.performance import PerformanceResult
@@ -28,6 +28,9 @@ from qmb.analysis.deferred import (
     refuse_live_money_gating,
     refuse_synthetic_portfolio,
 )
+
+if TYPE_CHECKING:
+    from qmb.results.interpret import FieldDiff
 
 __all__ = [
     "COMPARE_RUNS_CLASS",
@@ -71,7 +74,7 @@ class CompareReadout:
     same_world: bool
     same_account_binding_role: bool
     matching_paths: tuple[str, ...]
-    differing: tuple[object, ...]
+    differing: tuple[FieldDiff, ...]
     occupancy: str = COMPARE_RUNS_OCCUPANCY
     mints_ct32: bool = False
     mints_experiment_spec: bool = False
@@ -92,7 +95,7 @@ class CompareReadout:
             "class": COMPARE_RUNS_CLASS,
             "command": "compare_runs",
             "consumes_occupancy": False,
-            "differing_paths": [_diff_path(row) for row in self.differing],
+            "differing_paths": [row.path for row in self.differing],
             "is_admission_evidence": False,
             "is_analysis_method": False,
             "matching_path_count": len(self.matching_paths),
@@ -310,13 +313,6 @@ def _cited_world(source: object) -> str | None:
             if isinstance(world, str) and world.strip() != "":
                 return world
     return None
-
-
-def _diff_path(row: object) -> str:
-    path = getattr(row, "path", None)
-    if isinstance(path, str):
-        return path
-    return repr(row)
 
 
 def _requested_field(fields: Mapping[str, object], names: tuple[str, ...]) -> str | None:
