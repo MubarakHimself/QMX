@@ -18,7 +18,14 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Literal, cast
 
-from qma.core.control.procedures import classify_procedure_step
+from qma.core.control.procedures import (
+    PROCEDURE_LINEAGE_EXTRA_KEYS,
+    admit_procedure_successor_change,
+    admit_procedure_successor_edge,
+    classify_procedure_step,
+    procedure_step_changes_resolved_config,
+    procedure_step_resolved_config_ref,
+)
 from qma.core.ontology import ActorId
 from qma.core.ports.cancel_authority import (
     COORDINATED_CANCEL_AUTHORITY,
@@ -29,7 +36,10 @@ from qma.core.ports.cancel_authority import (
 )
 from qma.core.ports.experiments import (
     ANALYSIS_PUBLISHED_KIND,
+    COORDINATED_CONTINUITY_KIND,
+    EXPERIMENT_CHANGE_RESOLVED_CONFIG,
     EXPERIMENT_LEDGER_WORKBENCH_LANE,
+    EXPERIMENT_LINEAGE_EDGE_TYPE,
     QMB_LEDGER_WORKBENCH_LANE,
     coordinated_run_labels,
     refuse_caller_declared_lane_fields,
@@ -74,7 +84,11 @@ from qma.core.vocabulary.enums import JobHandleState
 from qma.daemon.backtest.cli import CliQmbDoorTransport
 from qma.daemon.envs.jobs import JobHandleService
 from qma.daemon.envs.registry import ExecutionEnvironmentRegistry
-from qma.daemon.experiments.service import ExperimentSpecService, PublishedProjection
+from qma.daemon.experiments.service import (
+    ExperimentSpecService,
+    PublishedProjection,
+    RegisteredExperiment,
+)
 from qma.daemon.plugins.context import DaemonPluginContext, PluginContextError
 from qma.daemon.taskgraph.records import DispatchLease
 from qma.daemon.tools.registry import ToolRegistry
@@ -284,30 +298,54 @@ class QmbQueryPlacement:
         return MappingProxyType(payload)
 
 
+def _procedure_extra_without_lineage(
+    extra: Mapping[str, object] | None,
+) -> Mapping[str, object] | None:
+    if extra is None:
+        return None
+    cleaned = {
+        key: value for key, value in extra.items() if key not in PROCEDURE_LINEAGE_EXTRA_KEYS
+    }
+    return MappingProxyType(cleaned) if cleaned else None
+
+
 @dataclass(frozen=True, slots=True)
 class ProcedureStepPlacement:
     """One procedure door step placed through the Story 36.2 QMB door.
 
-    Run-steps occupy the environment. Query-steps call Epic 35/33 door
-    queries: no occupancy, no CT-32, no ExperimentSpec successor.
+    Run-steps occupy the environment. A door step that changes
+    resolved-config mints an ExperimentSpec successor via
+    ``create_successor`` plus CT-07 ``branches-from``. Query-steps call
+    Epic 35/33 door queries: no occupancy, no CT-32, no successor.
     """
 
     occupancy: str
     command: str
     mints_ct32: bool
-    mints_experiment_spec: Literal[False] = False
+    mints_experiment_spec: bool = False
     consumes_environment: bool = False
     run: QmbPlacement | None = None
     query: QmbQueryPlacement | None = None
+    successor: RegisteredExperiment | None = None
+    experiment_spec_fp1: str | None = None
+    continuity: str = COORDINATED_CONTINUITY_KIND
 
     def to_payload(self) -> Mapping[str, object]:
         payload: dict[str, object] = {
             "occupancy": self.occupancy,
             "command": self.command,
             "mints_ct32": self.mints_ct32,
-            "mints_experiment_spec": False,
+            "mints_experiment_spec": self.mints_experiment_spec,
             "consumes_environment": self.consumes_environment,
+            "continuity": self.continuity,
+            "is_experiment_spec": False,
         }
+        if self.experiment_spec_fp1 is not None:
+            payload["experiment_spec_fp1"] = self.experiment_spec_fp1
+        if self.successor is not None:
+            payload["successor"] = dict(self.successor.to_payload())
+            if self.successor.lineage_edge is not None:
+                payload["lineage_edge_type"] = self.successor.lineage_edge.edge_type.value
         if self.run is not None:
             payload["run"] = dict(self.run.to_payload())
         if self.query is not None:
@@ -832,6 +870,9 @@ class BacktestingService:
         persist_projection: bool = False,
         mint_ct32: object = None,
         successor: object = None,
+        resolved_config_ref: object = None,
+        change: object = None,
+        edge_type: object = None,
         world: str = QMB_WORLD_REPLAY,
         door: QmbDoorKind | str = QmbDoorKind.CLI,
         qmb_ledger_ref: object = None,
@@ -840,6 +881,8 @@ class BacktestingService:
         """Place one procedure door step through the Story 36.2 QMB door.
 
         Run-steps occupy the environment as one CLI/MCP run invocation.
+        A door step that changes resolved-config mints an ExperimentSpec
+        successor via ``create_successor`` plus CT-07 ``branches-from``.
         Query-steps call ``place_query`` (Epic 35/33 door queries): no occupancy,
         no CT-32, no ExperimentSpec successor. A second run-step is refused
         while the slot is held; query-steps still proceed.
@@ -848,17 +891,44 @@ class BacktestingService:
         if is_refusal(classified):
             return classified
         row = classified.value
+        admitted_edge = admit_procedure_successor_edge(edge_type)
+        if is_refusal(admitted_edge):
+            return admitted_edge
+        admitted_change = admit_procedure_successor_change(change)
+        if is_refusal(admitted_change):
+            return admitted_change
+        next_config = procedure_step_resolved_config_ref(
+            step,
+            extra=extra,
+            resolved_config_ref=resolved_config_ref,
+        )
+        predecessor_config: str | None = None
+        if (
+            self._experiments is not None
+            and isinstance(experiment_spec_fp1, str)
+            and experiment_spec_fp1.strip()
+        ):
+            found = self._experiments.resolve(experiment_spec_fp1.strip())
+            if is_ok(found):
+                predecessor_config = found.value.spec.resolved_config_ref
+        changes_config = procedure_step_changes_resolved_config(
+            resolved_config_ref=next_config,
+            predecessor_resolved_config_ref=predecessor_config,
+        )
+        door_extra = _procedure_extra_without_lineage(extra)
         if row.occupancy == QMB_OCCUPANCY_QUERY:
             if mint_ct32 is not None and mint_ct32 is not False:
                 return refuse_query_ct32_or_successor(command=row.command)
             if successor is not None and successor is not False:
+                return refuse_query_ct32_or_successor(command=row.command)
+            if changes_config:
                 return refuse_query_ct32_or_successor(command=row.command)
             placed = self.place_query(
                 row.command,
                 owner=owner,
                 task_id=task_id,
                 environment_ref=environment_ref,
-                extra=extra,
+                extra=door_extra,
                 dispatch_lease=dispatch_lease,
                 model_deployment_ref=model_deployment_ref,
                 persist_projection=persist_projection,
@@ -877,6 +947,7 @@ class BacktestingService:
                     mints_experiment_spec=False,
                     consumes_environment=False,
                     query=query,
+                    experiment_spec_fp1=experiment_spec_fp1,
                 )
             )
         if not isinstance(experiment_spec_fp1, str) or experiment_spec_fp1.strip() == "":
@@ -890,16 +961,39 @@ class BacktestingService:
                 "evidence_ref",
                 "a procedure run-step requires recorded evidence (CT-47; FR-W33)",
             )
+        spec_fp1 = experiment_spec_fp1.strip()
+        registered_successor: RegisteredExperiment | None = None
+        if changes_config:
+            minted = self._mint_resolved_config_successor(
+                predecessor_fp1=spec_fp1,
+                resolved_config_ref=next_config,
+                dispatch_lease=dispatch_lease,
+                model_deployment_ref=model_deployment_ref,
+            )
+            if is_refusal(minted):
+                return minted
+            registered_successor = minted.value
+            edge = registered_successor.lineage_edge
+            if edge is None or edge.edge_type.value != EXPERIMENT_LINEAGE_EDGE_TYPE:
+                return policy_rejection(
+                    "edge_type",
+                    "a config-changing procedure door step must append the "
+                    "existing CT-07 branches-from edge; bot supersedes and new "
+                    "edge kinds are refused (FR-W34; DEC-0277)",
+                    given=None if edge is None else edge.edge_type.value,
+                    edge_type=EXPERIMENT_LINEAGE_EDGE_TYPE,
+                )
+            spec_fp1 = registered_successor.spec.spec_fp1
         placed_run = self.invoke(
             QMB_BACKTEST_TOOL_ID,
             owner=owner,
             task_id=task_id,
             environment_ref=environment_ref,
-            experiment_spec_fp1=experiment_spec_fp1,
+            experiment_spec_fp1=spec_fp1,
             evidence_ref=evidence_ref,
             world=world,
             door=door,
-            extra=extra,
+            extra=door_extra,
             dispatch_lease=dispatch_lease,
             model_deployment_ref=model_deployment_ref,
             qmb_ledger_ref=qmb_ledger_ref,
@@ -914,10 +1008,43 @@ class BacktestingService:
                 occupancy=QMB_OCCUPANCY_RUN,
                 command=row.command,
                 mints_ct32=row.mints_ct32,
-                mints_experiment_spec=False,
+                mints_experiment_spec=registered_successor is not None,
                 consumes_environment=True,
                 run=run,
+                successor=registered_successor,
+                experiment_spec_fp1=spec_fp1,
             )
+        )
+
+    def _mint_resolved_config_successor(
+        self,
+        *,
+        predecessor_fp1: str,
+        resolved_config_ref: object,
+        dispatch_lease: DispatchLease | None,
+        model_deployment_ref: object,
+    ) -> Result[RegisteredExperiment]:
+        """Mint an ExperimentSpec successor via ``create_successor`` (FR-W34)."""
+        if self._experiments is None:
+            return invalid_input(
+                "experiments",
+                "a config-changing procedure door step mints an ExperimentSpec "
+                "successor via create_successor plus CT-07 branches-from "
+                "(FR-W34; DEC-0277)",
+            )
+        if dispatch_lease is None:
+            return invalid_input(
+                "dispatch_lease",
+                "a config-changing procedure door step requires the Agent holding "
+                "dispatch_lease (FR-W34; DEC-0308)",
+            )
+        return self._experiments.create_successor(
+            predecessor_fp1=predecessor_fp1,
+            change=EXPERIMENT_CHANGE_RESOLVED_CONFIG,
+            dispatch_lease=dispatch_lease,
+            model_deployment_ref=model_deployment_ref,
+            resolved_config_ref=resolved_config_ref,
+            source="qma-daemon",
         )
 
     def _persist_projection_query(

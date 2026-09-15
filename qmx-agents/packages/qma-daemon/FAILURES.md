@@ -36,7 +36,10 @@ CT-07 `branches-from` successor edges through the daemon journal / sole
 sqlite writer so a restart restores them (FR-66 through FR-68).
 Epic 37 Story 37.2 places procedure run-steps through the CT-47 `qmb`
 door as one CLI/MCP run invocation and treats query-steps as Epic 35/33
-door queries (FR-69 through FR-70).
+door queries (FR-69 through FR-70). Epic 37 Story 37.3 mints an
+ExperimentSpec successor via `create_successor` plus the existing CT-07
+`branches-from` edge when a door step changes resolved-config (FR-71
+through FR-72).
 
 ### FR-1: A second daemon or writer is refused at the persistence boundary
 
@@ -1061,3 +1064,36 @@ door queries (FR-69 through FR-70).
 - **Product-user affordance:** a projection, rank, compare, or gap-check
   inside a procedure does not create a new experiment result. Run a
   backtest / rerun step when you need a new CT-32.
+
+### FR-71: Procedure lineage may not use bot supersedes or a new CT-07 kind
+
+- **Failure class:** `policy rejection` (CT-04; FR-W34; DEC-0277).
+- **Detection:** `admit_procedure_successor_edge` and
+  `place_procedure_step(..., edge_type=...)` admit only the existing
+  ExperimentSpec CT-07 `branches-from` token. `supersedes` /
+  `bot-supersedes` and any other kind (including a newly invented
+  procedure edge) are refused. `create_successor` is the mint path.
+- **Auto-recovery / retry:** none — drop the edge_type override; the
+  successor already carries `branches-from`.
+- **Visible degraded state:** no ExperimentSpec successor is minted; the
+  predecessor record is unchanged.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** parameter and configuration changes branch
+  the ExperimentSpec. They do not supersede a bot and they do not invent
+  a new lineage kind.
+
+### FR-72: A config-changing door step without ExperimentSpec product truth is refused
+
+- **Failure class:** `invalid input` (CT-04; FR-W34; DEC-0277).
+- **Detection:** `place_procedure_step` detects a different
+  `resolved_config_ref` and calls `create_successor`. Missing
+  `ExperimentSpecService`, missing `dispatch_lease`, or an unknown
+  predecessor fp1 is refused before the door invocation. Query-steps
+  that try to carry a resolved-config change are refused as FR-70.
+- **Auto-recovery / retry:** none — register the predecessor spec, bind
+  experiments, and hold `dispatch_lease`.
+- **Visible degraded state:** no successor spec, no CT-07 edge, occupancy
+  unchanged.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** a new resolved config is a new experiment.
+  Register the current ExperimentSpec first, then place the door step.

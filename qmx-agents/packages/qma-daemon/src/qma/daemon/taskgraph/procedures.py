@@ -6,6 +6,11 @@ edge. Any door step is READY so it may be the first placement.
 
 Story 37.2 / FR-W33. Run-steps occupy the CT-47 qmb door. Query-steps call
 Epic 35/33 door queries and consume no occupancy.
+
+Story 37.3 / FR-W34. A door step that changes resolved-config mints an
+ExperimentSpec successor via ``create_successor`` plus CT-07
+``branches-from``. Query-steps that do not change resolved-config mint
+no successor. Coordinated continuity remains the spec fp1.
 """
 
 from __future__ import annotations
@@ -138,6 +143,9 @@ def execute_procedure_door_step(
     persist_projection: bool = False,
     mint_ct32: object = None,
     successor: object = None,
+    resolved_config_ref: object = None,
+    change: object = None,
+    edge_type: object = None,
     world: str | None = None,
     door: QmbDoorKind | str = QmbDoorKind.CLI,
 ) -> Result[ProcedureStepPlacement]:
@@ -171,6 +179,9 @@ def execute_procedure_door_step(
         persist_projection=persist_projection,
         mint_ct32=mint_ct32,
         successor=successor,
+        resolved_config_ref=resolved_config_ref,
+        change=change,
+        edge_type=edge_type,
         world=world if world is not None else QMB_WORLD_REPLAY,
         door=door,
     )

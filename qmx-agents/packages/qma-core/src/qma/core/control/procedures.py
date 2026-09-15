@@ -2,7 +2,10 @@
 
 A reusable procedure is a Graph Template, Skill, or operator Routine.
 QMB does not grow a task-graph module. The procedure itself is not an
-ExperimentSpec and mints no CT-07 edge kind. Composition is non-linear:
+ExperimentSpec and mints no CT-07 edge kind. A door step that changes
+resolved-config is an ExperimentSpec successor via ``create_successor``
+plus the existing CT-07 ``branches-from`` edge — never bot
+``supersedes``, never a new edge kind. Composition is non-linear:
 any door step may be the first placement. A compulsory
 research→backtest→paper wizard or SQ Custom Projects clone is refused.
 """
@@ -28,7 +31,11 @@ from qma.core.ontology.routine import (
     parse_graph_template_ref,
     parse_routine,
 )
-from qma.core.ports.experiments import COORDINATED_CONTINUITY_KIND
+from qma.core.ports.experiments import (
+    COORDINATED_CONTINUITY_KIND,
+    EXPERIMENT_CHANGE_RESOLVED_CONFIG,
+    EXPERIMENT_LINEAGE_EDGE_TYPE,
+)
 from qma.core.ports.qmb import (
     ANALYSIS_BACKTEST_PLUGIN_ID,
     QMB_OCCUPANCY_QUERY,
@@ -51,19 +58,26 @@ __all__ = [
     "EPIC_33_QUERY_COMMANDS",
     "EPIC_35_QUERY_COMMANDS",
     "FORBIDDEN_QMB_TASK_GRAPH_NAMES",
+    "PROCEDURE_BOT_SUPERSEDES_EDGE",
     "PROCEDURE_CT07_EDGE_KIND",
     "PROCEDURE_HOMES",
     "PROCEDURE_IS_EXPERIMENT_SPEC",
+    "PROCEDURE_LINEAGE_EXTRA_KEYS",
     "PROCEDURE_MINTS_CT07_EDGE",
     "PROCEDURE_QUERY_STEP_COMMANDS",
     "PROCEDURE_RUN_STEP_COMMANDS",
     "PROCEDURE_STEP_TYPES",
+    "PROCEDURE_SUCCESSOR_CHANGE",
+    "PROCEDURE_SUCCESSOR_EDGE_TYPE",
+    "PROCEDURE_USES_BOT_SUPERSEDES",
     "QMB_GROWS_TASK_GRAPH",
     "QMB_PROCEDURE_DOOR_STEPS",
     "REFUSED_PROCEDURE_PRODUCTS",
     "REFUSED_WIZARD_SEQUENCE",
     "ProcedureKind",
     "ReusableProcedure",
+    "admit_procedure_successor_change",
+    "admit_procedure_successor_edge",
     "author_procedure",
     "classify_procedure_step",
     "door_step_ids",
@@ -74,10 +88,16 @@ __all__ = [
     "parse_reusable_procedure",
     "procedure_ct07_edge_kinds",
     "procedure_mints_ct07_edge",
+    "procedure_step_changes_resolved_config",
     "procedure_step_command",
+    "procedure_step_resolved_config_ref",
+    "procedure_successor_edge_type",
+    "procedure_uses_bot_supersedes",
     "qmb_grows_task_graph",
     "refuse_linear_wizard",
     "refuse_procedure_as_experiment_spec",
+    "refuse_procedure_bot_supersedes",
+    "refuse_procedure_new_ct07_edge",
     "refuse_qmb_task_graph",
     "refuse_sq_custom_projects_clone",
     "scan_qmb_task_graph_modules",
@@ -97,7 +117,36 @@ COMPOSITION_NON_LINEAR: Final[Literal["non_linear"]] = "non_linear"
 PROCEDURE_IS_EXPERIMENT_SPEC: Final[Literal[False]] = False
 PROCEDURE_CT07_EDGE_KIND: Final[None] = None
 PROCEDURE_MINTS_CT07_EDGE: Final[Literal[False]] = False
+PROCEDURE_SUCCESSOR_EDGE_TYPE: Final[str] = EXPERIMENT_LINEAGE_EDGE_TYPE
+PROCEDURE_SUCCESSOR_CHANGE: Final[str] = EXPERIMENT_CHANGE_RESOLVED_CONFIG
+PROCEDURE_BOT_SUPERSEDES_EDGE: Final[str] = "supersedes"
+PROCEDURE_USES_BOT_SUPERSEDES: Final[Literal[False]] = False
 QMB_GROWS_TASK_GRAPH: Final[Literal[False]] = False
+PROCEDURE_LINEAGE_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "change",
+        "ct07_edge_kind",
+        "ct07_edge_type",
+        "edge_type",
+        "resolved_config_ref",
+        "successor",
+    }
+)
+_BOT_SUPERSEDES_TOKENS: Final[frozenset[str]] = frozenset(
+    {
+        "bot-supersedes",
+        "bot_supersedes",
+        "supersedes",
+    }
+)
+_RESOLVED_CONFIG_CHANGE_TOKENS: Final[frozenset[str]] = frozenset(
+    {
+        EXPERIMENT_CHANGE_RESOLVED_CONFIG,
+        "config",
+        "resolved-config",
+        "resolved_config_ref",
+    }
+)
 
 ANALYSIS_PROCEDURE_LOCAL_ID: Final[str] = "procedure"
 ANALYSIS_PROCEDURE_ID: Final[str] = f"{ANALYSIS_BACKTEST_PLUGIN_ID}:{ANALYSIS_PROCEDURE_LOCAL_ID}"
@@ -270,6 +319,119 @@ def procedure_mints_ct07_edge() -> bool:
 def procedure_ct07_edge_kinds() -> frozenset[str]:
     """Empty: this story does not mint a CT-07 kind. V1 tokens stay parent-owned."""
     return frozenset()
+
+
+def procedure_successor_edge_type() -> str:
+    """Config-changing door steps reuse ExperimentSpec CT-07 ``branches-from``."""
+    return PROCEDURE_SUCCESSOR_EDGE_TYPE
+
+
+def procedure_uses_bot_supersedes() -> bool:
+    """Procedure lineage never uses bot ``supersedes`` (FR-W34; DEC-0277)."""
+    return PROCEDURE_USES_BOT_SUPERSEDES
+
+
+def _token(value: object) -> str:
+    raw = getattr(value, "value", value)
+    if not isinstance(raw, str):
+        return ""
+    return raw.strip().casefold().replace(" ", "_")
+
+
+def refuse_procedure_bot_supersedes(*, given: object = "supersedes") -> TypedRefusal:
+    """Refuse bot ``supersedes`` as procedure / ExperimentSpec successor lineage."""
+    return _policy(
+        "edge_type",
+        "a config-changing procedure door step mints an ExperimentSpec successor "
+        "via create_successor plus the existing CT-07 branches-from edge; bot "
+        "supersedes is not procedure lineage (FR-W34; DEC-0277)",
+        given=repr(given),
+        edge_type=PROCEDURE_SUCCESSOR_EDGE_TYPE,
+        uses_bot_supersedes=False,
+        mints_ct07_edge=False,
+    )
+
+
+def refuse_procedure_new_ct07_edge(*, given: object) -> TypedRefusal:
+    """Refuse minting a new CT-07 kind for procedure door-step lineage."""
+    return _policy(
+        "edge_type",
+        "procedure door steps do not mint a new CT-07 edge kind; config-changing "
+        "steps reuse ExperimentSpec branches-from (FR-W34; DEC-0277)",
+        given=repr(given),
+        edge_type=PROCEDURE_SUCCESSOR_EDGE_TYPE,
+        mints_ct07_edge=False,
+        allowed=PROCEDURE_SUCCESSOR_EDGE_TYPE,
+    )
+
+
+def admit_procedure_successor_edge(edge_type: object = None) -> Result[str]:
+    """Admit the existing ExperimentSpec ``branches-from`` edge only."""
+    if edge_type is None or edge_type is False:
+        return Ok(PROCEDURE_SUCCESSOR_EDGE_TYPE)
+    token = _token(edge_type)
+    if token == "":
+        return Ok(PROCEDURE_SUCCESSOR_EDGE_TYPE)
+    if token in _BOT_SUPERSEDES_TOKENS:
+        return refuse_procedure_bot_supersedes(given=edge_type)
+    if token != PROCEDURE_SUCCESSOR_EDGE_TYPE:
+        return refuse_procedure_new_ct07_edge(given=edge_type)
+    return Ok(PROCEDURE_SUCCESSOR_EDGE_TYPE)
+
+
+def admit_procedure_successor_change(change: object = None) -> Result[str]:
+    """Admit a resolved-config ExperimentSpec change for a procedure door step."""
+    if change is None or change is False:
+        return Ok(PROCEDURE_SUCCESSOR_CHANGE)
+    token = _token(change)
+    if token == "":
+        return Ok(PROCEDURE_SUCCESSOR_CHANGE)
+    if token in _RESOLVED_CONFIG_CHANGE_TOKENS:
+        return Ok(PROCEDURE_SUCCESSOR_CHANGE)
+    return _policy(
+        "change",
+        "a procedure door successor is a resolved-config ExperimentSpec change "
+        "via create_successor (FR-W34; DEC-0277)",
+        given=repr(change),
+        change=PROCEDURE_SUCCESSOR_CHANGE,
+    )
+
+
+def procedure_step_resolved_config_ref(
+    step: Mapping[str, object] | str | QmbDoorOccupancy,
+    *,
+    extra: Mapping[str, object] | None = None,
+    resolved_config_ref: object = None,
+) -> str | None:
+    """Resolve the next resolved-config ref from the placement inputs."""
+    if isinstance(resolved_config_ref, str) and resolved_config_ref.strip():
+        return resolved_config_ref.strip()
+    if extra is not None:
+        candidate = extra.get("resolved_config_ref")
+        if isinstance(candidate, str) and candidate.strip():
+            return candidate.strip()
+    if isinstance(step, Mapping):
+        candidate = step.get("resolved_config_ref")
+        if isinstance(candidate, str) and candidate.strip():
+            return candidate.strip()
+    return None
+
+
+def procedure_step_changes_resolved_config(
+    *,
+    resolved_config_ref: object,
+    predecessor_resolved_config_ref: object = None,
+) -> bool:
+    """True when the door step carries a different resolved-config identity."""
+    if not isinstance(resolved_config_ref, str) or resolved_config_ref.strip() == "":
+        return False
+    next_ref = resolved_config_ref.strip()
+    if (
+        not isinstance(predecessor_resolved_config_ref, str)
+        or predecessor_resolved_config_ref.strip() == ""
+    ):
+        return True
+    return next_ref != predecessor_resolved_config_ref.strip()
 
 
 def refuse_qmb_task_graph(*, given: object = "qmb.taskgraph") -> TypedRefusal:
