@@ -33,7 +33,7 @@ from qmf.core.refusal import (
 
 from qmb._refuse import invalid, policy, unavailable
 from qmb.config.compiler import ResolvedRunConfig
-from qmb.ledger.line import mint_aborted_line
+from qmb.ledger.line import WORKBENCH_LANE_GOVERNED, mint_aborted_line
 from qmb.orchestrator.governor import (
     ON_FULL_ENQUEUE,
     GovernedRequest,
@@ -1455,7 +1455,9 @@ def _reap_live(
             output_dir=item.output_dir,
             pid=item.pid,
         )
-        minted = mint_aborted_line(job.config, refusal)
+        minted = mint_aborted_line(
+            job.config, refusal, workbench_lane=WORKBENCH_LANE_GOVERNED
+        )
         if is_refusal(minted):
             first_ledger_failure = first_ledger_failure or minted
             continue

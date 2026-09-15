@@ -287,6 +287,10 @@ def backtest_run(
             cancel=payload.get("cancel"),
             limits=payload.get("limits"),
             probe=payload.get("probe"),
+            analysis_method=payload.get("analysis_method"),
+            lane=payload.get("lane"),
+            workbench_lane=payload.get("workbench_lane"),
+            experiment_spec=payload.get("experiment_spec"),
         ),
     )
     _ = (book, bms)

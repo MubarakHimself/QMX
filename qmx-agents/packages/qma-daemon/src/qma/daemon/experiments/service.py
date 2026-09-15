@@ -15,10 +15,12 @@ from types import MappingProxyType
 
 from qma.core.ports.experiments import (
     COORDINATED_CONTINUITY_KIND,
+    EXPERIMENT_LEDGER_WORKBENCH_LANE,
     EXPERIMENT_LINEAGE_EDGE_TYPE,
     ExperimentSpec,
     admit_coordinated_continuity,
     admit_experiment_evidence_body,
+    refuse_caller_declared_lane_fields,
 )
 from qma.daemon.experiments.sqlite import ExperimentSqliteStore
 from qma.daemon.journal.authoritative import AuthoritativeJournal
@@ -365,6 +367,52 @@ class ExperimentSpecService:
                 dispatch_lease=record.dispatch_lease,
                 lineage_edge=edge,
             )
+        )
+
+    def record_coordinated_run(
+        self,
+        *,
+        spec_fp1: object,
+        dispatch_lease: DispatchLease,
+        model_deployment_ref: object,
+        qmb_ledger_ref: object = None,
+        ct32_ref: object = None,
+        note: object = None,
+        analysis_method: object = None,
+        lane: object = None,
+        workbench_lane: object = None,
+        extra: Mapping[str, object] | None = None,
+    ) -> Result[ExperimentLedger]:
+        """Stamp Experiment Ledger ``workbench_lane=coordinated`` with QMB _refs.
+
+        The spawned run's QMB ledger line remains ``workbench_lane=governed``.
+        Those two labels are not the same field (FR-W06; DEC-0270).
+        """
+        declared = refuse_caller_declared_lane_fields(
+            extra,
+            analysis_method=analysis_method,
+            lane=lane,
+            workbench_lane=workbench_lane,
+        )
+        if declared is not None:
+            return declared
+        body: dict[str, object] = {"workbench_lane": EXPERIMENT_LEDGER_WORKBENCH_LANE}
+        if isinstance(qmb_ledger_ref, str) and qmb_ledger_ref.strip():
+            body["qmb_ledger_ref"] = qmb_ledger_ref.strip()
+        if isinstance(ct32_ref, str) and ct32_ref.strip():
+            body["ct32_ref"] = ct32_ref.strip()
+        if isinstance(note, str) and note.strip():
+            body["note"] = note.strip()
+        if extra is not None:
+            for key, value in extra.items():
+                if key in {"workbench_lane", "analysis_method", "lane"}:
+                    continue
+                body[key] = value
+        return self.append_evidence(
+            spec_fp1=spec_fp1,
+            dispatch_lease=dispatch_lease,
+            model_deployment_ref=model_deployment_ref,
+            body=body,
         )
 
     def append_evidence(

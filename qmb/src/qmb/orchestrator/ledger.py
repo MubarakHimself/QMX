@@ -24,6 +24,7 @@ from qmb.ledger.line import (
     LEDGER_LINE_CLASS,
     ROLE_ABORTED,
     ROLE_CONFIRMATION,
+    WORKBENCH_LANE_GOVERNED,
     LedgerLine,
     book_bar_lines,
     merge_ledger_lines,
@@ -36,6 +37,7 @@ from qmb.orchestrator.paths import (
     read_contained_bytes,
 )
 from qmb.orchestrator.spawn import IsolatedRun, LiveSpawn, collect_run
+from qmb.workbench import refuse_caller_declared_lane_fields
 
 __all__ = [
     "FACTORY_SANDBOX_ENV",
@@ -323,6 +325,9 @@ def finish_run(
     role: object = ROLE_CONFIRMATION,
     factory_sandbox: object = None,
     sweep_coordinates: object = None,
+    analysis_method: object = None,
+    lane: object = None,
+    workbench_lane: object = None,
 ) -> Result[IsolatedRun]:
     """Collect one spawned run and append exactly one ledger line (B-4).
 
@@ -331,7 +336,16 @@ def finish_run(
     library ``run()`` never calls this. ``sweep_coordinates`` stamps the
     ``{sweep_id, instrument, bar_spec, param_hash}`` onto both the completed and
     the aborted line when this run is one combination of a sweep (spec R10, R11).
+    ``workbench_lane=governed`` is door-derived; a caller-declared lane flag
+    is refused (DEC-0270).
     """
+    blocked = refuse_caller_declared_lane_fields(
+        analysis_method=analysis_method,
+        lane=lane,
+        workbench_lane=workbench_lane,
+    )
+    if blocked is not None:
+        return blocked
     if not isinstance(live, LiveSpawn):
         return invalid(
             "live",
@@ -370,6 +384,7 @@ def finish_run(
         role=role,
         factory_sandbox=sandbox,
         sweep_coordinates=sweep_coordinates,
+        workbench_lane=WORKBENCH_LANE_GOVERNED,
     )
     if is_refusal(minted):
         return _append_aborted(
@@ -428,7 +443,11 @@ def _append_aborted(
     sweep_coordinates: object = None,
 ) -> TypedRefusal:
     minted = mint_aborted_line(
-        config, refusal, factory_sandbox=factory_sandbox, sweep_coordinates=sweep_coordinates
+        config,
+        refusal,
+        factory_sandbox=factory_sandbox,
+        sweep_coordinates=sweep_coordinates,
+        workbench_lane=WORKBENCH_LANE_GOVERNED,
     )
     if is_refusal(minted):
         return minted

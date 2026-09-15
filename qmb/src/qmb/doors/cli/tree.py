@@ -111,6 +111,7 @@ from qmb.sweep import (
     rank_sweep,
     run_sweep_batch,
 )
+from qmb.workbench import refuse_caller_declared_lane_fields
 
 __all__ = [
     "ANALYSIS_COMMANDS",
@@ -921,12 +922,32 @@ def invoke_backtest(
     cancel: object = None,
     limits: object = None,
     probe: object = None,
+    analysis_method: object = None,
+    lane: object = None,
+    workbench_lane: object = None,
+    experiment_spec: object = None,
 ) -> Result[BacktestSubmission]:
     """Compile via ``compile_run_config`` and submit to ``spawn_run`` (B-1, B-3).
 
     The run-id root is the compiled artifact's fingerprint. This door does not
-    call ``fp1`` and does not name a run directory of its own.
+    call ``fp1`` and does not name a run directory of its own. Lane is
+    door-derived ``governed``; caller-declared flags are refused (DEC-0270).
     """
+    blocked = refuse_caller_declared_lane_fields(
+        analysis_method=analysis_method,
+        lane=lane,
+        workbench_lane=workbench_lane,
+    )
+    if blocked is not None:
+        return blocked
+    if experiment_spec is not None:
+        return policy(
+            "experiment_spec",
+            "a QMB orchestrator spawn not placed by CT-47 mints no ExperimentSpec "
+            "unless a later act places the same work through CT-47 (FR-W05; DEC-0270)",
+            mints_experiment_spec=False,
+            workbench_lane="governed",
+        )
     checked = require_prerequisites(
         "backtest.run",
         {

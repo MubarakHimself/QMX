@@ -26,7 +26,7 @@ from qmf.core.fingerprint import Fingerprint, fingerprint
 from qmf.core.refusal import Ok, Result, is_refusal
 from qmf.risk.performance import PerformanceResult
 
-from qmb._refuse import clean_token, invalid
+from qmb._refuse import clean_token, invalid, policy
 from qmb.config.compiler import ResolvedRunConfig
 from qmb.results.ct32 import (
     CONCURRENCY_IS_SCHEDULING_ONLY,
@@ -80,6 +80,7 @@ from qmb.runloop.warmup import (
     guard_trading,
     trading_evidence_range,
 )
+from qmb.workbench import refuse_caller_declared_lane_fields, ungoverned_run_identity
 
 __all__ = [
     "LOOP_KIND",
@@ -105,6 +106,7 @@ __all__ = [
     "run",
     "run_slice",
     "stream_set_from_config",
+    "ungoverned_run_identity",
     "verify_stored_reproduction",
 ]
 
@@ -568,6 +570,26 @@ class LoopOutcome:
                 payload["ct32_fingerprint"] = stamped.value.value
         return MappingProxyType(payload)
 
+    @property
+    def writes_qmb_ledger(self) -> bool:
+        """Ungoverned ``run()`` writes no QMB ledger line (FR-W04)."""
+        return False
+
+    @property
+    def writes_ct32_registry_record(self) -> bool:
+        """A returned CT-32-shaped value is not a registry record (FR-W04)."""
+        return False
+
+    @property
+    def mints_experiment_spec(self) -> bool:
+        """Ungoverned ``run()`` mints no ExperimentSpec (FR-W04)."""
+        return False
+
+    @property
+    def is_library_object(self) -> bool:
+        """A returned CT-32-shaped value is not a Library object (FR-W04)."""
+        return False
+
     def ct32_fingerprint(self) -> Result[Fingerprint]:
         """The CT-32 ``fp1`` when this outcome minted a governed result."""
         if self.performance_result is None:
@@ -806,6 +828,10 @@ def run(
     observer: object = None,
     limits: object = None,
     probe: object = None,
+    analysis_method: object = None,
+    lane: object = None,
+    workbench_lane: object = None,
+    experiment_spec: object = None,
 ) -> Result[LoopOutcome]:
     """PURE event-slice loop (B-2, B-4, B-5).
 
@@ -819,8 +845,27 @@ def run(
     log and no ledger. The same underlying series is replayed as-of each
     frontier so later prints cannot complete an earlier bar. A resolved
     run-config mints a CT-32 fingerprint witness; concurrency is scheduling
-    only and does not enter identity.
+    only and does not enter identity. This door is ungoverned: a returned
+    CT-32-shaped value is not a Library object (DEC-0270).
     """
+    blocked = refuse_caller_declared_lane_fields(
+        analysis_method=analysis_method,
+        lane=lane,
+        workbench_lane=workbench_lane,
+    )
+    if blocked is not None:
+        return blocked
+    if experiment_spec is not None:
+        return policy(
+            "experiment_spec",
+            "ungoverned qmb.run() writes no ExperimentSpec; L33 graduation is "
+            "a separate two-artifact registration act, not this spawn "
+            "(FR-W04; DEC-0270)",
+            mints_experiment_spec=False,
+            writes_qmb_ledger=False,
+            writes_ct32_registry_record=False,
+            is_library_object=False,
+        )
     declared = _resolve_stream_set(stream_set=stream_set, config=config)
     if is_refusal(declared):
         return declared

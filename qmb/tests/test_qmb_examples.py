@@ -1504,3 +1504,20 @@ def test_import_usage_example_runs_clean() -> None:
     assert completed.returncode == 0, completed.stderr
     assert "import qmb ok" in completed.stdout
     assert "qmb 0.1.0" in completed.stdout
+
+
+def test_workbench_lanes_usage_example_runs_clean() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(_QMB_ROOT / "examples" / "workbench_lanes_usage.py")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": pythonpath()},
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "workbench lanes ok" in completed.stdout
+    assert "ungoverned writes nothing" in completed.stdout
+    assert "qmb ledger workbench_lane=governed" in completed.stdout
+    assert "experiment ledger workbench_lane=coordinated" in completed.stdout
+    assert "caller-declared lane refused" in completed.stdout
+    assert "L33 is not this spawn" in completed.stdout

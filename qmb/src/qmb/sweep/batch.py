@@ -41,6 +41,7 @@ from qmb.config.compiler import ResolvedRunConfig
 from qmb.ledger.line import (
     ROLE_ABORTED,
     ROLE_CONFIRMATION,
+    WORKBENCH_LANE_GOVERNED,
     book_bar_fingerprint,
     mint_aborted_line,
     mint_aborted_line_for,
@@ -425,6 +426,7 @@ class _BatchDriver:
                 refusal=refusal,
                 factory_sandbox=self._sandbox,
                 sweep_coordinates=coordinates,
+                workbench_lane=WORKBENCH_LANE_GOVERNED,
             )
             if is_refusal(line):
                 return line
@@ -565,6 +567,7 @@ class _BatchDriver:
             refusal,
             factory_sandbox=self._sandbox,
             sweep_coordinates=entry.coordinates,
+            workbench_lane=WORKBENCH_LANE_GOVERNED,
         )
         if is_refusal(line):
             return line

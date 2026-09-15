@@ -66,6 +66,7 @@ from qmb.runloop.loop import (
     run,
     run_slice,
     stream_set_from_config,
+    ungoverned_run_identity,
     verify_stored_reproduction,
 )
 from qmb.runloop.observe import (
@@ -189,5 +190,6 @@ __all__ = [
     "script_replay_clock",
     "stream_set_from_config",
     "trading_evidence_range",
+    "ungoverned_run_identity",
     "verify_stored_reproduction",
 ]

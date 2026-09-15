@@ -22,6 +22,7 @@ from qmb.ledger.line import (
     LEDGER_LINE_CLASS,
     ONE_LINE_PER_RUN,
     PROVENANCE_SANDBOX,
+    QMB_LEDGER_WORKBENCH_LANE,
     ROLE_ABORTED,
     ROLE_CONFIRMATION,
     ROLE_REPLICATE,
@@ -54,6 +55,7 @@ __all__ = [
     "LEDGER_LINE_CLASS",
     "ONE_LINE_PER_RUN",
     "PROVENANCE_SANDBOX",
+    "QMB_LEDGER_WORKBENCH_LANE",
     "ROLE_ABORTED",
     "ROLE_CONFIRMATION",
     "ROLE_REPLICATE",
@@ -124,6 +126,7 @@ def ledger_identity() -> dict[str, object]:
         "one_line_per_run": ONE_LINE_PER_RUN,
         "run_roles": RUN_ROLES,
         "stores_verdict": STORES_VERDICT,
+        "workbench_lane": QMB_LEDGER_WORKBENCH_LANE,
         "writer": f"{WriterId.__module__}.{WriterId.__qualname__}",
         "writer_scope": ("machine", "role", "worker-slot"),
     }

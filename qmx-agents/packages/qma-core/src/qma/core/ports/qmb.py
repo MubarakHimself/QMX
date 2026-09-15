@@ -16,6 +16,12 @@ from types import MappingProxyType
 from typing import Final, Protocol, cast, runtime_checkable
 
 from qma.core.ontology import ActorId, Quant
+from qma.core.ports.experiments import (
+    EXPERIMENT_LEDGER_WORKBENCH_LANE,
+    QMB_LEDGER_WORKBENCH_LANE,
+    coordinated_run_labels,
+    refuse_caller_declared_lane_fields,
+)
 from qma.core.ports.tools import ToolKind, ToolRecord, default_rung_for_kind
 from qma.core.vocabulary.enums import ExecutionEnvironmentKind
 from qma.core.vocabulary.handles import is_forbidden_live_money_path_target
@@ -25,11 +31,13 @@ from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 
 __all__ = [
     "ANALYSIS_BACKTEST_PLUGIN_ID",
+    "EXPERIMENT_LEDGER_WORKBENCH_LANE",
     "QMB_BACKTEST_TOOL_ID",
     "QMB_BACKTEST_TOOL_LOCAL_ID",
     "QMB_CLI_ARGV",
     "QMB_CLI_PROGRAM",
     "QMB_DOOR_KINDS",
+    "QMB_LEDGER_WORKBENCH_LANE",
     "QMB_MCP_METHOD",
     "QMB_OWNED_CONCERNS",
     "QMB_ROUTE",
@@ -42,11 +50,13 @@ __all__ = [
     "QmbDoorTransport",
     "admit_qmb_job",
     "build_qmb_door_invocation",
+    "coordinated_run_labels",
     "environment_kind_from_ref",
     "occupying_qmb_job",
     "parse_qmb_backtest_request",
     "qma_owns_backtest_concern",
     "qmb_backtest_tool_record",
+    "refuse_caller_declared_lane_fields",
     "refuse_qmb_import_edge",
     "refuse_qmb_owned_concern",
     "refuse_second_qmb_job",
@@ -334,6 +344,9 @@ class QmbBacktestRequest:
         venue: object = None,
         paper: object = None,
         live: object = None,
+        analysis_method: object = None,
+        lane: object = None,
+        workbench_lane: object = None,
     ) -> Result[QmbBacktestRequest]:
         for field, given in (
             ("account", account),
@@ -346,6 +359,14 @@ class QmbBacktestRequest:
         hits = _venue_field_hits(extra)
         if hits:
             return refuse_venue_account_backtest(field=hits[0], given=extra)
+        declared = refuse_caller_declared_lane_fields(
+            extra,
+            analysis_method=analysis_method,
+            lane=lane,
+            workbench_lane=workbench_lane,
+        )
+        if declared is not None:
+            return declared
         if not isinstance(task_id, str) or task_id.strip() == "":
             return _invalid("task_id", "QMB door request requires a task_id")
         if not isinstance(experiment_spec_fp1, str) or experiment_spec_fp1.strip() == "":
@@ -433,6 +454,9 @@ def parse_qmb_backtest_request(**fields: object) -> Result[QmbBacktestRequest]:
         venue=fields.get("venue"),
         paper=fields.get("paper"),
         live=fields.get("live"),
+        analysis_method=fields.get("analysis_method"),
+        lane=fields.get("lane"),
+        workbench_lane=fields.get("workbench_lane"),
     )
 
 

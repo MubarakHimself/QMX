@@ -33,6 +33,7 @@ __all__ = [
     "LEDGER_LINE_CLASS",
     "ONE_LINE_PER_RUN",
     "PROVENANCE_SANDBOX",
+    "QMB_LEDGER_WORKBENCH_LANE",
     "ROLE_ABORTED",
     "ROLE_CONFIRMATION",
     "ROLE_REPLICATE",
@@ -78,8 +79,9 @@ WORKBENCH_LANES: Final[tuple[str, ...]] = (
     WORKBENCH_LANE_GOVERNED,
     WORKBENCH_LANE_COORDINATED,
 )
+QMB_LEDGER_WORKBENCH_LANE: Final[str] = WORKBENCH_LANE_GOVERNED
 _B4_LABEL_FIELDS: Final[frozenset[str]] = frozenset({"analysis_method", "lane"})
-_WORKBENCH_LANE_SET: Final[frozenset[str]] = frozenset(WORKBENCH_LANES)
+_QMB_LEDGER_LANE_SET: Final[frozenset[str]] = frozenset({WORKBENCH_LANE_GOVERNED})
 _VERDICT_KEYS: Final[frozenset[str]] = frozenset(
     {
         "bar-fail",
@@ -623,19 +625,32 @@ def _as_workbench_lane(value: object) -> Result[str | None]:
     if token is None:
         return invalid(
             "workbench_lane",
-            "workbench_lane is ungoverned, governed, or coordinated metadata, "
-            "never a B-4 role (DEC-0270)",
+            "the QMB ledger line stamps workbench_lane=governed for every "
+            "orchestrator spawn; coordinated lives on the Experiment Ledger "
+            "(DEC-0270)",
             given=repr(value),
-            legal=list(WORKBENCH_LANES),
+            legal=list(_QMB_LEDGER_LANE_SET),
         )
     folded = token.casefold()
-    if folded not in _WORKBENCH_LANE_SET:
+    if folded in {WORKBENCH_LANE_COORDINATED, WORKBENCH_LANE_UNGOVERNED}:
+        return policy(
+            "workbench_lane",
+            "the QMB ledger line stamps workbench_lane=governed for every "
+            "orchestrator spawn, including those QMA placed; coordinated lives "
+            "on the Experiment Ledger; ungoverned writes no ledger line "
+            "(DEC-0270; FR-W06)",
+            given=folded,
+            qmb_ledger_workbench_lane=WORKBENCH_LANE_GOVERNED,
+            experiment_ledger_workbench_lane=WORKBENCH_LANE_COORDINATED,
+        )
+    if folded not in _QMB_LEDGER_LANE_SET:
         return invalid(
             "workbench_lane",
-            "workbench_lane is ungoverned, governed, or coordinated metadata, "
-            "never a B-4 role (DEC-0270)",
+            "the QMB ledger line stamps workbench_lane=governed for every "
+            "orchestrator spawn; coordinated lives on the Experiment Ledger "
+            "(DEC-0270)",
             given=token,
-            legal=list(WORKBENCH_LANES),
+            legal=list(_QMB_LEDGER_LANE_SET),
         )
     return Ok(folded)
 

@@ -20,6 +20,7 @@ from qmf.core.fingerprint import Fingerprint
 from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 
 __all__ = [
+    "CALLER_DECLARED_LANE_FIELDS",
     "COORDINATED_CONTINUITY_KIND",
     "COPIED_EXPERIMENT_EVIDENCE_KEYS",
     "CT07_V1_EDGE_TYPES",
@@ -27,17 +28,23 @@ __all__ = [
     "EXPERIMENT_CHANGE_KINDS",
     "EXPERIMENT_CHANGE_RESOLVED_CONFIG",
     "EXPERIMENT_EVIDENCE_METADATA_KEYS",
+    "EXPERIMENT_LEDGER_WORKBENCH_LANE",
     "EXPERIMENT_LINEAGE_EDGE_TYPE",
     "GAP_0085_STRATEGY_MECHANISMS",
     "GIT_COMMIT_REF_PREFIX",
+    "QMB_LEDGER_WORKBENCH_LANE",
     "REFUSED_CONTINUITY_KINDS",
+    "WORKBENCH_LANE_COORDINATED",
+    "WORKBENCH_LANE_GOVERNED",
     "ExperimentSpec",
     "admit_coordinated_continuity",
     "admit_experiment_evidence_body",
+    "coordinated_run_labels",
     "is_git_branch_ref",
     "is_git_commit_ref",
     "parse_experiment_spec",
     "parse_git_commit_ref",
+    "refuse_caller_declared_lane_fields",
 ]
 
 
@@ -129,6 +136,21 @@ COPIED_EXPERIMENT_EVIDENCE_KEYS: Final[frozenset[str]] = frozenset(
 )
 EXPERIMENT_EVIDENCE_METADATA_KEYS: Final[frozenset[str]] = frozenset(
     {"note", "kind", "workbench_lane"}
+)
+WORKBENCH_LANE_GOVERNED: Final[str] = "governed"
+WORKBENCH_LANE_COORDINATED: Final[str] = "coordinated"
+QMB_LEDGER_WORKBENCH_LANE: Final[str] = WORKBENCH_LANE_GOVERNED
+EXPERIMENT_LEDGER_WORKBENCH_LANE: Final[str] = WORKBENCH_LANE_COORDINATED
+CALLER_DECLARED_LANE_FIELDS: Final[frozenset[str]] = frozenset(
+    {"analysis_method", "lane", "workbench_lane"}
+)
+_COLLAPSED_LANE_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "both_lanes",
+        "lanes",
+        "qmb_ledger_workbench_lane",
+        "experiment_ledger_workbench_lane",
+    }
 )
 
 
@@ -614,11 +636,75 @@ def _copied_evidence_value(value: object) -> bool:
     return False
 
 
+def refuse_caller_declared_lane_fields(
+    extra: Mapping[str, object] | None = None,
+    **fields: object,
+) -> TypedRefusal | None:
+    """Refuse payload / CT-32 / B-4 lane flags. The door selects the lane."""
+    present: list[str] = []
+    if extra is not None:
+        present.extend(key for key in CALLER_DECLARED_LANE_FIELDS if key in extra)
+    for key, value in fields.items():
+        if key in CALLER_DECLARED_LANE_FIELDS and value is not None:
+            present.append(key)
+    if not present:
+        return None
+    return _policy(
+        present[0],
+        "lane is derived from which door is called, never a caller-declared "
+        "flag on the payload, CT-32, or B-4; extending CT-32 or B-4 is a spine "
+        "amendment, not a connect fix (FR-W03; FR-W07; DEC-0270)",
+        given=present,
+        spine_amendment=True,
+        qmb_ledger_workbench_lane=QMB_LEDGER_WORKBENCH_LANE,
+        experiment_ledger_workbench_lane=EXPERIMENT_LEDGER_WORKBENCH_LANE,
+    )
+
+
+def coordinated_run_labels() -> Mapping[str, object]:
+    """Two honest labels on two objects for a CT-47 placement (DEC-0270)."""
+    return MappingProxyType(
+        {
+            "door": WORKBENCH_LANE_COORDINATED,
+            "experiment_ledger_workbench_lane": EXPERIMENT_LEDGER_WORKBENCH_LANE,
+            "qmb_ledger_workbench_lane": QMB_LEDGER_WORKBENCH_LANE,
+        }
+    )
+
+
 def admit_experiment_evidence_body(
     body: Mapping[str, object],
 ) -> Result[Mapping[str, object]]:
     """Admit Experiment Ledger evidence that stores _refs, never JSONL or CT-32 copies."""
-    for key, value in body.items():
+    stamped: dict[str, object] = dict(body)
+    for key in stamped:
+        token = key.strip().casefold().replace("-", "_")
+        if token in _COLLAPSED_LANE_KEYS:
+            return _policy(
+                key,
+                "the two workbench_lane labels live on two objects and must not "
+                "be collapsed into one field; QMB ledger is governed, Experiment "
+                "Ledger is coordinated (FR-W06; DEC-0270)",
+                qmb_ledger_workbench_lane=QMB_LEDGER_WORKBENCH_LANE,
+                experiment_ledger_workbench_lane=EXPERIMENT_LEDGER_WORKBENCH_LANE,
+            )
+    lane_raw = stamped.get("workbench_lane")
+    if lane_raw is None:
+        stamped["workbench_lane"] = EXPERIMENT_LEDGER_WORKBENCH_LANE
+    else:
+        token = lane_raw.strip().casefold() if isinstance(lane_raw, str) else ""
+        if token != WORKBENCH_LANE_COORDINATED:
+            return _policy(
+                "workbench_lane",
+                "the Experiment Ledger entry carries workbench_lane=coordinated; "
+                "the spawned run's QMB ledger line is workbench_lane=governed "
+                "(FR-W06; DEC-0270)",
+                given=repr(lane_raw),
+                qmb_ledger_workbench_lane=QMB_LEDGER_WORKBENCH_LANE,
+                experiment_ledger_workbench_lane=EXPERIMENT_LEDGER_WORKBENCH_LANE,
+            )
+        stamped["workbench_lane"] = EXPERIMENT_LEDGER_WORKBENCH_LANE
+    for key, value in stamped.items():
         if key.strip() == "":
             return _invalid(
                 "body",
@@ -649,7 +735,7 @@ def admit_experiment_evidence_body(
                 "(FR-W10; NFR-W04; DEC-0276)",
                 key=key,
             )
-    return Ok(MappingProxyType(dict(body)))
+    return Ok(MappingProxyType(stamped))
 
 
 def parse_experiment_spec(**fields: object) -> Result[ExperimentSpec]:

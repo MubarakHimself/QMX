@@ -207,6 +207,7 @@ class DaemonProcess:
                 return restored
 
             roster = DeskPluginRoster(plugins_root=plugins_root)
+            roster.backtesting.bind_experiments(experiments)
             activated = roster.activate(
                 principal=PrincipalClass.OPERATOR,
                 correlation_id=f"daemon-process:{boot_epoch_id}",

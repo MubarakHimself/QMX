@@ -23,6 +23,12 @@ from qma.core.ports.cancel_authority import (
     is_unauthorized_cancel_writer,
     refuse_unauthorized_cancel,
 )
+from qma.core.ports.experiments import (
+    EXPERIMENT_LEDGER_WORKBENCH_LANE,
+    QMB_LEDGER_WORKBENCH_LANE,
+    coordinated_run_labels,
+    refuse_caller_declared_lane_fields,
+)
 from qma.core.ports.jobs import JobHandle
 from qma.core.ports.qmb import (
     ANALYSIS_BACKTEST_PLUGIN_ID,
@@ -52,7 +58,9 @@ from qma.core.vocabulary.enums import JobHandleState
 from qma.daemon.backtest.cli import CliQmbDoorTransport
 from qma.daemon.envs.jobs import JobHandleService
 from qma.daemon.envs.registry import ExecutionEnvironmentRegistry
+from qma.daemon.experiments.service import ExperimentSpecService
 from qma.daemon.plugins.context import DaemonPluginContext, PluginContextError
+from qma.daemon.taskgraph.records import DispatchLease
 from qma.daemon.tools.registry import ToolRegistry
 from qmf.core import Ok, Result, is_ok, is_refusal
 from qmf.data.store.refusals import invalid_input, policy_rejection
@@ -146,28 +154,32 @@ class QmbPlacement:
     tool_id: str = QMB_BACKTEST_TOOL_ID
     plugin_id: str = ANALYSIS_BACKTEST_PLUGIN_ID
     route: tuple[str, ...] = QMB_ROUTE
+    qmb_ledger_workbench_lane: str = QMB_LEDGER_WORKBENCH_LANE
+    experiment_ledger_workbench_lane: str = EXPERIMENT_LEDGER_WORKBENCH_LANE
 
     def to_payload(self) -> Mapping[str, object]:
-        return MappingProxyType(
-            {
-                "job_id": self.handle.job_id,
-                "state": self.handle.state.value,
-                "tool_id": self.tool_id,
-                "plugin_id": self.plugin_id,
-                "route": list(self.route),
-                "occupancy_key": self.request.occupancy_key,
-                "environment_ref": self.request.environment_ref,
-                "world": self.request.world,
-                "door": self.request.door.value,
-                "program": self.invocation.program,
-                "argv": list(self.invocation.argv),
-                "import_edge": False,
-                "compute_router_used": False,
-                "qma_re_specifies": False,
-                "request": dict(self.request.to_payload()),
-                "receipt": dict(self.receipt.to_payload()),
-            }
-        )
+        payload: dict[str, object] = {
+            "job_id": self.handle.job_id,
+            "state": self.handle.state.value,
+            "tool_id": self.tool_id,
+            "plugin_id": self.plugin_id,
+            "route": list(self.route),
+            "occupancy_key": self.request.occupancy_key,
+            "environment_ref": self.request.environment_ref,
+            "world": self.request.world,
+            "door": self.request.door.value,
+            "program": self.invocation.program,
+            "argv": list(self.invocation.argv),
+            "import_edge": False,
+            "compute_router_used": False,
+            "qma_re_specifies": False,
+            "qmb_ledger_workbench_lane": self.qmb_ledger_workbench_lane,
+            "experiment_ledger_workbench_lane": self.experiment_ledger_workbench_lane,
+            "request": dict(self.request.to_payload()),
+            "receipt": dict(self.receipt.to_payload()),
+            "labels": dict(coordinated_run_labels()),
+        }
+        return MappingProxyType(payload)
 
 
 class BacktestingService:
@@ -180,6 +192,7 @@ class BacktestingService:
         jobs: JobHandleService | None = None,
         environments: ExecutionEnvironmentRegistry | None = None,
         transport: QmbDoorTransport | None = None,
+        experiments: ExperimentSpecService | None = None,
     ) -> None:
         self._jobs = jobs if jobs is not None else JobHandleService()
         self._tools = tools if tools is not None else ToolRegistry()
@@ -189,6 +202,7 @@ class BacktestingService:
         self._transport: QmbDoorTransport = (
             transport if transport is not None else CliQmbDoorTransport()
         )
+        self._experiments = experiments
         self._occupancy: dict[str, str] = {}
 
     @property
@@ -218,6 +232,14 @@ class BacktestingService:
     @property
     def transport(self) -> QmbDoorTransport:
         return self._transport
+
+    @property
+    def experiments(self) -> ExperimentSpecService | None:
+        return self._experiments
+
+    def bind_experiments(self, experiments: ExperimentSpecService) -> None:
+        """Attach ExperimentSpec product truth for coordinated placement."""
+        self._experiments = experiments
 
     @property
     def scheduling_authority(self) -> None:
@@ -291,6 +313,13 @@ class BacktestingService:
         world: str = QMB_WORLD_REPLAY,
         door: QmbDoorKind | str = QmbDoorKind.CLI,
         extra: Mapping[str, object] | None = None,
+        dispatch_lease: DispatchLease | None = None,
+        model_deployment_ref: object = None,
+        qmb_ledger_ref: object = None,
+        ct32_ref: object = None,
+        analysis_method: object = None,
+        lane: object = None,
+        workbench_lane: object = None,
     ) -> Result[QmbPlacement]:
         """Agent → QMA backtest tool → Backtesting Service."""
         if tool_id != QMB_BACKTEST_TOOL_ID:
@@ -300,6 +329,14 @@ class BacktestingService:
                 f"{QMB_BACKTEST_TOOL_ID} (CT-47; FR-Q55)",
                 given=tool_id,
             )
+        declared = refuse_caller_declared_lane_fields(
+            extra,
+            analysis_method=analysis_method,
+            lane=lane,
+            workbench_lane=workbench_lane,
+        )
+        if declared is not None:
+            return declared
         parsed = parse_qmb_backtest_request(
             owner=owner,
             task_id=task_id,
@@ -310,13 +347,39 @@ class BacktestingService:
             door=door,
             tool_id=tool_id,
             extra=extra,
+            analysis_method=analysis_method,
+            lane=lane,
+            workbench_lane=workbench_lane,
         )
         if is_refusal(parsed):
             return parsed
-        return self.submit(parsed.value)
+        return self.submit(
+            parsed.value,
+            dispatch_lease=dispatch_lease,
+            model_deployment_ref=model_deployment_ref,
+            qmb_ledger_ref=qmb_ledger_ref,
+            ct32_ref=ct32_ref,
+        )
 
-    def submit(self, request: QmbBacktestRequest) -> Result[QmbPlacement]:
+    def submit(
+        self,
+        request: QmbBacktestRequest,
+        *,
+        dispatch_lease: DispatchLease | None = None,
+        model_deployment_ref: object = None,
+        qmb_ledger_ref: object = None,
+        ct32_ref: object = None,
+    ) -> Result[QmbPlacement]:
         """Place one ``qmb`` job in an eligible environment through the QMB door."""
+        if self._experiments is not None:
+            resolved = self._experiments.resolve(request.experiment_spec_fp1)
+            if is_refusal(resolved):
+                return invalid_input(
+                    "experiment_spec_fp1",
+                    "coordinated placement requires a registered ExperimentSpec "
+                    "(FR-W06; DEC-0270)",
+                    spec_fp1=request.experiment_spec_fp1,
+                )
         if self._tools.get(QMB_BACKTEST_TOOL_ID) is None:
             installed = self.install()
             if is_refusal(installed):
@@ -364,6 +427,16 @@ class BacktestingService:
             )
             return receipt
         self._occupancy = admitted.value
+        if self._experiments is not None and dispatch_lease is not None:
+            recorded = self._experiments.record_coordinated_run(
+                spec_fp1=request.experiment_spec_fp1,
+                dispatch_lease=dispatch_lease,
+                model_deployment_ref=model_deployment_ref,
+                qmb_ledger_ref=qmb_ledger_ref,
+                ct32_ref=ct32_ref,
+            )
+            if is_refusal(recorded):
+                return recorded
         return Ok(
             QmbPlacement(
                 handle=minted.value,
