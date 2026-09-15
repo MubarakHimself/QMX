@@ -12,10 +12,13 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from pathlib import Path
 from types import MappingProxyType
 from typing import Final, Literal, cast
 
+from qma.core.barriers.dependencies import (
+    FORBIDDEN_QMB_TASK_GRAPH_NAMES,
+    scan_qmb_task_graph_modules,
+)
 from qma.core.control.primitives import ControlPrimitive, Skill
 from qma.core.ontology.routine import (
     ROUTINE_METADATA_KEYS,
@@ -205,17 +208,6 @@ REFUSED_PROCEDURE_PRODUCTS: Final[frozenset[str]] = frozenset(
     }
 )
 REFUSED_WIZARD_SEQUENCE: Final[tuple[str, ...]] = ("research", "backtest", "paper")
-FORBIDDEN_QMB_TASK_GRAPH_NAMES: Final[frozenset[str]] = frozenset(
-    {
-        "taskgraph",
-        "task_graph",
-        "workflow",
-        "wizard",
-        "custom_projects",
-        "custom-projects",
-        "kanban",
-    }
-)
 _QMB_TASK_GRAPH_HOMES: Final[frozenset[str]] = frozenset(
     {
         "qmb",
@@ -236,9 +228,6 @@ _PROCEDURE_KIND_ALIASES: Final[Mapping[str, ProcedureKind]] = MappingProxyType(
         ProcedureKind.ROUTINE.value: ProcedureKind.ROUTINE,
         "operator_routine": ProcedureKind.ROUTINE,
     }
-)
-_SKIP_SCAN_DIRS: Final[frozenset[str]] = frozenset(
-    {".git", "__pycache__", ".venv", "node_modules", ".ruff_cache"}
 )
 
 
@@ -441,26 +430,6 @@ def door_step_ids(nodes: Sequence[Mapping[str, object]]) -> tuple[str, ...]:
 def first_door_step_ids(nodes: Sequence[Mapping[str, object]]) -> tuple[str, ...]:
     """Non-linear composition: every door step is a legal first placement."""
     return door_step_ids(nodes)
-
-
-def scan_qmb_task_graph_modules(root: Path) -> tuple[str, ...]:
-    """Filesystem hits for a forbidden QMB task-graph / wizard module."""
-    if not root.exists():
-        return ()
-    hits: list[str] = []
-    if root.is_file():
-        stem = root.stem.casefold().replace("-", "_")
-        if stem in FORBIDDEN_QMB_TASK_GRAPH_NAMES:
-            return (str(root),)
-        return ()
-    for path in root.rglob("*"):
-        if any(part in _SKIP_SCAN_DIRS for part in path.parts):
-            continue
-        token = path.stem.casefold().replace("-", "_") if path.is_file() else path.name
-        token = token.casefold().replace("-", "_")
-        if token in FORBIDDEN_QMB_TASK_GRAPH_NAMES:
-            hits.append(str(path))
-    return tuple(dict.fromkeys(hits))
 
 
 def _nodes_from(value: object) -> tuple[Mapping[str, object], ...]:

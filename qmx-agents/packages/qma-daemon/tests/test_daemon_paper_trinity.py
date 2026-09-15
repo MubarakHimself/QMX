@@ -5,7 +5,6 @@ from __future__ import annotations
 import runpy
 from pathlib import Path
 
-from qma.core.ontology import ActorId, DeskSlug
 from qma.core.ports.paper import (
     EPIC_PROMOTION_AUTHORITY,
     PAPER_NOUN_RESEARCH,
@@ -20,12 +19,6 @@ from qma.daemon.process import DaemonProcess
 from qma.daemon.tools import ToolRegistry
 from qmf.core import is_ok, is_refusal
 from qmf.core.refusal import RefusalCategory
-
-
-def _owner() -> ActorId:
-    minted = ActorId.mint(DeskSlug.ANALYSIS, "notebook")
-    assert is_ok(minted)
-    return minted.value
 
 
 def test_research_paper_named_on_experiment_service() -> None:

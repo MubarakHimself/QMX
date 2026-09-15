@@ -15,6 +15,7 @@ from typing import Final, cast
 __all__ = [
     "FORBIDDEN_QMA_IMPORT_ROOTS",
     "FORBIDDEN_QMB_IMPORT_ROOTS",
+    "FORBIDDEN_QMB_TASK_GRAPH_NAMES",
     "QMA_CORE_ALLOWED_DEPS",
     "QMA_DAEMON_ALLOWED_DEPS",
     "QMA_PACKAGE_ALLOWED_DEPS",
@@ -26,6 +27,7 @@ __all__ = [
     "declared_project_dependencies",
     "scan_forbidden_qma_imports",
     "scan_qmb_imports",
+    "scan_qmb_task_graph_modules",
     "scan_qmf_venue_imports",
 ]
 
@@ -63,6 +65,22 @@ FORBIDDEN_QMA_IMPORT_ROOTS: Final[frozenset[str]] = frozenset(
 
 # The QMB door is a runtime CLI/MCP interaction — no package-import edge (FR-Q55).
 FORBIDDEN_QMB_IMPORT_ROOTS: Final[frozenset[str]] = frozenset({"qmb"})
+
+# QMB must not grow a task-graph / wizard / Custom Projects module (FR-W32; DEC-0277).
+FORBIDDEN_QMB_TASK_GRAPH_NAMES: Final[frozenset[str]] = frozenset(
+    {
+        "taskgraph",
+        "task_graph",
+        "workflow",
+        "wizard",
+        "custom_projects",
+        "custom-projects",
+        "kanban",
+    }
+)
+_SKIP_SCAN_DIRS: Final[frozenset[str]] = frozenset(
+    {".git", "__pycache__", ".venv", "node_modules", ".ruff_cache"}
+)
 
 
 class DependencyBoundaryError(ValueError):
@@ -186,3 +204,23 @@ def assert_no_qmb_import(root: Path) -> None:
             "the qmb door is a runtime CLI or MCP interaction (CT-47; FR-Q55); "
             f"offending sites: {', '.join(hits)}"
         )
+
+
+def scan_qmb_task_graph_modules(root: Path) -> tuple[str, ...]:
+    """Filesystem hits for a forbidden QMB task-graph / wizard module."""
+    if not root.exists():
+        return ()
+    hits: list[str] = []
+    if root.is_file():
+        stem = root.stem.casefold().replace("-", "_")
+        if stem in FORBIDDEN_QMB_TASK_GRAPH_NAMES:
+            return (str(root),)
+        return ()
+    for path in root.rglob("*"):
+        if any(part in _SKIP_SCAN_DIRS for part in path.parts):
+            continue
+        token = path.stem.casefold().replace("-", "_") if path.is_file() else path.name
+        token = token.casefold().replace("-", "_")
+        if token in FORBIDDEN_QMB_TASK_GRAPH_NAMES:
+            hits.append(str(path))
+    return tuple(dict.fromkeys(hits))

@@ -94,8 +94,10 @@ def test_placement_exposes_two_labels_not_one_field() -> None:
     assert payload["experiment_ledger_workbench_lane"] == EXPERIMENT_LEDGER_WORKBENCH_LANE
     assert payload["qmb_ledger_workbench_lane"] != payload["experiment_ledger_workbench_lane"]
     assert "workbench_lane" not in payload
-    assert payload["labels"]["qmb_ledger_workbench_lane"] == "governed"
-    assert payload["labels"]["experiment_ledger_workbench_lane"] == "coordinated"
+    labels = payload["labels"]
+    assert isinstance(labels, dict)
+    assert labels["qmb_ledger_workbench_lane"] == "governed"
+    assert labels["experiment_ledger_workbench_lane"] == "coordinated"
     flagged = service.invoke(
         QMB_BACKTEST_TOOL_ID,
         owner=_owner(),

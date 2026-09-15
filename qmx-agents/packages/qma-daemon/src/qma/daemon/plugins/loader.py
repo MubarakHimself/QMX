@@ -687,11 +687,19 @@ class PluginLoader:
             ):
                 if key in boundary.context:
                     extras[key] = boundary.context[key]
-            return self._refuse(
+            refused = self._refuse(
                 str(boundary.context.get("field", "trust")),
                 str(boundary.context.get("reason", boundary)),
                 plugin_id=str(plugin_raw) if isinstance(plugin_raw, str) else None,
-                **extras,
+            )
+            if not extras:
+                return refused
+            ctx = dict(refused.context)
+            ctx.update(extras)
+            return TypedRefusal(
+                category=refused.category,
+                retryability=refused.retryability,
+                context=MappingProxyType(ctx),
             )
         try:
             manifest = parse_plugin_manifest(raw)

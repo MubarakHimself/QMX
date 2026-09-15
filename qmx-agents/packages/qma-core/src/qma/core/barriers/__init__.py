@@ -30,6 +30,7 @@ from qma.core.barriers.credential_allowlist import (
 from qma.core.barriers.dependencies import (
     FORBIDDEN_QMA_IMPORT_ROOTS,
     FORBIDDEN_QMB_IMPORT_ROOTS,
+    FORBIDDEN_QMB_TASK_GRAPH_NAMES,
     QMA_CORE_ALLOWED_DEPS,
     QMA_DAEMON_ALLOWED_DEPS,
     QMA_PACKAGE_ALLOWED_DEPS,
@@ -41,6 +42,7 @@ from qma.core.barriers.dependencies import (
     declared_project_dependencies,
     scan_forbidden_qma_imports,
     scan_qmb_imports,
+    scan_qmb_task_graph_modules,
     scan_qmf_venue_imports,
 )
 from qma.core.barriers.money_path import (
@@ -119,6 +121,7 @@ __all__ = [
     "FORBIDDEN_MODEL_ADAPTERS",
     "FORBIDDEN_QMA_IMPORT_ROOTS",
     "FORBIDDEN_QMB_IMPORT_ROOTS",
+    "FORBIDDEN_QMB_TASK_GRAPH_NAMES",
     "GAP_0070_DESKTOP_EXCLUSION",
     "HANDED_VIA_SURFACES",
     "HOST_IDENTITY_KINDS",
@@ -192,6 +195,7 @@ __all__ = [
     "refuse_zone_transition_surface",
     "scan_forbidden_qma_imports",
     "scan_qmb_imports",
+    "scan_qmb_task_graph_modules",
     "scan_qmf_venue_imports",
     "validate_computer_use_profile",
     "validate_declaration_surface",
