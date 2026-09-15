@@ -14,6 +14,12 @@ decisions: [DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0192
 
 This records changes to the QMF knowledge base. It is not a software release log and does not convert provisional decisions into implementation authority.
 
+## 2026-09-15 — Story 36.2: Production QMB door is a real qmb CLI transport
+
+The QMA Backtesting Service default door is `CliQmbDoorTransport`, which subprocess-spawns a `qmb` CLI process along Agent → QMA backtest tool → Backtesting Service → qmb door → QMB. `RecordingQmbDoorTransport` remains a non-production recorder and is not a working integration. The daemon, plugins, and worker images still have no `import qmb` edge. Occupancy stays one `qmb` run per ExecutionEnvironment. `JobHandle.cancel` still does not map onto a live `qmb` abort (Story 36.5).
+
+Touched: [qma-daemon.md](components/qma-daemon.md).
+
 ## 2026-09-14 — Story 32.3: Extensibility rungs 1–3 bind; rung 4 stays GAP-0081
 
 The public extension surface is exactly three rungs (DEC-0280; FR-W37): ui-editable config variables on templates (`configurable: true`, L38); ordinary Python logic plus QMB ports/adapters; and QMA plugins, skills, graph templates, and desk packs. Rung 4 (UI contribution SDK / `qma-ui-contract`) is refused as GAP-0081 deferred; no `ui_view` contribution point is minted. No-code authoring (SQ-style DSL, RandomCondition editor, `.qml` revival) is not an extension rung — ordinary Python remains the logic path. QMA `plugin` vocabulary stays QMA-scoped (DEC-0346); no QMB module is a plugin. The work-environment roster remains a later UI alias over fingerprints and is not minted as a roster kind (NFR-W06 A2; FR-W16).

@@ -108,8 +108,12 @@ def test_no_qma_tree_imports_qmb() -> None:
     for pack in PLUGINS_ROOT.iterdir():
         if pack.is_dir():
             assert_no_qmb_import(pack)
+            worker = pack / "worker"
+            if worker.exists():
+                assert_no_qmb_import(worker)
     assert scan_qmb_imports(CORE_PKG / "src") == ()
     assert scan_qmb_imports(DAEMON_PKG / "src") == ()
+    assert scan_qmb_imports(PLUGINS_ROOT) == ()
 
 
 def test_qmb_import_scanner_catches_package_edge(tmp_path: Path) -> None:

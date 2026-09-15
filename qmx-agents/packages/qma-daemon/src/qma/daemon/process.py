@@ -365,6 +365,10 @@ class DaemonProcess:
                 "expected_analysis_backtest_plugin_id": ANALYSIS_BACKTEST_PLUGIN_ID,
                 "qmb_jsonl_tables": sorted(self.qmb_jsonl_tables_present()),
                 "backtesting_service": type(self.backtesting).__name__,
+                "qmb_door_transport": type(self.backtesting.transport).__name__,
+                "qmb_door_production": bool(
+                    getattr(self.backtesting.transport, "production", False)
+                ),
                 "scheduling_authority": self.backtesting.scheduling_authority,
                 "parallelism": self.backtesting.parallelism,
                 "backtest_state": self.backtesting.backtest_state,
@@ -394,10 +398,15 @@ class DaemonProcess:
             return
         self._closed = True
         self._bound = None
-        self._substrate.close()
-        with _process_gate.lock:
-            if _process_gate.holder is self:
-                _process_gate.holder = None
+        closer = getattr(self.backtesting.transport, "close", None)
+        try:
+            if callable(closer):
+                closer()
+        finally:
+            self._substrate.close()
+            with _process_gate.lock:
+                if _process_gate.holder is self:
+                    _process_gate.holder = None
 
     def __enter__(self) -> DaemonProcess:
         return self

@@ -11,7 +11,7 @@ from pathlib import Path
 
 from qma.core.plugins.packs import DESK_PLUGIN_PACK_IDS
 from qma.core.ports.qmb import ANALYSIS_BACKTEST_PLUGIN_ID, QMB_BACKTEST_TOOL_ID
-from qma.daemon.backtest.service import BacktestingService
+from qma.daemon.backtest import BacktestingService, CliQmbDoorTransport
 from qma.daemon.process import (
     COMP_EXP_MINTED,
     HTTP_EXPERIMENT_SERVICE_MINTED,
@@ -59,6 +59,8 @@ def test_compose_is_listener_sqlite_writer_and_pack_roster(tmp_path: Path) -> No
             assert process.backtesting.plugin_id == ANALYSIS_BACKTEST_PLUGIN_ID
             assert process.backtesting.tool_id == QMB_BACKTEST_TOOL_ID
             assert isinstance(process.backtesting, BacktestingService)
+            assert isinstance(process.backtesting.transport, CliQmbDoorTransport)
+            assert process.snapshot()["qmb_door_transport"] == "CliQmbDoorTransport"
             assert process.backtesting.scheduling_authority is None
             assert process.backtesting.parallelism is None
             assert process.backtesting.backtest_state is None

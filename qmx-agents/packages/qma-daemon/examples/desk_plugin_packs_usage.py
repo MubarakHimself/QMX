@@ -2,11 +2,19 @@
 
 from __future__ import annotations
 
+import tempfile
+from pathlib import Path
+
 from qma.core.ontology import ActorId, DeskSlug
 from qma.core.plugins import DESK_PLUGIN_PACK_IDS, assert_no_daemon_import
 from qma.core.ports.execution import ExecutionEnvironmentDeclaration
 from qma.core.ports.qmb import QMB_BACKTEST_TOOL_ID
 from qma.core.vocabulary.enums import ExecutionEnvironmentKind, JobHandleState
+from qma.daemon.backtest import (
+    BacktestingService,
+    CliQmbDoorTransport,
+    cli_qmb_test_double_argv0,
+)
 from qma.daemon.plugins import DeskPluginRoster, default_plugins_root
 from qmf.core import is_ok, is_refusal
 
@@ -14,7 +22,16 @@ from qmf.core import is_ok, is_refusal
 def main() -> None:
     root = default_plugins_root()
     assert_no_daemon_import(root)
-    roster = DeskPluginRoster(plugins_root=root)
+    with tempfile.TemporaryDirectory() as raw:
+        _run(root, Path(raw))
+
+
+def _run(plugins_root: Path, double_root: Path) -> None:
+    transport = CliQmbDoorTransport(argv0=cli_qmb_test_double_argv0(double_root / "qmb_double.py"))
+    roster = DeskPluginRoster(
+        plugins_root=plugins_root,
+        backtesting=BacktestingService(transport=transport),
+    )
     loaded = roster.activate()
     assert is_ok(loaded)
     assert tuple(roster.loader.loaded_ids()) == DESK_PLUGIN_PACK_IDS
@@ -53,6 +70,7 @@ def main() -> None:
     assert is_ok(
         roster.backtesting.observe_outcome(placed.value.handle.job_id, JobHandleState.DONE)
     )
+    transport.close()
 
 
 if __name__ == "__main__":

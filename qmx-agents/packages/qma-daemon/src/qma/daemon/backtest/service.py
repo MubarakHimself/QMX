@@ -5,6 +5,8 @@ Places exactly one ``qmb`` job per ExecutionEnvironment. Holds no scheduling
 authority, no parallelism, and no durable backtest state. QMB keeps those.
 The door is a runtime interaction: this module never imports the ``qmb``
 package and never places the compute leg through the Compute Router.
+Production placement is ``CliQmbDoorTransport``. ``RecordingQmbDoorTransport``
+records without spawning and is not a working integration.
 """
 
 from __future__ import annotations
@@ -47,6 +49,7 @@ from qma.core.ports.qmb import (
 from qma.core.ports.tools import ToolKind, ToolRecord
 from qma.core.refusals import NoEnvironment
 from qma.core.vocabulary.enums import JobHandleState
+from qma.daemon.backtest.cli import CliQmbDoorTransport
 from qma.daemon.envs.jobs import JobHandleService
 from qma.daemon.envs.registry import ExecutionEnvironmentRegistry
 from qma.daemon.plugins.context import DaemonPluginContext, PluginContextError
@@ -56,6 +59,7 @@ from qmf.data.store.refusals import invalid_input, policy_rejection
 
 __all__ = [
     "BacktestingService",
+    "CliQmbDoorTransport",
     "QmbPlacement",
     "RecordingQmbDoorTransport",
 ]
@@ -67,12 +71,16 @@ def _job_id_for(request: QmbBacktestRequest) -> str:
 
 @dataclass
 class RecordingQmbDoorTransport:
-    """Runtime QMB door. Records CLI/MCP invocations and never imports ``qmb``.
+    """Non-production recorder. Does not spawn ``qmb`` and is not the working door.
 
-    ``JobHandle.cancel`` still enters ``cancelled`` on the QMA handle. Mapping
-    that cancel onto a live ``qmb`` abort is Epic 36, not this transport.
+    Tests that claim the QMA→QMB door works must spawn ``qmb`` or the documented
+    CLI test double via ``CliQmbDoorTransport``. ``JobHandle.cancel`` still
+    enters ``cancelled`` on the QMA handle; mapping that cancel onto a live
+    ``qmb`` abort is Story 36.5.
     """
 
+    production: Literal[False] = False
+    spawns_qmb_process: Literal[False] = False
     maps_cancel_to_qmb_abort: Literal[False] = RECORDING_DOOR_MAPS_CANCEL_TO_QMB_ABORT
     _invocations: list[QmbDoorInvocation] = field(default_factory=list[QmbDoorInvocation])
     _abort_invocations: list[str] = field(default_factory=list[str])
@@ -179,7 +187,7 @@ class BacktestingService:
             environments if environments is not None else self._jobs.router.environments
         )
         self._transport: QmbDoorTransport = (
-            transport if transport is not None else RecordingQmbDoorTransport()
+            transport if transport is not None else CliQmbDoorTransport()
         )
         self._occupancy: dict[str, str] = {}
 
@@ -396,7 +404,7 @@ class BacktestingService:
         *,
         writer: str = COORDINATED_CANCEL_AUTHORITY,
     ) -> Result[JobHandle]:
-        """JobHandle.cancel only. Recording door does not map onto a live qmb abort."""
+        """JobHandle.cancel only. Live qmb abort mapping is Story 36.5."""
         cancelled = self._jobs.cancel(job_id, writer=writer)
         if is_refusal(cancelled):
             return cancelled

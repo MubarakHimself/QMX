@@ -54,6 +54,7 @@ def _service(
         kinds = (ExecutionEnvironmentKind.DOCKER,)
     envs = _envs(*kinds)
     jobs = JobHandleService()
+    # Non-production recorder: occupancy law, not a working-door claim (NFR-W05).
     transport = RecordingQmbDoorTransport()
     tools = ToolRegistry()
     service = BacktestingService(

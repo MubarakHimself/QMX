@@ -3,9 +3,9 @@
 A UI client detach or tab close leaves JobHandle state unchanged and never
 writes ``cancelled``, ``aborted``, ``failed``, or ``done``. A plugin, Routine,
 worker, or UI widget cannot set a terminal JobHandle or QMB ledger state.
-While the QMA→QMB door is ``RecordingQmbDoorTransport``, ``JobHandle.cancel``
+The production QMA→QMB door is ``CliQmbDoorTransport``. ``JobHandle.cancel``
 still enters ``cancelled`` (Story 45.4) and does not map onto a live ``qmb``
-abort (Epic 36). Ungoverned ``qmb.run()`` process death writes nothing to the
+abort (Story 36.5). Ungoverned ``qmb.run()`` process death writes nothing to the
 QMB ledger or Experiment Ledger and invents no ungoverned cancel record.
 """
 
@@ -122,7 +122,7 @@ def client_detach_writes_terminal() -> bool:
 
 
 def recording_door_maps_cancel_to_qmb_abort() -> bool:
-    """RecordingQmbDoorTransport does not map cancel onto a live qmb abort."""
+    """Neither the recording helper nor CliQmbDoorTransport maps cancel to abort."""
     return RECORDING_DOOR_MAPS_CANCEL_TO_QMB_ABORT
 
 

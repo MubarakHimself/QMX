@@ -125,6 +125,9 @@ def test_image_validation_refuses_venue_broker_and_node_client() -> None:
     assert is_forbidden_image_token("qmn.client") == "qmn.client"
     assert is_forbidden_image_token("ccxt") == "ccxt"
     assert is_forbidden_image_token("qma-core") is None
+    assert "qmb" in FORBIDDEN_IMAGE_TOKENS
+    assert is_forbidden_image_token("qmb") == "qmb"
+    assert is_forbidden_image_token("qmb.doors") == "qmb"
 
     venue = validate_worker_image(
         WorkerImageManifest.from_values(imports=("qmf.venue",), packages=("qmf-venue",))
@@ -138,6 +141,10 @@ def test_image_validation_refuses_venue_broker_and_node_client() -> None:
     )
     assert is_refusal(node)
     assert node.context["reason"] == "forbidden_image"
+
+    qmb_image = validate_worker_image(WorkerImageManifest.from_values(imports=("qmb",)))
+    assert is_refusal(qmb_image)
+    assert qmb_image.context["reason"] == "forbidden_image"
 
     clean = validate_worker_image(
         WorkerImageManifest.from_values(image="qma-worker:isolated", packages=("qma-core",))

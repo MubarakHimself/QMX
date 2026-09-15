@@ -22,6 +22,11 @@ from qma.core.vocabulary.enums import (
     JobHandleState,
     PrincipalClass,
 )
+from qma.daemon.backtest import (
+    BacktestingService,
+    CliQmbDoorTransport,
+    cli_qmb_test_double_argv0,
+)
 from qma.daemon.capabilities.spawn import SpawnRequest
 from qma.daemon.plugins import DeskPluginRoster, PluginLoader, default_plugins_root
 from qma.daemon.taskgraph.compiler import CompileRequest
@@ -64,47 +69,53 @@ def test_activate_registers_through_plugin_manifest_and_context() -> None:
     assert isinstance(research.context, PluginContext)
 
 
-def test_analysis_backtest_is_existing_qmb_door_adapter() -> None:
-    roster = _activate_roster()
+def test_analysis_backtest_is_existing_qmb_door_adapter(tmp_path: Path) -> None:
+    transport = CliQmbDoorTransport(argv0=cli_qmb_test_double_argv0(tmp_path / "qmb_double.py"))
+    roster = DeskPluginRoster(backtesting=BacktestingService(transport=transport))
+    result = roster.activate()
+    assert is_ok(result), result
     service = roster.backtesting
-    assert service.plugin_id == "analysis-backtest"
-    assert service.tool_id == QMB_BACKTEST_TOOL_ID
-    assert service.scheduling_authority is None
-    assert service.parallelism is None
-    assert service.backtest_state is None
-    assert service.qmb_owned_concerns() == QMB_OWNED_CONCERNS
-    assert is_refusal(service.set_parallelism(4))
-    assert is_refusal(service.append_run_ledger({"line": 1}))
-    assert is_refusal(service.store_artifact({"ct32": True}))
-    assert is_refusal(service.import_qmb_package())
+    try:
+        assert service.plugin_id == "analysis-backtest"
+        assert service.tool_id == QMB_BACKTEST_TOOL_ID
+        assert service.scheduling_authority is None
+        assert service.parallelism is None
+        assert service.backtest_state is None
+        assert service.qmb_owned_concerns() == QMB_OWNED_CONCERNS
+        assert is_refusal(service.set_parallelism(4))
+        assert is_refusal(service.append_run_ledger({"line": 1}))
+        assert is_refusal(service.store_artifact({"ct32": True}))
+        assert is_refusal(service.import_qmb_package())
 
-    docker = ExecutionEnvironmentDeclaration.isolated(
-        ExecutionEnvironmentKind.DOCKER, provider_ref="local-docker"
-    )
-    assert is_ok(service.environments.register_declaration(docker))
-    owner = ActorId.mint(DeskSlug.ANALYSIS, "notebook")
-    assert is_ok(owner)
-    first = service.invoke(
-        QMB_BACKTEST_TOOL_ID,
-        owner=owner.value,
-        task_id="task-pack-1",
-        environment_ref="env:docker",
-        experiment_spec_fp1="fp1:spec-1",
-        evidence_ref="evidence:recorded-1",
-    )
-    assert is_ok(first), first
-    second = service.invoke(
-        QMB_BACKTEST_TOOL_ID,
-        owner=owner.value,
-        task_id="task-pack-2",
-        environment_ref="env:docker",
-        experiment_spec_fp1="fp1:spec-2",
-        evidence_ref="evidence:recorded-2",
-    )
-    assert is_refusal(second)
-    assert second.context["field"] == "qmb_job"
-    done = service.observe_outcome(first.value.handle.job_id, JobHandleState.DONE)
-    assert is_ok(done)
+        docker = ExecutionEnvironmentDeclaration.isolated(
+            ExecutionEnvironmentKind.DOCKER, provider_ref="local-docker"
+        )
+        assert is_ok(service.environments.register_declaration(docker))
+        owner = ActorId.mint(DeskSlug.ANALYSIS, "notebook")
+        assert is_ok(owner)
+        first = service.invoke(
+            QMB_BACKTEST_TOOL_ID,
+            owner=owner.value,
+            task_id="task-pack-1",
+            environment_ref="env:docker",
+            experiment_spec_fp1="fp1:spec-1",
+            evidence_ref="evidence:recorded-1",
+        )
+        assert is_ok(first), first
+        second = service.invoke(
+            QMB_BACKTEST_TOOL_ID,
+            owner=owner.value,
+            task_id="task-pack-2",
+            environment_ref="env:docker",
+            experiment_spec_fp1="fp1:spec-2",
+            evidence_ref="evidence:recorded-2",
+        )
+        assert is_refusal(second)
+        assert second.context["field"] == "qmb_job"
+        done = service.observe_outcome(first.value.handle.job_id, JobHandleState.DONE)
+        assert is_ok(done)
+    finally:
+        transport.close()
 
 
 def test_money_path_act_refused_before_pack_registration_completes() -> None:

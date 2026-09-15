@@ -197,6 +197,7 @@ FORBIDDEN_IMAGE_TOKENS: Final[frozenset[str]] = frozenset(
         "ib_insync",
         "metatrader5",
         "openrouter",
+        "qmb",
     }
 )
 
@@ -479,7 +480,7 @@ def validate_worker_image(
     stage: StageName = "registration",
     kind: str | None = None,
 ) -> Result[WorkerImageManifest]:
-    """Refuse an image that contains qmf-venue, a broker/exchange SDK, or qmn."""
+    """Refuse an image that contains qmf-venue, qmb, a broker/exchange SDK, or qmn."""
     if manifest is None:
         resolved = WorkerImageManifest()
     elif isinstance(manifest, WorkerImageManifest):

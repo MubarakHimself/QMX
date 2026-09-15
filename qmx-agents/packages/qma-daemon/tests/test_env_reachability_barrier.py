@@ -118,6 +118,8 @@ def test_image_with_qmf_venue_or_node_client_refused() -> None:
     assert is_refusal(node)
     broker_sdk = registry.register_worker_image(WorkerImageManifest.from_values(packages=("ccxt",)))
     assert is_refusal(broker_sdk)
+    qmb_image = registry.register_worker_image(WorkerImageManifest.from_values(imports=("qmb",)))
+    assert is_refusal(qmb_image)
     clean = registry.register_worker_image(
         WorkerImageManifest.from_values(image="qma-worker:isolated", packages=("qma-core",))
     )
