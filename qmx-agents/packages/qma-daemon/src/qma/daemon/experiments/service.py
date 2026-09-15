@@ -27,6 +27,18 @@ from qma.core.ports.experiments import (
     admit_experiment_evidence_body,
     refuse_caller_declared_lane_fields,
 )
+from qma.core.ports.paper import (
+    DisplayAlias,
+    HubCandidateRef,
+    admit_hub_candidate_ref,
+    mint_ui_tab_record,
+    name_paper_noun,
+    refuse_hub_publish_from_qma,
+    refuse_qma_hub_write,
+    refuse_qma_paper,
+    refuse_qma_promotion,
+    resolve_display_alias,
+)
 from qma.core.ports.qmb import QMB_OCCUPANCY_QUERY, QMB_OPENS_DAEMON_SQLITE
 from qma.daemon.experiments.sqlite import ExperimentSqliteStore
 from qma.daemon.journal.authoritative import AuthoritativeJournal
@@ -230,6 +242,56 @@ class ExperimentSpecService:
             "successor edges persist through the daemon journal / sqlite writer "
             "(FR-W10; DEC-0276; DEC-0308)",
         )
+
+    def name_paper(
+        self,
+        *,
+        world: object = "replay",
+        location: object = "outside_node",
+        noun: object = None,
+    ) -> Result[str]:
+        """Name research-paper. QMA-paper and node-paper-as-QMB are refused."""
+        return name_paper_noun(world=world, location=location, noun=noun)
+
+    def register_qma_paper(self, *_args: object, **_kwargs: object) -> Result[str]:
+        """Refused — QMA-paper does not exist."""
+        return refuse_qma_paper(given=_kwargs.get("tool_id", "qma-paper"))
+
+    def write_hub(self, *_args: object, **_kwargs: object) -> Result[HubCandidateRef]:
+        """Refused — QMA never writes the B-15 hub."""
+        return refuse_qma_hub_write(act=_kwargs.get("act", "hub_write"), given=_kwargs.get("ref"))
+
+    def hub_publish(self, *_args: object, **_kwargs: object) -> Result[str]:
+        """Refused — hub_publish is human."""
+        return refuse_hub_publish_from_qma(given=_kwargs.get("fragment", "hub_publish"))
+
+    def admit_hub_ref(self, ref: object) -> Result[HubCandidateRef]:
+        """Hold a candidate ref. Never a hub write."""
+        return admit_hub_candidate_ref(ref)
+
+    def resolve_alias(
+        self,
+        *,
+        display: object,
+        lane: object,
+        over: object,
+        mint_record: object = False,
+    ) -> Result[DisplayAlias]:
+        """project/workspace are UX aliases. Tabs must not mint a record."""
+        return resolve_display_alias(
+            display=display,
+            lane=lane,
+            over=over,
+            mint_record=mint_record,
+        )
+
+    def mint_ui_tab(self, *_args: object, **_kwargs: object) -> Result[str]:
+        """Refused — UI tabs must not mint a record."""
+        return mint_ui_tab_record(display=_kwargs.get("display", "tab"))
+
+    def promote(self, *_args: object, **_kwargs: object) -> Result[str]:
+        """Refused — this epic grants no promotion authority."""
+        return refuse_qma_promotion(given=_kwargs.get("artifact", "promote"))
 
     def register(
         self,

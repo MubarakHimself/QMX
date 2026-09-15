@@ -37,6 +37,13 @@ from qma.core.control.runtime import (
 )
 from qma.core.ontology import ActorId, DeskSlug, Quant, Session
 from qma.core.plugins.hooks import HookSource
+from qma.core.ports.paper import (
+    ExploratoryNotebook,
+    ManagedInterpreter,
+    admit_exploratory_notebook,
+    admit_managed_interpreter,
+    notebook_joins_undertaking,
+)
 from qma.core.ports.tools import ToolKind, ToolRecord, default_rung_for_kind
 from qma.core.vocabulary.enums import (
     ExecutionEnvironmentKind,
@@ -529,6 +536,56 @@ class RuntimeService:
 
     def notebook_entry(self) -> ToolRecord | None:
         return self._tools.get(ANALYSIS_NOTEBOOK_TOOL_ID)
+
+    def admit_exploratory_notebook(
+        self,
+        *,
+        imports: object,
+        host: object = "controlled-room",
+        jupyter_product: object = None,
+        qmb_module: object = False,
+        new_comp: object = None,
+    ) -> Result[ExploratoryNotebook]:
+        """``import qmb`` / ``import qml`` on a controlled-room host."""
+        return admit_exploratory_notebook(
+            imports=imports,
+            host=host,
+            jupyter_product=jupyter_product,
+            qmb_module=qmb_module,
+            new_comp=new_comp,
+        )
+
+    def admit_managed_interpreter(
+        self,
+        *,
+        kind: object,
+        owner: object = "qma",
+        as_qmb_module: object = False,
+        as_comp: object = None,
+        jupyter_product: object = None,
+    ) -> Result[ManagedInterpreter]:
+        """Product-owned interpreter lifecycle is a QMA ExecutionEnvironment."""
+        return admit_managed_interpreter(
+            kind=kind,
+            owner=owner,
+            as_qmb_module=as_qmb_module,
+            as_comp=as_comp,
+            jupyter_product=jupyter_product,
+        )
+
+    def notebook_joins_undertaking(
+        self,
+        *,
+        as_identity: object = False,
+        as_code_ref: object = False,
+        as_environment_session: object = False,
+    ) -> Result[str]:
+        """A notebook is not a fourth identity."""
+        return notebook_joins_undertaking(
+            as_identity=as_identity,
+            as_code_ref=as_code_ref,
+            as_environment_session=as_environment_session,
+        )
 
     def depth_cap(self) -> Result[int]:
         return self._bridge.depth_cap()

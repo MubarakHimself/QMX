@@ -23,9 +23,14 @@ from qmn.paper._refuse import clean_token, invalid, policy
 
 __all__ = [
     "NODE_PAPER_ACCOUNT_ROLE",
+    "NODE_PAPER_NOUN",
+    "NODE_PAPER_OWNER",
     "NODE_PAPER_WORLD",
+    "QMA_PAPER_EXISTS",
+    "RESEARCH_PAPER_NOUN",
     "PairedDemoBinding",
     "build_paired_demo_target",
+    "name_node_paper",
     "require_demo_paper_target",
     "resolve_book_execution_target",
 ]
@@ -33,6 +38,10 @@ __all__ = [
 # V1 node collapse: paper routing shares the demo role namespace (DEC-0194).
 NODE_PAPER_ACCOUNT_ROLE: Final[AccountRole] = AccountRole.DEMO
 NODE_PAPER_WORLD: Final[World] = World.LIVE
+NODE_PAPER_NOUN: Final[str] = "node-paper"
+NODE_PAPER_OWNER: Final[str] = "COMP-QMN"
+RESEARCH_PAPER_NOUN: Final[str] = "research-paper"
+QMA_PAPER_EXISTS: Final[bool] = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,6 +71,53 @@ class PairedDemoBinding:
                 "world": self.world.value,
             }
         )
+
+
+def name_node_paper(
+    *,
+    role: object = NODE_PAPER_ACCOUNT_ROLE,
+    world: object = NODE_PAPER_WORLD,
+    noun: object = None,
+) -> Result[str]:
+    """Name Book-level demo routing as node-paper. Research-paper and QMA-paper refuse."""
+    asked = ""
+    if isinstance(noun, str):
+        asked = noun.strip().casefold().replace("_", "-")
+    if asked in {"qma-paper", "qma_paper", "agent-paper"}:
+        return policy(
+            "paper",
+            "QMA-paper does not exist; node-paper remains COMP-QMN Book-level "
+            "demo routing (FR-W13; DEC-0275)",
+            given=repr(noun),
+            exists=QMA_PAPER_EXISTS,
+            owner=NODE_PAPER_OWNER,
+        )
+    if asked == RESEARCH_PAPER_NOUN:
+        return policy(
+            "paper",
+            "research-paper is governed QMB replay outside the node, not node-paper "
+            "(FR-W13; DEC-0275)",
+            given=repr(noun),
+            owner="COMP-QMB",
+        )
+    role_token = role.value if isinstance(role, AccountRole) else role
+    world_token = world.value if isinstance(world, World) else world
+    if role_token is not NODE_PAPER_ACCOUNT_ROLE and role_token != NODE_PAPER_ACCOUNT_ROLE.value:
+        return policy(
+            "paper_target",
+            "node-paper is Book-level demo routing; no per-bot paper lane "
+            "(FR-W13; DEC-0261; DEC-0275)",
+            given=repr(role),
+            required=NODE_PAPER_ACCOUNT_ROLE.value,
+        )
+    if world_token is not NODE_PAPER_WORLD and world_token != NODE_PAPER_WORLD.value:
+        return policy(
+            "world",
+            "node-paper is role=demo, world=live (FR-W13; DEC-0275)",
+            given=repr(world),
+            required=NODE_PAPER_WORLD.value,
+        )
+    return Ok(NODE_PAPER_NOUN)
 
 
 def require_demo_paper_target(target: object) -> Result[ExecutionTarget]:

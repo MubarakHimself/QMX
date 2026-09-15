@@ -34,6 +34,7 @@ from qma.core.barriers.parent_surfaces import (
 )
 from qma.core.barriers.reachability import GAP_0070_DESKTOP_EXCLUSION
 from qma.core.control.primitives import Skill
+from qma.core.ports.paper import match_qma_paper_tool, refuse_qma_paper
 from qma.core.ports.tools import (
     TOOL_ADAPTER_WRITE_COMMAND,
     TOOL_KINDS,
@@ -51,12 +52,12 @@ from qma.core.ports.tools import (
     subagent_inherited_tool_ids,
     write_tool_adapter_binding,
 )
-from qma.core.refusals.variants import ProhibitedMoneyPathTool
 from qma.core.vocabulary.enums import ExecutionEnvironmentKind, PrincipalClass
 from qma.core.vocabulary.registry import VocabularyError
 from qma.daemon.envs.registry import ExecutionEnvironmentRegistry
 from qma.daemon.tools.parent_writes import DEV_ZONE, DevZoneCandidate, ParentSurfaceGate
 from qmf.core import Ok, Result, is_ok
+from qmf.core.refusal import TypedRefusal
 from qmf.data.store.refusals import invalid_input
 
 __all__ = [
@@ -159,7 +160,7 @@ class ToolRegistry:
 
         return check
 
-    def _money_path_refusal_for(self, record: ToolRecord) -> ProhibitedMoneyPathTool | None:
+    def _money_path_refusal_for(self, record: ToolRecord) -> TypedRefusal | None:
         """Evaluate the deny-list before ``check_fn`` (FR-Q42; AD-16).
 
         Paper-only tags and account-role prefixes cannot lift a match.
@@ -171,6 +172,14 @@ class ToolRegistry:
                     act=act,
                     plugin_id=record.plugin_id,
                 )
+        matched = match_qma_paper_tool(
+            tool_id=record.tool_id,
+            acts=record.acts,
+            tags=record.tags,
+            schema=record.schema,
+        )
+        if matched is not None:
+            return refuse_qma_paper(tool_id=record.tool_id, given=matched)
         return None
 
     def _adapter_money_path_refusal(
@@ -178,7 +187,7 @@ class ToolRegistry:
         record: ToolAdapterRecord,
         *,
         extra_tools: Sequence[ToolRecord] = (),
-    ) -> ProhibitedMoneyPathTool | None:
+    ) -> TypedRefusal | None:
         """Refuse the whole MCP server when any advertised tool matches."""
         extras = {tool.tool_id: tool for tool in extra_tools}
         for tool_id, act in _metadata_advertised_rows(record):

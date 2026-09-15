@@ -19,6 +19,13 @@ from types import MappingProxyType
 from typing import Final
 
 from qma.core.plugins.packs import DESK_PLUGIN_PACK_IDS
+from qma.core.ports.paper import (
+    EPIC_PROMOTION_AUTHORITY,
+    QMA_WRITES_HUB,
+    refuse_hub_publish_from_qma,
+    refuse_qma_hub_write,
+    refuse_qma_promotion,
+)
 from qma.core.ports.qmb import (
     ANALYSIS_BACKTEST_PLUGIN_ID,
     QMB_OWNED_CONCERNS,
@@ -300,6 +307,20 @@ class DaemonProcess:
             path=repr(path),
             qmb_owned=sorted(QMB_OWNED_CONCERNS),
         )
+
+    def write_hub(self, *_args: object, **_kwargs: object) -> Result[None]:
+        """Refused — QMA never writes the B-15 hub (candidate refs only)."""
+        _ = QMA_WRITES_HUB
+        return refuse_qma_hub_write(act="hub_write", given=_kwargs.get("ref"))
+
+    def hub_publish(self, *_args: object, **_kwargs: object) -> Result[None]:
+        """Refused — hub_publish is human."""
+        return refuse_hub_publish_from_qma()
+
+    def promote(self, *_args: object, **_kwargs: object) -> Result[None]:
+        """Refused — this epic grants no promotion authority."""
+        _ = EPIC_PROMOTION_AUTHORITY
+        return refuse_qma_promotion(given=_kwargs.get("artifact", "promote"))
 
     def import_qmb_package(self) -> Result[None]:
         """The QMB door stays a runtime interaction — no package-import edge."""
