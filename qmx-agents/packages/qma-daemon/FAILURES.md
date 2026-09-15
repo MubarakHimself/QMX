@@ -28,6 +28,9 @@ validating gate that never discards evidence (FR-51 through FR-53). Epic 48
 Story 48.3 adds the plugin load-refusal law: hard startup abort naming the
 offending unit, runtime typed refusal with LIFO dispose, and daemon
 continuity across leases, Tasks, and pending evidence (FR-54 through FR-57).
+Epic 36 Story 36.1 adds the composed asyncio process: loopback listener,
+sole sqlite writer, and pack roster, with no second runtime, no HTTP
+experiment service, and no QMB JSONL merge (FR-62 through FR-65).
 
 ### FR-1: A second daemon or writer is refused at the persistence boundary
 
@@ -926,3 +929,56 @@ continuity across leases, Tasks, and pending evidence (FR-54 through FR-57).
 - **Notification tier:** silent-log.
 - **Product-user affordance:** one backtest at a time per environment through
   the existing QMB door.
+
+### FR-62: A second composed daemon process is refused
+
+- **Failure class:** `policy rejection` (CT-04; FR-W09; FR-W01).
+- **Detection:** `DaemonProcess.compose` holds an in-process singleton gate.
+  A second compose in the same process is refused before another listener,
+  sqlite writer, or pack roster is started. The Story 42.1 substrate gate
+  still refuses a second writable sqlite connection.
+- **Auto-recovery / retry:** none — a second daemon runtime must not exist.
+- **Visible degraded state:** the new process never starts; the incumbent
+  continues as the sole writer and sole inbound listener.
+- **Notification tier:** operator-visible (startup / compose refusal).
+- **Product-user affordance:** another qma-daemon already owns this process.
+  Stop it or do not start a second runtime.
+
+### FR-63: An HTTP experiment service is refused
+
+- **Failure class:** `policy rejection` (CT-04; FR-W01; DEC-0269).
+- **Detection:** `DaemonProcess.start_http_experiment_service` always refuses.
+  The composed process binds the existing CT-40 loopback listener only; it
+  does not mint COMP-EXP or a sixth application.
+- **Auto-recovery / retry:** none — that service is not a product.
+- **Visible degraded state:** no experiment HTTP port is opened.
+- **Notification tier:** operator-visible (startup / API refusal).
+- **Product-user affordance:** experiments go through the existing QMA wire
+  and QMB doors, not a new HTTP experiment service.
+
+### FR-64: QMB JSONL is not merged into daemon sqlite
+
+- **Failure class:** `policy rejection` (CT-04; NFR-W04; DEC-0305).
+- **Detection:** `DaemonProcess.merge_qmb_jsonl` always refuses. Sqlite still
+  opens on exactly one connection in one writer thread (Story 42.1). QMB's
+  WriterId-scoped JSONL run ledger stays in QMB and is reached by `_ref`.
+- **Auto-recovery / retry:** none — the stores stay separate.
+- **Visible degraded state:** daemon sqlite tables do not include a QMB
+  ledger copy; QMB evidence is not imported.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** QMB keeps its run ledger. QMA sqlite is the
+  daemon store only.
+
+### FR-65: Unauthenticated or plaintext non-loopback listener bind is a startup refusal
+
+- **Failure class:** `policy rejection` (CT-04; FR-Q17; CT-40).
+- **Detection:** `DaemonProcess.compose` validates the existing
+  `ListenerBindConfig` through `validate_listener_startup` before opening
+  sqlite or loading packs. Unauthenticated binds and plaintext non-loopback
+  binds are hard startup refusals — never warnings or fallback listeners.
+- **Auto-recovery / retry:** none — fix the bind posture and restart.
+- **Visible degraded state:** the process does not start; no sqlite writer
+  and no pack roster are opened for a refused bind.
+- **Notification tier:** operator-visible (startup refusal).
+- **Product-user affordance:** default bind is loopback with authentication.
+  Non-loopback requires TLS and an explicit recorded operator configuration.

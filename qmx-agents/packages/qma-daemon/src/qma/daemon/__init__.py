@@ -41,6 +41,7 @@ from qma.daemon.persistence import (
     PersistenceSubstrate,
 )
 from qma.daemon.persistence.lifecycle import DaemonStoreLifecycle
+from qma.daemon.process import DaemonProcess
 from qma.daemon.staging import AdmissionPipeline, ProposalGate
 from qma.daemon.taskgraph import (
     CompileRequest,
@@ -58,6 +59,7 @@ __all__ = [
     "AuthoritativeJournal",
     "CompileRequest",
     "DaemonClock",
+    "DaemonProcess",
     "DaemonStoreLifecycle",
     "FoldContract",
     "FoldContractRegistry",

@@ -19,6 +19,7 @@ import qma.daemon.ledgers
 import qma.daemon.memory
 import qma.daemon.persistence
 import qma.daemon.plugins
+import qma.daemon.process
 import qma.daemon.proxy
 import qma.daemon.scheduler
 import qma.daemon.staging
@@ -51,6 +52,7 @@ def test_structural_modules_importable() -> None:
         qma.daemon.handles,
         qma.daemon.context,
         qma.daemon.plugins,
+        qma.daemon.process,
         qma.daemon.telemetry,
     )
     assert all(m.__doc__ for m in modules)
@@ -59,6 +61,8 @@ def test_structural_modules_importable() -> None:
     assert DaemonPluginContext.__name__ == "DaemonPluginContext"
     assert PluginLoader.__name__ == "PluginLoader"
     assert qma.daemon.PersistenceSubstrate.__name__ == "PersistenceSubstrate"
+    assert qma.daemon.DaemonProcess.__name__ == "DaemonProcess"
+    assert qma.daemon.process.DaemonProcess is qma.daemon.DaemonProcess
     assert qma.daemon.AuthoritativeJournal.__name__ == "AuthoritativeJournal"
     assert qma.daemon.journal.AuthoritativeJournal is qma.daemon.AuthoritativeJournal
     assert qma.daemon.DaemonClock.__name__ == "DaemonClock"
