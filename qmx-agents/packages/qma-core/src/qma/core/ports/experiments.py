@@ -20,6 +20,7 @@ from qmf.core.fingerprint import Fingerprint
 from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 
 __all__ = [
+    "ANALYSIS_PUBLISHED_KIND",
     "CALLER_DECLARED_LANE_FIELDS",
     "COORDINATED_CONTINUITY_KIND",
     "COPIED_EXPERIMENT_EVIDENCE_KEYS",
@@ -110,6 +111,7 @@ _VERSION_KEYS: Final[frozenset[str]] = frozenset({"model", "harness"})
 # Coordinated continuity is ExperimentSpec fp1. Project / Workspace are UX aliases
 # only and are never identity (DEC-0284).
 COORDINATED_CONTINUITY_KIND: Final[str] = "experiment_spec"
+ANALYSIS_PUBLISHED_KIND: Final[str] = "analysis.published"
 REFUSED_CONTINUITY_KINDS: Final[frozenset[str]] = frozenset({"project", "workspace"})
 
 # Experiment Ledger bodies store _refs. JSONL / CT-32 copies are not product truth.

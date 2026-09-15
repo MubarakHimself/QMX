@@ -5,11 +5,13 @@ from __future__ import annotations
 from qma.core.ports.cancel_authority import (
     CLIENT_DETACH_EVENTS,
     COORDINATED_CANCEL_AUTHORITY,
+    PRODUCTION_DOOR_MAPS_CANCEL_TO_QMB_ABORT,
     RECORDING_DOOR_MAPS_CANCEL_TO_QMB_ABORT,
     UNAUTHORIZED_CANCEL_WRITERS,
     UNGOVERNED_CANCEL_KIND,
     ClientDetachEvent,
     authorize_coordinated_cancel,
+    authorize_qmb_ledger_aborted_writer,
     authorize_terminal_writer,
     client_detach_preserves_state,
     client_detach_writes_terminal,
@@ -17,6 +19,7 @@ from qma.core.ports.cancel_authority import (
     is_coordinated_cancel_authority,
     is_unauthorized_cancel_writer,
     parse_client_detach_event,
+    production_door_maps_cancel_to_qmb_abort,
     record_ungoverned_caller_death,
     recording_door_maps_cancel_to_qmb_abort,
 )
@@ -91,6 +94,13 @@ def test_tab_close_is_client_detach_and_writes_no_terminal() -> None:
 def test_recording_door_does_not_map_cancel_to_live_qmb_abort() -> None:
     assert RECORDING_DOOR_MAPS_CANCEL_TO_QMB_ABORT is False
     assert recording_door_maps_cancel_to_qmb_abort() is False
+    assert PRODUCTION_DOOR_MAPS_CANCEL_TO_QMB_ABORT is True
+    assert production_door_maps_cancel_to_qmb_abort() is True
+    daemon = authorize_qmb_ledger_aborted_writer("daemon")
+    assert is_refusal(daemon)
+    qmb = authorize_qmb_ledger_aborted_writer("qmb")
+    assert is_ok(qmb)
+    assert qmb.value == "qmb"
 
 
 def test_ungoverned_process_death_writes_nothing() -> None:

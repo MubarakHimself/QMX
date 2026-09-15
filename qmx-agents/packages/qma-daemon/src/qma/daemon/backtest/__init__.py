@@ -12,6 +12,7 @@ from qma.daemon.backtest.cli import (
 from qma.daemon.backtest.service import (
     BacktestingService,
     QmbPlacement,
+    QmbQueryPlacement,
     RecordingQmbDoorTransport,
 )
 
@@ -20,6 +21,7 @@ __all__ = [
     "BacktestingService",
     "CliQmbDoorTransport",
     "QmbPlacement",
+    "QmbQueryPlacement",
     "RecordingQmbDoorTransport",
     "SpawnedQmbProcess",
     "cli_qmb_test_double_argv0",

@@ -11,19 +11,23 @@ records without spawning and is not a working integration.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+import json
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
+from pathlib import Path
 from types import MappingProxyType
-from typing import Literal
+from typing import Literal, cast
 
 from qma.core.ontology import ActorId
 from qma.core.ports.cancel_authority import (
     COORDINATED_CANCEL_AUTHORITY,
     RECORDING_DOOR_MAPS_CANCEL_TO_QMB_ABORT,
+    authorize_qmb_ledger_aborted_writer,
     is_unauthorized_cancel_writer,
     refuse_unauthorized_cancel,
 )
 from qma.core.ports.experiments import (
+    ANALYSIS_PUBLISHED_KIND,
     EXPERIMENT_LEDGER_WORKBENCH_LANE,
     QMB_LEDGER_WORKBENCH_LANE,
     coordinated_run_labels,
@@ -32,12 +36,18 @@ from qma.core.ports.experiments import (
 from qma.core.ports.jobs import JobHandle
 from qma.core.ports.qmb import (
     ANALYSIS_BACKTEST_PLUGIN_ID,
+    QMB_ABORTED_LEDGER_STATE,
     QMB_BACKTEST_TOOL_ID,
     QMB_BACKTEST_TOOL_LOCAL_ID,
     QMB_CLI_PROGRAM,
+    QMB_OCCUPANCY_QUERY,
+    QMB_OCCUPANCY_RUN,
+    QMB_OPENS_DAEMON_SQLITE,
     QMB_OWNED_CONCERNS,
+    QMB_PROCESS_PER_RUN_CHILD,
     QMB_ROUTE,
     QMB_WORLD_REPLAY,
+    QmbAbortReceipt,
     QmbBacktestRequest,
     QmbDoorInvocation,
     QmbDoorKind,
@@ -45,11 +55,16 @@ from qma.core.ports.qmb import (
     QmbDoorTransport,
     admit_qmb_job,
     build_qmb_door_invocation,
+    build_qmb_query_invocation,
+    classify_qmb_door_occupancy,
     environment_kind_from_ref,
+    occupancy_from_invocation,
     parse_qmb_backtest_request,
     qmb_backtest_tool_record,
+    qmb_opens_daemon_sqlite,
     refuse_qmb_import_edge,
     refuse_qmb_owned_concern,
+    refuse_query_ct32_or_successor,
     release_qmb_job,
 )
 from qma.core.ports.tools import ToolKind, ToolRecord
@@ -58,7 +73,7 @@ from qma.core.vocabulary.enums import JobHandleState
 from qma.daemon.backtest.cli import CliQmbDoorTransport
 from qma.daemon.envs.jobs import JobHandleService
 from qma.daemon.envs.registry import ExecutionEnvironmentRegistry
-from qma.daemon.experiments.service import ExperimentSpecService
+from qma.daemon.experiments.service import ExperimentSpecService, PublishedProjection
 from qma.daemon.plugins.context import DaemonPluginContext, PluginContextError
 from qma.daemon.taskgraph.records import DispatchLease
 from qma.daemon.tools.registry import ToolRegistry
@@ -69,6 +84,7 @@ __all__ = [
     "BacktestingService",
     "CliQmbDoorTransport",
     "QmbPlacement",
+    "QmbQueryPlacement",
     "RecordingQmbDoorTransport",
 ]
 
@@ -77,14 +93,49 @@ def _job_id_for(request: QmbBacktestRequest) -> str:
     return f"qmb:{request.occupancy_key}:{request.task_id}"
 
 
+def _projection_view_from_stdout(
+    stdout: str,
+    extra: Mapping[str, object] | None,
+) -> Result[dict[str, object]]:
+    raw = stdout.strip()
+    if not raw and extra is not None:
+        candidate = extra.get("view")
+        if isinstance(candidate, Mapping):
+            mapping = cast("Mapping[object, object]", candidate)
+            raw = json.dumps(
+                {str(key): value for key, value in mapping.items()},
+                separators=(",", ":"),
+            )
+    if not raw:
+        return invalid_input(
+            "stdout",
+            "coordinated analysis.project waits for canonical saved-view JSON (FR-W24; Story 35.1)",
+        )
+    try:
+        parsed_obj: object = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        return invalid_input("stdout", "projection JSON is not parseable", error=str(exc))
+    if not isinstance(parsed_obj, dict):
+        return invalid_input("stdout", "projection JSON is an object")
+    mapping = cast("dict[object, object]", parsed_obj)
+    view: dict[str, object] = {str(key): value for key, value in mapping.items()}
+    if view.get("method") != "projection":
+        return invalid_input(
+            "method",
+            "a projection saved view has method=projection (FR-W24; DEC-0273)",
+            given=repr(view.get("method")),
+        )
+    return Ok(view)
+
+
 @dataclass
 class RecordingQmbDoorTransport:
     """Non-production recorder. Does not spawn ``qmb`` and is not the working door.
 
     Tests that claim the QMA→QMB door works must spawn ``qmb`` or the documented
     CLI test double via ``CliQmbDoorTransport``. ``JobHandle.cancel`` still
-    enters ``cancelled`` on the QMA handle; mapping that cancel onto a live
-    ``qmb`` abort is Story 36.5.
+    enters ``cancelled`` on the QMA handle. This recorder does not map that
+    cancel onto a live ``qmb`` abort — ``CliQmbDoorTransport`` does.
     """
 
     production: Literal[False] = False
@@ -101,12 +152,12 @@ class RecordingQmbDoorTransport:
     def abort_invocations(self) -> tuple[str, ...]:
         return tuple(self._abort_invocations)
 
-    def abort(self, job_id: str) -> Result[None]:
-        """Live qmb abort is Epic 36. Recording door records nothing."""
+    def abort(self, job_id: str) -> Result[QmbAbortReceipt]:
+        """Recording door does not map cancel onto a live qmb abort."""
         return policy_rejection(
             "qmb_abort",
-            "mapping JobHandle.cancel onto a live qmb abort is Epic 36, "
-            "not Story 32.2 (AR-W04; FR-W08)",
+            "mapping JobHandle.cancel onto a live qmb abort is the production "
+            "CLI door, not RecordingQmbDoorTransport (AR-W04; FR-W08; FR-W36)",
             job_id=job_id,
             transport="RecordingQmbDoorTransport",
             maps_cancel_to_qmb_abort=self.maps_cancel_to_qmb_abort,
@@ -128,6 +179,10 @@ class RecordingQmbDoorTransport:
         if not isinstance(occupancy_key, str) or not occupancy_key:
             occupancy_key = environment_ref
         self._invocations.append(invocation)
+        classified = occupancy_from_invocation(invocation)
+        stdout = ""
+        if classified.occupancy == QMB_OCCUPANCY_QUERY:
+            stdout = str(payload.get("stdout", ""))
         return Ok(
             QmbDoorReceipt(
                 job_id=job_id,
@@ -139,6 +194,10 @@ class RecordingQmbDoorTransport:
                 world=QMB_WORLD_REPLAY,
                 route=QMB_ROUTE,
                 import_edge=False,
+                occupancy=classified.occupancy,
+                mints_ct32=classified.mints_ct32,
+                mints_experiment_spec=False,
+                stdout=stdout,
             )
         )
 
@@ -178,7 +237,48 @@ class QmbPlacement:
             "request": dict(self.request.to_payload()),
             "receipt": dict(self.receipt.to_payload()),
             "labels": dict(coordinated_run_labels()),
+            "occupancy": QMB_OCCUPANCY_RUN,
+            "children_are_qma_jobs": False,
         }
+        return MappingProxyType(payload)
+
+
+@dataclass(frozen=True, slots=True)
+class QmbQueryPlacement:
+    """One placed QMB query: JobHandle for progress, no environment occupancy."""
+
+    handle: JobHandle
+    invocation: QmbDoorInvocation
+    receipt: QmbDoorReceipt
+    command: str
+    occupancy: str = QMB_OCCUPANCY_QUERY
+    mints_ct32: Literal[False] = False
+    mints_experiment_spec: Literal[False] = False
+    published: PublishedProjection | None = None
+    tool_id: str = QMB_BACKTEST_TOOL_ID
+    plugin_id: str = ANALYSIS_BACKTEST_PLUGIN_ID
+    route: tuple[str, ...] = QMB_ROUTE
+
+    def to_payload(self) -> Mapping[str, object]:
+        payload: dict[str, object] = {
+            "job_id": self.handle.job_id,
+            "state": self.handle.state.value,
+            "command": self.command,
+            "occupancy": self.occupancy,
+            "mints_ct32": self.mints_ct32,
+            "mints_experiment_spec": self.mints_experiment_spec,
+            "consumes_environment": False,
+            "children_are_qma_jobs": False,
+            "opens_daemon_sqlite": QMB_OPENS_DAEMON_SQLITE,
+            "tool_id": self.tool_id,
+            "plugin_id": self.plugin_id,
+            "route": list(self.route),
+            "program": self.invocation.program,
+            "argv": list(self.invocation.argv),
+            "stdout": self.receipt.stdout,
+        }
+        if self.published is not None:
+            payload["published"] = dict(self.published.to_payload())
         return MappingProxyType(payload)
 
 
@@ -193,6 +293,7 @@ class BacktestingService:
         environments: ExecutionEnvironmentRegistry | None = None,
         transport: QmbDoorTransport | None = None,
         experiments: ExperimentSpecService | None = None,
+        artifact_root: Path | str | None = None,
     ) -> None:
         self._jobs = jobs if jobs is not None else JobHandleService()
         self._tools = tools if tools is not None else ToolRegistry()
@@ -203,6 +304,7 @@ class BacktestingService:
             transport if transport is not None else CliQmbDoorTransport()
         )
         self._experiments = experiments
+        self._artifact_root = Path(artifact_root) if artifact_root is not None else None
         self._occupancy: dict[str, str] = {}
 
     @property
@@ -376,8 +478,7 @@ class BacktestingService:
             if is_refusal(resolved):
                 return invalid_input(
                     "experiment_spec_fp1",
-                    "coordinated placement requires a registered ExperimentSpec "
-                    "(FR-W06; DEC-0270)",
+                    "coordinated placement requires a registered ExperimentSpec (FR-W06; DEC-0270)",
                     spec_fp1=request.experiment_spec_fp1,
                 )
         if self._tools.get(QMB_BACKTEST_TOOL_ID) is None:
@@ -392,6 +493,7 @@ class BacktestingService:
             self._occupancy,
             occupancy_key=kind,
             job_id=_job_id_for(request),
+            occupancy_class=QMB_OCCUPANCY_RUN,
         )
         if is_refusal(admitted):
             return admitted
@@ -477,10 +579,30 @@ class BacktestingService:
         *,
         writer: str = COORDINATED_CANCEL_AUTHORITY,
     ) -> Result[JobHandle]:
-        """JobHandle.cancel only. Live qmb abort mapping is Story 36.5."""
+        """JobHandle.cancel only. Production door maps it to QMB abort."""
+        mapped = False
+        abort_fn = getattr(self._transport, "abort", None)
+        if self.maps_cancel_to_qmb_abort and callable(abort_fn):
+            abort = cast("Callable[[str], Result[QmbAbortReceipt]]", abort_fn)
+            aborted = abort(job_id)
+            if is_refusal(aborted):
+                return aborted
+            mapped = True
         cancelled = self._jobs.cancel(job_id, writer=writer)
         if is_refusal(cancelled):
             return cancelled
+        if mapped:
+            self._jobs.record_progress(
+                job_id,
+                "qmb_abort",
+                {
+                    "mapped_from": COORDINATED_CANCEL_AUTHORITY,
+                    "qmb_ledger_state": QMB_ABORTED_LEDGER_STATE,
+                    "qmb_ledger_writer": "qmb",
+                    "qma_writes_qmb_ledger": False,
+                    "new_event_bus": False,
+                },
+            )
         self._release_terminal()
         return cancelled
 
@@ -504,8 +626,177 @@ class BacktestingService:
     ) -> Result[None]:
         if is_unauthorized_cancel_writer(writer):
             return refuse_unauthorized_cancel(writer=writer, surface="qmb_ledger")
+        role = entry.get("role", entry.get("state"))
+        if role == QMB_ABORTED_LEDGER_STATE:
+            authorized = authorize_qmb_ledger_aborted_writer(writer)
+            if is_refusal(authorized):
+                return authorized
         _ = entry
         return refuse_qmb_owned_concern(concern="run_ledger")
+
+    def admit_process_per_run_child(
+        self,
+        occupancy_key: str,
+        *,
+        child_job_id: str,
+    ) -> Result[dict[str, str]]:
+        """QMB process-per-run children are not additional QMA jobs (FR-W11)."""
+        return admit_qmb_job(
+            self._occupancy,
+            occupancy_key=occupancy_key,
+            job_id=child_job_id,
+            kind=QMB_PROCESS_PER_RUN_CHILD,
+        )
+
+    def qmb_opened_daemon_sqlite(self) -> bool:
+        return qmb_opens_daemon_sqlite()
+
+    def place_query(
+        self,
+        command: object,
+        *,
+        owner: ActorId | str,
+        task_id: str,
+        environment_ref: str,
+        extra: Mapping[str, object] | None = None,
+        dispatch_lease: DispatchLease | None = None,
+        model_deployment_ref: object = None,
+        persist_projection: bool = False,
+        mint_ct32: object = None,
+        successor: object = None,
+        experiment_spec_fp1: str | None = None,
+    ) -> Result[QmbQueryPlacement]:
+        """Place a QMB query: no occupancy, no CT-32, no ExperimentSpec successor."""
+        classified = classify_qmb_door_occupancy(command)
+        if is_refusal(classified):
+            return classified
+        row = classified.value
+        if row.occupancy != QMB_OCCUPANCY_QUERY:
+            return invalid_input(
+                "occupancy",
+                "place_query places queries only; runs occupy the environment (FR-W11; DEC-0276)",
+                command=row.command,
+                occupancy=row.occupancy,
+            )
+        if mint_ct32 is not None and mint_ct32 is not False:
+            return refuse_query_ct32_or_successor(command=row.command)
+        if successor is not None and successor is not False:
+            return refuse_query_ct32_or_successor(command=row.command)
+        if persist_projection and row.command != "analysis.project":
+            return invalid_input(
+                "command",
+                "coordinated analysis.published persistence is analysis.project only "
+                "(FR-W24; DEC-0273)",
+                command=row.command,
+            )
+        parsed_env = environment_kind_from_ref(environment_ref)
+        if is_refusal(parsed_env):
+            return parsed_env
+        occupancy_key = parsed_env.value
+        if (
+            self._environments.get(occupancy_key) is None
+            and self._environments.declaration(occupancy_key) is None
+        ):
+            return NoEnvironment.of(kind=occupancy_key, reason="kind_unbound")
+        admitted = admit_qmb_job(
+            self._occupancy,
+            occupancy_key=occupancy_key,
+            job_id=f"qmbq:{occupancy_key}:{task_id}",
+            occupancy_class=QMB_OCCUPANCY_QUERY,
+        )
+        if is_refusal(admitted):
+            return admitted
+        job_id = f"qmbq:{occupancy_key}:{task_id}"
+        minted = self._jobs.submit(
+            owner=owner,
+            task_id=task_id,
+            job_id=job_id,
+        )
+        if is_refusal(minted):
+            return minted
+        invocation = build_qmb_query_invocation(
+            job_id=minted.value.job_id,
+            command=row.command,
+            environment_ref=environment_ref,
+            occupancy_key=occupancy_key,
+            extra=extra,
+        )
+        if is_refusal(invocation):
+            return invocation
+        receipt = self._transport.submit(invocation.value)
+        if is_refusal(receipt):
+            return receipt
+        started = self._jobs.start(job_id)
+        if is_refusal(started):
+            return started
+        published: PublishedProjection | None = None
+        if persist_projection:
+            persisted = self._persist_projection_query(
+                receipt=receipt.value,
+                extra=extra,
+                spec_fp1=experiment_spec_fp1,
+                dispatch_lease=dispatch_lease,
+                model_deployment_ref=model_deployment_ref,
+            )
+            if is_refusal(persisted):
+                return persisted
+            published = persisted.value
+        completed = self._jobs.complete(job_id, JobHandleState.DONE, writer="qmb_outcome")
+        if is_refusal(completed):
+            return completed
+        self._jobs.record_progress(
+            job_id,
+            "query",
+            {
+                "command": row.command,
+                "occupancy": QMB_OCCUPANCY_QUERY,
+                "mints_ct32": False,
+                "mints_experiment_spec": False,
+                "kind": ANALYSIS_PUBLISHED_KIND if published is not None else row.command,
+                "new_event_bus": False,
+            },
+        )
+        return Ok(
+            QmbQueryPlacement(
+                handle=completed.value,
+                invocation=invocation.value,
+                receipt=receipt.value,
+                command=row.command,
+                published=published,
+            )
+        )
+
+    def _persist_projection_query(
+        self,
+        *,
+        receipt: QmbDoorReceipt,
+        extra: Mapping[str, object] | None,
+        spec_fp1: str | None,
+        dispatch_lease: DispatchLease | None,
+        model_deployment_ref: object,
+    ) -> Result[PublishedProjection]:
+        if self._experiments is None:
+            return invalid_input(
+                "experiments",
+                "coordinated analysis.project persistence requires ExperimentSpec "
+                "product truth (FR-W24; Story 36.3)",
+            )
+        if dispatch_lease is None or not isinstance(spec_fp1, str) or spec_fp1.strip() == "":
+            return invalid_input(
+                "experiment_spec_fp1",
+                "coordinated analysis.published cites a registered ExperimentSpec "
+                "fp1 (FR-W24; DEC-0273)",
+            )
+        view = _projection_view_from_stdout(receipt.stdout, extra)
+        if is_refusal(view):
+            return view
+        return self._experiments.persist_published_view(
+            spec_fp1=spec_fp1.strip(),
+            dispatch_lease=dispatch_lease,
+            model_deployment_ref=model_deployment_ref,
+            view=view.value,
+            artifact_root=self._artifact_root,
+        )
 
     def store_artifact(self, artifact: Mapping[str, object]) -> Result[None]:
         _ = artifact

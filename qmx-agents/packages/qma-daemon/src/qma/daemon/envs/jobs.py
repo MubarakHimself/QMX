@@ -507,6 +507,21 @@ class JobHandleService:
             return invalid_input("job_id", "stream requires a minted job id", given=job_id)
         return Ok(tuple(self._streams.get(job_id, ())))
 
+    def record_progress(
+        self,
+        job_id: str,
+        kind: str,
+        body: Mapping[str, object] | None = None,
+    ) -> Result[JobHandle]:
+        """JobHandle progress/failure. Existing stream — not a new event bus."""
+        handle = self._store.get(job_id)
+        if handle is None:
+            return invalid_input("job_id", "progress requires a minted job id", given=job_id)
+        payload: dict[str, object] = dict(body) if body is not None else {}
+        payload.setdefault("new_event_bus", False)
+        self._append_stream(job_id, kind, payload)
+        return Ok(handle)
+
     def start(self, job_id: str) -> Result[JobHandle]:
         """queued → running once the environment begins the work."""
         handle = self._require(job_id)

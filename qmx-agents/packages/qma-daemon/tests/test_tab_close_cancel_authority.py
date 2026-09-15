@@ -184,7 +184,7 @@ def test_recording_door_cancel_enters_cancelled_without_qmb_abort() -> None:
     live = transport.abort(placed.value.handle.job_id)
     assert is_refusal(live)
     assert live.context["field"] == "qmb_abort"
-    assert "Epic 36" in str(live.context["reason"])
+    assert "RecordingQmbDoorTransport" in str(live.context["reason"])
     assert transport.abort_invocations == ()
     authorized = service.cancel(placed.value.handle.job_id, writer=COORDINATED_CANCEL_AUTHORITY)
     assert is_ok(authorized)

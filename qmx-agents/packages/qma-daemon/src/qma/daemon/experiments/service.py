@@ -9,11 +9,16 @@ sqlite writer, those records are product truth and survive a daemon restart.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
 from dataclasses import dataclass
+from pathlib import Path
 from types import MappingProxyType
+from typing import Literal
 
+from qma.core.content import content_address
 from qma.core.ports.experiments import (
+    ANALYSIS_PUBLISHED_KIND,
     COORDINATED_CONTINUITY_KIND,
     EXPERIMENT_LEDGER_WORKBENCH_LANE,
     EXPERIMENT_LINEAGE_EDGE_TYPE,
@@ -22,6 +27,7 @@ from qma.core.ports.experiments import (
     admit_experiment_evidence_body,
     refuse_caller_declared_lane_fields,
 )
+from qma.core.ports.qmb import QMB_OCCUPANCY_QUERY, QMB_OPENS_DAEMON_SQLITE
 from qma.daemon.experiments.sqlite import ExperimentSqliteStore
 from qma.daemon.journal.authoritative import AuthoritativeJournal
 from qma.daemon.ledgers.experiment import (
@@ -34,7 +40,7 @@ from qmf.core import Ok, Result, WriterId, is_refusal
 from qmf.data.store.refusals import invalid_input, policy_rejection
 from qmf.registry import EdgeLog, LineageEdge
 
-__all__ = ["ExperimentSpecService", "RegisteredExperiment"]
+__all__ = ["ExperimentSpecService", "PublishedProjection", "RegisteredExperiment"]
 
 
 def _ledger_ref_for(spec_fp1: str) -> str:
@@ -64,6 +70,36 @@ class RegisteredExperiment:
                 "edge_fingerprint": self.lineage_edge.edge_fingerprint.value,
             }
         return MappingProxyType(payload)
+
+
+@dataclass(frozen=True, slots=True)
+class PublishedProjection:
+    """Daemon-persisted projection JSON plus ``analysis.published`` ledger cite."""
+
+    spec_fp1: str
+    view_fp1: str
+    json_path: str
+    ledger: ExperimentLedger
+    occupancy: str = QMB_OCCUPANCY_QUERY
+    mints_ct32: Literal[False] = False
+    mints_experiment_spec: Literal[False] = False
+    qmb_opens_daemon_sqlite: Literal[False] = QMB_OPENS_DAEMON_SQLITE
+    kind: str = ANALYSIS_PUBLISHED_KIND
+
+    def to_payload(self) -> Mapping[str, object]:
+        return MappingProxyType(
+            {
+                "spec_fp1": self.spec_fp1,
+                "view_fp1": self.view_fp1,
+                "json_path": self.json_path,
+                "kind": self.kind,
+                "occupancy": self.occupancy,
+                "mints_ct32": self.mints_ct32,
+                "mints_experiment_spec": self.mints_experiment_spec,
+                "qmb_opens_daemon_sqlite": self.qmb_opens_daemon_sqlite,
+                "ledger_ref": self.ledger.ledger_ref,
+            }
+        )
 
 
 class ExperimentSpecService:
@@ -413,6 +449,93 @@ class ExperimentSpecService:
             dispatch_lease=dispatch_lease,
             model_deployment_ref=model_deployment_ref,
             body=body,
+        )
+
+    def persist_published_view(
+        self,
+        *,
+        spec_fp1: object,
+        dispatch_lease: DispatchLease,
+        model_deployment_ref: object,
+        view: Mapping[str, object],
+        artifact_root: Path | str | None = None,
+    ) -> Result[PublishedProjection]:
+        """Write projection JSON plus an ``analysis.published`` ledger cite (FR-W24).
+
+        QMB still never opens daemon sqlite. This path mints no CT-32 and no
+        ExperimentSpec successor.
+        """
+        if view.get("method") != "projection":
+            return invalid_input(
+                "view",
+                "a coordinated projection saved view is canonical JSON with "
+                "method=projection (FR-W24; DEC-0273)",
+                given=repr(view.get("method")),
+            )
+        addressed = content_address(dict(view))
+        if is_refusal(addressed):
+            return addressed
+        view_fp1 = addressed.value.value
+        root = self._published_root(artifact_root)
+        if is_refusal(root):
+            return root
+        directory = root.value / "analysis.published"
+        directory.mkdir(parents=True, exist_ok=True)
+        json_path = directory / f"{view_fp1.replace(':', '_')}.json"
+        json_path.write_text(json.dumps(dict(view), separators=(",", ":")), encoding="utf-8")
+        appended = self.append_evidence(
+            spec_fp1=spec_fp1,
+            dispatch_lease=dispatch_lease,
+            model_deployment_ref=model_deployment_ref,
+            body={
+                "kind": ANALYSIS_PUBLISHED_KIND,
+                "saved_view_fp1_ref": view_fp1,
+                "saved_view_json_ref": str(json_path),
+                "note": "coordinated projection query",
+            },
+        )
+        if is_refusal(appended):
+            return appended
+        announced = self._journal_event(
+            "ledger.appended",
+            {
+                "kind": ANALYSIS_PUBLISHED_KIND,
+                "spec_fp1": str(spec_fp1).strip() if isinstance(spec_fp1, str) else "",
+                "saved_view_fp1_ref": view_fp1,
+            },
+        )
+        if is_refusal(announced):
+            return announced
+        return Ok(
+            PublishedProjection(
+                spec_fp1=appended.value.experiment_id,
+                view_fp1=view_fp1,
+                json_path=str(json_path),
+                ledger=appended.value,
+            )
+        )
+
+    def mint_query_successor(self, *_args: object, **_kwargs: object) -> Result[None]:
+        """Queries mint no ExperimentSpec successor (FR-W11)."""
+        return policy_rejection(
+            "experiment_spec",
+            "a QMB door query mints no ExperimentSpec successor (FR-W11; DEC-0276; DEC-0273)",
+            occupancy=QMB_OCCUPANCY_QUERY,
+            mints_ct32=False,
+            mints_experiment_spec=False,
+        )
+
+    def _published_root(self, artifact_root: Path | str | None) -> Result[Path]:
+        if artifact_root is not None:
+            return Ok(Path(artifact_root))
+        if self._durable is not None:
+            writer = getattr(self._durable, "_sqlite", None)
+            if isinstance(writer, SingleSqliteWriter):
+                return Ok(writer.db_path.parent)
+        return invalid_input(
+            "artifact_root",
+            "coordinated analysis.published persistence needs a daemon artifact "
+            "root or bound sqlite (FR-W24)",
         )
 
     def append_evidence(

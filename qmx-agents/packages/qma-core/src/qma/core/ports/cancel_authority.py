@@ -4,9 +4,12 @@ A UI client detach or tab close leaves JobHandle state unchanged and never
 writes ``cancelled``, ``aborted``, ``failed``, or ``done``. A plugin, Routine,
 worker, or UI widget cannot set a terminal JobHandle or QMB ledger state.
 The production QMA→QMB door is ``CliQmbDoorTransport``. ``JobHandle.cancel``
-still enters ``cancelled`` (Story 45.4) and does not map onto a live ``qmb``
-abort (Story 36.5). Ungoverned ``qmb.run()`` process death writes nothing to the
-QMB ledger or Experiment Ledger and invents no ungoverned cancel record.
+enters ``cancelled`` on the QMA handle (Story 45.4) and the production door
+maps it to QMB abort so the QMB ledger writes ``aborted`` (Story 36.5). The
+recording helper does not map cancel onto a live abort. Ungoverned
+``qmb.run()`` process death writes nothing to the QMB ledger or Experiment
+Ledger and invents no ungoverned cancel record. Only QMB may write that
+terminal ledger state.
 """
 
 from __future__ import annotations
@@ -27,12 +30,15 @@ __all__ = [
     "CLIENT_DETACH_EVENTS",
     "COORDINATED_CANCEL_AUTHORITY",
     "DAEMON_TERMINAL_WRITERS",
+    "PRODUCTION_DOOR_MAPS_CANCEL_TO_QMB_ABORT",
+    "QMB_ABORTED_LEDGER_WRITERS",
     "RECORDING_DOOR_MAPS_CANCEL_TO_QMB_ABORT",
     "UNAUTHORIZED_CANCEL_WRITERS",
     "UNGOVERNED_CANCEL_KIND",
     "ClientDetachEvent",
     "UngovernedProcessDeath",
     "authorize_coordinated_cancel",
+    "authorize_qmb_ledger_aborted_writer",
     "authorize_terminal_writer",
     "client_detach_preserves_state",
     "client_detach_writes_terminal",
@@ -40,6 +46,7 @@ __all__ = [
     "is_coordinated_cancel_authority",
     "is_unauthorized_cancel_writer",
     "parse_client_detach_event",
+    "production_door_maps_cancel_to_qmb_abort",
     "record_ungoverned_caller_death",
     "recording_door_maps_cancel_to_qmb_abort",
     "refuse_unauthorized_cancel",
@@ -64,6 +71,8 @@ DAEMON_TERMINAL_WRITERS: Final[frozenset[str]] = frozenset(
 )
 UNGOVERNED_CANCEL_KIND: Final[str] = "process_death"
 RECORDING_DOOR_MAPS_CANCEL_TO_QMB_ABORT: Final[Literal[False]] = False
+PRODUCTION_DOOR_MAPS_CANCEL_TO_QMB_ABORT: Final[Literal[True]] = True
+QMB_ABORTED_LEDGER_WRITERS: Final[frozenset[str]] = frozenset({"qmb", "qmb_abort"})
 
 
 class ClientDetachEvent(StrEnum):
@@ -122,8 +131,25 @@ def client_detach_writes_terminal() -> bool:
 
 
 def recording_door_maps_cancel_to_qmb_abort() -> bool:
-    """Neither the recording helper nor CliQmbDoorTransport maps cancel to abort."""
+    """The recording helper does not map cancel onto a live ``qmb`` abort."""
     return RECORDING_DOOR_MAPS_CANCEL_TO_QMB_ABORT
+
+
+def production_door_maps_cancel_to_qmb_abort() -> bool:
+    """``CliQmbDoorTransport`` maps ``JobHandle.cancel`` to QMB abort (FR-W36)."""
+    return PRODUCTION_DOOR_MAPS_CANCEL_TO_QMB_ABORT
+
+
+def authorize_qmb_ledger_aborted_writer(writer: object) -> Result[str]:
+    """Only QMB may write the terminal QMB ledger state ``aborted`` (FR-W36)."""
+    token = writer if isinstance(writer, str) else repr(writer)
+    if token in QMB_ABORTED_LEDGER_WRITERS:
+        return Ok("qmb")
+    return refuse_unauthorized_cancel(
+        writer=token,
+        state="aborted",
+        surface="qmb_ledger",
+    )
 
 
 def refuse_unauthorized_cancel(

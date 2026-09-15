@@ -235,10 +235,10 @@ def test_venue_account_and_mcp_are_refused_before_spawn(tmp_path: Path) -> None:
         assert is_refusal(mcp)
         assert mcp.context["field"] == "door"
         assert transport.spawned == ()
-        assert transport.maps_cancel_to_qmb_abort is False
+        assert transport.maps_cancel_to_qmb_abort is True
         abort = transport.abort("qmb:docker:task-cli-mcp")
         assert is_refusal(abort)
-        assert abort.context["field"] == "qmb_abort"
+        assert abort.context["field"] == "job_id"
     finally:
         transport.close()
 

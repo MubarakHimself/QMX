@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from qma.daemon.experiments.service import ExperimentSpecService, RegisteredExperiment
+from qma.daemon.experiments.service import (
+    ExperimentSpecService,
+    PublishedProjection,
+    RegisteredExperiment,
+)
 from qma.daemon.experiments.sqlite import (
     EXPERIMENT_LEDGER_ENTRY_TABLE,
     EXPERIMENT_LEDGER_TABLE,
@@ -20,5 +24,6 @@ __all__ = [
     "EXPERIMENT_SQLITE_TABLES",
     "ExperimentSpecService",
     "ExperimentSqliteStore",
+    "PublishedProjection",
     "RegisteredExperiment",
 ]

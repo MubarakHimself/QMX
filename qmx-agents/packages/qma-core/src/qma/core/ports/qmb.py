@@ -9,11 +9,11 @@ contract. Requests run against recorded evidence and ``world=replay`` only.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Final, Protocol, cast, runtime_checkable
+from typing import Final, Literal, Protocol, cast, runtime_checkable
 
 from qma.core.ontology import ActorId, Quant
 from qma.core.ports.experiments import (
@@ -32,33 +32,52 @@ from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 __all__ = [
     "ANALYSIS_BACKTEST_PLUGIN_ID",
     "EXPERIMENT_LEDGER_WORKBENCH_LANE",
+    "QMB_ABORTED_LEDGER_STATE",
+    "QMB_ABORTED_LEDGER_WRITER",
     "QMB_BACKTEST_TOOL_ID",
     "QMB_BACKTEST_TOOL_LOCAL_ID",
+    "QMB_CHILD_PROCESSES_ARE_QMA_JOBS",
     "QMB_CLI_ARGV",
     "QMB_CLI_PROGRAM",
+    "QMB_CT32_COMMANDS",
     "QMB_DOOR_KINDS",
     "QMB_LEDGER_WORKBENCH_LANE",
     "QMB_MCP_METHOD",
+    "QMB_OCCUPANCY_QUERY",
+    "QMB_OCCUPANCY_RUN",
+    "QMB_OPENS_DAEMON_SQLITE",
     "QMB_OWNED_CONCERNS",
+    "QMB_PROCESS_PER_RUN_CHILD",
+    "QMB_QUERY_COMMANDS",
     "QMB_ROUTE",
+    "QMB_RUN_COMMANDS",
     "QMB_WORLD_REPLAY",
     "VENUE_ACCOUNT_REQUEST_FIELDS",
+    "QmbAbortReceipt",
     "QmbBacktestRequest",
     "QmbDoorInvocation",
     "QmbDoorKind",
+    "QmbDoorOccupancy",
     "QmbDoorReceipt",
     "QmbDoorTransport",
     "admit_qmb_job",
+    "build_qmb_cli_argv",
     "build_qmb_door_invocation",
+    "build_qmb_query_invocation",
+    "classify_qmb_door_occupancy",
     "coordinated_run_labels",
     "environment_kind_from_ref",
+    "occupancy_from_invocation",
     "occupying_qmb_job",
     "parse_qmb_backtest_request",
+    "process_per_run_child_is_qma_job",
     "qma_owns_backtest_concern",
     "qmb_backtest_tool_record",
+    "qmb_opens_daemon_sqlite",
     "refuse_caller_declared_lane_fields",
     "refuse_qmb_import_edge",
     "refuse_qmb_owned_concern",
+    "refuse_query_ct32_or_successor",
     "refuse_second_qmb_job",
     "refuse_venue_account_backtest",
     "release_qmb_job",
@@ -71,6 +90,80 @@ QMB_BACKTEST_TOOL_ID: Final[str] = f"{ANALYSIS_BACKTEST_PLUGIN_ID}:{QMB_BACKTEST
 QMB_CLI_PROGRAM: Final[str] = "qmb"
 QMB_CLI_ARGV: Final[tuple[str, ...]] = ("backtest", "run")
 QMB_MCP_METHOD: Final[str] = "qmb.backtest.run"
+QMB_OCCUPANCY_RUN: Final[str] = "run"
+QMB_OCCUPANCY_QUERY: Final[str] = "query"
+QMB_PROCESS_PER_RUN_CHILD: Final[str] = "process_per_run_child"
+QMB_CHILD_PROCESSES_ARE_QMA_JOBS: Final[Literal[False]] = False
+QMB_OPENS_DAEMON_SQLITE: Final[Literal[False]] = False
+QMB_ABORTED_LEDGER_STATE: Final[str] = "aborted"
+QMB_ABORTED_LEDGER_WRITER: Final[str] = "qmb"
+_ROBUSTNESS_PROCEDURES: Final[tuple[str, ...]] = (
+    "walk-forward",
+    "monte-carlo-trade-shuffle",
+    "monte-carlo-candle-perturbation",
+    "rule-significance",
+)
+QMB_RUN_COMMANDS: Final[frozenset[str]] = frozenset(
+    {
+        "analysis.rerun",
+        "backtest.run",
+        "data.download",
+        "data.generate",
+        "optimize.run",
+        "sweep.batch",
+        *(f"robustness.{name}" for name in _ROBUSTNESS_PROCEDURES),
+    }
+)
+QMB_QUERY_COMMANDS: Final[frozenset[str]] = frozenset(
+    {
+        "analysis.compare",
+        "analysis.project",
+        "compare_runs",
+        "config.compile",
+        "config.show",
+        "data.catalog",
+        "data.gap-check",
+        "data.list",
+        "data.verify",
+        "ledger.bar",
+        "ledger.merge",
+        "library.candidates",
+        "library.kinds",
+        "library.search",
+        "optimize.estimate",
+        "optimize.space",
+        "sweep.count",
+        "sweep.rank",
+    }
+)
+QMB_CT32_COMMANDS: Final[frozenset[str]] = frozenset(
+    {
+        "analysis.rerun",
+        "backtest.run",
+        "optimize.run",
+        "sweep.batch",
+        *(f"robustness.{name}" for name in _ROBUSTNESS_PROCEDURES),
+    }
+)
+_COMMAND_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "backtest": "backtest.run",
+        "catalog": "data.catalog",
+        "compare": "analysis.compare",
+        "compare-runs": "analysis.compare",
+        "compare_runs": "analysis.compare",
+        "download": "data.download",
+        "gap-check": "data.gap-check",
+        "generate": "data.generate",
+        "list": "data.list",
+        "optimize": "optimize.run",
+        "project": "analysis.project",
+        "rank": "sweep.rank",
+        "rerun": "analysis.rerun",
+        "sweep": "sweep.batch",
+        "verify": "data.verify",
+    }
+)
 QMB_WORLD_REPLAY: Final[str] = "replay"
 QMB_ROUTE: Final[tuple[str, ...]] = (
     "agent",
@@ -207,6 +300,151 @@ def qma_owns_backtest_concern(concern: str) -> bool:
     return False
 
 
+def qmb_opens_daemon_sqlite() -> bool:
+    """QMB never opens daemon sqlite (FR-W24; DEC-0273)."""
+    return QMB_OPENS_DAEMON_SQLITE
+
+
+def process_per_run_child_is_qma_job() -> bool:
+    """QMB process-per-run children inside one CLI run are not extra QMA jobs."""
+    return QMB_CHILD_PROCESSES_ARE_QMA_JOBS
+
+
+def refuse_query_ct32_or_successor(*, command: str) -> TypedRefusal:
+    """Queries mint no CT-32 and no ExperimentSpec successor (FR-W11)."""
+    return _policy(
+        "ct32",
+        "a QMB door query consumes no occupancy, mints no CT-32, and mints no "
+        "ExperimentSpec successor (FR-W11; DEC-0276; DEC-0273)",
+        command=command,
+        occupancy=QMB_OCCUPANCY_QUERY,
+        mints_ct32=False,
+        mints_experiment_spec=False,
+        consumes_environment=False,
+    )
+
+
+def _canonical_door_command(command: object) -> Result[str]:
+    if isinstance(command, (tuple, list)):
+        sequence = cast("Sequence[object]", command)
+        parts = [str(item).strip() for item in sequence if str(item).strip() != ""]
+        if parts and parts[0] in {QMB_CLI_PROGRAM, f"{QMB_CLI_PROGRAM}.exe"}:
+            parts = parts[1:]
+        if not parts:
+            return _invalid("command", "QMB door command requires argv")
+        token = parts[0] if len(parts) == 1 else f"{parts[0]}.{parts[1]}"
+    elif isinstance(command, str):
+        token = command.strip()
+    else:
+        return _invalid(
+            "command",
+            "QMB door command is a dotted name or argv",
+            given=repr(command),
+        )
+    if token == "":
+        return _invalid("command", "QMB door command requires a non-empty name")
+    lowered = token.casefold().replace(" ", ".")
+    aliased = _COMMAND_ALIASES.get(lowered, lowered)
+    if aliased in _ROBUSTNESS_PROCEDURES:
+        aliased = f"robustness.{aliased}"
+    return Ok(aliased)
+
+
+@dataclass(frozen=True, slots=True)
+class QmbDoorOccupancy:
+    """One CLI/MCP invocation's occupancy class (FR-W11; DEC-0276)."""
+
+    command: str
+    occupancy: str
+    argv: tuple[str, ...]
+    mints_ct32: bool
+    mints_experiment_spec: bool = False
+    consumes_environment: bool = False
+    children_are_qma_jobs: bool = False
+    opens_daemon_sqlite: bool = False
+
+    def to_payload(self) -> Mapping[str, object]:
+        return MappingProxyType(
+            {
+                "command": self.command,
+                "occupancy": self.occupancy,
+                "argv": list(self.argv),
+                "mints_ct32": self.mints_ct32,
+                "mints_experiment_spec": self.mints_experiment_spec,
+                "consumes_environment": self.consumes_environment,
+                "children_are_qma_jobs": self.children_are_qma_jobs,
+                "opens_daemon_sqlite": self.opens_daemon_sqlite,
+            }
+        )
+
+
+def classify_qmb_door_occupancy(command: object) -> Result[QmbDoorOccupancy]:
+    """Classify a ``qmb`` CLI/MCP invocation as a run (occupies) or a query."""
+    canonical = _canonical_door_command(command)
+    if not isinstance(canonical, Ok):
+        return canonical
+    name = canonical.value
+    if name in QMB_RUN_COMMANDS:
+        occupancy = QMB_OCCUPANCY_RUN
+    elif name in QMB_QUERY_COMMANDS:
+        occupancy = QMB_OCCUPANCY_QUERY
+    else:
+        return _invalid(
+            "command",
+            "unknown QMB door command; occupancy classifies the closed CLI tree (FR-W11; DEC-0276)",
+            given=name,
+        )
+    group, sep, sub = name.partition(".")
+    argv = (group, sub) if sep else (group,)
+    if name == "analysis.compare":
+        argv = ("analysis", "compare")
+    consumes = occupancy == QMB_OCCUPANCY_RUN
+    return Ok(
+        QmbDoorOccupancy(
+            command=name,
+            occupancy=occupancy,
+            argv=argv,
+            mints_ct32=name in QMB_CT32_COMMANDS,
+            mints_experiment_spec=False,
+            consumes_environment=consumes,
+            children_are_qma_jobs=False,
+            opens_daemon_sqlite=False,
+        )
+    )
+
+
+def build_qmb_cli_argv(command: object) -> Result[tuple[str, ...]]:
+    """CLI argv suffix for one classified door command (program is ``qmb``)."""
+    classified = classify_qmb_door_occupancy(command)
+    if not isinstance(classified, Ok):
+        return classified
+    return Ok(classified.value.argv)
+
+
+def occupancy_from_invocation(invocation: QmbDoorInvocation) -> QmbDoorOccupancy:
+    """Read occupancy from a door invocation payload, defaulting from argv."""
+    classified = classify_qmb_door_occupancy(invocation.argv)
+    if isinstance(classified, Ok):
+        return classified.value
+    payload = dict(invocation.payload)
+    occupancy_raw = payload.get("occupancy", QMB_OCCUPANCY_RUN)
+    occupancy = (
+        occupancy_raw
+        if occupancy_raw in {QMB_OCCUPANCY_RUN, QMB_OCCUPANCY_QUERY}
+        else (QMB_OCCUPANCY_RUN)
+    )
+    return QmbDoorOccupancy(
+        command="backtest.run",
+        occupancy=str(occupancy),
+        argv=tuple(invocation.argv),
+        mints_ct32=bool(payload.get("mints_ct32", occupancy == QMB_OCCUPANCY_RUN)),
+        mints_experiment_spec=False,
+        consumes_environment=occupancy == QMB_OCCUPANCY_RUN,
+        children_are_qma_jobs=False,
+        opens_daemon_sqlite=False,
+    )
+
+
 def environment_kind_from_ref(value: object) -> Result[str]:
     """Resolve an environment ref onto the ExecutionEnvironment kind token."""
     if not isinstance(value, str) or value.strip() == "":
@@ -235,8 +473,24 @@ def admit_qmb_job(
     *,
     occupancy_key: str,
     job_id: str,
+    occupancy_class: object = QMB_OCCUPANCY_RUN,
+    kind: object = "cli_run",
 ) -> Result[dict[str, str]]:
-    """Admit one ``qmb`` job per environment; a second job is refused."""
+    """Admit one occupying ``qmb`` run per environment.
+
+    Queries consume no occupancy. Process-per-run children inside a run
+    invocation are not additional QMA jobs (FR-W11; DEC-0276).
+    """
+    if kind == QMB_PROCESS_PER_RUN_CHILD:
+        return Ok(dict(occupancy))
+    if occupancy_class == QMB_OCCUPANCY_QUERY:
+        return Ok(dict(occupancy))
+    if occupancy_class != QMB_OCCUPANCY_RUN:
+        return _invalid(
+            "occupancy",
+            "occupancy class is run or query (FR-W11; DEC-0276)",
+            given=repr(occupancy_class),
+        )
     existing = occupancy.get(occupancy_key)
     if existing is not None:
         return refuse_second_qmb_job(
@@ -499,6 +753,10 @@ class QmbDoorReceipt:
     world: str = QMB_WORLD_REPLAY
     route: tuple[str, ...] = QMB_ROUTE
     import_edge: bool = False
+    occupancy: str = QMB_OCCUPANCY_RUN
+    mints_ct32: bool = True
+    mints_experiment_spec: bool = False
+    stdout: str = ""
 
     def to_payload(self) -> Mapping[str, object]:
         return MappingProxyType(
@@ -512,6 +770,32 @@ class QmbDoorReceipt:
                 "world": self.world,
                 "route": list(self.route),
                 "import_edge": self.import_edge,
+                "occupancy": self.occupancy,
+                "mints_ct32": self.mints_ct32,
+                "mints_experiment_spec": self.mints_experiment_spec,
+                "stdout": self.stdout,
+            }
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class QmbAbortReceipt:
+    """Door mapping of ``JobHandle.cancel`` onto QMB abort (FR-W36)."""
+
+    job_id: str
+    mapped_from: str = "JobHandle.cancel"
+    qmb_ledger_state: str = QMB_ABORTED_LEDGER_STATE
+    qmb_ledger_writer: str = QMB_ABORTED_LEDGER_WRITER
+    qma_writes_qmb_ledger: Literal[False] = False
+
+    def to_payload(self) -> Mapping[str, object]:
+        return MappingProxyType(
+            {
+                "job_id": self.job_id,
+                "mapped_from": self.mapped_from,
+                "qmb_ledger_state": self.qmb_ledger_state,
+                "qmb_ledger_writer": self.qmb_ledger_writer,
+                "qma_writes_qmb_ledger": self.qma_writes_qmb_ledger,
             }
         )
 
@@ -525,6 +809,8 @@ def build_qmb_door_invocation(
     if not job_id.strip():
         return _invalid("job_id", "QMB door invocation requires a job id")
     argv = QMB_CLI_ARGV if request.door is QmbDoorKind.CLI else (QMB_MCP_METHOD,)
+    classified = classify_qmb_door_occupancy(argv)
+    occupancy = classified.value if isinstance(classified, Ok) else None
     payload: dict[str, object] = {
         "job_id": job_id,
         "experiment_spec_fp1": request.experiment_spec_fp1,
@@ -538,6 +824,11 @@ def build_qmb_door_invocation(
         "qma_re_specifies": False,
         "qmb_owned": sorted(QMB_OWNED_CONCERNS),
         "route": list(QMB_ROUTE),
+        "occupancy": occupancy.occupancy if occupancy is not None else QMB_OCCUPANCY_RUN,
+        "mints_ct32": occupancy.mints_ct32 if occupancy is not None else True,
+        "mints_experiment_spec": False,
+        "children_are_qma_jobs": False,
+        "opens_daemon_sqlite": False,
     }
     if request.door is QmbDoorKind.MCP:
         payload["method"] = QMB_MCP_METHOD
@@ -552,10 +843,70 @@ def build_qmb_door_invocation(
     )
 
 
+def build_qmb_query_invocation(
+    *,
+    job_id: str,
+    command: object,
+    environment_ref: str,
+    occupancy_key: str,
+    extra: Mapping[str, object] | None = None,
+) -> Result[QmbDoorInvocation]:
+    """Build a query CLI invocation. Queries consume no occupancy."""
+    if not job_id.strip():
+        return _invalid("job_id", "QMB door invocation requires a job id")
+    classified = classify_qmb_door_occupancy(command)
+    if not isinstance(classified, Ok):
+        return classified
+    row = classified.value
+    if row.occupancy != QMB_OCCUPANCY_QUERY:
+        return _policy(
+            "occupancy",
+            "build_qmb_query_invocation places queries only (FR-W11; DEC-0276)",
+            command=row.command,
+            occupancy=row.occupancy,
+        )
+    payload: dict[str, object] = {
+        "job_id": job_id,
+        "environment_ref": environment_ref,
+        "occupancy_key": occupancy_key,
+        "command": row.command,
+        "world": QMB_WORLD_REPLAY,
+        "recorded": True,
+        "import_edge": False,
+        "owned_by": "qmb",
+        "qma_re_specifies": False,
+        "occupancy": QMB_OCCUPANCY_QUERY,
+        "mints_ct32": False,
+        "mints_experiment_spec": False,
+        "consumes_environment": False,
+        "children_are_qma_jobs": False,
+        "opens_daemon_sqlite": False,
+        "route": list(QMB_ROUTE),
+    }
+    if extra is not None:
+        for key, value in extra.items():
+            if key in {"occupancy", "mints_ct32", "mints_experiment_spec", "import_edge"}:
+                continue
+            payload[key] = value
+    return Ok(
+        QmbDoorInvocation(
+            program=QMB_CLI_PROGRAM,
+            kind=QmbDoorKind.CLI,
+            argv=row.argv,
+            payload=payload,
+            import_edge=False,
+        )
+    )
+
+
 @runtime_checkable
 class QmbDoorTransport(Protocol):
     """Runtime door. Implementations must not import the ``qmb`` package."""
 
     def submit(self, invocation: QmbDoorInvocation) -> Result[QmbDoorReceipt]:
         """Deliver one invocation over CLI argv or MCP. Never ``import qmb``."""
+        ...
+
+    def abort(self, job_id: str) -> Result[QmbAbortReceipt]:
+        """Map ``JobHandle.cancel`` onto QMB abort. QMB writes ``aborted``."""
         ...
