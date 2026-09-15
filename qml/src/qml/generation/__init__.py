@@ -21,32 +21,102 @@ from typing import Final, cast
 from qmf.core.fingerprint import Fingerprint, fingerprint
 from qmf.core.refusal import Ok, Result, is_refusal
 
-from qml._refuse import invalid, policy, unsupported
+from qml._refuse import invalid, unsupported
 from qml.declaration.bot import BotDefinition, mint_bot_definition
 from qml.declaration.confluence import Confluence, mint_confluence
+from qml.generation.gaps import (
+    CHEAP_VETO_A1,
+    CONNECT_WAVE_EPICS,
+    DEFAULT_GENERATOR_ALGORITHM,
+    DOES_NOT_BLOCK_EPICS,
+    DOES_NOT_BLOCK_SURFACES,
+    DOOR_EPIC,
+    GAP_0063_ALGORITHM_CHOICES,
+    GAP_0063_ID,
+    GAP_0063_RECORD,
+    GAP_0063_STATUS,
+    GAP_0085_ID,
+    GAP_0085_MECHANISM_FIELDS,
+    GAP_0085_NOUNS,
+    GAP_0085_RECORD,
+    GAP_0085_STATUS,
+    GAP_0085_WRITE_INCREMENT,
+    GAP_0085_WRITE_OWNER,
+    GENERATION_EPIC,
+    GENERATOR_ALGORITHM_UNRULED,
+    HOST_MINTS_MECHANISM_VOCABULARY,
+    LIBRARY_EPIC,
+    LOGIC_PATH,
+    LOGIC_PATH_RUNG,
+    LOGIC_PATH_STORY,
+    MECHANISM_VOCABULARY_MINTED,
+    TRAILS_CONNECT_WAVE,
+    WHATIF_EPIC,
+    admit_decided_generator_algorithm,
+    blocks_library_whatif_or_door,
+    mint_mechanism_vocabulary,
+    minted_mechanism_type_hits,
+    prose_fills_gap_0063,
+    refuse_gap_0085_nouns,
+    refuse_generator_algorithm,
+    refuse_no_code_authoring,
+    trails_connect_wave,
+    write_ownership_is_qml_host,
+)
 from qml.logic import LogicIdentity, mint_logic_identity
 
 __all__ = [
     "ACT_GENERATION",
     "ACT_SEARCH",
+    "CHEAP_VETO_A1",
+    "CONNECT_WAVE_EPICS",
+    "DEFAULT_GENERATOR_ALGORITHM",
+    "DOES_NOT_BLOCK_EPICS",
+    "DOES_NOT_BLOCK_SURFACES",
+    "DOOR_EPIC",
     "FORBIDDEN_QMB_GENERATOR_NAMES",
     "GAP_0063_ALGORITHM_CHOICES",
+    "GAP_0063_ID",
+    "GAP_0063_RECORD",
+    "GAP_0063_STATUS",
+    "GAP_0085_ID",
     "GAP_0085_MECHANISM_FIELDS",
+    "GAP_0085_NOUNS",
+    "GAP_0085_RECORD",
+    "GAP_0085_STATUS",
+    "GAP_0085_WRITE_INCREMENT",
+    "GAP_0085_WRITE_OWNER",
+    "GENERATION_EPIC",
     "GENERATOR_ALGORITHM_UNRULED",
+    "HOST_MINTS_MECHANISM_VOCABULARY",
+    "LIBRARY_EPIC",
+    "LOGIC_PATH",
+    "LOGIC_PATH_RUNG",
+    "LOGIC_PATH_STORY",
+    "MECHANISM_VOCABULARY_MINTED",
     "QMB_AUTHORS_CANDIDATES",
     "QMB_RUNS_CANDIDATES",
     "RANDOM_CONDITION_DONOR_SHAPE",
     "RANDOM_CONDITION_SCHEMA_KEYS",
+    "TRAILS_CONNECT_WAVE",
+    "WHATIF_EPIC",
     "ActKind",
     "AuthoredStructure",
+    "admit_decided_generator_algorithm",
     "author_new_structure",
+    "blocks_library_whatif_or_door",
     "classify_parameter_search",
     "forbidden_generator_module_hits",
+    "mint_mechanism_vocabulary",
+    "minted_mechanism_type_hits",
+    "prose_fills_gap_0063",
     "refuse_gap_0085_nouns",
     "refuse_generator_algorithm",
     "refuse_no_code_authoring",
     "refuse_qml_dsl",
     "refuse_random_condition_schema",
+    "trails_connect_wave",
+    "write_ownership_is_qml_host",
 ]
 
 
@@ -61,7 +131,6 @@ ACT_SEARCH: Final[str] = ActKind.SEARCH.value
 ACT_GENERATION: Final[str] = ActKind.GENERATION.value
 QMB_AUTHORS_CANDIDATES: Final[bool] = False
 QMB_RUNS_CANDIDATES: Final[bool] = True
-GENERATOR_ALGORITHM_UNRULED: Final[bool] = True
 RANDOM_CONDITION_DONOR_SHAPE: Final[str] = "donor-shape-not-schema"
 
 # Module/directory stems that would be a generator inside qmb/ (FR-W38).
@@ -81,35 +150,6 @@ FORBIDDEN_QMB_GENERATOR_NAMES: Final[frozenset[str]] = frozenset(
         "strategy_generator",
         "structure_generation",
         "structure_generator",
-    }
-)
-
-# GAP-0063 stays unruled — placeholder-fill vs Python-logic synthesis is not chosen.
-GAP_0063_ALGORITHM_CHOICES: Final[frozenset[str]] = frozenset(
-    {
-        "ct34-placeholder",
-        "logic-synthesis",
-        "placeholder-fill",
-        "placeholder_fill",
-        "python-logic-synthesis",
-        "python_logic_synthesis",
-    }
-)
-
-# GAP-0085 mechanism nouns. ``filter`` as a CT-34 leg role is not this set.
-GAP_0085_MECHANISM_FIELDS: Final[frozenset[str]] = frozenset(
-    {
-        "entry_mechanism",
-        "entrymechanism",
-        "exit_mechanism",
-        "exitmechanism",
-        "filter",
-        "invalidation_rule",
-        "invalidationrule",
-        "position_rule",
-        "positionrule",
-        "session_rule",
-        "sessionrule",
     }
 )
 
@@ -155,75 +195,6 @@ def refuse_random_condition_schema(value: object = None) -> Result[None]:
         "generation does not fill RandomCondition slots",
         given=repr(value),
         donor_shape=RANDOM_CONDITION_DONOR_SHAPE,
-    )
-
-
-def refuse_gap_0085_nouns(value: object = None) -> Result[None]:
-    """Refuse typed Entry/Exit/Filter/Session mechanism nouns (GAP-0085)."""
-    if value is None or value is False:
-        return Ok(None)
-    hits: list[str] = []
-    if isinstance(value, Mapping):
-        mapping = cast("Mapping[object, object]", value)
-        for key in mapping:
-            token = _normalize_token(key)
-            if token is not None and token in GAP_0085_MECHANISM_FIELDS:
-                hits.append(str(key))
-    elif isinstance(value, str):
-        token = _normalize_token(value)
-        if token is not None and token in GAP_0085_MECHANISM_FIELDS:
-            hits.append(value)
-    elif isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
-        for item in cast("Sequence[object]", value):
-            token = _normalize_token(item)
-            if token is not None and token in GAP_0085_MECHANISM_FIELDS:
-                hits.append(str(item))
-    else:
-        return policy(
-            "mechanisms",
-            "typed Entry/Exit/Filter/Session vocabulary is Deferred GAP-0085; "
-            "write-ownership remains QML/host for a later increment",
-            given=repr(value),
-        )
-    if hits:
-        return policy(
-            "mechanisms",
-            "typed Entry/Exit/Filter/Session vocabulary is Deferred GAP-0085; "
-            "write-ownership remains QML/host for a later increment",
-            fields=sorted(hits),
-        )
-    return policy(
-        "mechanisms",
-        "typed Entry/Exit/Filter/Session vocabulary is Deferred GAP-0085; "
-        "write-ownership remains QML/host for a later increment",
-        given="mechanism-payload",
-    )
-
-
-def refuse_generator_algorithm(value: object = None) -> Result[None]:
-    """Refuse choosing GAP-0063's first generator algorithm."""
-    if value is None or value is False:
-        return Ok(None)
-    token = _normalize_token(value) if isinstance(value, str) else None
-    return unsupported(
-        "algorithm",
-        "the first generator algorithm (placeholder-fill of CT-34 legs vs "
-        "Python-logic synthesis) is unruled GAP-0063 and is not filled here",
-        given=repr(value),
-        unruled=GENERATOR_ALGORITHM_UNRULED,
-        named_choice=token in GAP_0063_ALGORITHM_CHOICES if token is not None else False,
-    )
-
-
-def refuse_no_code_authoring(value: object = None) -> Result[None]:
-    """Refuse no-code authoring as a V1 generation surface (FR-W40)."""
-    if value is None or value is False:
-        return Ok(None)
-    return unsupported(
-        "no_code",
-        "no-code authoring is not a V1 generation surface; rung 2 ordinary "
-        "Python remains the logic path",
-        given=repr(value),
     )
 
 
@@ -341,6 +312,31 @@ def _refuse_random_condition_payload(value: object) -> Result[None]:
     return Ok(None)
 
 
+def _refuse_gap_0085_payload(value: object) -> Result[None]:
+    """Refuse nested GAP-0085 keys. CT-34 ``role: filter`` is not a key hit."""
+    if isinstance(value, Mapping):
+        mapping = cast("Mapping[object, object]", value)
+        for key in mapping:
+            token = _normalize_token(key)
+            if isinstance(key, str) and key in GAP_0085_NOUNS:
+                return refuse_gap_0085_nouns(key)
+            if token is not None and (
+                token in GAP_0085_MECHANISM_FIELDS or token == _MECHANISMS_FIELD
+            ):
+                return refuse_gap_0085_nouns(mapping if token == _MECHANISMS_FIELD else key)
+        for item in mapping.values():
+            nested = _refuse_gap_0085_payload(item)
+            if is_refusal(nested):
+                return nested
+        return Ok(None)
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
+        for item in cast("Sequence[object]", value):
+            nested = _refuse_gap_0085_payload(item)
+            if is_refusal(nested):
+                return nested
+    return Ok(None)
+
+
 def _refuse_extra(extra: object) -> Result[None]:
     if extra is None:
         return Ok(None)
@@ -361,10 +357,17 @@ def _refuse_extra(extra: object) -> Result[None]:
                 return refused
         if token in RANDOM_CONDITION_SCHEMA_KEYS:
             return refuse_random_condition_schema(key)
-        if token in GAP_0085_MECHANISM_FIELDS or token == _MECHANISMS_FIELD:
+        if (
+            (isinstance(key, str) and key in GAP_0085_NOUNS)
+            or token in GAP_0085_MECHANISM_FIELDS
+            or token == _MECHANISMS_FIELD
+        ):
             return refuse_gap_0085_nouns(mapping if token == _MECHANISMS_FIELD else key)
         if token in {"algorithm", "generator_algorithm"} or token in GAP_0063_ALGORITHM_CHOICES:
-            return refuse_generator_algorithm(value if value is not None else key)
+            return refuse_generator_algorithm(
+                value if value is not None else key,
+                as_default=True,
+            )
         if token in {"no_code", "nocode", "no-code"}:
             return refuse_no_code_authoring(value if value is not None else key)
     return _refuse_random_condition_payload(mapping)
@@ -432,7 +435,7 @@ def author_new_structure(
     blocked = refuse_random_condition_schema(random_condition)
     if is_refusal(blocked):
         return blocked
-    blocked = refuse_generator_algorithm(algorithm)
+    blocked = refuse_generator_algorithm(algorithm, as_default=algorithm is not None)
     if is_refusal(blocked):
         return blocked
     blocked = refuse_no_code_authoring(no_code)
@@ -452,6 +455,18 @@ def author_new_structure(
     if is_refusal(blocked):
         return blocked
     blocked = _refuse_random_condition_payload(parameter_space)
+    if is_refusal(blocked):
+        return blocked
+    blocked = _refuse_gap_0085_payload(confluence_legs)
+    if is_refusal(blocked):
+        return blocked
+    blocked = _refuse_gap_0085_payload(confluence)
+    if is_refusal(blocked):
+        return blocked
+    blocked = _refuse_gap_0085_payload(parameter_space)
+    if is_refusal(blocked):
+        return blocked
+    blocked = _refuse_gap_0085_payload(logic_source)
     if is_refusal(blocked):
         return blocked
 

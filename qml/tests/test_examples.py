@@ -108,6 +108,16 @@ def test_generation_usage_example_runs_clean() -> None:
     assert "generation ownership ok" in completed.stdout
 
 
+def test_generation_gaps_usage_example_runs_clean() -> None:
+    completed = _run_example("generation_gaps_usage.py")
+    assert completed.returncode == 0, completed.stderr
+    assert "gap-0085 nouns not minted; write-ownership qml/host later increment" in completed.stdout
+    assert "gap-0063 decided default refused as unruled" in completed.stdout
+    assert "trails connect-wave; does not block library, what-if, door" in completed.stdout
+    assert "no-code refused; rung 2 ordinary python remains the logic path" in completed.stdout
+    assert "generation gaps unfilled ok" in completed.stdout
+
+
 def test_bot_definition_usage_example_runs_clean() -> None:
     completed = _run_example("bot_definition_usage.py")
     assert completed.returncode == 0, completed.stderr
