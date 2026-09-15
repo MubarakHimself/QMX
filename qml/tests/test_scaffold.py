@@ -20,6 +20,8 @@ _HOMES = (
     "footprint",
     "protocol",
     "conformance",
+    "generation",
+    "host",
     "examples",
     "tests",
 )

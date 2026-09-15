@@ -99,6 +99,15 @@ def test_state_usage_example_runs_clean() -> None:
     assert "state usage ok" in completed.stdout
 
 
+def test_generation_usage_example_runs_clean() -> None:
+    completed = _run_example("generation_usage.py")
+    assert completed.returncode == 0, completed.stderr
+    assert "parameter variation is search, not generation" in completed.stdout
+    assert "qml authors; host mints CT-06; qmb does not author" in completed.stdout
+    assert "dsl and RandomCondition schema refused" in completed.stdout
+    assert "generation ownership ok" in completed.stdout
+
+
 def test_bot_definition_usage_example_runs_clean() -> None:
     completed = _run_example("bot_definition_usage.py")
     assert completed.returncode == 0, completed.stderr

@@ -628,11 +628,11 @@ def promote_tuned_assignment(
 def bot_definition_kind_contract() -> Result[FieldSetKind]:
     """The CT-06 ``bot-definition`` kind contract — body field names only.
 
-    The dated Bot-kind mint itself is defined-unwired (CT-33 wiring_status,
-    DEC-0173; operator ruling OR-06 2026-08-27): no install/register wiring
-    ships in qml. Records reach qmf-registry only through a host composition
-    root under the AD-25 root-mints pattern, to be built at the QMB
-    composition root.
+    The dated Bot-kind mint itself is defined-unwired on declaration helpers
+    (CT-33 wiring_status, DEC-0173; operator ruling OR-06 2026-08-27): no
+    install/register wiring ships in ``qml.declaration``. Records reach
+    qmf-registry through the QML/host composition root under the AD-25
+    root-mints pattern. QMB runs the candidates and does not author them.
     """
     return FieldSetKind.try_create(
         KIND_BOT_DEFINITION,
