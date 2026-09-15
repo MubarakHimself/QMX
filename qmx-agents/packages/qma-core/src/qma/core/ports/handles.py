@@ -2,8 +2,11 @@
 
 Six closed kinds owned by ``qma-core``. A handle is a reference: contents never
 enter a context window. ``TradeLogHandle`` and ``MarketDataHandle`` address
-recorded, closed, read-only evidence only. ``StrategyHandle`` may create only
-content-addressed ``dev``-zone candidates with a QMA-owned origin.
+recorded, closed, read-only evidence only. ``StrategyHandle`` may only (1)
+reference an already-fingerprinted registry record and (2) register those bytes
+as a ``dev``-zone candidate with a QMA-owned origin and a CT-07 predecessor
+edge. It never assembles CT-33/CT-34 JSON, never mints GAP-0085 nouns, never
+fills RandomCondition slots (DEC-0272; DEC-0313).
 """
 
 from __future__ import annotations
@@ -13,6 +16,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final, cast
 
+from qma.core.ports.experiments import GAP_0085_STRATEGY_MECHANISMS
 from qma.core.vocabulary.enums import HandleKind
 from qma.core.vocabulary.handles import (
     CLOSED_HANDLE_KINDS,
@@ -26,11 +30,17 @@ from qma.core.vocabulary.handles import (
     refuse_plugin_handle_kind_extension,
 )
 from qma.core.vocabulary.registry import VocabularyError, parse_closed
-from qmf.core import Ok, Result
+from qmf.core import Fingerprint, Ok, Result, is_refusal
 from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 
 __all__ = [
+    "CT33_ASSEMBLY_KEYS",
+    "CT33_KIND_TOKENS",
+    "CT34_ASSEMBLY_KEYS",
+    "CT34_KIND_TOKENS",
     "MONEY_PATH_FIELD_DIFF_SCHEMA",
+    "RANDOM_CONDITION_SLOT_KEYS",
+    "STRATEGY_HANDLE_LINEAGE_EDGE_TYPE",
     "EvidenceHandle",
     "FieldLevelDiff",
     "FieldLevelDiffEntry",
@@ -38,7 +48,10 @@ __all__ = [
     "context_entries_for_handles",
     "money_path_field_is_set",
     "parse_evidence_handle",
+    "parse_registry_record_fp1",
+    "parse_strategy_record_reference",
     "refuse_plugin_handle_kind_extension",
+    "refuse_strategy_handle_assembly",
     "touched_money_path_fields",
     "unset_money_path_fills",
 ]
@@ -46,6 +59,43 @@ __all__ = [
 
 MONEY_PATH_FIELD_DIFF_SCHEMA: Final[str] = "qma.wire.money_path_field_diff.v1"
 _EMPTY_BODY: Final[Mapping[str, object]] = MappingProxyType({})
+
+# CT-07 predecessor edge for a StrategyHandle candidate (DEC-0272; DEC-0313).
+STRATEGY_HANDLE_LINEAGE_EDGE_TYPE: Final[str] = "branches-from"
+
+# CT-33/CT-34 JSON StrategyHandle may never assemble (DEC-0272).
+CT33_KIND_TOKENS: Final[frozenset[str]] = frozenset({"bot_definition", "ct_33", "ct33"})
+CT34_KIND_TOKENS: Final[frozenset[str]] = frozenset({"confluence", "ct_34", "ct34"})
+CT33_ASSEMBLY_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "bot_definition",
+        "bot_definition_fingerprint",
+        "confluence_set",
+        "footprint",
+        "logic_reference",
+        "logic_source",
+        "parameter_space",
+        "permitted_exit_intents",
+        "strategy_family_id",
+    }
+)
+CT34_ASSEMBLY_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "confluence_fingerprint",
+        "confluence_legs",
+        "legs",
+        "order_significance",
+    }
+)
+RANDOM_CONDITION_SLOT_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "random_condition",
+        "random_conditions",
+        "randomcondition",
+        "sq_random_condition",
+        "sq_randomcondition",
+    }
+)
 
 
 def _invalid(field: str, reason: str, **extra: object) -> TypedRefusal:
@@ -65,6 +115,141 @@ def _policy(field: str, reason: str, **extra: object) -> TypedRefusal:
         category=RefusalCategory.POLICY_REJECTION,
         retryability=Retryability.NO,
         context=context,
+    )
+
+
+def _normalize_assembly_token(token: str) -> str:
+    return token.strip().casefold().replace("-", "_")
+
+
+def _collect_strategy_handle_assembly(
+    value: object,
+    *,
+    mechanisms: list[str],
+    random_slots: list[str],
+    assembly: list[str],
+) -> None:
+    if isinstance(value, Mapping):
+        mapping = cast("Mapping[object, object]", value)
+        for raw_key, item in mapping.items():
+            if not isinstance(raw_key, str):
+                continue
+            normalized = _normalize_assembly_token(raw_key)
+            if normalized in GAP_0085_STRATEGY_MECHANISMS:
+                mechanisms.append(raw_key)
+            elif normalized in RANDOM_CONDITION_SLOT_KEYS:
+                random_slots.append(raw_key)
+            elif normalized in CT33_ASSEMBLY_KEYS or normalized in CT34_ASSEMBLY_KEYS:
+                assembly.append(raw_key)
+            elif normalized == "kind":
+                kind = _normalize_assembly_token(item) if isinstance(item, str) else ""
+                if kind in CT33_KIND_TOKENS or kind in CT34_KIND_TOKENS:
+                    assembly.append(raw_key)
+            _collect_strategy_handle_assembly(
+                item,
+                mechanisms=mechanisms,
+                random_slots=random_slots,
+                assembly=assembly,
+            )
+        return
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
+        for item in cast("Sequence[object]", value):
+            _collect_strategy_handle_assembly(
+                item,
+                mechanisms=mechanisms,
+                random_slots=random_slots,
+                assembly=assembly,
+            )
+
+
+def refuse_strategy_handle_assembly(body: object) -> TypedRefusal | None:
+    """Refuse CT-33/CT-34 JSON, GAP-0085 nouns, and RandomCondition slots."""
+    if body is None:
+        return None
+    if not isinstance(body, Mapping):
+        return _policy(
+            "assembly",
+            "StrategyHandle never assembles CT-33/CT-34 JSON; it references an "
+            "already-fingerprinted registry record (DEC-0272; FR-W39)",
+            given=type(body).__name__,
+        )
+    mechanisms: list[str] = []
+    random_slots: list[str] = []
+    assembly: list[str] = []
+    _collect_strategy_handle_assembly(
+        cast("Mapping[str, object]", body),
+        mechanisms=mechanisms,
+        random_slots=random_slots,
+        assembly=assembly,
+    )
+    if mechanisms:
+        return _policy(
+            "mechanisms",
+            "typed strategy-mechanism decomposition is Deferred GAP-0085; "
+            "StrategyHandle does not mint Entry/Exit/Filter/Session nouns "
+            "(DEC-0272; FR-W39)",
+            fields=mechanisms,
+        )
+    if random_slots:
+        return _policy(
+            "random_condition",
+            "SQ RandomCondition templates are a donor shape, not a schema; "
+            "StrategyHandle never fills RandomCondition slots (DEC-0272; FR-W39)",
+            fields=random_slots,
+        )
+    if assembly:
+        return _policy(
+            "assembly",
+            "StrategyHandle never assembles CT-33/CT-34 JSON; QML/host owns "
+            "generation write path (DEC-0272; FR-W39)",
+            fields=assembly,
+        )
+    return None
+
+
+def parse_registry_record_fp1(value: object) -> Result[str]:
+    """Admit an already-fingerprinted registry record; refuse assembled JSON."""
+    if isinstance(value, Mapping):
+        mapping = cast("Mapping[str, object]", value)
+        blocked = refuse_strategy_handle_assembly(mapping)
+        if blocked is not None:
+            return blocked
+        return _policy(
+            "record_fp1",
+            "StrategyHandle references an already-fingerprinted registry record; "
+            "it never assembles CT-33/CT-34 JSON (DEC-0272; FR-W39)",
+            given=type(mapping).__name__,
+        )
+    if not isinstance(value, str):
+        return _policy(
+            "record_fp1",
+            "StrategyHandle references an already-fingerprinted registry record; "
+            "it never assembles CT-33/CT-34 JSON (DEC-0272; FR-W39)",
+            given=type(value).__name__,
+        )
+    parsed = Fingerprint.try_create(value.strip())
+    if is_refusal(parsed):
+        return _invalid(
+            "record_fp1",
+            "StrategyHandle references an already-fingerprinted registry record (fp1:sha256:<hex>)",
+            given=repr(value),
+        )
+    return Ok(parsed.value.value)
+
+
+def parse_strategy_record_reference(
+    *,
+    handle_id: object,
+    record_fp1: object,
+) -> Result[EvidenceHandle]:
+    """Build a StrategyHandle that only cites an already-fingerprinted record."""
+    parsed = parse_registry_record_fp1(record_fp1)
+    if is_refusal(parsed):
+        return parsed
+    return parse_evidence_handle(
+        kind=HandleKind.STRATEGY_HANDLE,
+        handle_id=handle_id,
+        evidence_ref=parsed.value,
     )
 
 
@@ -392,6 +577,7 @@ class StrategyCandidate:
     money_path_relevant: bool
     touched_fields: tuple[str, ...] = ()
     lineage_predecessor: str | None = None
+    record_fp1: str | None = None
 
     def to_payload(self) -> Mapping[str, object]:
         payload: dict[str, object] = {
@@ -405,6 +591,8 @@ class StrategyCandidate:
         }
         if self.lineage_predecessor is not None:
             payload["lineage_predecessor"] = self.lineage_predecessor
+        if self.record_fp1 is not None:
+            payload["record_fp1"] = self.record_fp1
         return MappingProxyType(payload)
 
     @classmethod
@@ -419,6 +607,7 @@ class StrategyCandidate:
         money_path_relevant: object,
         touched_fields: object = (),
         lineage_predecessor: object = None,
+        record_fp1: object = None,
     ) -> Result[StrategyCandidate]:
         if origin != QMA_OWNED_CANDIDATE_ORIGIN:
             return _policy(
@@ -433,6 +622,15 @@ class StrategyCandidate:
                 "and mints no zone value (AD-3; DEC-0313; FR-Q53)",
                 given=repr(zone),
             )
+        if isinstance(payload_fp1, Mapping):
+            blocked = refuse_strategy_handle_assembly(cast("Mapping[str, object]", payload_fp1))
+            if blocked is not None:
+                return blocked
+            return _policy(
+                "payload_fp1",
+                "candidate identity is an already-fingerprinted fp1, never assembled "
+                "CT-33/CT-34 JSON (DEC-0272; FR-W39)",
+            )
         if not isinstance(payload_fp1, str) or not payload_fp1.startswith("fp1:"):
             return _invalid("payload_fp1", "candidate identity is an fp1 content address")
         if not isinstance(stable_id, str) or stable_id.strip() == "":
@@ -445,6 +643,14 @@ class StrategyCandidate:
             return _invalid("lineage_predecessor", "lineage predecessor is an fp1 string")
         if lineage_predecessor == "":
             return _invalid("lineage_predecessor", "lineage predecessor is an fp1 string")
+        parsed_record: str | None
+        if record_fp1 is None:
+            parsed_record = None
+        else:
+            referenced = parse_registry_record_fp1(record_fp1)
+            if is_refusal(referenced):
+                return referenced
+            parsed_record = referenced.value
         fields: tuple[str, ...]
         if touched_fields is None:
             fields = ()
@@ -481,5 +687,6 @@ class StrategyCandidate:
                 money_path_relevant=money_path_relevant,
                 touched_fields=fields,
                 lineage_predecessor=lineage_predecessor,
+                record_fp1=parsed_record,
             )
         )

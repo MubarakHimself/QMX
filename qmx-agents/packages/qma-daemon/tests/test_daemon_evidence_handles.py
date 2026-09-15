@@ -1,4 +1,4 @@
-"""Story 45.6 — daemon-resolved evidence handles and candidates (FR-Q53)."""
+"""Story 45.6 / 38.2 — daemon-resolved evidence handles and candidates (FR-Q53)."""
 
 from __future__ import annotations
 
@@ -7,8 +7,14 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+from qma.core.content import content_address
 from qma.core.plugins import PluginContext
-from qma.core.ports.handles import MONEY_PATH_FIELD_DIFF_SCHEMA, EvidenceHandle
+from qma.core.ports.experiments import GAP_0085_STRATEGY_MECHANISMS
+from qma.core.ports.handles import (
+    MONEY_PATH_FIELD_DIFF_SCHEMA,
+    STRATEGY_HANDLE_LINEAGE_EDGE_TYPE,
+    EvidenceHandle,
+)
 from qma.core.vocabulary.enums import HandleKind, MessageKind
 from qma.core.vocabulary.handles import (
     QMA_OWNED_CANDIDATE_ORIGIN,
@@ -18,6 +24,7 @@ from qma.daemon.handles import EvidenceHandleService
 from qma.daemon.plugins import DaemonPluginContext, PluginContextError
 from qma.daemon.tools import DEV_ZONE
 from qmf.core import is_ok, is_refusal
+from qmf.registry import EdgeType
 
 KINDS = (
     HandleKind.EXPERIMENT_HANDLE,
@@ -37,6 +44,12 @@ def _mint_all(service: EvidenceHandleService) -> None:
             evidence_ref=f"fp1:sha256:{kind.value}",
         )
         assert is_ok(minted)
+
+
+def _qml_record_fp(tag: str) -> str:
+    addressed = content_address({"qml_host_minted": tag})
+    assert is_ok(addressed)
+    return addressed.value.value
 
 
 def test_daemon_resolves_only_closed_kinds() -> None:
@@ -297,3 +310,122 @@ def test_handle_payload_round_trip() -> None:
     assert is_ok(restored)
     assert restored.value.handle_id == "h:know"
     assert restored.value.contents is None
+
+
+def test_strategy_handle_registers_fingerprinted_bytes_with_origin_and_ct07() -> None:
+    service = EvidenceHandleService()
+    record_fp1 = _qml_record_fp("bot-v1")
+    referenced = service.reference_registry_record(
+        handle_id="h:strategy",
+        record_fp1=record_fp1,
+    )
+    assert is_ok(referenced)
+    assert referenced.value.evidence_ref == record_fp1
+    candidate = service.register_fingerprinted_record(
+        handle_id="h:strategy",
+        record_fp1=record_fp1,
+    )
+    assert is_ok(candidate)
+    assert candidate.value.origin == QMA_OWNED_CANDIDATE_ORIGIN
+    assert candidate.value.zone == STRATEGY_CANDIDATE_ZONE
+    assert candidate.value.record_fp1 == record_fp1
+    assert candidate.value.lineage_predecessor == record_fp1
+    edge = service.candidate_lineage_edge(candidate.value.payload_fp1)
+    assert edge is not None
+    assert edge.edge_type is EdgeType.BRANCHES_FROM
+    assert edge.edge_type.value == STRATEGY_HANDLE_LINEAGE_EDGE_TYPE
+    assert edge.to_ref.value == record_fp1
+    assert edge.from_ref.value == candidate.value.payload_fp1
+
+
+def test_strategy_handle_never_assembles_ct33_or_fills_random_condition() -> None:
+    service = EvidenceHandleService()
+    assert is_ok(
+        service.mint(
+            kind=HandleKind.STRATEGY_HANDLE,
+            handle_id="h:strategy",
+            evidence_ref=_qml_record_fp("bot"),
+        )
+    )
+    assembled = service.create_strategy_candidate(
+        handle_id="h:strategy",
+        proposed={
+            "kind": "bot-definition",
+            "strategy_family_id": "trend",
+            "confluence_set": [_qml_record_fp("confluence")],
+        },
+    )
+    assert is_refusal(assembled)
+    assert assembled.context["field"] == "assembly"
+    confluence = service.create_strategy_candidate(
+        handle_id="h:strategy",
+        proposed={"kind": "confluence", "legs": [{"role": "trigger"}]},
+    )
+    assert is_refusal(confluence)
+    assert confluence.context["field"] == "assembly"
+    slots = service.register_fingerprinted_record(
+        handle_id="h:strategy",
+        record_fp1=_qml_record_fp("bot-v2"),
+        proposed={"RandomCondition": {"min": 1, "max": 3}},
+    )
+    assert is_refusal(slots)
+    assert slots.context["field"] == "random_condition"
+    assembled_ref = service.reference_registry_record(
+        handle_id="h:assembled",
+        record_fp1={"kind": "bot-definition", "strategy_family_id": "trend"},
+    )
+    assert is_refusal(assembled_ref)
+
+
+def test_gap_0085_strategy_mechanisms_still_refused_on_strategy_handle() -> None:
+    service = EvidenceHandleService()
+    assert is_ok(
+        service.mint(
+            kind=HandleKind.STRATEGY_HANDLE,
+            handle_id="h:strategy",
+            evidence_ref=_qml_record_fp("bot"),
+        )
+    )
+    assert "entry_mechanism" in GAP_0085_STRATEGY_MECHANISMS
+    refused = service.create_strategy_candidate(
+        handle_id="h:strategy",
+        proposed={"EntryMechanism": {"kind": "breakout"}, "note": "nope"},
+    )
+    assert is_refusal(refused)
+    assert refused.context["field"] == "mechanisms"
+
+
+def test_register_fingerprinted_record_keeps_money_path_field_diff() -> None:
+    service = EvidenceHandleService()
+    record_fp1 = _qml_record_fp("bot-money")
+    assert is_ok(service.reference_registry_record(handle_id="h:strategy", record_fp1=record_fp1))
+    filled = service.register_fingerprinted_record(
+        handle_id="h:strategy",
+        record_fp1=record_fp1,
+        proposed={"sizing": "1R", "note": "new"},
+        ancestor={"note": "old"},
+    )
+    assert is_refusal(filled)
+    assert filled.context["field"] == "money_path_field"
+    candidate = service.register_fingerprinted_record(
+        handle_id="h:strategy",
+        record_fp1=record_fp1,
+        proposed={"sizing": "2R", "note": "keep"},
+        ancestor={"sizing": "1R", "note": "keep"},
+    )
+    assert is_ok(candidate)
+    assert candidate.value.money_path_relevant is True
+    assert candidate.value.touched_fields == ("sizing",)
+    missing = service.emit_approval_request(candidate_ref=candidate.value.payload_fp1)
+    assert is_refusal(missing)
+    approved = service.emit_approval_request(
+        candidate_ref=candidate.value.payload_fp1,
+        field_diff={
+            "schema": MONEY_PATH_FIELD_DIFF_SCHEMA,
+            "candidate_ref": candidate.value.payload_fp1,
+            "predecessor_ref": candidate.value.lineage_predecessor,
+            "fields": [{"path": "sizing", "ancestor": "1R", "proposed": "2R"}],
+        },
+    )
+    assert is_ok(approved)
+    assert approved.value.schema == MONEY_PATH_FIELD_DIFF_SCHEMA

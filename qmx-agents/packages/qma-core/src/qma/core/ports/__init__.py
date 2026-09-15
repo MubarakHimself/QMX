@@ -164,6 +164,7 @@ from qma.core.ports.extensibility import (
 )
 from qma.core.ports.handles import (
     MONEY_PATH_FIELD_DIFF_SCHEMA,
+    STRATEGY_HANDLE_LINEAGE_EDGE_TYPE,
     EvidenceHandle,
     FieldLevelDiff,
     FieldLevelDiffEntry,
@@ -171,7 +172,10 @@ from qma.core.ports.handles import (
     context_entries_for_handles,
     money_path_field_is_set,
     parse_evidence_handle,
+    parse_registry_record_fp1,
+    parse_strategy_record_reference,
     refuse_plugin_handle_kind_extension,
+    refuse_strategy_handle_assembly,
     touched_money_path_fields,
     unset_money_path_fills,
 )
@@ -639,6 +643,7 @@ __all__ = [
     "SANDBOX_PROVENANCE",
     "SHARED_SEMANTIC_KEYS",
     "STAGING_STORE_RECORD_TYPE",
+    "STRATEGY_HANDLE_LINEAGE_EDGE_TYPE",
     "TASK_COMPLETED_FIELDS",
     "TELEMETRY_EXPORT_OPERATIONS",
     "TELEMETRY_FORBIDDEN_LEDGER_KEYS",
@@ -839,6 +844,8 @@ __all__ = [
     "parse_qmb_backtest_request",
     "parse_quant_ledger_entry",
     "parse_quiet_hours",
+    "parse_registry_record_fp1",
+    "parse_strategy_record_reference",
     "parse_task_completed",
     "parse_task_ledger_entry",
     "parse_telemetry_kind",
@@ -888,6 +895,7 @@ __all__ = [
     "refuse_sandbox_provenance",
     "refuse_second_qmb_job",
     "refuse_self_improvement_evaluation_gates",
+    "refuse_strategy_handle_assembly",
     "refuse_subagent_edit_kind",
     "refuse_trim_window_decision",
     "refuse_ui_contribution",

@@ -1,8 +1,10 @@
 """Daemon-resolved evidence handles and candidate writes (CT-47; FR-Q53).
 
 The daemon mints and resolves the six closed ``qma-core`` handle kinds. Contents
-never enter a context window. ``StrategyHandle`` writes a content-addressed
-candidate in the existing ``dev`` zone only — no promotion or zone transition.
+never enter a context window. ``StrategyHandle`` may only reference an already-
+fingerprinted registry record and register those bytes as a ``dev``-zone
+candidate with a QMA origin and a CT-07 predecessor edge — no CT-33/CT-34
+assembly, no promotion, no zone transition.
 """
 
 from __future__ import annotations
@@ -17,10 +19,14 @@ from qma.core.content import content_address
 from qma.core.ports.context import ContextCompiler
 from qma.core.ports.handles import (
     MONEY_PATH_FIELD_DIFF_SCHEMA,
+    STRATEGY_HANDLE_LINEAGE_EDGE_TYPE,
     EvidenceHandle,
     FieldLevelDiff,
     StrategyCandidate,
     parse_evidence_handle,
+    parse_registry_record_fp1,
+    parse_strategy_record_reference,
+    refuse_strategy_handle_assembly,
     touched_money_path_fields,
     unset_money_path_fills,
 )
@@ -33,9 +39,10 @@ from qma.core.vocabulary.handles import (
 from qma.daemon.context.compiler import DefaultContextCompiler
 from qma.daemon.tools.parent_writes import DEV_ZONE, ParentSurfaceGate
 from qma.wire.money_path_diff import validate_money_path_field_diff
-from qmf.core import Ok, Result, is_refusal
+from qmf.core import Ok, Result, WriterId, is_refusal
 from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 from qmf.data.store.refusals import invalid_input, policy_rejection
+from qmf.registry import EdgeLog, LineageEdge
 
 __all__ = ["CandidateApprovalRequest", "EvidenceHandleService"]
 
@@ -86,6 +93,12 @@ class EvidenceHandleService:
         self._bodies: dict[str, Mapping[str, object]] = {}
         self._ancestors: dict[str, Mapping[str, object]] = {}
         self._approvals: list[CandidateApprovalRequest] = []
+        writer = WriterId.try_create("qma-daemon", "authoring", "strategy-handle", "boot-1")
+        if is_refusal(writer):
+            msg = "strategy-handle lineage writer id must construct"
+            raise RuntimeError(msg)
+        self._edges = EdgeLog(writer.value)
+        self._lineage: dict[str, LineageEdge] = {}
 
     @property
     def minted_promotion_command(self) -> None:
@@ -174,6 +187,54 @@ class EvidenceHandleService:
         """Plugins never extend the closed handle-kind vocabulary."""
         return refuse_plugin_handle_kind_extension(kind)
 
+    def reference_registry_record(
+        self,
+        *,
+        handle_id: object,
+        record_fp1: object,
+    ) -> Result[EvidenceHandle]:
+        """Point StrategyHandle at an already-fingerprinted registry record."""
+        referenced = parse_strategy_record_reference(
+            handle_id=handle_id,
+            record_fp1=record_fp1,
+        )
+        if is_refusal(referenced):
+            return referenced
+        handle = referenced.value
+        self._handles[handle.handle_id] = handle
+        return Ok(handle)
+
+    def register_fingerprinted_record(
+        self,
+        *,
+        handle_id: object,
+        record_fp1: object,
+        proposed: Mapping[str, object] | None = None,
+        ancestor: Mapping[str, object] | None = None,
+        lineage_predecessor: str | None = None,
+        origin: str = QMA_OWNED_CANDIDATE_ORIGIN,
+        zone: str = STRATEGY_CANDIDATE_ZONE,
+        summary: str | None = None,
+    ) -> Result[StrategyCandidate]:
+        """Register already-fingerprinted bytes as a ``dev``-zone candidate."""
+        parsed = parse_registry_record_fp1(record_fp1)
+        if is_refusal(parsed):
+            return parsed
+        blocked = refuse_strategy_handle_assembly(proposed)
+        if blocked is not None:
+            return blocked
+        predecessor = lineage_predecessor if lineage_predecessor is not None else parsed.value
+        return self._commit_strategy_candidate(
+            handle_id=handle_id,
+            origin=origin,
+            zone=zone,
+            ancestor=ancestor,
+            proposed=proposed,
+            lineage_predecessor=predecessor,
+            summary=summary,
+            record_fp1=parsed.value,
+        )
+
     def create_strategy_candidate(
         self,
         *,
@@ -186,6 +247,25 @@ class EvidenceHandleService:
         summary: str | None = None,
     ) -> Result[StrategyCandidate]:
         """Write a content-addressed ``dev``-zone candidate from StrategyHandle."""
+        blocked = refuse_strategy_handle_assembly(proposed)
+        if blocked is not None:
+            return blocked
+        return self._commit_strategy_candidate(
+            handle_id=handle_id,
+            origin=origin,
+            zone=zone,
+            ancestor=ancestor,
+            proposed=proposed,
+            lineage_predecessor=lineage_predecessor,
+            summary=summary,
+            record_fp1=None,
+        )
+
+    def candidate_lineage_edge(self, candidate_ref: str) -> LineageEdge | None:
+        """CT-07 predecessor edge stamped for a StrategyHandle candidate."""
+        return self._lineage.get(candidate_ref)
+
+    def _require_strategy_handle(self, handle_id: object) -> Result[EvidenceHandle]:
         resolved = self.resolve(handle_id)
         if is_refusal(resolved):
             return resolved
@@ -196,6 +276,36 @@ class EvidenceHandleService:
                 "only StrategyHandle may create a candidate artifact (CT-47; FR-Q53)",
                 kind=handle.kind.value,
             )
+        return Ok(handle)
+
+    def _stamp_predecessor_edge(self, from_ref: str, to_ref: str) -> Result[LineageEdge]:
+        appended = self._edges.append(
+            edge_type=STRATEGY_HANDLE_LINEAGE_EDGE_TYPE,
+            from_ref=from_ref,
+            to_ref=to_ref,
+        )
+        if is_refusal(appended):
+            return appended
+        edge = appended.value.edge
+        self._lineage[from_ref] = edge
+        return Ok(edge)
+
+    def _commit_strategy_candidate(
+        self,
+        *,
+        handle_id: object,
+        origin: str,
+        zone: str,
+        ancestor: Mapping[str, object] | None,
+        proposed: Mapping[str, object] | None,
+        lineage_predecessor: str | None,
+        summary: str | None,
+        record_fp1: str | None,
+    ) -> Result[StrategyCandidate]:
+        handle_result = self._require_strategy_handle(handle_id)
+        if is_refusal(handle_result):
+            return handle_result
+        handle = handle_result.value
         if zone != DEV_ZONE:
             return self._parent.attempt_zone_transition()
         if origin != QMA_OWNED_CANDIDATE_ORIGIN:
@@ -204,7 +314,8 @@ class EvidenceHandleService:
                 "StrategyHandle candidates carry a QMA-owned origin (DEC-0313; FR-Q53)",
                 given=origin,
             )
-        fills = unset_money_path_fills(ancestor, proposed)
+        body: Mapping[str, object] = proposed if proposed is not None else MappingProxyType({})
+        fills = unset_money_path_fills(ancestor, body)
         if fills:
             return _policy(
                 "money_path_field",
@@ -212,7 +323,7 @@ class EvidenceHandleService:
                 "ancestor carries none (DEC-0313; FR-Q53)",
                 fields=list(fills),
             )
-        touched = touched_money_path_fields(ancestor, proposed)
+        touched = touched_money_path_fields(ancestor, body)
         money_path_relevant = bool(touched)
         if money_path_relevant and ancestor is None and lineage_predecessor is None:
             return _policy(
@@ -220,9 +331,6 @@ class EvidenceHandleService:
                 "a money_path_relevant candidate requires a predecessor artifact "
                 "to diff against (CT-47; FR-Q53)",
             )
-        addressed = content_address(dict(proposed))
-        if is_refusal(addressed):
-            return addressed
         predecessor = lineage_predecessor
         if predecessor is None and ancestor is not None:
             ancestor_fp = content_address(dict(ancestor))
@@ -232,10 +340,21 @@ class EvidenceHandleService:
         payload: dict[str, object] = {
             "kind": "strategy_candidate",
             "handle_id": handle.handle_id,
-            "body_fp1": addressed.value.value,
             "money_path_relevant": money_path_relevant,
             "touched_fields": list(touched),
         }
+        if record_fp1 is not None:
+            payload["record_fp1"] = record_fp1
+        elif proposed is not None:
+            addressed = content_address(dict(proposed))
+            if is_refusal(addressed):
+                return addressed
+            payload["body_fp1"] = addressed.value.value
+        else:
+            return invalid_input(
+                "record_fp1",
+                "StrategyHandle registers already-fingerprinted registry bytes",
+            )
         written = self._parent.write_dev_zone_candidate(
             payload,
             origin=origin,
@@ -255,14 +374,20 @@ class EvidenceHandleService:
             money_path_relevant=money_path_relevant,
             touched_fields=touched,
             lineage_predecessor=stored.lineage_predecessor,
+            record_fp1=record_fp1,
         )
         if is_refusal(candidate):
             return candidate
         record = candidate.value
         self._candidates[record.payload_fp1] = record
-        self._bodies[record.payload_fp1] = MappingProxyType(dict(proposed))
+        if proposed is not None:
+            self._bodies[record.payload_fp1] = MappingProxyType(dict(proposed))
         if ancestor is not None:
             self._ancestors[record.payload_fp1] = MappingProxyType(dict(ancestor))
+        if predecessor is not None:
+            stamped = self._stamp_predecessor_edge(record.payload_fp1, predecessor)
+            if is_refusal(stamped):
+                return stamped
         return Ok(record)
 
     def emit_approval_request(
