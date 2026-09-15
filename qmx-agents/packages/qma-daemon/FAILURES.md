@@ -34,6 +34,9 @@ experiment service, and no QMB JSONL merge (FR-62 through FR-65).
 Epic 36 Story 36.3 persists ExperimentSpec, the Experiment Ledger, and
 CT-07 `branches-from` successor edges through the daemon journal / sole
 sqlite writer so a restart restores them (FR-66 through FR-68).
+Epic 37 Story 37.2 places procedure run-steps through the CT-47 `qmb`
+door as one CLI/MCP run invocation and treats query-steps as Epic 35/33
+door queries (FR-69 through FR-70).
 
 ### FR-1: A second daemon or writer is refused at the persistence boundary
 
@@ -1024,3 +1027,37 @@ sqlite writer so a restart restores them (FR-66 through FR-68).
 - **Notification tier:** silent-log (caller receives the typed refusal).
 - **Product-user affordance:** QMB runs the backtest. Lineage lives on
   the ExperimentSpec in qma-daemon sqlite.
+
+### FR-69: A second procedure run-step is refused while the environment is occupied
+
+- **Failure class:** `policy rejection` (CT-04; FR-W33; FR-W11).
+- **Detection:** `BacktestingService.place_procedure_step` classifies the
+  step through the Story 36.2 door. A run-step (backtest, optimize, sweep,
+  robustness, `analysis.rerun`, mutating data download) calls `invoke` /
+  `admit_qmb_job`. A second in-flight run in the same ExecutionEnvironment
+  is refused. Query-steps (`analysis.project`, `compare_runs`,
+  `sweep.rank`, `data.gap-check|verify|catalog|list`) still proceed.
+- **Auto-recovery / retry:** none while the occupying run is queued,
+  running, or unknown. After a terminal outcome the slot is free; retry
+  the run-step then.
+- **Visible degraded state:** the first run remains occupying; no second
+  run invocation is issued. Query-steps return without consuming the slot.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** one QMB run at a time per environment.
+  Projections and ranks inside a procedure do not block the next backtest
+  once the current run finishes — they also do not occupy the slot now.
+
+### FR-70: A procedure query-step cannot mint CT-32 or an ExperimentSpec successor
+
+- **Failure class:** `policy rejection` (CT-04; FR-W33; FR-W11; FR-W26).
+- **Detection:** `place_procedure_step` routes query-steps to
+  `place_query` (Epic 35/33 door queries). `mint_ct32=True` or
+  `successor=True` is refused. Queries consume no occupancy.
+- **Auto-recovery / retry:** none — drop the mint flags; the query is a
+  readout / saved view / catalog, not a new run.
+- **Visible degraded state:** no CT-32, no successor spec, occupancy
+  unchanged.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** a projection, rank, compare, or gap-check
+  inside a procedure does not create a new experiment result. Run a
+  backtest / rerun step when you need a new CT-32.

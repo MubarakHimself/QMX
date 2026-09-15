@@ -33,7 +33,10 @@ from qma.daemon.taskgraph.execution import (
     validate_graph_template_topology,
     validate_no_daemon_graph_template,
 )
-from qma.daemon.taskgraph.procedures import instantiate_procedure
+from qma.daemon.taskgraph.procedures import (
+    execute_procedure_door_step,
+    instantiate_procedure,
+)
 from qma.daemon.taskgraph.records import (
     MISSION_DIRECTOR_ROLE,
     RESERVED_APPROVAL_ROUTE_OPERATOR,
@@ -87,6 +90,7 @@ __all__ = [
     "derive_mission_desk",
     "deterministic_task_id",
     "emits_task",
+    "execute_procedure_door_step",
     "holds_dispatch_lease",
     "instantiate_procedure",
     "loop_state_from_node_config",

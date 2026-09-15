@@ -3,11 +3,15 @@
 Story 37.1 / FR-W32. Skills stay knowledge. Routines expand their named Graph
 Template. The procedure itself is not an ExperimentSpec and mints no CT-07
 edge. Any door step is READY so it may be the first placement.
+
+Story 37.2 / FR-W33. Run-steps occupy the CT-47 qmb door. Query-steps call
+Epic 35/33 door queries and consume no occupancy.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import TYPE_CHECKING
 
 from qma.core.control.procedures import (
     COMPOSITION_NON_LINEAR,
@@ -15,16 +19,22 @@ from qma.core.control.procedures import (
     ProcedureKind,
     ReusableProcedure,
     author_procedure,
+    classify_procedure_step,
     refuse_procedure_as_experiment_spec,
 )
-from qma.core.ontology import Goal, Quant
+from qma.core.ontology import ActorId, Goal, Quant
+from qma.core.ports.qmb import QMB_WORLD_REPLAY, QmbDoorKind
 from qma.core.vocabulary.enums import PrincipalClass, TaskMissionState
 from qma.daemon.taskgraph.compiler import CompileRequest, CompileResult, MissionCompiler
-from qma.daemon.taskgraph.records import GraphTemplate
+from qma.daemon.taskgraph.records import DispatchLease, GraphTemplate
 from qmf.core import Ok, Result, is_ok
 from qmf.data.store.refusals import invalid_input, policy_rejection
 
+if TYPE_CHECKING:
+    from qma.daemon.backtest.service import BacktestingService, ProcedureStepPlacement
+
 __all__ = [
+    "execute_procedure_door_step",
     "instantiate_procedure",
 ]
 
@@ -110,3 +120,57 @@ def instantiate_procedure(
             given=result.mission.graph_template_ref,
         )
     return Ok(CompileResult(mission=result.mission, task_graph=graph))
+
+
+def execute_procedure_door_step(
+    procedure: ReusableProcedure,
+    node_id: str,
+    *,
+    service: BacktestingService,
+    owner: ActorId | Quant | str,
+    environment_ref: str,
+    task_id: str | None = None,
+    experiment_spec_fp1: str | None = None,
+    evidence_ref: str | None = None,
+    extra: Mapping[str, object] | None = None,
+    dispatch_lease: DispatchLease | None = None,
+    model_deployment_ref: object = None,
+    persist_projection: bool = False,
+    mint_ct32: object = None,
+    successor: object = None,
+    world: str | None = None,
+    door: QmbDoorKind | str = QmbDoorKind.CLI,
+) -> Result[ProcedureStepPlacement]:
+    """Place one authored procedure node through the Story 36.2 QMB door."""
+    node: Mapping[str, object] | None = None
+    for candidate in procedure.nodes:
+        if candidate.get("id") == node_id:
+            node = candidate
+            break
+    if node is None:
+        return invalid_input(
+            "node_id",
+            "procedure door step must name an authored Graph Template node",
+            given=node_id,
+            qualified_id=procedure.qualified_id,
+        )
+    classified = classify_procedure_step(node)
+    if not is_ok(classified):
+        return classified
+    actor: ActorId | str = owner.actor_id if isinstance(owner, Quant) else owner
+    return service.place_procedure_step(
+        node,
+        owner=actor,
+        task_id=task_id if task_id is not None else node_id,
+        environment_ref=environment_ref,
+        experiment_spec_fp1=experiment_spec_fp1,
+        evidence_ref=evidence_ref,
+        extra=extra,
+        dispatch_lease=dispatch_lease,
+        model_deployment_ref=model_deployment_ref,
+        persist_projection=persist_projection,
+        mint_ct32=mint_ct32,
+        successor=successor,
+        world=world if world is not None else QMB_WORLD_REPLAY,
+        door=door,
+    )

@@ -32,6 +32,7 @@ from qma.core.ports.qmb import (
     QMB_OCCUPANCY_RUN,
     QMB_QUERY_COMMANDS,
     QMB_RUN_COMMANDS,
+    QmbDoorOccupancy,
     classify_qmb_door_occupancy,
 )
 from qma.core.vocabulary.enums import GraphArtifactKind, PrincipalClass
@@ -44,11 +45,16 @@ __all__ = [
     "ANALYSIS_PROCEDURE_SKILL_ID",
     "ANALYSIS_PROCEDURE_SKILL_LOCAL_ID",
     "COMPOSITION_NON_LINEAR",
+    "EPIC_33_QUERY_COMMANDS",
+    "EPIC_35_QUERY_COMMANDS",
     "FORBIDDEN_QMB_TASK_GRAPH_NAMES",
     "PROCEDURE_CT07_EDGE_KIND",
     "PROCEDURE_HOMES",
     "PROCEDURE_IS_EXPERIMENT_SPEC",
     "PROCEDURE_MINTS_CT07_EDGE",
+    "PROCEDURE_QUERY_STEP_COMMANDS",
+    "PROCEDURE_RUN_STEP_COMMANDS",
+    "PROCEDURE_STEP_TYPES",
     "QMB_GROWS_TASK_GRAPH",
     "QMB_PROCEDURE_DOOR_STEPS",
     "REFUSED_PROCEDURE_PRODUCTS",
@@ -56,12 +62,16 @@ __all__ = [
     "ProcedureKind",
     "ReusableProcedure",
     "author_procedure",
+    "classify_procedure_step",
     "door_step_ids",
     "first_door_step_ids",
     "is_door_step",
+    "is_query_step",
+    "is_run_step",
     "parse_reusable_procedure",
     "procedure_ct07_edge_kinds",
     "procedure_mints_ct07_edge",
+    "procedure_step_command",
     "qmb_grows_task_graph",
     "refuse_linear_wizard",
     "refuse_procedure_as_experiment_spec",
@@ -93,43 +103,90 @@ ANALYSIS_PROCEDURE_SKILL_ID: Final[str] = (
     f"{ANALYSIS_BACKTEST_PLUGIN_ID}:{ANALYSIS_PROCEDURE_SKILL_LOCAL_ID}"
 )
 
+
+def _door_step(
+    step_id: str,
+    command: str,
+    occupancy: str,
+) -> Mapping[str, object]:
+    return MappingProxyType(
+        {
+            "id": step_id,
+            "kind": "task",
+            "door": "qmb",
+            "placement": occupancy,
+            "command": command,
+        }
+    )
+
+
 QMB_PROCEDURE_DOOR_STEPS: Final[tuple[Mapping[str, object], ...]] = (
-    MappingProxyType(
-        {
-            "id": "backtest",
-            "kind": "task",
-            "door": "qmb",
-            "placement": QMB_OCCUPANCY_RUN,
-            "command": "backtest.run",
-        }
-    ),
-    MappingProxyType(
-        {
-            "id": "project",
-            "kind": "task",
-            "door": "qmb",
-            "placement": QMB_OCCUPANCY_QUERY,
-            "command": "analysis.project",
-        }
-    ),
-    MappingProxyType(
-        {
-            "id": "rank",
-            "kind": "task",
-            "door": "qmb",
-            "placement": QMB_OCCUPANCY_QUERY,
-            "command": "sweep.rank",
-        }
-    ),
-    MappingProxyType(
-        {
-            "id": "download",
-            "kind": "task",
-            "door": "qmb",
-            "placement": QMB_OCCUPANCY_RUN,
-            "command": "data.download",
-        }
-    ),
+    _door_step("backtest", "backtest.run", QMB_OCCUPANCY_RUN),
+    _door_step("project", "analysis.project", QMB_OCCUPANCY_QUERY),
+    _door_step("rank", "sweep.rank", QMB_OCCUPANCY_QUERY),
+    _door_step("download", "data.download", QMB_OCCUPANCY_RUN),
+)
+PROCEDURE_STEP_TYPES: Final[tuple[Mapping[str, object], ...]] = (
+    _door_step("backtest", "backtest.run", QMB_OCCUPANCY_RUN),
+    _door_step("optimize", "optimize.run", QMB_OCCUPANCY_RUN),
+    _door_step("sweep", "sweep.batch", QMB_OCCUPANCY_RUN),
+    _door_step("robustness", "robustness.walk-forward", QMB_OCCUPANCY_RUN),
+    _door_step("rerun", "analysis.rerun", QMB_OCCUPANCY_RUN),
+    _door_step("download", "data.download", QMB_OCCUPANCY_RUN),
+    _door_step("project", "analysis.project", QMB_OCCUPANCY_QUERY),
+    _door_step("compare", "compare_runs", QMB_OCCUPANCY_QUERY),
+    _door_step("rank", "sweep.rank", QMB_OCCUPANCY_QUERY),
+    _door_step("gap-check", "data.gap-check", QMB_OCCUPANCY_QUERY),
+    _door_step("verify", "data.verify", QMB_OCCUPANCY_QUERY),
+    _door_step("catalog", "data.catalog", QMB_OCCUPANCY_QUERY),
+    _door_step("list", "data.list", QMB_OCCUPANCY_QUERY),
+)
+PROCEDURE_RUN_STEP_COMMANDS: Final[frozenset[str]] = QMB_RUN_COMMANDS
+PROCEDURE_QUERY_STEP_COMMANDS: Final[frozenset[str]] = frozenset(
+    {
+        "analysis.project",
+        "analysis.compare",
+        "compare_runs",
+        "sweep.rank",
+        "data.gap-check",
+        "data.verify",
+        "data.catalog",
+        "data.list",
+    }
+)
+EPIC_33_QUERY_COMMANDS: Final[frozenset[str]] = frozenset(
+    {
+        "data.gap-check",
+        "data.verify",
+        "data.catalog",
+        "data.list",
+    }
+)
+EPIC_35_QUERY_COMMANDS: Final[frozenset[str]] = frozenset(
+    {
+        "analysis.project",
+        "analysis.compare",
+        "compare_runs",
+    }
+)
+_PROCEDURE_STEP_ID_COMMANDS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "backtest": "backtest.run",
+        "optimize": "optimize.run",
+        "sweep": "sweep.batch",
+        "robustness": "robustness.walk-forward",
+        "rerun": "analysis.rerun",
+        "download": "data.download",
+        "project": "analysis.project",
+        "compare": "compare_runs",
+        "compare_runs": "compare_runs",
+        "rank": "sweep.rank",
+        "gap_check": "data.gap-check",
+        "gap-check": "data.gap-check",
+        "verify": "data.verify",
+        "catalog": "data.catalog",
+        "list": "data.list",
+    }
 )
 
 REFUSED_PROCEDURE_PRODUCTS: Final[frozenset[str]] = frozenset(
@@ -275,6 +332,80 @@ def refuse_procedure_as_experiment_spec(*, given: object = "procedure") -> Typed
     )
 
 
+def procedure_step_command(step: Mapping[str, object] | str) -> Result[str]:
+    """Resolve a procedure node or token onto a canonical QMB door command."""
+    if isinstance(step, str):
+        token = step.strip()
+        if token == "":
+            return _invalid("command", "procedure door step requires a QMB command")
+        aliased = _PROCEDURE_STEP_ID_COMMANDS.get(token.casefold().replace(" ", "_"))
+        return Ok(aliased if aliased is not None else token)
+    command = step.get("command")
+    if isinstance(command, str) and command.strip():
+        return Ok(command.strip())
+    raw_id = step.get("id")
+    if isinstance(raw_id, str) and raw_id.strip():
+        token = raw_id.strip().casefold().replace(" ", "_")
+        aliased = _PROCEDURE_STEP_ID_COMMANDS.get(token)
+        if aliased is None:
+            aliased = _PROCEDURE_STEP_ID_COMMANDS.get(token.replace("-", "_"))
+        if aliased is not None:
+            return Ok(aliased)
+        return Ok(raw_id.strip())
+    return _invalid("command", "procedure door step requires a QMB command")
+
+
+def classify_procedure_step(
+    step: Mapping[str, object] | str | QmbDoorOccupancy,
+) -> Result[QmbDoorOccupancy]:
+    """Classify a procedure step as a door run (occupies) or a door query."""
+    if isinstance(step, QmbDoorOccupancy):
+        return Ok(step)
+    resolved = procedure_step_command(step)
+    if not is_ok(resolved):
+        return resolved
+    classified = classify_qmb_door_occupancy(resolved.value)
+    if not is_ok(classified):
+        return classified
+    row = classified.value
+    if isinstance(step, Mapping):
+        placement = step.get("placement")
+        if isinstance(placement, str) and placement.strip():
+            token = placement.strip().casefold()
+            if token not in {QMB_OCCUPANCY_RUN, QMB_OCCUPANCY_QUERY}:
+                return _invalid(
+                    "placement",
+                    "procedure step placement is run or query (FR-W33; FR-W11)",
+                    given=token,
+                )
+            if token != row.occupancy:
+                return _policy(
+                    "placement",
+                    "procedure step placement must match the door occupancy class "
+                    "(FR-W33; FR-W11; DEC-0277)",
+                    command=row.command,
+                    occupancy=row.occupancy,
+                    given=token,
+                )
+    return Ok(row)
+
+
+def is_run_step(step: Mapping[str, object] | str | QmbDoorOccupancy) -> bool:
+    """True when the step is a QMB run invocation that occupies the door."""
+    classified = classify_procedure_step(step)
+    if not is_ok(classified):
+        return False
+    return classified.value.occupancy == QMB_OCCUPANCY_RUN
+
+
+def is_query_step(step: Mapping[str, object] | str | QmbDoorOccupancy) -> bool:
+    """True when the step is a QMB door query: no occupancy, no CT-32, no successor."""
+    classified = classify_procedure_step(step)
+    if not is_ok(classified):
+        return False
+    return classified.value.occupancy == QMB_OCCUPANCY_QUERY
+
+
 def is_door_step(node: Mapping[str, object]) -> bool:
     """True when a Graph Template node places a QMB door run or query."""
     door = node.get("door")
@@ -285,7 +416,11 @@ def is_door_step(node: Mapping[str, object]) -> bool:
         return True
     command = node.get("command")
     if not isinstance(command, str) or command.strip() == "":
-        return False
+        raw_id = node.get("id")
+        if not isinstance(raw_id, str):
+            return False
+        token = raw_id.strip().casefold().replace("-", "_")
+        return token in _PROCEDURE_STEP_ID_COMMANDS
     token = command.strip().casefold()
     if token in QMB_RUN_COMMANDS or token in QMB_QUERY_COMMANDS:
         return True

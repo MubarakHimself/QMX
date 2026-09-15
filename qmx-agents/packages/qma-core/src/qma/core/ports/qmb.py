@@ -804,13 +804,36 @@ def build_qmb_door_invocation(
     request: QmbBacktestRequest,
     *,
     job_id: str,
+    command: object | None = None,
 ) -> Result[QmbDoorInvocation]:
-    """Build a CLI/MCP invocation. Payload carries refs; QMA does not re-specify QMB."""
+    """Build a CLI/MCP run invocation. Payload carries refs; QMA does not re-specify QMB."""
     if not job_id.strip():
         return _invalid("job_id", "QMB door invocation requires a job id")
-    argv = QMB_CLI_ARGV if request.door is QmbDoorKind.CLI else (QMB_MCP_METHOD,)
-    classified = classify_qmb_door_occupancy(argv)
-    occupancy = classified.value if isinstance(classified, Ok) else None
+    occupancy: QmbDoorOccupancy | None
+    if command is None:
+        argv = QMB_CLI_ARGV if request.door is QmbDoorKind.CLI else (QMB_MCP_METHOD,)
+        classified = classify_qmb_door_occupancy(argv)
+        occupancy = classified.value if isinstance(classified, Ok) else None
+    else:
+        classified = classify_qmb_door_occupancy(command)
+        if not isinstance(classified, Ok):
+            return classified
+        row = classified.value
+        if row.occupancy != QMB_OCCUPANCY_RUN:
+            return _policy(
+                "occupancy",
+                "build_qmb_door_invocation places runs only; queries use "
+                "build_qmb_query_invocation (FR-W11; FR-W33; DEC-0276)",
+                command=row.command,
+                occupancy=row.occupancy,
+            )
+        occupancy = row
+        if request.door is QmbDoorKind.CLI:
+            argv = row.argv
+        elif row.command == "backtest.run":
+            argv = (QMB_MCP_METHOD,)
+        else:
+            argv = (f"qmb.{row.command}",)
     payload: dict[str, object] = {
         "job_id": job_id,
         "experiment_spec_fp1": request.experiment_spec_fp1,
@@ -824,6 +847,7 @@ def build_qmb_door_invocation(
         "qma_re_specifies": False,
         "qmb_owned": sorted(QMB_OWNED_CONCERNS),
         "route": list(QMB_ROUTE),
+        "command": occupancy.command if occupancy is not None else "backtest.run",
         "occupancy": occupancy.occupancy if occupancy is not None else QMB_OCCUPANCY_RUN,
         "mints_ct32": occupancy.mints_ct32 if occupancy is not None else True,
         "mints_experiment_spec": False,
@@ -831,7 +855,8 @@ def build_qmb_door_invocation(
         "opens_daemon_sqlite": False,
     }
     if request.door is QmbDoorKind.MCP:
-        payload["method"] = QMB_MCP_METHOD
+        method = argv[0] if argv else QMB_MCP_METHOD
+        payload["method"] = method
     return Ok(
         QmbDoorInvocation(
             program=QMB_CLI_PROGRAM,

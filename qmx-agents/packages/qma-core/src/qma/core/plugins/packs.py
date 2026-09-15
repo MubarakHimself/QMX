@@ -11,12 +11,6 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from typing import Final
 
-from qma.core.control.procedures import (
-    ANALYSIS_PROCEDURE_LOCAL_ID,
-    ANALYSIS_PROCEDURE_SKILL_LOCAL_ID,
-    COMPOSITION_NON_LINEAR,
-    QMB_PROCEDURE_DOOR_STEPS,
-)
 from qma.core.ontology.desks import DESK_PREFIX_TOKENS
 from qma.core.plugins.manifest import ManifestError, require_desk_prefix_plugin_id
 from qma.core.ports.qmb import ANALYSIS_BACKTEST_PLUGIN_ID, QMB_OWNED_CONCERNS
@@ -95,7 +89,7 @@ def graph_template_payload(
         "artifact_kind": "graph_template",
         "stateless": True,
         "runtime_state": None,
-        "composition": COMPOSITION_NON_LINEAR,
+        "composition": "non_linear",
         "is_experiment_spec": False,
         "nodes": [dict(node) for node in nodes],
         "edges": [dict(edge) for edge in edges],
@@ -120,13 +114,18 @@ def skill_payload(
         "control_primitive": "skill",
         "is_loop": False,
         "grants_capability": False,
-        "composition": COMPOSITION_NON_LINEAR,
+        "composition": "non_linear",
         "is_experiment_spec": False,
     }
 
 
 def analysis_procedure_graph_payload() -> dict[str, object]:
     """analysis-backtest Graph Template: QMB door steps, any may be first."""
+    from qma.core.control.procedures import (  # noqa: PLC0415
+        ANALYSIS_PROCEDURE_LOCAL_ID,
+        QMB_PROCEDURE_DOOR_STEPS,
+    )
+
     return graph_template_payload(
         ANALYSIS_BACKTEST_PLUGIN_ID,
         ANALYSIS_PROCEDURE_LOCAL_ID,
@@ -137,10 +136,14 @@ def analysis_procedure_graph_payload() -> dict[str, object]:
 
 def analysis_procedure_skill_payload() -> dict[str, object]:
     """analysis-backtest Skill: reusable door-step knowledge, never a wizard."""
+    from qma.core.control.procedures import ANALYSIS_PROCEDURE_SKILL_LOCAL_ID  # noqa: PLC0415
+
     return skill_payload(
         ANALYSIS_BACKTEST_PLUGIN_ID,
         ANALYSIS_PROCEDURE_SKILL_LOCAL_ID,
         summary="Reusable QMB door steps as a Skill, never a QMB workflow",
-        body="Any door step may be the first placement. The procedure is not "
-        "an ExperimentSpec. QMB does not grow a task graph.",
+        body="Any door step may be the first placement. Run-steps occupy the "
+        "CT-47 qmb door. Query-steps call Epic 35/33 door queries and consume "
+        "no occupancy. The procedure is not an ExperimentSpec. QMB does not "
+        "grow a task graph.",
     )

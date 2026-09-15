@@ -18,6 +18,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Literal, cast
 
+from qma.core.control.procedures import classify_procedure_step
 from qma.core.ontology import ActorId
 from qma.core.ports.cancel_authority import (
     COORDINATED_CANCEL_AUTHORITY,
@@ -83,6 +84,7 @@ from qmf.data.store.refusals import invalid_input, policy_rejection
 __all__ = [
     "BacktestingService",
     "CliQmbDoorTransport",
+    "ProcedureStepPlacement",
     "QmbPlacement",
     "QmbQueryPlacement",
     "RecordingQmbDoorTransport",
@@ -282,6 +284,37 @@ class QmbQueryPlacement:
         return MappingProxyType(payload)
 
 
+@dataclass(frozen=True, slots=True)
+class ProcedureStepPlacement:
+    """One procedure door step placed through the Story 36.2 QMB door.
+
+    Run-steps occupy the environment. Query-steps call Epic 35/33 door
+    queries: no occupancy, no CT-32, no ExperimentSpec successor.
+    """
+
+    occupancy: str
+    command: str
+    mints_ct32: bool
+    mints_experiment_spec: Literal[False] = False
+    consumes_environment: bool = False
+    run: QmbPlacement | None = None
+    query: QmbQueryPlacement | None = None
+
+    def to_payload(self) -> Mapping[str, object]:
+        payload: dict[str, object] = {
+            "occupancy": self.occupancy,
+            "command": self.command,
+            "mints_ct32": self.mints_ct32,
+            "mints_experiment_spec": False,
+            "consumes_environment": self.consumes_environment,
+        }
+        if self.run is not None:
+            payload["run"] = dict(self.run.to_payload())
+        if self.query is not None:
+            payload["query"] = dict(self.query.to_payload())
+        return MappingProxyType(payload)
+
+
 class BacktestingService:
     """``analysis-backtest`` daemon half: one Tool Registry entry, one ``qmb`` door."""
 
@@ -422,6 +455,7 @@ class BacktestingService:
         analysis_method: object = None,
         lane: object = None,
         workbench_lane: object = None,
+        command: object | None = None,
     ) -> Result[QmbPlacement]:
         """Agent → QMA backtest tool → Backtesting Service."""
         if tool_id != QMB_BACKTEST_TOOL_ID:
@@ -461,6 +495,7 @@ class BacktestingService:
             model_deployment_ref=model_deployment_ref,
             qmb_ledger_ref=qmb_ledger_ref,
             ct32_ref=ct32_ref,
+            command=command,
         )
 
     def submit(
@@ -471,8 +506,20 @@ class BacktestingService:
         model_deployment_ref: object = None,
         qmb_ledger_ref: object = None,
         ct32_ref: object = None,
+        command: object | None = None,
     ) -> Result[QmbPlacement]:
-        """Place one ``qmb`` job in an eligible environment through the QMB door."""
+        """Place one ``qmb`` run in an eligible environment through the QMB door."""
+        if command is not None:
+            classified = classify_qmb_door_occupancy(command)
+            if is_refusal(classified):
+                return classified
+            if classified.value.occupancy != QMB_OCCUPANCY_RUN:
+                return invalid_input(
+                    "occupancy",
+                    "submit places runs only; queries use place_query (FR-W11; FR-W33)",
+                    command=classified.value.command,
+                    occupancy=classified.value.occupancy,
+                )
         if self._experiments is not None:
             resolved = self._experiments.resolve(request.experiment_spec_fp1)
             if is_refusal(resolved):
@@ -512,7 +559,11 @@ class BacktestingService:
                 "Compute Router (CT-47; DEC-0316; FR-Q55)",
                 task_id=request.task_id,
             )
-        invocation = build_qmb_door_invocation(request, job_id=minted.value.job_id)
+        invocation = build_qmb_door_invocation(
+            request,
+            job_id=minted.value.job_id,
+            command=command,
+        )
         if is_refusal(invocation):
             self._occupancy = release_qmb_job(
                 admitted.value,
@@ -763,6 +814,109 @@ class BacktestingService:
                 receipt=receipt.value,
                 command=row.command,
                 published=published,
+            )
+        )
+
+    def place_procedure_step(
+        self,
+        step: Mapping[str, object] | str,
+        *,
+        owner: ActorId | str,
+        task_id: str,
+        environment_ref: str,
+        experiment_spec_fp1: str | None = None,
+        evidence_ref: str | None = None,
+        extra: Mapping[str, object] | None = None,
+        dispatch_lease: DispatchLease | None = None,
+        model_deployment_ref: object = None,
+        persist_projection: bool = False,
+        mint_ct32: object = None,
+        successor: object = None,
+        world: str = QMB_WORLD_REPLAY,
+        door: QmbDoorKind | str = QmbDoorKind.CLI,
+        qmb_ledger_ref: object = None,
+        ct32_ref: object = None,
+    ) -> Result[ProcedureStepPlacement]:
+        """Place one procedure door step through the Story 36.2 QMB door.
+
+        Run-steps occupy the environment as one CLI/MCP run invocation.
+        Query-steps call ``place_query`` (Epic 35/33 door queries): no occupancy,
+        no CT-32, no ExperimentSpec successor. A second run-step is refused
+        while the slot is held; query-steps still proceed.
+        """
+        classified = classify_procedure_step(step)
+        if is_refusal(classified):
+            return classified
+        row = classified.value
+        if row.occupancy == QMB_OCCUPANCY_QUERY:
+            if mint_ct32 is not None and mint_ct32 is not False:
+                return refuse_query_ct32_or_successor(command=row.command)
+            if successor is not None and successor is not False:
+                return refuse_query_ct32_or_successor(command=row.command)
+            placed = self.place_query(
+                row.command,
+                owner=owner,
+                task_id=task_id,
+                environment_ref=environment_ref,
+                extra=extra,
+                dispatch_lease=dispatch_lease,
+                model_deployment_ref=model_deployment_ref,
+                persist_projection=persist_projection,
+                mint_ct32=mint_ct32,
+                successor=successor,
+                experiment_spec_fp1=experiment_spec_fp1,
+            )
+            if is_refusal(placed):
+                return placed
+            query = placed.value
+            return Ok(
+                ProcedureStepPlacement(
+                    occupancy=QMB_OCCUPANCY_QUERY,
+                    command=query.command,
+                    mints_ct32=False,
+                    mints_experiment_spec=False,
+                    consumes_environment=False,
+                    query=query,
+                )
+            )
+        if not isinstance(experiment_spec_fp1, str) or experiment_spec_fp1.strip() == "":
+            return invalid_input(
+                "experiment_spec_fp1",
+                "a procedure run-step is placed through the CT-47 qmb door and "
+                "requires a registered ExperimentSpec (FR-W33; DEC-0277)",
+            )
+        if not isinstance(evidence_ref, str) or evidence_ref.strip() == "":
+            return invalid_input(
+                "evidence_ref",
+                "a procedure run-step requires recorded evidence (CT-47; FR-W33)",
+            )
+        placed_run = self.invoke(
+            QMB_BACKTEST_TOOL_ID,
+            owner=owner,
+            task_id=task_id,
+            environment_ref=environment_ref,
+            experiment_spec_fp1=experiment_spec_fp1,
+            evidence_ref=evidence_ref,
+            world=world,
+            door=door,
+            extra=extra,
+            dispatch_lease=dispatch_lease,
+            model_deployment_ref=model_deployment_ref,
+            qmb_ledger_ref=qmb_ledger_ref,
+            ct32_ref=ct32_ref,
+            command=row.command,
+        )
+        if is_refusal(placed_run):
+            return placed_run
+        run = placed_run.value
+        return Ok(
+            ProcedureStepPlacement(
+                occupancy=QMB_OCCUPANCY_RUN,
+                command=row.command,
+                mints_ct32=row.mints_ct32,
+                mints_experiment_spec=False,
+                consumes_environment=True,
+                run=run,
             )
         )
 
