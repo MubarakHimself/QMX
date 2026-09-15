@@ -6,6 +6,7 @@ from collections.abc import Mapping
 
 from qma.core.content import content_address
 from qma.core.ports.experiments import (
+    COORDINATED_CONTINUITY_KIND,
     CT07_V1_EDGE_TYPES,
     EXPERIMENT_CHANGE_CODE,
     EXPERIMENT_CHANGE_KINDS,
@@ -13,7 +14,10 @@ from qma.core.ports.experiments import (
     EXPERIMENT_LINEAGE_EDGE_TYPE,
     GAP_0085_STRATEGY_MECHANISMS,
     GIT_COMMIT_REF_PREFIX,
+    REFUSED_CONTINUITY_KINDS,
     ExperimentSpec,
+    admit_coordinated_continuity,
+    admit_experiment_evidence_body,
     is_git_branch_ref,
     is_git_commit_ref,
     parse_experiment_spec,
@@ -211,3 +215,35 @@ def test_invalid_seed_and_missing_axes_are_refused() -> None:
     assert is_refusal(missing)
     no_change = _spec().with_change(change="git_branch")
     assert is_refusal(no_change)
+
+
+def test_project_and_workspace_are_refused_as_continuity() -> None:
+    assert "project" in REFUSED_CONTINUITY_KINDS
+    assert "workspace" in REFUSED_CONTINUITY_KINDS
+    project = admit_coordinated_continuity("Project")
+    assert is_refusal(project)
+    assert project.context["field"] == "continuity"
+    workspace = admit_coordinated_continuity("workspace")
+    assert is_refusal(workspace)
+    admitted = admit_coordinated_continuity("experiment_spec")
+    assert is_ok(admitted)
+    assert admitted.value == COORDINATED_CONTINUITY_KIND
+
+
+def test_evidence_body_stores_refs_and_refuses_jsonl_or_ct32_copies() -> None:
+    refs = admit_experiment_evidence_body(
+        {
+            "ct32_ref": _fp("ct32"),
+            "qmb_ledger_ref": "qmb-ledger:run-1",
+            "note": "coordinated evidence",
+        }
+    )
+    assert is_ok(refs)
+    copied = admit_experiment_evidence_body({"ct32": {"label": "copied"}})
+    assert is_refusal(copied)
+    jsonl = admit_experiment_evidence_body({"jsonl": '{"event":1}\n{"event":2}\n'})
+    assert is_refusal(jsonl)
+    lines = admit_experiment_evidence_body(
+        {"run_ledger_lines": [{"role": "confirmation", "fp": "x"}]}
+    )
+    assert is_refusal(lines)

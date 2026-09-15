@@ -1,9 +1,10 @@
-"""Composed asyncio daemon process (Story 36.1; FR-W09; FR-W01; NFR-W04).
+"""Composed asyncio daemon process (Story 36.1 / 36.3; FR-W09; FR-W10; NFR-W04).
 
 One long-running process from existing modules: the CT-40 loopback listener,
-the Story 42.1 sole sqlite writer, and the Epic 48 desk-pack roster. Connect,
-not a sixth application: no new COMP, no HTTP experiment service, and no
-second daemon runtime. QMB JSONL stays in QMB and is not merged into sqlite.
+the Story 42.1 sole sqlite writer, the ExperimentSpec / Experiment Ledger /
+CT-07 sqlite product truth, and the Epic 48 desk-pack roster. Connect, not a
+sixth application: no new COMP, no HTTP experiment service, and no second
+daemon runtime. QMB JSONL stays in QMB and is not merged into sqlite.
 ``analysis-backtest`` remains the Backtesting Service's daemon half.
 """
 
@@ -26,6 +27,10 @@ from qma.core.ports.qmb import (
 )
 from qma.core.vocabulary.enums import PrincipalClass
 from qma.daemon.backtest.service import BacktestingService
+from qma.daemon.experiments import EXPERIMENT_SQLITE_TABLES, ExperimentSpecService
+from qma.daemon.journal.authoritative import AuthoritativeJournal
+from qma.daemon.journal.clock import InjectedUtcClock
+from qma.daemon.ledgers.experiment import ExperimentLedgerStore
 from qma.daemon.persistence.sqlite_writer import SingleSqliteWriter
 from qma.daemon.persistence.substrate import PersistenceSubstrate
 from qma.daemon.plugins.packs import DeskPluginRoster
@@ -37,7 +42,7 @@ from qma.wire.listener import (
 )
 from qma.wire.schemas import SCHEMA_FILES
 from qma.wire.vocabulary import WIRE_VOCABULARY_OWNER
-from qmf.core import Ok, Result, World, is_refusal
+from qmf.core import Ok, Result, World, WriterId, is_refusal
 from qmf.data.store.refusals import invalid_input, policy_rejection, storage_failure
 
 __all__ = [
@@ -97,11 +102,15 @@ class DaemonProcess:
         roster: DeskPluginRoster,
         posture: ListenerPosture,
         bind_port: int,
+        journal: AuthoritativeJournal,
+        experiments: ExperimentSpecService,
     ) -> None:
         self._substrate = substrate
         self._roster = roster
         self._posture = posture
         self._bind_port = bind_port
+        self._journal = journal
+        self._experiments = experiments
         self._server: asyncio.Server | None = None
         self._bound: BoundListener | None = None
         self._accepted = 0
@@ -167,12 +176,43 @@ class DaemonProcess:
                 return opened
             substrate = opened.value
 
+            journal_bound = AuthoritativeJournal.bind(
+                substrate,
+                clock=InjectedUtcClock(boot_epoch_id),
+            )
+            if is_refusal(journal_bound):
+                substrate.close()
+                return journal_bound
+            journal = journal_bound.value
+
+            lineage_writer = WriterId.try_create(
+                machine, "authoring", "experiment-lineage", boot_epoch_id
+            )
+            if is_refusal(lineage_writer):
+                journal.close()
+                substrate.close()
+                return lineage_writer
+
+            experiments = ExperimentSpecService(
+                writer=lineage_writer.value,
+                ledgers=ExperimentLedgerStore(_journal=journal),
+            )
+            restored = experiments.bind_durable(
+                sqlite=substrate.sqlite,
+                journal=journal,
+            )
+            if is_refusal(restored):
+                journal.close()
+                substrate.close()
+                return restored
+
             roster = DeskPluginRoster(plugins_root=plugins_root)
             activated = roster.activate(
                 principal=PrincipalClass.OPERATOR,
                 correlation_id=f"daemon-process:{boot_epoch_id}",
             )
             if is_refusal(activated):
+                journal.close()
                 substrate.close()
                 return activated
 
@@ -181,6 +221,8 @@ class DaemonProcess:
                 roster=roster,
                 posture=posture.value,
                 bind_port=port,
+                journal=journal,
+                experiments=experiments,
             )
             _process_gate.holder = process
             return Ok(process)
@@ -196,6 +238,14 @@ class DaemonProcess:
     @property
     def sqlite(self) -> SingleSqliteWriter:
         return self._substrate.sqlite
+
+    @property
+    def journal(self) -> AuthoritativeJournal:
+        return self._journal
+
+    @property
+    def experiments(self) -> ExperimentSpecService:
+        return self._experiments
 
     @property
     def roster(self) -> DeskPluginRoster:
@@ -359,6 +409,10 @@ class DaemonProcess:
                 "sqlite_connections": self.sqlite_connection_count(),
                 "sqlite_thread": self._substrate.sqlite.thread_name,
                 "sqlite_tables": sorted(self.sqlite_table_names()),
+                "experiment_sqlite_tables": sorted(
+                    self.sqlite_table_names() & EXPERIMENT_SQLITE_TABLES
+                ),
+                "experiment_product_truth": self._experiments.product_truth,
                 "pack_ids": list(self._roster.loader.loaded_ids()),
                 "expected_pack_ids": list(DESK_PLUGIN_PACK_IDS),
                 "analysis_backtest_plugin_id": self.backtesting.plugin_id,
@@ -398,6 +452,7 @@ class DaemonProcess:
             return
         self._closed = True
         self._bound = None
+        self._journal.close()
         closer = getattr(self.backtesting.transport, "close", None)
         try:
             if callable(closer):

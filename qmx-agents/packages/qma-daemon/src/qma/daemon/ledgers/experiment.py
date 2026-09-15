@@ -19,6 +19,7 @@ from qma.core.ports.cancel_authority import (
     UngovernedProcessDeath,
     record_ungoverned_caller_death,
 )
+from qma.core.ports.experiments import admit_experiment_evidence_body
 from qma.core.ports.ledgers import named_lease_kind
 from qma.core.vocabulary.enums import LeaseKind
 from qma.daemon.hooks.ledger_gate import (
@@ -166,6 +167,19 @@ class ExperimentLedgerStore:
     def lease_for(self, experiment_id: str) -> DispatchLease | None:
         return self._leases.get(experiment_id)
 
+    def install_restored(
+        self,
+        ledger: ExperimentLedger,
+        lease: DispatchLease,
+        *,
+        entry_seq: int,
+    ) -> ExperimentLedger:
+        """Install a sqlite-restored ledger. In-memory maps are not product truth."""
+        self._ledgers[ledger.experiment_id] = ledger
+        self._leases[ledger.experiment_id] = lease
+        self._entry_seq[ledger.experiment_id] = entry_seq
+        return ledger
+
     def open_for_experiment(
         self,
         *,
@@ -203,6 +217,10 @@ class ExperimentLedgerStore:
         """Append evidence. Author is the registering Task's dispatch_lease holder."""
         if not isinstance(spec_fp1, str) or spec_fp1.strip() == "":
             return invalid_input("spec_fp1", "ledger append requires an ExperimentSpec fp1")
+        admitted_body = admit_experiment_evidence_body(body)
+        if is_refusal(admitted_body):
+            return admitted_body
+        body = admitted_body.value
         if not isinstance(model_deployment_ref, str) or model_deployment_ref.strip() == "":
             return invalid_input(
                 "model_deployment_ref",

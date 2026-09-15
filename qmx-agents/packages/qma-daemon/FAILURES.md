@@ -31,6 +31,9 @@ continuity across leases, Tasks, and pending evidence (FR-54 through FR-57).
 Epic 36 Story 36.1 adds the composed asyncio process: loopback listener,
 sole sqlite writer, and pack roster, with no second runtime, no HTTP
 experiment service, and no QMB JSONL merge (FR-62 through FR-65).
+Epic 36 Story 36.3 persists ExperimentSpec, the Experiment Ledger, and
+CT-07 `branches-from` successor edges through the daemon journal / sole
+sqlite writer so a restart restores them (FR-66 through FR-68).
 
 ### FR-1: A second daemon or writer is refused at the persistence boundary
 
@@ -982,3 +985,42 @@ experiment service, and no QMB JSONL merge (FR-62 through FR-65).
 - **Notification tier:** operator-visible (startup refusal).
 - **Product-user affordance:** default bind is loopback with authentication.
   Non-loopback requires TLS and an explicit recorded operator configuration.
+
+### FR-66: Project or Workspace as coordinated continuity is refused
+
+- **Failure class:** `policy rejection` (CT-04; DEC-0284; FR-W16).
+- **Detection:** `ExperimentSpecService.register_project`,
+  `register_workspace`, and `register(..., continuity_kind=...)` refuse
+  Project / Workspace. Coordinated continuity is the ExperimentSpec `fp1`
+  (`code_ref` / `resolved_config_ref` / `data_ref` = CT-12 /
+  `environment_ref`).
+- **Auto-recovery / retry:** none — register an ExperimentSpec.
+- **Visible degraded state:** no Project or Workspace record is stored.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** display names "project" / "workspace" are
+  aliases. Continuity is the experiment fingerprint.
+
+### FR-67: Copied QMB JSONL or CT-32 on the Experiment Ledger is refused
+
+- **Failure class:** `policy rejection` (CT-04; FR-W10; NFR-W04).
+- **Detection:** Experiment Ledger appends admit `_ref` keys and small
+  metadata only. `copy_qmb_jsonl` and `merge_ct32` always refuse. QMA
+  never copies or merges QMB JSONL or CT-32.
+- **Auto-recovery / retry:** none — store `ct32_ref` / `qmb_ledger_ref`.
+- **Visible degraded state:** the Experiment Ledger is unchanged; QMB
+  keeps its JSONL and CT-32.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** QMA points at QMB evidence. It does not
+  import the run ledger.
+
+### FR-68: QMB writing ExperimentSpec successor edges is refused
+
+- **Failure class:** `policy rejection` (CT-04; DEC-0276; DEC-0308).
+- **Detection:** `create_successor(..., source="qmb")` and
+  `write_edges_from_qmb` refuse. CT-07 `branches-from` edges persist
+  through the daemon journal / sqlite writer only.
+- **Auto-recovery / retry:** none — the daemon records the successor.
+- **Visible degraded state:** no ExperimentSpec edge is written by QMB.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** QMB runs the backtest. Lineage lives on
+  the ExperimentSpec in qma-daemon sqlite.

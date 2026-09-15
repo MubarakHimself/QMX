@@ -9,12 +9,22 @@ a recorded UTC instant and carry no timezone.
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final, Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from qmf.core import Clock, Duration, Instant, Ok, Result, TypedRefusal, is_refusal
+from qmf.core import (
+    Clock,
+    Duration,
+    Instant,
+    MonotonicReading,
+    Ok,
+    Result,
+    TypedRefusal,
+    is_refusal,
+)
 from qmf.data.store.refusals import invalid_input, policy_rejection
 
 __all__ = [
@@ -22,6 +32,7 @@ __all__ = [
     "DaemonClock",
     "DurableTimestamps",
     "DurationPolicy",
+    "InjectedUtcClock",
     "WallClockPolicy",
     "refuse_host_local_time",
     "refuse_worker_evidence_timestamp",
@@ -153,6 +164,27 @@ def _try_wall_clock_kind(kind: object) -> Result[WallClockPolicyKind]:
         given=repr(kind),
         allowed=sorted(allowed),
     )
+
+
+class InjectedUtcClock:
+    """Live UTC clock injected only at the composition root (FR-Q25; AD-6).
+
+    Components never call ``time.time``; they read this clock through
+    :class:`DaemonClock` / :class:`~qma.daemon.journal.authoritative.AuthoritativeJournal`.
+    """
+
+    def __init__(self, boot_epoch_id: str) -> None:
+        self.boot_epoch_id = boot_epoch_id
+        self._mono0 = time.monotonic_ns()
+
+    def wall_now(self) -> Result[Instant]:
+        return Instant.try_create(time.time_ns())
+
+    def monotonic_now(self) -> Result[MonotonicReading]:
+        return MonotonicReading.try_create(
+            time.monotonic_ns() - self._mono0,
+            self.boot_epoch_id,
+        )
 
 
 class DaemonClock:

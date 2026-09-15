@@ -193,6 +193,17 @@ class SingleSqliteWriter:
 
         return self._submit(_work)
 
+    def run(self, fn: Callable[[sqlite3.Connection], _T]) -> _T:
+        """Run ``fn`` on the sole writable connection and commit."""
+
+        def _work() -> _T:
+            conn = self._require_conn()
+            result = fn(conn)
+            conn.commit()
+            return result
+
+        return self._submit(_work)
+
     def checkpoint(self, mode: str = "PASSIVE") -> tuple[int, int, int]:
         """Run ``PRAGMA wal_checkpoint`` on the sole writable connection only."""
         allowed = {"PASSIVE", "FULL", "RESTART", "TRUNCATE"}

@@ -20,14 +20,20 @@ from qmf.core.fingerprint import Fingerprint
 from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 
 __all__ = [
+    "COORDINATED_CONTINUITY_KIND",
+    "COPIED_EXPERIMENT_EVIDENCE_KEYS",
     "CT07_V1_EDGE_TYPES",
     "EXPERIMENT_CHANGE_CODE",
     "EXPERIMENT_CHANGE_KINDS",
     "EXPERIMENT_CHANGE_RESOLVED_CONFIG",
+    "EXPERIMENT_EVIDENCE_METADATA_KEYS",
     "EXPERIMENT_LINEAGE_EDGE_TYPE",
     "GAP_0085_STRATEGY_MECHANISMS",
     "GIT_COMMIT_REF_PREFIX",
+    "REFUSED_CONTINUITY_KINDS",
     "ExperimentSpec",
+    "admit_coordinated_continuity",
+    "admit_experiment_evidence_body",
     "is_git_branch_ref",
     "is_git_commit_ref",
     "parse_experiment_spec",
@@ -93,6 +99,37 @@ GAP_0085_STRATEGY_MECHANISMS: Final[frozenset[str]] = frozenset(
 )
 
 _VERSION_KEYS: Final[frozenset[str]] = frozenset({"model", "harness"})
+
+# Coordinated continuity is ExperimentSpec fp1. Project / Workspace are UX aliases
+# only and are never identity (DEC-0284).
+COORDINATED_CONTINUITY_KIND: Final[str] = "experiment_spec"
+REFUSED_CONTINUITY_KINDS: Final[frozenset[str]] = frozenset({"project", "workspace"})
+
+# Experiment Ledger bodies store _refs. JSONL / CT-32 copies are not product truth.
+COPIED_EXPERIMENT_EVIDENCE_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "jsonl",
+        "qmb_jsonl",
+        "run_jsonl",
+        "ledger_jsonl",
+        "copied_jsonl",
+        "merged_jsonl",
+        "ct32",
+        "ct_32",
+        "ct32_payload",
+        "ct32_body",
+        "copied_ct32",
+        "merged_ct32",
+        "qmb_ledger",
+        "run_ledger",
+        "run_ledger_lines",
+        "ledger_lines",
+        "jsonl_copy",
+    }
+)
+EXPERIMENT_EVIDENCE_METADATA_KEYS: Final[frozenset[str]] = frozenset(
+    {"note", "kind", "workbench_lane"}
+)
 
 
 def _invalid(field: str, reason: str, **extra: object) -> TypedRefusal:
@@ -507,6 +544,112 @@ class ExperimentSpec:
                 "a successor ExperimentSpec must differ in identity content (CT-47; FR-Q54)",
             )
         return Ok(successor)
+
+
+def _normalize_continuity_token(value: str) -> str:
+    return value.strip().casefold().replace(" ", "_").replace("-", "_")
+
+
+def admit_coordinated_continuity(kind: object) -> Result[str]:
+    """Admit ExperimentSpec fp1 as continuity; refuse Project / Workspace."""
+    if not isinstance(kind, str) or kind.strip() == "":
+        return _invalid(
+            "continuity",
+            "coordinated continuity is the ExperimentSpec fp1 "
+            "(code_ref / resolved_config_ref / data_ref = CT-12 / environment_ref) "
+            "(DEC-0284; FR-W16)",
+            given=repr(kind),
+        )
+    token = _normalize_continuity_token(kind)
+    if token in REFUSED_CONTINUITY_KINDS:
+        return _policy(
+            "continuity",
+            "Project or Workspace is not the continuity object; coordinated "
+            "continuity is the ExperimentSpec fp1 (code_ref / resolved_config_ref / "
+            "data_ref = CT-12 / environment_ref) (DEC-0284; FR-W16)",
+            given=kind,
+            refused=sorted(REFUSED_CONTINUITY_KINDS),
+        )
+    if token in {
+        COORDINATED_CONTINUITY_KIND,
+        "experimentspec",
+        "spec_fp1",
+        "fp1",
+    }:
+        return Ok(COORDINATED_CONTINUITY_KIND)
+    return _invalid(
+        "continuity",
+        "coordinated continuity is the ExperimentSpec fp1 "
+        "(code_ref / resolved_config_ref / data_ref = CT-12 / environment_ref) "
+        "(DEC-0284; FR-W16)",
+        given=kind,
+    )
+
+
+def _copied_evidence_key(key: str) -> bool:
+    token = key.strip().casefold().replace("-", "_")
+    if token.endswith("_ref"):
+        return False
+    if token in COPIED_EXPERIMENT_EVIDENCE_KEYS:
+        return True
+    if "jsonl" in token:
+        return True
+    return token in {"ct32", "ct_32"}
+
+
+def _copied_evidence_value(value: object) -> bool:
+    if isinstance(value, list):
+        items = cast("list[object]", value)
+        return bool(items) and all(isinstance(item, Mapping) for item in items)
+    if isinstance(value, str):
+        return "\n{" in value or (value.lstrip().startswith("{") and "\n" in value)
+    if isinstance(value, Mapping):
+        nested_map = cast("Mapping[object, object]", value)
+        nested = {
+            str(key).strip().casefold().replace("-", "_")
+            for key in nested_map
+            if isinstance(key, str)
+        }
+        return bool(nested & COPIED_EXPERIMENT_EVIDENCE_KEYS) or "ct32" in nested
+    return False
+
+
+def admit_experiment_evidence_body(
+    body: Mapping[str, object],
+) -> Result[Mapping[str, object]]:
+    """Admit Experiment Ledger evidence that stores _refs, never JSONL or CT-32 copies."""
+    for key, value in body.items():
+        if key.strip() == "":
+            return _invalid(
+                "body",
+                "Experiment Ledger evidence keys are non-empty strings",
+                given=repr(key),
+            )
+        token = key.strip().casefold().replace("-", "_")
+        if token.endswith("_ref"):
+            if not isinstance(value, str) or value.strip() == "":
+                return _invalid(
+                    key,
+                    "QMA stores _refs only; a ref value is a non-empty string (FR-W10; NFR-W04)",
+                    given=repr(value),
+                )
+            continue
+        if _copied_evidence_key(key) or _copied_evidence_value(value):
+            return _policy(
+                "body",
+                "QMA stores _refs only — it does not copy or merge JSONL or CT-32 "
+                "(FR-W10; NFR-W04; DEC-0276)",
+                key=key,
+            )
+        if token not in EXPERIMENT_EVIDENCE_METADATA_KEYS:
+            return _policy(
+                "body",
+                "QMA stores _refs only — Experiment Ledger evidence carries ref "
+                "keys and small metadata, never copied QMB JSONL or CT-32 "
+                "(FR-W10; NFR-W04; DEC-0276)",
+                key=key,
+            )
+    return Ok(MappingProxyType(dict(body)))
 
 
 def parse_experiment_spec(**fields: object) -> Result[ExperimentSpec]:
