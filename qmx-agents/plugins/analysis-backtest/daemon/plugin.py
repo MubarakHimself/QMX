@@ -7,7 +7,13 @@ pack. This module registers contributions through ``PluginContext`` from
 
 from __future__ import annotations
 
-from qma.core.plugins import PluginContext, graph_template_payload, skill_payload
+from qma.core.plugins import (
+    PluginContext,
+    analysis_procedure_graph_payload,
+    analysis_procedure_skill_payload,
+    graph_template_payload,
+    skill_payload,
+)
 from qma.core.ports.qmb import (
     ANALYSIS_BACKTEST_PLUGIN_ID,
     QMB_BACKTEST_TOOL_LOCAL_ID,
@@ -40,6 +46,10 @@ def activate(ctx: PluginContext) -> None:
             body="Replay only. QMB keeps parallelism, run ledger, and artifacts.",
         ),
     )
+    ctx.register_skill(
+        "steps",
+        analysis_procedure_skill_payload(),
+    )
     ctx.register_graph_template(
         "notebook",
         graph_template_payload(
@@ -55,6 +65,10 @@ def activate(ctx: PluginContext) -> None:
                 {"from": "replay", "to": "review"},
             ),
         ),
+    )
+    ctx.register_graph_template(
+        "procedure",
+        analysis_procedure_graph_payload(),
     )
     ctx.register_toolset(
         "replay-tools",
