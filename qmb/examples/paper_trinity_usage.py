@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TypeVar
+
 from qmb.paper import (
     PAPER_NOUN_RESEARCH,
     QMA_PAPER_EXISTS,
@@ -16,10 +18,10 @@ from qmf.core.chrono import WriterId
 from qmf.core.fingerprint import World, fingerprint
 from qmf.core.refusal import Result, is_ok, is_refusal
 
-T = object
+T = TypeVar("T")
 
 
-def _ok(result: Result[object]) -> object:
+def _ok(result: Result[T]) -> T:
     assert is_ok(result), result
     return result.value
 
