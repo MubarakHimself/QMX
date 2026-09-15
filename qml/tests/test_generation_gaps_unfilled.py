@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import ast
+import os
 import re
+import stat
 from pathlib import Path
 from typing import TypeVar
 
@@ -57,7 +59,9 @@ _QML_SRC = _REPO / "qml" / "src" / "qml"
 _QML_EXAMPLES = _REPO / "qml" / "examples"
 _QMB_SRC = _REPO / "qmb" / "src" / "qmb"
 _QMA_DAEMON_SRC = _REPO / "qmx-agents" / "packages" / "qma-daemon" / "src"
+_CONTRACTS = _REPO / "docs" / "contracts"
 _SKIP_DIR_NAMES = {".git", "__pycache__", ".venv"}
+_MAX_READ_BYTES = 1 << 20  # 1 MiB
 
 
 def _ok(result: Result[T]) -> T:
@@ -79,8 +83,63 @@ def _iter_py(root: Path) -> list[Path]:
     return paths
 
 
+def _read_contained(
+    path: Path,
+    *,
+    contain_within: Path,
+    max_bytes: int = _MAX_READ_BYTES,
+) -> str:
+    """Read UTF-8 text from a regular, in-root, non-symlink file under *max_bytes*."""
+    try:
+        resolved = Path(os.path.realpath(path))
+        root_real = Path(os.path.realpath(contain_within))
+    except OSError as exc:
+        raise OSError(
+            f"could not resolve a contained filesystem path ({path}): {type(exc).__name__}"
+        ) from exc
+    if path.is_symlink() or not resolved.is_relative_to(root_real):
+        raise OSError(f"refusing to follow a symlink or read outside the intended root ({path})")
+    if not path.is_file() or path.is_symlink():
+        raise OSError(f"refusing to read a path that is not a regular in-root file ({path})")
+    try:
+        # getattr keeps the "O_NOFOLLOW" token on this open so SKY-D324/D325
+        # see the no-follow flag; Windows has no O_NOFOLLOW (value 0).
+        fd = os.open(  # skylos: ignore[SKY-D215] contained, no-follow read
+            path,
+            os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_BINARY", 0),
+        )
+    except OSError as exc:
+        raise OSError(f"contained no-follow open failed for {path} ({type(exc).__name__})") from exc
+    try:
+        info = os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode):
+            raise OSError(f"refusing to read a path that is not a regular in-root file ({path})")
+        size = info.st_size
+        if size > max_bytes:
+            raise OSError(
+                f"refusing to read a file above the size cap ({path}: {size} > {max_bytes})"
+            )
+        limit = max_bytes if size <= 0 else min(size, max_bytes)
+        buf = bytearray()
+        while len(buf) < limit:
+            chunk = os.read(fd, limit - len(buf))
+            if not chunk:
+                break
+            buf.extend(chunk)
+        if size <= 0 and len(buf) >= max_bytes:
+            extra = os.read(fd, 1)
+            if extra:
+                raise OSError(f"refusing to read a file above the size cap ({path}: > {max_bytes})")
+    finally:
+        os.close(fd)
+    try:
+        return bytes(buf).decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise OSError(f"contained file is not UTF-8 text ({path})") from exc
+
+
 def _class_names(path: Path) -> list[str]:
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    tree = ast.parse(_read_contained(path, contain_within=_QML_SRC), filename=str(path))
     return [node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)]
 
 
@@ -146,11 +205,11 @@ def test_ct34_filter_role_is_not_the_gap_0085_filter_noun() -> None:
 
 def test_ct33_ct34_contracts_do_not_mint_mechanism_nouns() -> None:
     contracts = (
-        _REPO / "docs" / "contracts" / "ct-33-bot-definition.yaml",
-        _REPO / "docs" / "contracts" / "ct-34-confluence.yaml",
+        _CONTRACTS / "ct-33-bot-definition.yaml",
+        _CONTRACTS / "ct-34-confluence.yaml",
     )
     for path in contracts:
-        text = path.read_text(encoding="utf-8")
+        text = _read_contained(path, contain_within=_CONTRACTS)
         for noun in GAP_0085_NOUNS:
             assert re.search(rf"\b{re.escape(noun)}\b", text) is None, f"{path.name} minted {noun}"
 
@@ -196,7 +255,7 @@ def test_no_prose_in_this_epic_fills_gap_0063() -> None:
                 continue
             if any(part in _SKIP_DIR_NAMES for part in path.parts):
                 continue
-            text = path.read_text(encoding="utf-8")
+            text = _read_contained(path, contain_within=root)
             if _ok(prose_fills_gap_0063(text)):
                 fills.append(str(path))
     assert fills == []
@@ -234,17 +293,17 @@ def test_generation_trails_connect_wave_and_does_not_block() -> None:
 
 def test_library_whatif_and_door_do_not_import_qml_generation() -> None:
     surfaces = (
-        _QMB_SRC / "registryread" / "library.py",
-        _QMB_SRC / "analysis",
-        _QMB_SRC / "doors",
-        _QMA_DAEMON_SRC / "qma" / "daemon" / "backtest",
-        _QMA_DAEMON_SRC / "qma" / "daemon" / "experiments",
+        (_QMB_SRC / "registryread" / "library.py", _QMB_SRC),
+        (_QMB_SRC / "analysis", _QMB_SRC),
+        (_QMB_SRC / "doors", _QMB_SRC),
+        (_QMA_DAEMON_SRC / "qma" / "daemon" / "backtest", _QMA_DAEMON_SRC),
+        (_QMA_DAEMON_SRC / "qma" / "daemon" / "experiments", _QMA_DAEMON_SRC),
     )
     hits: list[str] = []
-    for surface in surfaces:
+    for surface, contain_within in surfaces:
         paths = [surface] if surface.is_file() else _iter_py(surface)
         for path in paths:
-            text = path.read_text(encoding="utf-8")
+            text = _read_contained(path, contain_within=contain_within)
             if "qml.generation" in text or "from qml.generation" in text:
                 hits.append(str(path))
     assert hits == []
