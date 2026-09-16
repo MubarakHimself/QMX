@@ -22,6 +22,7 @@ _HOMES = (
     "conformance",
     "generation",
     "host",
+    "research",
     "examples",
     "tests",
 )
