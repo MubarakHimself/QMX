@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final, cast
 
+from qmf.core.fingerprint import Fingerprint, canonical_bytes, fingerprint
 from qmf.core.refusal import Ok, Result, is_refusal
 
 from qml._refuse import invalid, policy, unavailable
@@ -40,6 +41,9 @@ __all__ = [
     "Hypothesis",
     "RoleBinding",
     "admit_research_format_version",
+    "fingerprint_hypothesis",
+    "hypothesis_canonical_bytes",
+    "hypothesis_identity_payload",
     "mint_hypothesis",
     "refuse_stage0_governed_citation",
     "refuse_stage0_intent_emit",
@@ -240,6 +244,14 @@ class Hypothesis:
             body["title"] = self.title
         return body
 
+    def identity_payload(self) -> dict[str, object]:
+        """Fingerprint preimage. Occurrence / writer / created-at / snapshot_ref omitted."""
+        return hypothesis_identity_payload(self)
+
+    def fingerprint_content(self) -> Result[Fingerprint]:
+        """``research_ref`` as fp1-shaped ``fp1:sha256:<hex>`` via qmf-core only."""
+        return fingerprint_hypothesis(self)
+
 
 def research_contract_identity() -> dict[str, object]:
     """Canonical identity of the research format ladder. No CT number, no SemVer."""
@@ -249,6 +261,42 @@ def research_contract_identity() -> dict[str, object]:
         "ladder": RESEARCH_LADDER,
         "surfaces": list(STAGE0_SURFACES),
     }
+
+
+def hypothesis_identity_payload(hypothesis: Hypothesis) -> dict[str, object]:
+    """Exact ``research_ref`` preimage (AD-21). Not a registry kind body."""
+    return {
+        "class": RESEARCH_CONTRACT_CLASS,
+        "contract_format_version": hypothesis.contract_format_version,
+        "body": hypothesis.canonical_body(),
+    }
+
+
+def hypothesis_canonical_bytes(hypothesis: object) -> Result[bytes]:
+    """Canonical JSON bytes of the identity preimage (sorted keys; CT-05)."""
+    if not isinstance(hypothesis, Hypothesis):
+        return invalid(
+            "hypothesis",
+            "canonical research bytes are computed over a Stage 0 Hypothesis",
+            given=type(hypothesis).__name__,
+        )
+    return canonical_bytes(hypothesis_identity_payload(hypothesis))
+
+
+def fingerprint_hypothesis(hypothesis: object) -> Result[Fingerprint]:
+    """Compute ``research_ref`` = qmf-core fingerprint of the Stage 0 preimage.
+
+    Value is fp1-shaped (``fp1:sha256:<hex>``). Not a qmf-registry kind, not an
+    Artifact-rail hit, and not a ``research:sha256:`` dialect (DEC-0401).
+    """
+    if not isinstance(hypothesis, Hypothesis):
+        return invalid(
+            "hypothesis",
+            "research_ref fingerprints a Stage 0 Hypothesis after explicit save; "
+            "a LAYOUT-DEMO projection is not a save",
+            given=type(hypothesis).__name__,
+        )
+    return fingerprint(hypothesis_identity_payload(hypothesis))
 
 
 def admit_research_format_version(value: object) -> Result[int]:
