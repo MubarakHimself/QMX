@@ -84,6 +84,8 @@ FORBIDDEN_BOT_FIELDS: Final[frozenset[str]] = frozenset(
         "paper_mode",
         "rebinding",
         "entry",
+        "entry_hypothesis",
+        "hypothesis_class",
         "package_version",
         "version_graph",
         "current",

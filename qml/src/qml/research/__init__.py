@@ -13,6 +13,19 @@ a save. Hosts persist; QMA does not write research identity.
 
 from __future__ import annotations
 
+from qml.research.collapse import (
+    CT34_LEG_ROLES,
+    INFORMAL_ROLE_TO_CT34,
+    PYTHON_WHEN_REMAINDERS,
+    STAGE0_CLASS_IS_CT33_FIELD,
+    CollapsedRoles,
+    UnresolvedFCollapse,
+    collapse_stage0_roles,
+    collapse_unresolved_f,
+    refuse_entry_hypothesis_as_ct33_field,
+    refuse_invented_ct34_role,
+    refuse_invented_exits,
+)
 from qml.research.projection import (
     GRAPH_COMPILE_TARGETS,
     LAYOUT_DEMO_PACKAGE_ID,
@@ -69,6 +82,7 @@ from qml.research.vocab import (
 )
 
 __all__ = [
+    "CT34_LEG_ROLES",
     "DICTIONARY_FIELDS",
     "F_LABELS",
     "F_SLOTS",
@@ -77,19 +91,23 @@ __all__ = [
     "GRAPH_PLANE",
     "HYPOTHESIS_CLASSES",
     "HYPOTHESIS_ORIGINS",
+    "INFORMAL_ROLE_TO_CT34",
     "LAYOUT_DEMO_PACKAGE_ID",
     "POPULATION_INGEST_SOURCES",
     "POPULATION_INGEST_STARTED",
     "PRODUCT_NOUNS",
+    "PYTHON_WHEN_REMAINDERS",
     "RESEARCH_CONTRACT_CLASS",
     "RESEARCH_FORMAT_VERSION",
     "RESEARCH_KNOWN_FORMAT_VERSIONS",
     "RESEARCH_LADDER",
     "STAGE0_CITED_BY_GOVERNED_EVIDENCE",
+    "STAGE0_CLASS_IS_CT33_FIELD",
     "STAGE0_EMITS_CT23",
     "STAGE0_IS_BOOK_SEAT",
     "STAGE0_NEVER_SIZES",
     "STAGE0_SURFACES",
+    "CollapsedRoles",
     "DictionaryCite",
     "DictionaryEntry",
     "EvidenceClaim",
@@ -98,7 +116,10 @@ __all__ = [
     "LayoutDemoProjection",
     "RoleBinding",
     "SavedHypothesis",
+    "UnresolvedFCollapse",
     "admit_research_format_version",
+    "collapse_stage0_roles",
+    "collapse_unresolved_f",
     "compile_graph",
     "complete_unresolved_f",
     "fingerprint_hypothesis",
@@ -107,6 +128,9 @@ __all__ = [
     "mint_bot_from_projection",
     "mint_hypothesis",
     "project_layout_demo",
+    "refuse_entry_hypothesis_as_ct33_field",
+    "refuse_invented_ct34_role",
+    "refuse_invented_exits",
     "refuse_stage0_governed_citation",
     "refuse_stage0_intent_emit",
     "refuse_stage0_seat",

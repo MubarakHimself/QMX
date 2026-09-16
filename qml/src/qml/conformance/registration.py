@@ -37,6 +37,7 @@ from qml.conformance.layer1 import Layer1Verdict
 from qml.conformance.layer2 import Layer2Verdict
 from qml.declaration.bot import BotDefinition
 from qml.logic import LogicIdentity
+from qml.research.collapse import refuse_invented_exits
 from qml.research.stage0 import (
     RESEARCH_CONTRACT_CLASS as MILL_RESEARCH_CLASS_TOKEN,
 )
@@ -447,6 +448,18 @@ def graduate_mill_to_governed(
     """
     if "spawn_governed" in extra:
         return refuse_spawn_as_graduation(extra.pop("spawn_governed"))
+    # Story 51.2 — refuse invented exits/producers/CT-29 during mill collapse.
+    invent_flags = (
+        extra.pop("invent_exits", False),
+        extra.pop("invent_producers", False),
+        extra.pop("invent_close_reasons", False),
+    )
+    if any(flag is True for flag in invent_flags):
+        return refuse_invented_exits(
+            invent_exits=invent_flags[0],
+            invent_producers=invent_flags[1],
+            invent_close_reasons=invent_flags[2],
+        )
     research = admit_mill_originating_research_ref(
         originating_research_ref,
         hypothesis=hypothesis,
