@@ -54,7 +54,8 @@ def test_activate_binds_plain_file_library_source_not_two_file_stub(tmp_path: Pa
     assert "class StratsCorpus" not in plugin_text
     assert "os.environ" not in plugin_text
     assert "getenv" not in plugin_text
-    assert "STRATS" not in plugin_text
+    # AD-4 include lists the seed filename; that is not product-brand STRATS.
+    assert "STRATS" not in plugin_text.replace("STRATS-BUILD-STATE.md", "")
 
 
 def test_root_path_homes_on_plugin_daemon_load_config(tmp_path: Path) -> None:
@@ -112,7 +113,7 @@ def test_snapshot_reads_configured_tree_and_does_not_copy_into_qmx(tmp_path: Pat
     snapped = source.snapshot()
     assert is_ok(snapped), snapped
     assert "README.md" in snapped.value.file_digests
-    assert "notes/layout.md" in snapped.value.file_digests
+    assert "notes/layout.md" not in snapped.value.file_digests
     assert "notes/liquidity.md" not in snapped.value.file_digests
     assert "notes/session.md" not in snapped.value.file_digests
     assert not (QMX_ROOT / "Stats").exists()
@@ -144,9 +145,16 @@ def test_write_is_refused_and_plugin_does_not_import_daemon(tmp_path: Path) -> N
 def test_operator_seed_tree_snapshots_when_present() -> None:
     if not OPERATOR_SEED.is_dir():
         pytest.skip("operator seed tree not present")
-    source = PlainFileLibrarySource(root_path=OPERATOR_SEED, source_id="strats")
+    roster = DeskPluginRoster(plugin_load_configs=research_corpus_plugin_load_config(OPERATOR_SEED))
+    result = roster.activate()
+    assert is_ok(result), result
+    loaded = roster.loader.get("research-corpus")
+    assert loaded is not None
+    source = loaded.context.snapshot()["singletons"][("KnowledgeSource", "strats")]
+    assert isinstance(source, PlainFileLibrarySource)
     snapped = source.snapshot()
     assert is_ok(snapped), snapped
     assert snapped.value.source_id == "strats"
     assert "README.md" in snapped.value.file_digests
+    assert "backend/strats.sqlite" not in snapped.value.file_digests
     assert not (QMX_ROOT / "Stats").exists()

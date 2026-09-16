@@ -3,11 +3,14 @@
 Imports contribution types from ``qma-core`` only. Never imports ``qma-daemon``,
 ``qmb``, or ``qmf-venue``. Binds the seed corpus through the daemon-owned
 plain-file adapter at operator-principal load-config ``root_path``.
+Snapshot include/exclude is AD-4 plugin config (FR-RES-02).
 """
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
+from typing import cast
 
 from qma.core.plugins import PluginContext, graph_template_payload, skill_payload
 from qma.core.ports.memory import MemoryCandidate, refuse_memory_promote
@@ -19,6 +22,49 @@ from qmf.core.refusal import RefusalCategory, Retryability, TypedRefusal
 _PLUGIN_ID = "research-corpus"
 # Adapter key — technical archaeology, not product brand (DEC-0383).
 _SOURCE_ID = "strats"
+
+# AD-4 snapshot set — plugin config, not a qma-core / plain_file layout.
+_SNAPSHOT_INCLUDE: tuple[str, ...] = (
+    "README.md",
+    "STRATS-BUILD-STATE.md",
+    "schema/",
+    "dictionary/",
+    "strategies/",
+    "sources/",
+    "knowledge/",
+    "lineage/",
+    "catalog/",
+    "IDEA.md",
+)
+_SNAPSHOT_EXCLUDE: tuple[str, ...] = (
+    ".hermes/",
+    ".obsidian/",
+    "backend/strats.sqlite",
+    "__pycache__/",
+    "backend/*.py",
+)
+
+
+def _snapshot_patterns(raw: object, default: tuple[str, ...]) -> tuple[str, ...]:
+    """Read include/exclude from plugin load config; AD-4 when absent."""
+    if raw is None:
+        return default
+    if isinstance(raw, str):
+        text = raw.replace("\\", "/").strip()
+        return (text,) if text else default
+    if isinstance(raw, Sequence) and not isinstance(raw, (str, bytes, bytearray)):
+        items: list[str] = []
+        seen: set[str] = set()
+        for item in cast(Sequence[object], raw):
+            if not isinstance(item, str):
+                continue
+            text = item.replace("\\", "/").strip()
+            if not text or text in seen:
+                continue
+            seen.add(text)
+            items.append(text)
+        return tuple(items) if items else default
+    return default
 
 
 def _missing(memory_id: str) -> TypedRefusal:
@@ -104,6 +150,8 @@ def activate(ctx: PluginContext) -> None:
         root_path=root_path.strip(),
         source_id=_SOURCE_ID,
         kind="plain_file_library",
+        include=_snapshot_patterns(ctx.load_config.get("include"), _SNAPSHOT_INCLUDE),
+        exclude=_snapshot_patterns(ctx.load_config.get("exclude"), _SNAPSHOT_EXCLUDE),
     )
     ctx.register_knowledge_source(_SOURCE_ID, source)
     ctx.register_tool(

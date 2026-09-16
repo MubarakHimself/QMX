@@ -6,9 +6,9 @@ library; the library is never built around QMX. Write-back is refused.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from types import MappingProxyType
 
 from qma.core.ports.knowledge import (
@@ -41,19 +41,75 @@ DEFAULT_PLAIN_FILE_CONFIDENCE_DIMENSIONS: tuple[str, ...] = (
 )
 
 
+def _normalize_patterns(patterns: Sequence[str] | None) -> tuple[str, ...]:
+    if not patterns:
+        return ()
+    out: list[str] = []
+    seen: set[str] = set()
+    for item in patterns:
+        text = item.replace("\\", "/").strip()
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        out.append(text)
+    return tuple(out)
+
+
+def _is_hidden_rel(rel: str) -> bool:
+    return any(part.startswith(".") for part in PurePosixPath(rel).parts)
+
+
+def _pattern_matches(rel: str, pattern: str) -> bool:
+    """Match a posix relative path against an include/exclude pattern.
+
+    Trailing-slash patterns are directories (a single segment matches any
+    path component; multi-segment matches a contiguous component run).
+    Globs use :meth:`PurePosixPath.full_match`. Other patterns are exact.
+    """
+    path = PurePosixPath(rel)
+    if pattern.endswith("/"):
+        dirname = pattern.rstrip("/")
+        if dirname == "":
+            return False
+        pat_parts = PurePosixPath(dirname).parts
+        rel_parts = path.parts
+        n = len(pat_parts)
+        if n == 0 or n > len(rel_parts):
+            return False
+        if n == 1:
+            return pat_parts[0] in rel_parts
+        last = len(rel_parts) - n + 1
+        return any(rel_parts[index : index + n] == pat_parts for index in range(last))
+    if any(token in pattern for token in "*?["):
+        return path.full_match(pattern)
+    return rel == pattern
+
+
+def _path_participates(rel: str, *, include: Sequence[str], exclude: Sequence[str]) -> bool:
+    # Built-in rule is hidden path parts only — no corpus schema.
+    if _is_hidden_rel(rel):
+        return False
+    if include and not any(_pattern_matches(rel, pattern) for pattern in include):
+        return False
+    return not any(_pattern_matches(rel, pattern) for pattern in exclude)
+
+
 @dataclass
 class PlainFileLibrarySource:
     """Read-only adapter over an external plain-file library root.
 
     Satisfies :class:`~qma.core.ports.knowledge.KnowledgeSource`. Does not
-    invent layout: every regular file under ``root_path`` participates in the
-    snapshot as a relative path using the corpus's own names.
+    invent layout: every regular non-hidden file under ``root_path``
+    participates unless the caller supplies include/exclude patterns.
+    Those patterns are plugin config, never a hardcoded corpus schema.
     """
 
     root_path: Path
     source_id: str
     confidence_dimensions: tuple[str, ...] = DEFAULT_PLAIN_FILE_CONFIDENCE_DIMENSIONS
     kind: str = "plain_file_library"
+    include: tuple[str, ...] = ()
+    exclude: tuple[str, ...] = ()
     _last_files: dict[str, bytes] = field(default_factory=dict[str, bytes], repr=False)
 
     def __post_init__(self) -> None:
@@ -67,11 +123,10 @@ class PlainFileLibrarySource:
             raise ValueError(str(dims.context.get("reason", "invalid confidence_dimensions")))
         self.confidence_dimensions = dims.value
         if self.kind not in KNOWLEDGE_SOURCE_KINDS:
-            msg = (
-                f"kind {self.kind!r} is not a known KnowledgeSource kind "
-                "(CT-44; DEC-0318)"
-            )
+            msg = f"kind {self.kind!r} is not a known KnowledgeSource kind (CT-44; DEC-0318)"
             raise ValueError(msg)
+        self.include = _normalize_patterns(self.include)
+        self.exclude = _normalize_patterns(self.exclude)
 
     def declaration(self) -> Mapping[str, object]:
         return MappingProxyType(
@@ -83,6 +138,8 @@ class PlainFileLibrarySource:
                 "impose_schema": False,
                 "confidence_dimensions": list(self.confidence_dimensions),
                 "hardcoded_layout": False,
+                "include": list(self.include),
+                "exclude": list(self.exclude),
             }
         )
 
@@ -141,8 +198,7 @@ class PlainFileLibrarySource:
             if not path.is_file():
                 continue
             rel = path.relative_to(root).as_posix()
-            # Skip hidden / VCS noise without imposing a corpus schema.
-            if any(part.startswith(".") for part in Path(rel).parts):
+            if not _path_participates(rel, include=self.include, exclude=self.exclude):
                 continue
             try:
                 files[rel] = path.read_bytes()

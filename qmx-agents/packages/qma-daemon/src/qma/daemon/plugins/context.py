@@ -101,6 +101,8 @@ class DaemonPluginContext:
         root_path: str,
         source_id: str,
         kind: str = "plain_file_library",
+        include: Sequence[str] | None = None,
+        exclude: Sequence[str] | None = None,
     ) -> KnowledgeSource:
         """Construct the read-only plain-file adapter from load-config ``root_path``."""
         checked = validate_seed_root_path(root_path)
@@ -111,6 +113,8 @@ class DaemonPluginContext:
             root_path=checked.value,
             source_id=source_id,
             kind=kind,
+            include=tuple(include) if include is not None else (),
+            exclude=tuple(exclude) if exclude is not None else (),
         )
 
     @property

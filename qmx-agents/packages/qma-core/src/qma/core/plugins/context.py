@@ -7,7 +7,7 @@ reference strings only — never a resolved secret value (DEC-0323).
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from typing import Protocol, runtime_checkable
 
 from qma.core.plugins.credential import CredentialRef
@@ -62,11 +62,15 @@ class PluginContext(Protocol):
         root_path: str,
         source_id: str,
         kind: str = "plain_file_library",
+        include: Sequence[str] | None = None,
+        exclude: Sequence[str] | None = None,
     ) -> KnowledgeSource:
         """Construct the daemon-owned read-only plain-file adapter (CT-44).
 
         Plugins call this instead of importing ``qma-daemon``. ``root_path`` is
         the filesystem path from operator-principal load config.
+        ``include`` / ``exclude`` are caller-supplied relative-path patterns
+        (plugin config), never a hardcoded corpus layout in this protocol.
         """
         ...
 
