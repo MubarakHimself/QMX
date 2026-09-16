@@ -172,7 +172,7 @@ def _assert_absent_from_maps(
     maps: tuple[Mapping[str, object], ...],
     keys: frozenset[str],
 ) -> None:
-    union_keys = set().union(*(mapping.keys() for mapping in maps))
+    union_keys = set[str]().union(*(mapping.keys() for mapping in maps))
     assert keys.isdisjoint(union_keys)
 
 
