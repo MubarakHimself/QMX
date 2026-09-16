@@ -31,7 +31,7 @@ from qml import research
 
 T = TypeVar("T")
 
-OPERATOR_SEED = Path(r"C:/Users/Mubarak/Desktop/Stats")
+FIXTURE_SEED = Path(__file__).resolve().parent / "fixtures" / "research-seed"
 STRAT_DIR = "strategies/STRAT-000001-asian-high-london-reversal"
 IDENTITY_PATH = f"{STRAT_DIR}/identity.md"
 GRAPH_PATH = f"{STRAT_DIR}/logic/graph.yaml"
@@ -97,11 +97,11 @@ def _ok(result: Result[T]) -> T:
 
 
 def _cited(relative: str) -> bytes:
-    src = OPERATOR_SEED / relative
+    src = FIXTURE_SEED / relative
     if not src.is_file():
         pytest.fail(
-            "AR-RES-10 requires operator seed at C:/Users/Mubarak/Desktop/Stats "
-            f"or a fixture of bytes copied from that tree — missing {relative}"
+            "AR-RES-10 requires fixtures/research-seed bytes copied from the "
+            f"operator Stats tree — missing {relative}"
         )
     return src.read_bytes()
 

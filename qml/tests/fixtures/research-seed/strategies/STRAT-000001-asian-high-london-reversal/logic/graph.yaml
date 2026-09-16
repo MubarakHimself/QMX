@@ -1,0 +1,93 @@
+# LAYOUT-DEMO — knowledge graph, not a QMX executor.
+# DNA letter: E (operational logic graph)
+# Sketch from gold-mine: Asian-session high AND liquidity sweep
+# AND engulfing completion AND London time window → enter.
+# Not an extracted strategy. F is unresolved → class entry_hypothesis.
+
+strategy_id: STRAT-000001
+slug: asian-high-london-reversal
+class: entry_hypothesis
+direction: long
+
+operators_supported:
+  - ALL          # AND
+  - ANY          # OR
+  - NOT
+  - K_OF_N
+  - sequence
+  - within
+  - arming
+  - reset
+  - cooldown
+  - re-entry
+
+nodes:
+  - id: loc-asian-high
+    kind: primitive
+    primitive_id: session-high
+    role: location
+    session: asia
+    params:
+      reference: asian_session_high
+  - id: evt-sweep
+    kind: primitive
+    primitive_id: liquidity-sweep
+    role: trigger
+    timing: pre-trigger
+    note: slug collides across three family files; binding must name file when imported
+  - id: evt-engulfing
+    kind: primitive
+    primitive_id: engulfing-completion
+    role: trigger
+    direction: bullish
+    timing: synchronous
+  - id: ctx-london
+    kind: primitive
+    primitive_id: time-of-day-window
+    role: filter
+    session: london
+  - id: all-entry
+    kind: operator
+    operator: ALL
+    alias: AND
+  - id: act-enter
+    kind: action
+    action: enter
+    direction: long
+    note: trigger is not an order; entry semantics unresolved
+
+edges:
+  - id: e1
+    from: loc-asian-high
+    to: all-entry
+    rel: operand
+  - id: e2
+    from: evt-sweep
+    to: all-entry
+    rel: operand
+  - id: e3
+    from: evt-engulfing
+    to: all-entry
+    rel: operand
+  - id: e4
+    from: ctx-london
+    to: all-entry
+    rel: operand
+  - id: e5
+    from: all-entry
+    to: act-enter
+    rel: then
+
+exit:
+  invalidation: unresolved
+  stop: unresolved
+  targets: unresolved
+  exit: unresolved
+  management: unresolved
+  note: LAYOUT-DEMO has no source-defined exits. Candidate remains entry_hypothesis. Do not invent exits.
+
+lifecycle:
+  arming: unresolved
+  reset: unresolved
+  cooldown: unresolved
+  re-entry: unresolved

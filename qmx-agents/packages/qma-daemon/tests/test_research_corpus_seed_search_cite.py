@@ -17,7 +17,7 @@ from qma.daemon.plugins import DeskPluginRoster, research_corpus_plugin_load_con
 from qmf.core import is_ok, is_refusal
 from qmf.core.refusal import RefusalCategory
 
-OPERATOR_SEED = Path(r"C:/Users/Mubarak/Desktop/Stats")
+FIXTURE_SEED = Path(__file__).resolve().parent / "fixtures" / "research-seed"
 
 _DIMS = (
     "extraction_confidence",
@@ -52,16 +52,16 @@ _SEED_RELATIVE = (
 
 
 def _copy_real_seed_bytes(tmp_path: Path) -> Path:
-    """Copy STRAT-000001 and swing-high bytes from the operator seed (AR-RES-10)."""
-    if not OPERATOR_SEED.is_dir():
+    """Copy STRAT-000001 and swing-high bytes from the vendored fixture (AR-RES-10)."""
+    if not FIXTURE_SEED.is_dir():
         pytest.fail(
-            "AR-RES-10 requires operator seed at C:/Users/Mubarak/Desktop/Stats "
-            "or a fixture of bytes copied from that tree — not the two-file stub"
+            "AR-RES-10 requires fixtures/research-seed bytes copied from the "
+            "operator Stats tree — not the two-file stub"
         )
     dest = tmp_path / "seed-corpus"
     dest.mkdir()
     for rel in _SEED_RELATIVE:
-        src = OPERATOR_SEED / rel
+        src = FIXTURE_SEED / rel
         target = dest / rel
         if src.is_dir():
             shutil.copytree(src, target)
@@ -360,18 +360,9 @@ def test_evidence_label_is_opaque_verbatim_not_parsed(tmp_path: Path) -> None:
     assert "eligible_roles" not in payload
 
 
-def test_operator_seed_tree_search_cite_when_present() -> None:
-    if not OPERATOR_SEED.is_dir():
-        pytest.fail("AR-RES-10 operator seed tree is required for slice 0 search/cite")
-    roster = DeskPluginRoster(plugin_load_configs=research_corpus_plugin_load_config(OPERATOR_SEED))
-    result = roster.activate()
-    assert is_ok(result), result
-    loaded = roster.loader.get("research-corpus")
-    assert loaded is not None
-    source = loaded.context.snapshot()["singletons"][("KnowledgeSource", "strats")]
-    assert isinstance(source, PlainFileLibrarySource)
-    service = KnowledgeService()
-    assert is_ok(service.bind("strats", source, plugin_id="research-corpus"))
+def test_operator_seed_tree_search_cite_when_present(tmp_path: Path) -> None:
+    # root_path must be outside the QMX worktree (NFR-RES-06); use a tmp copy.
+    service, _source, seed = _bind_copied_seed(tmp_path)
     snapped = service.snapshot("strats")
     assert is_ok(snapped)
     assert "notes/liquidity.md" not in snapped.value.file_digests
@@ -389,7 +380,7 @@ def test_operator_seed_tree_search_cite_when_present() -> None:
         authored_by="agent:research/quant/a1",
     )
     assert is_ok(cited)
-    assert cited.value.artifact.content == (OPERATOR_SEED / SWING_HIGH_PATH).read_bytes()
+    assert cited.value.artifact.content == (seed / SWING_HIGH_PATH).read_bytes()
     assert dict(cited.value.citation.evidence_confidence) == dict.fromkeys(
         _DIMS, UNSCORED_CONFIDENCE_VALUE
     )
