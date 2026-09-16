@@ -172,9 +172,8 @@ def _assert_absent_from_maps(
     maps: tuple[Mapping[str, object], ...],
     keys: frozenset[str],
 ) -> None:
-    for key in keys:
-        for mapping in maps:
-            assert key not in mapping
+    union_keys = set().union(*(mapping.keys() for mapping in maps))
+    assert keys.isdisjoint(union_keys)
 
 
 def test_layout_demo_projection_preserves_entry_hypothesis_and_unresolved_f() -> None:
