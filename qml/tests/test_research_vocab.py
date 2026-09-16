@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import importlib.util
 import inspect
 import sys
 from pathlib import Path
+from types import ModuleType
 from typing import cast
 
 from qmf.core.refusal import RefusalCategory, is_refusal
@@ -13,20 +15,30 @@ from qml.research import DICTIONARY_FIELDS, DictionaryEntry, resolve_dictionary_
 
 from qml import research
 
-_TESTS_DIR = str(Path(__file__).resolve().parent)
-if _TESTS_DIR not in sys.path:
-    sys.path.insert(0, _TESTS_DIR)
 
-from research_vocab_helpers import (  # noqa: E402
-    SWING_HIGH_PATH,
-    cited_bytes,
-    class_names_in_research,
-    ok,
-    path_of,
-    research_ban_violations,
-    resolve,
-    swing_high,
-)
+def _load_research_vocab_helpers() -> ModuleType:
+    path = Path(__file__).resolve().parent / "research_vocab_helpers.py"
+    name = "qml.tests.research_vocab_helpers"
+    existing = sys.modules.get(name)
+    if existing is not None:
+        return existing
+    spec = importlib.util.spec_from_file_location(name, path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+_helpers = _load_research_vocab_helpers()
+SWING_HIGH_PATH = _helpers.SWING_HIGH_PATH
+cited_bytes = _helpers.cited_bytes
+class_names_in_research = _helpers.class_names_in_research
+ok = _helpers.ok
+path_of = _helpers.path_of
+research_ban_violations = _helpers.research_ban_violations
+resolve = _helpers.resolve
+swing_high = _helpers.swing_high
 
 SWING_HIGH_LOCATOR = f"{SWING_HIGH_PATH}#swing-high"
 LIQUIDITY_SWEEP_LOCATION = (

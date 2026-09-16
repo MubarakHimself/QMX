@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import ast
+import importlib.util
 import inspect
 import sys
 from collections.abc import Mapping
 from dataclasses import fields
 from pathlib import Path
+from types import ModuleType
 from typing import TypeVar, cast
 
 import pytest
@@ -31,15 +33,25 @@ from qml.research import (
 
 from qml import research
 
-_TESTS_DIR = str(Path(__file__).resolve().parent)
-if _TESTS_DIR not in sys.path:
-    sys.path.insert(0, _TESTS_DIR)
 
-from research_vocab_helpers import (  # noqa: E402
-    FIXTURE_SEED,
-    read_contained,
-    read_contained_bytes,
-)
+def _load_research_vocab_helpers() -> ModuleType:
+    path = Path(__file__).resolve().parent / "research_vocab_helpers.py"
+    name = "qml.tests.research_vocab_helpers"
+    existing = sys.modules.get(name)
+    if existing is not None:
+        return existing
+    spec = importlib.util.spec_from_file_location(name, path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+_helpers = _load_research_vocab_helpers()
+FIXTURE_SEED = _helpers.FIXTURE_SEED
+read_contained = _helpers.read_contained
+read_contained_bytes = _helpers.read_contained_bytes
 
 T = TypeVar("T")
 
