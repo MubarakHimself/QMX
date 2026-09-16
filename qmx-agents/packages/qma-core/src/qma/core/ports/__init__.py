@@ -212,6 +212,7 @@ from qma.core.ports.knowledge import (
     refuse_evidence_confidence_scalarization,
     refuse_hybrid_knowledge_indexing,
     refuse_knowledge_write_back,
+    refuse_unpinned_live_tree,
     validate_evidence_confidence_shape,
 )
 from qma.core.ports.ledgers import (
@@ -900,6 +901,7 @@ __all__ = [
     "refuse_trim_window_decision",
     "refuse_ui_contribution",
     "refuse_unauthorized_cancel",
+    "refuse_unpinned_live_tree",
     "refuse_venue_account_backtest",
     "register_ui_widget_contribution",
     "release_qmb_job",

@@ -15,6 +15,7 @@ from qma.core.ports import (
     refuse_evidence_confidence_scalarization,
     refuse_hybrid_knowledge_indexing,
     refuse_knowledge_write_back,
+    refuse_unpinned_live_tree,
     validate_evidence_confidence_shape,
 )
 from qma.core.refusals import ProvenanceShapeMismatch
@@ -37,9 +38,7 @@ def _confidence(**overrides: object) -> dict[str, object]:
 
 
 def test_operation_surface_is_literal_query_only() -> None:
-    assert frozenset(
-        {"snapshot", "search", "retrieve", "cite"}
-    ) == KNOWLEDGE_SOURCE_OPERATIONS
+    assert frozenset({"snapshot", "search", "retrieve", "cite"}) == KNOWLEDGE_SOURCE_OPERATIONS
     assert frozenset({"search", "retrieve", "cite"}) == KNOWLEDGE_QUERY_SURFACE
     assert EVIDENCE_CONFIDENCE_DIMENSION_COUNT == 6
 
@@ -147,3 +146,8 @@ def test_gap_0073_and_no_scalarization_or_write_back() -> None:
     write = refuse_knowledge_write_back()
     assert is_refusal(write)
     assert write.context["field"] == "write"
+
+    unpinned = refuse_unpinned_live_tree(source_id="strats")
+    assert is_refusal(unpinned)
+    assert unpinned.context["field"] == "snapshot_ref"
+    assert "unpinned" in str(unpinned.context.get("reason", "")).lower()

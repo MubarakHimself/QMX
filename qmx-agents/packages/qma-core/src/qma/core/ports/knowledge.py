@@ -41,6 +41,7 @@ __all__ = [
     "refuse_evidence_confidence_scalarization",
     "refuse_hybrid_knowledge_indexing",
     "refuse_knowledge_write_back",
+    "refuse_unpinned_live_tree",
     "validate_evidence_confidence_shape",
 ]
 
@@ -50,9 +51,7 @@ KNOWLEDGE_SOURCE_OPERATIONS: Final[frozenset[str]] = frozenset(
 )
 
 # Desk-agnostic Tool Registry query surface (CT-44; DEC-0318).
-KNOWLEDGE_QUERY_SURFACE: Final[frozenset[str]] = frozenset(
-    {"search", "retrieve", "cite"}
-)
+KNOWLEDGE_QUERY_SURFACE: Final[frozenset[str]] = frozenset({"search", "retrieve", "cite"})
 
 EVIDENCE_CONFIDENCE_DIMENSION_COUNT: Final[int] = 6
 
@@ -149,6 +148,16 @@ def refuse_knowledge_write_back(**extra: object) -> TypedRefusal:
     )
 
 
+def refuse_unpinned_live_tree(**extra: object) -> TypedRefusal:
+    """Unpinned live-tree reads are refused; pin a snapshot_ref first (FR-RES-21)."""
+    return _policy(
+        "snapshot_ref",
+        "unpinned live-tree reads are refused; pin a Mission or session "
+        "snapshot_ref before retrieve/cite (CT-44; FR-RES-21; DEC-0391)",
+        **extra,
+    )
+
+
 def parse_confidence_dimensions(value: object) -> Result[tuple[str, ...]]:
     """Parse exactly six non-empty dimension keys fixed for a source_id."""
     if isinstance(value, str):
@@ -219,8 +228,7 @@ def validate_evidence_confidence_shape(
     if len(expected) != EVIDENCE_CONFIDENCE_DIMENSION_COUNT:
         return _invalid(
             "confidence_dimensions",
-            "source declaration must carry exactly six confidence_dimensions "
-            "(CT-44; DEC-0318)",
+            "source declaration must carry exactly six confidence_dimensions (CT-44; DEC-0318)",
             source_id=source_id,
             given_count=len(expected),
         )

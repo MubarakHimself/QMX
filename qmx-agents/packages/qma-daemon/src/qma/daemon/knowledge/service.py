@@ -1,9 +1,11 @@
 """KnowledgeSource registry, retained citations and copy gate (CT-44; FR-Q65).
 
-Exactly one read-only adapter binds a ``source_id``. ``cite`` copies cited bytes
-into the artifact store through ``before_artifact_register``. Retrieval against
-an uncopied snapshot returns ``StaleSnapshot``. ``evidence_confidence`` stays
-distinct from Memory's ``admission_confidence``. GAP-0073 stays Deferred.
+Exactly one read-only adapter binds a ``source_id``. A Mission or browse session
+pins exactly one ``snapshot_ref`` before retrieve/cite. ``cite`` copies pinned
+bytes into the artifact store through ``before_artifact_register``. Retrieval
+against an uncopied snapshot returns ``StaleSnapshot``. Unpinned live-tree reads
+are a typed refusal. ``evidence_confidence`` stays distinct from Memory's
+``admission_confidence``. GAP-0073 stays Deferred.
 """
 
 from __future__ import annotations
@@ -11,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Final, Literal, cast
+from typing import Final, Literal
 from uuid import uuid4
 
 from qma.core.plugins.hooks import HookResult, HookSource, build_hook_result
@@ -23,11 +25,13 @@ from qma.core.ports.knowledge import (
     CorpusSnapshot,
     KnowledgeSource,
     Provenance,
+    literal_search,
     parse_evidence_confidence,
     parse_provenance,
     refuse_evidence_confidence_scalarization,
     refuse_hybrid_knowledge_indexing,
     refuse_knowledge_write_back,
+    refuse_unpinned_live_tree,
 )
 from qma.core.refusals import StaleSnapshot
 from qma.core.vocabulary.enums import HookResultDecision, HookVerb
@@ -45,6 +49,7 @@ __all__ = [
     "KnowledgeService",
     "KnowledgeSourceRegistry",
     "MissionSnapshotPin",
+    "SessionSnapshotPin",
     "SourceBinding",
 ]
 
@@ -148,6 +153,27 @@ class MissionSnapshotPin:
         return MappingProxyType(payload)
 
 
+@dataclass(frozen=True, slots=True)
+class SessionSnapshotPin:
+    """Browse-session pinned snapshot_ref with recorded re-pin lineage."""
+
+    session_id: str
+    source_id: str
+    snapshot_ref: str
+    previous_snapshot_ref: str | None = None
+
+    def to_payload(self) -> Mapping[str, object]:
+        payload: dict[str, object] = {
+            "session_id": self.session_id,
+            "source_id": self.source_id,
+            "snapshot_ref": self.snapshot_ref,
+            "re_pin": self.previous_snapshot_ref is not None,
+        }
+        if self.previous_snapshot_ref is not None:
+            payload["previous_snapshot_ref"] = self.previous_snapshot_ref
+        return MappingProxyType(payload)
+
+
 class KnowledgeSourceRegistry:
     """In-memory singleton-per-source_id registry for KnowledgeSource.
 
@@ -195,8 +221,7 @@ class KnowledgeSourceRegistry:
         if len(dims) != 6:
             return invalid_input(
                 "confidence_dimensions",
-                "adapter must declare exactly six confidence_dimensions "
-                "(CT-44; DEC-0318)",
+                "adapter must declare exactly six confidence_dimensions (CT-44; DEC-0318)",
                 source_id=key,
                 given_count=len(dims),
             )
@@ -223,18 +248,24 @@ class KnowledgeService:
 
     ``cite`` always copies through ``before_artifact_register``. ``retrieve``
     against a snapshot with no retained copy returns ``StaleSnapshot`` rather
-    than live library bytes.
+    than live library bytes. Retrieve/cite require a pinned ``snapshot_ref``;
+    unpinned live-tree reads are refused.
     """
 
     registry: KnowledgeSourceRegistry = field(default_factory=KnowledgeSourceRegistry)
     hooks: HookRegistry | None = None
     _artifacts: dict[str, ArtifactCopy] = field(default_factory=dict[str, ArtifactCopy])
     _copied_snapshots: set[str] = field(default_factory=set[str])
-    _snapshot_chain: dict[str, list[str]] = field(
-        default_factory=dict[str, list[str]]
+    _snapshot_chain: dict[str, list[str]] = field(default_factory=dict[str, list[str]])
+    _snapshots: dict[str, CorpusSnapshot] = field(default_factory=dict[str, CorpusSnapshot])
+    _snapshot_bytes: dict[str, dict[str, bytes]] = field(
+        default_factory=dict[str, dict[str, bytes]]
     )
     _mission_pins: dict[tuple[str, str], MissionSnapshotPin] = field(
         default_factory=dict[tuple[str, str], MissionSnapshotPin]
+    )
+    _session_pins: dict[tuple[str, str], SessionSnapshotPin] = field(
+        default_factory=dict[tuple[str, str], SessionSnapshotPin]
     )
 
     def bind(
@@ -253,7 +284,7 @@ class KnowledgeService:
         snapped = binding.value.source.snapshot()
         if is_refusal(snapped):
             return snapped
-        return Ok(self._record_snapshot(binding.value.source_id, snapped.value))
+        return self._retain_now(binding.value, snapped.value)
 
     def search(
         self,
@@ -274,10 +305,13 @@ class KnowledgeService:
                 "search query is a non-empty literal string (CT-44; FR-Q65)",
                 given=repr(query),
             )
-        resolved = self._resolve_snapshot(binding.value, snapshot)
+        resolved = self._require_pinned_snapshot(binding.value, snapshot)
         if is_refusal(resolved):
             return resolved
-        return binding.value.source.search(resolved.value, query)
+        files = self._snapshot_bytes.get(resolved.value.id)
+        if files is None:
+            return StaleSnapshot.of(snapshot_ref=resolved.value.id)
+        return literal_search(files, query)
 
     def cite(
         self,
@@ -321,15 +355,24 @@ class KnowledgeService:
         if is_refusal(confidence):
             return confidence
 
-        resolved = self._resolve_snapshot(binding.value, snapshot)
+        resolved = self._require_pinned_snapshot(binding.value, snapshot)
         if is_refusal(resolved):
             return resolved
         snap = resolved.value
-        content = binding.value.source.retrieve(snap, locator.strip())
-        if is_refusal(content):
-            return content
+        files = self._snapshot_bytes.get(snap.id)
+        if files is None:
+            return StaleSnapshot.of(snapshot_ref=snap.id)
+        path = locator.strip().replace("\\", "/").split("#", 1)[0]
+        if path not in files:
+            return invalid_input(
+                "locator",
+                "locator is not present in the pinned CorpusSnapshot (CT-44)",
+                locator=path,
+                snapshot_ref=snap.id,
+            )
+        content_bytes = files[path]
 
-        content_fp = fingerprint_bytes(content.value).value
+        content_fp = fingerprint_bytes(content_bytes).value
         artifact_ref = f"artifact://knowledge/{snap.id}/{content_fp}"
         copy = ArtifactCopy(
             artifact_ref=artifact_ref,
@@ -337,7 +380,7 @@ class KnowledgeService:
             locator=locator.strip().replace("\\", "/"),
             content_fp1=content_fp,
             authored_by=authored_by.strip(),
-            content=content.value,
+            content=content_bytes,
         )
         hook = self._before_artifact_register(copy)
         if is_refusal(hook):
@@ -385,7 +428,7 @@ class KnowledgeService:
                 "retrieve requires a non-empty locator (CT-44; FR-Q65)",
                 given=repr(locator),
             )
-        resolved = self._resolve_snapshot(binding.value, snapshot)
+        resolved = self._require_pinned_snapshot(binding.value, snapshot)
         if is_refusal(resolved):
             return resolved
         snap = resolved.value
@@ -393,9 +436,10 @@ class KnowledgeService:
             return StaleSnapshot.of(snapshot_ref=snap.id)
         loc = locator.strip().replace("\\", "/")
         for artifact in self._artifacts.values():
-            if artifact.snapshot_ref == snap.id and artifact.locator.split("#", 1)[
-                0
-            ] == loc.split("#", 1)[0]:
+            if (
+                artifact.snapshot_ref == snap.id
+                and artifact.locator.split("#", 1)[0] == loc.split("#", 1)[0]
+            ):
                 return Ok(artifact.content)
         return StaleSnapshot.of(snapshot_ref=snap.id)
 
@@ -422,11 +466,13 @@ class KnowledgeService:
         binding = self._require_binding(source_id)
         if is_refusal(binding):
             return binding
-        resolved = self._resolve_snapshot(binding.value, snapshot)
+        resolved = self._pin_target(binding.value, snapshot)
         if is_refusal(resolved):
             return resolved
         key = (mission_id.strip(), binding.value.source_id)
         previous = self._mission_pins.get(key)
+        if previous is not None and previous.snapshot_ref == resolved.value.id:
+            return Ok(previous)
         pin = MissionSnapshotPin(
             mission_id=mission_id.strip(),
             source_id=binding.value.source_id,
@@ -435,6 +481,91 @@ class KnowledgeService:
         )
         self._mission_pins[key] = pin
         return Ok(pin)
+
+    def pin_session_snapshot(
+        self,
+        session_id: object,
+        source_id: object,
+        snapshot: CorpusSnapshot | Mapping[str, object] | str | None = None,
+    ) -> Result[SessionSnapshotPin]:
+        """Pin one snapshot_ref for a browse session; re-pinning is recorded.
+
+        When ``snapshot`` is omitted, snapshot the live tree first then pin.
+        """
+        if not isinstance(session_id, str) or session_id.strip() == "":
+            return invalid_input(
+                "session_id",
+                "session pin requires a non-empty session_id (CT-44; FR-RES-21)",
+                given=repr(session_id),
+            )
+        binding = self._require_binding(source_id)
+        if is_refusal(binding):
+            return binding
+        target: CorpusSnapshot | Mapping[str, object] | str
+        if snapshot is None:
+            snapped = self.snapshot(binding.value.source_id)
+            if is_refusal(snapped):
+                return snapped
+            target = snapped.value
+        else:
+            target = snapshot
+        resolved = self._pin_target(binding.value, target)
+        if is_refusal(resolved):
+            return resolved
+        key = (session_id.strip(), binding.value.source_id)
+        previous = self._session_pins.get(key)
+        if previous is not None and previous.snapshot_ref == resolved.value.id:
+            return Ok(previous)
+        pin = SessionSnapshotPin(
+            session_id=session_id.strip(),
+            source_id=binding.value.source_id,
+            snapshot_ref=resolved.value.id,
+            previous_snapshot_ref=None if previous is None else previous.snapshot_ref,
+        )
+        self._session_pins[key] = pin
+        return Ok(pin)
+
+    def mission_pin(self, mission_id: str, source_id: str) -> MissionSnapshotPin | None:
+        return self._mission_pins.get((mission_id.strip(), source_id.strip()))
+
+    def session_pin(self, session_id: str, source_id: str) -> SessionSnapshotPin | None:
+        return self._session_pins.get((session_id.strip(), source_id.strip()))
+
+    def browse_retrieve(
+        self,
+        source_id: object,
+        locator: object,
+        *,
+        session_id: object,
+    ) -> Result[bytes]:
+        """Pin a session snapshot_ref if needed, then retrieve against that pin."""
+        pin = self._ensure_session_pin(session_id, source_id)
+        if is_refusal(pin):
+            return pin
+        return self.retrieve(source_id, pin.value.snapshot_ref, locator)
+
+    def browse_cite(
+        self,
+        source_id: object,
+        locator: object,
+        *,
+        session_id: object,
+        evidence_label: object,
+        evidence_confidence: object,
+        authored_by: object,
+    ) -> Result[CiteOutcome]:
+        """Pin a session snapshot_ref if needed, then cite against that pin."""
+        pin = self._ensure_session_pin(session_id, source_id)
+        if is_refusal(pin):
+            return pin
+        return self.cite(
+            source_id,
+            pin.value.snapshot_ref,
+            locator,
+            evidence_label=evidence_label,
+            evidence_confidence=evidence_confidence,
+            authored_by=authored_by,
+        )
 
     def supersedes_chain(self, source_id: object) -> Result[tuple[str, ...]]:
         """Linear supersedes chain of snapshots for one source."""
@@ -468,6 +599,9 @@ class KnowledgeService:
     def refuse_write_back(self, **extra: object) -> Result[None]:
         return refuse_knowledge_write_back(**extra)
 
+    def refuse_unpinned_live_tree(self, **extra: object) -> Result[None]:
+        return refuse_unpinned_live_tree(**extra)
+
     def retained_artifact(self, artifact_ref: str) -> ArtifactCopy | None:
         return self._artifacts.get(artifact_ref)
 
@@ -488,21 +622,12 @@ class KnowledgeService:
             )
         return Ok(binding)
 
-    def _resolve_snapshot(
+    def _snapshot_ref_of(
         self,
-        binding: SourceBinding,
         snapshot: CorpusSnapshot | Mapping[str, object] | str,
-    ) -> Result[CorpusSnapshot]:
+    ) -> Result[str]:
         if isinstance(snapshot, CorpusSnapshot):
-            if snapshot.source_id != binding.source_id:
-                return invalid_input(
-                    "snapshot",
-                    "CorpusSnapshot source_id must match the bound source "
-                    "(CT-44; FR-Q65)",
-                    snapshot_source_id=snapshot.source_id,
-                    source_id=binding.source_id,
-                )
-            return Ok(snapshot)
+            return Ok(snapshot.id)
         if isinstance(snapshot, str):
             if snapshot.strip() == "":
                 return invalid_input(
@@ -510,74 +635,126 @@ class KnowledgeService:
                     "snapshot_ref is a non-empty content-addressed id (CT-44)",
                     given=repr(snapshot),
                 )
-            # Re-snapshot and accept only when the live tree still matches.
-            live = binding.source.snapshot()
-            if is_refusal(live):
-                return live
-            recorded = self._record_snapshot(binding.source_id, live.value)
-            if recorded.id != snapshot.strip():
-                # Allow resolving a previously recorded snapshot id only when
-                # the chain knows it — still require retained copies for retrieve.
-                chain = self._snapshot_chain.get(binding.source_id, [])
-                if snapshot.strip() not in chain:
-                    return invalid_input(
-                        "snapshot_ref",
-                        "unknown snapshot_ref for source_id (CT-44; FR-Q65)",
-                        snapshot_ref=snapshot.strip(),
-                        source_id=binding.source_id,
-                    )
-                return Ok(
-                    CorpusSnapshot(
-                        id=snapshot.strip(),
-                        source_id=binding.source_id,
-                        file_digests=dict(recorded.file_digests),
-                    )
-                )
-            return Ok(recorded)
+            return Ok(snapshot.strip())
         snap_id = snapshot.get("id")
-        digests_raw = snapshot.get("file_digests")
         if not isinstance(snap_id, str) or snap_id.strip() == "":
             return invalid_input(
                 "snapshot",
                 "snapshot mapping requires id (CT-44)",
                 given=repr(snapshot),
             )
-        if not isinstance(digests_raw, Mapping):
+        return Ok(snap_id.strip())
+
+    def _lookup_recorded(
+        self,
+        binding: SourceBinding,
+        snapshot_ref: str,
+    ) -> CorpusSnapshot | None:
+        stored = self._snapshots.get(snapshot_ref)
+        if stored is None or stored.source_id != binding.source_id:
+            return None
+        return stored
+
+    def _require_pinned_snapshot(
+        self,
+        binding: SourceBinding,
+        snapshot: CorpusSnapshot | Mapping[str, object] | str,
+    ) -> Result[CorpusSnapshot]:
+        """Resolve a snapshot_ref that was already pinned or snapshotted.
+
+        Does not read the live tree. Unrecorded refs are an unpinned refusal.
+        Recorded refs whose bytes were not retained are ``StaleSnapshot``.
+        """
+        if isinstance(snapshot, CorpusSnapshot) and snapshot.source_id != binding.source_id:
             return invalid_input(
-                "file_digests",
-                "snapshot mapping requires file_digests (CT-44)",
-            )
-        file_digests: dict[str, str] = {}
-        for raw_key, raw_value in cast("Mapping[object, object]", digests_raw).items():
-            if not isinstance(raw_key, str) or not isinstance(raw_value, str):
-                return invalid_input(
-                    "file_digests",
-                    "file_digests maps path string to fp1 string (CT-44)",
-                    given=repr((raw_key, raw_value)),
-                )
-            file_digests[raw_key] = raw_value
-        created_raw = snapshot.get("created_at")
-        created_at = created_raw if isinstance(created_raw, int) else None
-        supersedes_raw = snapshot.get("supersedes")
-        supersedes = (
-            supersedes_raw.strip()
-            if isinstance(supersedes_raw, str) and supersedes_raw.strip() != ""
-            else None
-        )
-        return Ok(
-            CorpusSnapshot(
-                id=snap_id.strip(),
+                "snapshot",
+                "CorpusSnapshot source_id must match the bound source (CT-44; FR-Q65)",
+                snapshot_source_id=snapshot.source_id,
                 source_id=binding.source_id,
-                file_digests=file_digests,
-                created_at=created_at,
-                supersedes=supersedes,
             )
+        parsed = self._snapshot_ref_of(snapshot)
+        if is_refusal(parsed):
+            return parsed
+        snapshot_ref = parsed.value
+        stored = self._lookup_recorded(binding, snapshot_ref)
+        if stored is not None:
+            if snapshot_ref not in self._snapshot_bytes:
+                return StaleSnapshot.of(snapshot_ref=snapshot_ref)
+            return Ok(stored)
+        chain = self._snapshot_chain.get(binding.source_id, [])
+        if snapshot_ref in chain:
+            return StaleSnapshot.of(snapshot_ref=snapshot_ref)
+        return refuse_unpinned_live_tree(
+            source_id=binding.source_id,
+            snapshot_ref=snapshot_ref,
         )
+
+    def _pin_target(
+        self,
+        binding: SourceBinding,
+        snapshot: CorpusSnapshot | Mapping[str, object] | str,
+    ) -> Result[CorpusSnapshot]:
+        """Record a pin target. Explicit pin may retain matching adapter bytes."""
+        recorded = self._require_pinned_snapshot(binding, snapshot)
+        if not is_refusal(recorded):
+            return recorded
+        if not isinstance(snapshot, CorpusSnapshot):
+            return recorded
+        if StaleSnapshot.matches(recorded):
+            return recorded
+        return self._retain_now(binding, snapshot)
+
+    def _retain_now(
+        self,
+        binding: SourceBinding,
+        snapshot: CorpusSnapshot,
+    ) -> Result[CorpusSnapshot]:
+        """Copy snapshot bytes from the adapter now; never substitute later live files."""
+        if snapshot.source_id != binding.source_id:
+            return invalid_input(
+                "snapshot",
+                "CorpusSnapshot source_id must match the bound source (CT-44; FR-Q65)",
+                snapshot_source_id=snapshot.source_id,
+                source_id=binding.source_id,
+            )
+        existing = self._lookup_recorded(binding, snapshot.id)
+        if existing is not None and snapshot.id in self._snapshot_bytes:
+            return Ok(existing)
+        files: dict[str, bytes] = {}
+        for path in snapshot.file_digests:
+            got = binding.source.retrieve(snapshot, path)
+            if is_refusal(got):
+                return StaleSnapshot.of(snapshot_ref=snapshot.id)
+            files[path] = got.value
+        recorded = self._record_snapshot(binding.source_id, snapshot)
+        self._snapshot_bytes[recorded.id] = files
+        self._snapshots[recorded.id] = recorded
+        return Ok(recorded)
+
+    def _ensure_session_pin(
+        self,
+        session_id: object,
+        source_id: object,
+    ) -> Result[SessionSnapshotPin]:
+        if not isinstance(session_id, str) or session_id.strip() == "":
+            return invalid_input(
+                "session_id",
+                "session pin requires a non-empty session_id (CT-44; FR-RES-21)",
+                given=repr(session_id),
+            )
+        binding = self._require_binding(source_id)
+        if is_refusal(binding):
+            return binding
+        existing = self._session_pins.get((session_id.strip(), binding.value.source_id))
+        if existing is not None:
+            return Ok(existing)
+        return self.pin_session_snapshot(session_id, source_id)
 
     def _record_snapshot(self, source_id: str, snapshot: CorpusSnapshot) -> CorpusSnapshot:
         chain = self._snapshot_chain.setdefault(source_id, [])
+        stored = self._snapshots.get(snapshot.id)
         if snapshot.id in chain:
-            return snapshot
+            return stored if stored is not None else snapshot
         supersedes = chain[-1] if chain else None
         recorded = CorpusSnapshot(
             id=snapshot.id,
@@ -587,6 +764,7 @@ class KnowledgeService:
             supersedes=supersedes,
         )
         chain.append(recorded.id)
+        self._snapshots[recorded.id] = recorded
         return recorded
 
     def _before_artifact_register(self, copy: ArtifactCopy) -> Result[HookResult]:

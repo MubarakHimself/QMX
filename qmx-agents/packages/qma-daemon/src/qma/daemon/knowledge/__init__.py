@@ -16,6 +16,7 @@ from qma.daemon.knowledge.service import (
     KnowledgeService,
     KnowledgeSourceRegistry,
     MissionSnapshotPin,
+    SessionSnapshotPin,
     SourceBinding,
 )
 
@@ -30,6 +31,7 @@ __all__ = [
     "KnowledgeSourceRegistry",
     "MissionSnapshotPin",
     "PlainFileLibrarySource",
+    "SessionSnapshotPin",
     "SourceBinding",
     "qmx_worktree_root",
     "validate_seed_root_path",

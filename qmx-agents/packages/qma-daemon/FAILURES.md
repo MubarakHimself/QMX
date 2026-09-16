@@ -1097,3 +1097,22 @@ through FR-72).
 - **Notification tier:** silent-log (caller receives the typed refusal).
 - **Product-user affordance:** a new resolved config is a new experiment.
   Register the current ExperimentSpec first, then place the door step.
+
+### FR-73: Unpinned live-tree knowledge reads are refused
+
+- **Failure class:** `policy rejection` (CT-04; FR-RES-21; DEC-0391).
+- **Detection:** `KnowledgeService.retrieve` / `cite` / `search` require a
+  Mission or session `snapshot_ref` already recorded by `snapshot()`,
+  `pin_mission_snapshot`, or `pin_session_snapshot`. An adapter live
+  snapshot that was never pinned is refused as an unpinned live-tree
+  read. Browse without a Mission still pins a session `snapshot_ref`
+  first. After a pin, retrieve/cite uses retained pinned bytes; an
+  uncopied retrieve is `StaleSnapshot` rather than current files.
+- **Auto-recovery / retry:** none — pin a Mission or session snapshot,
+  then retry retrieve/cite against that `snapshot_ref`.
+- **Visible degraded state:** no live-tree bytes are returned; the
+  previous pin (if any) is unchanged.
+- **Notification tier:** silent-log (caller receives the typed refusal).
+- **Product-user affordance:** conclusions stay on a pinned snapshot.
+  Pin first (Mission start, or browse session), then retrieve or cite.
+  Re-pinning is a recorded act; the live seed tree is not substituted.
