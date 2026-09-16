@@ -40,6 +40,12 @@ from qml.declaration.confluence import (
     register_confluence,
 )
 from qml.generation import AuthoredStructure
+from qml.host.graduation import (
+    MILL_PROMOTED_FROM_IS_GOVERNED_EVIDENCE,
+    MILL_PROMOTED_FROM_IS_LINEAGE,
+    refuse_research_ref_as_governed_evidence,
+    stamp_promoted_from_edge,
+)
 from qml.host.research_store import (
     QMA_BINDS_SECOND_CT44_OVER_RESEARCH_ROOT_V1,
     QMA_WRITES_RESEARCH_ROOT,
@@ -54,6 +60,8 @@ from qml.host.research_store import (
 
 __all__ = [
     "HOST_MINTS_CT06_ENVELOPE",
+    "MILL_PROMOTED_FROM_IS_GOVERNED_EVIDENCE",
+    "MILL_PROMOTED_FROM_IS_LINEAGE",
     "QMA_BINDS_SECOND_CT44_OVER_RESEARCH_ROOT_V1",
     "QMA_WRITES_RESEARCH_ROOT",
     "QMB_AUTHORS_CANDIDATES",
@@ -67,9 +75,11 @@ __all__ = [
     "mint_generation_envelope",
     "persist_research_blob",
     "read_research_blob",
+    "refuse_research_ref_as_governed_evidence",
     "register_bot_definition",
     "research_blob_path",
     "save_research_hypothesis",
+    "stamp_promoted_from_edge",
 ]
 
 HOST_MINTS_CT06_ENVELOPE: Final[bool] = True

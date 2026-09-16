@@ -13,10 +13,17 @@ tunnel access (B-4 ledger lines, the research door). Graduation mints the two
 artifacts (declaration + logic) with a ``promoted-from`` lineage edge back to
 the originating research artifact. ``max_acceptable_complexity_score`` is a
 stated drop — a later measure, never a registration gate.
+
+Mill graduation (Story 51.1) reuses :func:`graduate_to_governed` with
+``originating_research_ref`` constrained to a hypothesis ``research_ref``
+(class ``qml-research-hypothesis``). Knowledge Citation digests /
+``artifact_ref`` / ``source_ref`` / ``seed_cite`` are refused there. Parent
+QL-8 ungoverned-experiment graduation keeps its own preimage class.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Final, cast
@@ -30,10 +37,21 @@ from qml.conformance.layer1 import Layer1Verdict
 from qml.conformance.layer2 import Layer2Verdict
 from qml.declaration.bot import BotDefinition
 from qml.logic import LogicIdentity
+from qml.research.stage0 import (
+    RESEARCH_CONTRACT_CLASS as MILL_RESEARCH_CLASS_TOKEN,
+)
+from qml.research.stage0 import (
+    Hypothesis,
+    SavedHypothesis,
+    fingerprint_hypothesis,
+    hypothesis_identity_payload,
+)
 
 __all__ = [
     "CITATION_KINDS",
     "DROPPED_REGISTRATION_GATES",
+    "MILL_ORIGINATING_BANNED_KEYS",
+    "MILL_RESEARCH_CLASS",
     "PROMOTED_FROM_EDGE_TYPE",
     "BotCitation",
     "CitationKind",
@@ -42,12 +60,15 @@ __all__ = [
     "GraduationEdge",
     "RegistrationCandidate",
     "UngovernedTunnelAccess",
+    "admit_mill_originating_research_ref",
     "admit_ungoverned_tunnel",
     "cite_registered_bot",
     "cite_ungoverned_bot",
     "evaluate_ticket",
     "gate_registration",
+    "graduate_mill_to_governed",
     "graduate_to_governed",
+    "refuse_spawn_as_graduation",
 ]
 
 # The old anti-sprawl gate is a stated drop, not an omission (DEC-0178). Named
@@ -58,9 +79,23 @@ DROPPED_REGISTRATION_GATES: Final[frozenset[str]] = frozenset(
 
 PROMOTED_FROM_EDGE_TYPE: Final[str] = "promoted-from"
 
+# Mill graduation identity (AD-17 / DEC-0397). Parent QL-8 may still use other
+# preimage classes via graduate_to_governed directly.
+MILL_RESEARCH_CLASS: Final[str] = MILL_RESEARCH_CLASS_TOKEN
+MILL_ORIGINATING_BANNED_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "artifact_ref",
+        "seed_cite",
+        "source_ref",
+    }
+)
+
 CITATION_KINDS: Final[tuple[str, ...]] = ("governed-evidence", "seat")
 
 _NO_PROBATION: Final[frozenset[str]] = frozenset({"probation", "partial", "probationary"})
+_CITATION_SHAPE_ATTRS: Final[frozenset[str]] = frozenset(
+    {"artifact_ref", "source_ref", "seed_cite"}
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -334,7 +369,10 @@ def graduate_to_governed(
 
     Graduation still requires both conformance layers. The edge is fingerprintable
     content; the host composition root stamps the CT-07 record with its
-    ``WriterId``.
+    ``WriterId``. Parent QL-8 ungoverned-experiment graduation may pass any
+    distinct fp1 preimage class. Mill graduation must use
+    :func:`graduate_mill_to_governed` so ``originating_research_ref`` is proven
+    as a hypothesis ``research_ref``.
     """
     candidate = gate_registration(layer1=layer1, layer2=layer2, **extra)
     if is_refusal(candidate):
@@ -358,6 +396,80 @@ def graduate_to_governed(
             originating_research_ref=research.value,
             promoted_from_edge=edge,
         )
+    )
+
+
+def admit_mill_originating_research_ref(
+    value: object,
+    *,
+    hypothesis: object,
+) -> Result[Fingerprint]:
+    """Admit mill ``originating_research_ref`` = hypothesis ``research_ref`` only.
+
+    Knowledge Citation digest / ``artifact_ref`` / ``source_ref`` / ``seed_cite``
+    are refused; seed cites travel on ``seed_cite`` only (Story 51.3).
+    """
+    shaped = _refuse_citation_shaped_origin(value)
+    if is_refusal(shaped):
+        return shaped
+    expected = _research_ref_from_hypothesis(hypothesis)
+    if is_refusal(expected):
+        return expected
+    if value is None:
+        return Ok(expected.value)
+    given = _coerce_fingerprint(value, "originating_research_ref")
+    if is_refusal(given):
+        return given
+    if given.value.value != expected.value.value:
+        return invalid(
+            "originating_research_ref",
+            "mill originating_research_ref must equal the hypothesis research_ref "
+            f"(class {MILL_RESEARCH_CLASS})",
+            given=given.value.value,
+            research_ref=expected.value.value,
+            research_class=MILL_RESEARCH_CLASS,
+        )
+    return Ok(given.value)
+
+
+def graduate_mill_to_governed(
+    *,
+    layer1: object,
+    layer2: object,
+    hypothesis: object,
+    originating_research_ref: object = None,
+    **extra: object,
+) -> Result[Graduation]:
+    """Mill graduation: call :func:`graduate_to_governed` with ``research_ref`` only.
+
+    Does not call the structure-package research graduate helper. ``spawn_governed``
+    is not graduation (use :func:`refuse_spawn_as_graduation`).
+    """
+    if "spawn_governed" in extra:
+        return refuse_spawn_as_graduation(extra.pop("spawn_governed"))
+    research = admit_mill_originating_research_ref(
+        originating_research_ref,
+        hypothesis=hypothesis,
+    )
+    if is_refusal(research):
+        return research
+    return graduate_to_governed(
+        layer1=layer1,
+        layer2=layer2,
+        originating_research_ref=research.value,
+        **extra,
+    )
+
+
+def refuse_spawn_as_graduation(label: object = "spawn_governed") -> TypedRefusal:
+    """``spawn_governed`` is not graduation; L33 stays two-artifact registration."""
+    return policy(
+        "graduation",
+        "spawn_governed is not graduation; L33 remains two-artifact registration, "
+        "not an orchestrator spawn (DEC-0270)",
+        given=repr(label),
+        spawn_governed=False,
+        mill_calls="qml.conformance.registration.graduate_to_governed",
     )
 
 
@@ -460,3 +572,59 @@ def _unwrap_ok(raw: object) -> object:
     if isinstance(raw, Ok):
         return cast("Ok[object]", raw).value
     return raw
+
+
+def _refuse_citation_shaped_origin(value: object) -> Result[None]:
+    """Refuse Knowledge Citation / seed_cite shapes as mill originating refs."""
+    if isinstance(value, Mapping):
+        mapping = cast("Mapping[str, object]", value)
+        hit = sorted(key for key in MILL_ORIGINATING_BANNED_KEYS if key in mapping)
+        if hit:
+            return policy(
+                "originating_research_ref",
+                "Knowledge Citation digest / artifact_ref / source_ref / seed_cite "
+                "is not a legal mill originating_research_ref; seed cites travel on "
+                "seed_cite only",
+                banned=hit,
+                research_class=MILL_RESEARCH_CLASS,
+            )
+        return Ok(None)
+    for attr in sorted(_CITATION_SHAPE_ATTRS):
+        if hasattr(value, attr) and not isinstance(value, (Fingerprint, str, bytes)):
+            return policy(
+                "originating_research_ref",
+                "Knowledge Citation digest / artifact_ref / source_ref / seed_cite "
+                "is not a legal mill originating_research_ref; seed cites travel on "
+                "seed_cite only",
+                banned=attr,
+                given=type(value).__name__,
+                research_class=MILL_RESEARCH_CLASS,
+            )
+    return Ok(None)
+
+
+def _research_ref_from_hypothesis(hypothesis: object) -> Result[Fingerprint]:
+    """Resolve hypothesis research_ref (class qml-research-hypothesis)."""
+    if isinstance(hypothesis, SavedHypothesis):
+        return Ok(hypothesis.research_ref)
+    if isinstance(hypothesis, Hypothesis):
+        return fingerprint_hypothesis(hypothesis)
+    if isinstance(hypothesis, Mapping):
+        mapping = cast("Mapping[str, object]", hypothesis)
+        if mapping.get("class") != MILL_RESEARCH_CLASS:
+            return invalid(
+                "hypothesis",
+                "mill graduation proves originating_research_ref against a "
+                f"{MILL_RESEARCH_CLASS} hypothesis (or its saved envelope)",
+                given=repr(mapping.get("class")),
+                research_class=MILL_RESEARCH_CLASS,
+            )
+        return fingerprint(dict(mapping))
+    return invalid(
+        "hypothesis",
+        "mill graduation requires a Stage 0 Hypothesis or SavedHypothesis so "
+        f"originating_research_ref is proven as class {MILL_RESEARCH_CLASS}",
+        given=type(hypothesis).__name__,
+        research_class=MILL_RESEARCH_CLASS,
+        identity_helper=hypothesis_identity_payload.__name__,
+    )
