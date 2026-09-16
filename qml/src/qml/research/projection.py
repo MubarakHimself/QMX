@@ -26,6 +26,8 @@ from qml.research.stage0 import (
     F_SLOTS,
     GRAPH_PLANE,
     HYPOTHESIS_CLASSES,
+    Hypothesis,
+    save_authored_hypothesis,
 )
 
 __all__ = [
@@ -251,18 +253,29 @@ def mint_bot_from_projection(projection: object) -> Result[None]:
     )
 
 
-def save_hypothesis(projection: object) -> Result[None]:
-    """Refuse minting ``research_ref`` from a view (DEC-0394, DEC-0401)."""
-    checked = _require_projection(projection)
-    if is_refusal(checked):
-        return checked
-    return policy(
+def save_hypothesis(candidate: object) -> Result[object]:
+    """Explicit save returns canonical bytes + ``research_ref``; views refuse.
+
+    A read-only LAYOUT-DEMO projection is not a save (DEC-0394, DEC-0401). An
+    authored Stage 0 :class:`~qml.research.stage0.Hypothesis` returns pure
+    :class:`~qml.research.stage0.SavedHypothesis` bytes — hosts persist.
+    """
+    if isinstance(candidate, LayoutDemoProjection):
+        return policy(
+            "research_ref",
+            "viewing cited seed is not a save; identity waits on an explicit later "
+            "save (DEC-0394, DEC-0401)",
+            package_id=candidate.package_id,
+            research_ref=None,
+            read_only=True,
+        )
+    if isinstance(candidate, Hypothesis):
+        return save_authored_hypothesis(candidate)
+    return invalid(
+        "hypothesis",
+        "explicit save takes a Stage 0 Hypothesis; a seed view does not mint "
         "research_ref",
-        "viewing cited seed is not a save; identity waits on an explicit later "
-        "save (DEC-0394, DEC-0401)",
-        package_id=checked.value.package_id,
-        research_ref=None,
-        read_only=True,
+        given=type(candidate).__name__,
     )
 
 

@@ -48,6 +48,7 @@ from qml.research.stage0 import (
     Graph,
     Hypothesis,
     RoleBinding,
+    SavedHypothesis,
     admit_research_format_version,
     fingerprint_hypothesis,
     hypothesis_canonical_bytes,
@@ -59,6 +60,7 @@ from qml.research.stage0 import (
     refuse_stage0_sizing,
     research_contract_identity,
     restore_hypothesis,
+    save_authored_hypothesis,
 )
 from qml.research.vocab import (
     DICTIONARY_FIELDS,
@@ -95,6 +97,7 @@ __all__ = [
     "Hypothesis",
     "LayoutDemoProjection",
     "RoleBinding",
+    "SavedHypothesis",
     "admit_research_format_version",
     "compile_graph",
     "complete_unresolved_f",
@@ -111,6 +114,7 @@ __all__ = [
     "research_contract_identity",
     "resolve_dictionary_entry",
     "restore_hypothesis",
+    "save_authored_hypothesis",
     "save_hypothesis",
     "start_population_ingest",
 ]

@@ -40,6 +40,7 @@ __all__ = [
     "Graph",
     "Hypothesis",
     "RoleBinding",
+    "SavedHypothesis",
     "admit_research_format_version",
     "fingerprint_hypothesis",
     "hypothesis_canonical_bytes",
@@ -51,6 +52,7 @@ __all__ = [
     "refuse_stage0_sizing",
     "research_contract_identity",
     "restore_hypothesis",
+    "save_authored_hypothesis",
 ]
 
 # QML-local AD-5 second ladder. Not QL-7 protocol / QL-8 conformance (DEC-0395).
@@ -297,6 +299,35 @@ def fingerprint_hypothesis(hypothesis: object) -> Result[Fingerprint]:
             given=type(hypothesis).__name__,
         )
     return fingerprint(hypothesis_identity_payload(hypothesis))
+
+
+@dataclass(frozen=True, slots=True)
+class SavedHypothesis:
+    """Canonical bytes + ``research_ref`` from an explicit authoring save.
+
+    Pure return value — hosts persist under ``research_root``. Viewing cited seed
+    never produces this type.
+    """
+
+    canonical_bytes: bytes
+    research_ref: Fingerprint
+
+
+def save_authored_hypothesis(hypothesis: object) -> Result[SavedHypothesis]:
+    """Explicit Stage 0 save: return canonical bytes and ``research_ref`` (no I/O)."""
+    if not isinstance(hypothesis, Hypothesis):
+        return invalid(
+            "hypothesis",
+            "explicit save returns canonical bytes for a Stage 0 Hypothesis",
+            given=type(hypothesis).__name__,
+        )
+    canonical = hypothesis_canonical_bytes(hypothesis)
+    if is_refusal(canonical):
+        return canonical
+    ref = fingerprint_hypothesis(hypothesis)
+    if is_refusal(ref):
+        return ref
+    return Ok(SavedHypothesis(canonical_bytes=canonical.value, research_ref=ref.value))
 
 
 def admit_research_format_version(value: object) -> Result[int]:
