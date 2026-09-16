@@ -6,6 +6,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from qma.core.control import ControlPrimitive, is_skill_distinct_from_loop
+from qma.core.ports.knowledge import CorpusSnapshot
 from qma.daemon.discovery import (
     GAP_0081_UI_CONTRACT,
     HYPOTHESES_ARE_FEDERATED_HITS,
@@ -59,7 +60,7 @@ class _FakeArtifactPort:
         return Ok(())
 
 
-def _knowledge(tmp_path: Path) -> tuple[KnowledgeService, object]:
+def _knowledge(tmp_path: Path) -> tuple[KnowledgeService, CorpusSnapshot]:
     root = tmp_path / "strats"
     root.mkdir()
     (root / "notes.md").write_text("swing-high near London\n", encoding="utf-8")

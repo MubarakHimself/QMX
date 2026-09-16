@@ -6,8 +6,12 @@ import ast
 import inspect
 from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import cast
 
-from qma.core.ports.knowledge import GAP_0073_KNOWLEDGE_HYBRID_INDEXING
+from qma.core.ports.knowledge import (
+    GAP_0073_KNOWLEDGE_HYBRID_INDEXING,
+    CorpusSnapshot,
+)
 from qma.core.ports.qmb import qmb_opens_daemon_sqlite
 from qma.daemon.discovery import (
     FEDERATED_SEARCH_HOLDS_CACHE,
@@ -56,7 +60,7 @@ def _corpus(tmp_path: Path) -> Path:
     return root
 
 
-def _knowledge(tmp_path: Path) -> tuple[KnowledgeService, object]:
+def _knowledge(tmp_path: Path) -> tuple[KnowledgeService, CorpusSnapshot]:
     registry = KnowledgeSourceRegistry()
     source = PlainFileLibrarySource(root_path=_corpus(tmp_path), source_id="strats")
     bound = registry.bind("strats", source, plugin_id="research-strats")
@@ -153,7 +157,8 @@ def test_concatenates_knowledge_locators_and_artifact_fp1(tmp_path: Path) -> Non
     payload = body.to_payload()
     assert payload["occupancy"] == "none"
     assert payload["is_door_run"] is False
-    assert len(payload["hits"]) == len(body.hits)
+    hits_payload = cast("Sequence[object]", payload["hits"])
+    assert len(hits_payload) == len(body.hits)
 
 
 def test_hybrid_semantic_ranked_is_unsupported_capability(tmp_path: Path) -> None:

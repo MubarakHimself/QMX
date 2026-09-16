@@ -15,7 +15,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Final, Protocol, cast, runtime_checkable
+from typing import Final, Protocol, runtime_checkable
 
 from qma.core.ports.knowledge import (
     GAP_0073_KNOWLEDGE_HYBRID_INDEXING,
@@ -206,9 +206,8 @@ def _snapshot_ref_of(
                 given=repr(snapshot),
             )
         return Ok(token)
-    body = cast("Mapping[str, object]", snapshot)
     for key in ("id", "snapshot_ref"):
-        value = body.get(key)
+        value = snapshot.get(key)
         if isinstance(value, str) and value.strip() != "":
             return Ok(value.strip())
     return invalid_input(
@@ -244,6 +243,7 @@ class ArtifactLibrarySearchPort(Protocol):
         query: str | None = None,
     ) -> Result[Sequence[Mapping[str, object]]]:
         """Fold B-15 / ledger merge / Experiment Ledger refs into hit rows."""
+        ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -501,13 +501,7 @@ class FederatedDiscoveryService:
             return artifact_rows
 
         for row in artifact_rows.value:
-            if not isinstance(row, Mapping):
-                return invalid_input(
-                    "artifact_hit",
-                    "artifact library.search rows are {fp1, kind} mappings",
-                    given=repr(type(row).__name__),
-                )
-            mapped = _map_artifact_row(cast("Mapping[str, object]", row))
+            mapped = _map_artifact_row(row)
             if is_refusal(mapped):
                 return mapped
             hits.append(mapped.value)
