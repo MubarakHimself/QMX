@@ -18,6 +18,11 @@ from qma.daemon.capabilities import (
     PermissionPolicyEnforcer,
     spawn_agent,
 )
+from qma.daemon.discovery import (
+    FEDERATED_SEARCH_OCCUPANCY,
+    FederatedDiscoveryService,
+    FederatedSearch,
+)
 from qma.daemon.hooks import (
     AGENT_REACHABLE_WRITE_VERBS,
     BYPASS_WRITE_PATHS,
@@ -54,6 +59,7 @@ __all__ = [
     "AGENT_PATH_ENFORCEMENT_EVENTS",
     "AGENT_REACHABLE_WRITE_VERBS",
     "BYPASS_WRITE_PATHS",
+    "FEDERATED_SEARCH_OCCUPANCY",
     "AdmissionPipeline",
     "AgentCapabilityStore",
     "AuthoritativeJournal",
@@ -61,6 +67,8 @@ __all__ = [
     "DaemonClock",
     "DaemonProcess",
     "DaemonStoreLifecycle",
+    "FederatedDiscoveryService",
+    "FederatedSearch",
     "FoldContract",
     "FoldContractRegistry",
     "FoldMetadata",

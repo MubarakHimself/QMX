@@ -40,6 +40,7 @@ __all__ = [
     "ArtifactHit",
     "FederatedHit",
     "KnowledgeHit",
+    "library_kind_to_artifact_hit_kind",
     "parse_federated_hit",
     "refuse_cite_copy_artifact_rail",
     "refuse_qml_candidate_hit",
@@ -96,6 +97,30 @@ _REFUSED_TYPE_NAMES: Final[frozenset[str]] = frozenset(
 )
 
 _FORBIDDEN_ARTIFACT_KEYS: Final[frozenset[str]] = frozenset({"artifact_ref"})
+
+# QMB library.search citation kinds → frozen ArtifactHit query-hit tags.
+_LIBRARY_KIND_TO_ARTIFACT_HIT: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "analysis-publication": "analysis.published",
+        "analysis.published": "analysis.published",
+        "analysis-published": "analysis.published",
+        "saved-view": "saved-view",
+        "savedview": "saved-view",
+    }
+)
+
+
+def library_kind_to_artifact_hit_kind(kind: str) -> str:
+    """Map a QMB ``library.search`` kind token onto the frozen ArtifactHit kind."""
+    token = kind.strip()
+    mapped = _LIBRARY_KIND_TO_ARTIFACT_HIT.get(token)
+    if mapped is not None:
+        return mapped
+    folded = token.casefold().replace("_", "-")
+    mapped = _LIBRARY_KIND_TO_ARTIFACT_HIT.get(folded)
+    if mapped is not None:
+        return mapped
+    return token
 
 
 def _invalid(field: str, reason: str, **extra: object) -> TypedRefusal:

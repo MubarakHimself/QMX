@@ -160,6 +160,15 @@ def test_cite_copy_artifact_ref_is_not_artifact_rail_hit() -> None:
     assert is_refusal(refuse_cite_copy_artifact_rail())
 
 
+def test_library_kind_maps_onto_artifact_hit_tags() -> None:
+    from qma.wire import library_kind_to_artifact_hit_kind
+
+    assert library_kind_to_artifact_hit_kind("analysis-publication") == "analysis.published"
+    assert library_kind_to_artifact_hit_kind("analysis.published") == "analysis.published"
+    assert library_kind_to_artifact_hit_kind("saved-view") == "saved-view"
+    assert library_kind_to_artifact_hit_kind("bot-definition") == "bot-definition"
+
+
 def test_unknown_artifact_kind_and_invented_hit_class_refused() -> None:
     kind = ArtifactHit.try_create(fp1=_FP1, kind="graph-template")
     assert is_refusal(kind)
