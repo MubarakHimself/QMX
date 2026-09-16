@@ -8,8 +8,8 @@ from pathlib import Path
 from qma.core.control import ControlPrimitive, is_skill_distinct_from_loop
 from qma.daemon.discovery import (
     GAP_0081_UI_CONTRACT,
-    HYPOTHESIS_LISTING_SURFACE,
     HYPOTHESES_ARE_FEDERATED_HITS,
+    HYPOTHESIS_LISTING_SURFACE,
     JSON_RENDER_EXECUTES,
     JSON_RENDER_STORES,
     LIBRARIAN_IS_REQUIRED,
@@ -21,6 +21,7 @@ from qma.daemon.discovery import (
     MCP_APPS_STORES,
     FederatedDiscoveryService,
     federated_in_flight_on_tab_close,
+    federated_search_identity,
     hypotheses_are_federated_hits,
     hypothesis_listing_surface,
     optional_librarian_graph_template,
@@ -103,6 +104,21 @@ def test_stage0_hypotheses_are_not_federated_hits(tmp_path: Path) -> None:
     )
     assert is_refusal(candidate)
     assert is_refusal(refuse_hypothesis_as_federated_hit())
+
+    mill_kind = facade.search(
+        "swing-high",
+        source_id="strats",
+        snapshot=snap,
+        kind="qml-research-hypothesis",
+    )
+    assert is_refusal(mill_kind)
+    assert mill_kind.context["listing_surface"] == "qml.research"
+
+    identity = federated_search_identity()
+    assert identity["hypotheses_are_federated_hits"] is False
+    assert identity["hypothesis_listing_surface"] == "qml.research"
+    assert identity["tab_close_cancels"] is False
+    assert identity["occupancy"] == "none"
 
 
 def test_knowledge_hit_display_aliases_ban_hypothesis_nouns() -> None:

@@ -23,8 +23,14 @@ from qma.core.ports.knowledge import (
     refuse_hybrid_knowledge_indexing,
 )
 from qma.core.ports.qmb import QMB_OPENS_DAEMON_SQLITE, qmb_opens_daemon_sqlite
+from qma.daemon.discovery.research_surface import (
+    HYPOTHESES_ARE_FEDERATED_HITS,
+    HYPOTHESIS_LISTING_SURFACE,
+    REFUSED_HYPOTHESIS_KIND_TOKENS,
+    refuse_federated_hypothesis_kwargs,
+    refuse_hypothesis_kind_on_federated_search,
+)
 from qma.daemon.knowledge.service import KnowledgeService
-from qma.daemon.discovery.research_surface import refuse_federated_hypothesis_kwargs
 from qma.wire.federated_discovery import (
     ARTIFACT_HIT_KINDS,
     ArtifactHit,
@@ -103,7 +109,10 @@ def federated_search_identity() -> dict[str, object]:
     return {
         "class": FEDERATED_SEARCH_CLASS,
         "command": "facade_search",
+        "gap_0073": GAP_0073_KNOWLEDGE_HYBRID_INDEXING,
         "holds_cache": FEDERATED_SEARCH_HOLDS_CACHE,
+        "hypotheses_are_federated_hits": HYPOTHESES_ARE_FEDERATED_HITS,
+        "hypothesis_listing_surface": HYPOTHESIS_LISTING_SURFACE,
         "is_door_run": FEDERATED_SEARCH_IS_DOOR_RUN,
         "occupancy": FEDERATED_SEARCH_OCCUPANCY,
         "opens_fourth_store": FEDERATED_SEARCH_OPENS_FOURTH_STORE,
@@ -111,7 +120,7 @@ def federated_search_identity() -> dict[str, object]:
         "qmb_opens_daemon_sqlite": FEDERATED_SEARCH_QMB_OPENS_DAEMON_SQLITE,
         "reads_staging": FEDERATED_SEARCH_READS_STAGING,
         "surfaces": list(FEDERATED_SEARCH_SURFACES),
-        "gap_0073": GAP_0073_KNOWLEDGE_HYBRID_INDEXING,
+        "tab_close_cancels": False,
     }
 
 
@@ -271,6 +280,20 @@ class FederatedSearch:
 
 
 def _map_artifact_row(row: Mapping[str, object]) -> Result[ArtifactHit]:
+    if row.get("research_ref") is not None:
+        return refuse_hypothesis_kind_on_federated_search(
+            given=repr(row.get("research_ref")),
+            field="research_ref",
+        )
+    hit_class = row.get("hit_class")
+    if isinstance(hit_class, str) and hit_class.strip().casefold() not in {
+        "artifact",
+        "",
+    }:
+        return refuse_hypothesis_kind_on_federated_search(
+            given=hit_class,
+            field="hit_class",
+        )
     if "locator" in row and "fp1" not in row:
         return refuse_locator_as_fp1(given=repr(row.get("locator")))
     if "locator" in row and row.get("locator") is not None and row.get("fp1") == row.get(
@@ -285,6 +308,13 @@ def _map_artifact_row(row: Mapping[str, object]) -> Result[ArtifactHit]:
             "query-hit tag (FR-RES-07)",
             given=repr(raw_kind),
         )
+    kind_fold = raw_kind.strip().casefold().replace("_", "-")
+    if (
+        raw_kind.strip() in REFUSED_HYPOTHESIS_KIND_TOKENS
+        or kind_fold in REFUSED_HYPOTHESIS_KIND_TOKENS
+        or kind_fold.replace("-", " ") in REFUSED_HYPOTHESIS_KIND_TOKENS
+    ):
+        return refuse_hypothesis_kind_on_federated_search(given=raw_kind)
     mapped = library_kind_to_artifact_hit_kind(raw_kind)
     if mapped not in ARTIFACT_HIT_KINDS:
         return policy_rejection(
@@ -441,6 +471,13 @@ class FederatedDiscoveryService:
                     given=repr(kind),
                 )
             kind_token = kind.strip()
+            kind_fold = kind_token.casefold().replace("_", "-")
+            if (
+                kind_token in REFUSED_HYPOTHESIS_KIND_TOKENS
+                or kind_fold in REFUSED_HYPOTHESIS_KIND_TOKENS
+                or kind_fold.replace("-", " ") in REFUSED_HYPOTHESIS_KIND_TOKENS
+            ):
+                return refuse_hypothesis_kind_on_federated_search(given=kind_token)
 
         fp1_token: str | None = None
         if fp1 is not None:

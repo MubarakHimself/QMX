@@ -3,7 +3,9 @@
 COMP-QMA-WIRE owns the frozen federated hit shape as an additive CT-40 family.
 No new CT number is minted. ``hit_class: strats``, ``qml_candidate``, and
 cite-copy ``artifact_ref`` as an Artifact-rail hit are refused (DEC-0389,
-DEC-0412; UX-DR2).
+DEC-0412; UX-DR2). KnowledgeHit display aliases must not say ``hypothesis`` or
+``research candidate``; viewing cited seed does not mint ``research_ref``
+(Story 52.3; FR-RES-25).
 """
 
 from __future__ import annotations

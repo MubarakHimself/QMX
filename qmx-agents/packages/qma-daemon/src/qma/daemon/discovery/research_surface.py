@@ -37,8 +37,8 @@ from qmf.data.store.refusals import invalid_input, policy_rejection
 
 __all__ = [
     "GAP_0081_UI_CONTRACT",
-    "HYPOTHESIS_LISTING_SURFACE",
     "HYPOTHESES_ARE_FEDERATED_HITS",
+    "HYPOTHESIS_LISTING_SURFACE",
     "JSON_RENDER_EXECUTES",
     "JSON_RENDER_STORES",
     "LIBRARIAN_CONTROL_PRIMITIVES",
@@ -52,15 +52,17 @@ __all__ = [
     "MCP_APPS_EXECUTES",
     "MCP_APPS_STORES",
     "PRESENTATION_CANDIDATES",
+    "REFUSED_HYPOTHESIS_KIND_TOKENS",
     "LibrarianContribution",
     "federated_in_flight_on_tab_close",
-    "hypothesis_listing_surface",
     "hypotheses_are_federated_hits",
+    "hypothesis_listing_surface",
     "optional_librarian_graph_template",
     "optional_librarian_skill",
     "presentation_candidates_identity",
     "refuse_federated_hypothesis_kwargs",
     "refuse_hypothesis_as_federated_hit",
+    "refuse_hypothesis_kind_on_federated_search",
     "refuse_research_to_bot_wizard",
     "viewing_cited_seed_mints_research_ref",
 ]
@@ -102,6 +104,19 @@ _HYPOTHESIS_HIT_FIELDS: Final[tuple[str, ...]] = (
     "research_ref",
 )
 
+REFUSED_HYPOTHESIS_KIND_TOKENS: Final[frozenset[str]] = frozenset(
+    {
+        "hypothesis",
+        "entry_hypothesis",
+        "entry-hypothesis",
+        "qml-research-hypothesis",
+        "qml_research_hypothesis",
+        "research_candidate",
+        "research-candidate",
+        "research candidate",
+    }
+)
+
 
 def hypotheses_are_federated_hits() -> bool:
     """Stage 0 hypotheses are never KnowledgeHit / ArtifactHit rows."""
@@ -127,6 +142,11 @@ def refuse_hypothesis_as_federated_hit(**extra: object) -> TypedRefusal:
         decision="DEC-0389",
         **extra,
     )
+
+
+def refuse_hypothesis_kind_on_federated_search(**extra: object) -> TypedRefusal:
+    """Refuse Artifact ``kind`` tokens that name Stage 0 / mill identity."""
+    return refuse_hypothesis_as_federated_hit(field="kind", **extra)
 
 
 def refuse_research_to_bot_wizard(**extra: object) -> TypedRefusal:
@@ -271,4 +291,3 @@ def refuse_federated_hypothesis_kwargs(
         if values.get(name) is not None:
             return refuse_hypothesis_as_federated_hit(field=name, given=name)
     return None
-
