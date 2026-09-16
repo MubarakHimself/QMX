@@ -14,7 +14,10 @@ requires-python = ">=3.14,<3.15"
 dependencies = []
 
 [tool.uv]
-default-groups = ["dev"]
+# `qma-runtime` installs the daemon member (and transitively qmf-data engines
+# duckdb/pyarrow + tzdata) so a plain `uv sync` can import `qmf.data` under
+# `poe test` without an explicit `--all-packages`.
+default-groups = ["dev", "qma-runtime"]
 
 [tool.uv.workspace]
 members = ["packages/qma-core", "packages/qma-wire", "packages/qma-daemon"]
@@ -39,6 +42,9 @@ dev = [
     "pytest-cov>=7,<8",
     "poethepoet==0.48.0",
 ]
+# Pulls qma-daemon (and its qmf-data/registry/risk path edges) into the gate
+# environment so store engines are present at import/test time.
+qma-runtime = ["qma-daemon"]
 
 [tool.pytest.ini_options]
 testpaths = ["packages", "tests"]
@@ -47,6 +53,9 @@ pythonpath = [
     "packages/qma-wire/src",
     "packages/qma-daemon/src",
     "../packages/qmf-core/src",
+    "../packages/qmf-data/src",
+    "../packages/qmf-registry/src",
+    "../packages/qmf-risk/src",
 ]
 
 [tool.ruff]

@@ -343,6 +343,9 @@ dev = [
     { name = "pytest-cov" },
     { name = "ruff" },
 ]
+qma-runtime = [
+    { name = "qma-daemon" },
+]
 
 [package.metadata]
 
@@ -354,6 +357,7 @@ dev = [
     { name = "pytest-cov", specifier = ">=7,<8" },
     { name = "ruff", specifier = "==0.16.5" },
 ]
+qma-runtime = [{ name = "qma-daemon", editable = "packages/qma-daemon" }]
 
 [[package]]
 name = "ruff"
