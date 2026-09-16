@@ -183,3 +183,36 @@ def test_unknown_artifact_kind_and_invented_hit_class_refused() -> None:
     assert is_refusal(invented)
     bad_fp = ArtifactHit.try_create(fp1="not-a-fingerprint", kind="saved-view")
     assert is_refusal(bad_fp)
+
+
+def test_knowledge_hit_display_aliases_forbid_hypothesis_nouns() -> None:
+    from qma.wire import (
+        KNOWLEDGE_HIT_ALLOWED_DISPLAY_ALIASES,
+        KNOWLEDGE_HIT_FORBIDDEN_DISPLAY_TOKENS,
+        VIEWING_CITED_SEED_MINTS_RESEARCH_REF,
+        refuse_knowledge_hit_display_alias,
+        resolve_knowledge_hit_display_alias,
+        viewing_cited_seed_mints_research_ref,
+    )
+
+    assert "hypothesis" in KNOWLEDGE_HIT_FORBIDDEN_DISPLAY_TOKENS
+    assert "research candidate" in KNOWLEDGE_HIT_FORBIDDEN_DISPLAY_TOKENS
+    assert "seed cite" in KNOWLEDGE_HIT_ALLOWED_DISPLAY_ALIASES
+    assert VIEWING_CITED_SEED_MINTS_RESEARCH_REF is False
+    assert viewing_cited_seed_mints_research_ref() is False
+
+    ok = resolve_knowledge_hit_display_alias("dictionary entry")
+    assert is_ok(ok)
+    assert ok.value == "dictionary entry"
+
+    banned = resolve_knowledge_hit_display_alias("research candidate")
+    assert is_refusal(banned)
+    assert is_refusal(refuse_knowledge_hit_display_alias())
+
+    payload = KnowledgeHit.try_create(
+        source_ref="strats",
+        snapshot_ref=_FP1,
+        locator="notes.md",
+    )
+    assert is_ok(payload)
+    assert "research_ref" not in payload.value.to_payload()

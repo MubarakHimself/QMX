@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://qmx.local/qma-wire/schemas/federated_hit.v1.schema.json",
   "title": "QMA federated discovery hit (CT-40 additive; FR-RES-07)",
-  "description": "Frozen federated discovery hit owned by COMP-QMA-WIRE as an additive CT-40 family. Exactly one of KnowledgeHit {hit_class: knowledge, source_ref, snapshot_ref, locator} or ArtifactHit {hit_class: artifact, fp1, kind} where kind is a Workbench AD-3 roster kind or closed query-hit tags saved-view | analysis.published. No qml_candidate, no strats hit_class, no cite-copy artifact_ref as an Artifact-rail hit. No new CT number (DEC-0389, DEC-0412).",
+  "description": "Frozen federated discovery hit owned by COMP-QMA-WIRE as an additive CT-40 family. Exactly one of KnowledgeHit {hit_class: knowledge, source_ref, snapshot_ref, locator} or ArtifactHit {hit_class: artifact, fp1, kind} where kind is a Workbench AD-3 roster kind or closed query-hit tags saved-view | analysis.published. No qml_candidate, no strats hit_class, no cite-copy artifact_ref as an Artifact-rail hit. Display aliases on KnowledgeHits must not say hypothesis or research candidate; Stage 0 hypotheses list on qml.research. No new CT number (DEC-0389, DEC-0412; UX-DR2).",
   "oneOf": [
     {
       "type": "object",

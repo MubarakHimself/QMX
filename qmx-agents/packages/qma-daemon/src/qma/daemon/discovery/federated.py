@@ -1,4 +1,4 @@
-"""Concatenate CT-44 Knowledge search and QMB ``library.search`` (Story 52.2).
+"""Concatenate CT-44 Knowledge search and QMB ``library.search`` (Stories 52.2–52.3).
 
 Federated discovery is a read-time concatenate of two existing queries — never a
 fourth store, never a door **run**, and Workbench AD-8 occupancy is unchanged
@@ -7,6 +7,7 @@ Artifact search via an injected port (the daemon never imports ``qmb`` and QMB
 never opens daemon sqlite). Locators are not ``fp1``. Unified row caches,
 copied-row Library indexes, and QMA staging reads are refused. Ranked /
 semantic / hybrid retrieval stays ``unsupported-capability`` (GAP-0073).
+Stage 0 hypotheses stay on ``qml.research`` and are refused as federated hits.
 """
 
 from __future__ import annotations
@@ -23,6 +24,7 @@ from qma.core.ports.knowledge import (
 )
 from qma.core.ports.qmb import QMB_OPENS_DAEMON_SQLITE, qmb_opens_daemon_sqlite
 from qma.daemon.knowledge.service import KnowledgeService
+from qma.daemon.discovery.research_surface import refuse_federated_hypothesis_kwargs
 from qma.wire.federated_discovery import (
     ARTIFACT_HIT_KINDS,
     ArtifactHit,
@@ -325,11 +327,33 @@ class FederatedDiscoveryService:
         copied_row_library_index: object = None,
         row_cache: object = None,
         library_index: object = None,
+        hypothesis: object = None,
+        hypotheses: object = None,
+        research_candidate: object = None,
+        research_candidates: object = None,
+        qml_candidate: object = None,
+        stage0_hypothesis: object = None,
+        research_ref: object = None,
     ) -> Result[FederatedSearch]:
         """Concatenate Knowledge locators and Artifact ``fp1`` hits.
 
         Occupancy is ``none`` — never a door run. QMB never opens daemon sqlite.
+        Stage 0 hypotheses are refused here; they list on ``qml.research``.
         """
+        hypothesis_refusal = refuse_federated_hypothesis_kwargs(
+            {
+                "hypothesis": hypothesis,
+                "hypotheses": hypotheses,
+                "research_candidate": research_candidate,
+                "research_candidates": research_candidates,
+                "qml_candidate": qml_candidate,
+                "stage0_hypothesis": stage0_hypothesis,
+                "research_ref": research_ref,
+            }
+        )
+        if hypothesis_refusal is not None:
+            return hypothesis_refusal
+
         store_field = _requested_field(
             {
                 "store": store,

@@ -36,16 +36,22 @@ __all__ = [
     "FEDERATED_HIT_SCHEMA_NAME",
     "HIT_CLASS_ARTIFACT",
     "HIT_CLASS_KNOWLEDGE",
+    "KNOWLEDGE_HIT_ALLOWED_DISPLAY_ALIASES",
+    "KNOWLEDGE_HIT_FORBIDDEN_DISPLAY_TOKENS",
     "REFUSED_HIT_CLASSES",
+    "VIEWING_CITED_SEED_MINTS_RESEARCH_REF",
     "ArtifactHit",
     "FederatedHit",
     "KnowledgeHit",
     "library_kind_to_artifact_hit_kind",
     "parse_federated_hit",
     "refuse_cite_copy_artifact_rail",
+    "refuse_knowledge_hit_display_alias",
     "refuse_qml_candidate_hit",
     "refuse_strats_hit_class",
+    "resolve_knowledge_hit_display_alias",
     "validate_federated_hit",
+    "viewing_cited_seed_mints_research_ref",
 ]
 
 
@@ -91,6 +97,35 @@ ARTIFACT_HIT_KINDS: Final[frozenset[str]] = frozenset(
 REFUSED_HIT_CLASSES: Final[frozenset[str]] = frozenset(
     {"strats", "qml_candidate", "qml-candidate", "QmlCandidateHit"}
 )
+
+# UX-DR2: KnowledgeHit rendering aliases must never imply a Stage 0 hypothesis.
+KNOWLEDGE_HIT_FORBIDDEN_DISPLAY_TOKENS: Final[frozenset[str]] = frozenset(
+    {
+        "hypothesis",
+        "research candidate",
+        "research_candidate",
+        "research-candidate",
+        "qml_candidate",
+        "qml-candidate",
+        "entry_hypothesis",
+    }
+)
+
+# Safe Knowledge-rail labels only — seed cites, never mill identity nouns.
+KNOWLEDGE_HIT_ALLOWED_DISPLAY_ALIASES: Final[frozenset[str]] = frozenset(
+    {
+        "knowledge",
+        "seed",
+        "seed cite",
+        "seed corpus",
+        "cite",
+        "citation",
+        "dictionary entry",
+        "locator",
+    }
+)
+
+VIEWING_CITED_SEED_MINTS_RESEARCH_REF: Final[bool] = False
 
 _REFUSED_TYPE_NAMES: Final[frozenset[str]] = frozenset(
     {"QmlCandidateHit", "qml_candidate", "StratsHit", "strats"}
@@ -178,6 +213,50 @@ def refuse_cite_copy_artifact_rail(**extra: object) -> TypedRefusal:
         "(AD-9; FR-RES-07; DEC-0389)",
         **extra,
     )
+
+
+def refuse_knowledge_hit_display_alias(**extra: object) -> TypedRefusal:
+    """Refuse KnowledgeHit labels that say hypothesis / research candidate."""
+    return _policy(
+        "display_alias",
+        "KnowledgeHit display aliases must not say 'hypothesis' or "
+        "'research candidate'; seed cites stay on the Knowledge rail "
+        "(UX-DR2; FR-RES-07; DEC-0389)",
+        forbidden=sorted(KNOWLEDGE_HIT_FORBIDDEN_DISPLAY_TOKENS),
+        allowed=sorted(KNOWLEDGE_HIT_ALLOWED_DISPLAY_ALIASES),
+        **extra,
+    )
+
+
+def viewing_cited_seed_mints_research_ref() -> bool:
+    """Viewing cited seed is not a save and never mints ``research_ref``."""
+    return VIEWING_CITED_SEED_MINTS_RESEARCH_REF
+
+
+def resolve_knowledge_hit_display_alias(alias: object) -> Result[str]:
+    """Admit a KnowledgeHit render alias; refuse mill-identity nouns (UX-DR2)."""
+    if not isinstance(alias, str) or alias.strip() == "":
+        return _invalid(
+            "display_alias",
+            "KnowledgeHit display alias is a non-empty string (UX-DR2)",
+            given=repr(alias),
+        )
+    token = alias.strip()
+    folded = token.casefold().replace("_", " ").replace("-", " ")
+    compact = folded.replace(" ", "")
+    for forbidden in KNOWLEDGE_HIT_FORBIDDEN_DISPLAY_TOKENS:
+        forbid_fold = forbidden.casefold().replace("_", " ").replace("-", " ")
+        if folded == forbid_fold or compact == forbid_fold.replace(" ", ""):
+            return refuse_knowledge_hit_display_alias(given=token, matched=forbidden)
+        if forbid_fold in folded:
+            return refuse_knowledge_hit_display_alias(given=token, matched=forbidden)
+    if folded not in {item.casefold() for item in KNOWLEDGE_HIT_ALLOWED_DISPLAY_ALIASES}:
+        return refuse_knowledge_hit_display_alias(given=token, matched="unknown")
+    # Preserve the canonical spelling from the closed allow-list.
+    for allowed in KNOWLEDGE_HIT_ALLOWED_DISPLAY_ALIASES:
+        if allowed.casefold() == folded:
+            return Ok(allowed)
+    return Ok(token)
 
 
 def _parse_nonempty_str(value: object, field: str) -> Result[str]:
