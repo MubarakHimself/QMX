@@ -82,57 +82,64 @@ def _path_of(locator: str) -> str:
     return locator.split("#", 1)[0]
 
 
-def test_swing_high_twelve_field_record_from_host_passed_bytes() -> None:
-    cited = _cited_bytes(SWING_HIGH_PATH)
-    entry = _ok(
-        resolve_dictionary_entry(
-            cited,
-            file_path=SWING_HIGH_PATH,
-            entry_id="swing-high",
-        )
-    )
-    assert isinstance(entry, DictionaryEntry)
-    assert entry.identity() == (SWING_HIGH_PATH, "swing-high")
-    assert entry.id == "swing-high"
-    assert entry.file_path == SWING_HIGH_PATH
-    assert entry.title == "Swing High"
-    assert tuple(entry.fields) == DICTIONARY_FIELDS
-    assert len(entry.fields) == 12
-    assert entry.fields["family"] == "Swing points & structural ranges"
-    assert "pivot high" in entry.fields["aliases"]
-    assert "local upper turning point" in entry.fields["definition"]
-    assert "OHLC bar series" in entry.fields["observable_inputs"]
-    payload = dict(entry.to_payload())
-    assert payload["id"] == "swing-high"
-    assert payload["file_path"] == SWING_HIGH_PATH
-    assert "research_ref" not in payload
-    for key in _DNA_KEYS:
-        assert key not in payload
-        assert key not in entry.fields
+def _resolve(cited: bytes, file_path: str, entry_id: str | None = None) -> DictionaryEntry:
+    if entry_id is None:
+        return _ok(resolve_dictionary_entry(cited, file_path=file_path))
+    return _ok(resolve_dictionary_entry(cited, file_path=file_path, entry_id=entry_id))
 
 
-def test_swing_high_eligible_roles_include_location_trigger_invalidation() -> None:
-    cited = _cited_bytes(SWING_HIGH_PATH)
-    entry = _ok(
-        resolve_dictionary_entry(
-            cited,
-            file_path=SWING_HIGH_LOCATOR,
-        )
-    )
-    assert "location" in entry.eligible_roles
-    assert "trigger" in entry.eligible_roles
-    assert "invalidation" in entry.eligible_roles
-    assert "context" in entry.eligible_roles
-    assert "confirmation" in entry.eligible_roles
-    assert "InvalidationRule" not in entry.eligible_roles
-    assert entry.fields["eligible_roles"].startswith("location")
+def _swing_high() -> DictionaryEntry:
+    return _resolve(_cited_bytes(SWING_HIGH_PATH), SWING_HIGH_PATH, "swing-high")
 
 
-def test_collision_resolution_uses_file_path_and_id() -> None:
-    location_bytes = _cited_bytes(_path_of(LIQUIDITY_SWEEP_LOCATION))
-    context_bytes = _cited_bytes(_path_of(LIQUIDITY_SWEEP_CONTEXT))
-    trigger_bytes = _cited_bytes(_path_of(LIQUIDITY_SWEEP_TRIGGERS))
+def _import_names(node: ast.AST) -> list[str]:
+    if isinstance(node, ast.Import):
+        return [alias.name for alias in node.names]
+    if isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
+        return [node.module]
+    return []
 
+
+def _is_open_call(node: ast.AST) -> bool:
+    return isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "open"
+
+
+def _name_is_banned(name: str, banned: frozenset[str]) -> bool:
+    return name in banned or any(name.startswith(item + ".") for item in banned)
+
+
+def _node_ban_hits(path: Path, node: ast.AST, banned: frozenset[str]) -> list[str]:
+    if _is_open_call(node):
+        return [f"{path}: open()"]
+    return [
+        f"{path}: imports {name}" for name in _import_names(node) if _name_is_banned(name, banned)
+    ]
+
+
+def _file_ban_violations(path: Path, banned: frozenset[str]) -> list[str]:
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    found: list[str] = []
+    for node in ast.walk(tree):
+        found.extend(_node_ban_hits(path, node, banned))
+    return found
+
+
+def _research_ban_violations(banned: frozenset[str]) -> list[str]:
+    found: list[str] = []
+    for path in sorted(_QML_RESEARCH.rglob("*.py")):
+        found.extend(_file_ban_violations(path, banned))
+    return found
+
+
+def _class_names_in_research() -> list[str]:
+    names: list[str] = []
+    for path in _QML_RESEARCH.rglob("*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        names.extend(node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef))
+    return names
+
+
+def _assert_collision_refusals(location_bytes: bytes) -> None:
     missing_path = resolve_dictionary_entry(
         location_bytes, file_path="", entry_id="liquidity-sweep"
     )
@@ -147,25 +154,29 @@ def test_collision_resolution_uses_file_path_and_id() -> None:
     assert is_refusal(missing_id)
     assert missing_id.context["field"] == "id"
 
-    location = _ok(
-        resolve_dictionary_entry(
-            location_bytes,
-            file_path=_path_of(LIQUIDITY_SWEEP_LOCATION),
-            entry_id="liquidity-sweep",
-        )
+
+def _resolve_sweep_trio() -> tuple[DictionaryEntry, DictionaryEntry, DictionaryEntry]:
+    location = _resolve(
+        _cited_bytes(_path_of(LIQUIDITY_SWEEP_LOCATION)),
+        _path_of(LIQUIDITY_SWEEP_LOCATION),
+        "liquidity-sweep",
     )
-    context = _ok(
-        resolve_dictionary_entry(
-            context_bytes,
-            file_path=LIQUIDITY_SWEEP_CONTEXT,
-        )
+    context = _resolve(
+        _cited_bytes(_path_of(LIQUIDITY_SWEEP_CONTEXT)),
+        LIQUIDITY_SWEEP_CONTEXT,
     )
-    triggers = _ok(
-        resolve_dictionary_entry(
-            trigger_bytes,
-            file_path=LIQUIDITY_SWEEP_TRIGGERS,
-        )
+    triggers = _resolve(
+        _cited_bytes(_path_of(LIQUIDITY_SWEEP_TRIGGERS)),
+        LIQUIDITY_SWEEP_TRIGGERS,
     )
+    return location, context, triggers
+
+
+def _assert_sweep_identities_distinct(
+    location: DictionaryEntry,
+    context: DictionaryEntry,
+    triggers: DictionaryEntry,
+) -> None:
     assert location.identity() != context.identity()
     assert location.identity() != triggers.identity()
     assert location.id == context.id == triggers.id == "liquidity-sweep"
@@ -173,9 +184,10 @@ def test_collision_resolution_uses_file_path_and_id() -> None:
     assert "invalidation" not in location.eligible_roles
     assert "invalidation" in context.eligible_roles
 
-    concatenated = location_bytes + b"\n" + context_bytes
+
+def _assert_concatenated_collision(location_bytes: bytes, context_bytes: bytes) -> None:
     colliding = resolve_dictionary_entry(
-        concatenated,
+        location_bytes + b"\n" + context_bytes,
         file_path=_path_of(LIQUIDITY_SWEEP_LOCATION),
         entry_id="liquidity-sweep",
     )
@@ -186,31 +198,57 @@ def test_collision_resolution_uses_file_path_and_id() -> None:
     assert colliding.context["occurrences"] == 2
 
 
+def _assert_swing_high_fields(entry: DictionaryEntry) -> None:
+    assert entry.title == "Swing High"
+    assert tuple(entry.fields) == DICTIONARY_FIELDS
+    assert len(entry.fields) == 12
+    assert entry.fields["family"] == "Swing points & structural ranges"
+    assert "pivot high" in entry.fields["aliases"]
+    assert "local upper turning point" in entry.fields["definition"]
+    assert "OHLC bar series" in entry.fields["observable_inputs"]
+
+
+def _assert_no_dna_keys(entry: DictionaryEntry) -> None:
+    payload = dict(entry.to_payload())
+    assert payload["id"] == "swing-high"
+    assert payload["file_path"] == SWING_HIGH_PATH
+    assert "research_ref" not in payload
+    for key in _DNA_KEYS:
+        assert key not in payload
+        assert key not in entry.fields
+
+
+def test_swing_high_twelve_field_record_from_host_passed_bytes() -> None:
+    entry = _swing_high()
+    assert isinstance(entry, DictionaryEntry)
+    assert entry.identity() == (SWING_HIGH_PATH, "swing-high")
+    assert entry.id == "swing-high"
+    assert entry.file_path == SWING_HIGH_PATH
+    _assert_swing_high_fields(entry)
+    _assert_no_dna_keys(entry)
+
+
+def test_swing_high_eligible_roles_include_location_trigger_invalidation() -> None:
+    entry = _resolve(_cited_bytes(SWING_HIGH_PATH), SWING_HIGH_LOCATOR)
+    for role in ("location", "trigger", "invalidation", "context", "confirmation"):
+        assert role in entry.eligible_roles
+    assert "InvalidationRule" not in entry.eligible_roles
+    assert entry.fields["eligible_roles"].startswith("location")
+
+
+def test_collision_resolution_uses_file_path_and_id() -> None:
+    location_bytes = _cited_bytes(_path_of(LIQUIDITY_SWEEP_LOCATION))
+    context_bytes = _cited_bytes(_path_of(LIQUIDITY_SWEEP_CONTEXT))
+    _assert_collision_refusals(location_bytes)
+    location, context, triggers = _resolve_sweep_trio()
+    _assert_sweep_identities_distinct(location, context, triggers)
+    _assert_concatenated_collision(location_bytes, context_bytes)
+
+
 def test_helper_performs_no_filesystem_io_threads_or_process() -> None:
     source = inspect.getsource(resolve_dictionary_entry)
     assert "open(" not in source
-    violations: list[str] = []
-    for path in sorted(_QML_RESEARCH.rglob("*.py")):
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            names: list[str] = []
-            if isinstance(node, ast.Import):
-                names.extend(alias.name for alias in node.names)
-            elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
-                names.append(node.module)
-            elif (
-                isinstance(node, ast.Call)
-                and isinstance(node.func, ast.Name)
-                and node.func.id == "open"
-            ):
-                violations.append(f"{path}: open()")
-                continue
-            for name in names:
-                if name in _BANNED_IMPORTS or any(
-                    name.startswith(banned + ".") for banned in _BANNED_IMPORTS
-                ):
-                    violations.append(f"{path}: imports {name}")
-    assert violations == []
+    assert _research_ban_violations(_BANNED_IMPORTS) == []
 
 
 def test_meaning_is_computed_only_by_qml_research() -> None:
@@ -236,64 +274,49 @@ def test_meaning_is_computed_only_by_qml_research() -> None:
         "research_ref",
     ):
         assert key not in adapter_payload
-    entry = _ok(
-        resolve_dictionary_entry(
-            adapter_payload["content"],
-            file_path=cast("str", adapter_payload["locator"]),
-        )
+    entry = _resolve(
+        cast("bytes", adapter_payload["content"]),
+        cast("str", adapter_payload["locator"]),
     )
     assert entry.fields["family"]
     assert "location" in entry.eligible_roles
 
 
-def test_does_not_register_registry_row_or_mint_ct16_or_research_ref() -> None:
+def _assert_research_exports_have_no_registry_surface() -> None:
     assert "Confluence" not in research.__all__
     assert "confluence" not in research.__all__
-    assert not hasattr(research, "Confluence")
-    assert not hasattr(research, "confluence")
-    assert not hasattr(research, "research_ref")
-    assert not hasattr(research, "mint_research_ref")
-    assert not hasattr(research, "register_dictionary_entry")
-    assert not hasattr(research, "mint_producer")
-    cited = _cited_bytes(SWING_HIGH_PATH)
-    entry = _ok(
-        resolve_dictionary_entry(
-            cited,
-            file_path=SWING_HIGH_PATH,
-            entry_id="swing-high",
-        )
-    )
-    payload = dict(entry.to_payload())
-    assert "producer_binding" not in payload
-    assert "formula_id" not in payload
-    assert "research_ref" not in payload
-    assert "kind" not in payload
+    for name in (
+        "Confluence",
+        "confluence",
+        "research_ref",
+        "mint_research_ref",
+        "register_dictionary_entry",
+        "mint_producer",
+    ):
+        assert not hasattr(research, name)
+
+
+def test_does_not_register_registry_row_or_mint_ct16_or_research_ref() -> None:
+    _assert_research_exports_have_no_registry_surface()
+    payload = dict(_swing_high().to_payload())
+    for key in ("producer_binding", "formula_id", "research_ref", "kind"):
+        assert key not in payload
     signature = inspect.signature(resolve_dictionary_entry)
     assert "registrar" not in signature.parameters
     assert "producer" not in signature.parameters
 
 
 def test_gap_0085_stays_unfilled_invalidation_is_stage_0_role() -> None:
-    names: list[str] = []
-    for path in _QML_RESEARCH.rglob("*.py"):
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        names.extend(node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef))
+    names = _class_names_in_research()
     assert _ok(minted_mechanism_type_hits(names)) == ()
     for noun in GAP_0085_NOUNS:
         assert noun not in names
-    cited = _cited_bytes(SWING_HIGH_PATH)
-    entry = _ok(
-        resolve_dictionary_entry(
-            cited,
-            file_path=SWING_HIGH_PATH,
-            entry_id="swing-high",
-        )
-    )
+    entry = _swing_high()
     assert "invalidation" in entry.eligible_roles
     assert "InvalidationRule" not in names
 
 
-def test_missing_entry_and_non_bytes_are_typed_refusals() -> None:
+def _assert_missing_and_bad_buffers() -> None:
     cited = _cited_bytes(SWING_HIGH_PATH)
     missing = resolve_dictionary_entry(
         cited,
@@ -312,16 +335,19 @@ def test_missing_entry_and_non_bytes_are_typed_refusals() -> None:
     assert is_refusal(not_bytes)
     assert not_bytes.context["field"] == "cited_bytes"
     assert "filesystem" in str(not_bytes.context["reason"])
-
-    bad_utf8 = resolve_dictionary_entry(
-        b"\xff\xfe",
-        file_path=SWING_HIGH_PATH,
-        entry_id="swing-high",
+    assert is_refusal(
+        resolve_dictionary_entry(
+            b"\xff\xfe",
+            file_path=SWING_HIGH_PATH,
+            entry_id="swing-high",
+        )
     )
-    assert is_refusal(bad_utf8)
 
+
+def test_missing_entry_and_non_bytes_are_typed_refusals() -> None:
+    _assert_missing_and_bad_buffers()
     mismatch = resolve_dictionary_entry(
-        cited,
+        _cited_bytes(SWING_HIGH_PATH),
         file_path=SWING_HIGH_LOCATOR,
         entry_id="swing-low",
     )

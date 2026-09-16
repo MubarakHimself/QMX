@@ -20,6 +20,7 @@ from typing import Final, cast
 from qmf.core.refusal import Ok, Result, is_refusal
 
 from qml._refuse import invalid, policy
+from qml.research._cited import FIELD_CITED_BYTES, decode_cited_buffer
 
 __all__ = [
     "F_LABELS",
@@ -92,6 +93,9 @@ POPULATION_INGEST_SOURCES: Final[tuple[str, ...]] = (
     "vision",
 )
 
+_FIELD_F_LABELS: Final[str] = "f_labels"
+_MAPPING_REASON: Final[str] = "cited LAYOUT-DEMO bytes are a mapping of locator to buffer"
+
 _CLASS_RE: Final[re.Pattern[str]] = re.compile(
     r"(?:^class:\s*|^\|\s*class\s*\|\s*`?)"
     r"(entry_hypothesis|fragment|descriptive_pattern|composite|complete)",
@@ -156,7 +160,7 @@ class LayoutDemoProjection:
     read_only: bool = True
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "f_labels", MappingProxyType(dict(self.f_labels)))
+        object.__setattr__(self, _FIELD_F_LABELS, MappingProxyType(dict(self.f_labels)))
         object.__setattr__(self, "graph_operators", tuple(self.graph_operators))
 
     def to_payload(self) -> Mapping[str, object]:
@@ -164,7 +168,7 @@ class LayoutDemoProjection:
         body: dict[str, object] = {
             "package_id": self.package_id,
             "class": self.hypothesis_class,
-            "f_labels": dict(self.f_labels),
+            _FIELD_F_LABELS: dict(self.f_labels),
             "graph": {
                 "operators": list(self.graph_operators),
                 "plane": GRAPH_PLANE,
@@ -190,25 +194,20 @@ def project_layout_demo(cited_bytes: object) -> Result[LayoutDemoProjection]:
     text = "\n".join(files.value.values())
     if "STRAT-000001" not in text and "LAYOUT-DEMO" not in text:
         return invalid(
-            "cited_bytes",
+            FIELD_CITED_BYTES,
             "the Stage 0 projection opens cited LAYOUT-DEMO seed; it does not "
             "read a filesystem path",
             given="cited buffers without STRAT-000001",
         )
-    package = _package_id(text)
-    if is_refusal(package):
-        return package
-    hypothesis_class = _hypothesis_class(text)
-    if is_refusal(hypothesis_class):
-        return hypothesis_class
-    f_labels = _f_labels(text)
-    if is_refusal(f_labels):
-        return f_labels
+    parts = _layout_parts(text)
+    if is_refusal(parts):
+        return parts
+    package_id, hypothesis_class, f_labels = parts.value
     return Ok(
         LayoutDemoProjection(
-            package_id=package.value,
-            hypothesis_class=hypothesis_class.value,
-            f_labels=f_labels.value,
+            package_id=package_id,
+            hypothesis_class=hypothesis_class,
+            f_labels=f_labels,
             graph_operators=_graph_operators(text),
             direction=_direction(text),
             market=_market(text),
@@ -245,7 +244,7 @@ def complete_unresolved_f(projection: object) -> Result[None]:
     if is_refusal(checked):
         return checked
     return policy(
-        "f_labels",
+        _FIELD_F_LABELS,
         "unresolved F is not completed by invented stops, take-profits, a short "
         "side, or a CT-29 close-reason (DEC-0386, DEC-0400)",
         hypothesis_class=checked.value.hypothesis_class,
@@ -309,52 +308,50 @@ def _require_projection(projection: object) -> Result[LayoutDemoProjection]:
     )
 
 
+def _layout_parts(text: str) -> Result[tuple[str, str, Mapping[str, str]]]:
+    package = _package_id(text)
+    if is_refusal(package):
+        return package
+    hypothesis_class = _hypothesis_class(text)
+    if is_refusal(hypothesis_class):
+        return hypothesis_class
+    f_labels = _read_f_labels(text)
+    if is_refusal(f_labels):
+        return f_labels
+    return Ok((package.value, hypothesis_class.value, f_labels.value))
+
+
 def _decode_cited(cited_bytes: object) -> Result[Mapping[str, str]]:
     if isinstance(cited_bytes, Mapping):
-        decoded: dict[str, str] = {}
-        cited_map = cast("Mapping[object, object]", cited_bytes)
-        for raw_key, raw_value in cited_map.items():
-            if not isinstance(raw_key, str) or raw_key.strip() == "":
-                return invalid(
-                    "cited_bytes",
-                    "cited LAYOUT-DEMO bytes are a mapping of locator to buffer",
-                    given=repr(raw_key),
-                )
-            text = _decode_buffer(raw_value)
-            if is_refusal(text):
-                return text
-            decoded[raw_key.replace("\\", "/").strip()] = text.value
-        if not decoded:
-            return invalid(
-                "cited_bytes",
-                "cited LAYOUT-DEMO bytes are a mapping of locator to buffer",
-                given="empty mapping",
-            )
-        return Ok(MappingProxyType(decoded))
-    text = _decode_buffer(cited_bytes)
+        return _decode_cited_mapping(cast("Mapping[object, object]", cited_bytes))
+    text = decode_cited_buffer(cited_bytes)
     if is_refusal(text):
         return text
     return Ok(MappingProxyType({"": text.value}))
 
 
-def _decode_buffer(cited_bytes: object) -> Result[str]:
-    if isinstance(cited_bytes, str):
-        return Ok(cited_bytes)
-    if not isinstance(cited_bytes, bytes):
+def _decode_cited_mapping(
+    cited_map: Mapping[object, object],
+) -> Result[Mapping[str, str]]:
+    decoded: dict[str, str] = {}
+    for raw_key, raw_value in cited_map.items():
+        if not isinstance(raw_key, str) or raw_key.strip() == "":
+            return invalid(
+                FIELD_CITED_BYTES,
+                _MAPPING_REASON,
+                given=repr(raw_key),
+            )
+        text = decode_cited_buffer(raw_value)
+        if is_refusal(text):
+            return text
+        decoded[raw_key.replace("\\", "/").strip()] = text.value
+    if not decoded:
         return invalid(
-            "cited_bytes",
-            "the Stage 0 projection resolves host-passed cited bytes; it does "
-            "not read a filesystem path",
-            given=type(cited_bytes).__name__,
+            FIELD_CITED_BYTES,
+            _MAPPING_REASON,
+            given="empty mapping",
         )
-    try:
-        return Ok(cited_bytes.decode("utf-8"))
-    except UnicodeDecodeError:
-        return invalid(
-            "cited_bytes",
-            "cited LAYOUT-DEMO bytes are UTF-8 markdown or yaml",
-            given="bytes",
-        )
+    return Ok(MappingProxyType(decoded))
 
 
 def _package_id(text: str) -> Result[str]:
@@ -381,7 +378,7 @@ def _hypothesis_class(text: str) -> Result[str]:
     return Ok(token)
 
 
-def _f_labels(text: str) -> Result[Mapping[str, str]]:
+def _read_f_labels(text: str) -> Result[Mapping[str, str]]:
     found: dict[str, str] = {}
     for match in (*_TABLE_F_RE.finditer(text), *_YAML_F_RE.finditer(text)):
         slot = match.group(1).casefold()
@@ -394,7 +391,7 @@ def _f_labels(text: str) -> Result[Mapping[str, str]]:
     missing = [slot for slot in F_SLOTS if slot not in found]
     if missing:
         return invalid(
-            "f_labels",
+            _FIELD_F_LABELS,
             "Stage 0 preserves F labels; unresolved slots are not invented",
             missing=tuple(missing),
         )

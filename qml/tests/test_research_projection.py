@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import ast
 import inspect
+from collections.abc import Mapping
 from dataclasses import fields
 from pathlib import Path
-from typing import TypeVar
+from typing import TypeVar, cast
 
 import pytest
 from qmb.registryread.library import register_library_kind
@@ -115,8 +116,69 @@ def _cited_package() -> dict[str, bytes]:
     }
 
 
+def _demo_view() -> LayoutDemoProjection:
+    return _ok(project_layout_demo(_cited_package()))
+
+
+def _payload_graph(
+    view: LayoutDemoProjection,
+) -> tuple[dict[str, object], dict[str, object]]:
+    payload = dict(view.to_payload())
+    graph = payload["graph"]
+    assert isinstance(graph, dict)
+    return payload, cast("dict[str, object]", graph)
+
+
+def _import_names(node: ast.AST) -> list[str]:
+    if isinstance(node, ast.Import):
+        return [alias.name for alias in node.names]
+    if isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
+        return [node.module]
+    return []
+
+
+def _is_open_call(node: ast.AST) -> bool:
+    return isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "open"
+
+
+def _name_is_banned(name: str, banned: frozenset[str]) -> bool:
+    return name in banned or any(name.startswith(item + ".") for item in banned)
+
+
+def _node_ban_hits(path: Path, node: ast.AST, banned: frozenset[str]) -> list[str]:
+    if _is_open_call(node):
+        return [f"{path}: open()"]
+    return [
+        f"{path}: imports {name}" for name in _import_names(node) if _name_is_banned(name, banned)
+    ]
+
+
+def _file_ban_violations(path: Path, banned: frozenset[str]) -> list[str]:
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    found: list[str] = []
+    for node in ast.walk(tree):
+        found.extend(_node_ban_hits(path, node, banned))
+    return found
+
+
+def _research_ban_violations(banned: frozenset[str]) -> list[str]:
+    found: list[str] = []
+    for path in sorted(_QML_RESEARCH.rglob("*.py")):
+        found.extend(_file_ban_violations(path, banned))
+    return found
+
+
+def _assert_absent_from_maps(
+    maps: tuple[Mapping[str, object], ...],
+    keys: frozenset[str],
+) -> None:
+    for key in keys:
+        for mapping in maps:
+            assert key not in mapping
+
+
 def test_layout_demo_projection_preserves_entry_hypothesis_and_unresolved_f() -> None:
-    view = _ok(project_layout_demo(_cited_package()))
+    view = _demo_view()
     assert isinstance(view, LayoutDemoProjection)
     assert view.package_id == LAYOUT_DEMO_PACKAGE_ID == "STRAT-000001"
     assert view.hypothesis_class == "entry_hypothesis"
@@ -133,14 +195,9 @@ def test_layout_demo_projection_preserves_entry_hypothesis_and_unresolved_f() ->
 
 
 def test_projection_does_not_invent_exits_short_side_or_ct29() -> None:
-    view = _ok(project_layout_demo(_cited_package()))
-    payload = dict(view.to_payload())
-    graph = payload["graph"]
-    assert isinstance(graph, dict)
-    for key in _INVENTED_KEYS:
-        assert key not in payload
-        assert key not in graph
-        assert key not in view.f_labels
+    view = _demo_view()
+    payload, graph = _payload_graph(view)
+    _assert_absent_from_maps((payload, graph, view.f_labels), _INVENTED_KEYS)
     for reason in _CT29:
         assert reason not in payload
         assert reason not in graph
@@ -158,7 +215,7 @@ def test_projection_does_not_invent_exits_short_side_or_ct29() -> None:
 
 
 def test_projection_does_not_return_research_ref_and_view_is_not_a_save() -> None:
-    view = _ok(project_layout_demo(_cited_package()))
+    view = _demo_view()
     payload = dict(view.to_payload())
     names = {item.name for item in fields(LayoutDemoProjection)}
     assert "research_ref" not in names
@@ -174,11 +231,19 @@ def test_projection_does_not_return_research_ref_and_view_is_not_a_save() -> Non
     assert "not a save" in str(saved.context["reason"])
 
 
+def _assert_compile_target_refused(view: LayoutDemoProjection, target: str) -> None:
+    refused = compile_graph(view, into=target)
+    assert is_refusal(refused), target
+    assert refused.category is RefusalCategory.POLICY_REJECTION
+    assert refused.context["field"] == "graph"
+    assert refused.context["into"] == target
+    assert refused.context["plane"] == "hypothesis"
+    assert "run_slice" in str(refused.context["reason"])
+
+
 def test_all_then_stay_on_hypothesis_graph_compile_to_run_slice_refused() -> None:
-    view = _ok(project_layout_demo(_cited_package()))
-    payload = dict(view.to_payload())
-    graph = payload["graph"]
-    assert isinstance(graph, dict)
+    view = _demo_view()
+    _payload, graph = _payload_graph(view)
     assert "ALL" in view.graph_operators
     assert "THEN" in view.graph_operators
     assert graph["operators"] == list(view.graph_operators)
@@ -186,17 +251,11 @@ def test_all_then_stay_on_hypothesis_graph_compile_to_run_slice_refused() -> Non
     assert "confluence" not in graph
     assert "Confluence" not in graph
     for target in ("run_slice", "graph-template", "order-adapter"):
-        refused = compile_graph(view, into=target)
-        assert is_refusal(refused), target
-        assert refused.category is RefusalCategory.POLICY_REJECTION
-        assert refused.context["field"] == "graph"
-        assert refused.context["into"] == target
-        assert refused.context["plane"] == "hypothesis"
-        assert "run_slice" in str(refused.context["reason"])
+        _assert_compile_target_refused(view, target)
 
 
 def test_register_library_kind_strats_still_refused_no_ct33_ct34_mint() -> None:
-    view = _ok(project_layout_demo(_cited_package()))
+    view = _demo_view()
     refused_kind = register_library_kind("strats")
     assert is_refusal(refused_kind)
     assert refused_kind.category is RefusalCategory.POLICY_REJECTION
@@ -231,10 +290,8 @@ def test_product_nouns_are_research_hypothesis_dictionary_entry_seed_corpus() ->
         "dictionary entry",
         "seed corpus",
     )
-    view = _ok(project_layout_demo(_cited_package()))
-    payload = dict(view.to_payload())
-    graph = payload["graph"]
-    assert isinstance(graph, dict)
+    view = _demo_view()
+    payload, graph = _payload_graph(view)
     assert graph["plane"] == "hypothesis"
     assert "confluence" not in payload
     assert "Confluence" not in research.__all__
@@ -243,9 +300,8 @@ def test_product_nouns_are_research_hypothesis_dictionary_entry_seed_corpus() ->
     assert not hasattr(research, "confluence")
     assert "graph" in payload
     module_text = (_QML_RESEARCH / "projection.py").read_text(encoding="utf-8")
-    assert "dictionary entry" in module_text or "seed corpus" in (
-        (_QML_RESEARCH / "__init__.py").read_text(encoding="utf-8")
-    )
+    init_text = (_QML_RESEARCH / "__init__.py").read_text(encoding="utf-8")
+    assert "dictionary entry" in module_text or "seed corpus" in init_text
     assert "never Confluence" in module_text
 
 
@@ -261,28 +317,7 @@ def test_ungoverned_python_skips_stage0_tunnel_stays_legal() -> None:
 def test_projection_performs_no_filesystem_io_threads_or_process() -> None:
     source = inspect.getsource(project_layout_demo)
     assert "open(" not in source
-    violations: list[str] = []
-    for path in sorted(_QML_RESEARCH.rglob("*.py")):
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            names: list[str] = []
-            if isinstance(node, ast.Import):
-                names.extend(alias.name for alias in node.names)
-            elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
-                names.append(node.module)
-            elif (
-                isinstance(node, ast.Call)
-                and isinstance(node.func, ast.Name)
-                and node.func.id == "open"
-            ):
-                violations.append(f"{path}: open()")
-                continue
-            for name in names:
-                if name in _BANNED_IMPORTS or any(
-                    name.startswith(banned + ".") for banned in _BANNED_IMPORTS
-                ):
-                    violations.append(f"{path}: imports {name}")
-    assert violations == []
+    assert _research_ban_violations(_BANNED_IMPORTS) == []
 
 
 def test_missing_layout_demo_and_non_bytes_are_typed_refusals() -> None:

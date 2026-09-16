@@ -17,6 +17,7 @@ from typing import Final, cast
 from qmf.core.refusal import Ok, Result, is_refusal
 
 from qml._refuse import invalid
+from qml.research._cited import decode_cited_buffer
 
 __all__ = [
     "DICTIONARY_FIELDS",
@@ -117,10 +118,31 @@ def resolve_dictionary_entry(
     if is_refusal(path_and_id):
         return path_and_id
     posix_path, slug = path_and_id.value
-    text = _decode_cited_bytes(cited_bytes)
+    text = decode_cited_buffer(cited_bytes)
     if is_refusal(text):
         return text
-    matches = [item for item in _parse_entries(text.value) if item["id"] == slug]
+    return _entry_from_text(text.value, posix_path=posix_path, slug=slug)
+
+
+def _entry_from_text(
+    text: str,
+    *,
+    posix_path: str,
+    slug: str,
+) -> Result[DictionaryEntry]:
+    matches = [item for item in _parse_entries(text) if item["id"] == slug]
+    selected = _select_match(matches, posix_path=posix_path, slug=slug)
+    if is_refusal(selected):
+        return selected
+    return _dictionary_entry_from_raw(selected.value, posix_path=posix_path, slug=slug)
+
+
+def _select_match(
+    matches: list[dict[str, object]],
+    *,
+    posix_path: str,
+    slug: str,
+) -> Result[dict[str, object]]:
     if len(matches) > 1:
         return invalid(
             "id",
@@ -137,7 +159,15 @@ def resolve_dictionary_entry(
             id=slug,
             file_path=posix_path,
         )
-    raw = matches[0]
+    return Ok(matches[0])
+
+
+def _dictionary_entry_from_raw(
+    raw: dict[str, object],
+    *,
+    posix_path: str,
+    slug: str,
+) -> Result[DictionaryEntry]:
     fields = _required_fields(cast("Mapping[str, str]", raw["fields"]))
     if is_refusal(fields):
         return fields
@@ -176,53 +206,37 @@ def _identity_pair(file_path: object, entry_id: object) -> Result[tuple[str, str
 
 
 def _entry_id(entry_id: object, fragment: str) -> Result[str]:
-    token: str
-    if entry_id is None:
-        token = fragment
-    elif not isinstance(entry_id, str):
-        return invalid(
-            "id",
-            "a dictionary entry id is the seed kebab slug",
-            given=repr(entry_id),
-        )
-    else:
-        token = entry_id.strip()
-        if fragment and token and fragment != token:
-            return invalid(
-                "id",
-                "locator fragment must match entry id",
-                id=token,
-                fragment=fragment,
-            )
-        if token == "":
-            token = fragment
+    token_result = _token_from_id_and_fragment(entry_id, fragment)
+    if is_refusal(token_result):
+        return token_result
+    token = token_result.value
     if token == "" or _ENTRY_ID_RE.fullmatch(token) is None:
         return invalid(
             "id",
-            "colliding slugs require (file_path, id) (FR-RES-05; DEC-0385)",
+            _COLLISION_REASON,
             given=repr(entry_id),
         )
     return Ok(token)
 
 
-def _decode_cited_bytes(cited_bytes: object) -> Result[str]:
-    if isinstance(cited_bytes, str):
-        return Ok(cited_bytes)
-    if not isinstance(cited_bytes, bytes):
+def _token_from_id_and_fragment(entry_id: object, fragment: str) -> Result[str]:
+    if entry_id is None:
+        return Ok(fragment)
+    if not isinstance(entry_id, str):
         return invalid(
-            "cited_bytes",
-            "the vocabulary helper resolves host-passed cited bytes; it does not "
-            "read a filesystem path",
-            given=type(cited_bytes).__name__,
+            "id",
+            "a dictionary entry id is the seed kebab slug",
+            given=repr(entry_id),
         )
-    try:
-        return Ok(cited_bytes.decode("utf-8"))
-    except UnicodeDecodeError:
+    token = entry_id.strip()
+    if fragment and token and fragment != token:
         return invalid(
-            "cited_bytes",
-            "cited dictionary bytes are UTF-8 markdown",
-            given="bytes",
+            "id",
+            "locator fragment must match entry id",
+            id=token,
+            fragment=fragment,
         )
+    return Ok(token if token else fragment)
 
 
 def _parse_entries(text: str) -> tuple[dict[str, object], ...]:
@@ -230,51 +244,70 @@ def _parse_entries(text: str) -> tuple[dict[str, object], ...]:
     current: dict[str, object] | None = None
     current_field: tuple[str, list[str]] | None = None
 
-    def flush_field() -> None:
-        nonlocal current_field
-        if current is not None and current_field is not None:
-            key, chunks = current_field
-            fields = cast("dict[str, str]", current["fields"])
-            fields[key] = " ".join(chunks).strip()
-            current_field = None
-
-    def flush_entry() -> None:
-        flush_field()
-        if current is not None:
-            entries.append(current)
-
     for raw in text.splitlines():
         line = raw.rstrip()
         heading = _HEADING_RE.match(line)
         if heading is not None:
-            flush_entry()
-            current = {
-                "id": heading.group(1),
-                "title": (heading.group(2) or "").strip(),
-                "fields": {},
-            }
+            _flush_entry(entries, current, current_field)
+            current = _new_entry(heading)
             current_field = None
             continue
         if current is None:
             continue
-        stripped = line.strip()
-        if stripped.startswith("|") or stripped.startswith("---"):
-            continue
-        field = _FIELD_RE.match(line)
-        if field is not None:
-            flush_field()
-            mapped = _MARKDOWN_TO_FIELD.get(field.group(1).strip().casefold())
-            if mapped is None:
-                current_field = None
-                continue
-            value = field.group(2).strip()
-            current_field = (mapped, [value] if value else [])
-            continue
-        if current_field is not None and stripped and not stripped.startswith("#"):
-            current_field[1].append(stripped)
+        current_field = _consume_entry_line(current, current_field, line)
 
-    flush_entry()
+    _flush_entry(entries, current, current_field)
     return tuple(entries)
+
+
+def _new_entry(heading: re.Match[str]) -> dict[str, object]:
+    return {
+        "id": heading.group(1),
+        "title": (heading.group(2) or "").strip(),
+        "fields": {},
+    }
+
+
+def _flush_field(
+    current: dict[str, object] | None,
+    current_field: tuple[str, list[str]] | None,
+) -> None:
+    if current is None or current_field is None:
+        return
+    key, chunks = current_field
+    fields = cast("dict[str, str]", current["fields"])
+    fields[key] = " ".join(chunks).strip()
+
+
+def _flush_entry(
+    entries: list[dict[str, object]],
+    current: dict[str, object] | None,
+    current_field: tuple[str, list[str]] | None,
+) -> None:
+    _flush_field(current, current_field)
+    if current is not None:
+        entries.append(current)
+
+
+def _consume_entry_line(
+    current: dict[str, object],
+    current_field: tuple[str, list[str]] | None,
+    line: str,
+) -> tuple[str, list[str]] | None:
+    stripped = line.strip()
+    if stripped.startswith("|") or stripped.startswith("---"):
+        return current_field
+    field = _FIELD_RE.match(line)
+    if field is not None:
+        _flush_field(current, current_field)
+        mapped = _MARKDOWN_TO_FIELD.get(field.group(1).strip().casefold())
+        if mapped is None:
+            return None
+        value = field.group(2).strip()
+        return (mapped, [value] if value else [])
+    if current_field is not None and stripped and not stripped.startswith("#"):
+        current_field[1].append(stripped)
+    return current_field
 
 
 def _required_fields(raw: Mapping[str, str]) -> Result[Mapping[str, str]]:
