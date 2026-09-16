@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import sys
 from collections.abc import Mapping
 from dataclasses import fields
 from pathlib import Path
@@ -30,9 +31,18 @@ from qml.research import (
 
 from qml import research
 
+_TESTS_DIR = str(Path(__file__).resolve().parent)
+if _TESTS_DIR not in sys.path:
+    sys.path.insert(0, _TESTS_DIR)
+
+from research_vocab_helpers import (  # noqa: E402
+    FIXTURE_SEED,
+    read_contained,
+    read_contained_bytes,
+)
+
 T = TypeVar("T")
 
-FIXTURE_SEED = Path(__file__).resolve().parent / "fixtures" / "research-seed"
 STRAT_DIR = "strategies/STRAT-000001-asian-high-london-reversal"
 IDENTITY_PATH = f"{STRAT_DIR}/identity.md"
 GRAPH_PATH = f"{STRAT_DIR}/logic/graph.yaml"
@@ -104,7 +114,7 @@ def _cited(relative: str) -> bytes:
             "AR-RES-10 requires fixtures/research-seed bytes copied from the "
             f"operator Stats tree — missing {relative}"
         )
-    return src.read_bytes()
+    return read_contained_bytes(src, contain_within=FIXTURE_SEED)
 
 
 def _cited_package() -> dict[str, bytes]:
@@ -154,7 +164,10 @@ def _node_ban_hits(path: Path, node: ast.AST, banned: frozenset[str]) -> list[st
 
 
 def _file_ban_violations(path: Path, banned: frozenset[str]) -> list[str]:
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    tree = ast.parse(
+        read_contained(path, contain_within=_QML_RESEARCH),
+        filename=str(path),
+    )
     found: list[str] = []
     for node in ast.walk(tree):
         found.extend(_node_ban_hits(path, node, banned))
@@ -276,7 +289,9 @@ def test_population_ingest_is_not_started() -> None:
     assert is_refusal(refused)
     assert refused.context["started"] is False
     assert refused.context["source"] == "yt-dlp"
-    text = "\n".join(path.read_text(encoding="utf-8") for path in _QML_RESEARCH.rglob("*.py"))
+    text = "\n".join(
+        read_contained(path, contain_within=_QML_RESEARCH) for path in _QML_RESEARCH.rglob("*.py")
+    )
     for name in ("yt-dlp", "n8n", "YouTube", "Hermes"):
         assert f"import {name}" not in text
         assert f"from {name}" not in text
@@ -298,8 +313,8 @@ def test_product_nouns_are_research_hypothesis_dictionary_entry_seed_corpus() ->
     assert not hasattr(research, "Confluence")
     assert not hasattr(research, "confluence")
     assert "graph" in payload
-    module_text = (_QML_RESEARCH / "projection.py").read_text(encoding="utf-8")
-    init_text = (_QML_RESEARCH / "__init__.py").read_text(encoding="utf-8")
+    module_text = read_contained(_QML_RESEARCH / "projection.py", contain_within=_QML_RESEARCH)
+    init_text = read_contained(_QML_RESEARCH / "__init__.py", contain_within=_QML_RESEARCH)
     assert "dictionary entry" in module_text or "seed corpus" in init_text
     assert "never Confluence" in module_text
 

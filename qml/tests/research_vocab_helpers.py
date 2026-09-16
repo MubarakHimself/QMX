@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import ast
+import os
+import stat
 from pathlib import Path
 from typing import TypeVar
 
@@ -15,11 +17,78 @@ T = TypeVar("T")
 FIXTURE_SEED = Path(__file__).resolve().parent / "fixtures" / "research-seed"
 SWING_HIGH_PATH = "dictionary/market-structure-and-location/locations-and-structure.md"
 _QML_RESEARCH = Path(__file__).resolve().parents[1] / "src" / "qml" / "research"
+_MAX_READ_BYTES = 1 << 20  # 1 MiB
 
 
 def ok(result: Result[T]) -> T:
     assert is_ok(result), result
     return result.value
+
+
+def read_contained_bytes(
+    path: Path,
+    *,
+    contain_within: Path,
+    max_bytes: int = _MAX_READ_BYTES,
+) -> bytes:
+    """Read bytes from a regular, in-root, non-symlink file under *max_bytes*."""
+    try:
+        resolved = Path(os.path.realpath(path))
+        root_real = Path(os.path.realpath(contain_within))
+    except OSError as exc:
+        raise OSError(
+            f"could not resolve a contained filesystem path ({path}): {type(exc).__name__}"
+        ) from exc
+    if path.is_symlink() or not resolved.is_relative_to(root_real):
+        raise OSError(f"refusing to follow a symlink or read outside the intended root ({path})")
+    if not path.is_file() or path.is_symlink():
+        raise OSError(f"refusing to read a path that is not a regular in-root file ({path})")
+    try:
+        # getattr keeps the "O_NOFOLLOW" token on this open so SKY-D324/D325
+        # see the no-follow flag; Windows has no O_NOFOLLOW (value 0).
+        fd = os.open(  # skylos: ignore[SKY-D215] contained, no-follow read
+            path,
+            os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_BINARY", 0),
+        )
+    except OSError as exc:
+        raise OSError(f"contained no-follow open failed for {path} ({type(exc).__name__})") from exc
+    try:
+        info = os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode):
+            raise OSError(f"refusing to read a path that is not a regular in-root file ({path})")
+        size = info.st_size
+        if size > max_bytes:
+            raise OSError(
+                f"refusing to read a file above the size cap ({path}: {size} > {max_bytes})"
+            )
+        limit = max_bytes if size <= 0 else min(size, max_bytes)
+        buf = bytearray()
+        while len(buf) < limit:
+            chunk = os.read(fd, limit - len(buf))
+            if not chunk:
+                break
+            buf.extend(chunk)
+        if size <= 0 and len(buf) >= max_bytes:
+            extra = os.read(fd, 1)
+            if extra:
+                raise OSError(f"refusing to read a file above the size cap ({path}: > {max_bytes})")
+    finally:
+        os.close(fd)
+    return bytes(buf)
+
+
+def read_contained(
+    path: Path,
+    *,
+    contain_within: Path,
+    max_bytes: int = _MAX_READ_BYTES,
+) -> str:
+    """Read UTF-8 text from a regular, in-root, non-symlink file under *max_bytes*."""
+    raw = read_contained_bytes(path, contain_within=contain_within, max_bytes=max_bytes)
+    try:
+        return raw.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise OSError(f"contained file is not UTF-8 text ({path})") from exc
 
 
 def cited_bytes(relative: str) -> bytes:
@@ -29,7 +98,7 @@ def cited_bytes(relative: str) -> bytes:
             "AR-RES-10 requires fixtures/research-seed bytes copied from the "
             f"operator Stats tree — missing {relative}"
         )
-    return src.read_bytes()
+    return read_contained_bytes(src, contain_within=FIXTURE_SEED)
 
 
 def path_of(locator: str) -> str:
@@ -71,7 +140,10 @@ def node_ban_hits(path: Path, node: ast.AST, banned: frozenset[str]) -> list[str
 
 
 def file_ban_violations(path: Path, banned: frozenset[str]) -> list[str]:
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    tree = ast.parse(
+        read_contained(path, contain_within=_QML_RESEARCH),
+        filename=str(path),
+    )
     found: list[str] = []
     for node in ast.walk(tree):
         found.extend(node_ban_hits(path, node, banned))
@@ -88,6 +160,9 @@ def research_ban_violations(banned: frozenset[str]) -> list[str]:
 def class_names_in_research() -> list[str]:
     names: list[str] = []
     for path in _QML_RESEARCH.rglob("*.py"):
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        tree = ast.parse(
+            read_contained(path, contain_within=_QML_RESEARCH),
+            filename=str(path),
+        )
         names.extend(node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef))
     return names
