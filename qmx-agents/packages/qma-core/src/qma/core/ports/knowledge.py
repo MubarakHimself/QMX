@@ -116,13 +116,20 @@ def _policy(field: str, reason: str, **extra: object) -> TypedRefusal:
 
 def refuse_hybrid_knowledge_indexing(**extra: object) -> TypedRefusal:
     """Ranked / semantic / hybrid retrieval is Deferred GAP-0073 (DEC-0343)."""
-    return _policy(
-        "retrieval",
-        "ranked, semantic or hybrid knowledge indexing is Deferred GAP-0073; "
-        "v1 ships literal and locator-based search only (CT-44; FR-Q65; DEC-0343)",
-        gap=GAP_0073_KNOWLEDGE_HYBRID_INDEXING,
-        deferred=True,
-        **extra,
+    context: dict[str, object] = {
+        "field": "retrieval",
+        "reason": (
+            "ranked, semantic or hybrid knowledge indexing is Deferred GAP-0073; "
+            "v1 ships literal and locator-based search only (CT-44; FR-Q65; DEC-0343)"
+        ),
+        "gap": GAP_0073_KNOWLEDGE_HYBRID_INDEXING,
+        "deferred": True,
+    }
+    context.update(extra)
+    return TypedRefusal(
+        category=RefusalCategory.UNSUPPORTED_CAPABILITY,
+        retryability=Retryability.NO,
+        context=context,
     )
 
 

@@ -11,6 +11,7 @@ from qma.daemon.knowledge.service import (
     GAP_0073_KNOWLEDGE_HYBRID_INDEXING,
     KNOWLEDGE_QUERY_SURFACE,
     KNOWLEDGE_SOURCE_OPERATIONS,
+    UNSCORED_CONFIDENCE_VALUE,
     ArtifactCopy,
     CiteOutcome,
     KnowledgeService,
@@ -18,6 +19,7 @@ from qma.daemon.knowledge.service import (
     MissionSnapshotPin,
     SessionSnapshotPin,
     SourceBinding,
+    unscored_evidence_confidence,
 )
 
 __all__ = [
@@ -25,6 +27,7 @@ __all__ = [
     "GAP_0073_KNOWLEDGE_HYBRID_INDEXING",
     "KNOWLEDGE_QUERY_SURFACE",
     "KNOWLEDGE_SOURCE_OPERATIONS",
+    "UNSCORED_CONFIDENCE_VALUE",
     "ArtifactCopy",
     "CiteOutcome",
     "KnowledgeService",
@@ -34,5 +37,6 @@ __all__ = [
     "SessionSnapshotPin",
     "SourceBinding",
     "qmx_worktree_root",
+    "unscored_evidence_confidence",
     "validate_seed_root_path",
 ]

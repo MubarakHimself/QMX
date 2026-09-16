@@ -20,6 +20,7 @@ from qma.core.ports import (
 )
 from qma.core.refusals import ProvenanceShapeMismatch
 from qmf.core import is_ok, is_refusal
+from qmf.core.refusal import RefusalCategory
 
 _DIMS = (
     "extraction_confidence",
@@ -136,6 +137,7 @@ def test_provenance_shape_mismatch_and_verbatim_fields() -> None:
 def test_gap_0073_and_no_scalarization_or_write_back() -> None:
     hybrid = refuse_hybrid_knowledge_indexing(mode="semantic")
     assert is_refusal(hybrid)
+    assert hybrid.category is RefusalCategory.UNSUPPORTED_CAPABILITY
     assert hybrid.context["gap"] == GAP_0073_KNOWLEDGE_HYBRID_INDEXING
     assert hybrid.context.get("deferred") is True
 

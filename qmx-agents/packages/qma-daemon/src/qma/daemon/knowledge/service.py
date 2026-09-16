@@ -10,10 +10,11 @@ are a typed refusal. ``evidence_confidence`` stays distinct from Memory's
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+import re
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Final, Literal
+from typing import Final
 from uuid import uuid4
 
 from qma.core.plugins.hooks import HookResult, HookSource, build_hook_result
@@ -44,6 +45,7 @@ __all__ = [
     "GAP_0073_KNOWLEDGE_HYBRID_INDEXING",
     "KNOWLEDGE_QUERY_SURFACE",
     "KNOWLEDGE_SOURCE_OPERATIONS",
+    "UNSCORED_CONFIDENCE_VALUE",
     "ArtifactCopy",
     "CiteOutcome",
     "KnowledgeService",
@@ -51,6 +53,7 @@ __all__ = [
     "MissionSnapshotPin",
     "SessionSnapshotPin",
     "SourceBinding",
+    "unscored_evidence_confidence",
 ]
 
 
@@ -62,6 +65,109 @@ _BLOCKING_BEFORE: Final[frozenset[HookResultDecision]] = frozenset(
         HookResultDecision.BLOCK_STOP,
     }
 )
+
+# First-slice default when a locator carries no corpus-authored scores (FR-RES-21).
+UNSCORED_CONFIDENCE_VALUE: Final[str] = "unscored"
+
+# ATX kebab heading (`## slug` or `## slug — Title`). Not a corpus schema.
+_HEADING_ID: Final[re.Pattern[str]] = re.compile(
+    r"^##\s+([a-z0-9]+(?:-[a-z0-9]+)*)(?:\s+[\u2014\u2013-].*)?\s*$"
+)
+
+
+def unscored_evidence_confidence(declared_keys: Sequence[str]) -> dict[str, str]:
+    """Six declared keys, each ``unscored`` — never a QMA-computed scalar."""
+    return dict.fromkeys(declared_keys, UNSCORED_CONFIDENCE_VALUE)
+
+
+def _heading_ids(payload: bytes) -> frozenset[str]:
+    try:
+        text = payload.decode("utf-8")
+    except UnicodeDecodeError:
+        return frozenset()
+    found: set[str] = set()
+    for line in text.splitlines():
+        match = _HEADING_ID.match(line)
+        if match is not None:
+            found.add(match.group(1))
+    return frozenset(found)
+
+
+def _normalize_locator(locator: str) -> str:
+    return locator.strip().replace("\\", "/")
+
+
+def _search_locators(
+    files: Mapping[str, bytes],
+    query: str,
+) -> Result[tuple[str, ...]]:
+    """Literal grep plus heading locators ``file_path#id`` (FR-RES-03, FR-RES-05)."""
+    text = _normalize_locator(query)
+    if "#" in text:
+        path, _, fragment = text.partition("#")
+        if path not in files:
+            return Ok(())
+        if fragment == "":
+            return Ok((path,))
+        payload = files[path]
+        if fragment.encode("utf-8") in payload or fragment in _heading_ids(payload):
+            return Ok((f"{path}#{fragment}",))
+        return Ok(())
+    grepped = literal_search(files, query)
+    if is_refusal(grepped):
+        return grepped
+    locators: list[str] = list(grepped.value)
+    seen = set(locators)
+    for path in sorted(files):
+        if query in _heading_ids(files[path]):
+            loc = f"{path}#{query}"
+            if loc not in seen:
+                locators.append(loc)
+                seen.add(loc)
+    return Ok(tuple(locators))
+
+
+def _resolve_file_locator(
+    files: Mapping[str, bytes],
+    locator: str,
+    *,
+    snapshot_ref: str,
+) -> Result[tuple[str, str]]:
+    """Resolve ``path``, ``path#id``, or unique slug to ``(file_path, stored_locator)``.
+
+    Colliding heading slugs require ``(file_path, id)`` (FR-RES-05; DEC-0385).
+    Fragments are stripped for byte lookup; the stored locator keeps them.
+    """
+    loc = _normalize_locator(locator)
+    path, sep, fragment = loc.partition("#")
+    if path in files:
+        stored = loc if sep and fragment else path
+        return Ok((path, stored))
+    if sep:
+        return invalid_input(
+            "locator",
+            "locator is not present in the pinned CorpusSnapshot (CT-44)",
+            locator=path,
+            snapshot_ref=snapshot_ref,
+        )
+    matches = [candidate for candidate in sorted(files) if path in _heading_ids(files[candidate])]
+    if len(matches) == 1:
+        return Ok((matches[0], f"{matches[0]}#{path}"))
+    if len(matches) > 1:
+        return invalid_input(
+            "locator",
+            "colliding slugs require (file_path, id) (FR-RES-05; DEC-0385)",
+            slug=path,
+            id=path,
+            file_path=tuple(matches),
+            snapshot_ref=snapshot_ref,
+        )
+    return invalid_input(
+        "locator",
+        "locator is not present in the pinned CorpusSnapshot (CT-44)",
+        locator=loc,
+        snapshot_ref=snapshot_ref,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -249,7 +355,9 @@ class KnowledgeService:
     ``cite`` always copies through ``before_artifact_register``. ``retrieve``
     against a snapshot with no retained copy returns ``StaleSnapshot`` rather
     than live library bytes. Retrieve/cite require a pinned ``snapshot_ref``;
-    unpinned live-tree reads are refused.
+    unpinned live-tree reads are refused. When the caller omits
+    ``evidence_confidence`` and the locator has no corpus-authored scores,
+    Provenance emits the six declared keys as ``unscored``.
     """
 
     registry: KnowledgeSourceRegistry = field(default_factory=KnowledgeSourceRegistry)
@@ -292,7 +400,7 @@ class KnowledgeService:
         snapshot: CorpusSnapshot | Mapping[str, object] | str,
         query: object,
         *,
-        mode: Literal["literal", "hybrid", "semantic", "ranked"] = "literal",
+        mode: str = "literal",
     ) -> Result[tuple[str, ...]]:
         if mode != "literal":
             return refuse_hybrid_knowledge_indexing(mode=mode)
@@ -311,7 +419,7 @@ class KnowledgeService:
         files = self._snapshot_bytes.get(resolved.value.id)
         if files is None:
             return StaleSnapshot.of(snapshot_ref=resolved.value.id)
-        return literal_search(files, query)
+        return _search_locators(files, query)
 
     def cite(
         self,
@@ -320,10 +428,14 @@ class KnowledgeService:
         locator: object,
         *,
         evidence_label: object,
-        evidence_confidence: object,
         authored_by: object,
+        evidence_confidence: object | None = None,
     ) -> Result[CiteOutcome]:
-        """Copy cited bytes through before_artifact_register and return Citation."""
+        """Copy cited bytes through before_artifact_register and return Citation.
+
+        When ``evidence_confidence`` is omitted and the locator has no
+        corpus-authored scores, the six declared keys emit ``unscored``.
+        """
         binding = self._require_binding(source_id)
         if is_refusal(binding):
             return binding
@@ -347,8 +459,11 @@ class KnowledgeService:
                 given=repr(evidence_label),
             )
         dims = binding.value.source.confidence_dimensions
+        supplied = evidence_confidence
+        if supplied is None:
+            supplied = unscored_evidence_confidence(dims)
         confidence = parse_evidence_confidence(
-            evidence_confidence,
+            supplied,
             declared_keys=dims,
             source_id=binding.value.source_id,
         )
@@ -362,14 +477,10 @@ class KnowledgeService:
         files = self._snapshot_bytes.get(snap.id)
         if files is None:
             return StaleSnapshot.of(snapshot_ref=snap.id)
-        path = locator.strip().replace("\\", "/").split("#", 1)[0]
-        if path not in files:
-            return invalid_input(
-                "locator",
-                "locator is not present in the pinned CorpusSnapshot (CT-44)",
-                locator=path,
-                snapshot_ref=snap.id,
-            )
+        addressed = _resolve_file_locator(files, locator, snapshot_ref=snap.id)
+        if is_refusal(addressed):
+            return addressed
+        path, stored_locator = addressed.value
         content_bytes = files[path]
 
         content_fp = fingerprint_bytes(content_bytes).value
@@ -377,7 +488,7 @@ class KnowledgeService:
         copy = ArtifactCopy(
             artifact_ref=artifact_ref,
             snapshot_ref=snap.id,
-            locator=locator.strip().replace("\\", "/"),
+            locator=stored_locator,
             content_fp1=content_fp,
             authored_by=authored_by.strip(),
             content=content_bytes,
@@ -432,14 +543,15 @@ class KnowledgeService:
         if is_refusal(resolved):
             return resolved
         snap = resolved.value
-        if snap.id not in self._copied_snapshots:
+        files = self._snapshot_bytes.get(snap.id)
+        if files is None:
             return StaleSnapshot.of(snapshot_ref=snap.id)
-        loc = locator.strip().replace("\\", "/")
+        addressed = _resolve_file_locator(files, locator, snapshot_ref=snap.id)
+        if is_refusal(addressed):
+            return addressed
+        path, _stored = addressed.value
         for artifact in self._artifacts.values():
-            if (
-                artifact.snapshot_ref == snap.id
-                and artifact.locator.split("#", 1)[0] == loc.split("#", 1)[0]
-            ):
+            if artifact.snapshot_ref == snap.id and artifact.locator.split("#", 1)[0] == path:
                 return Ok(artifact.content)
         return StaleSnapshot.of(snapshot_ref=snap.id)
 
@@ -551,8 +663,8 @@ class KnowledgeService:
         *,
         session_id: object,
         evidence_label: object,
-        evidence_confidence: object,
         authored_by: object,
+        evidence_confidence: object | None = None,
     ) -> Result[CiteOutcome]:
         """Pin a session snapshot_ref if needed, then cite against that pin."""
         pin = self._ensure_session_pin(session_id, source_id)

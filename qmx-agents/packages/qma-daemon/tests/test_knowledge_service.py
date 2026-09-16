@@ -14,6 +14,7 @@ from qma.daemon.knowledge import (
 )
 from qma.daemon.plugins import DaemonPluginContext
 from qmf.core import is_ok, is_refusal
+from qmf.core.refusal import RefusalCategory
 
 _DIMS = (
     "extraction_confidence",
@@ -207,6 +208,7 @@ def test_gap_0073_excluded_from_search(tmp_path: Path) -> None:
 
     hybrid = service.search("strats", snapped.value, "liquidity", mode="hybrid")
     assert is_refusal(hybrid)
+    assert hybrid.category is RefusalCategory.UNSUPPORTED_CAPABILITY
     assert hybrid.context["gap"] == GAP_0073_KNOWLEDGE_HYBRID_INDEXING
 
     deferred = service.refuse_hybrid_indexing(requested="embeddings")
