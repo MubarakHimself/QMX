@@ -88,12 +88,10 @@ def refuse_research_ref_as_governed_evidence(
     candidate: object = None,
 ) -> Result[None]:
     """Lineage ``research_ref`` is not governed evidence; seats cite Bot fp1 only."""
-    cited = research_ref
-    if isinstance(research_ref, Fingerprint):
-        cited = research_ref
+    cited_fp1 = research_ref.value if isinstance(research_ref, Fingerprint) else research_ref
     refused = cite_registered_bot(
         candidate=candidate,
-        cited_fp1=cited,
+        cited_fp1=cited_fp1,
         kind="governed-evidence",
     )
     if is_refusal(refused):

@@ -455,11 +455,13 @@ def graduate_mill_to_governed(
         extra.pop("invent_close_reasons", False),
     )
     if any(flag is True for flag in invent_flags):
-        return refuse_invented_exits(
+        invented = refuse_invented_exits(
             invent_exits=invent_flags[0],
             invent_producers=invent_flags[1],
             invent_close_reasons=invent_flags[2],
         )
+        if is_refusal(invented):
+            return invented
     research = admit_mill_originating_research_ref(
         originating_research_ref,
         hypothesis=hypothesis,

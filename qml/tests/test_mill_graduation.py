@@ -37,6 +37,7 @@ from qml.logic import mint_logic_identity
 from qml.protocol import PROTOCOL_FORMAT_VERSION, FunctionFactory, mint_state_scope
 from qml.research import (
     DictionaryCite,
+    Hypothesis,
     fingerprint_hypothesis,
     mint_hypothesis,
     save_hypothesis,
@@ -151,14 +152,16 @@ def _layer2(world: dict[str, object]):
     )
 
 
-def _hypothesis():
+def _hypothesis() -> Hypothesis:
     cite = DictionaryCite("dictionary/a.md", "swing-high")
-    return mint_hypothesis(
-        hypothesis_class="entry_hypothesis",
-        origin="idea",
-        dictionary_cites=[cite],
-        title="mill graduate",
-    ).value
+    return _ok(
+        mint_hypothesis(
+            hypothesis_class="entry_hypothesis",
+            origin="idea",
+            dictionary_cites=[cite],
+            title="mill graduate",
+        )
+    )
 
 
 def test_mill_graduation_uses_research_ref_and_calls_graduate_to_governed() -> None:
@@ -292,7 +295,9 @@ def test_spawn_governed_is_not_graduation_and_structure_helper_not_called() -> N
     refused = refuse_spawn_as_graduation("spawn_governed")
     assert refused.category is RefusalCategory.POLICY_REJECTION
     assert refused.context["spawn_governed"] is False
-    assert "graduate_to_governed" in refused.context["mill_calls"]
+    mill_calls = refused.context["mill_calls"]
+    assert isinstance(mill_calls, str)
+    assert "graduate_to_governed" in mill_calls
 
     world = _world()
     hyp = _hypothesis()
