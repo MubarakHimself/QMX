@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qmx.local/qma-wire/schemas/federated_hit.v1.schema.json",
+  "title": "QMA federated discovery hit (CT-40 additive; FR-RES-07)",
+  "description": "Frozen federated discovery hit owned by COMP-QMA-WIRE as an additive CT-40 family. Exactly one of KnowledgeHit {hit_class: knowledge, source_ref, snapshot_ref, locator} or ArtifactHit {hit_class: artifact, fp1, kind} where kind is a Workbench AD-3 roster kind or closed query-hit tags saved-view | analysis.published. No qml_candidate, no strats hit_class, no cite-copy artifact_ref as an Artifact-rail hit. No new CT number (DEC-0389, DEC-0412).",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hit_class", "source_ref", "snapshot_ref", "locator"],
+      "properties": {
+        "hit_class": { "const": "knowledge" },
+        "source_ref": { "type": "string", "minLength": 1 },
+        "snapshot_ref": { "type": "string", "minLength": 1 },
+        "locator": { "type": "string", "minLength": 1 }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hit_class", "fp1", "kind"],
+      "properties": {
+        "hit_class": { "const": "artifact" },
+        "fp1": { "type": "string", "minLength": 1 },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "bot-definition",
+            "confluence",
+            "strategy-family",
+            "book-definition",
+            "bms-definition",
+            "book-binding",
+            "split-manifest",
+            "source-observation",
+            "performance-result",
+            "experiment-spec",
+            "saved-view",
+            "analysis.published"
+          ]
+        }
+      }
+    }
+  ]
+}

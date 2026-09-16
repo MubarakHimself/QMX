@@ -39,8 +39,8 @@ def test_seed_vocabulary_counts_and_owner() -> None:
     assert WIRE_VOCABULARY_OWNER == "qma-wire"
     assert len(WIRE_COMMANDS) == SEED_COMMAND_COUNT == 9
     assert SEED_QUERY_COUNT == 7
-    assert ADDABLE_QUERY_COUNT == 2
-    assert len(WIRE_QUERIES) == SEED_QUERY_COUNT + ADDABLE_QUERY_COUNT == 9
+    assert ADDABLE_QUERY_COUNT == 4
+    assert len(WIRE_QUERIES) == SEED_QUERY_COUNT + ADDABLE_QUERY_COUNT == 11
     assert len(WIRE_EVENTS) == SEED_EVENT_COUNT == 10
     assert SEED_VOCABULARY_COUNT == 26
     assert {member.value for member in WireCommand} == WIRE_COMMANDS
@@ -66,6 +66,10 @@ def test_seed_members_match_ratified_packet() -> None:
     assert WireQuery.LIST_MISSION_HOOKS.value == "list_mission_hooks"
     assert "plugin_install_preflight" in WIRE_QUERIES
     assert WireQuery.PLUGIN_INSTALL_PREFLIGHT.value == "plugin_install_preflight"
+    assert "facade_search" in WIRE_QUERIES
+    assert WireQuery.FACADE_SEARCH.value == "facade_search"
+    assert "facade_get" in WIRE_QUERIES
+    assert WireQuery.FACADE_GET.value == "facade_get"
     assert {
         "agent.started",
         "message.delta",

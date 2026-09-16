@@ -5,11 +5,12 @@ compatibility law, scoped attach/detach replay, command idempotency on
 ``producer_id``+``id``, correlation provenance, the RLM ``host_request`` bridge
 (closed-and-addable verb→primitive map, JobHandle async return,
 ``registry:rlm.depth_cap``), listener bind posture, pre-protocol credential-ref
-authentication, dial-out reachability, the durable remote outbox spool, and
-principal classes with the closed human-gate command list (AD-24).
-Owns no client implementation and no alternate cross-boundary contract
-(DEC-0304; AR-Q04). SemVer is display-only provenance in lockstep with the QMF
-workspace (AR-Q11).
+authentication, dial-out reachability, the durable remote outbox spool,
+principal classes with the closed human-gate command list (AD-24), and the
+federated discovery hit DTO (KnowledgeHit | ArtifactHit; additive CT-40;
+FR-RES-07). Owns no client implementation and no alternate cross-boundary
+contract (DEC-0304; AR-Q04). SemVer is display-only provenance in lockstep with
+the QMF workspace (AR-Q11).
 """
 
 from __future__ import annotations
@@ -79,6 +80,29 @@ from qma.wire.families import (
     contract_for_type,
     progress_is_authoritative,
     snapshots_are_authoritative,
+)
+from qma.wire.federated_discovery import (
+    ARTIFACT_HIT_KINDS,
+    ARTIFACT_QUERY_HIT_TAGS,
+    ARTIFACT_ROSTER_KINDS,
+    FEDERATED_HIT_CLASSES,
+    FEDERATED_HIT_CONTRACT,
+    FEDERATED_HIT_DTO_OWNER,
+    FEDERATED_HIT_NEW_CT_MINTED,
+    FEDERATED_HIT_SCHEMA,
+    FEDERATED_HIT_SCHEMA_FILE,
+    FEDERATED_HIT_SCHEMA_NAME,
+    HIT_CLASS_ARTIFACT,
+    HIT_CLASS_KNOWLEDGE,
+    REFUSED_HIT_CLASSES,
+    ArtifactHit,
+    FederatedHit,
+    KnowledgeHit,
+    parse_federated_hit,
+    refuse_cite_copy_artifact_rail,
+    refuse_qml_candidate_hit,
+    refuse_strats_hit_class,
+    validate_federated_hit,
 )
 from qma.wire.host_request import (
     ALTERNATE_RLM_TRANSPORTS,
@@ -204,6 +228,9 @@ from qma.wire.vocabulary import (
 __all__ = [
     "ADDABLE_QUERY_COUNT",
     "ALTERNATE_RLM_TRANSPORTS",
+    "ARTIFACT_HIT_KINDS",
+    "ARTIFACT_QUERY_HIT_TAGS",
+    "ARTIFACT_ROSTER_KINDS",
     "ATTACH_METHOD",
     "COMPATIBILITY_AUTHORITY",
     "CORRELATION_MINT_ORIGINS",
@@ -216,7 +243,16 @@ __all__ = [
     "DEPRECATION_MINORS_REGISTRY_KEY",
     "DETACH_METHOD",
     "FAMILY_CONTRACTS",
+    "FEDERATED_HIT_CLASSES",
+    "FEDERATED_HIT_CONTRACT",
+    "FEDERATED_HIT_DTO_OWNER",
+    "FEDERATED_HIT_NEW_CT_MINTED",
+    "FEDERATED_HIT_SCHEMA",
+    "FEDERATED_HIT_SCHEMA_FILE",
+    "FEDERATED_HIT_SCHEMA_NAME",
     "FORBIDDEN_SECRET_SURFACE_KEYS",
+    "HIT_CLASS_ARTIFACT",
+    "HIT_CLASS_KNOWLEDGE",
     "HOST_REQUEST_BRIDGE_TRANSPORT",
     "HOST_REQUEST_OWNING_AD",
     "HOST_REQUEST_PRIMITIVE_MAP",
@@ -232,6 +268,7 @@ __all__ = [
     "MONEY_PATH_FIELD_DIFF_SCHEMA",
     "MONEY_PATH_FIELD_DIFF_SCHEMA_FILE",
     "MONEY_PATH_FIELD_DIFF_SCHEMA_NAME",
+    "REFUSED_HIT_CLASSES",
     "REMOTE_DIAL_DIRECTION",
     "REMOTE_OUTBOX_DEPTH_REGISTRY_KEY",
     "REMOTE_SPOOL_BYTES_REGISTRY_KEY",
@@ -251,6 +288,7 @@ __all__ = [
     "WIRE_PROTOCOL_VERSION",
     "WIRE_QUERIES",
     "WIRE_VOCABULARY_OWNER",
+    "ArtifactHit",
     "AsyncHostResult",
     "AttachError",
     "AttachRequest",
@@ -269,6 +307,7 @@ __all__ = [
     "DetachRequest",
     "FamilyContract",
     "FamilyFormatDeclaration",
+    "FederatedHit",
     "HostRequestEmission",
     "HostRequestMapping",
     "HostRequestVerbError",
@@ -280,6 +319,7 @@ __all__ = [
     "JournalPrincipalShape",
     "JsonRpcRequest",
     "JsonRpcResponse",
+    "KnowledgeHit",
     "LedgerPrincipalShape",
     "ListenerBindConfig",
     "ListenerPosture",
@@ -339,6 +379,7 @@ __all__ = [
     "mint_correlation_id",
     "mint_replay_cursor",
     "negotiate_initialize",
+    "parse_federated_hit",
     "parse_host_request_verb",
     "parse_principal_class",
     "parse_protocol_version",
@@ -346,12 +387,16 @@ __all__ = [
     "parse_wire_type",
     "progress_is_authoritative",
     "propagate_correlation",
+    "refuse_cite_copy_artifact_rail",
     "refuse_principal_impersonation",
+    "refuse_qml_candidate_hit",
+    "refuse_strats_hit_class",
     "resolve_host_request",
     "snapshots_are_authoritative",
     "validate_attach",
     "validate_deployed_side",
     "validate_family_payload",
+    "validate_federated_hit",
     "validate_instance",
     "validate_listener_startup",
     "validate_money_path_field_diff",

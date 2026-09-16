@@ -53,6 +53,7 @@ SCHEMA_FILES: Final[dict[str, str]] = {
     "host_request": "host_request.v1.schema.json",
     "principal_record": "principal_record.v1.schema.json",
     "money_path_field_diff": "money_path_field_diff.v1.schema.json",
+    "federated_hit": "federated_hit.v1.schema.json",
 }
 
 

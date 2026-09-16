@@ -37,8 +37,9 @@ SEED_QUERY_COUNT: Final[int] = 7
 SEED_EVENT_COUNT: Final[int] = 10
 SEED_VOCABULARY_COUNT: Final[int] = SEED_COMMAND_COUNT + SEED_QUERY_COUNT + SEED_EVENT_COUNT
 # Closed-and-addable extensions beyond the packet seed:
-# list_mission_hooks (FR-Q35; AD-11) and plugin_install_preflight (FR-Q69; AD-21).
-ADDABLE_QUERY_COUNT: Final[int] = 2
+# list_mission_hooks (FR-Q35; AD-11), plugin_install_preflight (FR-Q69; AD-21),
+# and facade_search / facade_get for federated discovery (FR-RES-18; DEC-0389).
+ADDABLE_QUERY_COUNT: Final[int] = 4
 
 
 class MessageFamily(StrEnum):
@@ -71,9 +72,10 @@ class WireQuery(StrEnum):
     """Closed-and-addable queries (packet seed plus AD extensions).
 
     The seven packet-seed queries (DEC-0304, DEC-0331) plus ``list_mission_hooks``
-    (FR-Q35; AD-11) and ``plugin_install_preflight`` returning rollback mode
-    (FR-Q69; AD-21). The packet seed ``get bot`` reads ``get_quant`` under the
-    Bot-to-Quant rule.
+    (FR-Q35; AD-11), ``plugin_install_preflight`` returning rollback mode
+    (FR-Q69; AD-21), and illustrative ``facade_search`` / ``facade_get`` for the
+    federated discovery DTO (FR-RES-18; DEC-0389). The packet seed ``get bot``
+    reads ``get_quant`` under the Bot-to-Quant rule.
     """
 
     GET_QUANT = "get_quant"
@@ -85,6 +87,8 @@ class WireQuery(StrEnum):
     GET_PROVIDER_HEALTH = "get_provider_health"
     LIST_MISSION_HOOKS = "list_mission_hooks"
     PLUGIN_INSTALL_PREFLIGHT = "plugin_install_preflight"
+    FACADE_SEARCH = "facade_search"
+    FACADE_GET = "facade_get"
 
 
 class WireEvent(StrEnum):
