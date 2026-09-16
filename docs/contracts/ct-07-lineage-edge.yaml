@@ -6,7 +6,7 @@ owner: COMP-QMF-REGISTRY
 consumers: [COMP-QMF-DATA, COMP-QMF-STRUCTURE, COMP-QMF-RISK]
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0103, DEC-0106, DEC-0108, DEC-0109, DEC-0113, DEC-0114, DEC-0116, DEC-0119, DEC-0120, DEC-0131, DEC-0137, DEC-0138, DEC-0144, DEC-0158]
+decisions: [DEC-0103, DEC-0106, DEC-0108, DEC-0109, DEC-0113, DEC-0114, DEC-0116, DEC-0119, DEC-0120, DEC-0131, DEC-0137, DEC-0138, DEC-0144, DEC-0158, DEC-0286, DEC-0387, DEC-0397, DEC-0406]
 gaps: []
 purpose: >-
   Represent lineage that accrues after a record's birth as append-only typed edge
@@ -31,6 +31,7 @@ invariants:
   - "corroborates and disagrees-with edges keep source disagreements visible and are never merged away — the same mechanism tick-source disagreements use (DEC-0114, DEC-0119)."
   - "Every edge append succeeds or returns a typed refusal; a byte-identical idempotent re-append is accepted while a true fp1 collision on differing bytes is refused and alarmed (DEC-0109, DEC-0108)."
   - "Edges persist in qmf-registry's registry room through qmf-data's CT-11 append-store contract (DEC-0120)."
+  - "QML RESEARCH USAGE [PROPOSED] (2026-09-16): mill host stamps `promoted-from` with `to_ref` = hypothesis `research_ref` (fp1-shaped); that edge is lineage, not governed evidence; no CT-07 edge points at a Knowledge Citation digest; a self-edge is refused (DEC-0397, DEC-0387)."
 schema:
   type: "append-only typed lineage-edge record serialized as pinned JSONL — one fp1-canonical JSON object per line, LF-terminated"
   fields:
@@ -46,3 +47,4 @@ schema:
   nullability:
     all_fields: "edge_type, from_ref, to_ref, contract_format_version, and writer are mandatory (never null); an absent value is an omitted key, never null (DEC-0108)"
     endpoint_roles: "corroborates and disagrees-with relate two source-observation fingerprints; both endpoints are always present"
+provenance_note: "CT-07 is the append-only lineage-edge contract (DEC-0114). Matching source exists on integration@1b451a8 (DEC-0286). 2026-09-16 QML research expansion annotations are package-PROPOSED only and cite integration@8510c03 (DEC-0406): mill graduation stamps promoted-from to hypothesis research_ref as lineage, never governed evidence, and never to a Knowledge Citation (DEC-0397, DEC-0387)."

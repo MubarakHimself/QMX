@@ -31,3 +31,10 @@ Thumbs.db
 adws/adw_data/sessions/
 adws/adw_data/sssf.db*
 .env
+
+# local clones and agent runtime (not project content)
+.worktrees/
+.grok/
+.hermes/
+.reticle/
+.scratch/

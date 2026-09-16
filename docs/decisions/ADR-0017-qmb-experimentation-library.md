@@ -4,10 +4,10 @@ title: QMB — the experimentation/backtesting library and qmb CLI
 type: adr
 status: ratified
 depends_on: [COMP-QMB, COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-RISK]
-decisions: [DEC-0159, DEC-0160, DEC-0161, DEC-0162, DEC-0163, DEC-0164, DEC-0165, DEC-0166, DEC-0167, DEC-0168, DEC-0169, DEC-0170, DEC-0013, DEC-0083, DEC-0084, DEC-0085, DEC-0086, DEC-0087, DEC-0088]
+decisions: [DEC-0159, DEC-0160, DEC-0161, DEC-0162, DEC-0163, DEC-0164, DEC-0165, DEC-0166, DEC-0167, DEC-0168, DEC-0169, DEC-0170, DEC-0013, DEC-0083, DEC-0084, DEC-0085, DEC-0086, DEC-0087, DEC-0088, DEC-0285]
 sources: [DEC-0159, DEC-0160, DEC-0161, DEC-0162, DEC-0163, DEC-0164, DEC-0165, DEC-0166, DEC-0167, DEC-0168, DEC-0169, _bmad-output/planning-artifacts/architecture/architecture-QMB-2026-08-20/ARCHITECTURE-SPINE.md]
 generated: 2026-08-21
-verified: 2026-08-21
+verified: 2026-09-14
 stale_after: 1y
 ---
 
@@ -56,3 +56,13 @@ What `COMP-QMB` owns that nothing else does: the event-slice run loop, the confi
 ## Blast radius
 
 New component `COMP-QMB` and feature `FEAT-0029`; new registry rows for the QMB governor/limits/staleness variables and the click/optuna pins; CT-32 gains its declared QMB extensions and QMB as its intended producer; CT-13 gains the replay-world run-loop emission note; CT-11's operational-vs-evidence boundary is restated for per-run logs; glossary (QMB, future-backtesting-library, experimentation/backtest, Simulator, as-of set), overview, stack, gap report, index, AGENTS.md, and the qmf-risk/qmf-data/qmf-registry/dukascopy component specs take consumer-side notes. No QMF contract changes meaning; no dependency edge into QMF reverses direction.
+
+## Follow-up — 2026-09-14 workbench expansion (ADR-0022)
+
+This ADR's 2026-08-21 Decision/Ruling stands as written. The 2026-09-14 workbench spine ([ADR-0022](ADR-0022-workbench-expansion.md), DEC-0285) composes QMB without shrinking its authority or minting a sixth application.
+
+- **Three door-derived lanes (DEC-0270).** Ungoverned (`qmb.run()` / ordinary Python) returns values and writes no ledger, no CT-32, no ExperimentSpec. Governed (orchestrator spawn not placed by CT-47) writes one QMB ledger line and one CT-32. Coordinated (QMA Backtesting Service) places at most one `qmb` CLI/MCP **run** invocation per ExecutionEnvironment and never `import qmb`. `workbench_lane` is metadata on the ledger / Experiment Ledger entry, never a CT-32 field.
+- **Two named analysis methods (DEC-0273).** `analysis.project` is a saved view over one cited CT-32 and its CT-29 stream; it is not a run and consumes no occupancy. `analysis.rerun` is a new QMB run whose artifact is a new CT-32. `compare_runs` is readout only.
+- **No CT-32 / B-4 extension (DEC-0283).** Labels stay parent-shaped; `workbench_lane` and `analysis_method` are not CT-32 fields.
+- **CLI wiring (DEC-0281, DEC-0286).** Robustness and sweep batch/rank remain library surface that the CLI must cover as connect work; matching CT-32 producer source exists on `integration@1b451a8` (`source-inspected`), and class/test existence is not end-to-end demonstration.
+- **research-paper (DEC-0275).** research-paper is QMB governed replay (`world=replay`) outside the node; node-paper stays Book-level demo on QMN; QMA-paper does not exist.

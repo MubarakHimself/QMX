@@ -3,13 +3,13 @@ name: QMA Routine (scheduled trigger) record contract
 status: ratified
 version: 1  # first minted format version; CT-49 realizes AD-29's Routine as a durable, Quant-owned daemon-state record, absorbed by the 2026-08-28/29 QMX agentic-system sitting (DEC-0328)
 owner: COMP-QMA-CORE  # the Routine record type is defined in qma-core (definitions only, depends only on qmf-core, AD-1); the daemon scheduler owns and runs the live records (DEC-0300, DEC-0328)
-consumers: []  # defined-unwired: no code imports this contract yet (DEC-0328)
+consumers: []  # source-inspected on integration@1b451a8 (DEC-0286); not end-to-end demonstrated (DEC-0328)
 active_consumers: []
 intended_consumers: [COMP-QMA-DAEMON, COMP-QMA-WIRE]  # qma-daemon holds Routine records as declarative daemon state and its scheduler fires them; qma-wire carries the operator-principal create/edit commands and the before_routine_fire / after_routine_fire hook events (DEC-0328, DEC-0304)
-wiring_status: defined-unwired  # ratified surface; no code exists; a Routine record is written only by an operator-principal wire command, and no wiring is authorized from this doc (DEC-0328)
+wiring_status: source-inspected  # matching source exists on integration@1b451a8 (DEC-0286); class/test existence is not end-to-end demonstration; remaining connect / composition-root / daemon-process work is not authorized from this doc
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0328, DEC-0325, DEC-0306, DEC-0304, DEC-0309, DEC-0311, DEC-0312, DEC-0323]
+decisions: [DEC-0328, DEC-0325, DEC-0306, DEC-0304, DEC-0309, DEC-0311, DEC-0312, DEC-0323, DEC-0286]
 gaps: []  # AD-29 is ruled outright; missed-fire catch-up is an operator-gated command, not a deferred question; the continuation ceilings this record references are AD-26 registry variables (DEC-0328, DEC-0325)
 purpose: >-
   One Routine — a durable, Quant-owned scheduled trigger that makes unattended
@@ -56,4 +56,4 @@ schema:
   nullability:
     - "per `fp1` null is prohibited and an absent value is an omitted key (parent AD-10): a Routine carries all of `id`, `owner_ref`, `schedule`, `goal`, `graph_template_ref`, `enabled` and `max_concurrent`; an absent required field is a load defect, never a best-effort read (DEC-0328)"
     - "`graph_template_ref` is fully-qualified `<plugin_id>:<local_id>`; a bare local id or an unresolvable template id is refused, never expanded best-effort (DEC-0328, DEC-0312)"
-provenance_note: "CT-49 is newly minted by the 2026-08-28/29 QMX agentic-system architecture sitting (spine AD-29 Routines, scheduled triggers and continuation; realizing AD-5 correlation_id, AD-7 ActorId, AD-10 before_routine_fire / after_routine_fire, AD-12 Mission Compiler, AD-13 graph_template expansion, AD-24 machine principal and AD-26 the routine.max_concurrent and continuation configurables), absorbed into docs/ under SRC-15 (the operator's job-spec rider of 2026-08-29). Routines give unattended operation — the operator's first stated requirement — its owning rule, so no LLM decides when work fires and no agent invents work after its budget runs out (DEC-0328). Ratified as rider material; the QMA spine is FINAL and export-ready with validation closed dry 2026-08-29. The contract is defined-unwired: no code exists, and implementation authorization arrives only through the factory pipeline."
+provenance_note: "CT-49 is newly minted by the 2026-08-28/29 QMX agentic-system architecture sitting (spine AD-29 Routines, scheduled triggers and continuation; realizing AD-5 correlation_id, AD-7 ActorId, AD-10 before_routine_fire / after_routine_fire, AD-12 Mission Compiler, AD-13 graph_template expansion, AD-24 machine principal and AD-26 the routine.max_concurrent and continuation configurables), absorbed into docs/ under SRC-15 (the operator's job-spec rider of 2026-08-29). Routines give unattended operation — the operator's first stated requirement — its owning rule, so no LLM decides when work fires and no agent invents work after its budget runs out (DEC-0328). Ratified as rider material; the QMA spine is FINAL and export-ready with validation closed dry 2026-08-29. The contract is source-inspected on integration@1b451a8 (DEC-0286); not end-to-end demonstrated, and implementation authorization arrives only through the factory pipeline."

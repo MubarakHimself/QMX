@@ -6,10 +6,10 @@ owner: COMP-QMF-RISK
 consumers: []  # consumer-blind by design: window records derive from CT-10/CT-15 intake and are qmf-core value types wrapped into registry records by the composition root; no package imports qmf-risk under default-deny (DEC-0152, DEC-0143)
 active_consumers: []
 intended_consumers: [COMP-QMF-DATA, COMP-QMF-REGISTRY]  # feed-derived windows arrive through qmf-data's CT-15 intake; window records and their journal events reach qmf-registry/qmf-data via the composition root when the factory ships; documentary until then (DEC-0152)
-wiring_status: defined-unwired  # AD-38 ratifies the window-record surface and the read-time effective-window fold; no code exists and no build is authorized outside the factory pipeline — composition-root mediated (DEC-0152)
+wiring_status: source-inspected  # matching source exists on integration@1b451a8 (DEC-0286); class/test existence is not end-to-end demonstration; remaining connect / composition-root / daemon-process work is not authorized from this doc
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0152, DEC-0157, DEC-0158, DEC-0156, DEC-0150, DEC-0151, DEC-0193, DEC-0196, DEC-0198, DEC-0259]
+decisions: [DEC-0152, DEC-0157, DEC-0158, DEC-0156, DEC-0150, DEC-0151, DEC-0193, DEC-0196, DEC-0198, DEC-0259, DEC-0286]
 gaps: []  # AD-38 closes GAP-0042; window widths, anchors and severity mapping are configurable UI-editable variables awaiting evidence, a deferred measurement not a gap (DEC-0152, DEC-0157)
 purpose: "One control-window contract for every no-trade band: a window record carries two instants (never an offset), a resolved instrument scope, a kind, a reason class, and the external-fact quadruple where feed-derived; three ratified calendar-derived kinds (news, daily_dead_zone, session_handover_buffer) each block new entries only — live and paper alike — resolved at a decision instant by a widen-never-shrink read-time effective-window fold, and a window never blocks an exit, a protection amendment, a protection action, or the recording of evidence (DEC-0152)."
 invariants:

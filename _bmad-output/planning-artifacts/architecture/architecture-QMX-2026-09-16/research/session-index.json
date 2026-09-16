@@ -1,0 +1,118 @@
+[
+  {
+    "id": "20260824_121737_86f88c",
+    "display_name": null,
+    "model": "gpt-5.6-sol",
+    "cwd": "C:\\Users\\Mubarak\\Desktop\\Stats",
+    "message_count_col": 194,
+    "messages_rows": 1201,
+    "started_at": 1787563058.4940188,
+    "ended_at": 1787717481.2975254,
+    "end_reason": "startup_orphan_reap",
+    "parent_session_id": null,
+    "role_counts": [
+      [
+        "assistant",
+        389,
+        327
+      ],
+      [
+        "tool",
+        745,
+        622
+      ],
+      [
+        "user",
+        67,
+        58
+      ]
+    ]
+  },
+  {
+    "id": "20260825_115530_94412f",
+    "display_name": null,
+    "model": "gpt-5.6-sol",
+    "cwd": null,
+    "message_count_col": 57,
+    "messages_rows": 610,
+    "started_at": 1787648131.1276526,
+    "ended_at": 1788268901.6910617,
+    "end_reason": "ws_orphan_reap",
+    "parent_session_id": null,
+    "role_counts": [
+      [
+        "assistant",
+        193,
+        86
+      ],
+      [
+        "tool",
+        374,
+        170
+      ],
+      [
+        "user",
+        43,
+        17
+      ]
+    ]
+  },
+  {
+    "id": "20260826_115355_ae94f7",
+    "display_name": null,
+    "model": "gpt-5.6-sol",
+    "cwd": null,
+    "message_count_col": 140,
+    "messages_rows": 224,
+    "started_at": 1787734520.6566,
+    "ended_at": 1787814551.462948,
+    "end_reason": "startup_orphan_reap",
+    "parent_session_id": null,
+    "role_counts": [
+      [
+        "assistant",
+        76,
+        29
+      ],
+      [
+        "tool",
+        141,
+        54
+      ],
+      [
+        "user",
+        7,
+        1
+      ]
+    ]
+  },
+  {
+    "id": "20260826_180446_36307b",
+    "display_name": null,
+    "model": "gpt-5.6-sol",
+    "cwd": null,
+    "message_count_col": 154,
+    "messages_rows": 325,
+    "started_at": 1787756698.1752172,
+    "ended_at": null,
+    "end_reason": null,
+    "parent_session_id": null,
+    "role_counts": [
+      [
+        "assistant",
+        73,
+        32
+      ],
+      [
+        "tool",
+        248,
+        137
+      ],
+      [
+        "user",
+        4,
+        2
+      ]
+    ]
+  }
+]

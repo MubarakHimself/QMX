@@ -1,4 +1,4 @@
-current_stage: 8
+current_stage: 9
 provisional: false
 completed:
 - stage: 1
@@ -259,3 +259,65 @@ change_mode:
     lint_docs: clean
     lint_docs_strict: clean
   remaining: "Operator merges docs/node-veto-round into main; then prompt 14 (node epics 5-8, Grok lane; the single-machine variant epic's first story = the GAP-0058 architecture increment; MIS training last); GAP-0050 KSA matrix values pre-soak; GAP-0016/0017; GAP-0048/0049"
+
+- date: '2026-09-11'
+  change: "Absorb the 2026-09-11 CONNECT FX-paper architecture sitting (child feature spine CONNECT AD-1..AD-5 FINAL) into docs/ — reuse COMP-QMN and COMP-QMF-VENUE; no Stages 1-8 rebuild"
+  sources: [SRC-16]
+  provenance: "SRC-16 = architecture-CONNECT-2026-09-11/ (spine status final + .memlog.md + reviews/); captain brief workroom/research/2026-09-11_connect-architecture-result.md; handoff workroom/research/2026-09-11_connect-architecture-handoff.md. Brownfield integration@1b451a8 via the sitting's git show. Operator-directed change-mode absorption; sitting itself was operator-absent with tagged assumptions A1-A5 as cheap-veto."
+  ledger: "DEC-0263..DEC-0268 minted (ratified, authority rider): CONNECT AD-1 fail-closed selection, AD-2 honest FX paper, AD-3 encode/session locus, AD-4 FTR-01 closed mapping to CT-13 data quality (interprets DEC-0247, does not supersede), AD-5 plurality without a fourth V1 kind, umbrella adoption + preflight reuse. EXT-2172..EXT-2182. No live DEC superseded."
+  gaps: "GAP-0059 (FTR-02 compound-command annotation) and GAP-0060 (canonical live source parameterization) minted deferred non-blocking. A3 journal type data quality answered as DEC-0266 with cheap-veto. No blocking gap opened."
+  adr: "ADR-0021 written (new); preflight verdict: reuse COMP-QMN and COMP-QMF-VENUE — no new component; ADR-0019 dated CONNECT follow-up"
+  contracts: "CT-20 mapping rows for position-read-back and balance-read-back corrected from observation-as-journal-type to CT-13 data quality; CT-13/CT-18/CT-19/CT-21 CONNECT usage annotations; no new contract id"
+  features: "FEAT-0032 minted (multi-pass, planned, blocked_by FEAT-0023/0024/0026/0031)"
+  docs: "ADR-0021; trading-node CONNECT section; qmf-venue CONNECT section; ctrader CONNECT section; CT-13/18/19/20/21 usage annotations (CT-20 mapping corrected to data quality); constitution L21/L22/L30; overview; stack protobuf pin; glossary VenueClientKind/FTR-01; gap-report GAP-0059/0060; traceability DEC-0263..0268 FEAT-0032; index ADR-0021; AGENTS; SCN-0005; ADR-0019 CONNECT follow-up; changelog 2026-09-11"
+  status: complete
+  gates:
+    validate_ledger: pass
+    validate_registry: pass
+    validate_inventory: "pass (pre-existing house-accepted warnings only)"
+    check_citations: "pass (house-accepted dead-DEC frontmatter class only)"
+    lint_docs: clean
+    lint_docs_strict: clean
+  remaining: "GAP-0059/GAP-0060 deferred; cheap-veto A1-A5; next = bmad-create-epics-and-stories then factory lane — not this session"
+
+- date: '2026-09-14'
+  change: "Absorb the 2026-09-14 QMX strategy-experimentation workbench spine (local AD-1..AD-16 FINAL) into docs/ — reuse existing applications; no sixth COMP; no Stages 1-8 rebuild"
+  sources: [SRC-17, SRC-18]
+  provenance: "SRC-17 = architecture-QMX-2026-09-14/ (spine status final + CAPABILITY-EXPANSION.md + .memlog.md + inputs/ + reviews/); SRC-18 = epansion_session (architecture-sitting transcript; citation surface is memlog/spine). Planning checkout main 430fb7d; implementation inspected on integration@1b451a848d897e42f6e2c7fd9f2ea86fab7295f2 via git show without switching. Operator-directed change-mode; operator away — tagged assumptions A1-A5 as cheap-veto. Generated layouts are not preference evidence."
+  ledger: "DEC-0269..DEC-0287 minted (ratified, authority rider): workbench AD-1..AD-16, umbrella reuse preflight, wiring-status reconcile source-inspected ≠ e2e, cheap-veto register. EXT-2183..EXT-2212. No live DEC superseded. Dead list honored (DEC-0084/0085/0086, DEC-0376, QMA-paper)."
+  gaps: "GAP-0061 (PRD FR addenda), GAP-0062 (workbench AD-10 host machine), GAP-0063 (generator algorithm) minted deferred non-blocking. GAP-0085 ownership updated to QML/host (DEC-0272); nouns still deferred. No blocking gap opened."
+  adr: "ADR-0022 written (new); preflight verdict: reuse COMP-QMB / COMP-QML / COMP-QMA-CORE / COMP-QMA-WIRE / COMP-QMA-DAEMON / COMP-QMF-REGISTRY / COMP-QMF-RISK / COMP-QMF-DATA / COMP-QMN — no new component; dated follow-ups on ADR-0017/0018/0020"
+  contracts: "CT-22..CT-34 and CT-40..CT-51 wiring_status reconciled to source-inspected (DEC-0286); CT-32 forbids workbench_lane/analysis_method fields; CT-47 occupancy = one run invocation, queries free; no new contract id; no new depends_on edge"
+  features: "FEAT-0033..FEAT-0039 minted (multi-pass, planned). Connect-wave is not wave-1: 0038 wave 11, 0039 wave 12, 0034/0035/0036 wave 14, 0033 wave 15, 0037 wave 16."
+  docs: "ADR-0022; SCN-0015/SCN-0016; qmb/qml/qma-*/qmf-registry/qmf-risk/qmf-data/trading-node; overview/stack/dependencies; constitution L7/L31/L17/L33/L30 annotations; AGENTS; glossary; gap-report GAP-0061..0063; traceability; index; changelog 2026-09-14; ADR-0017/0018/0020 follow-ups; lenses test/security/observability/bugs/ops; every edited doc verified: 2026-09-14"
+  status: complete
+  gates:
+    validate_ledger: pass
+    validate_registry: pass
+    validate_inventory: "pass (pre-existing house-accepted warnings only)"
+    check_citations: "pass (house-accepted dead-DEC class only)"
+    lint_docs: clean
+    lint_docs_strict: clean
+  review: "Independent spine-fidelity FAIL-with-amendments (SCN-0015 dual-label collapse; bare AD-10/AD-5 collisions; ADR-0022 inherited-store list) and consistency FAIL (same dual-label; leftover defined-unwired as current fact; CT-47 GAP-0085 over-answer; qma-daemon Interfaces table). Desk fixes applied 2026-09-14; lint_docs --strict re-clean."
+  remaining: "GAP-0061/0062/0063 deferred; GAP-0085 nouns still open; cheap-veto A1-A5; next = bmad-create-epics-and-stories on FEAT-0033..0039 (respect inventory waves) then factory lane — not this session"
+
+- date: '2026-09-16'
+  change: "Absorb the 2026-09-16 QML research-expansion spine (local AD-1..AD-21 draft/proposed) into docs/ — reuse COMP-QML (Stage 0) + existing QMA/QMB/registry; no new COMP; no new CT; package stamped provisional"
+  sources: [SRC-19, SRC-20]
+  provenance: "SRC-19 = architecture-QMX-2026-09-16/ (spine AD-1..AD-21 draft/proposed + QML-EXPANSION.md current + REQUIREMENTS-ADDENDUM.md FR-RES-* + .memlog.md + inputs/ + research/ + reviews/). LIBRARY-ADAPTATION.md superseded first distill, not folded as current. SRC-20 = operator rider qml-research-expansion-2026-09-16.md (DEC-0380 ratified). Inspect integration@8510c032496bb870824ecc5c4f807e8a4e4f167e. Operator-directed change-mode; package not accepted."
+  ledger: "DEC-0380 ratified operator paradigm. DEC-0381..DEC-0401 (AD-1..AD-21) provisional. DEC-0402 umbrella + preflight reuse provisional. DEC-0403 parent amendments provisional. DEC-0404 cheap-veto. DEC-0405 FR-RES / GAP-0064. DEC-0406 wiring inspect 8510c03. DEC-0407 GAP-0073 layout trigger. DEC-0408..DEC-0413 dead. EXT-2213..EXT-2245. No live DEC superseded."
+  gaps: "GAP-0064 minted deferred (FR-RES PRD hole, sibling to GAP-0061). GAP-0073/0085/0061 updated in place; none closed. No blocking gap opened."
+  adr: "ADR-0023 written (new, status provisional); preflight verdict: reuse COMP-QML / COMP-QMA-CORE / COMP-QMA-DAEMON / research-corpus / COMP-QMA-WIRE / COMP-QMB / COMP-QMF-REGISTRY — no new component, no new contract id, no new depends_on edge; dated follow-ups on ADR-0018/0020/0022"
+  contracts: "CT-33/CT-34/CT-44/CT-07/CT-40/CT-32/CT-06 usage annotations only; no new contract id; wiring_status remains source-inspected; 8510c03 note added beside 1b451a8"
+  features: "FEAT-0047..FEAT-0050 minted (multi-pass, planned). First epic FEAT-0047 (AD-14 seed bind + Stage 0 view)."
+  docs: "ADR-0023; SCN-0017; qml/qma-core/qma-daemon/qma-wire/qmb/qmf-registry; constitution L11/L33; AGENTS; glossary; gap-report GAP-0064 + graveyard DEC-0408..0413; traceability; index; changelog 2026-09-16; overview/stack/dependencies; ADR-0018/0020/0022 follow-ups; every edited doc verified: 2026-09-16"
+  status: complete
+  gates:
+    validate_ledger: pass
+    validate_registry: pass
+    validate_inventory: "pass (pre-existing house-accepted warnings only)"
+    check_citations: "pass (house-accepted dead-DEC class only)"
+    lint_docs: clean
+    lint_docs_strict: "expected-blocked (ADR-0023 and SCN-0017 status: provisional per operator stamp)"
+  review: "Independent consistency FAIL-with-amendments (_docwork/review-consistency-qml-research.md): 3 major + 2 minor. Desk fixes applied 2026-09-16; lint_docs re-clean."
+  remaining: "Package proposed not accepted; GAP-0064/0073/0085/0061 deferred; cheap-veto A1-A5; next = bmad-create-epics-and-stories on FEAT-0047 first (see _docwork/qml-research-epics-handoff.md) — not this session"

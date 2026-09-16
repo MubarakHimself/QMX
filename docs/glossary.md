@@ -4,10 +4,10 @@ title: QMF V1 Glossary
 type: glossary
 status: ratified
 depends_on: [COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMN, COMP-QMA-CORE, COMP-QMA-WIRE, COMP-QMA-DAEMON]
-decisions: [DEC-0001, DEC-0017, DEC-0019, DEC-0024, DEC-0028, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0048, DEC-0055, DEC-0058, DEC-0059, DEC-0065, DEC-0066, DEC-0074, DEC-0076, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0114, DEC-0115, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0126, DEC-0128, DEC-0129, DEC-0130, DEC-0131, DEC-0132, DEC-0133, DEC-0134, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0147, DEC-0148, DEC-0149, DEC-0150, DEC-0151, DEC-0152, DEC-0153, DEC-0154, DEC-0155, DEC-0157, DEC-0158, DEC-0159, DEC-0160, DEC-0161, DEC-0164, DEC-0165, DEC-0169, DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184, DEC-0185, DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0192, DEC-0193, DEC-0194, DEC-0195, DEC-0196, DEC-0197, DEC-0198, DEC-0200, DEC-0201, DEC-0202, DEC-0203, DEC-0204, DEC-0205, DEC-0206, DEC-0208, DEC-0209, DEC-0210, DEC-0211, DEC-0212, DEC-0213, DEC-0215, DEC-0216, DEC-0217, DEC-0218, DEC-0221, DEC-0224, DEC-0227, DEC-0228, DEC-0229, DEC-0230, DEC-0231, DEC-0233, DEC-0234, DEC-0235, DEC-0236, DEC-0237, DEC-0238, DEC-0239, DEC-0241, DEC-0249, DEC-0250, DEC-0252, DEC-0253, DEC-0254, DEC-0255, DEC-0256, DEC-0257, DEC-0258, DEC-0259, DEC-0261, DEC-0262, DEC-0303, DEC-0304, DEC-0305, DEC-0306, DEC-0308, DEC-0309, DEC-0311, DEC-0312, DEC-0313, DEC-0314, DEC-0315, DEC-0316, DEC-0317, DEC-0318, DEC-0319, DEC-0320, DEC-0321, DEC-0322, DEC-0323, DEC-0328, DEC-0330, DEC-0331, DEC-0332, DEC-0337, DEC-0338, DEC-0339, DEC-0340, DEC-0342, DEC-0343, DEC-0344, DEC-0345, DEC-0346, DEC-0348, DEC-0349, DEC-0361, DEC-0376, DEC-0378, DEC-0269, DEC-0270, DEC-0273, DEC-0275, DEC-0283, DEC-0284, DEC-0285, DEC-0286]
-sources: [_docwork/ledger.yaml, _docwork/gaps.yaml, docs/registry/variables.yaml, docs/architecture/dependencies.yaml, docs/contracts/, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, docs/decisions/ADR-0019-trading-node.md, docs/decisions/ADR-0022-workbench-expansion.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-14/ARCHITECTURE-SPINE.md]
+decisions: [DEC-0001, DEC-0017, DEC-0019, DEC-0024, DEC-0028, DEC-0033, DEC-0035, DEC-0042, DEC-0045, DEC-0048, DEC-0055, DEC-0058, DEC-0059, DEC-0065, DEC-0066, DEC-0074, DEC-0076, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0114, DEC-0115, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0126, DEC-0128, DEC-0129, DEC-0130, DEC-0131, DEC-0132, DEC-0133, DEC-0134, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0147, DEC-0148, DEC-0149, DEC-0150, DEC-0151, DEC-0152, DEC-0153, DEC-0154, DEC-0155, DEC-0157, DEC-0158, DEC-0159, DEC-0160, DEC-0161, DEC-0164, DEC-0165, DEC-0169, DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184, DEC-0185, DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0192, DEC-0193, DEC-0194, DEC-0195, DEC-0196, DEC-0197, DEC-0198, DEC-0200, DEC-0201, DEC-0202, DEC-0203, DEC-0204, DEC-0205, DEC-0206, DEC-0208, DEC-0209, DEC-0210, DEC-0211, DEC-0212, DEC-0213, DEC-0215, DEC-0216, DEC-0217, DEC-0218, DEC-0221, DEC-0224, DEC-0227, DEC-0228, DEC-0229, DEC-0230, DEC-0231, DEC-0233, DEC-0234, DEC-0235, DEC-0236, DEC-0237, DEC-0238, DEC-0239, DEC-0241, DEC-0249, DEC-0250, DEC-0252, DEC-0253, DEC-0254, DEC-0255, DEC-0256, DEC-0257, DEC-0258, DEC-0259, DEC-0261, DEC-0262, DEC-0303, DEC-0304, DEC-0305, DEC-0306, DEC-0308, DEC-0309, DEC-0311, DEC-0312, DEC-0313, DEC-0314, DEC-0315, DEC-0316, DEC-0317, DEC-0318, DEC-0319, DEC-0320, DEC-0321, DEC-0322, DEC-0323, DEC-0328, DEC-0330, DEC-0331, DEC-0332, DEC-0337, DEC-0338, DEC-0339, DEC-0340, DEC-0342, DEC-0343, DEC-0344, DEC-0345, DEC-0346, DEC-0348, DEC-0349, DEC-0361, DEC-0376, DEC-0378, DEC-0269, DEC-0270, DEC-0273, DEC-0275, DEC-0283, DEC-0284, DEC-0285, DEC-0286, DEC-0380, DEC-0381, DEC-0382, DEC-0383, DEC-0386, DEC-0387, DEC-0395, DEC-0396, DEC-0397, DEC-0398, DEC-0399, DEC-0401, DEC-0403]
+sources: [_docwork/ledger.yaml, _docwork/gaps.yaml, docs/registry/variables.yaml, docs/architecture/dependencies.yaml, docs/contracts/, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, docs/decisions/ADR-0019-trading-node.md, docs/decisions/ADR-0022-workbench-expansion.md, docs/decisions/ADR-0023-qml-research-expansion.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-14/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-16/ARCHITECTURE-SPINE.md]
 generated: 2026-08-18
-verified: '2026-09-14'
+verified: '2026-09-16'
 stale_after: 30d
 ---
 
@@ -135,7 +135,7 @@ The CT-33 registry artifact — the declaration half of a **Bot** (the other hal
 
 ### Bot journey (pre-promotion)
 
-The path a bot travels BEFORE it reaches the trading node, ruled binding across the whole corpus by the operator on 2026-08-30 (DEC-0261): a bot starts as a hypothesis, is built, and is backtested, iterated and paper-traded with QMB and the research lanes — all of it OUTSIDE the trading node, which is for live trading only — so by promotion the bot is KNOWN ready for live capital and everything deployed on the node carries the operator's approval to touch money (DEC-0261). The node therefore grants NO per-bot warm-up, probation, ramp or paper lane ("there is no ramping, there is no bot ramping"); the inherited three-layer admission row (registration linters, a technical demo/paper shakedown, one operator signature — no probation, no paper-performance gate) stands unchanged, and the only route back to paper is a BMS/Book protective demotion after a drawdown or bench event (`GAP-0057` answered, DEC-0261; AD-35, DEC-0251). The only paper the node itself runs is the deploy-level **soak** week and that protective demotion — never a per-bot lane (DEC-0261). Distinct from **activation versus promotion**, which names the two live-path acts at the node's edge once a bot has completed this journey. (DEC-0261)
+The path a bot travels BEFORE it reaches the trading node, ruled binding across the whole corpus by the operator on 2026-08-30 (DEC-0261): a bot starts as a hypothesis, is built, and is backtested, iterated and paper-traded with QMB and the research lanes — all of it OUTSIDE the trading node, which is for live trading only — so by promotion the bot is KNOWN ready for live capital and everything deployed on the node carries the operator's approval to touch money (DEC-0261). The node therefore grants NO per-bot warm-up, probation, ramp or paper lane ("there is no ramping, there is no bot ramping"); the inherited three-layer admission row (registration linters, a technical demo/paper shakedown, one operator signature — no probation, no paper-performance gate) stands unchanged, and the only route back to paper is a BMS/Book protective demotion after a drawdown or bench event (`GAP-0057` answered, DEC-0261; AD-35, DEC-0251). The only paper the node itself runs is the deploy-level **soak** week and that protective demotion — never a per-bot lane (DEC-0261). Distinct from **activation versus promotion**, which names the two live-path acts at the node's edge once a bot has completed this journey. (DEC-0261) **[PROPOSED, DEC-0386]**: Stage 0 **Hypothesis** is the mill package on the research-candidate plane before CT-33 registration; this does not rewrite DEC-0261.
 
 ### candidate labeler
 
@@ -215,7 +215,7 @@ The declared maximum bound, in observations at the family's **BarSpec**, between
 
 ### Confluence
 
-A registry artifact (CT-34) of reusable bot-side trading logic, cited by fingerprint. A confluence carries ONE-OR-MORE **confluence leg**s of ANY role mix — at least one leg of any role, never one of each — each leg a `(role, producer binding, optional declared exact parameters)` triple whose role is one of `level | trigger | confirmation | filter`; a leg may cite another confluence (composition). A confluence is its own artifact with lineage to its children (AD-17), NOT a CT-17 causal-structure composite, so AD-25's order-significant-by-default does not reach it: legs follow a fingerprint-ascending default with display-only ordinals, and order-significance is opt-in per confluence, entering the fingerprint ONLY when declared. Condition semantics live in the Python logic in V1. A **Bot** contains one-or-more confluences (DEC-0115); exit ownership is separate — the Book owns exit policy and a Bot may only propose exits through the CT-23 door (DEC-0147). (DEC-0175, DEC-0115, DEC-0147)
+A registry artifact (CT-34) of reusable bot-side trading logic, cited by fingerprint. A confluence carries ONE-OR-MORE **confluence leg**s of ANY role mix — at least one leg of any role, never one of each — each leg a `(role, producer binding, optional declared exact parameters)` triple whose role is one of `level | trigger | confirmation | filter`; a leg may cite another confluence (composition). A confluence is its own artifact with lineage to its children (AD-17), NOT a CT-17 causal-structure composite, so AD-25's order-significant-by-default does not reach it: legs follow a fingerprint-ascending default with display-only ordinals, and order-significance is opt-in per confluence, entering the fingerprint ONLY when declared. Condition semantics live in the Python logic in V1. A **Bot** contains one-or-more confluences (DEC-0115); exit ownership is separate — the Book owns exit policy and a Bot may only propose exits through the CT-23 door (DEC-0147). (DEC-0175, DEC-0115, DEC-0147) Homonym versus Stage 0 **graph (Stage 0)** — never name that field Confluence (DEC-0398).
 
 ### confluence leg
 
@@ -272,6 +272,10 @@ The organizational and workspace unit at the head of the ontology chain Desk -> 
 ### desk ledger view
 
 A read-time view over the three ledger stores — **Task Ledger**, **Quant Ledger** and **Experiment Ledger** — indexed by desk, quant, agent, mission, task, experiment and date, never itself a store (DEC-0308, DEC-0338). The Research, Trading, Development, Analysis and PM ledgers are all views. Its fold contract streams the three stores' `ledger.appended` announcements filtered by the view's index key, orders by the announcement `journal_seq`, bounds knowledge-time by the view's `as_of` over `recorded_at` (defaulting to now), and disposes equal instants by ascending `journal_seq` (DEC-0308).
+
+### Dictionary entry
+
+**[PROPOSED, DEC-0396]**: a role-neutral file record in the **Seed corpus** vocabulary helpers over host-passed bytes. It is not a registry kind and is not CT-16. GAP-0085 stays deferred.
 
 ### drain window
 
@@ -397,9 +401,17 @@ The reserved entry for a modular, on-demand QMF consumer for testing Bot-by-Book
 
 The route by which a working plain-Python research experiment enters governed evidence as a CT-16 indicator or CT-17 structure family through the AD-2 extension shape — a separate versioned package outside the seven-package roster, its own SemVer ladder, distribution identity and version as identity fields of every artifact it produces, explicit registration at the composition root — carrying a lineage edge back to the originating research artifact. Authoring outside the framework stays legal always; the graduation path keeps that freedom without losing provenance when an experiment becomes evidence-bearing. (DEC-0133) Workbench clarification: L33 graduation is this two-artifact registration act, **not** an orchestrator spawn; a governed or coordinated QMB run is a door-selected **workbench_lane**, not graduation (DEC-0270).
 
+### graduate_to_governed (mill path)
+
+**[PROPOSED, DEC-0397]**: the QL-8 mill graduation path from Stage 0 into governed CT-33 + Python. For mill graduation, `originating_research_ref` is the hypothesis `research_ref` only; a Citation digest is illegal there. Distinct from `spawn_governed` (not graduation) and from the indicator/structure **Graduation path**. See **research_ref**, **Hypothesis**.
+
+### graph (Stage 0)
+
+**[PROPOSED, DEC-0398]**: the Boolean/temporal/lifecycle composition field on a Stage 0 **Hypothesis**. NEVER Confluence. Homonym versus **Confluence** CT-34 (the fingerprinted leg-set). Stage 0 `graph` is never an executor and is never compiled into `run_slice`.
+
 ### Graph Template
 
-The authored, plugin-contributed, versioned artifact that holds NO runtime state, addressed `<plugin_id>:<local_id>` (DEC-0312). It is never interchanged with the daemon's **Task Graph**, which is the runtime work state. A **Loop** is invoked as a node kind inside a Graph Template. v1 ships no `graph_template` in `qma-daemon`; every named cycle — Act-Observe-Verify and Hypothesis-Test-Learn-Mutate-Gate included — arrives as a plugin-contributed Graph Template (DEC-0312, DEC-0340). Graphs, not loops, are the organizing centre (DEC-0340).
+The authored, plugin-contributed, versioned artifact that holds NO runtime state, addressed `<plugin_id>:<local_id>` (DEC-0312). It is never interchanged with the daemon's **Task Graph**, which is the runtime work state. A **Loop** is invoked as a node kind inside a Graph Template. v1 ships no `graph_template` in `qma-daemon`; every named cycle — Act-Observe-Verify and Hypothesis-Test-Learn-Mutate-Gate included — arrives as a plugin-contributed Graph Template (DEC-0312, DEC-0340). Graphs, not loops, are the organizing centre (DEC-0340). Distinct from Stage 0 **graph (Stage 0)**.
 
 ### held versus refused
 
@@ -408,6 +420,10 @@ Two different fates for a protective act the trading node could not dispatch, ne
 ### Hook
 
 The single enforcement and control surface of the daemon, never an optional feature (DEC-0309, DEC-0339). Every daemon-owned primitive ships a `before_<verb>` and an `after_<verb>` event; the v1 registry is closed-and-addable across twenty-three verbs plus the two phase-less blocking controls `agent_stop` and `review_required` (DEC-0309). A hook is a deterministic Python callable or subprocess with no prompt-type and no agent-type handlers, and its source (`desk`, `role`, `mission` or `plugin`) bounds the events it can ever receive. `HookResult` decisions have the total precedence `block_stop` > `deny` > `defer` > `ask` > `allow` > `observe`, parallel hooks resolving most-restrictive-wins, and a `deny` binds under any permissive mode (DEC-0309, DEC-0323).
+
+### Hypothesis
+
+**[PROPOSED, DEC-0401, DEC-0381]**: a Stage 0 / research-candidate object owned by **QML research** (`qml.research`). Identity is `research_ref` (fp1-shaped class `qml-research-hypothesis`). It is QML-local: not a Library object and not a registry kind until CT-33 registration. See **research_ref**, **Bot journey (pre-promotion)**.
 
 ### Injected sink / sink protocols
 
@@ -463,7 +479,7 @@ The per-sample instant every CT-16 output carries: the earliest instant at which
 
 ### Knowledge
 
-A read-only, provenance-carrying corpus behind the `KnowledgeSource` port over the operator's STRATS plain-file library; QMX adapts to the library and the library is never built around QMX (DEC-0318, DEC-0343). `snapshot()` returns a `CorpusSnapshot` whose id is a content-addressed tree digest; a `Citation` carries `source_ref`, `snapshot_ref`, `locator`, an opaque evidence label and an `evidence_confidence` map of exactly six corpus-declared dimensions stored and surfaced verbatim (DEC-0318). `search` is literal and locator-based — grep-class semantics, no ranking and no embedding — and v1 ships no index (GAP(GAP-0073)). Knowledge is never conflated with **Memory**, and `evidence_confidence` is never derived from `admission_confidence` (DEC-0318, DEC-0343). "Knowledge Base" is a retired name (DEC-0348).
+A read-only, provenance-carrying corpus behind the `KnowledgeSource` port (CT-44) over a bound **Seed corpus**; `source_id=strats` is the adapter key, not product copy (DEC-0318, DEC-0343, DEC-0382, DEC-0383, DEC-0380). **[PROPOSED, DEC-0399]**: QMA cites; QML owns meaning. `snapshot()` returns a `CorpusSnapshot` whose id is a content-addressed tree digest; a `Citation` carries `source_ref`, `snapshot_ref`, `locator`, an opaque evidence label and an `evidence_confidence` map of exactly six corpus-declared dimensions stored and surfaced verbatim (DEC-0318). `search` is literal and locator-based — grep-class semantics, no ranking and no embedding — and v1 ships no index (GAP(GAP-0073)). Knowledge is never conflated with **Memory**, and `evidence_confidence` is never derived from `admission_confidence` (DEC-0318, DEC-0343). **[PROPOSED, DEC-0399, DEC-0403]**: the empty-corpus sentence is a stale factual claim; QMA AD-19 law holds. "Knowledge Base" is a retired name (DEC-0348).
 
 ### Knowledge time
 
@@ -705,7 +721,11 @@ The QMX-owned causal chart-object library `COMP-QMF-STRUCTURE`, governed by CT-1
 
 ### QML
 
-The QMX bot-authoring library: one uv-installable application-layer distribution (`import qml`) built ON QMF contracts exactly as **QMB** is, never a QMF roster package, never a framework, never an engine, and never again a cross-component contract layer (the old load-bearing-stratum role is retired — QMF's contracts are the shared layer now). Its whole surface is three thin things: author-side types and helpers producing the Bot-domain registry artifacts (**Bot definition** CT-33 and **Confluence** CT-34) on qmf-core nouns; the bot runtime protocol hosts invoke (DEC-0177); and the **conformance** gate (DEC-0178). QML mints NO new QMF-ladder (CT-*) shared contract of its own — CT-33 and CT-34 are qmf-registry kinds it authors, and the runtime protocol and conformance contract are QML-local contracts on QML's own AD-5 format-version ladder. No acronym expansion is minted: the corpus never expands QML and the L reads as Library. Plain Python stays first-class forever — an unregistered bot needs zero QML imports to run in QMB or research lanes, and QML conformance is the ticket into governed evidence and Book seats, nothing else. QML imports qmf-core, qmf-registry, and qmf-risk (CT-23/CT-29 types) and NEVER imports qmf-venue; it is pure per AD-15 (no threads, no I/O, no process spawning), every impure step host-owned. QML builds before the trading node and may build alongside QMB, carrying its own SemVer as display-only provenance and consuming the QMF workspace in lockstep (`uv add qml`) (DEC-0180). (DEC-0171, DEC-0184)
+The QMX bot-authoring library: one uv-installable application-layer distribution (`import qml`) built ON QMF contracts exactly as **QMB** is, never a QMF roster package, never a framework, never an engine, and never again a cross-component contract layer (the old load-bearing-stratum role is retired — QMF's contracts are the shared layer now). Its whole surface is three thin things: author-side types and helpers producing the Bot-domain registry artifacts (**Bot definition** CT-33 and **Confluence** CT-34) on qmf-core nouns; the bot runtime protocol hosts invoke (DEC-0177); and the **conformance** gate (DEC-0178). QML mints NO new QMF-ladder (CT-*) shared contract of its own — CT-33 and CT-34 are qmf-registry kinds it authors, and the runtime protocol and conformance contract are QML-local contracts on QML's own AD-5 format-version ladder. No acronym expansion is minted: the corpus never expands QML and the L reads as Library. Plain Python stays first-class forever — an unregistered bot needs zero QML imports to run in QMB or research lanes, and QML conformance is the ticket into governed evidence and Book seats, nothing else. QML imports qmf-core, qmf-registry, and qmf-risk (CT-23/CT-29 types) and NEVER imports qmf-venue; it is pure per AD-15 (no threads, no I/O, no process spawning), every impure step host-owned. QML builds before the trading node and may build alongside QMB, carrying its own SemVer as display-only provenance and consuming the QMF workspace in lockstep (`uv add qml`) (DEC-0180). (DEC-0171, DEC-0184) **[PROPOSED, DEC-0395, DEC-0403]**: a fourth surface `qml.research` (Stage 0 / **QML research**) is proposed; not a silent override of the ratified three-thin-things sentence; QML still mints no CT-*.
+
+### QML research
+
+**[PROPOSED, DEC-0395]**: Stage 0 mill surface on COMP-QML (`qml.research`) — types, vocabulary helpers, and hypothesis identity before CT-33. Absorbs the **Seed corpus** mill process; no new COMP and no new CT-*. Alias: **Stage 0**. See **Hypothesis**, **graduate_to_governed (mill path)**, **graph (Stage 0)**.
 
 ### QMX
 
@@ -762,6 +782,11 @@ The operator-only act that leaves **node stand-down**: `resurrect`, invoked thro
 ### research-paper
 
 One leg of the paper trinity (DEC-0275): QMB governed replay (`world=replay`, Book/BMS fragments in the run-config) outside the trading node, before promotion. Distinct from **node-paper** and from **QMA-paper** (does not exist). Never write bare "paper" for this meaning. See **QMB**, **node-paper**.
+
+### research_ref
+
+**[PROPOSED, DEC-0401]**: fp1-shaped fingerprint of class `qml-research-hypothesis` identifying a Stage 0 **Hypothesis**. Not a registry kind. Host blob store under `research_root`. Viewing cited seed / LAYOUT-DEMO does not mint a `research_ref`.
+
 ### Risk contracts (CT-22..25, CT-27..32)
 
 The ratified risk-domain contract surface owned by `COMP-QMF-RISK`: Book definition (CT-22), risk evaluation / bot-to-Book port (CT-23), binding transition (CT-24), risk-record projection join (CT-25), BMS definition (CT-27), Book binding (CT-28), exit record (CT-29), control action (CT-30), control window (CT-31), and performance result (CT-32). Matching `qmf-risk` value types and CT-32 producer path exist on `integration@1b451a8`; the reconciled wiring stamp is `source-inspected` — class/test existence is not end-to-end demonstration, and composition-root / daemon / real-CLI-transport connect work remains factory-pipeline work (DEC-0286). Composition-root-mediated, they create no new package dependency edge. Two former `pending(bot-schema sitting)` surfaces — `footprint_requirements` and the **prediction linter** — have filled now that the QML sitting landed CT-33: `footprint_requirements` takes the QL-4 requirement-set shape through the CT-22 format version 2 mint (DEC-0181) and the prediction linter's pinned four-check list is defined (DEC-0178), both still passing registration and blocking live binding (DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0147, DEC-0150, DEC-0155).
@@ -825,6 +850,14 @@ The qmf-core typed value carrying a **secret reference** — an opaque minted id
 
 The qmf-core typed value that carries actual secret material and **never renders it**: repr, str, serialization, and logging all yield the reference id, and a tier-1 secret-scan gate rides `poe check`. Only the **connection manager** may hold a SecretValue in memory, for a session's lifetime, through the core-defined `SecretStore` port; the value never crosses back out. Secrets never appear in repositories, configuration artifacts, docs, `.env` files, CLI arguments, journals, evidence, fingerprints, or logs. (DEC-0136)
 
+### Seed corpus
+
+**[PROPOSED, DEC-0382, DEC-0383, DEC-0380]**: the portable Stats tree QMX binds by `root_path`. Stats / STRATS is not product language. `source_id=strats` is the adapter key, not brand. Product language is research / hypothesis / dictionary entry / seed corpus.
+
+### seed_cite
+
+**[PROPOSED, DEC-0387]**: optional `{source_ref, snapshot_ref, locator}` field on mill graduation, distinct from live handle `origin="qma"`. Not an fp1 identity field and not a substitute for `originating_research_ref`.
+
 ### Session
 
 The run container, home of the two orthogonal session axes (DEC-0313). The durable Session record carries the execution-model axis (`dialogue` or `rlm`) and the autonomy axis (`interactive`, `semi` or `autonomous`) only; attachment (`attached` or `detached`) is client state, never daemon state and never persisted, which is what makes closing a client harmless (DEC-0313, DEC-0304). In the wire `scope_path` order Session sits between Task and Agent because a Task outlives its session (DEC-0304).
@@ -876,6 +909,10 @@ Spread Quality Sensor, a CT-16 configured producer (a value per evaluation insta
 ### SQS baseline
 
 The fingerprinted input artifact SQS divides the live spread against — the instrument's historical spread statistic for a named session window — with its own lineage, separate from the producer's configuration identity. It carries its conditioning window (a market-hours calendar identity + session id, identity-bearing), its statistic (mean, median, or a stated quantile — fingerprinted contract surface, never the bare word 'average'), and its refit cadence. A refit mints a new artifact with a `supersedes` edge; the configuration cites a **refit-series identity** plus the refit-policy fingerprint, so a refit under an unchanged policy does not fork identity while a change to the refit policy does — without that split a daily refit would fork the decay cohort daily. A live binding requires a present baseline artifact, checked at bind time among the admission Layer-2 prerequisites (DEC-0153). In the trading node the baseline is keyed `(VenueId, environment, instrument)`, so a demo-conditioned baseline NEVER satisfies a `role = live` binding; the live baseline is minted from live-connection recording during the **soak** week, and SQS reaches the Book door only inside the **signal snapshot** so one instant carries exactly one SQS value (DEC-0193, DEC-0230).
+
+### Stage 0
+
+See **QML research**.
 
 ### standing intent
 
@@ -1124,7 +1161,11 @@ Retired name. Use **Task Graph** for the daemon's deterministic runtime work sta
 
 ### Knowledge Base
 
-Retired name. Use **Knowledge** and the `KnowledgeSource` port for the read-only, provenance-carrying corpus over the operator's STRATS plain-file library (DEC-0348, DEC-0343).
+Retired name. Use **Knowledge** / the Knowledge rail and the `KnowledgeSource` port over a bound **Seed corpus**; do not brand the product STRATS (DEC-0348, DEC-0343, DEC-0380).
+
+### STRATS (product language)
+
+Banned as product language. Use **Seed corpus**; `source_id=strats` is the adapter key only (DEC-0380, DEC-0382, DEC-0383).
 
 ### bare paper
 

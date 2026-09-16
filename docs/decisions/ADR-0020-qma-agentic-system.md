@@ -4,10 +4,10 @@ title: The QMX agentic system — QMA SDK, daemon and wire
 type: adr
 status: ratified
 depends_on: [COMP-QMA-CORE, COMP-QMA-WIRE, COMP-QMA-DAEMON, COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-RISK, COMP-QMF-DATA]
-decisions: [DEC-0300, DEC-0301, DEC-0302, DEC-0304, DEC-0305, DEC-0306, DEC-0313, DEC-0316, DEC-0319, DEC-0321, DEC-0322, DEC-0324, DEC-0327, DEC-0328, DEC-0329, DEC-0330, DEC-0331, DEC-0332, DEC-0333, DEC-0334, DEC-0335, DEC-0336, DEC-0337, DEC-0338, DEC-0339, DEC-0340, DEC-0341, DEC-0342, DEC-0343, DEC-0344, DEC-0345, DEC-0346, DEC-0347, DEC-0348, DEC-0349, DEC-0350, DEC-0360, DEC-0361, DEC-0362, DEC-0363, DEC-0364, DEC-0365, DEC-0366, DEC-0367, DEC-0368, DEC-0369, DEC-0370, DEC-0371, DEC-0372, DEC-0373, DEC-0374, DEC-0375, DEC-0376, DEC-0377, DEC-0378, DEC-0379]
-sources: [DEC-0329, DEC-0335, DEC-0341, DEC-0347, DEC-0350, _bmad-output/planning-artifacts/architecture/architecture-QMA-2026-08-28/ARCHITECTURE-SPINE.md, _docwork/qma/riders/job-spec-2026-08-29.md]
+decisions: [DEC-0300, DEC-0301, DEC-0302, DEC-0304, DEC-0305, DEC-0306, DEC-0313, DEC-0316, DEC-0319, DEC-0321, DEC-0322, DEC-0324, DEC-0327, DEC-0328, DEC-0329, DEC-0330, DEC-0331, DEC-0332, DEC-0333, DEC-0334, DEC-0335, DEC-0336, DEC-0337, DEC-0338, DEC-0339, DEC-0340, DEC-0341, DEC-0342, DEC-0343, DEC-0344, DEC-0345, DEC-0346, DEC-0347, DEC-0348, DEC-0349, DEC-0350, DEC-0360, DEC-0361, DEC-0362, DEC-0363, DEC-0364, DEC-0365, DEC-0366, DEC-0367, DEC-0368, DEC-0369, DEC-0370, DEC-0371, DEC-0372, DEC-0373, DEC-0374, DEC-0375, DEC-0376, DEC-0377, DEC-0378, DEC-0379, DEC-0285, DEC-0388, DEC-0399, DEC-0403]
+sources: [DEC-0329, DEC-0335, DEC-0341, DEC-0347, DEC-0350, _bmad-output/planning-artifacts/architecture/architecture-QMA-2026-08-28/ARCHITECTURE-SPINE.md, _docwork/qma/riders/job-spec-2026-08-29.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-16/ARCHITECTURE-SPINE.md]
 generated: '2026-08-29'
-verified: '2026-08-29'
+verified: '2026-09-16'
 stale_after: 1y
 ---
 
@@ -79,3 +79,22 @@ What the three components own that nothing else does: `qma-core` owns the port d
 Three new component specs — `docs/components/qma-core.md` (`COMP-QMA-CORE`), `docs/components/qma-wire.md` (`COMP-QMA-WIRE`) and `docs/components/qma-daemon.md` (`COMP-QMA-DAEMON`) — and twelve new contracts, CT-40 through CT-51 (`defined-unwired`, no code). Two golden scenarios land: SCN-0013 (a Quant reachable through models over the wire, the first milestone) and SCN-0014 (the money-path reachability barrier). Seven features enter the inventory, FEAT-0040 through FEAT-0046, in the operator's build order.
 
 The ledger takes one DEC per AD (DEC-0300..DEC-0328), the spine-adoption umbrella (DEC-0329), twenty-one ruling DECs (DEC-0330..DEC-0350), twenty `status: dead` Cut rows (DEC-0360..DEC-0379) and twenty-two `status: deferred` gaps (GAP-0070..GAP-0091). Navigation and reference docs take the QMA increment: the **overview** (an application-layer consumer section with the containers and deployment diagrams and a layer-view addition), **AGENTS.md** (a reading-order step, a "Ratified QMA content" entry and the `plugin` / "RLM kernel" vocabulary hard-rule annotation), the **glossary** (canonical QMA terms plus the retired names, and the scoped "RLM kernel" and `plugin` notes), the **gap-report** (the twenty-two Deferred rows and the twenty dead rows), **traceability** (rows for the new DECs, GAPs and features, plus the QMA constitution touchpoints), the **variables registry** (every AD-26 variable), **dependencies.yaml** (the three components and their edges), **stack.md** (the QMA application stack), the **index** (component, contract, ADR and scenario rows), the **changelog** (the QMA increment entry with the cheap-veto register and the id-block reservation), and two lens pages — the security lens (Credential Broker, principal classes, money-path barrier) and the observability lens (the telemetry export port). No QMF contract changes meaning and no dependency edge reverses direction; `qma-daemon` depends on `qmf-registry`, `qmf-data` and `qmf-risk` read-and-calculate only, on `qmf-venue` never (DEC-0347).
+
+## Follow-up — 2026-09-14 workbench expansion (ADR-0022)
+
+This ADR's 2026-08-29 Decision stands as written. The 2026-09-14 workbench spine ([ADR-0022](ADR-0022-workbench-expansion.md), DEC-0285) treats the QMA→QMB door as connect work over the existing three packages.
+
+- **The door is connect (DEC-0276).** Keep Agent → QMA backtest tool → Backtesting Service → `qmb` CLI/MCP → QMB. Replace `RecordingQmbDoorTransport` with a real CLI transport; compose the asyncio daemon process from existing modules. Persist ExperimentSpec and the Experiment Ledger through the daemon writer. Occupancy is one `qmb` **run** invocation per ExecutionEnvironment; queries (`analysis.project`, `compare_runs`, `sweep.rank`, gap-check/verify/catalog/list) do not consume occupancy.
+- **`RecordingQmbDoorTransport` is not a working integration (DEC-0286).** Matching CT-47 source exists on `integration@1b451a8` (`source-inspected`); the default recording transport records and does not spawn `qmb`. Class/test existence is not end-to-end demonstration.
+- **Never `import qmb` (DEC-0276).** The daemon, every plugin, and every QMA worker image place through the door only.
+- **No QMA-paper (DEC-0275, DEC-0341).** QMA-paper does not exist; no execution tool at any account role.
+- **ExperimentSpec identity (DEC-0284).** There is no Project kind and no Workspace kind; coordinated continuity is ExperimentSpec `fp1`. Display names `project` / `workspace` are UX aliases.
+- **Continuation host is GAP-0062 (DEC-0278).** Continuation is a daemon property (daemon + remote ExecutionEnvironments + durable outbox); the concrete always-on host machine remains GAP-0062.
+
+## Follow-up — 2026-09-16 QML research expansion (ADR-0023)
+
+This ADR's 2026-08-29 Decision stands as written. The 2026-09-16 QML research expansion ([ADR-0023](ADR-0023-qml-research-expansion.md), DEC-0380 ratified paradigm; package **PROPOSED**) uses QMA as cite/transport only.
+
+- **QMA AD-19 law holds (DEC-0399).** The empty-corpus sentence is a factual refresh only (DEC-0403); the read-only KnowledgeSource port stands.
+- **QMA cites; QML owns meaning (DEC-0399).** QMA does not author hypotheses and does not assemble CT-33/CT-34.
+- **Daemon must not write `research_root` (DEC-0388).** The daemon must not bind a second CT-44 `source_id` in v1.

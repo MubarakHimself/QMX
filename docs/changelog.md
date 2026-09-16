@@ -5,14 +5,64 @@ type: changelog
 status: ratified
 sources: [_docwork/ledger.yaml, _docwork/gaps.yaml, _docwork/feature_inventory.yaml, _docwork/review-consistency.md, _docwork/review-redteam.md, docs/index.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMB-2026-08-20/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ARCHITECTURE-SPINE.md]
 generated: 2026-08-18
-verified: '2026-08-30'
+verified: '2026-09-16'
 stale_after: 90d
-decisions: [DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0192, DEC-0193, DEC-0194, DEC-0195, DEC-0196, DEC-0197, DEC-0198, DEC-0199, DEC-0200, DEC-0201, DEC-0202, DEC-0203, DEC-0204, DEC-0205, DEC-0206, DEC-0207, DEC-0208, DEC-0209, DEC-0210, DEC-0211, DEC-0212, DEC-0213, DEC-0214, DEC-0215, DEC-0216, DEC-0231, DEC-0236, DEC-0237, DEC-0238, DEC-0239, DEC-0240, DEC-0241, DEC-0242, DEC-0243, DEC-0244, DEC-0245, DEC-0246, DEC-0247, DEC-0248, DEC-0249, DEC-0250, DEC-0251, DEC-0252, DEC-0253, DEC-0254, DEC-0255, DEC-0256, DEC-0257, DEC-0258, DEC-0259, DEC-0260, DEC-0261, DEC-0262, DEC-0114, DEC-0121, DEC-0142, DEC-0300, DEC-0304, DEC-0315, DEC-0316, DEC-0324, DEC-0327, DEC-0328, DEC-0329, DEC-0330, DEC-0331, DEC-0334, DEC-0335, DEC-0337, DEC-0338, DEC-0340, DEC-0341, DEC-0343, DEC-0344, DEC-0345, DEC-0346, DEC-0347, DEC-0349, DEC-0350, DEC-0360, DEC-0379]
+decisions: [DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0192, DEC-0193, DEC-0194, DEC-0195, DEC-0196, DEC-0197, DEC-0198, DEC-0199, DEC-0200, DEC-0201, DEC-0202, DEC-0203, DEC-0204, DEC-0205, DEC-0206, DEC-0207, DEC-0208, DEC-0209, DEC-0210, DEC-0211, DEC-0212, DEC-0213, DEC-0214, DEC-0215, DEC-0216, DEC-0231, DEC-0236, DEC-0237, DEC-0238, DEC-0239, DEC-0240, DEC-0241, DEC-0242, DEC-0243, DEC-0244, DEC-0245, DEC-0246, DEC-0247, DEC-0248, DEC-0249, DEC-0250, DEC-0251, DEC-0252, DEC-0253, DEC-0254, DEC-0255, DEC-0256, DEC-0257, DEC-0258, DEC-0259, DEC-0260, DEC-0261, DEC-0262, DEC-0263, DEC-0264, DEC-0265, DEC-0266, DEC-0267, DEC-0268, DEC-0269, DEC-0270, DEC-0271, DEC-0272, DEC-0273, DEC-0274, DEC-0275, DEC-0276, DEC-0277, DEC-0278, DEC-0279, DEC-0280, DEC-0281, DEC-0282, DEC-0283, DEC-0284, DEC-0285, DEC-0286, DEC-0287, DEC-0114, DEC-0121, DEC-0142, DEC-0300, DEC-0304, DEC-0315, DEC-0316, DEC-0324, DEC-0327, DEC-0328, DEC-0329, DEC-0330, DEC-0331, DEC-0334, DEC-0335, DEC-0337, DEC-0338, DEC-0340, DEC-0341, DEC-0343, DEC-0344, DEC-0345, DEC-0346, DEC-0347, DEC-0349, DEC-0350, DEC-0360, DEC-0379, DEC-0380, DEC-0381, DEC-0382, DEC-0383, DEC-0384, DEC-0385, DEC-0386, DEC-0387, DEC-0388, DEC-0389, DEC-0390, DEC-0391, DEC-0392, DEC-0393, DEC-0394, DEC-0395, DEC-0396, DEC-0397, DEC-0398, DEC-0399, DEC-0400, DEC-0401, DEC-0402, DEC-0403, DEC-0404, DEC-0405, DEC-0406, DEC-0407, DEC-0408, DEC-0409, DEC-0410, DEC-0411, DEC-0412, DEC-0413]
 ---
 
 # QMF Documentation Changelog
 
 This records changes to the QMF knowledge base. It is not a software release log and does not convert provisional decisions into implementation authority.
+
+## 2026-09-16 — QML research expansion absorption (change mode)
+
+The 2026-09-16 QML research-expansion spine (`architecture-QMX-2026-09-16/ARCHITECTURE-SPINE.md`, status draft/proposed, local AD-1..AD-21) is absorbed into `docs/` as **PROPOSED** composition over existing application-layer products. Preflight verdict: reuse — no new COMP, no sixth application, no new contract id, no new dependency edge (DEC-0402, [ADR-0023](decisions/ADR-0023-qml-research-expansion.md)). Operator-direct paradigm DEC-0380 is ratified; the package itself is proposed, not operator-accepted. Implementation authorization remains factory-pipeline-only.
+
+| Field | Value |
+|---|---|
+| Mode | Change mode Stage 9 — absorb QML research AD-1..AD-21; Stages 1–8 not rebuilt |
+| Authority snapshot | DEC-0380 ratified operator paradigm. DEC-0381..DEC-0401 (AD-1..AD-21) provisional. DEC-0402 umbrella provisional. DEC-0403..DEC-0407 package umbrellas provisional. DEC-0408..DEC-0413 dead. Local AD-1..AD-21 do not renumber QMF/QMB/QML/NODE/QMA/CONNECT/Workbench parents. |
+| Preflight | reuse existing application-layer products; **no new COMP**; **no new CT** |
+| Gaps | GAP-0064 new (FR-RES PRD hole, sibling to GAP-0061, DEC-0405); GAP-0073 layout trigger met, hybrid still deferred (DEC-0407); GAP-0085 still deferred — Stage 0 carries open roles; fill-now is dead DEC-0413; GAP-0061 not closed (mill FRs live on GAP-0064) |
+| Features | FEAT-0047..FEAT-0050 planned; first epic FEAT-0047 (AD-14 seed bind + Stage 0 view) |
+| Cheap-veto A1–A5 | A1 `source_id=strats` freeze; A2 AD-4 include/exclude lists; A3 six dim spellings + `unscored`; A4 QMA AD-19 empty-corpus factual refresh only; A5 FR-RES-* on GAP-0064, GAP-0061 not closed (DEC-0404) |
+| Touched docs | [ADR-0023](decisions/ADR-0023-qml-research-expansion.md) (new); [SCN-0017](scenarios/SCN-0017-stage0-honesty-envelope.md); qml, qma-core, qma-daemon, qma-wire, qmb, qmf-registry; CT-33/CT-34/CT-44/CT-07/CT-40/CT-32/CT-06 annotations; constitution; AGENTS.md; glossary; gap-report; traceability; index; overview; stack; dependencies; ADR-0018/0020/0022 dated follow-ups; this changelog |
+| Gates | validate_ledger PASS; validate_registry PASS; validate_inventory PASS (pre-existing house-accepted warnings only); check_citations PASS (house-accepted dead-DEC class only); lint_docs CLEAN; **lint_docs --strict expected-blocked** (ADR-0023 and SCN-0017 `status: provisional` per operator stamp) |
+
+## 2026-09-14 — Workbench expansion absorption (change mode)
+
+The 2026-09-14 workbench feature-altitude spine (`architecture-QMX-2026-09-14/ARCHITECTURE-SPINE.md`, status final, local AD-1..AD-16) is absorbed into `docs/` as composition over the existing application-layer products. Preflight verdict: reuse — no new COMP, no sixth application, no new contract id, no new dependency edge (DEC-0285, [ADR-0022](decisions/ADR-0022-workbench-expansion.md)). Implementation authorization remains factory-pipeline-only.
+
+| Field | Value |
+|---|---|
+| Mode | Change mode Stage 9 — absorb workbench AD-1..AD-16; Stages 1–8 not rebuilt |
+| Authority snapshot | DEC-0269..DEC-0287 minted ratified (authority rider). No live DEC superseded. Umbrella DEC-0285; wiring-status reconcile DEC-0286; cheap-veto DEC-0287. Local AD-1..AD-16 do not renumber QMF/QMB/QML/NODE/QMA/CONNECT parents. |
+| Preflight | reuse existing application-layer products; **no new COMP** |
+| Gaps | GAP-0061 (PRD FR addenda), GAP-0062 (workbench AD-10 / DEC-0278 host machine), GAP-0063 (first generator algorithm) deferred non-blocking; GAP-0085 ownership noted as QML/host write path (workbench AD-4 / DEC-0272) — nouns still deferred; QMA already refuses `GAP_0085_STRATEGY_MECHANISMS` |
+| Features | FEAT-0033..FEAT-0039 planned (connect-wave 0033–0038 first; generation 0039 may trail) |
+| Cheap-veto A1–A5 | A1 connect-wave first / generation trails; A2 work-environment roster UI-open; A3 generated layouts are not preference evidence; A4 Optuna pin stays `4.9.0`; A5 no PRD rewrite (GAP-0061) |
+| wiring_status | `source-inspected` — matching source exists on `integration@1b451a8`; composition-root / daemon-process / real-CLI-transport / e2e walk still connect work (DEC-0286) |
+| Touched docs | [ADR-0022](decisions/ADR-0022-workbench-expansion.md) (new); [SCN-0015](scenarios/SCN-0015-three-experiment-lanes.md); [SCN-0016](scenarios/SCN-0016-projection-vs-path-dependent.md); [SCN-0012](scenarios/SCN-0012-qmb-replay-run.md) (workbench_lane / research-paper / ExperimentSpec note); [index.md](index.md); this changelog. Broader blast radius (other Stage 9 seats): qmb/qml/qma-*/qmf-registry/qmf-risk/qmf-data/trading-node component specs; CT-22..34 and CT-40..51 wiring comments; constitution; overview; stack; dependencies; glossary; gap-report; traceability; AGENTS.md; ADR-0017/0018/0020 dated follow-ups |
+| Gates | validate_ledger PASS; validate_registry PASS; validate_inventory PASS (pre-existing house-accepted warnings only); check_citations PASS (house-accepted dead-DEC class only); lint_docs CLEAN; **lint_docs --strict CLEAN** |
+
+## 2026-09-11 — CONNECT FX paper absorption (change mode)
+
+The 2026-09-11 CONNECT child feature spine (`architecture-CONNECT-2026-09-11/ARCHITECTURE-SPINE.md`, status final) is absorbed into `docs/` as hexagonal port completion on the existing cTrader adapter. Preflight verdict: reuse `COMP-QMN` and `COMP-QMF-VENUE` — no new component, no new contract id, no new dependency edge (DEC-0268, [ADR-0021](decisions/ADR-0021-connect-fx-paper.md)). Implementation authorization remains factory-pipeline-only.
+
+| Field | Value |
+|---|---|
+| Mode | Change mode Stage 9 — absorb CONNECT AD-1..AD-5; Stages 1–8 not rebuilt |
+| Authority snapshot | DEC-0263..DEC-0268 minted ratified (authority rider). No live DEC superseded. DEC-0266 interprets DEC-0247 (observation names the CT-20 kind; journal type is `data quality`) and does not supersede it. |
+| AD-1 / DEC-0263 | Fail-closed live selection by `(world, VenueId)` reading explicit roster `VenueClientKind`; unknown live `VenueId` is `unsupported capability` |
+| AD-2 / DEC-0264 | Honest FX paper: vendor demo host + `AccountRole.DEMO` + `world=live` + same live client + CT-19 encode + position/balance read-back. Sensing-only submit is not paper. |
+| AD-3 / DEC-0265 | Encode and `connect_open_api` complete `ConnectionManager` in `qmf-venue`; `qmn.venue` remains the sole importer; production must call `connect_open_api` |
+| AD-4 / DEC-0266 | FTR-01 closed: `position-read-back` / `balance-read-back` map onto CT-13 `data quality` |
+| AD-5 / DEC-0267 | Crypto plurality without a fourth V1 kind; no exchange pick this increment |
+| Gaps | GAP-0059 (FTR-02) and GAP-0060 (canonical live source token) deferred non-blocking |
+| Feature | FEAT-0032 planned, blocked_by FEAT-0023/0024/0026/0031 |
+| Cheap-veto A1–A5 | A1 FX-first / crypto later; A2 brownfield SHA `1b451a8`; A3 journal type `data quality`; A4 protobuf stays `==7.36.0`; A5 no PRD amendment |
+| Touched docs | [ADR-0021](decisions/ADR-0021-connect-fx-paper.md) (new); [trading-node.md](components/trading-node.md); [qmf-venue.md](components/qmf-venue.md); [ctrader.md](components/ctrader.md); CT-13/CT-18/CT-19/CT-20/CT-21; constitution L21/L22/L30; [overview.md](architecture/overview.md); [stack.md](architecture/stack.md); [glossary.md](glossary.md); [gap-report.md](gap-report.md); [traceability](knowledge/traceability.md); [index.md](index.md); [AGENTS.md](AGENTS.md); [SCN-0005](scenarios/SCN-0005-uncertain-venue-submission.md); [ADR-0019](decisions/ADR-0019-trading-node.md) dated CONNECT follow-up; this changelog |
+| Gates | validate_ledger PASS; validate_registry PASS; validate_inventory PASS (pre-existing house-accepted warnings only); check_citations PASS (house-accepted dead-DEC class only); lint_docs CLEAN; **lint_docs --strict CLEAN** |
 
 ## 2026-08-30 — Trading-node increment veto round closed (operator rulings)
 

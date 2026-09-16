@@ -92,7 +92,8 @@ components:
       control-action dispatch (CT-30) reaches the venue through qmf-core-defined
       sink protocols injected at the composition root. CT-23 is the bot-to-Book
       inbound door whose caller is node-boundary and unassigned in QMF. All
-      risk contracts are defined-unwired; the venue command CT-19 gains the
+      risk contracts are source-inspected on integration@1b451a8 (DEC-0286),
+      not end-to-end demonstrated; the venue command CT-19 gains the
       fifth kind amend_protection, owned by COMP-QMF-VENUE. (DEC-0143, DEC-0145,
       DEC-0158)
 
@@ -168,6 +169,10 @@ components:
       DEC-0182). Hosts: QMB binds conformant bots through a runtime-protocol
       adapter at its composition root day one, the trading node hosts seats
       later (DEC-0177, DEC-0180).
+      **[PROPOSED]** Fourth surface qml.research (Stage 0) on QML's own
+      ladder; no new depends_on; no new interface CT; hypotheses are not a
+      registry kind. Inspect integration@8510c03: graduate_to_governed exists;
+      Stage 0 types do not (DEC-0395, DEC-0406).
 
   - id: COMP-QMN
     name: trading-node

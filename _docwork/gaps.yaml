@@ -610,11 +610,11 @@ gaps:
     question: "What hybrid retrieval / indexing does the Knowledge corpus need beyond literal and locator-based search?"
     needed_by: [COMP-QMA-CORE, COMP-QMA-DAEMON]
     blocking: false
-    recommendation: "the corpus root holds at least one ingestible content file and STRATS §6 Q1-Q12 (folder layout, serialization, stable-id scheme) are ratified upstream"
+    recommendation: "Layout trigger is met in the seed (239 dictionary entries, LAYOUT-DEMO, schema locks). Hybrid retrieval is a separate irreversible index choice and stays deferred. v1 remains literal + locator only (DEC-0407)."
     status: deferred
     answer: null
-    note: "AD-19 KnowledgeSource port. v1 ships the adapter over the STRATS plain-file library with CorpusSnapshot / Citation / Provenance and literal + locator search only; evidence_confidence on knowledge is never conflated with admission_confidence on memory (DEC-0343)."
-    date: 2026-08-29
+    note: "AD-19 KnowledgeSource port. v1 ships the adapter over the seed corpus (source_id=strats, product language is seed corpus not STRATS brand) with CorpusSnapshot / Citation / Provenance and literal + locator search only; evidence_confidence on knowledge is never conflated with admission_confidence on memory (DEC-0343). 2026-09-16 QML research expansion (DEC-0407): layout revisit trigger is met upstream; do not silently close this row; ranked/semantic search remains unsupported-capability."
+    date: 2026-09-16
   - id: GAP-0074
     question: "When do the self-improvement evaluation gates switch on, and against what trajectory evidence?"
     needed_by: [COMP-QMA-DAEMON]
@@ -716,13 +716,13 @@ gaps:
     date: 2026-08-29
   - id: GAP-0085
     question: "What is the typed strategy-mechanism decomposition and recombination (EntryMechanism, ExitMechanism, Filter, SessionRule, PositionRule, InvalidationRule with paper-level provenance)?"
-    needed_by: [COMP-QMA-CORE]
+    needed_by: [COMP-QML, COMP-QMF-REGISTRY, COMP-QMA-CORE]
     blocking: false
-    recommendation: "QML and qmf-registry own strategy semantics (AD-14); QMA carries the candidates and the lineage edges. Revisit at the QML sitting - StrategyHandle and ExperimentSpec are already shaped to carry the result"
+    recommendation: "Write-ownership is QML/host (DEC-0272 / workbench AD-4). QMA never assembles CT-33/CT-34 JSON and already refuses GAP_0085_STRATEGY_MECHANISMS on integration. Nouns wait on a later QML increment. Generator algorithm is GAP-0063, not this row."
     status: deferred
     answer: null
-    note: "AD-14. Operator source T-1896 / T-2832. QML and qmf-registry own strategy semantics; QMA holds references and content-addressed candidates with lineage edges only, and no QMA contract redefines Strategy or Bot. Revisit at the QML sitting."
-    date: 2026-08-29
+    note: "Ownership ruled 2026-09-14 by workbench AD-4 (DEC-0272): search varies declared CT-33 parameters in QMB; generation, if built, authors new CT-33/CT-34 and/or logic-source bytes via QML; QMA StrategyHandle may only reference already-fingerprinted records and register dev-zone candidates. Typed Entry/Exit/Filter/Session vocabulary remains unruled. QMA AD-14 parent still holds. Integration source (qma/core/ports/experiments.py) refuses the mechanism keys. Do not silently fill nouns in prose. 2026-09-16 QML research expansion (DEC-0396, DEC-0413): Stage 0 already carries open eligible roles and F/H holes; filling GAP-0085 this increment to fit seed DNA roles is dead; CT-34 enum stays level | trigger | confirmation | filter."
+    date: 2026-09-16
   - id: GAP-0086
     question: "Which graph engine implementation backs the Task Graph?"
     needed_by: [COMP-QMA-DAEMON]
@@ -787,3 +787,60 @@ gaps:
     answer: null
     note: "Flipped from deferred to OPEN (non-blocking) by the operator in the second exchange of the veto round 2026-08-30 ('let's do the two variants, please... I have a colleague who might want to try this out'; 'the backend should set itself up... If you need Docker, you use Docker'). Raised by the operator at the veto round 2026-08-30 ('is it possible to have two variants of this trading node? One that can run on the same machine... as the agentic system'); recorded as deferred, never a second product (DEC-0261)."
     date: 2026-08-30
+
+  - id: GAP-0059
+    question: "FTR-02 compound-command annotation — when does a CT-19 compound/fan-out command get its parent-meet annotation, and is it required before single-kind FX paper encode ships?"
+    needed_by: [COMP-QMF-VENUE, COMP-QMN]
+    blocking: false
+    recommendation: "Leave the existing compound-command block unchanged; single-kind FX paper encode does not require FTR-02. Revisit when a command that fans out to N venue submissions is in scope."
+    status: deferred
+    answer: null
+    note: "CONNECT Deferred table 2026-09-11 (DEC-0268). Unchanged block; not required for single-kind FX paper encode."
+    date: 2026-09-11
+  - id: GAP-0060
+    question: "When a fourth VenueClientKind exists, how is the canonical live source token parameterized off the hardcoded ctrader value?"
+    needed_by: [COMP-QMN]
+    blocking: false
+    recommendation: "Hardcoded ctrader is correct while only CTRADER connects. Revisit when DEC-0267 mints a kind. Do not parameterize in the FX-paper increment."
+    status: deferred
+    answer: null
+    note: "CONNECT Deferred table 2026-09-11 (DEC-0267, DEC-0268). Canonical live source stays ctrader this increment."
+    date: 2026-09-11
+
+  - id: GAP-0061
+    question: "When are the existing PRD functional-requirement addenda written for ExperimentSpec, named analysis methods, generation-vs-search, and reusable procedures?"
+    needed_by: [COMP-QMB, COMP-QMA-CORE, COMP-QML]
+    blocking: false
+    recommendation: "Note the hole in this sitting; do not rewrite the PRD here. The workbench spine is the expansion contract until a later PRD update pass. Connect-wave epics may be written from the spine and FEAT-0033..0038 without waiting."
+    status: deferred
+    answer: null
+    note: "Workbench Open questions 2026-09-14 (DEC-0287). PRD today covers QMB FRs (FR-036..046) and QML FRs; it does not yet state ExperimentSpec, analysis methods, generation-vs-search, or procedures. Operator instruction: note the hole; do not rewrite the PRD in this sitting. 2026-09-16: mill/seed/hypothesis FRs are a sibling hole GAP-0064 (FR-RES-*); do not close this row to absorb them (DEC-0405)."
+    date: 2026-09-16
+  - id: GAP-0062
+    question: "What is the concrete always-on host for workbench AD-10 / DEC-0278 laptop-off continuation — operator-named reachable ExecutionEnvironment, workstation-adjacent machine, or moving qma-daemon off the sleeping laptop?"
+    needed_by: [COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "Keep workbench AD-10 / DEC-0278's property (daemon or a reachable remote env must not live only on the sleeping laptop). Leave the machine as operator config under QMA AD-25/AD-26. Do not invent a host name in docs."
+    status: deferred
+    answer: null
+    note: "Workbench Open questions 2026-09-14 (DEC-0278, DEC-0287). Property is decided; the machine is not. Revisit when the operator names a reachable ExecutionEnvironment or moves the daemon off the laptop."
+    date: 2026-09-14
+  - id: GAP-0063
+    question: "What is the first structure-generator algorithm — placeholder-fill of CT-34 legs versus Python-logic synthesis?"
+    needed_by: [COMP-QML]
+    blocking: false
+    recommendation: "Ownership is DEC-0272 (QML authors; QMB runs; QMA references). Do not start a generator inside QMB. Do not fill GAP-0085 mechanism nouns to dodge this choice. Revisit at a QML increment after connect-wave."
+    status: deferred
+    answer: null
+    note: "Workbench Open questions 2026-09-14 (DEC-0272, DEC-0287). Distinct from GAP-0085 (typed mechanism vocabulary). Neither blocks connect-wave epics."
+    date: 2026-09-14
+
+  - id: GAP-0064
+    question: "When are the PRD functional-requirement addenda written for QML Stage 0 / seed corpus / hypothesis FRs (FR-RES-01..FR-RES-25 and NFR-RES-01..08)?"
+    needed_by: [COMP-QML, COMP-QMA-CORE, COMP-QMA-DAEMON]
+    blocking: false
+    recommendation: "Note the hole in this sitting; do not rewrite the PRD here. REQUIREMENTS-ADDENDUM.md holds proposed FR-RES-* identifiers. Sibling to GAP-0061 (workbench FRs); do not close GAP-0061. Epics may be written from the proposed spine and FEAT-0047..FEAT-0050 without waiting, with first epic = AD-14 seed bind + Stage 0 view."
+    status: deferred
+    answer: null
+    note: "QML research expansion Open questions 2026-09-16 (DEC-0405, DEC-0380). PRD 2026-08-21 has QMB/QML FRs and a QMA phase boundary; it has no mill / seed-corpus / hypothesis FRs. First-distill FR-LIB-* ids are superseded. Operator instruction: stamp the package proposed; do not pretend the old PRD specified this expansion."
+    date: 2026-09-16

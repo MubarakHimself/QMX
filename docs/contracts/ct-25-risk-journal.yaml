@@ -6,10 +6,10 @@ owner: COMP-QMF-RISK
 consumers: []  # projection-blind: entity journals are read-time projections the composition root resolves over AD-21 writer-scoped streams; nothing imports qmf-risk under default-deny, so no package import edge exists (DEC-0145, DEC-0158)
 active_consumers: []
 intended_consumers: [COMP-QMF-DATA, COMP-QMF-REGISTRY]  # qmf-data resolves the projections over its stored journal streams (CT-13); qmf-registry wraps each risk record into a registry record; both mediated by the composition root when the factory ships, documentary until then (DEC-0145)
-wiring_status: defined-unwired  # AD-31 ratified the projection and record surface; no code exists and no wiring is authorized from this doc — CT-25 is a composition-root-mediated contract that stays defined and unwired until the software factory ships it (DEC-0145, DEC-0158)
+wiring_status: source-inspected  # matching source exists on integration@1b451a8 (DEC-0286); class/test existence is not end-to-end demonstration; remaining connect / composition-root / daemon-process work is not authorized from this doc
 layer_from: backend
 layer_to: data
-decisions: [DEC-0145, DEC-0143, DEC-0150, DEC-0147, DEC-0158, DEC-0189, DEC-0192, DEC-0200, DEC-0246, DEC-0247, DEC-0259]
+decisions: [DEC-0145, DEC-0143, DEC-0150, DEC-0147, DEC-0158, DEC-0189, DEC-0192, DEC-0200, DEC-0246, DEC-0247, DEC-0259, DEC-0286]
 gaps: []  # GAP-0005 answered by minting version 1; GAP-0039's journal half answered 2026-08-20 (DEC-0145); the placeholder's open-schema gaps (GAP-0025/0042/0043/0045/0046) are all closed by the risk sitting
 purpose: "Declare the read-time projection and record surface for entity journals — the Book journal, the BMS journal, and the per-bot journal (the operator's logbook) — as selections over AD-21 writer-scoped streams keyed by entity identity, never as streams an entity writes; pin the command-fingerprint join between risk-authored and venue-authored events as versioned surface; and carry the legacy five Records stream names forward as projection names through one mapping table onto AD-21's seven event types."
 invariants:

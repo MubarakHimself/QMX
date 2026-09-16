@@ -6,11 +6,11 @@ owner: COMP-QMF-RISK
 consumers: []  # consumer-blind by design: control-action records are qmf-core value types wrapped into registry records by the composition root; dispatch reaches the venue through qmf-core-defined sink protocols, so no package imports qmf-risk under default-deny (DEC-0150, DEC-0143)
 active_consumers: []
 intended_consumers: [COMP-QMF-VENUE, COMP-QMF-REGISTRY, COMP-QMF-DATA]  # a flatten/drain dispatches as CT-19 commands; records and journal events reach qmf-registry/qmf-data via the composition root when the factory ships; documentary until then (DEC-0150, DEC-0145)
-wiring_status: defined-unwired  # AD-36/AD-37 ratify the contract surface; no code exists and no build is authorized outside the factory pipeline — composition-root mediated (DEC-0150)
+wiring_status: source-inspected  # matching source exists on integration@1b451a8 (DEC-0286); class/test existence is not end-to-end demonstration; remaining connect / composition-root / daemon-process work is not authorized from this doc
 caller_status: unassigned  # actions are issued by the operator, Book policy, the protection authority, a venue-delegated authority, or the adapter itself; the node owns the issuers, QMF carries the contract, the scopes, the refusals and the evidence (DEC-0150)
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0150, DEC-0151, DEC-0147, DEC-0158, DEC-0143, DEC-0149, DEC-0192, DEC-0218, DEC-0249, DEC-0250, DEC-0251, DEC-0259]
+decisions: [DEC-0150, DEC-0151, DEC-0147, DEC-0158, DEC-0143, DEC-0149, DEC-0192, DEC-0218, DEC-0249, DEC-0250, DEC-0251, DEC-0259, DEC-0286]
 gaps: []  # AD-36 closes the flatten-authority leftover and kill-switch seam; AD-37 closes GAP-0046; no still-open gap applies. The node's trigger->level->effect severity matrix is node material, not a QMF gap (DEC-0150)
 purpose: "The typed control-action contract: a bounded set of protection and lifecycle actions — suspend_new, drain, flatten, resume — each issued by a named authority at a resolved subject scope, journaled before dispatch as a standing intent, arbitrated at exactly one point per (VenueId, account) command stream by a BMS-declared rank, with the exit-preservation invariant guaranteeing no control action of any authority at any scope may ever block a risk-reducing act (DEC-0150, DEC-0151)."
 invariants:

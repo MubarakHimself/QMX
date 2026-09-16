@@ -6,7 +6,7 @@ owner: COMP-QMF-REGISTRY
 consumers: [COMP-QMF-DATA, COMP-QMF-STRUCTURE, COMP-QMF-RISK]
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0103, DEC-0106, DEC-0108, DEC-0109, DEC-0110, DEC-0114, DEC-0115, DEC-0116, DEC-0120, DEC-0121, DEC-0137, DEC-0138, DEC-0143, DEC-0153, DEC-0158, DEC-0169, DEC-0171, DEC-0173, DEC-0175, DEC-0176, DEC-0178, DEC-0184]
+decisions: [DEC-0103, DEC-0106, DEC-0108, DEC-0109, DEC-0110, DEC-0114, DEC-0115, DEC-0116, DEC-0120, DEC-0121, DEC-0137, DEC-0138, DEC-0143, DEC-0153, DEC-0158, DEC-0169, DEC-0171, DEC-0173, DEC-0175, DEC-0176, DEC-0178, DEC-0184, DEC-0286, DEC-0396, DEC-0401, DEC-0406]
 gaps: [GAP-0016, GAP-0017]  # Book/BMS kind bodies ruled 2026-08-20 (DEC-0143, DEC-0158); GAP-0016/0017 deferred to backtesting (DEC-0121); GAP-0047 answered — the full Bot kind body is now ruled via CT-33 (DEC-0173)
 purpose: >-
   Register an artifact as a per-kind versioned record whose stable id is derived
@@ -35,6 +35,7 @@ invariants:
   - "Per default-deny dependency direction no library imports qmf-registry (the only ratified inter-library edge is qmf-registry to qmf-data); registration is invoked by the application at the composition root, not by a consuming library's import (DEC-0120). [Scope annotation, 2026-08-21: the default-deny reading is roster-scoped — it governs the seven roster packages internally, never applications built on the workspace; an application-layer product built ON QMF (COMP-QMB, COMP-QML) may import and consume qmf-registry and qmf-risk contracts directly, with impure steps (registration writes, sandbox execution) riding its composition root; applications still never import qmf-venue (DEC-0171, DEC-0184; QMB precedent DEC-0169).]"
   - "On the venue path a record's WriterId granularity is (machine, adapter role, VenueId, account) — the same unit as the command stream — and the adapter's connection manager is the sole holder of that WriterId, stamping writer and sequence and calling the injected sinks; no other component constructs a venue client (DEC-0138, DEC-0137)."
   - "A session-epoch id, distinct from the boot epoch, rides every venue observation; venue-path sequences reset only on boot, never on reconnect, and the sequence cursor is durable through the observation sink (DEC-0137)."
+  - "QML RESEARCH USAGE [PROPOSED] (2026-09-16): no addable kind for hypotheses or dictionary entries; `research_ref` must not be registered as a registry kind (DEC-0401, DEC-0396)."
 schema:
   type: "per-kind versioned registry record: a tiny common header shared by every kind plus a kind-specific body; the promotion-occurrence card is one reserved kind"
   fields:
@@ -67,3 +68,4 @@ schema:
     at_birth_parent_refs: "empty array when the record has no at-birth parents; an absent value is an omitted key, never null (DEC-0108)"
     plain_words_summary: "mandatory on the promotion-occurrence card (identity field) (DEC-0116)"
     reserved_kind_body_fields: "the Book kind body is ruled via CT-22 (DEC-0143); the full Bot kind body's per-kind nullability is now ruled via CT-33 (DEC-0173)"
+provenance_note: "CT-06 is the per-kind registry registration contract (DEC-0114). Matching source exists on integration@1b451a8 (DEC-0286). 2026-09-16 QML research expansion annotations are package-PROPOSED only and cite integration@8510c03 (DEC-0406): hypotheses and dictionary entries are not addable kinds; research_ref is not registered (DEC-0401, DEC-0396)."

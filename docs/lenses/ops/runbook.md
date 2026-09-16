@@ -4,10 +4,10 @@ title: QMF V1 Operations Runbook
 type: runbook
 status: ratified
 depends_on: [COMP-QMN, COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-DATA, COMP-QMF-INDICATORS, COMP-QMF-STRUCTURE, COMP-QMF-VENUE, COMP-QMF-RISK, COMP-QMF-DATA-INGEST, COMP-QMF-DATA-STORE, COMP-QMF-DATA-BACKUP, COMP-CTRADER, COMP-DUKASCOPY, COMP-CALENDAR-FEED, COMP-OBJECT-STORAGE]
-decisions: [DEC-0001, DEC-0003, DEC-0004, DEC-0005, DEC-0008, DEC-0009, DEC-0030, DEC-0041, DEC-0045, DEC-0051, DEC-0052, DEC-0053, DEC-0059, DEC-0065, DEC-0096, DEC-0099, DEC-0100, DEC-0101, DEC-0102, DEC-0103, DEC-0104, DEC-0105, DEC-0106, DEC-0110, DEC-0112, DEC-0114, DEC-0117, DEC-0118, DEC-0119, DEC-0121, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0143, DEC-0146, DEC-0147, DEC-0149, DEC-0150, DEC-0151, DEC-0152, DEC-0153, DEC-0155, DEC-0157, DEC-0158, DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0193, DEC-0194, DEC-0197, DEC-0198, DEC-0200, DEC-0201, DEC-0202, DEC-0203, DEC-0206, DEC-0208, DEC-0211, DEC-0212, DEC-0217, DEC-0218, DEC-0221, DEC-0222, DEC-0226, DEC-0227, DEC-0231, DEC-0233, DEC-0234, DEC-0236, DEC-0252, DEC-0259, DEC-0260, DEC-0261, DEC-0262]
+decisions: [DEC-0001, DEC-0003, DEC-0004, DEC-0005, DEC-0008, DEC-0009, DEC-0030, DEC-0041, DEC-0045, DEC-0051, DEC-0052, DEC-0053, DEC-0059, DEC-0065, DEC-0096, DEC-0099, DEC-0100, DEC-0101, DEC-0102, DEC-0103, DEC-0104, DEC-0105, DEC-0106, DEC-0110, DEC-0112, DEC-0114, DEC-0117, DEC-0118, DEC-0119, DEC-0121, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0143, DEC-0146, DEC-0147, DEC-0149, DEC-0150, DEC-0151, DEC-0152, DEC-0153, DEC-0155, DEC-0157, DEC-0158, DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0193, DEC-0194, DEC-0197, DEC-0198, DEC-0200, DEC-0201, DEC-0202, DEC-0203, DEC-0206, DEC-0208, DEC-0211, DEC-0212, DEC-0217, DEC-0218, DEC-0221, DEC-0222, DEC-0226, DEC-0227, DEC-0231, DEC-0233, DEC-0234, DEC-0236, DEC-0252, DEC-0259, DEC-0260, DEC-0261, DEC-0262, DEC-0286]
 sources: [DEC-0001, DEC-0003, DEC-0004, DEC-0005, DEC-0008, DEC-0009, DEC-0030, DEC-0041, DEC-0045, DEC-0051, DEC-0052, DEC-0053, DEC-0059, DEC-0065, DEC-0096, DEC-0099, DEC-0100, DEC-0101, DEC-0102, DEC-0103, DEC-0106, DEC-0112, DEC-0118, DEC-0186, DEC-0187, DEC-0189, DEC-0197, DEC-0198, DEC-0201, DEC-0202, DEC-0211, DEC-0212, DEC-0217, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/time-audit-devops.md, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, _docwork/gaps.yaml, docs/decisions/ADR-0019-trading-node.md, docs/components/trading-node.md, docs/architecture/dependencies.yaml, docs/registry/variables.yaml, docs/contracts/ct-09-registry-persistence.yaml, docs/contracts/ct-11-evidence-persistence.yaml, docs/contracts/ct-13-journal.yaml, docs/contracts/ct-14-backup-restore.yaml, docs/contracts/ct-15-external-source-adapter.yaml, docs/contracts/ct-19-venue-command.yaml, docs/contracts/ct-20-venue-event.yaml, docs/contracts/ct-21-venue-secret-session.yaml]
 generated: 2026-08-18
-verified: 2026-08-30
+verified: 2026-09-14
 stale_after: 30d
 ---
 
@@ -174,7 +174,7 @@ The operator's roughly one-week warm-up/observation rider before live trading (D
 
 ## Risk bindings, control actions, and paper mode
 
-The risk contracts are ratified design, **defined-unwired**: no code exists, the composition root mediates, and implementation authorization arrives only through the factory pipeline, never from this runbook. When any step runs in production, the trigger→level→effect matrix and order-path internals stay node/risk territory, tracked in `tracker/trading-node-notes.md` (DEC-0142).
+The risk contracts are ratified design, **source-inspected** on `integration@1b451a8` (DEC-0286): matching value types exist; class/test existence is not end-to-end demonstration; the composition root mediates remaining connect work; implementation authorization arrives only through the factory pipeline, never from this runbook. When any step runs in production, the trigger→level→effect matrix and order-path internals stay node/risk territory, tracked in `tracker/trading-node-notes.md` (DEC-0142).
 
 ### Bind-time capability check
 

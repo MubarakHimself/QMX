@@ -130,3 +130,37 @@ sources:
   role: primary
   status: harvested
   note: "The operator's verbatim job spec for the QMA absorption pass — a direct operator ruling of 2026-08-29, the highest authority in this increment: it orders the absorption, fixes the build order, and settles the plugin / RLM-kernel vocabulary reconciliation."
+
+- id: SRC-16
+  path: _bmad-output/planning-artifacts/architecture/architecture-CONNECT-2026-09-11/
+  kind: rider
+  role: primary
+  status: harvested
+  note: "2026-09-11 CONNECT FX-paper child feature architecture sitting (operator-absent; spine status final): ARCHITECTURE-SPINE.md (CONNECT AD-1..AD-5 plus Inherited Invariants, Corrections, Consistency Conventions, Stack, Structural Seed, Capability map, Deferred), .memlog.md (sitting open through spine finalized; assumptions A1-A5; conflicts surfaced not overridden), reviews/ (lint, rubric, adversarial, currency, reconcile-inputs). Citation surface for the CONNECT increment (EXT-2172..EXT-2182). Parents architecture-QMX-2026-08-19 and architecture-NODE-2026-08-28 bind read-only. Companion captain brief workroom/research/2026-09-11_connect-architecture-result.md and handoff workroom/research/2026-09-11_connect-architecture-handoff.md. The 2026-09-09 crypto-connect packet is INPUT not law."
+
+- id: SRC-17
+  path: _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-14/
+  kind: rider
+  role: primary
+  status: harvested
+  note: "2026-09-14 QMX strategy-experimentation workbench architecture sitting (operator-absent one-shot; spine status final): ARCHITECTURE-SPINE.md (local AD-1..AD-16 plus Inherited Invariants, Consistency Conventions, Stack, Structural Seed, Capability map, Deferred, Open questions), CAPABILITY-EXPANSION.md (companion), .memlog.md (Fast-path through spine finalized after reviewer-gate amendments), inputs/ (code-qma/qmb/qml/qmf/qmn, classify-synthesis, donor cuts, intent-durable, orchestrator-verified), reviews/ (adversarial, parent-consistency, currency, rubric, reconcile-inputs). Citation surface for the workbench increment (EXT-2183..EXT-2212). Parents QMF AD-1..41, QMB B-1..15, QML QL-1..10, NODE TN-1..25, QMA AD-1..29, CONNECT AD-1..5 bind read-only. Local AD ids do not renumber parents. Planning on main 430fb7d; implementation inspected on integration@1b451a848d897e42f6e2c7fd9f2ea86fab7295f2. Generated layouts are not preference evidence."
+- id: SRC-18
+  path: epansion_session
+  kind: transcript
+  role: primary
+  status: harvested
+  no_chunks: "Sitting transcript harvested into the SRC-17 memlog/spine, which is its citation surface (house treatment for architecture-sitting transcripts; no chunk index)."
+  note: "Architecture-sitting session export for the 2026-09-14 workbench expansion. Citation surface for the operator's own words only; the SRC-17 memlog/spine is the citation surface for everything else (mirrors SRC-08/SRC-10/SRC-12/SRC-14)."
+
+- id: SRC-19
+  path: _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-16/
+  kind: rider
+  role: primary
+  status: harvested
+  note: "2026-09-16 QMX QML research-expansion architecture sitting (restart-as-update; spine status draft/proposed, not operator-accepted): ARCHITECTURE-SPINE.md (local AD-1..AD-21 plus Inherited Invariants, Consistency Conventions, Stack, Structural Seed, Capability map, Deferred, Open questions), QML-EXPANSION.md (current companion; supersedes LIBRARY-ADAPTATION.md), REQUIREMENTS-ADDENDUM.md (FR-RES-* proposed), DOCUMENTATION-FACTORY-HANDOFF.md, .memlog.md, inputs/evidence-summary.md, inputs/worked-mapping.md, research/qml-expansion-legality.md, research/parent-conflicts-qml-expansion.md, research/naming-qml-expansion.md, research/mill-pipeline.md, reviews/. Citation surface for the QML research increment (EXT-2213..EXT-2245). LIBRARY-ADAPTATION.md is the superseded first distill and is not current. Parents QMF AD-1..41, QMB B-1..15, QML QL-1..10, NODE TN-1..25, QMA AD-1..29, CONNECT AD-1..5, Workbench AD-1..16 bind read-only. Local AD ids do not renumber parents. Implementation inspected on integration@8510c032496bb870824ecc5c4f807e8a4e4f167e."
+- id: SRC-20
+  path: _docwork/riders/qml-research-expansion-2026-09-16.md
+  kind: rider
+  role: primary
+  status: harvested
+  note: "Operator-direct rider for the 2026-09-16 documentation-factory change-mode session: STRATS is not a QMX language; Stats is a staging mill absorbed as QML two-stage authoring; QMF=framework, QML/QMB/QMA=libraries, QMN=node; no new COMP; no new CT; source_id=strats is adapter key not product copy; architecture package proposed not accepted; do not fill GAP-0085; do not start videos/n8n/Hermes; first epic = AD-14 seed bind + Stage 0 view. Citation surface for the operator's own words (DEC-0380)."

@@ -4,10 +4,10 @@ title: QML — the bot-authoring library
 type: adr
 status: ratified
 depends_on: [COMP-QML, COMP-QMF-CORE, COMP-QMF-REGISTRY, COMP-QMF-RISK]
-decisions: [DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184, DEC-0185, DEC-0017, DEC-0022, DEC-0024, DEC-0084, DEC-0085, DEC-0086, DEC-0090, DEC-0121, DEC-0169]
-sources: [DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184, DEC-0185, _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/research-risk/qml-original-dig.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/research-backtesting/qml-dig-verification.md]
+decisions: [DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184, DEC-0185, DEC-0017, DEC-0022, DEC-0024, DEC-0084, DEC-0085, DEC-0086, DEC-0090, DEC-0121, DEC-0169, DEC-0285, DEC-0380, DEC-0395, DEC-0397, DEC-0403, DEC-0413]
+sources: [DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184, DEC-0185, _bmad-output/planning-artifacts/architecture/architecture-QML-2026-08-21/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/research-risk/qml-original-dig.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/research-backtesting/qml-dig-verification.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-09-16/ARCHITECTURE-SPINE.md]
 generated: 2026-08-21
-verified: 2026-08-21
+verified: 2026-09-16
 stale_after: 1y
 ---
 
@@ -72,3 +72,19 @@ What `COMP-QML` owns that nothing else does: the author-side CT-33/CT-34 types, 
 ## Blast radius
 
 New component `COMP-QML` and its spec `docs/components/qml.md`; new feature `FEAT-0030`. Two new contracts, CT-33 (Bot definition) and CT-34 (confluence), and one updated, CT-06 (Bot kind body via CT-33 plus the strategy-family record kind). Two format-version mints on existing `qmf-risk` contracts: CT-22 v2 and CT-23 v2, both carrying AD-5 migration notes. The QMB component spec gains the three coordination notes. Navigation and reference docs take the QML increment: the glossary (QML rewritten, Bot rewritten, and new entries for Bot definition, strategy family, canonical assignment, advisory stop proposal, conformance/conformance ticket, confluence leg and `filter`, producer template, footprint, prediction linter; `BotSpec` and `archetype` recorded as retired aliases); the constitution (L11's parenthetical refreshed, L30 annotated with the roster-scoped scope note at source); the overview, stack, gap report (GAP-0047 answered), index, and AGENTS.md. This fix wave additionally reconciles the perimeter documents the increment touches: `knowledge/traceability.md`, `components/qmf-registry.md`, `components/qmf-risk.md`, `components/qmf-data.md`, `contracts/ct-29-exit-record.yaml`, `contracts/ct-13-journal.yaml`, `scenarios/SCN-0012-qmb-replay-run.md`, and ADR-0017's dated follow-up. No QMF contract changes meaning; no dependency edge reverses direction; `qmf-registry` gains two kind bodies it already reserved, and `qmf-risk` gains two format-version mints of its own contracts.
+
+## Follow-up — 2026-09-14 workbench expansion (ADR-0022)
+
+This ADR's 2026-08-21 Decision stands as written. The 2026-09-14 workbench spine ([ADR-0022](ADR-0022-workbench-expansion.md), DEC-0285) extends QML's write-ownership without rewriting CT-33/CT-34 meaning or minting mechanism nouns here.
+
+- **Generation write-ownership is QML (DEC-0272).** Search varies declared CT-33 parameters in QMB over the same bot `fp1`. Generation, if built, authors new CT-33/CT-34 content and/or logic-source bytes via QML; QMA never assembles that JSON.
+- **GAP-0085 and GAP-0063 remain open.** Typed Entry/Exit/Filter/Session mechanism nouns stay deferred (GAP-0085). The first generator algorithm (placeholder-fill of CT-34 legs versus Python-logic synthesis) stays unruled (GAP-0063). Ownership of both is QML/host write path; filling them in prose is refused.
+- **CT-33 / CT-34 wiring (DEC-0286).** Matching author-side source exists on `integration@1b451a8` (`source-inspected`); class/test existence is not end-to-end demonstration.
+
+## Follow-up — 2026-09-16 QML research expansion (ADR-0023)
+
+This ADR's 2026-08-21 Decision stands as written. The 2026-09-16 QML research expansion ([ADR-0023](ADR-0023-qml-research-expansion.md), DEC-0380 ratified paradigm; package **PROPOSED**) extends QML without rewriting the two-artifact bot or minting a new CT-*.
+
+- **Proposed QL-1 four-count (DEC-0403) is a docs obligation.** It does not rewrite the 2026-08-21 QL-1 three-thin-things sentence in place. Stage 0 types live in `qml.research` on QML's own ladder (DEC-0395).
+- **Stage 0 then graduation.** Research hypotheses are Stage 0; graduation reuses existing `graduate_to_governed` (DEC-0397). Viewing cited seed does not mint `research_ref`.
+- **GAP-0085 still deferred.** Fill-now to fit seed DNA roles is dead (DEC-0413). Stage 0 already carries open roles.

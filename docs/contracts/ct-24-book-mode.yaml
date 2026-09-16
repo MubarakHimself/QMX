@@ -6,11 +6,11 @@ owner: COMP-QMF-RISK
 consumers: []  # consumer-blind by design: transition records and mode folds are qmf-core value types wrapped into registry records by the composition root; no package imports qmf-risk under default-deny (DEC-0143, DEC-0149)
 active_consumers: []
 intended_consumers: [COMP-QMF-REGISTRY, COMP-QMF-DATA]  # the composition root persists transition records and their journal events through qmf-registry / qmf-data when the factory ships; documentary until then (DEC-0149, DEC-0145)
-wiring_status: defined-unwired  # AD-35/AD-29 ratify the transition-record surface; no code exists and no build is authorized outside the factory pipeline — composition-root mediated (DEC-0149, DEC-0143)
+wiring_status: source-inspected  # matching source exists on integration@1b451a8 (DEC-0286); class/test existence is not end-to-end demonstration; remaining connect / composition-root / daemon-process work is not authorized from this doc
 caller_status: unassigned  # the mode flip is an operator-ratified act and a clocked mechanical clear; the issuer is the node/operator, QMF carries the record (DEC-0149)
 layer_from: backend
 layer_to: backend
-decisions: [DEC-0149, DEC-0143, DEC-0150, DEC-0157, DEC-0158, DEC-0041, DEC-0194, DEC-0207, DEC-0219, DEC-0251, DEC-0259]
+decisions: [DEC-0149, DEC-0143, DEC-0150, DEC-0157, DEC-0158, DEC-0041, DEC-0194, DEC-0207, DEC-0219, DEC-0251, DEC-0259, DEC-0286]
 prohibitions: [DEC-0069]  # dead: paper Bot twins stay dead — no Bot twins ever, BENCHED is a bot-seat word only (DEC-0069 cited as dead; DEC-0149)
 gaps: []  # GAP-0041 answered by AD-35 (DEC-0149); GAP-0005 answered by minting format version 1; GAP-0018 answered by DEC-0115, GAP-0019 answered by DEC-0116 — none live here
 purpose: "The append-only binding-transition record that carries a Book between its two modes LIVE and PAPER: every transition is a dated change of the Book's execution binding minting a new binding epoch (never a new Book), current mode is a read-time fold over the transition stream under AD-36's fold contract, and the paper-routing target, paper epochs, and return-to-live rules are governed here — while control actions ride a separate CT-30 stream so 'is this Book live now' folds one stream in every build (DEC-0149, DEC-0143, DEC-0150)."

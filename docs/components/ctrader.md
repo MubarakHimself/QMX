@@ -5,10 +5,10 @@ type: component-spec
 status: ratified
 component: COMP-CTRADER
 depends_on: []
-decisions: [DEC-0030, DEC-0031, DEC-0053, DEC-0059, DEC-0060, DEC-0061, DEC-0065, DEC-0105, DEC-0106, DEC-0107, DEC-0119, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0148, DEC-0158, DEC-0191, DEC-0194, DEC-0196, DEC-0197, DEC-0207, DEC-0222, DEC-0240, DEC-0259]
+decisions: [DEC-0030, DEC-0031, DEC-0053, DEC-0059, DEC-0060, DEC-0061, DEC-0065, DEC-0105, DEC-0106, DEC-0107, DEC-0119, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0148, DEC-0158, DEC-0191, DEC-0194, DEC-0196, DEC-0197, DEC-0207, DEC-0222, DEC-0240, DEC-0259, DEC-0264, DEC-0265, DEC-0267, DEC-0268]
 sources: [DEC-0030, DEC-0031, DEC-0053, DEC-0059, DEC-0060, DEC-0061, DEC-0065, DEC-0105, DEC-0106, DEC-0107, DEC-0119, DEC-0135, DEC-0136, DEC-0137, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0148, DEC-0158, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ARCHITECTURE-SPINE.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-venue-facts.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-time-research.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-primary-verification.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-rate-limits-research.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-tick-spot-mechanics-research.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/ctrader-depth-and-connectivity-research.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/research-risk/ctrader-sltp-amend-research.md, _bmad-output/planning-artifacts/architecture/architecture-QMX-2026-08-19/spotware-org-inventory.md, docs/architecture/dependencies.yaml, docs/contracts/ct-15-external-source-adapter.yaml, docs/contracts/ct-18-venue-capabilities.yaml, docs/contracts/ct-19-venue-command.yaml, docs/contracts/ct-20-venue-event.yaml, docs/contracts/ct-21-venue-secret-session.yaml, _bmad-output/planning-artifacts/architecture/architecture-NODE-2026-08-28/ARCHITECTURE-SPINE.md, _docwork/ledger.yaml, docs/components/trading-node.md]
 generated: 2026-08-18
-verified: 2026-08-29
+verified: 2026-09-11
 stale_after: 30d
 ---
 
@@ -49,6 +49,10 @@ cTrader is a **platform**, not a broker. The platform fixes the protocol and the
 ### Protocol pinning and SDK stance
 
 The venue protocol artifact is the Spotware `openapi-proto-messages` package, pinned in the AD-6 dependency register at its **integer release tag, currently 91**. A tag change mints a new capability declaration plus re-verification, and bumps a `CT-*` format version only where the wire change alters that contract's public shape. Only the proto **message definitions** are consumed — data, not code. The official OpenApiPy SDK is **reference-only**: its pinned Twisted reactor violates AD-6's platform-imposing prohibition, so **zero Spotware code runs in QMX** and the adapter owns its own transport. [DEC-0141]
+
+### CONNECT FX paper (2026-09-11)
+
+`COMP-CTRADER` remains the external facts boundary — hosts `demo.ctraderapi.com` and `live.ctraderapi.com`, Open API protobuf TCP port 5035, proto integer tag 91 compiled in-house — not an implementation home. CONNECT completes the existing cTrader adapter in `qmf-venue`/`qmn.venue.live`; it does not mint a fourth `VenueClientKind` and does not pick an exchange ([ADR-0021](../decisions/ADR-0021-connect-fx-paper.md), DEC-0267, DEC-0268). An FX paper claim uses the vendor cTrader demo host with `AccountRole.DEMO` and `world = live` on the same live client (DEC-0264). Production calls `connect_open_api`; a tests-only caller is a connect bug. No CCXT, no Hummingbot, no Spotware SDK, no Twisted (DEC-0265). This document still authorizes no credentials, session, order, or live trading.
 
 ### Venue facts — documentation-grade (Bundle A)
 
