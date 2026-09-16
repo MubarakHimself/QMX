@@ -21,6 +21,12 @@ from qmf.core.refusal import Ok, Result, is_refusal
 
 from qml._refuse import invalid, policy
 from qml.research._cited import FIELD_CITED_BYTES, decode_cited_buffer
+from qml.research.stage0 import (
+    F_LABELS,
+    F_SLOTS,
+    GRAPH_PLANE,
+    HYPOTHESIS_CLASSES,
+)
 
 __all__ = [
     "F_LABELS",
@@ -42,37 +48,12 @@ __all__ = [
 ]
 
 LAYOUT_DEMO_PACKAGE_ID: Final[str] = "STRAT-000001"
-GRAPH_PLANE: Final[str] = "hypothesis"
 POPULATION_INGEST_STARTED: Final[bool] = False
 PRODUCT_NOUNS: Final[tuple[str, ...]] = (
     "research",
     "hypothesis",
     "dictionary entry",
     "seed corpus",
-)
-HYPOTHESIS_CLASSES: Final[frozenset[str]] = frozenset(
-    {
-        "entry_hypothesis",
-        "fragment",
-        "descriptive_pattern",
-        "composite",
-        "complete",
-    }
-)
-F_SLOTS: Final[tuple[str, ...]] = (
-    "invalidation",
-    "stop",
-    "targets",
-    "exit",
-    "management",
-)
-F_LABELS: Final[frozenset[str]] = frozenset(
-    {
-        "source_defined",
-        "external_policy",
-        "deliberately_open",
-        "unresolved",
-    }
 )
 GRAPH_COMPILE_TARGETS: Final[frozenset[str]] = frozenset(
     {
