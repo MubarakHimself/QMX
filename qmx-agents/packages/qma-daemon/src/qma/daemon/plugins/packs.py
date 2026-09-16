@@ -66,7 +66,19 @@ __all__ = [
     "default_plugins_root",
     "load_pack_activator",
     "load_pack_manifest_raw",
+    "research_corpus_plugin_load_config",
 ]
+
+
+def research_corpus_plugin_load_config(
+    root_path: Path | str,
+) -> dict[str, dict[str, object]]:
+    """Operator-principal load config binding seed-corpus ``root_path``.
+
+    ``root_path`` is a filesystem path, not an env var, git path, venue secret,
+    or qmb setting (NFR-RES-06).
+    """
+    return {"research-corpus": {"root_path": str(Path(root_path))}}
 
 
 def default_plugins_root() -> Path:
@@ -179,9 +191,20 @@ class DeskPluginRoster:
         plugins_root: Path | None = None,
         loader: PluginLoader | None = None,
         backtesting: BacktestingService | None = None,
+        plugin_load_configs: Mapping[str, Mapping[str, object]] | None = None,
     ) -> None:
         self.plugins_root = plugins_root if plugins_root is not None else default_plugins_root()
-        self.loader = loader if loader is not None else PluginLoader()
+        configs: dict[str, Mapping[str, object]] = {
+            key: dict(value) for key, value in dict(plugin_load_configs or {}).items()
+        }
+        if loader is not None:
+            self.loader = loader
+            if configs:
+                merged = dict(loader.plugin_load_configs)
+                merged.update(configs)
+                self.loader.plugin_load_configs = merged
+        else:
+            self.loader = PluginLoader(plugin_load_configs=configs)
         if backtesting is not None:
             self.backtesting = backtesting
         else:

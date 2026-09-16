@@ -12,6 +12,7 @@ from pathlib import Path
 from qma.core.plugins.packs import DESK_PLUGIN_PACK_IDS
 from qma.core.ports.qmb import ANALYSIS_BACKTEST_PLUGIN_ID, QMB_BACKTEST_TOOL_ID
 from qma.daemon.backtest import BacktestingService, CliQmbDoorTransport
+from qma.daemon.plugins import research_corpus_plugin_load_config
 from qma.daemon.process import (
     COMP_EXP_MINTED,
     HTTP_EXPERIMENT_SERVICE_MINTED,
@@ -28,12 +29,19 @@ EXAMPLE = Path(__file__).resolve().parents[1] / "examples" / "daemon_process_usa
 PROCESS_SRC = Path(__file__).resolve().parents[1] / "src" / "qma" / "daemon" / "process.py"
 
 
+def _seed_configs(tmp_path: Path) -> dict[str, dict[str, object]]:
+    seed = tmp_path / "seed-corpus"
+    seed.mkdir(exist_ok=True)
+    return research_corpus_plugin_load_config(seed)
+
+
 def _compose(tmp_path: Path, *, boot: str = "boot-36-1") -> DaemonProcess:
     result = DaemonProcess.compose(
         tmp_path,
         machine="test-host",
         boot_epoch_id=boot,
         bind_port=0,
+        plugin_load_configs=_seed_configs(tmp_path),
     )
     assert is_ok(result), result
     return result.value

@@ -15,7 +15,11 @@ from qma.daemon.backtest import (
     CliQmbDoorTransport,
     cli_qmb_test_double_argv0,
 )
-from qma.daemon.plugins import DeskPluginRoster, default_plugins_root
+from qma.daemon.plugins import (
+    DeskPluginRoster,
+    default_plugins_root,
+    research_corpus_plugin_load_config,
+)
 from qmf.core import is_ok, is_refusal
 
 
@@ -28,9 +32,12 @@ def main() -> None:
 
 def _run(plugins_root: Path, double_root: Path) -> None:
     transport = CliQmbDoorTransport(argv0=cli_qmb_test_double_argv0(double_root / "qmb_double.py"))
+    seed = double_root / "seed-corpus"
+    seed.mkdir()
     roster = DeskPluginRoster(
         plugins_root=plugins_root,
         backtesting=BacktestingService(transport=transport),
+        plugin_load_configs=research_corpus_plugin_load_config(seed),
     )
     loaded = roster.activate()
     assert is_ok(loaded)

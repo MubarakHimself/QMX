@@ -22,6 +22,7 @@ from qma.daemon.experiments import (
     EXPERIMENT_SQLITE_TABLES,
     ExperimentSpecService,
 )
+from qma.daemon.plugins import research_corpus_plugin_load_config
 from qma.daemon.process import DaemonProcess
 from qma.daemon.taskgraph.records import DispatchLease
 from qmf.core import is_ok, is_refusal
@@ -65,11 +66,14 @@ def _spec(*, config: str = "cfg-persist") -> ExperimentSpec:
 
 
 def _compose(tmp_path: Path, *, boot: str) -> DaemonProcess:
+    seed = tmp_path / "seed-corpus"
+    seed.mkdir(exist_ok=True)
     result = DaemonProcess.compose(
         tmp_path,
         machine="test-host",
         boot_epoch_id=boot,
         bind_port=0,
+        plugin_load_configs=research_corpus_plugin_load_config(seed),
     )
     assert is_ok(result), result
     return result.value

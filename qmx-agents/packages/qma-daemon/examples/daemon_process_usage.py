@@ -9,6 +9,7 @@ from pathlib import Path
 from qma.core.plugins.packs import DESK_PLUGIN_PACK_IDS
 from qma.core.ports.qmb import ANALYSIS_BACKTEST_PLUGIN_ID
 from qma.daemon.backtest.service import BacktestingService
+from qma.daemon.plugins import research_corpus_plugin_load_config
 from qma.daemon.process import (
     COMP_EXP_MINTED,
     HTTP_EXPERIMENT_SERVICE_MINTED,
@@ -28,11 +29,14 @@ def main() -> None:
     assert QMB_JSONL_MERGED_INTO_SQLITE is False
 
     async def _run(root: Path) -> None:
+        seed = root / "seed-corpus"
+        seed.mkdir()
         composed = DaemonProcess.compose(
             root,
             machine="example-host",
             boot_epoch_id="boot-example-36-1",
             bind_port=0,
+            plugin_load_configs=research_corpus_plugin_load_config(seed),
         )
         assert is_ok(composed), composed
         process = composed.value

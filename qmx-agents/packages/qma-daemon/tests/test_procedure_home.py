@@ -17,7 +17,7 @@ from qma.core.plugins import analysis_procedure_graph_payload, analysis_procedur
 from qma.core.ports.execution import WorkerImageManifest
 from qma.core.ports.experiments import CT07_V1_EDGE_TYPES
 from qma.core.vocabulary.enums import GraphArtifactKind, TaskMissionState
-from qma.daemon.plugins import DeskPluginRoster
+from qma.daemon.plugins import DeskPluginRoster, research_corpus_plugin_load_config
 from qma.daemon.taskgraph import CompileRequest, MissionCompiler, instantiate_procedure
 from qmf.core import is_ok, is_refusal
 
@@ -88,8 +88,10 @@ def test_skill_does_not_compile_to_a_mission() -> None:
     assert refused.context["field"] == "kind"
 
 
-def test_analysis_backtest_pack_contributes_the_procedure() -> None:
-    roster = DeskPluginRoster()
+def test_analysis_backtest_pack_contributes_the_procedure(tmp_path: Path) -> None:
+    seed = tmp_path / "seed-corpus"
+    seed.mkdir()
+    roster = DeskPluginRoster(plugin_load_configs=research_corpus_plugin_load_config(seed))
     activated = roster.activate()
     assert is_ok(activated), activated
     template = roster.templates.get(ANALYSIS_PROCEDURE_ID)

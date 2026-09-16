@@ -6,6 +6,7 @@ from qma.daemon.knowledge.plain_file import (
     DEFAULT_PLAIN_FILE_CONFIDENCE_DIMENSIONS,
     PlainFileLibrarySource,
 )
+from qma.daemon.knowledge.seed_root import qmx_worktree_root, validate_seed_root_path
 from qma.daemon.knowledge.service import (
     GAP_0073_KNOWLEDGE_HYBRID_INDEXING,
     KNOWLEDGE_QUERY_SURFACE,
@@ -30,4 +31,6 @@ __all__ = [
     "MissionSnapshotPin",
     "PlainFileLibrarySource",
     "SourceBinding",
+    "qmx_worktree_root",
+    "validate_seed_root_path",
 ]

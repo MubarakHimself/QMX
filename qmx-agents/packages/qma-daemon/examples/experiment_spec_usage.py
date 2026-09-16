@@ -15,6 +15,7 @@ from qma.core.ports.experiments import (
     ExperimentSpec,
 )
 from qma.daemon.experiments import ExperimentSpecService
+from qma.daemon.plugins import research_corpus_plugin_load_config
 from qma.daemon.process import DaemonProcess
 from qma.daemon.taskgraph.records import DispatchLease
 from qmf.core import is_ok, is_refusal
@@ -105,11 +106,15 @@ def _restart_restores_sqlite(
 ) -> None:
     with tempfile.TemporaryDirectory() as raw:
         root = Path(raw)
+        seed = root / "seed-corpus"
+        seed.mkdir()
+        configs = research_corpus_plugin_load_config(seed)
         first = DaemonProcess.compose(
             root,
             machine="example-host",
             boot_epoch_id="boot-example-36-3-a",
             bind_port=0,
+            plugin_load_configs=configs,
         )
         assert is_ok(first)
         process = first.value
@@ -134,6 +139,7 @@ def _restart_restores_sqlite(
             machine="example-host",
             boot_epoch_id="boot-example-36-3-b",
             bind_port=0,
+            plugin_load_configs=configs,
         )
         assert is_ok(restarted)
         restored_process = restarted.value

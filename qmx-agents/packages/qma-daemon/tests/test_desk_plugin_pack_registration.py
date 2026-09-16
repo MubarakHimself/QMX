@@ -28,7 +28,12 @@ from qma.daemon.backtest import (
     cli_qmb_test_double_argv0,
 )
 from qma.daemon.capabilities.spawn import SpawnRequest
-from qma.daemon.plugins import DeskPluginRoster, PluginLoader, default_plugins_root
+from qma.daemon.plugins import (
+    DeskPluginRoster,
+    PluginLoader,
+    default_plugins_root,
+    research_corpus_plugin_load_config,
+)
 from qma.daemon.taskgraph.compiler import CompileRequest
 from qmf.core import is_ok, is_refusal
 
@@ -36,8 +41,14 @@ PLUGINS_ROOT = default_plugins_root()
 EXAMPLE = Path(__file__).resolve().parents[1] / "examples" / "desk_plugin_packs_usage.py"
 
 
-def _activate_roster() -> DeskPluginRoster:
-    roster = DeskPluginRoster()
+def _seed_configs(tmp_path: Path) -> dict[str, dict[str, object]]:
+    seed = tmp_path / "seed-corpus"
+    seed.mkdir()
+    return research_corpus_plugin_load_config(seed)
+
+
+def _activate_roster(tmp_path: Path) -> DeskPluginRoster:
+    roster = DeskPluginRoster(plugin_load_configs=_seed_configs(tmp_path))
     result = roster.activate()
     assert is_ok(result), result
     return roster
@@ -50,8 +61,8 @@ def test_plugins_root_holds_five_first_party_packs() -> None:
     assert_no_daemon_import(PLUGINS_ROOT)
 
 
-def test_activate_registers_through_plugin_manifest_and_context() -> None:
-    roster = _activate_roster()
+def test_activate_registers_through_plugin_manifest_and_context(tmp_path: Path) -> None:
+    roster = _activate_roster(tmp_path)
     assert tuple(roster.loader.loaded_ids()) == DESK_PLUGIN_PACK_IDS
     published = roster.loader.published_contributions()
     by_plugin: dict[str, set[str]] = {}
@@ -71,7 +82,10 @@ def test_activate_registers_through_plugin_manifest_and_context() -> None:
 
 def test_analysis_backtest_is_existing_qmb_door_adapter(tmp_path: Path) -> None:
     transport = CliQmbDoorTransport(argv0=cli_qmb_test_double_argv0(tmp_path / "qmb_double.py"))
-    roster = DeskPluginRoster(backtesting=BacktestingService(transport=transport))
+    roster = DeskPluginRoster(
+        backtesting=BacktestingService(transport=transport),
+        plugin_load_configs=_seed_configs(tmp_path),
+    )
     result = roster.activate()
     assert is_ok(result), result
     service = roster.backtesting
@@ -191,8 +205,8 @@ def test_worker_template_qmf_venue_image_refused_at_registration() -> None:
     assert "reachability" in str(refused.context["reason"])
 
 
-def test_graph_template_stays_stateless_daemon_owns_task_graph() -> None:
-    roster = _activate_roster()
+def test_graph_template_stays_stateless_daemon_owns_task_graph(tmp_path: Path) -> None:
+    roster = _activate_roster(tmp_path)
     template = roster.templates.get("research-corpus:survey")
     assert template is not None
     assert template.artifact_kind is GraphArtifactKind.GRAPH_TEMPLATE
@@ -226,8 +240,8 @@ def test_graph_template_stays_stateless_daemon_owns_task_graph() -> None:
     assert template.qualified_id == "research-corpus:survey"
 
 
-def test_memory_admitted_refinement_applied_promote_refused() -> None:
-    roster = _activate_roster()
+def test_memory_admitted_refinement_applied_promote_refused(tmp_path: Path) -> None:
+    roster = _activate_roster(tmp_path)
     candidate = MemoryCandidate(
         provenance={"source": "research-corpus"},
         supporting_artifacts=("artifact:note-1",),
@@ -267,8 +281,8 @@ def test_memory_admitted_refinement_applied_promote_refused() -> None:
     assert is_refusal(roster.refuse_promote())
 
 
-def test_spawn_constrains_unpublished_pack_tools() -> None:
-    roster = _activate_roster()
+def test_spawn_constrains_unpublished_pack_tools(tmp_path: Path) -> None:
+    roster = _activate_roster(tmp_path)
     minted = ActorId.mint(DeskSlug.RESEARCH, "alpha")
     assert is_ok(minted)
     ok_spawn = roster.spawn_constrained(

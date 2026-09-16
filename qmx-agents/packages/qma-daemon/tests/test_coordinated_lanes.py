@@ -19,6 +19,7 @@ from qma.daemon.backtest import BacktestingService, RecordingQmbDoorTransport
 from qma.daemon.envs import ExecutionEnvironmentRegistry
 from qma.daemon.envs.jobs import JobHandleService
 from qma.daemon.experiments import ExperimentSpecService
+from qma.daemon.plugins import research_corpus_plugin_load_config
 from qma.daemon.process import DaemonProcess
 from qma.daemon.taskgraph.records import DispatchLease
 from qma.daemon.tools import ToolRegistry
@@ -181,11 +182,14 @@ def test_registered_spec_records_coordinated_ledger_and_governed_qmb_label(
     )
     assert is_refusal(collapsed)
 
+    seed = tmp_path / "seed-corpus"
+    seed.mkdir()
     process = DaemonProcess.compose(
         tmp_path,
         machine="test-host",
         boot_epoch_id="boot-36-4",
         bind_port=0,
+        plugin_load_configs=research_corpus_plugin_load_config(seed),
     )
     assert is_ok(process)
     composed = process.value

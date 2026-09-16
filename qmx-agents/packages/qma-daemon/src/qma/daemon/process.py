@@ -133,6 +133,7 @@ class DaemonProcess:
         listener: ListenerBindConfig | None = None,
         bind_port: object = 0,
         plugins_root: Path | None = None,
+        plugin_load_configs: Mapping[str, Mapping[str, object]] | None = None,
         world: World = World.LIVE,
     ) -> Result[DaemonProcess]:
         """Compose the daemon from existing modules. Does not mint a new COMP."""
@@ -213,7 +214,10 @@ class DaemonProcess:
                 substrate.close()
                 return restored
 
-            roster = DeskPluginRoster(plugins_root=plugins_root)
+            roster = DeskPluginRoster(
+                plugins_root=plugins_root,
+                plugin_load_configs=plugin_load_configs,
+            )
             roster.backtesting.bind_experiments(experiments)
             activated = roster.activate(
                 principal=PrincipalClass.OPERATOR,

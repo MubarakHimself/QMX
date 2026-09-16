@@ -15,6 +15,7 @@ from qma.core.ports.tools import ToolKind, ToolRecord, default_rung_for_kind
 from qma.core.vocabulary.enums import ExecutionEnvironmentKind
 from qma.daemon.envs.runtime import RuntimeService
 from qma.daemon.experiments import ExperimentSpecService
+from qma.daemon.plugins import research_corpus_plugin_load_config
 from qma.daemon.process import DaemonProcess
 from qma.daemon.tools import ToolRegistry
 from qmf.core import is_ok, is_refusal
@@ -53,11 +54,14 @@ def test_qma_paper_tool_refused_at_registration_including_paper_only() -> None:
 
 
 def test_daemon_never_writes_hub_and_does_not_promote(tmp_path: Path) -> None:
+    seed = tmp_path / "seed-corpus"
+    seed.mkdir()
     composed = DaemonProcess.compose(
         tmp_path,
         machine="test-host",
         boot_epoch_id="boot-36-6",
         bind_port=0,
+        plugin_load_configs=research_corpus_plugin_load_config(seed),
     )
     assert is_ok(composed)
     process = composed.value

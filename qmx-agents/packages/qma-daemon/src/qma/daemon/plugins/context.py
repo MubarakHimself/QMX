@@ -8,6 +8,7 @@ Each registration returns a disposer pushed onto the per-plugin exit stack.
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from types import MappingProxyType
 from typing import Any, cast
 
 from qma.core.barriers.money_path import (
@@ -36,6 +37,8 @@ from qma.core.ports.memory import MemoryProvider
 from qma.core.ports.model import DeploymentRecord, ModelDeployment
 from qma.core.ports.tools import ToolAdapter
 from qma.core.vocabulary.handles import is_handle_kind_contribution_point
+from qma.daemon.knowledge.plain_file import PlainFileLibrarySource
+from qma.daemon.knowledge.seed_root import validate_seed_root_path
 from qma.daemon.plugins.exit_stack import PluginExitStack
 from qmf.core import is_ok
 
@@ -72,6 +75,7 @@ class DaemonPluginContext:
         plugin_id: str,
         *,
         exit_stack: PluginExitStack | None = None,
+        load_config: Mapping[str, object] | None = None,
     ) -> None:
         if not plugin_id or ":" in plugin_id:
             raise PluginContextError(f"invalid plugin_id {plugin_id!r}")
@@ -81,10 +85,33 @@ class DaemonPluginContext:
         self._multis: dict[tuple[str, str], object] = {}
         self._credential_refs: dict[str, CredentialRef] = {}
         self._context_compiler: ContextCompiler | None = None
+        self._load_config: Mapping[str, object] = MappingProxyType(dict(load_config or {}))
 
     @property
     def plugin_id(self) -> str:
         return self._plugin_id
+
+    @property
+    def load_config(self) -> Mapping[str, object]:
+        return self._load_config
+
+    def plain_file_library_source(
+        self,
+        *,
+        root_path: str,
+        source_id: str,
+        kind: str = "plain_file_library",
+    ) -> KnowledgeSource:
+        """Construct the read-only plain-file adapter from load-config ``root_path``."""
+        checked = validate_seed_root_path(root_path)
+        if not is_ok(checked):
+            reason = checked.context.get("reason", "invalid root_path")
+            raise PluginContextError(str(reason))
+        return PlainFileLibrarySource(
+            root_path=checked.value,
+            source_id=source_id,
+            kind=kind,
+        )
 
     @property
     def exit_stack(self) -> PluginExitStack:
@@ -282,6 +309,7 @@ class DaemonPluginContext:
             "singletons": dict(self._singletons),
             "multis": dict(self._multis),
             "credential_refs": dict(self._credential_refs),
+            "load_config": dict(self._load_config),
             "context_compiler_bound": self._context_compiler is not None,
             "exit_stack_depth": self._exit_stack.depth,
             "exit_stack_closed": self._exit_stack.closed,

@@ -267,6 +267,9 @@ class PluginLoader:
     migration_source_root: Path | None = None
     migration_destination_root: Path | None = None
     continuity: DaemonContinuitySnapshot = field(default_factory=DaemonContinuitySnapshot)
+    plugin_load_configs: dict[str, Mapping[str, object]] = field(
+        default_factory=dict[str, Mapping[str, object]]
+    )
     _loaded: dict[str, LoadedPlugin] = field(default_factory=dict[str, LoadedPlugin], init=False)
     _singleton_owners: dict[tuple[str, str], str] = field(
         default_factory=dict[tuple[str, str], str], init=False
@@ -596,7 +599,11 @@ class PluginLoader:
                 field="id",
             )
         exit_stack = PluginExitStack(manifest.id)
-        context = DaemonPluginContext(manifest.id, exit_stack=exit_stack)
+        context = DaemonPluginContext(
+            manifest.id,
+            exit_stack=exit_stack,
+            load_config=self.plugin_load_configs.get(manifest.id, {}),
+        )
         phases: list[str] = [
             "manifest_validation",
             "qma_api_compatibility",

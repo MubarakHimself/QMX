@@ -43,8 +43,31 @@ class PluginContext(Protocol):
         """Fully-qualified plugin id owning this scoped context."""
         ...
 
+    @property
+    def load_config(self) -> Mapping[str, object]:
+        """Operator-principal plugin/daemon load config for this plugin scope.
+
+        Filesystem paths (for example seed-corpus ``root_path``) live here. The
+        map is not an environment, git path, venue secret, or qmb setting.
+        """
+        ...
+
     def credential_ref(self, name: str) -> CredentialRef:
         """Return a credential *reference* string — never a resolved secret."""
+        ...
+
+    def plain_file_library_source(
+        self,
+        *,
+        root_path: str,
+        source_id: str,
+        kind: str = "plain_file_library",
+    ) -> KnowledgeSource:
+        """Construct the daemon-owned read-only plain-file adapter (CT-44).
+
+        Plugins call this instead of importing ``qma-daemon``. ``root_path`` is
+        the filesystem path from operator-principal load config.
+        """
         ...
 
     # --- singleton ports -------------------------------------------------

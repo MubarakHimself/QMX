@@ -30,6 +30,7 @@ from qma.daemon.backtest import (
 )
 from qma.daemon.envs import ExecutionEnvironmentRegistry
 from qma.daemon.envs.jobs import JobHandleService
+from qma.daemon.plugins import research_corpus_plugin_load_config
 from qma.daemon.process import DaemonProcess
 from qma.daemon.tools import ToolRegistry
 from qmf.core import is_ok, is_refusal
@@ -289,11 +290,14 @@ def test_missing_qmb_binary_is_typed_refusal_not_import(tmp_path: Path) -> None:
 
 
 def test_composed_process_default_door_is_cli(tmp_path: Path) -> None:
+    seed = tmp_path / "seed-corpus"
+    seed.mkdir()
     result = DaemonProcess.compose(
         tmp_path,
         machine="test-host",
         boot_epoch_id="boot-36-2",
         bind_port=0,
+        plugin_load_configs=research_corpus_plugin_load_config(seed),
     )
     assert is_ok(result)
     process = result.value

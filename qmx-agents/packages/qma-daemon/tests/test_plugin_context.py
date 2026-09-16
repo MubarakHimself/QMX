@@ -76,6 +76,8 @@ def test_daemon_context_conforms_to_plugin_context_protocol() -> None:
     assert not hasattr(ctx, "secret")
     assert not hasattr(ctx, "resolved_secret")
     assert not hasattr(ctx, "password")
+    assert dict(ctx.load_config) == {}
+    assert hasattr(ctx, "plain_file_library_source")
 
 
 def test_singleton_and_multi_registration_with_disposers() -> None:

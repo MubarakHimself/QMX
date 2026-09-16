@@ -67,6 +67,7 @@ from qma.daemon.plugins.packs import (
     default_plugins_root,
     load_pack_activator,
     load_pack_manifest_raw,
+    research_corpus_plugin_load_config,
 )
 
 __all__ = [
@@ -123,6 +124,7 @@ __all__ = [
     "plugin_context_mints_ui_view",
     "refuse_cut_plugin_surface",
     "require_singleton_bindings_met",
+    "research_corpus_plugin_load_config",
     "rollback_mode_for_manifest",
     "runtime_load_refusal",
     "topological_plugin_order",
