@@ -17,6 +17,15 @@ from qml.conformance.contract import (
     LAYER2_CHECKS,
     conformance_contract_identity,
 )
+from qml.conformance.entries import (
+    AUTO_MINT_SOURCES,
+    LEGAL_AUTHORING_ENTRIES,
+    LegalAuthoringEntries,
+    enumerate_legal_authoring_entries,
+    gate_registration_requires_stage0,
+    refuse_auto_mint,
+    refuse_entry_toll_booth,
+)
 from qml.conformance.harness import (
     INTENT_KIND_ENTRY,
     drive_golden_slice,
@@ -83,6 +92,7 @@ from qml.conformance.slice import (
 
 __all__ = [
     "AST_SCAN_RULES_CLASS",
+    "AUTO_MINT_SOURCES",
     "CITATION_KINDS",
     "CONFORMANCE_CONTRACT_CLASS",
     "CONFORMANCE_FORMAT_VERSION",
@@ -99,6 +109,7 @@ __all__ = [
     "INTENT_KIND_ENTRY",
     "LAYER1_CHECKS",
     "LAYER2_CHECKS",
+    "LEGAL_AUTHORING_ENTRIES",
     "MILL_ORIGINATING_BANNED_KEYS",
     "MILL_RESEARCH_CLASS",
     "PREDICTION_CHECKS",
@@ -112,6 +123,7 @@ __all__ = [
     "Layer1Verdict",
     "Layer2Observations",
     "Layer2Verdict",
+    "LegalAuthoringEntries",
     "PredictionBindingContext",
     "PredictionVerdict",
     "RegistrationCandidate",
@@ -126,9 +138,11 @@ __all__ = [
     "collect_layer2_observations",
     "conformance_contract_identity",
     "drive_golden_slice",
+    "enumerate_legal_authoring_entries",
     "evaluate_layer2",
     "evaluate_ticket",
     "gate_registration",
+    "gate_registration_requires_stage0",
     "generate_golden_slice",
     "graduate_mill_to_governed",
     "graduate_to_governed",
@@ -137,6 +151,8 @@ __all__ = [
     "lint_declaration",
     "lint_prediction",
     "read_surfaces_for_slice",
+    "refuse_auto_mint",
+    "refuse_entry_toll_booth",
     "refuse_spawn_as_graduation",
     "run_layer2_suite",
     "scan_logic_source",

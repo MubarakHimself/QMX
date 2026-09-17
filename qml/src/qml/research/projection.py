@@ -250,6 +250,7 @@ def mint_bot_from_projection(projection: object) -> Result[None]:
         package_id=checked.value.package_id,
         mints_ct33=False,
         mints_ct34=False,
+        source="dna",
     )
 
 
