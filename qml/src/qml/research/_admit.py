@@ -40,6 +40,7 @@ __all__ = ["mint_hypothesis", "restore_hypothesis"]
 _FIELD_CLASS: Final[str] = "class"
 _FIELD_ORIGIN: Final[str] = "origin"
 _FIELD_EVIDENCE: Final[str] = "evidence"
+_FIELD_UNKNOWNS: Final[str] = "unknowns"
 _FIELD_F_LABELS: Final[str] = "f_labels"
 _FIELD_H_LABELS: Final[str] = "h_labels"
 _FIELD_VERSION: Final[str] = "contract_format_version"
@@ -51,7 +52,7 @@ _OPTIONAL_FIELD_KEYS: Final[frozenset[str]] = frozenset(
         "role_bindings",
         "graph",
         _FIELD_EVIDENCE,
-        "unknowns",
+        _FIELD_UNKNOWNS,
         _FIELD_F_LABELS,
         _FIELD_H_LABELS,
         _FIELD_TITLE,
@@ -126,7 +127,7 @@ def restore_hypothesis(payload: object) -> Result[Hypothesis]:
         role_bindings=body.get("role_bindings", ()),
         graph=body.get("graph"),
         evidence=body.get(_FIELD_EVIDENCE, ()),
-        unknowns=body.get("unknowns", ()),
+        unknowns=body.get(_FIELD_UNKNOWNS, ()),
         f_labels=body.get(_FIELD_F_LABELS),
         h_labels=body.get(_FIELD_H_LABELS),
         title=body.get(_FIELD_TITLE),
@@ -270,7 +271,10 @@ def _admit_claims_and_unknowns(
     claims = admit_evidence(fields.get(_FIELD_EVIDENCE, ()))
     if is_refusal(claims):
         return claims
-    unknown_tokens = admit_string_tuple(fields.get("unknowns", ()), field="unknowns")
+    unknown_tokens = admit_string_tuple(
+        fields.get(_FIELD_UNKNOWNS, ()),
+        field=_FIELD_UNKNOWNS,
+    )
     if is_refusal(unknown_tokens):
         return unknown_tokens
     return Ok((claims.value, unknown_tokens.value))

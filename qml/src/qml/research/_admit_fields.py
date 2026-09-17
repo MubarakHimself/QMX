@@ -9,6 +9,7 @@ from typing import Final, TypeVar, cast
 from qmf.core.refusal import Ok, Result, is_refusal
 
 from qml._refuse import invalid
+from qml.research._admit_labels import admit_label_entry
 from qml.research.stage0 import (
     GRAPH_MEANING_KINDS,
     GRAPH_PLANE,
@@ -341,26 +342,9 @@ def _build_label_map(
 ) -> Result[dict[str, str]]:
     out: dict[str, str] = {}
     for raw_key, raw_label in value.items():
-        entry = _admit_label_entry(raw_key, raw_label, field=field, allowed=allowed)
+        entry = admit_label_entry(raw_key, raw_label, field=field, allowed=allowed)
         if is_refusal(entry):
             return entry
         key, label = entry.value
         out[key] = label
     return Ok(out)
-
-
-def _admit_label_entry(
-    raw_key: object,
-    raw_label: object,
-    *,
-    field: str,
-    allowed: frozenset[str] | None,
-) -> Result[tuple[str, str]]:
-    if not isinstance(raw_key, str) or raw_key.strip() == "":
-        return invalid(field, f"{field} keys are non-empty strings", given=repr(raw_key))
-    if not isinstance(raw_label, str) or raw_label.strip() == "":
-        return invalid(field, f"{field} values are non-empty strings", given=repr(raw_label))
-    label = raw_label.casefold().strip()
-    if allowed is not None and label not in allowed:
-        return invalid(field, f"{field} labels are the Stage 0 closed set", given=label)
-    return Ok((raw_key.casefold().strip(), label))
