@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import importlib.util
+import sys
+from pathlib import Path
+from types import ModuleType
+
 from qmf.core.refusal import RefusalCategory, is_refusal
 from qml.conformance import graduate_mill_to_governed
 from qml.declaration import FORBIDDEN_BOT_FIELDS, LEG_ROLES
@@ -16,14 +21,29 @@ from qml.research import (
     refuse_invented_ct34_role,
     refuse_invented_exits,
 )
-from research_collapse_helpers import (
-    layer_verdicts,
-    mint_research_bot,
-    ok,
-    open_role_hypothesis,
-    research_bot_world,
-    unresolved_f_hypothesis,
-)
+
+
+def _load_research_collapse_helpers() -> ModuleType:
+    path = Path(__file__).resolve().parent / "research_collapse_helpers.py"
+    name = "qml.tests.research_collapse_helpers"
+    existing = sys.modules.get(name)
+    if existing is not None:
+        return existing
+    spec = importlib.util.spec_from_file_location(name, path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+_helpers = _load_research_collapse_helpers()
+layer_verdicts = _helpers.layer_verdicts
+mint_research_bot = _helpers.mint_research_bot
+ok = _helpers.ok
+open_role_hypothesis = _helpers.open_role_hypothesis
+research_bot_world = _helpers.research_bot_world
+unresolved_f_hypothesis = _helpers.unresolved_f_hypothesis
 
 
 def test_collapse_maps_open_roles_to_ct34_and_python_when() -> None:
