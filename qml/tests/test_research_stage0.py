@@ -2,19 +2,16 @@
 
 from __future__ import annotations
 
-import ast
+import importlib.util
+import sys
 from pathlib import Path
+from types import ModuleType
 
 from qmf.core.refusal import RefusalCategory, is_ok, is_refusal
 from qml.conformance import CONFORMANCE_FORMAT_VERSION
 from qml.protocol import PROTOCOL_FORMAT_VERSION
 from qml.research import (
-    F_LABELS,
     F_SLOTS,
-    GRAPH_MEANING_KINDS,
-    GRAPH_PLANE,
-    HYPOTHESIS_CLASSES,
-    HYPOTHESIS_ORIGINS,
     RESEARCH_CONTRACT_CLASS,
     RESEARCH_FORMAT_VERSION,
     RESEARCH_LADDER,
@@ -22,11 +19,9 @@ from qml.research import (
     STAGE0_EMITS_CT23,
     STAGE0_IS_BOOK_SEAT,
     STAGE0_NEVER_SIZES,
-    STAGE0_SURFACES,
     DictionaryCite,
     EvidenceClaim,
     Graph,
-    Hypothesis,
     RoleBinding,
     admit_research_format_version,
     mint_hypothesis,
@@ -39,6 +34,28 @@ from qml.research import (
 )
 
 from qml import research
+
+
+def _load_research_stage0_helpers() -> ModuleType:
+    path = Path(__file__).resolve().parent / "research_stage0_helpers.py"
+    name = "qml.tests.research_stage0_helpers"
+    existing = sys.modules.get(name)
+    if existing is not None:
+        return existing
+    spec = importlib.util.spec_from_file_location(name, path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+_helpers = _load_research_stage0_helpers()
+assert_idea_fragment = _helpers.assert_idea_fragment
+assert_source_agnostic_origins = _helpers.assert_source_agnostic_origins
+assert_stage0_surface_constants = _helpers.assert_stage0_surface_constants
+mint_idea_fragment = _helpers.mint_idea_fragment
+research_purity_violations = _helpers.research_purity_violations
 
 
 def test_qml_research_is_public_submodule_with_own_format_ladder() -> None:
@@ -66,66 +83,9 @@ def test_qml_research_is_public_submodule_with_own_format_ladder() -> None:
 
 
 def test_stage0_types_cover_required_surfaces_and_source_agnostic_origins() -> None:
-    assert set(STAGE0_SURFACES) >= {
-        "dictionary_cites",
-        "role_bindings",
-        "graph",
-        "evidence",
-        "unknowns",
-        "f_labels",
-        "h_labels",
-        "class",
-    }
-    assert HYPOTHESIS_CLASSES == frozenset(
-        {
-            "entry_hypothesis",
-            "fragment",
-            "descriptive_pattern",
-            "composite",
-            "complete",
-        }
-    )
-    assert HYPOTHESIS_ORIGINS == frozenset({"idea", "chart", "journal", "seed_package"})
-    assert GRAPH_MEANING_KINDS == frozenset({"boolean", "temporal", "lifecycle"})
-    assert GRAPH_PLANE == "hypothesis"
-    assert F_SLOTS == ("invalidation", "stop", "targets", "exit", "management")
-    assert F_LABELS == frozenset(
-        {"source_defined", "external_policy", "deliberately_open", "unresolved"}
-    )
-
-    idea = mint_hypothesis(
-        hypothesis_class="fragment",
-        origin="idea",
-        dictionary_cites=[{"file_path": "notes/local.md", "id": "my-level"}],
-        role_bindings=[
-            {
-                "cite": {"file_path": "notes/local.md", "id": "my-level"},
-                "role": "location",
-            }
-        ],
-        graph={"operators": ["ALL"], "meaning": ["boolean", "temporal"], "plane": "hypothesis"},
-        evidence=[{"claim": "sketched on a whiteboard", "locator": None}],
-        unknowns=("pair unresolved",),
-        f_labels=dict.fromkeys(F_SLOTS, "unresolved"),
-        h_labels={"pair": "unresolved"},
-        title="whiteboard sketch",
-    )
-    assert is_ok(idea)
-    hyp = idea.value
-    assert isinstance(hyp, Hypothesis)
-    assert hyp.origin == "idea"
-    assert hyp.hypothesis_class == "fragment"
-    assert hyp.dictionary_cites[0] == DictionaryCite("notes/local.md", "my-level")
-    assert hyp.role_bindings[0].role == "location"
-    assert isinstance(hyp.graph, Graph)
-    assert hyp.graph.meaning == ("boolean", "temporal")
-    assert hyp.evidence[0] == EvidenceClaim(claim="sketched on a whiteboard")
-    assert "pair unresolved" in hyp.unknowns
-
-    for origin in ("chart", "journal", "seed_package"):
-        minted = mint_hypothesis(hypothesis_class="entry_hypothesis", origin=origin)
-        assert is_ok(minted), origin
-        assert minted.value.origin == origin
+    assert_stage0_surface_constants()
+    assert_idea_fragment(mint_idea_fragment())
+    assert_source_agnostic_origins()
 
 
 def test_stage0_never_sizes_intents_seats_or_governed_evidence() -> None:
@@ -222,44 +182,4 @@ def test_restore_round_trip_known_version() -> None:
 
 
 def test_research_module_stays_pure_no_io_threads_process() -> None:
-    root = Path(__file__).resolve().parents[1] / "src" / "qml" / "research"
-    banned = frozenset(
-        {
-            "asyncio",
-            "concurrent",
-            "http",
-            "multiprocessing",
-            "os",
-            "pathlib",
-            "socket",
-            "subprocess",
-            "threading",
-            "urllib",
-            "qmf.registry",
-            "qmf.venue",
-            "qml.declaration",
-            "qml.host",
-        }
-    )
-    hits: list[str] = []
-    for path in sorted(root.rglob("*.py")):
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                for alias in node.names:
-                    if alias.name in banned or any(
-                        alias.name.startswith(item + ".") for item in banned
-                    ):
-                        hits.append(f"{path.name}: import {alias.name}")
-            elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
-                if node.module in banned or any(
-                    node.module.startswith(item + ".") for item in banned
-                ):
-                    hits.append(f"{path.name}: from {node.module}")
-            elif (
-                isinstance(node, ast.Call)
-                and isinstance(node.func, ast.Name)
-                and node.func.id == "open"
-            ):
-                hits.append(f"{path.name}: open()")
-    assert hits == []
+    assert research_purity_violations() == []
