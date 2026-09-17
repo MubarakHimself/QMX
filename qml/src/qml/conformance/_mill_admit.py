@@ -14,6 +14,7 @@ from qmf.core.fingerprint import Fingerprint, fingerprint
 from qmf.core.refusal import Ok, Result, TypedRefusal, is_refusal
 
 from qml._refuse import invalid, policy
+from qml.conformance._fp import coerce_fp1
 from qml.conformance.registration import Graduation, graduate_to_governed
 from qml.research.collapse import refuse_invented_exits
 from qml.research.stage0 import (
@@ -43,8 +44,15 @@ MILL_ORIGINATING_BANNED_KEYS: Final[frozenset[str]] = frozenset(
     }
 )
 
+_FIELD_ORIGINATING: Final[str] = "originating_research_ref"
+_SPAWN_GOVERNED: Final[str] = "spawn_governed"
 _CITATION_SHAPE_ATTRS: Final[frozenset[str]] = frozenset(
     {"artifact_ref", "source_ref", "seed_cite"}
+)
+_CITATION_ORIGIN_REASON: Final[str] = (
+    "Knowledge Citation digest / artifact_ref / source_ref / seed_cite "
+    "is not a legal mill originating_research_ref; seed cites travel on "
+    "seed_cite only"
 )
 
 
@@ -66,19 +74,7 @@ def admit_mill_originating_research_ref(
         return expected
     if value is None:
         return Ok(expected.value)
-    given = _coerce_fingerprint(value, "originating_research_ref")
-    if is_refusal(given):
-        return given
-    if given.value.value != expected.value.value:
-        return invalid(
-            "originating_research_ref",
-            "mill originating_research_ref must equal the hypothesis research_ref "
-            f"(class {MILL_RESEARCH_CLASS})",
-            given=given.value.value,
-            research_ref=expected.value.value,
-            research_class=MILL_RESEARCH_CLASS,
-        )
-    return Ok(given.value)
+    return _match_originating_ref(value, expected.value)
 
 
 def graduate_mill_to_governed(
@@ -94,8 +90,8 @@ def graduate_mill_to_governed(
     Does not call the structure-package research graduate helper. ``spawn_governed``
     is not graduation (use :func:`refuse_spawn_as_graduation`).
     """
-    if "spawn_governed" in extra:
-        return refuse_spawn_as_graduation(extra.pop("spawn_governed"))
+    if _SPAWN_GOVERNED in extra:
+        return refuse_spawn_as_graduation(extra.pop(_SPAWN_GOVERNED))
     invented = _refuse_invent_flags(extra)
     if is_refusal(invented):
         return invented
@@ -113,7 +109,7 @@ def graduate_mill_to_governed(
     )
 
 
-def refuse_spawn_as_graduation(label: object = "spawn_governed") -> TypedRefusal:
+def refuse_spawn_as_graduation(label: object = _SPAWN_GOVERNED) -> TypedRefusal:
     """``spawn_governed`` is not graduation; L33 stays two-artifact registration."""
     return policy(
         "graduation",
@@ -123,6 +119,25 @@ def refuse_spawn_as_graduation(label: object = "spawn_governed") -> TypedRefusal
         spawn_governed=False,
         mill_calls="qml.conformance.registration.graduate_to_governed",
     )
+
+
+def _match_originating_ref(
+    value: object,
+    expected: Fingerprint,
+) -> Result[Fingerprint]:
+    given = coerce_fp1(value, _FIELD_ORIGINATING)
+    if is_refusal(given):
+        return given
+    if given.value.value != expected.value:
+        return invalid(
+            _FIELD_ORIGINATING,
+            "mill originating_research_ref must equal the hypothesis research_ref "
+            f"(class {MILL_RESEARCH_CLASS})",
+            given=given.value.value,
+            research_ref=expected.value,
+            research_class=MILL_RESEARCH_CLASS,
+        )
+    return Ok(given.value)
 
 
 def _refuse_invent_flags(extra: dict[str, object]) -> Result[None]:
@@ -144,25 +159,28 @@ def _refuse_invent_flags(extra: dict[str, object]) -> Result[None]:
 def _refuse_citation_shaped_origin(value: object) -> Result[None]:
     """Refuse Knowledge Citation / seed_cite shapes as mill originating refs."""
     if isinstance(value, Mapping):
-        mapping = cast("Mapping[str, object]", value)
-        hit = sorted(key for key in MILL_ORIGINATING_BANNED_KEYS if key in mapping)
-        if hit:
-            return policy(
-                "originating_research_ref",
-                "Knowledge Citation digest / artifact_ref / source_ref / seed_cite "
-                "is not a legal mill originating_research_ref; seed cites travel on "
-                "seed_cite only",
-                banned=hit,
-                research_class=MILL_RESEARCH_CLASS,
-            )
+        return _refuse_citation_mapping(cast("Mapping[str, object]", value))
+    return _refuse_citation_attrs(value)
+
+
+def _refuse_citation_mapping(mapping: Mapping[str, object]) -> Result[None]:
+    hit = sorted(key for key in MILL_ORIGINATING_BANNED_KEYS if key in mapping)
+    if not hit:
         return Ok(None)
+    return policy(
+        _FIELD_ORIGINATING,
+        _CITATION_ORIGIN_REASON,
+        banned=hit,
+        research_class=MILL_RESEARCH_CLASS,
+    )
+
+
+def _refuse_citation_attrs(value: object) -> Result[None]:
     for attr in sorted(_CITATION_SHAPE_ATTRS):
         if hasattr(value, attr) and not isinstance(value, (Fingerprint, str, bytes)):
             return policy(
-                "originating_research_ref",
-                "Knowledge Citation digest / artifact_ref / source_ref / seed_cite "
-                "is not a legal mill originating_research_ref; seed cites travel on "
-                "seed_cite only",
+                _FIELD_ORIGINATING,
+                _CITATION_ORIGIN_REASON,
                 banned=attr,
                 given=type(value).__name__,
                 research_class=MILL_RESEARCH_CLASS,
@@ -198,16 +216,3 @@ def _research_ref_from_mapping(mapping: Mapping[str, object]) -> Result[Fingerpr
             research_class=MILL_RESEARCH_CLASS,
         )
     return fingerprint(dict(mapping))
-
-
-def _coerce_fingerprint(value: object, field: str) -> Result[Fingerprint]:
-    if isinstance(value, Fingerprint):
-        return Ok(value)
-    parsed = Fingerprint.try_create(value)
-    if is_refusal(parsed):
-        return invalid(
-            field,
-            "a Bot citation or research artifact is referenced by fp1:sha256:<hex>",
-            given=repr(value),
-        )
-    return parsed

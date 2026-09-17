@@ -117,6 +117,7 @@ STAGE0_SURFACES: Final[tuple[str, ...]] = (
 _EMPTY_F: Final[Mapping[str, str]] = MappingProxyType({})
 _FIELD_F_LABELS: Final[str] = "f_labels"
 _FIELD_H_LABELS: Final[str] = "h_labels"
+_FIELD_HYPOTHESIS: Final[str] = "hypothesis"
 _FIELD_VERSION: Final[str] = "contract_format_version"
 
 
@@ -265,15 +266,21 @@ def hypothesis_identity_payload(hypothesis: Hypothesis) -> dict[str, object]:
     }
 
 
+def _require_hypothesis(hypothesis: object, reason: str) -> Result[Hypothesis]:
+    if isinstance(hypothesis, Hypothesis):
+        return Ok(hypothesis)
+    return invalid(_FIELD_HYPOTHESIS, reason, given=type(hypothesis).__name__)
+
+
 def hypothesis_canonical_bytes(hypothesis: object) -> Result[bytes]:
     """Canonical JSON bytes of the identity preimage (sorted keys; CT-05)."""
-    if not isinstance(hypothesis, Hypothesis):
-        return invalid(
-            "hypothesis",
-            "canonical research bytes are computed over a Stage 0 Hypothesis",
-            given=type(hypothesis).__name__,
-        )
-    return canonical_bytes(hypothesis_identity_payload(hypothesis))
+    admitted = _require_hypothesis(
+        hypothesis,
+        "canonical research bytes are computed over a Stage 0 Hypothesis",
+    )
+    if is_refusal(admitted):
+        return admitted
+    return canonical_bytes(hypothesis_identity_payload(admitted.value))
 
 
 def fingerprint_hypothesis(hypothesis: object) -> Result[Fingerprint]:
@@ -282,14 +289,14 @@ def fingerprint_hypothesis(hypothesis: object) -> Result[Fingerprint]:
     Value is fp1-shaped (``fp1:sha256:<hex>``). Not a qmf-registry kind, not an
     Artifact-rail hit, and not a ``research:sha256:`` dialect (DEC-0401).
     """
-    if not isinstance(hypothesis, Hypothesis):
-        return invalid(
-            "hypothesis",
-            "research_ref fingerprints a Stage 0 Hypothesis after explicit save; "
-            "a LAYOUT-DEMO projection is not a save",
-            given=type(hypothesis).__name__,
-        )
-    return fingerprint(hypothesis_identity_payload(hypothesis))
+    admitted = _require_hypothesis(
+        hypothesis,
+        "research_ref fingerprints a Stage 0 Hypothesis after explicit save; "
+        "a LAYOUT-DEMO projection is not a save",
+    )
+    if is_refusal(admitted):
+        return admitted
+    return fingerprint(hypothesis_identity_payload(admitted.value))
 
 
 @dataclass(frozen=True, slots=True)
@@ -306,12 +313,16 @@ class SavedHypothesis:
 
 def save_authored_hypothesis(hypothesis: object) -> Result[SavedHypothesis]:
     """Explicit Stage 0 save: return canonical bytes and ``research_ref`` (no I/O)."""
-    if not isinstance(hypothesis, Hypothesis):
-        return invalid(
-            "hypothesis",
-            "explicit save returns canonical bytes for a Stage 0 Hypothesis",
-            given=type(hypothesis).__name__,
-        )
+    admitted = _require_hypothesis(
+        hypothesis,
+        "explicit save returns canonical bytes for a Stage 0 Hypothesis",
+    )
+    if is_refusal(admitted):
+        return admitted
+    return _save_admitted_hypothesis(admitted.value)
+
+
+def _save_admitted_hypothesis(hypothesis: Hypothesis) -> Result[SavedHypothesis]:
     canonical = hypothesis_canonical_bytes(hypothesis)
     if is_refusal(canonical):
         return canonical

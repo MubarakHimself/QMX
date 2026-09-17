@@ -31,6 +31,13 @@ __all__ = [
 T = TypeVar("T")
 
 _EMPTY_F: Final[Mapping[str, str]] = MappingProxyType({})
+_FIELD_EVIDENCE: Final[str] = "evidence"
+_FIELD_MEANING: Final[str] = "meaning"
+_FIELD_PLANE: Final[str] = "plane"
+_FIELD_GRAPH: Final[str] = "graph"
+_MAPPING_STR_OBJECT = Mapping[str, object]
+_MEANING_REASON: Final[str] = "graph meaning kinds are boolean, temporal, and lifecycle"
+_PLANE_REASON: Final[str] = "graph plane is the hypothesis plane"
 
 
 def admit_cites(value: object) -> Result[tuple[DictionaryCite, ...]]:
@@ -54,7 +61,7 @@ def admit_bindings(value: object) -> Result[tuple[RoleBinding, ...]]:
 def admit_evidence(value: object) -> Result[tuple[EvidenceClaim, ...]]:
     return _admit_sequence(
         value,
-        field="evidence",
+        field=_FIELD_EVIDENCE,
         reason="evidence is a sequence of source-faithful claims (not CT-32)",
         admit_one=_admit_claim,
     )
@@ -64,17 +71,14 @@ def admit_graph(value: object) -> Result[Graph]:
     if value is None:
         return Ok(Graph())
     if isinstance(value, Graph):
-        checked = _validate_graph(value)
-        if is_refusal(checked):
-            return checked
-        return Ok(value)
-    if not isinstance(value, Mapping):
-        return invalid(
-            "graph",
-            "graph is Boolean/temporal/lifecycle meaning",
-            given=type(value).__name__,
-        )
-    return _admit_graph_mapping(cast("Mapping[str, object]", value))
+        return _checked_graph(value)
+    if isinstance(value, Mapping):
+        return _admit_graph_mapping(cast(_MAPPING_STR_OBJECT, value))
+    return invalid(
+        _FIELD_GRAPH,
+        "graph is Boolean/temporal/lifecycle meaning",
+        given=type(value).__name__,
+    )
 
 
 def admit_string_tuple(value: object, *, field: str) -> Result[tuple[str, ...]]:
@@ -83,14 +87,7 @@ def admit_string_tuple(value: object, *, field: str) -> Result[tuple[str, ...]]:
     if isinstance(value, str):
         token = value.strip()
         return Ok((token,) if token else ())
-    if not isinstance(value, Sequence) or isinstance(value, (bytes, bytearray)):
-        return invalid(field, f"{field} is a sequence of strings", given=type(value).__name__)
-    out: list[str] = []
-    for item in cast("Sequence[object]", value):
-        if not isinstance(item, str) or item.strip() == "":
-            return invalid(field, f"{field} entries are non-empty strings", given=repr(item))
-        out.append(item.strip())
-    return Ok(tuple(out))
+    return _admit_string_sequence(value, field=field)
 
 
 def admit_label_map(
@@ -121,6 +118,17 @@ def optional_string(value: object, *, field: str) -> Result[str | None]:
     return Ok(value.strip())
 
 
+def _admit_string_sequence(value: object, *, field: str) -> Result[tuple[str, ...]]:
+    if not isinstance(value, Sequence) or isinstance(value, (bytes, bytearray)):
+        return invalid(field, f"{field} is a sequence of strings", given=type(value).__name__)
+    out: list[str] = []
+    for item in cast("Sequence[object]", value):
+        if not isinstance(item, str) or item.strip() == "":
+            return invalid(field, f"{field} entries are non-empty strings", given=repr(item))
+        out.append(item.strip())
+    return Ok(tuple(out))
+
+
 def _admit_sequence(
     value: object,
     *,
@@ -144,13 +152,16 @@ def _admit_sequence(
 def _admit_cite(value: object) -> Result[DictionaryCite]:
     if isinstance(value, DictionaryCite):
         return Ok(value)
-    if not isinstance(value, Mapping):
-        return invalid(
-            "dictionary_cites",
-            "a dictionary cite is {file_path, id}",
-            given=type(value).__name__,
-        )
-    mapping = cast("Mapping[str, object]", value)
+    if isinstance(value, Mapping):
+        return _admit_cite_mapping(cast(_MAPPING_STR_OBJECT, value))
+    return invalid(
+        "dictionary_cites",
+        "a dictionary cite is {file_path, id}",
+        given=type(value).__name__,
+    )
+
+
+def _admit_cite_mapping(mapping: _MAPPING_STR_OBJECT) -> Result[DictionaryCite]:
     path = mapping.get("file_path")
     entry_id = mapping.get("id")
     if not isinstance(path, str) or path.strip() == "":
@@ -171,13 +182,16 @@ def _admit_cite(value: object) -> Result[DictionaryCite]:
 def _admit_binding(value: object) -> Result[RoleBinding]:
     if isinstance(value, RoleBinding):
         return Ok(value)
-    if not isinstance(value, Mapping):
-        return invalid(
-            "role_bindings",
-            "a role binding is {cite, role}",
-            given=type(value).__name__,
-        )
-    mapping = cast("Mapping[str, object]", value)
+    if isinstance(value, Mapping):
+        return _admit_binding_mapping(cast(_MAPPING_STR_OBJECT, value))
+    return invalid(
+        "role_bindings",
+        "a role binding is {cite, role}",
+        given=type(value).__name__,
+    )
+
+
+def _admit_binding_mapping(mapping: _MAPPING_STR_OBJECT) -> Result[RoleBinding]:
     cite = _admit_cite(mapping.get("cite"))
     if is_refusal(cite):
         return cite
@@ -191,10 +205,10 @@ def _admit_binding(value: object) -> Result[RoleBinding]:
     return Ok(RoleBinding(cite=cite.value, role=role.casefold().strip()))
 
 
-def _admit_graph_mapping(mapping: Mapping[str, object]) -> Result[Graph]:
+def _admit_graph_mapping(mapping: _MAPPING_STR_OBJECT) -> Result[Graph]:
     if "confluence" in mapping or "Confluence" in mapping:
         return invalid(
-            "graph",
+            _FIELD_GRAPH,
             "Stage 0 composition field/type is graph; Confluence stays CT-34",
             given="confluence",
         )
@@ -206,29 +220,46 @@ def _admit_graph_mapping(mapping: Mapping[str, object]) -> Result[Graph]:
 
 
 def _admit_graph_parts(
-    mapping: Mapping[str, object],
+    mapping: _MAPPING_STR_OBJECT,
 ) -> Result[tuple[tuple[str, ...], tuple[str, ...]]]:
     operators = admit_string_tuple(mapping.get("operators", ()), field="operators")
     if is_refusal(operators):
         return operators
-    meaning = admit_string_tuple(mapping.get("meaning", ()), field="meaning")
+    meaning_plane = _admit_meaning_and_plane(mapping)
+    if is_refusal(meaning_plane):
+        return meaning_plane
+    meaning, _plane = meaning_plane.value
+    return Ok((operators.value, meaning))
+
+
+def _admit_meaning_and_plane(
+    mapping: _MAPPING_STR_OBJECT,
+) -> Result[tuple[tuple[str, ...], str]]:
+    meaning = _admit_checked_meaning(mapping.get(_FIELD_MEANING, ()))
+    if is_refusal(meaning):
+        return meaning
+    plane = _admit_plane(mapping.get(_FIELD_PLANE, GRAPH_PLANE))
+    if is_refusal(plane):
+        return plane
+    return Ok((meaning.value, plane.value))
+
+
+def _admit_checked_meaning(value: object) -> Result[tuple[str, ...]]:
+    meaning = admit_string_tuple(value, field=_FIELD_MEANING)
     if is_refusal(meaning):
         return meaning
     checked = _validate_meaning_tokens(meaning.value)
     if is_refusal(checked):
         return checked
-    plane = _admit_plane(mapping.get("plane", GRAPH_PLANE))
-    if is_refusal(plane):
-        return plane
-    return Ok((operators.value, meaning.value))
+    return Ok(meaning.value)
 
 
 def _validate_meaning_tokens(tokens: tuple[str, ...]) -> Result[None]:
     for token in tokens:
         if token not in GRAPH_MEANING_KINDS:
             return invalid(
-                "meaning",
-                "graph meaning kinds are boolean, temporal, and lifecycle",
+                _FIELD_MEANING,
+                _MEANING_REASON,
                 given=token,
                 allowed=tuple(sorted(GRAPH_MEANING_KINDS)),
             )
@@ -237,26 +268,29 @@ def _validate_meaning_tokens(tokens: tuple[str, ...]) -> Result[None]:
 
 def _admit_plane(plane: object) -> Result[str]:
     if not isinstance(plane, str) or plane.strip() == "":
-        return invalid("plane", "graph plane is the hypothesis plane", given=repr(plane))
+        return invalid(_FIELD_PLANE, _PLANE_REASON, given=repr(plane))
     if plane.casefold().strip() != GRAPH_PLANE:
         return invalid(
-            "plane",
+            _FIELD_PLANE,
             "Boolean/temporal operators stay on the hypothesis plane as graph meaning",
             given=plane,
         )
     return Ok(GRAPH_PLANE)
 
 
+def _checked_graph(graph: Graph) -> Result[Graph]:
+    checked = _validate_graph(graph)
+    if is_refusal(checked):
+        return checked
+    return Ok(graph)
+
+
 def _validate_graph(graph: Graph) -> Result[None]:
     for token in graph.meaning:
         if token not in GRAPH_MEANING_KINDS:
-            return invalid(
-                "meaning",
-                "graph meaning kinds are boolean, temporal, and lifecycle",
-                given=token,
-            )
+            return invalid(_FIELD_MEANING, _MEANING_REASON, given=token)
     if graph.plane != GRAPH_PLANE:
-        return invalid("plane", "graph plane is the hypothesis plane", given=graph.plane)
+        return invalid(_FIELD_PLANE, _PLANE_REASON, given=graph.plane)
     return Ok(None)
 
 
@@ -265,22 +299,22 @@ def _admit_claim(value: object) -> Result[EvidenceClaim]:
         return Ok(value)
     if isinstance(value, str):
         return _admit_claim_text(value)
-    if not isinstance(value, Mapping):
-        return invalid(
-            "evidence",
-            "an evidence claim is text or {claim, locator?}",
-            given=type(value).__name__,
-        )
-    return _admit_claim_mapping(cast("Mapping[str, object]", value))
+    if isinstance(value, Mapping):
+        return _admit_claim_mapping(cast(_MAPPING_STR_OBJECT, value))
+    return invalid(
+        _FIELD_EVIDENCE,
+        "an evidence claim is text or {claim, locator?}",
+        given=type(value).__name__,
+    )
 
 
 def _admit_claim_text(value: str) -> Result[EvidenceClaim]:
     if value.strip() == "":
-        return invalid("evidence", "an evidence claim is non-empty text", given=repr(value))
+        return invalid(_FIELD_EVIDENCE, "an evidence claim is non-empty text", given=repr(value))
     return Ok(EvidenceClaim(claim=value.strip()))
 
 
-def _admit_claim_mapping(mapping: Mapping[str, object]) -> Result[EvidenceClaim]:
+def _admit_claim_mapping(mapping: _MAPPING_STR_OBJECT) -> Result[EvidenceClaim]:
     claim = mapping.get("claim")
     if not isinstance(claim, str) or claim.strip() == "":
         return invalid("claim", "an evidence claim is non-empty text", given=repr(claim))

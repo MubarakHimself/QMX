@@ -19,6 +19,7 @@ from qmf.core.fingerprint import Fingerprint, fingerprint
 from qmf.core.refusal import Ok, Result, TypedRefusal, is_refusal
 
 from qml._refuse import invalid, policy
+from qml.conformance._fp import coerce_fp1
 from qml.conformance.contract import CONFORMANCE_FORMAT_VERSION
 from qml.conformance.layer1 import Layer1Verdict
 from qml.conformance.layer2 import Layer2Verdict
@@ -257,7 +258,7 @@ def cite_registered_bot(
             "kind that did not pass both layers has no ticket",
             given=type(candidate).__name__,
         )
-    cited = _coerce_fingerprint(cited_fp1, "cited_fp1")
+    cited = coerce_fp1(cited_fp1, "cited_fp1")
     if is_refusal(cited):
         return cited
     resolved_kind = _admit_citation_kind(kind)
@@ -314,7 +315,7 @@ def graduate_to_governed(
     candidate = gate_registration(layer1=layer1, layer2=layer2, **extra)
     if is_refusal(candidate):
         return candidate
-    research = _coerce_fingerprint(originating_research_ref, "originating_research_ref")
+    research = coerce_fp1(originating_research_ref, "originating_research_ref")
     if is_refusal(research):
         return research
     if research.value.value == candidate.value.fingerprint.value:
@@ -457,19 +458,6 @@ def _admit_citation_kind(value: object) -> Result[CitationKind]:
         given=repr(value),
         allowed=list(CITATION_KINDS),
     )
-
-
-def _coerce_fingerprint(value: object, field: str) -> Result[Fingerprint]:
-    if isinstance(value, Fingerprint):
-        return Ok(value)
-    parsed = Fingerprint.try_create(value)
-    if is_refusal(parsed):
-        return invalid(
-            field,
-            "a Bot citation or research artifact is referenced by fp1:sha256:<hex>",
-            given=repr(value),
-        )
-    return parsed
 
 
 def _unwrap_ok(raw: object) -> object:

@@ -104,20 +104,7 @@ def read_research_blob(
     path = research_blob_path(research_root, research_ref)
     if is_refusal(path):
         return path
-    try:
-        if not path.value.is_file():
-            return invalid(
-                "research_ref",
-                "no canonical research blob is stored under research_root for that ref",
-                research_ref=str(getattr(research_ref, "value", research_ref)),
-            )
-        return Ok(path.value.read_bytes())
-    except OSError as exc:
-        return invalid(
-            _FIELD_RESEARCH_ROOT,
-            "the host could not read canonical research bytes",
-            given=type(exc).__name__,
-        )
+    return _read_blob_file(path.value, research_ref)
 
 
 def save_research_hypothesis(
@@ -144,27 +131,63 @@ def save_research_hypothesis(
     )
 
 
+def _read_blob_file(path: Path, research_ref: object) -> Result[bytes]:
+    try:
+        if not path.is_file():
+            return invalid(
+                "research_ref",
+                "no canonical research blob is stored under research_root for that ref",
+                research_ref=str(getattr(research_ref, "value", research_ref)),
+            )
+        return Ok(path.read_bytes())
+    except OSError as exc:
+        return invalid(
+            _FIELD_RESEARCH_ROOT,
+            "the host could not read canonical research bytes",
+            given=type(exc).__name__,
+        )
+
+
 def _prepare_persist(
     research_root: object,
     research_ref: object,
     canonical_bytes: object,
 ) -> Result[tuple[Path, Fingerprint, bytes, Path]]:
+    admitted = _admit_persist_inputs(research_root, research_ref, canonical_bytes)
+    if is_refusal(admitted):
+        return admitted
+    root, ref, payload = admitted.value
+    path = research_blob_path(root, ref)
+    if is_refusal(path):
+        return path
+    return Ok((root, ref, payload, path.value))
+
+
+def _admit_persist_inputs(
+    research_root: object,
+    research_ref: object,
+    canonical_bytes: object,
+) -> Result[tuple[Path, Fingerprint, bytes]]:
     root = _admit_root(research_root)
     if is_refusal(root):
         return root
     ref = _admit_ref(research_ref)
     if is_refusal(ref):
         return ref
-    if not isinstance(canonical_bytes, (bytes, bytearray)):
-        return invalid(
-            "canonical_bytes",
-            "the host persists only canonical Stage 0 bytes",
-            given=type(canonical_bytes).__name__,
-        )
-    path = research_blob_path(root.value, ref.value)
-    if is_refusal(path):
-        return path
-    return Ok((root.value, ref.value, bytes(canonical_bytes), path.value))
+    payload = _admit_canonical_bytes(canonical_bytes)
+    if is_refusal(payload):
+        return payload
+    return Ok((root.value, ref.value, payload.value))
+
+
+def _admit_canonical_bytes(canonical_bytes: object) -> Result[bytes]:
+    if isinstance(canonical_bytes, (bytes, bytearray)):
+        return Ok(bytes(canonical_bytes))
+    return invalid(
+        "canonical_bytes",
+        "the host persists only canonical Stage 0 bytes",
+        given=type(canonical_bytes).__name__,
+    )
 
 
 def _persist_os_error(path: Path, exc: OSError) -> TypedRefusal:
@@ -180,6 +203,15 @@ def _ensure_research_root(root: Path) -> Result[Path]:
     """Create ``research_root`` without following a symlink leaf."""
     if root.is_symlink():
         return policy(_FIELD_RESEARCH_ROOT, _SYMLINK_ROOT_REASON)
+    created = _mkdir_research_root(root)
+    if is_refusal(created):
+        return created
+    if root.is_symlink() or not root.is_dir():
+        return policy(_FIELD_RESEARCH_ROOT, _SYMLINK_ROOT_REASON)
+    return Ok(root)
+
+
+def _mkdir_research_root(root: Path) -> Result[None]:
     try:
         if root.exists() and not root.is_dir():
             return invalid(
@@ -190,9 +222,7 @@ def _ensure_research_root(root: Path) -> Result[Path]:
         root.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
         return _persist_os_error(root, exc)
-    if root.is_symlink() or not root.is_dir():
-        return policy(_FIELD_RESEARCH_ROOT, _SYMLINK_ROOT_REASON)
-    return Ok(root)
+    return Ok(None)
 
 
 def _contain_under_root(path: Path, root: Path) -> Result[Path]:
@@ -264,15 +294,22 @@ def _write_research_blob(*, root: Path, path: Path, payload: bytes) -> Result[No
     ensured = _ensure_research_root(root)
     if is_refusal(ensured):
         return ensured
+    root_real = _contain_write_target(path, root)
+    if is_refusal(root_real):
+        return root_real
+    tmp = _prepare_write_tmp(path, root_real.value)
+    if is_refusal(tmp):
+        return tmp
+    return _exclusive_replace(tmp.value, path, payload)
+
+
+def _contain_write_target(path: Path, root: Path) -> Result[Path]:
     root_real = _contain_under_root(path, root)
     if is_refusal(root_real):
         return root_real
     if path.exists() and (path.is_symlink() or not path.is_file()):
         return policy(_FIELD_RESEARCH_ROOT, _SYMLINK_WRITE_REASON)
-    tmp = _prepare_write_tmp(path, root_real.value)
-    if is_refusal(tmp):
-        return tmp
-    return _exclusive_replace(tmp.value, path, payload)
+    return Ok(root_real.value)
 
 
 def _admit_root(research_root: object) -> Result[Path]:
