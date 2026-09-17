@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import TypeVar
 
-from qmf.core.refusal import RefusalCategory, is_ok, is_refusal
+from qmf.core.refusal import RefusalCategory, Result, is_ok, is_refusal
 from qml.host import (
     QMA_BINDS_SECOND_CT44_OVER_RESEARCH_ROOT_V1,
     QMA_WRITES_RESEARCH_ROOT,
@@ -21,6 +22,7 @@ from qml.research import (
     RESEARCH_FORMAT_VERSION,
     DictionaryCite,
     Graph,
+    Hypothesis,
     LayoutDemoProjection,
     SavedHypothesis,
     fingerprint_hypothesis,
@@ -31,18 +33,27 @@ from qml.research import (
 
 from qml import host, research
 
+T = TypeVar("T")
 
-def _hypothesis():
+
+def _ok(result: Result[T]) -> T:
+    assert is_ok(result), result
+    return result.value
+
+
+def _hypothesis() -> Hypothesis:
     cite = DictionaryCite("dictionary/a.md", "swing-high")
-    return mint_hypothesis(
-        hypothesis_class="entry_hypothesis",
-        origin="idea",
-        dictionary_cites=[cite],
-        graph=Graph(operators=("ALL",), meaning=("boolean",)),
-        f_labels=dict.fromkeys(F_SLOTS, "unresolved"),
-        unknowns=("pair",),
-        title="from idea",
-    ).value
+    return _ok(
+        mint_hypothesis(
+            hypothesis_class="entry_hypothesis",
+            origin="idea",
+            dictionary_cites=[cite],
+            graph=Graph(operators=("ALL",), meaning=("boolean",)),
+            f_labels=dict.fromkeys(F_SLOTS, "unresolved"),
+            unknowns=("pair",),
+            title="from idea",
+        )
+    )
 
 
 def test_explicit_save_returns_canonical_bytes_and_research_ref() -> None:
@@ -52,7 +63,7 @@ def test_explicit_save_returns_canonical_bytes_and_research_ref() -> None:
     assert isinstance(saved.value, SavedHypothesis)
     assert isinstance(saved.value.canonical_bytes, bytes)
     assert saved.value.research_ref.value.startswith("fp1:sha256:")
-    assert saved.value.research_ref.value == fingerprint_hypothesis(hyp).value.value
+    assert saved.value.research_ref.value == _ok(fingerprint_hypothesis(hyp)).value
     envelope = json.loads(saved.value.canonical_bytes.decode("utf-8"))
     assert envelope["class"] == RESEARCH_CONTRACT_CLASS
     assert envelope["contract_format_version"] == RESEARCH_FORMAT_VERSION
@@ -79,7 +90,7 @@ def test_host_persists_only_canonical_bytes_under_research_root(
     assert record.path.is_file()
     assert record.path.parent == research_root
     assert record.path.name == record.research_ref.value.replace(":", "-")
-    assert record.canonical_bytes == save_hypothesis(hyp).value.canonical_bytes
+    assert record.canonical_bytes == _ok(save_hypothesis(hyp)).canonical_bytes
     assert list(research_root.iterdir()) == [record.path]
     # Distinct from seed root_path — nothing written there.
     assert list(seed_root.iterdir()) == []
@@ -127,7 +138,7 @@ def test_viewing_cited_seed_without_save_mints_no_research_ref(
 
 def test_persist_rejects_non_bytes_payload(tmp_path: Path) -> None:
     hyp = _hypothesis()
-    ref = fingerprint_hypothesis(hyp).value
+    ref = _ok(fingerprint_hypothesis(hyp))
     refused = persist_research_blob(
         research_root=tmp_path / "research_root",
         research_ref=ref,

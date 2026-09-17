@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Final
 
 from qmf.core.fingerprint import Fingerprint
-from qmf.core.refusal import Ok, Result, is_refusal
+from qmf.core.refusal import Ok, Result, TypedRefusal, is_refusal
 
 from qml._refuse import invalid, policy
 from qml.research.stage0 import Hypothesis, SavedHypothesis, save_authored_hypothesis
@@ -39,9 +39,7 @@ QMA_BINDS_SECOND_CT44_OVER_RESEARCH_ROOT_V1: Final[bool] = False
 
 _FIELD_RESEARCH_ROOT: Final[str] = "research_root"
 _SYMLINK_ROOT_REASON: Final[str] = "refusing to follow a symlink at research_root"
-_SYMLINK_WRITE_REASON: Final[str] = (
-    "refusing to follow a symlink or write outside research_root"
-)
+_SYMLINK_WRITE_REASON: Final[str] = "refusing to follow a symlink or write outside research_root"
 _PERSIST_FAIL_REASON: Final[str] = "the host could not persist canonical research bytes"
 
 
@@ -169,7 +167,7 @@ def _prepare_persist(
     return Ok((root.value, ref.value, bytes(canonical_bytes), path.value))
 
 
-def _persist_os_error(path: Path, exc: OSError) -> Result[None]:
+def _persist_os_error(path: Path, exc: OSError) -> TypedRefusal:
     return invalid(
         _FIELD_RESEARCH_ROOT,
         _PERSIST_FAIL_REASON,

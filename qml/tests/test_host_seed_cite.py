@@ -158,8 +158,10 @@ def test_seed_cite_is_distinct_and_outside_fp1() -> None:
     assert "seed_cite" not in identity
     assert "origin" not in identity
     decl = hosted.declaration_identity()
+    body = decl["body"]
     assert "seed_cite" not in decl
-    assert "seed_cite" not in decl["body"]
+    assert isinstance(body, dict)
+    assert "seed_cite" not in body
 
 
 def test_qma_never_invents_seed_cite_host_is_single_writer() -> None:
@@ -218,14 +220,14 @@ def test_mill_graduation_may_carry_seed_cite_with_research_ref_edge() -> None:
         ),
         state_bound=256,
     )
-    hyp = mint_hypothesis(
-        hypothesis_class="entry_hypothesis",
-        origin="idea",
-        dictionary_cites=[DictionaryCite("dictionary/a.md", "swing-high")],
-    ).value
-    graduated = _ok(
-        graduate_mill_to_governed(layer1=layer1, layer2=layer2, hypothesis=hyp)
+    hyp = _ok(
+        mint_hypothesis(
+            hypothesis_class="entry_hypothesis",
+            origin="idea",
+            dictionary_cites=[DictionaryCite("dictionary/a.md", "swing-high")],
+        )
     )
+    graduated = _ok(graduate_mill_to_governed(layer1=layer1, layer2=layer2, hypothesis=hyp))
     writer = _ok(WriterId.try_create("host", "authoring", "bot-definition", "boot-1"))
     edge = _ok(stamp_promoted_from_edge(graduation=graduated, writer=writer))
     hosted = _ok(

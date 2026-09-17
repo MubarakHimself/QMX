@@ -27,7 +27,11 @@ from qml.research.stage0 import (
     HYPOTHESIS_ORIGINS,
     RESEARCH_CONTRACT_CLASS,
     RESEARCH_FORMAT_VERSION,
+    DictionaryCite,
+    EvidenceClaim,
+    Graph,
     Hypothesis,
+    RoleBinding,
     admit_research_format_version,
 )
 
@@ -79,7 +83,36 @@ def mint_hypothesis(
     )
     if is_refusal(parts):
         return parts
-    return Ok(Hypothesis(**parts.value))
+    (
+        hypothesis_class_token,
+        origin_token,
+        cites,
+        bindings,
+        graph_value,
+        claims,
+        unknown_tokens,
+        f_map,
+        h_map,
+        title_token,
+        package_token,
+        version,
+    ) = parts.value
+    return Ok(
+        Hypothesis(
+            hypothesis_class=hypothesis_class_token,
+            origin=origin_token,
+            dictionary_cites=cites,
+            role_bindings=bindings,
+            graph=graph_value,
+            evidence=claims,
+            unknowns=unknown_tokens,
+            f_labels=f_map,
+            h_labels=h_map,
+            title=title_token,
+            package_id=package_token,
+            contract_format_version=version,
+        )
+    )
 
 
 def restore_hypothesis(payload: object) -> Result[Hypothesis]:
@@ -118,26 +151,57 @@ def _admit_hypothesis_parts(
     title: object,
     package_id: object,
     contract_format_version: object,
-) -> Result[dict[str, object]]:
+) -> Result[
+    tuple[
+        str,
+        str,
+        tuple[DictionaryCite, ...],
+        tuple[RoleBinding, ...],
+        Graph,
+        tuple[EvidenceClaim, ...],
+        tuple[str, ...],
+        Mapping[str, str],
+        Mapping[str, str],
+        str | None,
+        str | None,
+        int,
+    ]
+]:
     core = _admit_core_fields(hypothesis_class, origin, contract_format_version)
     if is_refusal(core):
         return core
-    surfaces = _admit_surface_fields(
-        dictionary_cites, role_bindings, graph, evidence, unknowns
-    )
+    surfaces = _admit_surface_fields(dictionary_cites, role_bindings, graph, evidence, unknowns)
     if is_refusal(surfaces):
         return surfaces
     labels = _admit_label_fields(f_labels, h_labels, title, package_id)
     if is_refusal(labels):
         return labels
-    return Ok({**core.value, **surfaces.value, **labels.value})
+    class_token, origin_token, version = core.value
+    cites, bindings, graph_value, claims, unknown_tokens = surfaces.value
+    f_map, h_map, title_token, package_token = labels.value
+    return Ok(
+        (
+            class_token,
+            origin_token,
+            cites,
+            bindings,
+            graph_value,
+            claims,
+            unknown_tokens,
+            f_map,
+            h_map,
+            title_token,
+            package_token,
+            version,
+        )
+    )
 
 
 def _admit_core_fields(
     hypothesis_class: object,
     origin: object,
     contract_format_version: object,
-) -> Result[dict[str, object]]:
+) -> Result[tuple[str, str, int]]:
     version = admit_research_format_version(contract_format_version)
     if is_refusal(version):
         return version
@@ -147,13 +211,7 @@ def _admit_core_fields(
     origin_token = _admit_origin(origin)
     if is_refusal(origin_token):
         return origin_token
-    return Ok(
-        {
-            "hypothesis_class": class_token.value,
-            "origin": origin_token.value,
-            "contract_format_version": version.value,
-        }
-    )
+    return Ok((class_token.value, origin_token.value, version.value))
 
 
 def _admit_surface_fields(
@@ -162,7 +220,15 @@ def _admit_surface_fields(
     graph: object,
     evidence: object,
     unknowns: object,
-) -> Result[dict[str, object]]:
+) -> Result[
+    tuple[
+        tuple[DictionaryCite, ...],
+        tuple[RoleBinding, ...],
+        Graph,
+        tuple[EvidenceClaim, ...],
+        tuple[str, ...],
+    ]
+]:
     cites = admit_cites(dictionary_cites)
     if is_refusal(cites):
         return cites
@@ -179,13 +245,13 @@ def _admit_surface_fields(
     if is_refusal(unknown_tokens):
         return unknown_tokens
     return Ok(
-        {
-            "dictionary_cites": cites.value,
-            "role_bindings": bindings.value,
-            "graph": graph_value.value,
-            "evidence": claims.value,
-            "unknowns": unknown_tokens.value,
-        }
+        (
+            cites.value,
+            bindings.value,
+            graph_value.value,
+            claims.value,
+            unknown_tokens.value,
+        )
     )
 
 
@@ -194,7 +260,7 @@ def _admit_label_fields(
     h_labels: object,
     title: object,
     package_id: object,
-) -> Result[dict[str, object]]:
+) -> Result[tuple[Mapping[str, str], Mapping[str, str], str | None, str | None]]:
     f_map = admit_label_map(f_labels, field=_FIELD_F_LABELS, allowed=F_LABELS)
     if is_refusal(f_map):
         return f_map
@@ -207,14 +273,7 @@ def _admit_label_fields(
     package_token = optional_string(package_id, field="package_id")
     if is_refusal(package_token):
         return package_token
-    return Ok(
-        {
-            "f_labels": f_map.value,
-            "h_labels": h_map.value,
-            "title": title_token.value,
-            "package_id": package_token.value,
-        }
-    )
+    return Ok((f_map.value, h_map.value, title_token.value, package_token.value))
 
 
 def _admit_restore_envelope(

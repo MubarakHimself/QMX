@@ -162,11 +162,13 @@ def test_gate_registration_works_without_stage0() -> None:
 def test_stage0_graduate_requires_hypothesis_research_ref() -> None:
     world = _world()
     layer1, layer2 = _layers(world)
-    hyp = mint_hypothesis(
-        hypothesis_class="entry_hypothesis",
-        origin="idea",
-        dictionary_cites=[DictionaryCite("dictionary/a.md", "swing-high")],
-    ).value
+    hyp = _ok(
+        mint_hypothesis(
+            hypothesis_class="entry_hypothesis",
+            origin="idea",
+            dictionary_cites=[DictionaryCite("dictionary/a.md", "swing-high")],
+        )
+    )
     saved = _ok(save_hypothesis(hyp))
     graduated = _ok(
         graduate_mill_to_governed(

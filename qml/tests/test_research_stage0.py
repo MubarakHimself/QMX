@@ -6,8 +6,9 @@ import importlib.util
 import sys
 from pathlib import Path
 from types import ModuleType
+from typing import TypeVar
 
-from qmf.core.refusal import RefusalCategory, is_ok, is_refusal
+from qmf.core.refusal import RefusalCategory, Result, is_ok, is_refusal
 from qml.conformance import CONFORMANCE_FORMAT_VERSION
 from qml.protocol import PROTOCOL_FORMAT_VERSION
 from qml.research import (
@@ -57,6 +58,13 @@ assert_stage0_surface_constants = _helpers.assert_stage0_surface_constants
 mint_idea_fragment = _helpers.mint_idea_fragment
 research_purity_violations = _helpers.research_purity_violations
 
+T = TypeVar("T")
+
+
+def _ok(result: Result[T]) -> T:
+    assert is_ok(result), result
+    return result.value
+
 
 def test_qml_research_is_public_submodule_with_own_format_ladder() -> None:
     assert RESEARCH_FORMAT_VERSION == 1
@@ -105,15 +113,19 @@ def test_stage0_never_sizes_intents_seats_or_governed_evidence() -> None:
 
 
 def test_graph_identifier_not_confluence_export() -> None:
-    hyp = mint_hypothesis(
-        hypothesis_class="composite",
-        origin="journal",
-        graph={"operators": ["sequence", "within"], "meaning": ["lifecycle"]},
-    ).value
+    hyp = _ok(
+        mint_hypothesis(
+            hypothesis_class="composite",
+            origin="journal",
+            graph={"operators": ["sequence", "within"], "meaning": ["lifecycle"]},
+        )
+    )
     body = hyp.canonical_body()
+    graph = body["graph"]
     assert "graph" in body
     assert "confluence" not in body
-    assert body["graph"]["plane"] == "hypothesis"
+    assert isinstance(graph, dict)
+    assert graph["plane"] == "hypothesis"
     refused = mint_hypothesis(
         hypothesis_class="fragment",
         origin="idea",
@@ -155,19 +167,21 @@ def test_unknown_research_format_version_is_unavailable_dependency() -> None:
 
 def test_restore_round_trip_known_version() -> None:
     cite = DictionaryCite("dictionary/a.md", "swing-high")
-    original = mint_hypothesis(
-        hypothesis_class="entry_hypothesis",
-        origin="seed_package",
-        dictionary_cites=[cite],
-        role_bindings=[RoleBinding(cite=cite, role="location")],
-        graph=Graph(operators=("ALL", "THEN"), meaning=("boolean", "temporal")),
-        evidence=[EvidenceClaim(claim="LAYOUT-DEMO sketch", locator="identity.md")],
-        unknowns=("F unresolved",),
-        f_labels=dict.fromkeys(F_SLOTS, "unresolved"),
-        h_labels={"exits": "unresolved"},
-        package_id="STRAT-000001",
-        title="asian high london",
-    ).value
+    original = _ok(
+        mint_hypothesis(
+            hypothesis_class="entry_hypothesis",
+            origin="seed_package",
+            dictionary_cites=[cite],
+            role_bindings=[RoleBinding(cite=cite, role="location")],
+            graph=Graph(operators=("ALL", "THEN"), meaning=("boolean", "temporal")),
+            evidence=[EvidenceClaim(claim="LAYOUT-DEMO sketch", locator="identity.md")],
+            unknowns=("F unresolved",),
+            f_labels=dict.fromkeys(F_SLOTS, "unresolved"),
+            h_labels={"exits": "unresolved"},
+            package_id="STRAT-000001",
+            title="asian high london",
+        )
+    )
     envelope = {
         "class": RESEARCH_CONTRACT_CLASS,
         "contract_format_version": RESEARCH_FORMAT_VERSION,

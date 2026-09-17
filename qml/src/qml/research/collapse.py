@@ -39,9 +39,7 @@ __all__ = [
 ]
 
 # Closed CT-34 enum mirrored here so qml.research stays free of declaration imports.
-CT34_LEG_ROLES: Final[frozenset[str]] = frozenset(
-    {"level", "trigger", "confirmation", "filter"}
-)
+CT34_LEG_ROLES: Final[frozenset[str]] = frozenset({"level", "trigger", "confirmation", "filter"})
 STAGE0_CLASS_IS_CT33_FIELD: Final[bool] = False
 
 # Informal handoff aid (AD-7) — not a contract mint.
@@ -215,7 +213,7 @@ def _admit_role_tokens(bindings: object) -> Result[tuple[str, ...]]:
     if isinstance(bindings, str):
         return _admit_role_string(bindings)
     if isinstance(bindings, Sequence) and not isinstance(bindings, (str, bytes)):
-        return _admit_role_sequence(bindings)
+        return _admit_role_sequence(cast("Sequence[object]", bindings))
     return invalid(
         "role_bindings",
         "collapse consumes Stage 0 role bindings or role tokens",
@@ -252,7 +250,7 @@ def _one_role_token(item: object) -> Result[str]:
     return invalid(
         "role_bindings",
         "collapse consumes Stage 0 role bindings or role tokens",
-        given=type(item).__name__,
+        given=type(cast("object", item)).__name__,
     )
 
 
@@ -273,7 +271,7 @@ def _admit_f_labels(value: object) -> Result[Mapping[str, str]]:
 def _admit_f_label_map(mapping: Mapping[str, object]) -> Result[Mapping[str, str]]:
     out: dict[str, str] = {}
     for key, raw in mapping.items():
-        if not isinstance(key, str) or key not in F_SLOTS:
+        if key not in F_SLOTS:
             return invalid("f_labels", "F label keys are Stage 0 F slots", given=repr(key))
         if not isinstance(raw, str) or raw not in F_LABELS:
             return invalid(

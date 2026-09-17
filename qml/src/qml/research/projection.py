@@ -27,6 +27,7 @@ from qml.research.stage0 import (
     GRAPH_PLANE,
     HYPOTHESIS_CLASSES,
     Hypothesis,
+    SavedHypothesis,
     save_authored_hypothesis,
 )
 
@@ -254,7 +255,7 @@ def mint_bot_from_projection(projection: object) -> Result[None]:
     )
 
 
-def save_hypothesis(candidate: object) -> Result[object]:
+def save_hypothesis(candidate: object) -> Result[SavedHypothesis]:
     """Explicit save returns canonical bytes + ``research_ref``; views refuse.
 
     A read-only LAYOUT-DEMO projection is not a save (DEC-0394, DEC-0401). An
@@ -274,8 +275,7 @@ def save_hypothesis(candidate: object) -> Result[object]:
         return save_authored_hypothesis(candidate)
     return invalid(
         "hypothesis",
-        "explicit save takes a Stage 0 Hypothesis; a seed view does not mint "
-        "research_ref",
+        "explicit save takes a Stage 0 Hypothesis; a seed view does not mint research_ref",
         given=type(candidate).__name__,
     )
 

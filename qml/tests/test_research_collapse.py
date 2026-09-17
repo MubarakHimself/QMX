@@ -54,18 +54,20 @@ def _pinned(tag: str) -> ProducerBinding:
 
 def test_collapse_maps_open_roles_to_ct34_and_python_when() -> None:
     cite = DictionaryCite("dictionary/a.md", "swing-high")
-    hyp = mint_hypothesis(
-        hypothesis_class="entry_hypothesis",
-        origin="seed_package",
-        role_bindings=[
-            RoleBinding(cite=cite, role="location"),
-            RoleBinding(cite=cite, role="trigger"),
-            RoleBinding(cite=cite, role="invalidation"),
-            RoleBinding(cite=cite, role="confirmation"),
-            RoleBinding(cite=cite, role="filter"),
-        ],
-        graph={"operators": ("ALL", "sequence", "within"), "meaning": ("boolean", "temporal")},
-    ).value
+    hyp = _ok(
+        mint_hypothesis(
+            hypothesis_class="entry_hypothesis",
+            origin="seed_package",
+            role_bindings=[
+                RoleBinding(cite=cite, role="location"),
+                RoleBinding(cite=cite, role="trigger"),
+                RoleBinding(cite=cite, role="invalidation"),
+                RoleBinding(cite=cite, role="confirmation"),
+                RoleBinding(cite=cite, role="filter"),
+            ],
+            graph={"operators": ("ALL", "sequence", "within"), "meaning": ("boolean", "temporal")},
+        )
+    )
     collapsed = _ok(collapse_stage0_roles(hyp))
     assert collapsed.ct34_roles == ("level", "trigger", "confirmation", "filter")
     assert "invalidation" in collapsed.python_when
@@ -172,9 +174,11 @@ def test_entry_hypothesis_is_stage0_taxonomy_not_ct33_field() -> None:
             }
         )
     ).identity_payload()
+    body = payload["body"]
     assert "entry_hypothesis" not in payload
-    assert "entry_hypothesis" not in payload["body"]
-    assert "hypothesis_class" not in payload["body"]
+    assert isinstance(body, dict)
+    assert "entry_hypothesis" not in body
+    assert "hypothesis_class" not in body
 
 
 def test_mill_graduation_refuses_invented_exits_flag() -> None:
@@ -246,11 +250,13 @@ def test_mill_graduation_refuses_invented_exits_flag() -> None:
         ),
         state_bound=256,
     )
-    hyp = mint_hypothesis(
-        hypothesis_class="entry_hypothesis",
-        origin="idea",
-        f_labels=dict.fromkeys(F_SLOTS, "unresolved"),
-    ).value
+    hyp = _ok(
+        mint_hypothesis(
+            hypothesis_class="entry_hypothesis",
+            origin="idea",
+            f_labels=dict.fromkeys(F_SLOTS, "unresolved"),
+        )
+    )
     refused = graduate_mill_to_governed(
         layer1=layer1,
         layer2=layer2,

@@ -86,7 +86,7 @@ def admit_string_tuple(value: object, *, field: str) -> Result[tuple[str, ...]]:
     if not isinstance(value, Sequence) or isinstance(value, (bytes, bytearray)):
         return invalid(field, f"{field} is a sequence of strings", given=type(value).__name__)
     out: list[str] = []
-    for item in value:
+    for item in cast("Sequence[object]", value):
         if not isinstance(item, str) or item.strip() == "":
             return invalid(field, f"{field} entries are non-empty strings", given=repr(item))
         out.append(item.strip())
@@ -133,7 +133,7 @@ def _admit_sequence(
     if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
         return invalid(field, reason, given=type(value).__name__)
     out: list[T] = []
-    for item in value:
+    for item in cast("Sequence[object]", value):
         admitted = admit_one(item)
         if is_refusal(admitted):
             return admitted

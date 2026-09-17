@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 from dataclasses import fields
+from typing import TypeVar
 
 from qmf.core.fingerprint import Fingerprint, fingerprint
-from qmf.core.refusal import RefusalCategory, is_ok, is_refusal
+from qmf.core.refusal import RefusalCategory, Result, is_ok, is_refusal
 from qml.research import (
     F_SLOTS,
     RESEARCH_CONTRACT_CLASS,
@@ -14,6 +15,7 @@ from qml.research import (
     DictionaryCite,
     EvidenceClaim,
     Graph,
+    Hypothesis,
     LayoutDemoProjection,
     RoleBinding,
     fingerprint_hypothesis,
@@ -26,22 +28,31 @@ from qml.research import (
 
 from qml import research
 
+T = TypeVar("T")
 
-def _sample_hypothesis():
+
+def _ok(result: Result[T]) -> T:
+    assert is_ok(result), result
+    return result.value
+
+
+def _sample_hypothesis() -> Hypothesis:
     cite = DictionaryCite("dictionary/a.md", "swing-high")
-    return mint_hypothesis(
-        hypothesis_class="entry_hypothesis",
-        origin="seed_package",
-        dictionary_cites=[cite],
-        role_bindings=[RoleBinding(cite=cite, role="location")],
-        graph=Graph(operators=("ALL", "THEN"), meaning=("boolean", "temporal")),
-        evidence=[EvidenceClaim(claim="LAYOUT-DEMO sketch", locator="identity.md")],
-        unknowns=("F unresolved",),
-        f_labels=dict.fromkeys(F_SLOTS, "unresolved"),
-        h_labels={"exits": "unresolved"},
-        package_id="STRAT-000001",
-        title="asian high london",
-    ).value
+    return _ok(
+        mint_hypothesis(
+            hypothesis_class="entry_hypothesis",
+            origin="seed_package",
+            dictionary_cites=[cite],
+            role_bindings=[RoleBinding(cite=cite, role="location")],
+            graph=Graph(operators=("ALL", "THEN"), meaning=("boolean", "temporal")),
+            evidence=[EvidenceClaim(claim="LAYOUT-DEMO sketch", locator="identity.md")],
+            unknowns=("F unresolved",),
+            f_labels=dict.fromkeys(F_SLOTS, "unresolved"),
+            h_labels={"exits": "unresolved"},
+            package_id="STRAT-000001",
+            title="asian high london",
+        )
+    )
 
 
 def test_research_ref_is_fp1_shaped_qml_research_hypothesis_fingerprint() -> None:
@@ -53,9 +64,11 @@ def test_research_ref_is_fp1_shaped_qml_research_hypothesis_fingerprint() -> Non
         "body": hyp.canonical_body(),
     }
     assert payload["class"] == "qml-research-hypothesis"
+    body = payload["body"]
+    assert isinstance(body, dict)
     for banned in ("occurrence", "writer", "created_at", "snapshot_ref", "research_ref"):
         assert banned not in payload
-        assert banned not in payload["body"]
+        assert banned not in body
 
     ref = fingerprint_hypothesis(hyp)
     assert is_ok(ref)
@@ -67,7 +80,7 @@ def test_research_ref_is_fp1_shaped_qml_research_hypothesis_fingerprint() -> Non
     via_core = fingerprint(payload)
     assert is_ok(via_core)
     assert ref.value.value == via_core.value.value
-    assert hyp.fingerprint_content().value.value == ref.value.value
+    assert _ok(hyp.fingerprint_content()).value == ref.value.value
 
     canonical = hypothesis_canonical_bytes(hyp)
     assert is_ok(canonical)
@@ -88,7 +101,7 @@ def test_research_ref_is_not_registry_kind_or_artifact_rail() -> None:
     assert payload["class"] != "citation"
     assert "kind" not in payload
     assert not hasattr(research, "register_research_kind")
-    assert "research:sha256:" not in fingerprint_hypothesis(hyp).value.value
+    assert "research:sha256:" not in _ok(fingerprint_hypothesis(hyp)).value
 
 
 def test_projection_view_still_does_not_mint_research_ref() -> None:
