@@ -115,40 +115,7 @@ def admit_seed_cite(value: object) -> Result[SeedCite | None]:
             given=type(value).__name__,
             fields=list(SEED_CITE_FIELDS),
         )
-    mapping = cast("Mapping[str, object]", value)
-    missing = [key for key in SEED_CITE_FIELDS if key not in mapping]
-    if missing:
-        return invalid(
-            "seed_cite",
-            "seed_cite requires source_ref, snapshot_ref, and locator",
-            missing=missing,
-            fields=list(SEED_CITE_FIELDS),
-        )
-    extras = sorted(key for key in mapping if key not in SEED_CITE_FIELDS)
-    if extras:
-        return invalid(
-            "seed_cite",
-            "seed_cite carries only source_ref, snapshot_ref, and locator",
-            extras=extras,
-            fields=list(SEED_CITE_FIELDS),
-        )
-    parts: dict[str, str] = {}
-    for key in SEED_CITE_FIELDS:
-        raw = mapping[key]
-        if not isinstance(raw, str) or raw.strip() == "":
-            return invalid(
-                key,
-                "seed_cite fields are non-empty strings citing an existing Knowledge Citation",
-                given=repr(raw),
-            )
-        parts[key] = raw.strip()
-    return Ok(
-        SeedCite(
-            source_ref=parts["source_ref"],
-            snapshot_ref=parts["snapshot_ref"],
-            locator=parts["locator"],
-        )
-    )
+    return _admit_seed_cite_mapping(cast("Mapping[str, object]", value))
 
 
 def refuse_qma_invented_seed_cite(*, invented_by: object = "qma") -> TypedRefusal:
@@ -212,69 +179,129 @@ def mint_host_candidate(
             "or mill graduation",
             given=type(candidate).__name__,
         )
+    parts = _admit_host_parts(
+        origin=origin,
+        seed_cite=seed_cite,
+        mill_graduation=mill_graduation,
+        promoted_from_edge=promoted_from_edge,
+    )
+    if is_refusal(parts):
+        return parts
+    admitted_origin, admitted_cite, graduation, edge = parts.value
+    checked = _check_host_lineage(edge=edge, cite=admitted_cite, graduation=graduation)
+    if is_refusal(checked):
+        return checked
+    banned = _seed_cite_in_identity(candidate.declaration)
+    if is_refusal(banned):
+        return banned
+    return Ok(
+        HostCandidate(
+            origin=admitted_origin,
+            candidate=candidate,
+            seed_cite=admitted_cite,
+            mill_graduation=graduation,
+            promoted_from_edge=edge,
+        )
+    )
+
+
+def _admit_seed_cite_mapping(mapping: Mapping[str, object]) -> Result[SeedCite | None]:
+    missing = [key for key in SEED_CITE_FIELDS if key not in mapping]
+    if missing:
+        return invalid(
+            "seed_cite",
+            "seed_cite requires source_ref, snapshot_ref, and locator",
+            missing=missing,
+            fields=list(SEED_CITE_FIELDS),
+        )
+    extras = sorted(key for key in mapping if key not in SEED_CITE_FIELDS)
+    if extras:
+        return invalid(
+            "seed_cite",
+            "seed_cite carries only source_ref, snapshot_ref, and locator",
+            extras=extras,
+            fields=list(SEED_CITE_FIELDS),
+        )
+    parts: dict[str, str] = {}
+    for key in SEED_CITE_FIELDS:
+        raw = mapping[key]
+        if not isinstance(raw, str) or raw.strip() == "":
+            return invalid(
+                key,
+                "seed_cite fields are non-empty strings citing an existing Knowledge Citation",
+                given=repr(raw),
+            )
+        parts[key] = raw.strip()
+    return Ok(
+        SeedCite(
+            source_ref=parts["source_ref"],
+            snapshot_ref=parts["snapshot_ref"],
+            locator=parts["locator"],
+        )
+    )
+
+
+def _admit_optional_graduation(value: object) -> Result[Graduation | None]:
+    if value is None:
+        return Ok(None)
+    if isinstance(value, Graduation):
+        return Ok(value)
+    return invalid(
+        "mill_graduation",
+        "mill_graduation is a Graduation or omitted for skip-Stage-0",
+        given=type(value).__name__,
+    )
+
+
+def _admit_optional_edge(value: object) -> Result[LineageEdge | None]:
+    if value is None:
+        return Ok(None)
+    if isinstance(value, LineageEdge):
+        return Ok(value)
+    return invalid(
+        "promoted_from_edge",
+        "promoted_from_edge is a stamped CT-07 LineageEdge or omitted",
+        given=type(value).__name__,
+    )
+
+
+def _admit_host_parts(
+    *,
+    origin: object,
+    seed_cite: object,
+    mill_graduation: object,
+    promoted_from_edge: object,
+) -> Result[tuple[str, SeedCite | None, Graduation | None, LineageEdge | None]]:
     admitted_origin = admit_candidate_origin(origin)
     if is_refusal(admitted_origin):
         return admitted_origin
     admitted_cite = admit_seed_cite(seed_cite)
     if is_refusal(admitted_cite):
         return admitted_cite
+    graduation = _admit_optional_graduation(mill_graduation)
+    if is_refusal(graduation):
+        return graduation
+    edge = _admit_optional_edge(promoted_from_edge)
+    if is_refusal(edge):
+        return edge
+    return Ok((admitted_origin.value, admitted_cite.value, graduation.value, edge.value))
 
-    graduation: Graduation | None
-    if mill_graduation is None:
-        graduation = None
-    elif isinstance(mill_graduation, Graduation):
-        graduation = mill_graduation
-    else:
-        return invalid(
-            "mill_graduation",
-            "mill_graduation is a Graduation or omitted for skip-Stage-0",
-            given=type(mill_graduation).__name__,
-        )
 
-    edge: LineageEdge | None
-    if promoted_from_edge is None:
-        edge = None
-    elif isinstance(promoted_from_edge, LineageEdge):
-        edge = promoted_from_edge
-    else:
-        return invalid(
-            "promoted_from_edge",
-            "promoted_from_edge is a stamped CT-07 LineageEdge or omitted",
-            given=type(promoted_from_edge).__name__,
-        )
-
+def _check_host_lineage(
+    *,
+    edge: LineageEdge | None,
+    cite: SeedCite | None,
+    graduation: Graduation | None,
+) -> Result[None]:
     # Skip-Stage-0: seed_cite allowed; no originating_research_ref / mill CT-07.
     if graduation is None and edge is not None:
         return invalid(
             "promoted_from_edge",
             "skip-Stage-0 gate_registration may set seed_cite but has no mill CT-07",
         )
-    if graduation is None and edge is None:
-        # Honest skip path.
-        pass
-    if (
-        edge is not None
-        and admitted_cite.value is not None
-        and _edge_targets_seed_cite(edge, admitted_cite.value)
-    ):
-        return refuse_ct07_to_knowledge_citation(
-            to_ref=edge.to_ref,
-            seed_cite=admitted_cite.value,
-        )
-
-    banned = _seed_cite_in_identity(candidate.declaration)
-    if is_refusal(banned):
-        return banned
-
-    return Ok(
-        HostCandidate(
-            origin=admitted_origin.value,
-            candidate=candidate,
-            seed_cite=admitted_cite.value,
-            mill_graduation=graduation,
-            promoted_from_edge=edge,
-        )
-    )
+    if edge is not None and cite is not None and _edge_targets_seed_cite(edge, cite):
+        return refuse_ct07_to_knowledge_citation(to_ref=edge.to_ref, seed_cite=cite)
+    return Ok(None)
 
 
 def _edge_targets_seed_cite(edge: LineageEdge, cite: SeedCite) -> bool:
@@ -287,8 +314,10 @@ def _edge_targets_seed_cite(edge: LineageEdge, cite: SeedCite) -> bool:
 
 def _seed_cite_in_identity(declaration: BotDefinition) -> Result[None]:
     payload = declaration.identity_payload()
-    body = payload.get("body", {})
-    body_map = body if isinstance(body, Mapping) else {}
+    raw_body = payload.get("body")
+    body_map: Mapping[str, object] = (
+        cast("Mapping[str, object]", raw_body) if isinstance(raw_body, Mapping) else {}
+    )
     if "seed_cite" in payload or "seed_cite" in body_map:
         return policy(
             "seed_cite",

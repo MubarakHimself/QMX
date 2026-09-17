@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final, cast
 
-from qmf.core.refusal import Ok, Result, is_refusal
+from qmf.core.refusal import Ok, Result, TypedRefusal, is_refusal
 
 from qml._refuse import invalid, policy
 from qml.research.stage0 import (
@@ -114,22 +114,7 @@ def collapse_stage0_roles(bindings: object) -> Result[CollapsedRoles]:
     roles = _admit_role_tokens(bindings)
     if is_refusal(roles):
         return roles
-    ct34: list[str] = []
-    python_when: list[str] = []
-    for role in roles.value:
-        mapped = INFORMAL_ROLE_TO_CT34.get(role)
-        if mapped is not None:
-            ct34.append(mapped)
-            continue
-        if role in CT34_LEG_ROLES:
-            ct34.append(role)
-            continue
-        # ALL/sequence/within, invalidation, and other open roles → Python WHEN.
-        python_when.append(role)
-    for token in ct34:
-        if token not in CT34_LEG_ROLES:
-            return refuse_invented_ct34_role(token)
-    return Ok(CollapsedRoles(ct34_roles=tuple(ct34), python_when=tuple(python_when)))
+    return _partition_roles(roles.value)
 
 
 def collapse_unresolved_f(
@@ -149,16 +134,6 @@ def collapse_unresolved_f(
     labels = _admit_f_labels(f_labels)
     if is_refusal(labels):
         return labels
-    unresolved = any(label == "unresolved" for label in labels.value.values())
-    empty = not labels.value or unresolved
-    if empty:
-        return Ok(
-            UnresolvedFCollapse(
-                permitted_exit_intents=(),
-                book_family_policy=True,
-                invented_exits=False,
-            )
-        )
     return Ok(
         UnresolvedFCollapse(
             permitted_exit_intents=(),
@@ -173,7 +148,7 @@ def refuse_invented_exits(
     invent_exits: object = True,
     invent_producers: object = False,
     invent_close_reasons: object = False,
-) -> Result[None]:
+) -> TypedRefusal:
     """Graduation refuses invented exits / producers / CT-29 close-reasons."""
     return policy(
         "permitted_exit_intents",
@@ -187,7 +162,7 @@ def refuse_invented_exits(
     )
 
 
-def refuse_invented_ct34_role(role: object) -> Result[None]:
+def refuse_invented_ct34_role(role: object) -> TypedRefusal:
     """Refuse a CT-34 role outside level|trigger|confirmation|filter."""
     return policy(
         "role",
@@ -211,6 +186,25 @@ def refuse_entry_hypothesis_as_ct33_field(value: object = "entry_hypothesis") ->
     )
 
 
+def _partition_roles(roles: tuple[str, ...]) -> Result[CollapsedRoles]:
+    ct34: list[str] = []
+    python_when: list[str] = []
+    for role in roles:
+        mapped = INFORMAL_ROLE_TO_CT34.get(role)
+        if mapped is not None:
+            ct34.append(mapped)
+            continue
+        if role in CT34_LEG_ROLES:
+            ct34.append(role)
+            continue
+        # ALL/sequence/within, invalidation, and other open roles → Python WHEN.
+        python_when.append(role)
+    for token in ct34:
+        if token not in CT34_LEG_ROLES:
+            return refuse_invented_ct34_role(token)
+    return Ok(CollapsedRoles(ct34_roles=tuple(ct34), python_when=tuple(python_when)))
+
+
 def _admit_role_tokens(bindings: object) -> Result[tuple[str, ...]]:
     if bindings is None:
         return Ok(())
@@ -219,34 +213,46 @@ def _admit_role_tokens(bindings: object) -> Result[tuple[str, ...]]:
     if isinstance(bindings, RoleBinding):
         return Ok((bindings.role,))
     if isinstance(bindings, str):
-        token = bindings.casefold().strip()
-        if token == "":
-            return invalid("role", "Stage 0 role is a non-empty string", given=repr(bindings))
-        return Ok((token,))
+        return _admit_role_string(bindings)
     if isinstance(bindings, Sequence) and not isinstance(bindings, (str, bytes)):
-        out: list[str] = []
-        for item in bindings:
-            if isinstance(item, RoleBinding):
-                out.append(item.role)
-                continue
-            if isinstance(item, str) and item.strip() != "":
-                out.append(item.casefold().strip())
-                continue
-            if isinstance(item, Mapping):
-                role = cast("Mapping[str, object]", item).get("role")
-                if isinstance(role, str) and role.strip() != "":
-                    out.append(role.casefold().strip())
-                    continue
-            return invalid(
-                "role_bindings",
-                "collapse consumes Stage 0 role bindings or role tokens",
-                given=type(item).__name__,
-            )
-        return Ok(tuple(out))
+        return _admit_role_sequence(bindings)
     return invalid(
         "role_bindings",
         "collapse consumes Stage 0 role bindings or role tokens",
         given=type(bindings).__name__,
+    )
+
+
+def _admit_role_string(bindings: str) -> Result[tuple[str, ...]]:
+    token = bindings.casefold().strip()
+    if token == "":
+        return invalid("role", "Stage 0 role is a non-empty string", given=repr(bindings))
+    return Ok((token,))
+
+
+def _admit_role_sequence(bindings: Sequence[object]) -> Result[tuple[str, ...]]:
+    out: list[str] = []
+    for item in bindings:
+        token = _one_role_token(item)
+        if is_refusal(token):
+            return token
+        out.append(token.value)
+    return Ok(tuple(out))
+
+
+def _one_role_token(item: object) -> Result[str]:
+    if isinstance(item, RoleBinding):
+        return Ok(item.role)
+    if isinstance(item, str) and item.strip() != "":
+        return Ok(item.casefold().strip())
+    if isinstance(item, Mapping):
+        role = cast("Mapping[str, object]", item).get("role")
+        if isinstance(role, str) and role.strip() != "":
+            return Ok(role.casefold().strip())
+    return invalid(
+        "role_bindings",
+        "collapse consumes Stage 0 role bindings or role tokens",
+        given=type(item).__name__,
     )
 
 
@@ -261,7 +267,10 @@ def _admit_f_labels(value: object) -> Result[Mapping[str, str]]:
             "F labels are a mapping of Stage 0 F slots",
             given=type(value).__name__,
         )
-    mapping = cast("Mapping[str, object]", value)
+    return _admit_f_label_map(cast("Mapping[str, object]", value))
+
+
+def _admit_f_label_map(mapping: Mapping[str, object]) -> Result[Mapping[str, str]]:
     out: dict[str, str] = {}
     for key, raw in mapping.items():
         if not isinstance(key, str) or key not in F_SLOTS:
