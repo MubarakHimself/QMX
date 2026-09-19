@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qmx.local/qma-wire/schemas/contribution_listing.v1.schema.json",
+  "title": "QMA ContributionHit listing status (CT-40 additive; FR-WF-12)",
+  "description": "Discovery listing overlay over a ContributionHit. Distinguishes published vs configured vs granted vs reachable vs healthy as independent booleans. authorizes_invoke is always false — a hit is not a grant even when published and healthy (SCN-0018 Branch B; DEC-0415; FR-WF-06). Occupancy is none. product_session / granted_ops are not minted here (Epic 55; AD-8). No new CT number — do not mint CT-52. Not on the wire at inspect SHA 270e992 (DEC-0450).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "hit",
+    "published",
+    "configured",
+    "granted",
+    "reachable",
+    "healthy",
+    "authorizes_invoke",
+    "occupancy"
+  ],
+  "properties": {
+    "hit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hit_class",
+        "plugin_id",
+        "point",
+        "qualified_id",
+        "package_id",
+        "package_version",
+        "availability_revision",
+        "availability"
+      ],
+      "properties": {
+        "hit_class": { "const": "contribution" },
+        "plugin_id": { "type": "string", "minLength": 1 },
+        "point": {
+          "type": "string",
+          "enum": [
+            "tool",
+            "tool_adapter",
+            "hook",
+            "skill",
+            "graph_template",
+            "model_deployment",
+            "toolset",
+            "worker_template"
+          ]
+        },
+        "qualified_id": { "type": "string", "minLength": 1 },
+        "package_id": { "type": "string", "minLength": 1 },
+        "package_version": { "type": "string", "minLength": 1 },
+        "availability_revision": { "type": "integer", "minimum": 0 },
+        "availability": {
+          "type": "string",
+          "enum": ["enabled", "disabled", "unavailable", "tombstone"]
+        }
+      }
+    },
+    "published": { "type": "boolean" },
+    "configured": { "type": "boolean" },
+    "granted": { "type": "boolean" },
+    "reachable": { "type": "boolean" },
+    "healthy": { "type": "boolean" },
+    "authorizes_invoke": { "const": false },
+    "occupancy": { "const": "none" }
+  }
+}

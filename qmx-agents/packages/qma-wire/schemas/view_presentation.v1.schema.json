@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qmx.local/qma-wire/schemas/view_presentation.v1.schema.json",
+  "title": "QMA AD-17 view:* presentation DTO (CT-40 additive; GAP-0081)",
+  "description": "Pack view:* is a wire-owned presentation DTO (CONTRACTS §14; AD-17). It is not a plugin contribution point and not a ContributionHit until a named GAP-0081 ui_view increment. Occupancy is none. Mount/dispose must not start or kill durable work. No new CT number — do not mint CT-52.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "view_id",
+    "view_version",
+    "op_id",
+    "mount",
+    "parameter_binding",
+    "snapshot_cursor",
+    "stale",
+    "is_contribution_hit",
+    "is_plugin_contribution_point",
+    "occupancy"
+  ],
+  "properties": {
+    "view_id": { "type": "string", "minLength": 1 },
+    "view_version": { "type": "integer", "minimum": 1 },
+    "op_id": { "type": "string", "minLength": 1 },
+    "mount": { "type": "string", "enum": ["mounted", "unmounted"] },
+    "parameter_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "values"],
+      "properties": {
+        "schema": { "type": "string", "minLength": 1 },
+        "values": { "type": "object" }
+      }
+    },
+    "snapshot_cursor": { "type": "integer", "minimum": 0 },
+    "stale": { "type": "boolean" },
+    "is_contribution_hit": { "const": false },
+    "is_plugin_contribution_point": { "const": false },
+    "occupancy": { "const": "none" }
+  }
+}

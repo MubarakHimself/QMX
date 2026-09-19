@@ -14,6 +14,12 @@ decisions: [DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0192
 
 This records changes to the QMF knowledge base. It is not a software release log and does not convert provisional decisions into implementation authority.
 
+## 2026-09-19 — Story 53.4: A hit is not a grant; listings distinguish published from healthy
+
+Publishing or discovering a ContributionHit does not authorize invoke (SCN-0018 Branch B). Discovery listings distinguish published vs configured vs granted vs reachable vs healthy as independent axes; a hit is not a grant even when published and healthy. `view:*` remains an AD-17 wire DTO only — not a plugin contribution point and not a ContributionHit (GAP-0081). Stage 0 hypotheses / `research_ref` stay off this DTO. Occupancy remains none. `product_session.granted_ops` stay a separate AD-8 state; this story does not mint `product_session` (Epic 55). Tool availability still requires the later GrantRecord intersection (Stories 54/55). At inspect SHA `270e992` this listing overlay was not wired.
+
+Touched: COMP-QMA-WIRE listing and view:* DTOs on additive CT-40; COMP-QMA-DAEMON listing overlay over `published_contributions()`.
+
 ## 2026-09-19 — Story 53.3: Pin tuple, invoke revalidation, and disable yields tombstone
 
 A ContributionHit pin stores `(qualified_id, package_version, availability_revision)` — not a descriptor digest and not fp1. Invoke revalidates that exact tuple against the live published roster and `availability_revision`. A matching live tuple may proceed to grant checks later (Stories 54/55); the pin alone is not a grant. After disable, uninstall, or leave-roster, a later invoke of that pin is typed `unavailable` or `tombstone` — never another `package_version`, never another contribution, never a stale fp1. In-flight `pin_leases` keep the bytes they started with; GC only when leases are empty and no dependant remains. Side-by-side versions remain allowed. Pin leases live on the existing `plugin_install_records` projection (no sixth sqlite class). At inspect SHA `270e992` this pin/tombstone path was not wired.

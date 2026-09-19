@@ -19,7 +19,9 @@ from qma.daemon.capabilities import (
     spawn_agent,
 )
 from qma.daemon.discovery import (
+    CONTRIBUTION_LISTING_OCCUPANCY,
     FEDERATED_SEARCH_OCCUPANCY,
+    ContributionListingService,
     FederatedDiscoveryService,
     FederatedSearch,
 )
@@ -59,11 +61,13 @@ __all__ = [
     "AGENT_PATH_ENFORCEMENT_EVENTS",
     "AGENT_REACHABLE_WRITE_VERBS",
     "BYPASS_WRITE_PATHS",
+    "CONTRIBUTION_LISTING_OCCUPANCY",
     "FEDERATED_SEARCH_OCCUPANCY",
     "AdmissionPipeline",
     "AgentCapabilityStore",
     "AuthoritativeJournal",
     "CompileRequest",
+    "ContributionListingService",
     "DaemonClock",
     "DaemonProcess",
     "DaemonStoreLifecycle",

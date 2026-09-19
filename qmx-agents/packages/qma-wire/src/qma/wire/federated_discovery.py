@@ -44,6 +44,7 @@ __all__ = [
     "ARTIFACT_QUERY_HIT_TAGS",
     "ARTIFACT_ROSTER_KINDS",
     "CONTRIBUTION_AVAILABILITY",
+    "CONTRIBUTION_HIT_IS_GRANT",
     "CONTRIBUTION_HIT_POINTS",
     "CONTRIBUTION_HIT_WIRED_AT_INSPECT_SHA",
     "FEDERATED_HIT_CLASSES",
@@ -93,6 +94,7 @@ FEDERATED_HIT_SCHEMA_FILE: Final[str] = "federated_hit.v1.schema.json"
 # wired federated class at integration@270e992. This story mints the third class.
 FEDERATED_HIT_INSPECT_SHA: Final[str] = "270e992"
 CONTRIBUTION_HIT_WIRED_AT_INSPECT_SHA: Final[bool] = False
+CONTRIBUTION_HIT_IS_GRANT: Final[bool] = False
 
 HIT_CLASS_KNOWLEDGE: Final[str] = "knowledge"
 HIT_CLASS_ARTIFACT: Final[str] = "artifact"
