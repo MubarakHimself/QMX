@@ -14,6 +14,12 @@ decisions: [DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0192
 
 This records changes to the QMF knowledge base. It is not a software release log and does not convert provisional decisions into implementation authority.
 
+## 2026-09-20 — Story 54.2: InvocationEnvelope is bound request context, not authority
+
+Every public call (in-process, CLI, wire, nested) carries an additive CT-40 `InvocationEnvelope` with the cheap-veto A3 / CONTRACTS §1b field set. Transport never bypasses it. The envelope is signed/bound request context: the host resolves contribution, descriptor, and `GrantRecord` from authoritative stores, compares every bound field, and emits typed `stale` / `mismatch` / `GRANT_MISMATCH` before execution. Ambiguous `instance_id` or `config_revision` is a typed refusal — never silent latest. `input_hash` is canonical JSON of the `input_schema`-validated payload (sorted keys); secrets are never inlined. The signature algorithm remains `GAP-DESK-ENVELOPE-CRYPTO`; mismatch refuse is still required. GrantRecord minting/revocation is Story 54.4. At inspect SHA `270e992` this envelope was not on the wire.
+
+Touched: [ct-40-qma-wire-envelope.yaml](contracts/ct-40-qma-wire-envelope.yaml).
+
 ## 2026-09-19 — Story 53.4: A hit is not a grant; listings distinguish published from healthy
 
 Publishing or discovering a ContributionHit does not authorize invoke (SCN-0018 Branch B). Discovery listings distinguish published vs configured vs granted vs reachable vs healthy as independent axes; a hit is not a grant even when published and healthy. `view:*` remains an AD-17 wire DTO only — not a plugin contribution point and not a ContributionHit (GAP-0081). Stage 0 hypotheses / `research_ref` stay off this DTO. Occupancy remains none. `product_session.granted_ops` stay a separate AD-8 state; this story does not mint `product_session` (Epic 55). Tool availability still requires the later GrantRecord intersection (Stories 54/55). At inspect SHA `270e992` this listing overlay was not wired.

@@ -35,6 +35,7 @@ from qma.core.vocabulary.enums import (
     OutputShape,
     PrincipalClass,
     QuantLedgerEntryKind,
+    ReconcilePolicy,
     RefinementEditKind,
     RoutingPolicy,
     SessionAttachment,
@@ -110,6 +111,7 @@ CLOSED_VOCABULARIES: Final[tuple[ClosedVocabulary, ...]] = (
     ClosedVocabulary("lifecycle_verb", "AD-3", LifecycleVerb, "DEC-0416"),
     ClosedVocabulary("empty_policy", "AD-5", EmptyPolicy, "DEC-0418"),
     ClosedVocabulary("door_adapter", "AD-21", DoorAdapter, "DEC-0434"),
+    ClosedVocabulary("reconcile_policy", "AD-24", ReconcilePolicy, "DEC-0437"),
 )
 
 

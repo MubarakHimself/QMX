@@ -39,6 +39,7 @@ from qma.core.vocabulary import (
     OperationCardinality,
     OperationPlacement,
     OutputShape,
+    ReconcilePolicy,
     VocabularyError,
     parse_closed,
 )
@@ -157,6 +158,7 @@ def test_closed_vocabularies_reject_invented_values() -> None:
     assert "operation_cardinality" in names
     assert "lifecycle_verb" in names
     assert "door_adapter" in names
+    assert "reconcile_policy" in names
     assert {member.value for member in OutputShape} == {
         "value",
         "artifact_ref",
@@ -187,6 +189,11 @@ def test_closed_vocabularies_reject_invented_values() -> None:
         "await",
     }
     assert {member.value for member in EmptyPolicy} == {"refuse", "skip"}
+    assert {member.value for member in ReconcilePolicy} == {
+        "query-then-decide",
+        "unknown-manual",
+        "never-retry",
+    }
     with pytest.raises(VocabularyError):
         parse_closed(OutputShape, "blob")
     with pytest.raises(VocabularyError):
@@ -201,6 +208,8 @@ def test_closed_vocabularies_reject_invented_values() -> None:
         parse_closed(DoorAdapter, "qma-cli")
     with pytest.raises(VocabularyError):
         parse_closed(DoorAdapter, "qmn-cli")
+    with pytest.raises(VocabularyError):
+        parse_closed(ReconcilePolicy, "blind-retry")
 
 
 def test_missing_refusal_codes_are_refused() -> None:

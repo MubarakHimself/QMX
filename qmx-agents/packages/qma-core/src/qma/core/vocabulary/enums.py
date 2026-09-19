@@ -42,6 +42,7 @@ __all__ = [
     "OutputShape",
     "PrincipalClass",
     "QuantLedgerEntryKind",
+    "ReconcilePolicy",
     "RefinementEditKind",
     "RoutingPolicy",
     "SessionAttachment",
@@ -546,3 +547,15 @@ class DoorAdapter(StrEnum):
     NODE = "node"
     EVIDENCE_HTTP = "evidence-http"
     QMN_RUN_SLICE = "qmn-run-slice"
+
+
+class ReconcilePolicy(StrEnum):
+    """Closed invocation reconcile policies (Workflows AD-24; DEC-0437; FR-WF-22).
+
+    Effect-specific retry outcomes are Story 54.3. This enum only closes the
+    ``reconcile_policy`` field on ``InvocationEnvelope``.
+    """
+
+    QUERY_THEN_DECIDE = "query-then-decide"
+    UNKNOWN_MANUAL = "unknown-manual"
+    NEVER_RETRY = "never-retry"

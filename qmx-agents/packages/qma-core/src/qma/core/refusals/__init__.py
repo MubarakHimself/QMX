@@ -9,9 +9,13 @@ from __future__ import annotations
 from qma.core.refusals._base import QmaRefusal, variant_name
 from qma.core.refusals.variants import (
     NAMED_REFUSAL_VARIANTS,
+    AmbiguousResolution,
     CredentialOutOfScope,
     CursorScopeMismatch,
+    EnvelopeMismatch,
     ExtensionSurfaceRefused,
+    GrantMismatch,
+    InvocationEnvelopeRequired,
     LaptopOffContinuationRefused,
     NoCodeAuthoringRefused,
     NoEligibleDeployment,
@@ -24,6 +28,7 @@ from qma.core.refusals.variants import (
     ProhibitedReachability,
     ProvenanceShapeMismatch,
     SlugUnavailable,
+    StaleObservation,
     StaleSnapshot,
     StoreVersionMismatch,
     UiContributionDeferred,
@@ -35,9 +40,13 @@ from qma.core.refusals.variants import (
 
 __all__ = [
     "NAMED_REFUSAL_VARIANTS",
+    "AmbiguousResolution",
     "CredentialOutOfScope",
     "CursorScopeMismatch",
+    "EnvelopeMismatch",
     "ExtensionSurfaceRefused",
+    "GrantMismatch",
+    "InvocationEnvelopeRequired",
     "LaptopOffContinuationRefused",
     "NoCodeAuthoringRefused",
     "NoEligibleDeployment",
@@ -51,6 +60,7 @@ __all__ = [
     "ProvenanceShapeMismatch",
     "QmaRefusal",
     "SlugUnavailable",
+    "StaleObservation",
     "StaleSnapshot",
     "StoreVersionMismatch",
     "UiContributionDeferred",

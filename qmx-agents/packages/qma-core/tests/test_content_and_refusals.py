@@ -21,9 +21,13 @@ from qma.core.foundation import (
 )
 from qma.core.refusals import (
     NAMED_REFUSAL_VARIANTS,
+    AmbiguousResolution,
     CredentialOutOfScope,
     CursorScopeMismatch,
+    EnvelopeMismatch,
     ExtensionSurfaceRefused,
+    GrantMismatch,
+    InvocationEnvelopeRequired,
     LaptopOffContinuationRefused,
     NoCodeAuthoringRefused,
     NoEligibleDeployment,
@@ -37,6 +41,7 @@ from qma.core.refusals import (
     ProvenanceShapeMismatch,
     QmaRefusal,
     SlugUnavailable,
+    StaleObservation,
     StaleSnapshot,
     StoreVersionMismatch,
     UiContributionDeferred,
@@ -77,6 +82,11 @@ EXPECTED_VARIANTS = (
     "NoCodeAuthoringRefused",
     "ExtensionSurfaceRefused",
     "UnsupportedDoor",
+    "StaleObservation",
+    "EnvelopeMismatch",
+    "GrantMismatch",
+    "AmbiguousResolution",
+    "InvocationEnvelopeRequired",
 )
 
 
@@ -205,6 +215,11 @@ def test_all_variant_factories_carry_structured_context() -> None:
             version=1,
             adapter="qma-cli",
         ),
+        StaleObservation.of(field="op_version", bound=1),
+        EnvelopeMismatch.of(field="effect_class", bound="read"),
+        GrantMismatch.of(field="instance_id", grant_id="grant:1"),
+        AmbiguousResolution.of(field="instance_id", given="latest"),
+        InvocationEnvelopeRequired.of(transport="wire"),
     ]
     assert len(samples) == len(EXPECTED_VARIANTS)
     for sample in samples:

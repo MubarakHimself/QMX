@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qmx.local/qma-wire/schemas/invocation_envelope.v1.schema.json",
+  "title": "QMA InvocationEnvelope (CT-40 additive; FR-WF-17; cheap-veto A3)",
+  "description": "Signed/bound request context for every public call. Not authority by assertion. Host resolves contribution, descriptor, and GrantRecord from authoritative stores and compares every bound field before execution. No new CT number — do not mint CT-52. Signature algorithm remains GAP-DESK-ENVELOPE-CRYPTO; mismatch refuse is still required. Not on the wire at inspect SHA 270e992 (DEC-0437, DEC-0450; GAP-0096).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "logical_invocation_id",
+    "attempt_id",
+    "op_id",
+    "op_version",
+    "contribution",
+    "instance_id",
+    "config_revision",
+    "grant_id",
+    "effect_class",
+    "idempotency_key",
+    "reconcile_policy",
+    "input_hash",
+    "call_depth"
+  ],
+  "properties": {
+    "logical_invocation_id": { "type": "string", "minLength": 1 },
+    "attempt_id": { "type": "integer", "minimum": 1 },
+    "op_id": { "type": "string", "minLength": 1 },
+    "op_version": { "type": "integer", "minimum": 1 },
+    "contribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["qualified_id", "package_version"],
+      "properties": {
+        "qualified_id": { "type": "string", "minLength": 1 },
+        "package_version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "instance_id": { "type": "string", "minLength": 1 },
+    "config_revision": { "type": "integer", "minimum": 0 },
+    "caller_session_ref": { "type": "string", "minLength": 1 },
+    "callee_session_ref": { "type": "string", "minLength": 1 },
+    "grant_id": { "type": "string", "minLength": 1 },
+    "effect_class": {
+      "type": "string",
+      "enum": [
+        "none",
+        "read",
+        "append-evidence",
+        "mutate-config",
+        "place-run",
+        "external-egress"
+      ]
+    },
+    "idempotency_key": { "type": "string", "minLength": 1 },
+    "reconcile_policy": {
+      "type": "string",
+      "enum": ["query-then-decide", "unknown-manual", "never-retry"]
+    },
+    "input_hash": { "type": "string", "minLength": 1 },
+    "parent_logical_invocation_id": { "type": "string", "minLength": 1 },
+    "call_depth": { "type": "integer", "minimum": 0 }
+  }
+}

@@ -14,9 +14,13 @@ from qmf.core.refusal import RefusalCategory, Retryability
 
 __all__ = [
     "NAMED_REFUSAL_VARIANTS",
+    "AmbiguousResolution",
     "CredentialOutOfScope",
     "CursorScopeMismatch",
+    "EnvelopeMismatch",
     "ExtensionSurfaceRefused",
+    "GrantMismatch",
+    "InvocationEnvelopeRequired",
     "LaptopOffContinuationRefused",
     "NoCodeAuthoringRefused",
     "NoEligibleDeployment",
@@ -29,6 +33,7 @@ __all__ = [
     "ProhibitedReachability",
     "ProvenanceShapeMismatch",
     "SlugUnavailable",
+    "StaleObservation",
     "StaleSnapshot",
     "StoreVersionMismatch",
     "UiContributionDeferred",
@@ -472,6 +477,119 @@ class UnsupportedDoor(QmaRefusal):
         return cls.create(context=context)
 
 
+class StaleObservation(QmaRefusal):
+    """Bound envelope field is stale versus the authoritative store (AD-24).
+
+    Typed ``STALE_OBSERVATION`` before execution. The envelope is not authority
+    (RC-03; FR-WF-18).
+    """
+
+    VARIANT: ClassVar[str] = "StaleObservation"
+    CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.STALE_EVIDENCE
+    RETRYABILITY: ClassVar[Retryability] = Retryability.AFTER_CONDITION
+
+    @classmethod
+    def of(cls, *, field: str, **extra: object) -> StaleObservation:
+        context: dict[str, object] = {
+            "field": field,
+            "code": "STALE_OBSERVATION",
+            "reason": "stale",
+            "envelope_is_authority": False,
+        }
+        context.update(extra)
+        return cls.create(
+            context=context,
+            after_condition_descriptor="authoritative stores match every bound field",
+        )
+
+
+class EnvelopeMismatch(QmaRefusal):
+    """Bound envelope field does not match the authoritative store (AD-24; RC-03).
+
+    Typed ``mismatch`` before execution. The envelope is signed/bound request
+    context, not authority by assertion.
+    """
+
+    VARIANT: ClassVar[str] = "EnvelopeMismatch"
+    CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.POLICY_REJECTION
+
+    @classmethod
+    def of(cls, *, field: str, **extra: object) -> EnvelopeMismatch:
+        context: dict[str, object] = {
+            "field": field,
+            "code": "MISMATCH",
+            "reason": "mismatch",
+            "envelope_is_authority": False,
+        }
+        context.update(extra)
+        return cls.create(context=context)
+
+
+class GrantMismatch(QmaRefusal):
+    """Grant snapshot does not match the resolved GrantRecord (AD-24; FR-WF-18).
+
+    Typed ``GRANT_MISMATCH`` before execution — a valid grant cannot be paired
+    with another instance, config, op, contribution, or effect class.
+    """
+
+    VARIANT: ClassVar[str] = "GrantMismatch"
+    CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.POLICY_REJECTION
+
+    @classmethod
+    def of(cls, *, field: str, grant_id: str, **extra: object) -> GrantMismatch:
+        context: dict[str, object] = {
+            "field": field,
+            "grant_id": grant_id,
+            "code": "GRANT_MISMATCH",
+            "reason": "grant_mismatch",
+            "envelope_is_authority": False,
+        }
+        context.update(extra)
+        return cls.create(context=context)
+
+
+class AmbiguousResolution(QmaRefusal):
+    """``instance_id`` or ``config_revision`` would silently pick latest (FR-WF-18).
+
+    J12: forbidden latest-instance substitution. Typed refusal, never latest.
+    """
+
+    VARIANT: ClassVar[str] = "AmbiguousResolution"
+    CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.INVALID_INPUT
+
+    @classmethod
+    def of(cls, *, field: str, **extra: object) -> AmbiguousResolution:
+        context: dict[str, object] = {
+            "field": field,
+            "code": "INVALID_INPUT",
+            "reason": "ambiguous_resolution",
+            "never_latest": True,
+        }
+        context.update(extra)
+        return cls.create(context=context)
+
+
+class InvocationEnvelopeRequired(QmaRefusal):
+    """A public call omitted ``InvocationEnvelope`` (FR-WF-17; FR-WF-25).
+
+    Transport (in-process, CLI, wire, nested) never bypasses the envelope.
+    """
+
+    VARIANT: ClassVar[str] = "InvocationEnvelopeRequired"
+    CATEGORY: ClassVar[RefusalCategory] = RefusalCategory.INVALID_INPUT
+
+    @classmethod
+    def of(cls, *, transport: str, **extra: object) -> InvocationEnvelopeRequired:
+        context: dict[str, object] = {
+            "field": "invocation_envelope",
+            "transport": transport,
+            "code": "INVALID_INPUT",
+            "reason": "transport_must_carry_envelope",
+        }
+        context.update(extra)
+        return cls.create(context=context)
+
+
 class StoreVersionMismatch(QmaRefusal):
     """Store lifecycle refused an unknown ``store_schema_version`` (AD-27).
 
@@ -522,4 +640,9 @@ NAMED_REFUSAL_VARIANTS: Final[tuple[type[QmaRefusal], ...]] = (
     NoCodeAuthoringRefused,
     ExtensionSurfaceRefused,
     UnsupportedDoor,
+    StaleObservation,
+    EnvelopeMismatch,
+    GrantMismatch,
+    AmbiguousResolution,
+    InvocationEnvelopeRequired,
 )
