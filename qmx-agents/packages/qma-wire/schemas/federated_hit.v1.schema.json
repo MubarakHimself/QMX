@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://qmx.local/qma-wire/schemas/federated_hit.v1.schema.json",
-  "title": "QMA federated discovery hit (CT-40 additive; FR-RES-07)",
-  "description": "Frozen federated discovery hit owned by COMP-QMA-WIRE as an additive CT-40 family. Exactly one of KnowledgeHit {hit_class: knowledge, source_ref, snapshot_ref, locator} or ArtifactHit {hit_class: artifact, fp1, kind} where kind is a Workbench AD-3 roster kind or closed query-hit tags saved-view | analysis.published. No qml_candidate, no strats hit_class, no cite-copy artifact_ref as an Artifact-rail hit. Display aliases on KnowledgeHits must not say hypothesis or research candidate; Stage 0 hypotheses list on qml.research. No new CT number (DEC-0389, DEC-0412; UX-DR2).",
+  "title": "QMA federated discovery hit (CT-40 additive; FR-WF-01)",
+  "description": "Frozen federated discovery hit owned by COMP-QMA-WIRE as an additive CT-40 family format mint. Exactly one of KnowledgeHit {hit_class: knowledge, source_ref, snapshot_ref, locator}, ArtifactHit {hit_class: artifact, fp1, kind} where kind is a Workbench AD-3 roster kind or closed query-hit tags saved-view | analysis.published, or ContributionHit {hit_class: contribution, plugin_id, point, qualified_id, package_id, package_version, availability_revision, availability} whose identity is the live published_contributions() tuple and is never fp1, never a registry kind, and never ArtifactHit.kind. No qml_candidate, no strats hit_class, no hypothesis kind, no cite-copy artifact_ref as an Artifact-rail hit, no view:* ContributionHit (GAP-0081). Display aliases on KnowledgeHits must not say hypothesis or research candidate; Stage 0 hypotheses list on qml.research. No new CT number — do not mint CT-52 (DEC-0389 named-amended by DEC-0449, DEC-0412, DEC-0415; UX-DR2).",
   "oneOf": [
     {
       "type": "object",
@@ -38,6 +38,45 @@
             "saved-view",
             "analysis.published"
           ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hit_class",
+        "plugin_id",
+        "point",
+        "qualified_id",
+        "package_id",
+        "package_version",
+        "availability_revision",
+        "availability"
+      ],
+      "properties": {
+        "hit_class": { "const": "contribution" },
+        "plugin_id": { "type": "string", "minLength": 1 },
+        "point": {
+          "type": "string",
+          "enum": [
+            "tool",
+            "tool_adapter",
+            "hook",
+            "skill",
+            "graph_template",
+            "model_deployment",
+            "toolset",
+            "worker_template"
+          ]
+        },
+        "qualified_id": { "type": "string", "minLength": 1 },
+        "package_id": { "type": "string", "minLength": 1 },
+        "package_version": { "type": "string", "minLength": 1 },
+        "availability_revision": { "type": "integer", "minimum": 0 },
+        "availability": {
+          "type": "string",
+          "enum": ["enabled", "disabled", "unavailable", "tombstone"]
         }
       }
     }

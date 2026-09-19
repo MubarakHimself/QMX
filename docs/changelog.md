@@ -14,6 +14,12 @@ decisions: [DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0192
 
 This records changes to the QMF knowledge base. It is not a software release log and does not convert provisional decisions into implementation authority.
 
+## 2026-09-19 — Story 53.1: Federated DTO gains ContributionHit on additive CT-40
+
+COMP-QMA-WIRE format-mints ContributionHit on the existing CT-40 federated hit family. A hit is exactly one of KnowledgeHit, ArtifactHit, or ContributionHit. ContributionHit identity is the live `published_contributions()` tuple (`hit_class=contribution`, `plugin_id`, `point`, `qualified_id`, `package_id`, `package_version`, `availability_revision`, `availability`) and is never fp1, never a registry kind, and never `ArtifactHit.kind`. No new CT number (do not mint CT-52). `facade_search` / `facade_get` remain the discovery query names. `view:*` is not a ContributionHit (GAP-0081). `hit_class` `strats` / `qml_candidate` / hypothesis kinds stay refused (DEC-0412). At inspect SHA `270e992` the third class was not on the wire.
+
+Touched: [ct-40-qma-wire-envelope.yaml](contracts/ct-40-qma-wire-envelope.yaml).
+
 ## 2026-09-15 — Story 36.2: Production QMB door is a real qmb CLI transport
 
 The QMA Backtesting Service default door is `CliQmbDoorTransport`, which subprocess-spawns a `qmb` CLI process along Agent → QMA backtest tool → Backtesting Service → qmb door → QMB. `RecordingQmbDoorTransport` remains a non-production recorder and is not a working integration. The daemon, plugins, and worker images still have no `import qmb` edge. Occupancy stays one `qmb` run per ExecutionEnvironment. `JobHandle.cancel` still does not map onto a live `qmb` abort (Story 36.5).

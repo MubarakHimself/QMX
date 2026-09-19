@@ -1,12 +1,15 @@
-"""Reference usage — federated KnowledgeHit | ArtifactHit DTO (Story 52.1)."""
+"""Reference usage — federated KnowledgeHit | ArtifactHit | ContributionHit (Story 53.1)."""
 
 from __future__ import annotations
 
 from qma.wire import (
+    CONTRIBUTION_HIT_WIRED_AT_INSPECT_SHA,
     FEDERATED_HIT_CONTRACT,
     FEDERATED_HIT_DTO_OWNER,
     FEDERATED_HIT_NEW_CT_MINTED,
+    FEDERATED_HIT_REFUSED_CT,
     ArtifactHit,
+    ContributionHit,
     KnowledgeHit,
     parse_federated_hit,
     validate_federated_hit,
@@ -20,6 +23,8 @@ def main() -> None:
     assert FEDERATED_HIT_DTO_OWNER == "COMP-QMA-WIRE"
     assert FEDERATED_HIT_CONTRACT == "CT-40"
     assert FEDERATED_HIT_NEW_CT_MINTED is False
+    assert FEDERATED_HIT_REFUSED_CT == "CT-52"
+    assert CONTRIBUTION_HIT_WIRED_AT_INSPECT_SHA is False
 
     knowledge = KnowledgeHit.try_create(
         source_ref="strats",
@@ -32,6 +37,19 @@ def main() -> None:
     artifact = ArtifactHit.try_create(fp1=_FP1, kind="saved-view")
     assert is_ok(artifact)
     print("artifact hit_class=artifact; kind is roster or query-hit tag")
+
+    contribution = ContributionHit.try_create(
+        plugin_id="analysis-backtest",
+        point="tool",
+        qualified_id="analysis-backtest:qmb",
+        package_id="analysis-backtest",
+        package_version="0.1.0",
+        availability_revision=12,
+        availability="enabled",
+    )
+    assert is_ok(contribution)
+    assert "fp1" not in contribution.value.to_payload()
+    print("contribution hit_class=contribution; published tuple, never fp1")
 
     refused = parse_federated_hit({"hit_class": "strats", "fp1": _FP1, "kind": "strats"})
     assert is_refusal(refused)

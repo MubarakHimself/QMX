@@ -1,4 +1,4 @@
-"""Story 52.1 — frozen federated hit DTO is KnowledgeHit | ArtifactHit only."""
+"""Story 52.1 / 53.1 — federated hit DTO is KnowledgeHit | ArtifactHit | ContributionHit."""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ from qma.wire import (
     FEDERATED_HIT_SCHEMA_FILE,
     FEDERATED_HIT_SCHEMA_NAME,
     HIT_CLASS_ARTIFACT,
+    HIT_CLASS_CONTRIBUTION,
     HIT_CLASS_KNOWLEDGE,
     SCHEMA_DIR,
     SCHEMA_FILES,
@@ -43,7 +44,11 @@ def test_owner_is_additive_ct40_without_new_contract() -> None:
     assert FEDERATED_HIT_SCHEMA == "qma.wire.federated_hit.v1"
     assert SCHEMA_FILES[FEDERATED_HIT_SCHEMA_NAME] == FEDERATED_HIT_SCHEMA_FILE
     assert (SCHEMA_DIR / FEDERATED_HIT_SCHEMA_FILE).is_file()
-    assert {HIT_CLASS_KNOWLEDGE, HIT_CLASS_ARTIFACT} == FEDERATED_HIT_CLASSES
+    assert {
+        HIT_CLASS_KNOWLEDGE,
+        HIT_CLASS_ARTIFACT,
+        HIT_CLASS_CONTRIBUTION,
+    } == FEDERATED_HIT_CLASSES
 
 
 def test_facade_queries_are_additive_ct40_vocabulary() -> None:
@@ -56,6 +61,7 @@ def test_facade_queries_are_additive_ct40_vocabulary() -> None:
     assert parse_wire_type("facade_search") == "facade_search"
     assert is_ok(validate_family_payload("facade_search", {"query": "swing-high"}))
     assert is_ok(validate_family_payload("facade_get", {"hit_class": "knowledge"}))
+    assert is_ok(validate_family_payload("facade_get", {"hit_class": "contribution"}))
 
 
 def test_knowledge_hit_round_trips() -> None:
@@ -86,9 +92,7 @@ def test_artifact_hit_accepts_roster_and_query_tags() -> None:
     assert roster.value.hit_class == "artifact"
     assert roster.value.kind == "bot-definition"
 
-    saved = parse_federated_hit(
-        {"hit_class": "artifact", "fp1": _FP1, "kind": "saved-view"}
-    )
+    saved = parse_federated_hit({"hit_class": "artifact", "fp1": _FP1, "kind": "saved-view"})
     assert is_ok(saved)
     assert isinstance(saved.value, ArtifactHit)
     assert saved.value.kind == "saved-view"
